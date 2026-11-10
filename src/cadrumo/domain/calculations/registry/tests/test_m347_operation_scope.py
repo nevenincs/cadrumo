@@ -26,10 +26,11 @@ from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGove
 from ..m347_operation_scope import M347EstimacionObjetivaScope, resolve_m347_estimacion_objetiva_scope
 from ..schema_base import DateAxis
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON_DATE = date(2025, 12, 31)
+_ON_DATE = date(newest_authored_edition("347"), 12, 31)
 _SCOPE_FACT_ID = "m347-estimacion-objetiva-operation-scope"
 
 

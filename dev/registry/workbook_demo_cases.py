@@ -105,6 +105,22 @@ class DemoCase:
     period: str = "4T"
 
 
+_SECTOR_DEDUCTION_SUM_PREFIX = "iva.anual.sector-diferenciado-"
+
+
+def demonstrates_sector_deductions(case: DemoCase) -> bool:
+    """Whether a Modelo 390 scenario shows the differentiated-sector deductions rather than the annual totals.
+
+    A scenario that names its result shows the branch that result reads: an
+    edition carrying both the sector summary and the annual totals demonstrates
+    whichever one the scenario asks for. A scenario without a result shows the
+    sector branch wherever the edition declares it.
+    """
+    if case.result_casilla is not None:
+        return case.result_casilla.startswith(_SECTOR_DEDUCTION_SUM_PREFIX)
+    return has_differentiated_sectors(case.modelo, case.revision)
+
+
 @dataclass(frozen=True)
 class _Spec:
     """One demonstrated edition: its position among the Modelo's editions, oldest first."""

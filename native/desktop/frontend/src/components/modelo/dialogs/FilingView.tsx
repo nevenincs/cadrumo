@@ -37,7 +37,6 @@ import type {
 } from "../../../shell/modeloContract/modelo";
 import type { ModeloExportRequest } from "../../../shell/modeloContract/modeloExport";
 import type {
-  ExportLayoutFormat,
   ModeloExportRequestField,
   ModeloFormArtefactOption,
   ModeloFormElection,
@@ -107,21 +106,6 @@ const STAGE_TONE: Record<Stage["state"], string> = {
   open: "text-faint",
 };
 
-/** The save format the filing file is written as, by its export layout. */
-const FILING_FORMAT: Record<ExportLayoutFormat, ModeloSaveFormat> = {
-  fixed_width: "boe",
-  xml_dictionary: "xml",
-};
-
-/** The save format each copy is written as. */
-const COPY_FORMAT: Record<
-  Exclude<ModeloExportArtefact, "fichero_boe">,
-  ModeloSaveFormat
-> = {
-  calculation_report_pdf: "pdf",
-  calculation_report_csv: "csv",
-  calculation_review_xlsx: "xlsx",
-};
 const COPY_ICON: Record<Write, IconName> = {
   export: "page",
   record: "tick",
@@ -338,12 +322,11 @@ export function FilingView({
     if (!calculation || quiet) return;
     const artefact: ModeloExportArtefact =
       write === "export" ? "fichero_boe" : write;
-    let format: ModeloSaveFormat;
-    if (write === "export") {
-      const layout = offer?.file_format ?? null;
-      if (layout === null) return;
-      format = FILING_FORMAT[layout];
-    } else format = COPY_FORMAT[write];
+    // The offer says what kind of file each artefact is saved as.
+    const format: ModeloSaveFormat | null =
+      offer?.artefacts.find((option) => option.artefact === artefact)
+        ?.save_format ?? null;
+    if (format === null) return;
     const picked = await save(write, format, stem);
     if (!picked) return;
     await run(

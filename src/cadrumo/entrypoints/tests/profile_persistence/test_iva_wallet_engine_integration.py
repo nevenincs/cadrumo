@@ -24,10 +24,8 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-    resolve_iva_compensation_decision_for_calculation,
-)
+from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
+from cadrumo.application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
 from cadrumo.core.observed_header_fact import ObservedHeaderFact

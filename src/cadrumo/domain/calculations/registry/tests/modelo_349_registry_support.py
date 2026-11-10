@@ -8,6 +8,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_catalogues import RegistryCatalogues
+from .authored_editions import open_ended_revision
 from .registry_tree import bundled_registry_tree
 
 WWW6_HOST = aeat_host("www6")
@@ -132,7 +133,7 @@ def load_modelo_349() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def modelo_349_revision() -> ModeloRevision:
     modelo, _ = load_modelo_349()
-    return modelo.revisions["2020-y-siguientes"]
+    return modelo.revisions[str(open_ended_revision("349").id)]
 
 
 def fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:

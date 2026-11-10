@@ -2007,12 +2007,14 @@ desktop:
       category: Category
       category_needs_classification: Classify them as Business or Mixed first
       choose_category: Choose a category
+      cleared_category: Category removed · {count} not saved yet
       expense_category: Expense category · {count}
       inactive_only: Only active movements change
       income_no_category: Income {count} · no category needed
       no_category_match: No category matches
       not_saved: Not saved yet
       nothing: Select movements first
+      nothing_to_clear: None of the selected movements has a category to remove.
       overwritten: '{count} changed from another classification'
       partial: loaded rows only
       range_differs: 'Selected: {selected} · range: {range}'
@@ -3917,8 +3919,9 @@ desktop:
       shown: Select the shown movements · Ctrl-click adds them
     selected: '{count} selected'
     selection:
-      actions: Selection actions
+      actions_count: Actions · {count} selected
       all_shown: 'All shown are selected: {count}.'
+      clear_category: Remove category
       hidden: 'Hidden: {hidden} of {selected} selected'
       keep_visible: Keep only visible
       select_all: Select all {count} in {period}
@@ -4779,6 +4782,8 @@ desktop:
       cancelled: You cancelled the setup.
       damaged_download: The download was damaged and could not be used.
       disk_full: There is not enough free disk space.
+      engine_program_unusable: 'The local AI program couldn''t start: it''s damaged
+        or doesn''t work on this computer. Repairing local AI reinstalls it.'
       host_unreachable: The download server could not be reached. Check your internet
         connection, then try again.
       interrupted: Setup was interrupted before it finished.

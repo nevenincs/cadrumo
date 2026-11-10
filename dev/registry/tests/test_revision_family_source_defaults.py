@@ -26,6 +26,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -33,7 +34,8 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_ID: Final = "999"
-_REVISION: Final = "2025"
+_YEAR: Final = filing_year_envelope().horizon
+_REVISION: Final = str(_YEAR)
 _ARTICLE: Final = "ley-58-2003:art-29"
 _ORDEN: Final = "orden-hac-200-2024:art-1"
 _CASILLA_SOURCE: Final = "aeat-dr-999-2025"
@@ -101,9 +103,9 @@ def _tree(
         defaults += _stated("formula_source_refs", formula_default)
     (revision_dir / "revision.toml").write_text(
         f'[revisions."{_REVISION}"]\n'
-        "valid_from = 2025-01-01\n"
-        "valid_to = 2025-12-31\n"
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f"valid_from = {_YEAR}-01-01\n"
+        f"valid_to = {_YEAR}-12-31\n"
+        f'period_selector = {{ years = [{_YEAR}], periods = ["0A"] }}\n'
         f'legal_refs = ["{_ARTICLE}"]\n'
         'source_refs = ["aeat-manual"]\n'
         f'orden_aplicabilidad = ["{_ORDEN}"]\n'
@@ -161,7 +163,7 @@ def test_without_a_declared_family_default_a_row_stating_no_source_is_refused(tm
     """The teeth of the proofs above: nothing is inferred when the edition declares no default."""
     tree = _tree(tmp_path, bindings=_binding("b-silente", ""), formulas=_formula("f-silente", ""), binding_default=None)
 
-    with pytest.raises(RegistryLoadError, match=r"(?s)invalid revision '2025'.*bindings\.0\.source_refs"):
+    with pytest.raises(RegistryLoadError, match=rf"(?s)invalid revision '{_REVISION}'.*bindings\.0\.source_refs"):
         load_modelo_directory(tree)
 
 

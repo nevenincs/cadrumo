@@ -1630,6 +1630,11 @@ complexity-gate:
 check-module-size:
     @uv run --no-sync python -m dev.quality.typescript_module_size
 
+[doc('Fail when a branch adds a year literal or complexity finding against its merge-base; takes the merge-base tree, the branch tree and a changed-path manifest prepared outside the tool.')]
+[group('check')]
+check-branch-gate-delta BASE_TREE HEAD_TREE PATHS_FROM:
+    @uv run --no-sync python -m dev.quality.branch_gate_delta --base-tree {{BASE_TREE}} --head-tree {{HEAD_TREE}} --paths-from {{PATHS_FROM}}
+
 [doc('Reject any year, edition id or year bound written into Python or TypeScript outside the authority data root; read-only and blocking.')]
 [group('check')]
 check-year-literals:
@@ -1725,8 +1730,8 @@ report-registry-aeip:
 # Regenerate committed CLI-sequence goldens through their owning runner.
 [doc('Generate committed CLI-sequence goldens through the owning sequence generator; review the resulting diff.')]
 [group('docs')]
-docs-generate-sequences:
-    uv run --no-sync python -m dev.docs.sequences refresh
+docs-generate-sequences *ARGS:
+    uv run --no-sync python -m dev.docs.sequences refresh {{ARGS}}
 
 # Regenerate committed documentation gettext catalogues through the i18n owner.
 [doc('Generate documentation gettext catalogues through the owning i18n generator; writes committed catalogue state.')]

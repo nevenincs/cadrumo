@@ -11,6 +11,7 @@ import {
   selectAll,
   selectOnly,
   stepColumn,
+  type CellRange,
   type ColumnLayout,
 } from "./dataGridModel";
 import {
@@ -27,6 +28,7 @@ import type {
 } from "./dataGridTypes";
 import type { useGridSelection } from "./dataGridSelection";
 import { chordMatches } from "@/shared/chords";
+import { clipboardChord, pasteRange } from "./dataGridClipboard";
 
 /** Maps grid-owned keyboard gestures to navigation, selection and edit actions. */
 export function gridKeyboard<R>({
@@ -68,6 +70,9 @@ export function gridKeyboard<R>({
     | "onMenu"
     | "onActivate"
     | "onCommit"
+    | "onCopy"
+    | "onPaste"
+    | "clipboard"
   > & { onColumnResize(column: string, width: number): void };
   startEdit(key: string, column: string, initial?: string): boolean;
   readOnlyReason(row: GridRow<R>, column: string): string | undefined;
@@ -103,6 +108,9 @@ export function gridKeyboard<R>({
     onMenu,
     onActivate,
     onCommit,
+    onCopy,
+    onPaste,
+    clipboard,
   } = actions;
   // ── The keyboard ──────────────────────────────────────────────────────
   const menuAt = (element: HTMLElement | null): GridMenuAnchor => {
@@ -117,6 +125,15 @@ export function gridKeyboard<R>({
       ? getComputedStyle(scroller.current).getPropertyValue("--resize-step")
       : "";
     return (lengthPx(raw, remPx) ?? remPx) / remPx;
+  };
+
+  /** Asks every cell of the range that has an editor to clear. */
+  const clearRange = (target: CellRange) => {
+    if (!onCommit) return;
+    for (const rowKey of target.rows)
+      for (const columnId of target.columns)
+        if (editorFor(rowKey, columnId) !== null)
+          onCommit(rowKey, columnId, null);
   };
 
   const headerKeys = (event: React.KeyboardEvent, column: string) => {
@@ -315,6 +332,26 @@ export function gridKeyboard<R>({
       onMenu(row.key, row.kind === "data" ? column : null, menuAt(element));
       return true;
     }
+    const chord = clipboard
+      ? clipboardChord(event, exactly(event, { primary: true }))
+      : null;
+    if (chord && clipboard) {
+      const target = currentRange();
+      if (!target) return false;
+      if (chord === "paste") {
+        if (!onPaste) return false;
+        const into = pasteRange(target, selection, dataKeys);
+        void clipboard.read().then((text) => {
+          if (text !== null) onPaste(into, text);
+        });
+        return true;
+      }
+      const text = onCopy?.(target) ?? null;
+      if (text === null) return false;
+      clipboard.write(text);
+      if (chord === "cut") clearRange(target);
+      return true;
+    }
     if (!exactly(event)) {
       if (isPrintable(event) && row.kind !== "section")
         return startEdit(row.key, column, event.key);
@@ -336,10 +373,7 @@ export function gridKeyboard<R>({
     if (key === "Delete" && onCommit) {
       const target = currentRange();
       if (!target) return false;
-      for (const rowKey of target.rows)
-        for (const columnId of target.columns)
-          if (editorFor(rowKey, columnId) !== null)
-            onCommit(rowKey, columnId, null);
+      clearRange(target);
       return true;
     }
     if (key === "Escape" && anchor) {

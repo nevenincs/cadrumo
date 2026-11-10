@@ -20,7 +20,11 @@ from rich.text import Text
 from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
+from ......application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ......application.modelo.work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 from ......application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

@@ -9,6 +9,7 @@ import type {
   LedgerAddRequest,
   LedgerClassifyRequest,
 } from "./ledgerMovementOperations";
+import { fieldsDroppedBy } from "./ledgerClassifications";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
 
 /** Every movement field the page can stage a change to. */
@@ -615,6 +616,12 @@ export function effectiveFacts(
         : null
       : storedFieldValue(row, field);
   }
+  // The classification's own write drops what it carries none of, staged
+  // as a clear or not.
+  const chosen = changes?.business_classification;
+  if (chosen?.kind === "set")
+    for (const field of fieldsDroppedBy(chosen.value))
+      if (!changes?.[field as StageField]) facts[field as StageField] = null;
   return facts;
 }
 

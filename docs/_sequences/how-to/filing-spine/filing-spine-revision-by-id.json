@@ -331,7 +331,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
+          "value": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e"
         }
       ],
       "envelope": null,
@@ -350,7 +350,7 @@
         "modelo",
         "work",
         "revision",
-        "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491"
+        "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e"
       ],
       "captures": [],
       "envelope": {
@@ -418,7 +418,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c30aaf3bc2f061fc7687bed304c33839380e441060cb579d6207e1fa9593d491",
+          "calculation_revision_id": "c21c66281fbc7c81345f4bea7f14d97afc29dffc4c0adce54d7d80642cdab61e",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -986,7 +986,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -997,7 +997,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",

@@ -9,7 +9,10 @@ candidate the register serves, so they live together here.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 _HEX = {name: name * 64 for name in "abce"}
 
@@ -49,7 +52,7 @@ CANDIDATE = candidate(
     invoice_evidence_id=_HEX["b"],
     evidence_fingerprint=_HEX["c"],
     description="Compra",
-    booked_date="2026-05-06",
+    booked_date=date(filing_year_envelope().horizon, 5, 6).isoformat(),
     taxable_base="900.00",
     iva_amount="189.00",
 )

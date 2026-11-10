@@ -306,6 +306,23 @@ def _renta_expense_fact_or_issue(
         )
 
 
+def _unplaced_payment_issue(
+    transaction: Transaction, *, fact: RentaDeductibleExpenseFact, period: Period, unresolved: ImputationUnresolved
+) -> RentaLedgerAggregationIssue:
+    """Return the issue for a payment whose ejercicio the imputation could not decide."""
+    if not (period.contains(fact.operation_date) or period.contains(fact.filing_date)):
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            f"payment of {fact.operation_date.isoformat()} is outside {period}",
+        )
+    return _renta_transaction_issue(
+        transaction,
+        RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+        f"{unresolved.value}: payment of {fact.operation_date.isoformat()} cannot be placed in an ejercicio",
+    )
+
+
 def _renta_observation_or_issue(
     transaction: Transaction,
     *,
@@ -318,17 +335,7 @@ def _renta_observation_or_issue(
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
     """Apply filing-period and deductibility gates to one validated fact."""
     if isinstance(imputed, ImputationUnresolved):
-        if not (period.contains(fact.operation_date) or period.contains(fact.filing_date)):
-            return _renta_transaction_issue(
-                transaction,
-                RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-                f"payment of {fact.operation_date.isoformat()} is outside {period}",
-            )
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
-            f"{imputed.value}: payment of {fact.operation_date.isoformat()} cannot be placed in an ejercicio",
-        )
+        return _unplaced_payment_issue(transaction, fact=fact, period=period, unresolved=imputed)
     anchor = fact.filing_date if imputed is None else imputed
     if not period.contains(anchor):
         return _renta_transaction_issue(

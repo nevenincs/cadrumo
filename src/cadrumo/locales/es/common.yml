@@ -2055,12 +2055,15 @@ desktop:
       category: Categoría
       category_needs_classification: Clasifícalos antes como empresariales o mixtos
       choose_category: Elige una categoría
+      cleared_category: Categoría quitada · {count} sin guardar aún
       expense_category: Categoría de gasto · {count}
       inactive_only: Solo cambian los movimientos activos
       income_no_category: Ingresos {count} · sin categoría
       no_category_match: Ninguna categoría coincide
       not_saved: Aún sin guardar
       nothing: Selecciona movimientos primero
+      nothing_to_clear: Ninguno de los movimientos seleccionados tiene una categoría
+        que quitar.
       overwritten: 'antes con otra clasificación: {count}'
       partial: solo las filas cargadas
       range_differs: 'Seleccionados: {selected} · rango: {range}'
@@ -3987,8 +3990,9 @@ desktop:
       shown: Selecciona los movimientos mostrados · Ctrl+clic los añade
     selected: '{count} seleccionados'
     selection:
-      actions: Acciones de la selección
+      actions_count: Acciones · {count} seleccionados
       all_shown: 'Todos los mostrados están seleccionados: {count}.'
+      clear_category: Quitar la categoría
       hidden: 'Ocultos: {hidden} de {selected} seleccionados'
       keep_visible: Deja solo los visibles
       select_all: Selecciona los {count} de {period}
@@ -4864,6 +4868,8 @@ desktop:
       cancelled: Has cancelado la configuración.
       damaged_download: La descarga estaba dañada y no se ha podido usar.
       disk_full: No hay suficiente espacio libre en el disco.
+      engine_program_unusable: 'No se ha podido iniciar el programa de IA local: está
+        dañado o no funciona en este ordenador. Reparar la IA local lo reinstala.'
       host_unreachable: No se ha podido contactar con el servidor de descarga. Comprueba
         tu conexión a internet y vuelve a intentarlo.
       interrupted: La configuración se interrumpió antes de terminar.

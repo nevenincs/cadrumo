@@ -8,14 +8,19 @@ import {
 
 // Which local lanes are offered for the selected engine: an engine's lane
 // only while it is the selected one, every other lane unchanged, and nothing
-// held back while no readable engine is known.
+// held back while no readable engine is known. The engines are the ones the
+// service offers, not a list of the window's own.
 
 const lane = (provider: string) => ({ id: `${provider}_api`, provider });
 const LANES = [lane("local"), lane("ollama"), lane("llamacpp"), lane("alpha")];
-const readable = (engine: "llamacpp" | "ollama"): AgentLocalEngine => ({
+const readable = (
+  engine: "llamacpp" | "ollama",
+  choices: ("llamacpp" | "ollama")[] = ["llamacpp", "ollama"],
+): AgentLocalEngine => ({
   state: "readable",
   engine,
   placement: "auto",
+  choices: { engine: choices, placement: ["auto", "cpu_only"] },
   revision: "r1",
 });
 const providers = (engine: AgentLocalEngine | null) =>
@@ -32,18 +37,33 @@ test("the selected engine's lane is offered and the other engine's is not", () =
 
 test("nothing is held back without a readable engine", () => {
   expect(providers(null)).toEqual(["local", "ollama", "llamacpp", "alpha"]);
-  expect(providers({ state: "unreadable", revision: "r1" })).toEqual([
-    "local",
-    "ollama",
-    "llamacpp",
-    "alpha",
-  ]);
+  expect(
+    providers({
+      state: "unreadable",
+      choices: {
+        engine: ["llamacpp", "ollama"],
+        placement: ["auto", "cpu_only"],
+      },
+      revision: "r1",
+    }),
+  ).toEqual(["local", "ollama", "llamacpp", "alpha"]);
 });
 
 test("a lane that is no engine's is never held back", () => {
   expect(heldBackByEngine(lane("alpha"), readable("ollama"))).toBe(false);
   expect(heldBackByEngine(lane("llamacpp"), readable("ollama"))).toBe(true);
   expect(heldBackByEngine(lane("ollama"), readable("ollama"))).toBe(false);
+});
+
+test("an engine the service does not offer has no lane held back for it", () => {
+  // Only llama.cpp is offered: the Ollama lane is no engine's lane here.
+  expect(
+    heldBackByEngine(lane("ollama"), readable("llamacpp", ["llamacpp"])),
+  ).toBe(false);
+  expect(
+    heldBackByEngine(lane("llamacpp"), readable("ollama", ["ollama"])),
+  ).toBe(false);
+  expect(heldBackByEngine(lane("llamacpp"), readable("ollama"))).toBe(true);
 });
 
 test("a refusal with a word of its own says it, any other says the change failed", () => {

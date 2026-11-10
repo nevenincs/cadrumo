@@ -2057,12 +2057,14 @@ desktop:
       category: Categoria
       category_needs_classification: Classifica'ls abans com a empresarials o mixtos
       choose_category: Tria una categoria
+      cleared_category: Categoria treta · {count} encara sense desar
       expense_category: Categoria de despesa · {count}
       inactive_only: Només canvien els moviments actius
       income_no_category: Ingressos {count} · sense categoria
       no_category_match: Cap categoria coincideix
       not_saved: Encara sense desar
       nothing: Selecciona moviments primer
+      nothing_to_clear: Cap dels moviments seleccionats té una categoria que treure.
       overwritten: 'abans amb una altra classificació: {count}'
       partial: només les files carregades
       range_differs: 'Seleccionats: {selected} · rang: {range}'
@@ -3984,8 +3986,9 @@ desktop:
       shown: Selecciona els moviments mostrats · Ctrl+clic els afegeix
     selected: '{count} seleccionats'
     selection:
-      actions: Accions de la selecció
+      actions_count: Accions · {count} seleccionats
       all_shown: 'Tots els mostrats estan seleccionats: {count}.'
+      clear_category: Treu la categoria
       hidden: 'Amagats: {hidden} de {selected} seleccionats'
       keep_visible: Deixa només els visibles
       select_all: Selecciona els {count} de {period}
@@ -4861,6 +4864,8 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
+      engine_program_unusable: 'No s''ha pogut iniciar el programa d''IA local: està
+        malmès o no funciona en aquest ordinador. Reparar la IA local el reinstal·la.'
       host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
         la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.

@@ -23,9 +23,19 @@ export const catalogBusyPause = (pauses: number): number =>
 export const catalogReadBusy = (code: string): boolean =>
   code === "agent_service_busy" || code === "agent_reconnecting";
 
+/** How long the agent column waits on a busy service before the wait is
+ * noted as a warning. A normal agent start, its first model load included,
+ * ends well within it. */
+export const CATALOG_BUSY_QUIET_MS = 90_000;
+
 /** A catalog read whose busy refusals the caller answers by reading again
- * while `scheduled` says another read is coming. */
-export const catalogReadRetry = (scheduled: () => boolean): CallPlan => ({
+ * while `scheduled` says another read is coming, and notes below a warning
+ * while `expected` says the wait is still the one it expects. */
+export const catalogReadRetry = (
+  scheduled: () => boolean,
+  expected?: () => boolean,
+): CallPlan => ({
   retryable: catalogReadBusy,
   scheduled,
+  ...(expected ? { expected } : {}),
 });

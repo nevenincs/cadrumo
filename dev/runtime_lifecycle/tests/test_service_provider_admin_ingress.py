@@ -23,7 +23,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     KEYLESS_LANE,
     synthetic_document,
 )
-from cadrumo_agent_service.providers.domain.record import LocalEngine
+from cadrumo_agent_service.providers.domain.record import LocalEngine, LocalPlacement
 from cadrumo_agent_service.providers.persistence.store import (
     LOCAL_MODEL_LIST_CAPABILITY,
     LOCAL_MODEL_LIST_KEY,
@@ -71,8 +71,8 @@ class _AdminRecorder:
         scope: Literal["once", "session", "remember"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
-        engine: Literal["llamacpp", "ollama"] | None = None,
-        placement: Literal["auto", "cpu_only"] | None = None,
+        engine: LocalEngine | None = None,
+        placement: LocalPlacement | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,

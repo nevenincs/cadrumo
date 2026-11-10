@@ -22,6 +22,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.errors import LedgerStorageError
 from ....domain.transactions.models import (
     Transaction,
+    validate_stored_transaction_json,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..storage.errors import (
@@ -60,7 +61,7 @@ def validated_migrated_transactions(bucket_id: str, payloads: Mapping[str, bytes
     transactions: list[Transaction] = []
     for transaction_id in index.transaction_ids:
         payload = payloads[transaction_object_key(bucket_id, transaction_id)]
-        envelope = Envelope[Transaction].model_validate_json(payload)
+        envelope = validate_stored_transaction_json(Envelope[Transaction], payload)
         assert_transaction_row_identity(envelope.payload, bucket_id=bucket_id, expected_transaction_id=transaction_id)
         validate_migrated_deduction_fact(envelope.payload)
         transactions.append(envelope.payload)

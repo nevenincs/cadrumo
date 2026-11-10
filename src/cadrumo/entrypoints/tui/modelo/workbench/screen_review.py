@@ -6,11 +6,13 @@ import asyncio
 from functools import partial
 from typing import TYPE_CHECKING
 
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormAddressV1,
+    address_key,
+)
+from .....application.modelo.work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
-    address_key,
     edit_address,
     section_fields,
 )

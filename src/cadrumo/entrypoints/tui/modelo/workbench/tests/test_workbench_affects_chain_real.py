@@ -19,7 +19,11 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm, address_key
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormCasillaAddressV1,
+    address_key,
+)
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr

@@ -68,11 +68,13 @@ from ..work_form_export_offer import (
     form_receipt,
     revision_file_format,
 )
-from ..work_form_header import export_hold
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     TYPED_EDITABILITIES,
     ModeloFormEditability,
     ModeloFormOrigin,
+)
+from ..work_form_header import export_hold
+from ..work_form_models import (
     ModeloWorkForm,
     map_form_fields,
     revised_field,
@@ -789,3 +791,22 @@ def test_a_file_from_an_earlier_calculation_withholds_the_recording_and_a_record
     assert artefacts[ModeloExportArtefact.FICHERO_BOE].available
     assert record.reason is ModeloFormUnavailable.FILE_OUT_OF_DATE
     assert recorded.reason is ModeloFormUnavailable.RECORDED
+
+
+def test_each_artefact_is_offered_with_the_kind_of_file_it_is_saved_as(operation: PinnedAuthorityOperation) -> None:
+    form = _entered_210(
+        operation, calculation_revision_id="c" * 64, verification=VerificationCompletenessStatus.COMPLETE
+    )
+
+    offer = form_export_offer(
+        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=True, filed=False
+    )
+
+    saved = {option.artefact: option.save_format for option in offer.artefacts}
+    assert saved[ModeloExportArtefact.CALCULATION_REPORT_CSV] == "csv"
+    assert saved[ModeloExportArtefact.CALCULATION_REPORT_PDF] == "pdf"
+    assert saved[ModeloExportArtefact.CALCULATION_REVIEW_XLSX] == "xlsx"
+    assert offer.file_format is not None
+    assert saved[ModeloExportArtefact.FICHERO_BOE] == (
+        "boe" if offer.file_format is ExportLayoutFormat.FIXED_WIDTH else "xml"
+    )

@@ -23,10 +23,10 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
     resolve_iva_compensation_decision_for_calculation,
 )
+from cadrumo.application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1
@@ -196,6 +196,14 @@ def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(
         assert step.filing_year == work_unit.filing_year
         assert step.period_code == str(work_unit.period.code)
         assert step.words.strip() != ""
+        # The refusal's verdict names the command that records it, for the revision leaves
+        # (verify, file, export) as it does for the calculation.
+        verdict = exc_info.value.precondition_failure.verdict
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.modelo.iva_wallet.seed"
+        bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+        assert bound == {"filing_year": work_unit.filing_year, "period": work_unit.period.registry_token}
+        assert verdict.missing_argument_names == ("amount",)
 
 
 def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(

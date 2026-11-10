@@ -98,17 +98,19 @@ def test_historical_308_preview_keeps_filing_refusal_and_real_formula() -> None:
 
 
 @pytest.mark.parametrize(
-    "year,revision_id,period",
+    "year,revision_id",
     # aeat-dr-308-2009 admits only the quarters; the July 2011 design adds 0A.
-    [
-        (_last_full_exercise(revision), str(revision.id), period)
-        for revision, period in zip(_historical_revisions("308")[:2], ("3T", "0A"), strict=True)
-    ],
+    [(_last_full_exercise(revision), str(revision.id)) for revision in _historical_revisions("308")[:2]],
 )
-def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revision_id: str, period: str) -> None:
+def test_old_308_preview_uses_complete_name_and_old_bank_account(year: int, revision_id: str) -> None:
     source, plan = build_historical_refund_plan(year=year)
     assert source.revision.id == revision_id
     assert plan.metadata.preview_year == year
+    # The preview is the annual return where the edition serves one, and
+    # otherwise the edition's first period that year: a quarters-only design
+    # never previews a period it does not lay out.
+    served = tuple(str(token) for token in source.revision.period_selector.periods_for_year(year))
+    period = "0A" if "0A" in served else served[0]
     assert plan.metadata.preview_period == period
     titles = [
         c.value

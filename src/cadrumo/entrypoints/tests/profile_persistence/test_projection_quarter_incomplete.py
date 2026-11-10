@@ -26,7 +26,10 @@ from cadrumo.application.modelo.projection import (
     ModeloProjectServiceResult,
     project_modelo_100_from_m130,
 )
-from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, address_key
+from cadrumo.application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    address_key,
+)
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.next_step import OperationOpenWorkStepV1

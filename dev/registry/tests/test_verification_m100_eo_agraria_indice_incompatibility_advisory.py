@@ -123,14 +123,20 @@ _FORESTAL_OTHER_LETRA_CASILLAS = (
 
 
 @cache
-def _m100_2025_revision() -> ModeloRevision:
+def _m100_advisory_revision() -> ModeloRevision:
+    """The one revision that declares the advisory predicates under test."""
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "100"))
-    return modelo.revisions["2025"]
+    (revision,) = (
+        candidate
+        for candidate in modelo.revisions.values()
+        if any(predicate.predicate_id == _AB_PREDICATE_ID for predicate in candidate.verification_predicates)
+    )
+    return revision
 
 
 @cache
 def _predicate(predicate_id: str) -> VerificationPredicateDefinition:
-    revision = _m100_2025_revision()
+    revision = _m100_advisory_revision()
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 
@@ -141,7 +147,7 @@ def _forestal_predicate_for(other_letra_casilla: CasillaId) -> VerificationPredi
 
 def test_incompatibility_predicates_ship_on_the_modulos_orden_revision() -> None:
     """Every declared incompatibility predicate exists, is ADVISORY, and cites the Anexo I instrucción."""
-    revision = _m100_2025_revision()
+    revision = _m100_advisory_revision()
     predicates_by_id = {p.predicate_id: p for p in revision.verification_predicates}
 
     for predicate_id in _ALL_PREDICATE_IDS:

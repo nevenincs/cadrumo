@@ -19,6 +19,12 @@ from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.temporal import RevisionSelectionMetadata
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.generated_tree_dispositions import (
@@ -34,6 +40,43 @@ from ..pipeline.render_check import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _tree_bearing_revisions(modelo: str) -> tuple[RevisionSelectionMetadata, ...]:
+    """Return the authored revisions of one modelo that ship a committed generated tree, oldest first."""
+    shipped = {tree.revision for tree in generated_export_trees() if tree.modelo == modelo}
+    return tuple(revision for revision in authored_revisions(modelo) if str(revision.id) in shipped)
+
+
+def _newest_whole_exercise_tree(modelo: str) -> str:
+    """Name the newest tree-bearing revision that governs one whole calendar exercise and no more."""
+    (*_older, newest) = (
+        revision
+        for revision in _tree_bearing_revisions(modelo)
+        if revision.valid_to is not None
+        and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+        and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+        and revision.valid_from.year == revision.valid_to.year
+    )
+    return str(newest.id)
+
+
+def _oldest_supported_tree(modelo: str) -> str:
+    """Name the oldest tree-bearing revision that still governs a supported exercise."""
+    floor = filing_year_envelope().floor
+    return str(next(revision for revision in _tree_bearing_revisions(modelo) if _last_exercise(revision) >= floor).id)
+
+
+def _newest_tree(modelo: str) -> str:
+    return str(_tree_bearing_revisions(modelo)[-1].id)
+
+
+def _last_exercise(revision: RevisionSelectionMetadata) -> int:
+    return revision.valid_from.year if revision.valid_to is None else revision.valid_to.year
+
+
+_M347_REVISION = str(open_ended_revision("347").id)
+_M347_LAYOUT = f"generated-modelo-347-{_M347_REVISION}-fichero"
 
 
 @pytest.fixture(scope="module")
@@ -75,7 +118,8 @@ def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedReg
     that nothing is left over. A changed value would land in
     ``record_differing`` and fail here.
     """
-    comparison = compare_revision_against_committed(authority, modelo="303", revision="2025")
+    revision = _newest_whole_exercise_tree("303")
+    comparison = compare_revision_against_committed(authority, modelo="303", revision=revision)
 
     # This revision now differs in its RECORDS, and legitimately: the generator
     # derives a field's sign from the official type column where it used to
@@ -86,10 +130,10 @@ def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedReg
     # and self-retiring, and this test reads that row rather than asserting a
     # reproduction that stopped being true. The day the revision is republished
     # the row retires and the conclusive assertions below take over again.
-    disposition = {item.subject: item for item in record_drift_dispositions()}.get("303/2025")
+    disposition = {item.subject: item for item in record_drift_dispositions()}.get(f"303/{revision}")
     if disposition is not None:
         assert comparison.disposition_class == "record_drift", (
-            "303/2025 carries a drift disposition but no longer drifts; retire the row"
+            f"303/{revision} carries a drift disposition but no longer drifts; retire the row"
         )
         assert comparison.record_differing, "a drift row must name a real record difference"
         return
@@ -105,17 +149,18 @@ def test_a_published_revision_uses_its_source_defect_adjudication(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     """The read-only comparison reproduces M390 through its official-typo adjudication."""
-    comparison = compare_revision_against_committed(authority, modelo="390", revision="2022")
+    revision = _oldest_supported_tree("390")
+    comparison = compare_revision_against_committed(authority, modelo="390", revision=revision)
 
     # Same correction as the revision above: the adjudication this test exists to
     # exercise is still applied, but the tree no longer reproduces byte for byte
     # because the sign is now derived from the official type column. The
     # disposition row carries that, so this reads the row rather than asserting a
     # reproduction the correction retired.
-    disposition = {item.subject: item for item in record_drift_dispositions()}.get("390/2022")
+    disposition = {item.subject: item for item in record_drift_dispositions()}.get(f"390/{revision}")
     if disposition is not None:
         assert comparison.disposition_class == "record_drift", (
-            "390/2022 carries a drift disposition but no longer drifts; retire the row"
+            f"390/{revision} carries a drift disposition but no longer drifts; retire the row"
         )
         assert comparison.only_committed == () and comparison.only_rendered == (), (
             "a drift is a changed record, never a missing or an extra one"
@@ -128,7 +173,7 @@ def test_a_published_revision_uses_its_source_defect_adjudication(
 
 def test_a_republished_attestation_matches_its_current_authorities(authority: ValidatedRegistryAuthority) -> None:
     """A repaired tree reproduces both its records and its generation manifest."""
-    comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-2025")
+    comparison = compare_revision_against_committed(authority, modelo="296", revision=_newest_tree("296"))
     assert comparison.reproduced
     assert comparison.semantically_reproduced
     assert comparison.record_differing == ()
@@ -147,7 +192,7 @@ def test_record_drift_is_reported_as_such(tmp_path: Path) -> None:
     compared against the real one. Do not delete it: this is the assertion that
     keeps an unsafe republication from being reported as a stale manifest.
     """
-    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", _M347_REVISION, "export")
     drifted = tmp_path / "export"
     shutil.copytree(real, drifted)
     declarado = drifted / "0002-record-m347-declarado.toml"
@@ -157,8 +202,8 @@ def test_record_drift_is_reported_as_such(tmp_path: Path) -> None:
 
     comparison = compare_export_tree_roots(
         modelo="347",
-        revision="2025-y-siguientes",
-        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        revision=_M347_REVISION,
+        layout_id=_M347_LAYOUT,
         committed_root=drifted,
         rendered_root=real,
     )
@@ -177,7 +222,7 @@ def test_a_stale_manifest_names_the_member_that_moved(tmp_path: Path) -> None:
     by which one it is. The case is constructed from a copy of a real tree whose
     manifest attests a different loader digest; every record file is untouched.
     """
-    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", _M347_REVISION, "export")
     stale = tmp_path / "export"
     shutil.copytree(real, stale)
     manifest_path = stale / "_generation.provenance.json"
@@ -187,8 +232,8 @@ def test_a_stale_manifest_names_the_member_that_moved(tmp_path: Path) -> None:
 
     comparison = compare_export_tree_roots(
         modelo="347",
-        revision="2025-y-siguientes",
-        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        revision=_M347_REVISION,
+        layout_id=_M347_LAYOUT,
         committed_root=stale,
         rendered_root=real,
     )
@@ -199,15 +244,15 @@ def test_a_stale_manifest_names_the_member_that_moved(tmp_path: Path) -> None:
 
 def test_an_unparseable_manifest_is_never_reported_as_agreeing(tmp_path: Path) -> None:
     """A corrupt manifest names itself rather than reporting no differing member."""
-    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", _M347_REVISION, "export")
     corrupt = tmp_path / "export"
     shutil.copytree(real, corrupt)
     (corrupt / "_generation.provenance.json").write_bytes(b"{not json")
 
     comparison = compare_export_tree_roots(
         modelo="347",
-        revision="2025-y-siguientes",
-        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        revision=_M347_REVISION,
+        layout_id=_M347_LAYOUT,
         committed_root=corrupt,
         rendered_root=real,
     )

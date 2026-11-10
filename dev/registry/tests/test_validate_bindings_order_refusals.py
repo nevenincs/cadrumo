@@ -36,9 +36,11 @@ import pytest
 
 from cadrumo.core.aggregation import BindingAggregationOp
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import validate_binding_registration_section
+from .authored_edition_support import authored_revisions
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -47,7 +49,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
-_M303_REVISION = "2025"
+_M303_WHOLE_YEAR = [
+    revision
+    for revision in authored_revisions("303")
+    if revision.valid_to is not None
+    and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+    and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+][-1]
+_M303_REVISION = str(_M303_WHOLE_YEAR.id)
+_M303_DESIGN = next(str(ref) for ref in _M303_WHOLE_YEAR.source_refs if str(ref).startswith("aeat-dr-303-"))
 _M303_PRORRATA_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M303_PRORRATA_BLOCK = f'''
 [[revisions.{_M303_REVISION}.bindings]]
@@ -58,7 +68,7 @@ provider = {{ kind = "prorrata_regularizacion", source_modelo = "303", source_ca
 regularizacion_output = "modelo_303_casilla_44" }}
 value = {{ data_type = "money", channel = "decimal" }}
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["{_M303_DESIGN}", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.{_M303_REVISION}.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -76,7 +86,7 @@ id = "{binding_id}"
 provider = {{ kind = "bienes_inversion_regularizacion", source_modelo = "303", regularizacion_output = "{output}" }}
 value = {{ data_type = "money", channel = "decimal" }}
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+source_refs = ["{_M303_DESIGN}", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.{_M303_REVISION}.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -84,7 +94,7 @@ required_text = ["modelo 303"]
 '''
 
 
-_M720_REVISION = "2013-y-siguientes"
+_M720_REVISION = str(open_ended_revision("720").id)
 _M720_ROW_FIELD = "asset_class_code"
 _M720_RECORD = "bien"
 _M720_ROW_BLOCK = f'''

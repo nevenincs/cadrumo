@@ -58,6 +58,9 @@ export type LedgerPageProps = {
   contribute(actions: (() => Action[]) | null): void;
   /** Puts text on the clipboard through the host. */
   copy(text: string): Promise<void>;
+  /** Reads the host's clipboard; without it the grid keeps to the browser's
+   * own paste event. */
+  paste?(): Promise<string>;
   /** Opens an official address in the system browser, as the window does
    * for any external link. */
   onOpenLink?(url: string): void;

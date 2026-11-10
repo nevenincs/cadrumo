@@ -28,21 +28,29 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
+from .synthetic_delta_edition_support import (
+    PREDECESSOR_EDITION,
+    PREDECESSOR_EDITION_YEAR,
+    SUCCESSOR_EDITION,
+    SUCCESSOR_EDITION_YEAR,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_ID: Final = "999"
 _ARTICLE: Final = "ley-58-2003:art-29"
-_ORDEN_2024: Final = "orden-hac-100-2023:art-1"
-_ORDEN_2025: Final = "orden-hac-200-2024:art-1"
-_SOURCE_2024: Final = "aeat-dr-999-2024"
-_SOURCE_2025: Final = "aeat-dr-999-2025"
+_ORDEN_PREDECESSOR: Final = "orden-hac-100-2023:art-1"
+_ORDEN_SUCCESSOR: Final = "orden-hac-200-2024:art-1"
+_SOURCE_PREDECESSOR: Final = "aeat-dr-999-2024"
+_SOURCE_SUCCESSOR: Final = "aeat-dr-999-2025"
 _OWN_SOURCE: Final = "aeat-instrucciones-999"
 _BUNDLED_REGISTRY: Final = bundled_path("registry", "aeat")
+_M111_EDITION: Final = str(open_ended_revision("111").id)
 
 
 def _casilla(
@@ -126,16 +134,16 @@ def _single_edition(root: Path, *, source_default: str | None) -> Path:
     modelo_dir = _modelo_root(root)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
         source_default=source_default,
         casillas=(
-            _casilla("2025", "01", lineage="silente")
-            + _casilla("2025", "02", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,))
-            + _casilla("2025", "03", lineage="solo-fuente", source_refs=(_OWN_SOURCE,))
+            _casilla(SUCCESSOR_EDITION, "01", lineage="silente")
+            + _casilla(SUCCESSOR_EDITION, "02", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,))
+            + _casilla(SUCCESSOR_EDITION, "03", lineage="solo-fuente", source_refs=(_OWN_SOURCE,))
             + _casilla(
-                "2025",
+                SUCCESSOR_EDITION,
                 "04",
                 lineage="con-restriccion",
                 legal_refs=(_ARTICLE,),
@@ -143,7 +151,7 @@ def _single_edition(root: Path, *, source_default: str | None) -> Path:
                 constraints='sign = "non_negative"',
             )
             + _casilla(
-                "2025",
+                SUCCESSOR_EDITION,
                 "05",
                 lineage="restriccion-propia",
                 constraints=f'sign = "non_negative", legal_refs = ["{_ARTICLE}"], source_refs = ["{_OWN_SOURCE}"]',
@@ -157,28 +165,33 @@ def test_a_row_stating_none_takes_the_editions_defaults_and_a_row_stating_its_ow
     tmp_path: Path,
 ) -> None:
     """Replace, never merge: each field is decided independently, and a stated value survives whole."""
-    revision = load_modelo_directory(_single_edition(tmp_path, source_default=_SOURCE_2025)).revisions["2025"]
+    revision = load_modelo_directory(_single_edition(tmp_path, source_default=_SOURCE_SUCCESSOR)).revisions[
+        SUCCESSOR_EDITION
+    ]
 
-    assert _refs(revision, "01") == ((_ORDEN_2025,), (_SOURCE_2025,))
+    assert _refs(revision, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
     assert _refs(revision, "02") == ((_ARTICLE,), (_OWN_SOURCE,))
-    assert _refs(revision, "03") == ((_ORDEN_2025,), (_OWN_SOURCE,))
-    assert revision.casilla_source_refs == (_SOURCE_2025,)
+    assert _refs(revision, "03") == ((_ORDEN_SUCCESSOR,), (_OWN_SOURCE,))
+    assert revision.casilla_source_refs == (_SOURCE_SUCCESSOR,)
 
 
 def test_a_constraints_table_is_defaulted_from_the_edition_not_from_its_row(tmp_path: Path) -> None:
     """Row 04 states its own source; its constraints state none and take the edition's, not the row's."""
-    revision = load_modelo_directory(_single_edition(tmp_path, source_default=_SOURCE_2025)).revisions["2025"]
+    revision = load_modelo_directory(_single_edition(tmp_path, source_default=_SOURCE_SUCCESSOR)).revisions[
+        SUCCESSOR_EDITION
+    ]
 
-    assert _constraint_refs(revision, "04") == ((_ORDEN_2025,), (_SOURCE_2025,))
+    assert _constraint_refs(revision, "04") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
     assert _refs(revision, "04") == ((_ARTICLE,), (_OWN_SOURCE,))
     assert _constraint_refs(revision, "05") == ((_ARTICLE,), (_OWN_SOURCE,))
-    assert _refs(revision, "05") == ((_ORDEN_2025,), (_SOURCE_2025,))
+    assert _refs(revision, "05") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
 
 
 def test_without_a_declared_source_default_a_row_stating_no_source_is_refused(tmp_path: Path) -> None:
     """The teeth of the proofs above: nothing is inferred when the edition declares no default."""
     with pytest.raises(
-        RegistryLoadError, match=r"(?s)invalid revision '2025'.*casillas\.0\.source_refs\s+Field required"
+        RegistryLoadError,
+        match=rf"(?s)invalid revision '{SUCCESSOR_EDITION}'.*casillas\.0\.source_refs\s+Field required",
     ):
         load_modelo_directory(_single_edition(tmp_path, source_default=None))
 
@@ -187,11 +200,11 @@ def test_an_explicitly_empty_row_value_is_refused_rather_than_defaulted(tmp_path
     modelo_dir = _modelo_root(tmp_path)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
-        source_default=_SOURCE_2025,
-        casillas=_casilla("2025", "01", lineage="vacia", source_refs=()),
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
+        source_default=_SOURCE_SUCCESSOR,
+        casillas=_casilla(SUCCESSOR_EDITION, "01", lineage="vacia", source_refs=()),
     )
 
     with pytest.raises(RegistryLoadError, match=r"casillas\.0\.source_refs\s+Tuple should have at least 1 item"):
@@ -201,9 +214,10 @@ def test_an_explicitly_empty_row_value_is_refused_rather_than_defaulted(tmp_path
 def test_the_source_default_is_refused_outside_the_manifest(tmp_path: Path) -> None:
     """A default grounding every row of the edition must be readable in ``revision.toml``."""
     modelo_dir = _single_edition(tmp_path, source_default=None)
-    fragment = modelo_dir / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    fragment = modelo_dir / "revisions" / SUCCESSOR_EDITION / "casillas" / "0001-casillas.toml"
     fragment.write_text(
-        fragment.read_text(encoding="utf-8") + f'[revisions."2025"]\ncasilla_source_refs = ["{_SOURCE_2025}"]\n',
+        fragment.read_text(encoding="utf-8")
+        + f'[revisions."{SUCCESSOR_EDITION}"]\ncasilla_source_refs = ["{_SOURCE_SUCCESSOR}"]\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -217,20 +231,22 @@ def test_an_edition_declaring_no_default_dumps_without_the_field(tmp_path: Path)
     modelo_dir = _modelo_root(tmp_path)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
         source_default=None,
-        casillas=_casilla("2025", "01", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,)),
+        casillas=_casilla(
+            SUCCESSOR_EDITION, "01", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,)
+        ),
     )
-    revision = load_modelo_directory(modelo_dir).revisions["2025"]
+    revision = load_modelo_directory(modelo_dir).revisions[SUCCESSOR_EDITION]
 
     assert revision.casilla_source_refs is None
     assert "casilla_source_refs" not in revision.model_dump()
     assert (
         "casilla_source_refs"
-        in load_modelo_directory(_single_edition(tmp_path / "declared", source_default=_SOURCE_2025))
-        .revisions["2025"]
+        in load_modelo_directory(_single_edition(tmp_path / "declared", source_default=_SOURCE_SUCCESSOR))
+        .revisions[SUCCESSOR_EDITION]
         .model_dump()
     )
 
@@ -243,23 +259,23 @@ def _two_editions(root: Path) -> Path:
     modelo_dir = _modelo_root(root)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
-        orden=_ORDEN_2024,
-        source_default=_SOURCE_2024,
+        PREDECESSOR_EDITION,
+        year=PREDECESSOR_EDITION_YEAR,
+        orden=_ORDEN_PREDECESSOR,
+        source_default=_SOURCE_PREDECESSOR,
         casillas=(
-            _casilla("2024", "01", lineage="silente", constraints='sign = "non_negative"')
-            + _casilla("2024", "02", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,))
+            _casilla(PREDECESSOR_EDITION, "01", lineage="silente", constraints='sign = "non_negative"')
+            + _casilla(PREDECESSOR_EDITION, "02", lineage="propia", legal_refs=(_ARTICLE,), source_refs=(_OWN_SOURCE,))
         ),
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
-        source_default=_SOURCE_2025,
-        manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "03", lineage="nueva"),
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
+        source_default=_SOURCE_SUCCESSOR,
+        manifest_extra=f'predecessor = "{PREDECESSOR_EDITION}"\n',
+        casillas=_casilla(SUCCESSOR_EDITION, "03", lineage="nueva"),
     )
     return modelo_dir
 
@@ -272,19 +288,19 @@ def test_an_inherited_row_stating_none_takes_the_successors_defaults(tmp_path: P
     assertion on 2025 below would then name the 2024 value instead.
     """
     definition = load_modelo_directory(_two_editions(tmp_path))
-    predecessor, successor = definition.revisions["2024"], definition.revisions["2025"]
+    predecessor, successor = definition.revisions[PREDECESSOR_EDITION], definition.revisions[SUCCESSOR_EDITION]
 
     assert [casilla.id for casilla in successor.casillas] == ["01", "02", "03"]
-    assert _refs(predecessor, "01") == ((_ORDEN_2024,), (_SOURCE_2024,))
-    assert _constraint_refs(predecessor, "01") == ((_ORDEN_2024,), (_SOURCE_2024,))
-    assert _refs(successor, "01") == ((_ORDEN_2025,), (_SOURCE_2025,))
-    assert _constraint_refs(successor, "01") == ((_ORDEN_2025,), (_SOURCE_2025,))
-    assert _refs(successor, "03") == ((_ORDEN_2025,), (_SOURCE_2025,))
+    assert _refs(predecessor, "01") == ((_ORDEN_PREDECESSOR,), (_SOURCE_PREDECESSOR,))
+    assert _constraint_refs(predecessor, "01") == ((_ORDEN_PREDECESSOR,), (_SOURCE_PREDECESSOR,))
+    assert _refs(successor, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
+    assert _constraint_refs(successor, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
+    assert _refs(successor, "03") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
 
 
 def test_an_inherited_row_stating_its_own_refs_keeps_them(tmp_path: Path) -> None:
     """The predecessor author grounded row 02 explicitly, and inheritance carries that statement unchanged."""
-    successor = load_modelo_directory(_two_editions(tmp_path)).revisions["2025"]
+    successor = load_modelo_directory(_two_editions(tmp_path)).revisions[SUCCESSOR_EDITION]
 
     assert _refs(successor, "02") == ((_ARTICLE,), (_OWN_SOURCE,))
 
@@ -292,15 +308,16 @@ def test_an_inherited_row_stating_its_own_refs_keeps_them(tmp_path: Path) -> Non
 def test_a_successor_without_a_source_default_cannot_ground_an_inherited_silent_row(tmp_path: Path) -> None:
     """Teeth for the ordering: the predecessor's default does not rescue a successor that declares none."""
     modelo_dir = _two_editions(tmp_path)
-    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    manifest = modelo_dir / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     manifest.write_text(
-        manifest.read_text(encoding="utf-8").replace(f'casilla_source_refs = ["{_SOURCE_2025}"]\n', ""),
+        manifest.read_text(encoding="utf-8").replace(f'casilla_source_refs = ["{_SOURCE_SUCCESSOR}"]\n', ""),
         encoding="utf-8",
         newline="\n",
     )
 
     with pytest.raises(
-        RegistryLoadError, match=r"(?s)invalid revision '2025'.*casillas\.0\.source_refs\s+Field required"
+        RegistryLoadError,
+        match=rf"(?s)invalid revision '{SUCCESSOR_EDITION}'.*casillas\.0\.source_refs\s+Field required",
     ):
         load_modelo_directory(modelo_dir)
 
@@ -312,11 +329,11 @@ def _additions_edition(root: Path, *, source_default: str | None, row: str) -> P
     modelo_dir = _modelo_root(root)
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
         source_default=source_default,
-        casillas=row + _casilla("2025", "02", lineage="propia", source_refs=(_OWN_SOURCE,)),
+        casillas=row + _casilla(SUCCESSOR_EDITION, "02", lineage="propia", source_refs=(_OWN_SOURCE,)),
     )
     return modelo_dir
 
@@ -324,23 +341,25 @@ def _additions_edition(root: Path, *, source_default: str | None, row: str) -> P
 def test_additions_extend_the_default_with_the_default_first_and_each_reference_once(tmp_path: Path) -> None:
     """Additions follow the default; a stated full value beside them still replaces it."""
     row = _casilla(
-        "2025",
+        SUCCESSOR_EDITION,
         "01",
         lineage="con-procedimiento",
-        additional_source_refs=(_OWN_SOURCE, _SOURCE_2025),
+        additional_source_refs=(_OWN_SOURCE, _SOURCE_SUCCESSOR),
         constraints=f'sign = "non_negative", additional_source_refs = ["{_OWN_SOURCE}"]',
     )
-    revision = load_modelo_directory(_additions_edition(tmp_path, source_default=_SOURCE_2025, row=row)).revisions[
-        "2025"
+    revision = load_modelo_directory(_additions_edition(tmp_path, source_default=_SOURCE_SUCCESSOR, row=row)).revisions[
+        SUCCESSOR_EDITION
     ]
 
-    assert _refs(revision, "01") == ((_ORDEN_2025,), (_SOURCE_2025, _OWN_SOURCE))
-    assert _constraint_refs(revision, "01") == ((_ORDEN_2025,), (_SOURCE_2025, _OWN_SOURCE))
-    assert _refs(revision, "02") == ((_ORDEN_2025,), (_OWN_SOURCE,))
+    assert _refs(revision, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR, _OWN_SOURCE))
+    assert _constraint_refs(revision, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR, _OWN_SOURCE))
+    assert _refs(revision, "02") == ((_ORDEN_SUCCESSOR,), (_OWN_SOURCE,))
     assert "additional_source_refs" not in revision.model_dump()["casillas"][0]
 
 
-_ADDITIONS_ROW: Final = _casilla("2025", "01", lineage="con-procedimiento", additional_source_refs=(_OWN_SOURCE,))
+_ADDITIONS_ROW: Final = _casilla(
+    SUCCESSOR_EDITION, "01", lineage="con-procedimiento", additional_source_refs=(_OWN_SOURCE,)
+)
 
 
 @pytest.mark.parametrize(
@@ -348,26 +367,30 @@ _ADDITIONS_ROW: Final = _casilla("2025", "01", lineage="con-procedimiento", addi
     [
         pytest.param(
             _casilla(
-                "2025", "01", lineage="con-procedimiento", source_refs=(_OWN_SOURCE,), additional_source_refs=("x",)
+                SUCCESSOR_EDITION,
+                "01",
+                lineage="con-procedimiento",
+                source_refs=(_OWN_SOURCE,),
+                additional_source_refs=("x",),
             ),
-            _SOURCE_2025,
+            _SOURCE_SUCCESSOR,
             r"casilla '01' states both source_refs and additional_source_refs",
             id="both-on-the-row",
         ),
         pytest.param(
             _casilla(
-                "2025",
+                SUCCESSOR_EDITION,
                 "01",
                 lineage="con-procedimiento",
                 constraints=f'sign = "non_negative", source_refs = ["{_OWN_SOURCE}"], additional_source_refs = ["x"]',
             ),
-            _SOURCE_2025,
+            _SOURCE_SUCCESSOR,
             r"casilla '01' constraints states both source_refs and additional_source_refs",
             id="both-on-the-constraints",
         ),
         pytest.param(
-            _casilla("2025", "01", lineage="con-procedimiento", additional_source_refs=()),
-            _SOURCE_2025,
+            _casilla(SUCCESSOR_EDITION, "01", lineage="con-procedimiento", additional_source_refs=()),
+            _SOURCE_SUCCESSOR,
             r"casilla '01' additional_source_refs must be a non-empty array of source reference ids",
             id="empty-additions",
         ),
@@ -382,13 +405,13 @@ _ADDITIONS_ROW: Final = _casilla("2025", "01", lineage="con-procedimiento", addi
 def test_additions_are_refused_where_they_cannot_extend_a_default_and_the_repaired_tree_loads(
     tmp_path: Path, row: str, source_default: str | None, refusal: str
 ) -> None:
-    with pytest.raises(RegistryLoadError, match=rf"revision '2025': {refusal}"):
+    with pytest.raises(RegistryLoadError, match=rf"revision '{SUCCESSOR_EDITION}': {refusal}"):
         load_modelo_directory(_additions_edition(tmp_path / "refused", source_default=source_default, row=row))
 
     repaired = load_modelo_directory(
-        _additions_edition(tmp_path / "repaired", source_default=_SOURCE_2025, row=_ADDITIONS_ROW)
+        _additions_edition(tmp_path / "repaired", source_default=_SOURCE_SUCCESSOR, row=_ADDITIONS_ROW)
     )
-    assert _refs(repaired.revisions["2025"], "01") == ((_ORDEN_2025,), (_SOURCE_2025, _OWN_SOURCE))
+    assert _refs(repaired.revisions[SUCCESSOR_EDITION], "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR, _OWN_SOURCE))
 
 
 def test_additions_inherit_with_the_row_and_extend_the_successors_default(tmp_path: Path) -> None:
@@ -401,12 +424,12 @@ def test_additions_inherit_with_the_row_and_extend_the_successors_default(tmp_pa
     modelo_dir = _modelo_root(tmp_path)
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
-        orden=_ORDEN_2024,
-        source_default=_SOURCE_2024,
+        PREDECESSOR_EDITION,
+        year=PREDECESSOR_EDITION_YEAR,
+        orden=_ORDEN_PREDECESSOR,
+        source_default=_SOURCE_PREDECESSOR,
         casillas=_casilla(
-            "2024",
+            PREDECESSOR_EDITION,
             "01",
             lineage="con-procedimiento",
             additional_source_refs=(_OWN_SOURCE,),
@@ -415,21 +438,21 @@ def test_additions_inherit_with_the_row_and_extend_the_successors_default(tmp_pa
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        orden=_ORDEN_2025,
-        source_default=_SOURCE_2025,
-        manifest_extra='predecessor = "2024"\n',
-        casillas=_casilla("2025", "03", lineage="nueva"),
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        orden=_ORDEN_SUCCESSOR,
+        source_default=_SOURCE_SUCCESSOR,
+        manifest_extra=f'predecessor = "{PREDECESSOR_EDITION}"\n',
+        casillas=_casilla(SUCCESSOR_EDITION, "03", lineage="nueva"),
     )
     definition = load_modelo_directory(modelo_dir)
-    predecessor, successor = definition.revisions["2024"], definition.revisions["2025"]
+    predecessor, successor = definition.revisions[PREDECESSOR_EDITION], definition.revisions[SUCCESSOR_EDITION]
 
-    assert _refs(predecessor, "01") == ((_ORDEN_2024,), (_SOURCE_2024, _OWN_SOURCE))
-    assert _constraint_refs(predecessor, "01") == ((_ORDEN_2024,), (_SOURCE_2024, _OWN_SOURCE))
-    assert _refs(successor, "01") == ((_ORDEN_2025,), (_SOURCE_2025, _OWN_SOURCE))
-    assert _constraint_refs(successor, "01") == ((_ORDEN_2025,), (_SOURCE_2025, _OWN_SOURCE))
-    assert _refs(successor, "03") == ((_ORDEN_2025,), (_SOURCE_2025,))
+    assert _refs(predecessor, "01") == ((_ORDEN_PREDECESSOR,), (_SOURCE_PREDECESSOR, _OWN_SOURCE))
+    assert _constraint_refs(predecessor, "01") == ((_ORDEN_PREDECESSOR,), (_SOURCE_PREDECESSOR, _OWN_SOURCE))
+    assert _refs(successor, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR, _OWN_SOURCE))
+    assert _constraint_refs(successor, "01") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR, _OWN_SOURCE))
+    assert _refs(successor, "03") == ((_ORDEN_SUCCESSOR,), (_SOURCE_SUCCESSOR,))
 
 
 # ── real corpus ─────────────────────────────────────────────────────────────
@@ -482,12 +505,12 @@ def test_the_source_default_resolves_against_the_catalogue_even_when_no_row_take
     """Every modelo 111 row states its own sources, so only the edition-level check can see the default."""
     root = _copy_registry(tmp_path / "registry" / "aeat", "111")
     _declare_in_manifest(
-        root / "modelos" / "111" / "revisions" / "2019-y-siguientes", f'casilla_source_refs = ["{declared}"]\n'
+        root / "modelos" / "111" / "revisions" / _M111_EDITION, f'casilla_source_refs = ["{declared}"]\n'
     )
 
     if failure is not None:
         with pytest.raises(RegistryValidationError, match=re.escape(failure)):
             compile_validated_authority(root, bundled_path())
         return
-    revision = compile_validated_authority(root, bundled_path()).modelo("111").revisions["2019-y-siguientes"]
+    revision = compile_validated_authority(root, bundled_path()).modelo("111").revisions[_M111_EDITION]
     assert revision.casilla_source_refs == (declared,)

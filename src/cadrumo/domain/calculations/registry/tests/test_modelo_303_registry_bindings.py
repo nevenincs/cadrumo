@@ -16,6 +16,7 @@ from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope, revision_covering
 from .modelo_303_registry_constants import (
     M303_BIENES_INVERSION_REGULARIZACION_BINDING,
     M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
@@ -34,10 +35,13 @@ from .modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_FLOOR_REVISION = str(revision_covering("303", filing_year_envelope().floor).id)
+_OBSERVATION_YEAR = filing_year_envelope().horizon
+
 
 def test_modelo_303_live_cross_references_forbid_writes() -> None:
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_FLOOR_REVISION]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     static_ref = cross_refs["modelo-303-static-documentation"]
@@ -68,7 +72,7 @@ def test_modelo_303_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_FLOOR_REVISION]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
 
     assert "modelo-303-filing" in construct.application_links
@@ -83,7 +87,7 @@ def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings(
     three IVA flow directions so the runtime can resolve cuota
     devengada / cuota deducible / INVERSION_SUJETO_PASIVO cross-modelo."""
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_FLOOR_REVISION]
 
     iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-303-iva-repercutido-general-cuota" in iva_bindings
@@ -107,12 +111,12 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     )
 
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_FLOOR_REVISION]
 
     observations = [
         IvaLedgerObservation(
             ledger_id="rep-general-1",
-            transaction_date=date(2025, 6, 1),
+            transaction_date=date(_OBSERVATION_YEAR, 6, 1),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -122,7 +126,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         ),
         IvaLedgerObservation(
             ledger_id="rep-reducido-1",
-            transaction_date=date(2025, 6, 3),
+            transaction_date=date(_OBSERVATION_YEAR, 6, 3),
             category=IvaCategory("domestic_reduced"),
             rate_kind=IvaRateKind("reduced"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -132,7 +136,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         ),
         IvaLedgerObservation(
             ledger_id="rep-super-1",
-            transaction_date=date(2025, 6, 4),
+            transaction_date=date(_OBSERVATION_YEAR, 6, 4),
             category=IvaCategory("domestic_super_reduced"),
             rate_kind=IvaRateKind("super_reduced"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -142,7 +146,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         ),
         IvaLedgerObservation(
             ledger_id="sop-interior-1",
-            transaction_date=date(2025, 6, 5),
+            transaction_date=date(_OBSERVATION_YEAR, 6, 5),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -158,7 +162,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         ),
         IvaLedgerObservation(
             ledger_id="auto-ica-1",
-            transaction_date=date(2025, 6, 6),
+            transaction_date=date(_OBSERVATION_YEAR, 6, 6),
             category=IvaCategory("intra_community_acquisition_reverse_charge"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
@@ -250,7 +254,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     """The Modelo 303 construct must list each ledger_iva_aggregation
     binding so downstream consumers see a complete construct envelope."""
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2022"]
+    revision = modelo.revisions[_FLOOR_REVISION]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
     assert "modelo-303-iva-repercutido-general-cuota" in construct.bindings
     assert "modelo-303-iva-repercutido-reducido-cuota" in construct.bindings
@@ -259,7 +263,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     revision_id: str,
 ) -> None:
@@ -283,7 +287,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     assert casilla_43.binding == M303_BIENES_INVERSION_REGULARIZACION_BINDING
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     revision_id: str,
 ) -> None:
@@ -314,7 +318,7 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -325,7 +329,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]

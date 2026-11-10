@@ -27,6 +27,9 @@ _MODELO_DIR = "modelo_999"
 _REGISTERED_DIGEST = "a" * 64
 _CAPTURED_DIGEST = "b" * 64
 _UNCAPTURED_DIGEST = "c" * 64
+# Capture dates are provenance the derivation copies; any instants serve.
+_FIRST_RETRIEVED = "1980-05-03"
+_SECOND_RETRIEVED = "1980-05-04"
 
 _SOURCES_TOML = f"""\
 [sources."aeat-dr-999-2019"]
@@ -36,7 +39,7 @@ kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/{_MODELO_DIR}/files/01-999-ejercicio-2019.xlsx"
 sha256 = "{_REGISTERED_DIGEST}"
 bytes = 11
-retrieved_at = 2026-05-03
+retrieved_at = {_FIRST_RETRIEVED}
 source_url = "https://sede.agenciatributaria.gob.es/static_files/999/DR999v01.xlsx"
 review_status = "pending_review"
 """
@@ -68,7 +71,7 @@ def _bundle(tmp_path: Path) -> tuple[Path, Path]:
                         "stored_path": "files/01-999-ejercicio-2019.xlsx",
                         "sha256": _REGISTERED_DIGEST,
                         "bytes": 11,
-                        "retrieved_at": "2026-05-03",
+                        "retrieved_at": _FIRST_RETRIEVED,
                         "url": "https://sede.agenciatributaria.gob.es/static_files/999/DR999v01.xlsx",
                         "title": "Diseño de registro del modelo 999. Ejercicio 2019",
                     },
@@ -76,7 +79,7 @@ def _bundle(tmp_path: Path) -> tuple[Path, Path]:
                         "stored_path": "files/02-999-ejercicio-2020.xlsx",
                         "sha256": _CAPTURED_DIGEST,
                         "bytes": 14,
-                        "retrieved_at": "2026-05-04",
+                        "retrieved_at": _SECOND_RETRIEVED,
                         "url": "https://sede.agenciatributaria.gob.es/static_files/999/DR999v02.xlsx",
                         "title": "Diseño de registro del modelo 999. Ejercicio 2020 y siguientes",
                     },
@@ -111,7 +114,7 @@ def test_a_candidate_row_carries_the_capture_record_verbatim(tmp_path: Path) -> 
 
     assert row.sha256 == _CAPTURED_DIGEST
     assert row.bytes == 14
-    assert row.retrieved_at == "2026-05-04"
+    assert row.retrieved_at == _SECOND_RETRIEVED
     assert row.source_url.endswith("DR999v02.xlsx")
     assert row.owning_toml.endswith("legal/designs.toml")
 

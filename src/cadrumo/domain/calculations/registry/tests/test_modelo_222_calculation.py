@@ -17,6 +17,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from .authored_editions import filing_year_envelope
 from .cross_dependency_calculation_support import casilla_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -33,10 +34,12 @@ def _calculate(
     registry_snapshot: Callable[..., RegistrySnapshot],
     values: Mapping[str, str],
 ) -> dict[str, Decimal]:
-    snapshot = registry_snapshot("222", 2025, "1P", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = registry_snapshot("222", filing_year_envelope().horizon, "1P", grade=RegistryAuthorityGrade.CALCULATION)
     assert {formula.target_casilla_id for formula in snapshot.revision.formulas} == _FORMULA_TARGETS
     inputs = casilla_inputs({box: Decimal(values.get(box, "0")) for box in _MANUAL_BOXES})
-    result = calculate_registry_snapshot(snapshot, inputs=inputs, date_context={"filing_period": date(2025, 4, 20)})
+    result = calculate_registry_snapshot(
+        snapshot, inputs=inputs, date_context={"filing_period": date(filing_year_envelope().horizon, 4, 20)}
+    )
     return {entry.target_casilla_id: entry.value for entry in result.entries}
 
 
@@ -46,7 +49,7 @@ def test_modalidad_40_3_single_rate_group_reaches_the_cantidad_a_ingresar(
     computed = _calculate(
         registry_snapshot,
         {
-            "04": "100000", "05": "20000", "07": "5000", "06": "10000", "37": "2000", "08": "3000",
+            "04": "100000", "05": "20000", "07": "5000", "06": "10000", "37": "2500", "08": "2500",
             "11": "4000", "12": "1000", "14": "3000", "17": "24",
             "49": "300", "50": "200", "51": "1000", "58": "100",
             "27": "500", "28": "1500", "29": "100", "30": "5000", "33": "12000",
@@ -54,7 +57,7 @@ def test_modalidad_40_3_single_rate_group_reaches_the_cantidad_a_ingresar(
     )  # fmt: skip
 
     assert computed["38"] == Decimal("25000")  # 20000 + 0 + 5000
-    assert computed["39"] == Decimal("15000")  # 10000 + 2000 + 3000
+    assert computed["39"] == Decimal("15000")  # 10000 + 2500 + 2500
     assert computed["10"] == Decimal("110000")  # 100000 + 25000 - 15000 + 0 - 0
     assert computed["13"] == Decimal("113000")  # 110000 + 4000 - 1000
     assert computed["16"] == Decimal("110000")  # 113000 - 3000

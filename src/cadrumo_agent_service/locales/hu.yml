@@ -108,6 +108,11 @@ desktop:
     effort_medium: Közepes
     effort_ultra: Ultra
     effort_xhigh: Nagyon magas
+    engine_door_local_ai_setup: Helyi MI javítása
+    engine_not_running: A helyi MI motorja nem fut.
+    engine_reason_answer_unreadable: Válaszolt, de nem a várt módon.
+    engine_reason_no_answer_in_time: Nem válaszolt időben.
+    engine_reason_not_reachable: Ezen a számítógépen nem érhető el.
     files_summary: 'Fájlok: {count} · {size}'
     hide: Ügynök elrejtése
     history: Előzmények
@@ -132,6 +137,9 @@ desktop:
     message_label: Üzenet
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
+    model_does_not_fit_refused: Ez a modell most nem fér el abban, amit ez a
+      számítógép biztosítani tud neki. Válassz kisebb modellt, vagy módosítsd,
+      hol futnak a modellek a helyi MI beállításaiban.
     model_not_installed: '{name} (nincs letöltve)'
     model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
       vagy válassz másik modellt.
@@ -300,6 +308,7 @@ desktop:
     change_failed: Nem sikerült menteni. Frissíts, és próbáld újra.
     connection_api: API-kulcs
     connection_app: Telepített alkalmazás
+    connection_local: Ezen a számítógépen
     console_command_label: 'Futtasd ezt a parancsot terminálban:'
     detail_app_missing: Telepítsd a(z) {provider} alkalmazást, majd jelentkezz be.
     detail_off: 'Kikapcsolva: az ügynök nem ajánlja fel és nem használja.'
@@ -330,6 +339,7 @@ desktop:
     local_model_download: Letöltés
     local_model_installed: Letöltve
     local_model_licence: 'Licenc: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
     local_model_licence_unknown: 'Licenc: nincs megadva'
     local_model_remove: Eltávolítás
     local_model_remove_failed: A Cadrumo nem tudta eltávolítani a modellt. Próbáld

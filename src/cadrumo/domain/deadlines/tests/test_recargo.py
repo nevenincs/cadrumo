@@ -9,6 +9,7 @@ completo de retraso"), so the schedule is keyed on completed months.
 
 from __future__ import annotations
 
+import calendar
 import inspect
 from datetime import date
 from decimal import Decimal
@@ -18,6 +19,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import DeadlineValidationError
 from ..models import RecargoBand, Recovery
 from ..recargo import (
@@ -30,6 +32,8 @@ from ..recargo import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_recargo_bands_load_from_published_authority_in_order(operation: PinnedAuthorityOperation) -> None:
@@ -119,10 +123,10 @@ def test_completed_months_counts_only_whole_months() -> None:
     Deadline 2026-04-20: at 2026-05-19 zero completed months (1 day short of
     the May-20 anniversary); at 2026-05-20 exactly one completed month.
     """
-    closes = date(2026, 4, 20)
-    assert completed_months_late(closes, date(2026, 5, 19)) == 0
-    assert completed_months_late(closes, date(2026, 5, 20)) == 1
-    assert completed_months_late(closes, date(2026, 6, 20)) == 2
+    closes = date(_YEAR, 4, 20)
+    assert completed_months_late(closes, date(_YEAR, 5, 19)) == 0
+    assert completed_months_late(closes, date(_YEAR, 5, 20)) == 1
+    assert completed_months_late(closes, date(_YEAR, 6, 20)) == 2
     assert completed_months_late(closes, closes) == 0
 
 
@@ -134,10 +138,10 @@ def test_build_recovery_uses_completed_months_not_day_bracket(operation: PinnedA
     computation is exact.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2026, 6, 19),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 6, 19),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
     assert recovery is not None
@@ -162,13 +166,14 @@ def test_load_recargo_bands_exposes_no_raw_path_override() -> None:
 
 def test_twelve_month_anniversary_is_same_day_next_year() -> None:
     """The twelve-month term is the same day-of-month twelve months later."""
-    assert twelve_month_anniversary(date(2026, 4, 20)) == date(2027, 4, 20)
-    assert twelve_month_anniversary(date(2026, 1, 30)) == date(2027, 1, 30)
+    assert twelve_month_anniversary(date(_YEAR, 4, 20)) == date(_YEAR + 1, 4, 20)
+    assert twelve_month_anniversary(date(_YEAR, 1, 30)) == date(_YEAR + 1, 1, 30)
 
 
 def test_twelve_month_anniversary_clamps_leap_day() -> None:
     """A 29 February close clamps to 28 February in a non-leap target year."""
-    assert twelve_month_anniversary(date(2024, 2, 29)) == date(2025, 2, 28)
+    leap_year = next(year for year in filing_year_envelope().years if calendar.isleap(year))
+    assert twelve_month_anniversary(date(leap_year, 2, 29)) == date(leap_year + 1, 2, 28)
 
 
 def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
@@ -179,10 +184,10 @@ def test_more_than_twelve_months_elapsed_is_strict_after_anniversary() -> None:
     término de los 12 meses". So the anniversary is not yet the tail; the day
     after is.
     """
-    closes = date(2026, 4, 20)
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 19)) is False
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 20)) is False
-    assert more_than_twelve_months_elapsed(closes, date(2027, 4, 21)) is True
+    closes = date(_YEAR, 4, 20)
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 19)) is False
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 20)) is False
+    assert more_than_twelve_months_elapsed(closes, date(_YEAR + 1, 4, 21)) is True
 
 
 def test_exact_twelve_month_anniversary_stays_in_graduated_band(
@@ -195,10 +200,10 @@ def test_exact_twelve_month_anniversary_stays_in_graduated_band(
     months → 1% + 12% = 13%, no interest.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2027, 4, 20),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR + 1, 4, 20),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
     assert recovery is not None
@@ -218,10 +223,10 @@ def test_day_after_twelve_month_anniversary_enters_interest_tail(
     still reports only twelve completed months.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2027, 4, 21),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR + 1, 4, 21),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
     assert recovery is not None
@@ -241,10 +246,10 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
     supplying a top-level ``legal_ref`` is refused outright.
     """
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2026, 5, 21),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 5, 21),
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
 
@@ -271,10 +276,10 @@ def test_fixed_refund_has_no_recovery_and_never_loads_bands(
     monkeypatch.setattr("cadrumo.domain.deadlines.recargo.load_recargo_bands", unexpected_load)
     assert (
         build_recovery_for_overdue(
-            closes_on=date(2026, 9, 30),
-            reference_today=date(2026, 11, 1),
+            closes_on=date(_YEAR, 9, 30),
+            reference_today=date(_YEAR, 11, 1),
             modelo="360",
-            period=Period.from_year_and_code(2025, "0A"),
+            period=Period.from_year_and_code(_YEAR - 1, "0A"),
             operation=operation,
         )
         is None
@@ -288,10 +293,10 @@ def test_variable_disposition_still_has_conditional_recovery(
     period_code: str,
 ) -> None:
     recovery = build_recovery_for_overdue(
-        closes_on=date(2026, 4, 20),
-        reference_today=date(2026, 5, 20),
+        closes_on=date(_YEAR, 4, 20),
+        reference_today=date(_YEAR, 5, 20),
         modelo=modelo,
-        period=Period.from_year_and_code(2026, period_code),
+        period=Period.from_year_and_code(_YEAR, period_code),
         operation=operation,
     )
     assert recovery is not None

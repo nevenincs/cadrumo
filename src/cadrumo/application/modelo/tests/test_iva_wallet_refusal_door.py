@@ -24,10 +24,10 @@ from ....domain.iva_compensation.reconciliation import (
 )
 from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenIvaWalletStepV1
-from ..iva_wallet_gate import (
+from ..iva_wallet_binding import apply_iva_compensation_decision_binding
+from ..iva_wallet_refusal import (
     ModeloIvaWalletAuthorityUnavailableError,
     ModeloIvaWalletReconciliationBlockedError,
-    apply_iva_compensation_decision_binding,
     iva_wallet_door,
 )
 

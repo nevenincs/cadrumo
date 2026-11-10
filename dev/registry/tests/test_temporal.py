@@ -12,7 +12,7 @@ otherwise land silently.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.temporal import (
     select_revision_metadata,
     select_revision_metadata_for_year,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, split_exercise_revisions
 from dev.registry.compiler.loader import load_modelo_directory
 
 from ..compiler.validate_revision_rules import validate_revision_windows
@@ -47,7 +48,12 @@ from ..conformance.registry_schema_support import (
     committed_registry_tree,
     committed_snapshot,
 )
-from .authored_edition_support import newest_authored_edition
+from .authored_edition_support import (
+    authored_revisions,
+    newest_authored_edition,
+    oldest_authored_edition,
+    revision_covering,
+)
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -59,44 +65,72 @@ def _committed_modelo_100() -> ModeloDefinition:
     )
 
 
+def _m100_ids() -> tuple[str, ...]:
+    """The authored modelo 100 revision ids, oldest first."""
+    return tuple(str(revision.id) for revision in authored_revisions("100"))
+
+
+def _newest_year() -> int:
+    return newest_authored_edition("100")
+
+
+def _oldest_year() -> int:
+    return oldest_authored_edition("100")
+
+
+def _year_of(revision_id: str) -> int:
+    return next(revision.valid_from.year for revision in authored_revisions("100") if str(revision.id) == revision_id)
+
+
 def test_select_revision_returns_the_matching_year_revision() -> None:
     modelo = _committed_modelo_100()
+    year = _newest_year()
 
-    revision = select_revision(modelo, filing_year=2025, period="0A")
+    revision = select_revision(modelo, filing_year=year, period="0A")
 
-    assert revision.id == "2025"
+    assert revision.id == str(revision_covering("100", year).id)
 
 
 def _support() -> SupportedFilingYearsCatalogue:
-    return SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+    """An envelope whose floor sits just above the oldest authored edition and whose horizon is one past the newest."""
+    return SupportedFilingYearsCatalogue(floor=_oldest_year() + 1, horizon=_newest_year() + 1)
 
 
 def test_nearest_authored_projection_works_backward_forward_and_across_gaps() -> None:
     modelo = _committed_modelo_100()
-    only_2025 = modelo.model_copy(update={"revisions": {"2025": modelo.revisions["2025"]}})
-    assert select_revision(only_2025, filing_year=2022, period="0A", support=_support()).id == "2025"
-    assert select_revision(only_2025, filing_year=2026, period="0A", support=_support()).id == "2025"
+    ids = _m100_ids()
+    newest = ids[-1]
+    only_newest = modelo.model_copy(update={"revisions": {newest: modelo.revisions[newest]}})
+    support = _support()
+    assert select_revision(only_newest, filing_year=support.floor, period="0A", support=support).id == newest
+    assert select_revision(only_newest, filing_year=support.horizon, period="0A", support=support).id == newest
 
+    removed = set(ids[-3:-1])
     gap = modelo.model_copy(
-        update={"revisions": {key: value for key, value in modelo.revisions.items() if key not in {"2023", "2024"}}}
+        update={"revisions": {key: value for key, value in modelo.revisions.items() if key not in removed}}
     )
-    assert select_revision(gap, filing_year=2024, period="0A", support=_support()).id == "2025"
+    assert select_revision(gap, filing_year=_year_of(ids[-2]), period="0A", support=support).id == newest
 
 
 def test_supported_request_can_project_from_an_authored_anchor_before_the_global_floor() -> None:
     modelo = _committed_modelo_100()
-    historical = modelo.model_copy(update={"revisions": {"2020": modelo.revisions["2020"]}})
+    oldest = _m100_ids()[0]
+    historical = modelo.model_copy(update={"revisions": {oldest: modelo.revisions[oldest]}})
+    support = _support()
+    assert _oldest_year() < support.floor
 
-    assert select_revision(historical, filing_year=2022, period="0A", support=_support()).id == "2020"
+    assert select_revision(historical, filing_year=support.floor, period="0A", support=support).id == oldest
 
 
 def test_equal_distance_projection_uses_the_earlier_authored_anchor() -> None:
     modelo = _committed_modelo_100()
-    gap = modelo.model_copy(update={"revisions": {key: modelo.revisions[key] for key in ("2023", "2025")}})
+    ids = _m100_ids()
+    earlier, between, later = ids[-3], ids[-2], ids[-1]
+    gap = modelo.model_copy(update={"revisions": {key: modelo.revisions[key] for key in (earlier, later)}})
 
-    selected = select_revision(gap, filing_year=2024, period="0A", support=_support())
+    selected = select_revision(gap, filing_year=_year_of(between), period="0A", support=_support())
 
-    assert selected.id == "2023"
+    assert selected.id == earlier
 
 
 def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> None:
@@ -109,16 +143,19 @@ def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> No
     modelo = _committed_modelo_100()
     support = _support()
 
-    assert select_revision(modelo, filing_year=support.floor, period="0A", support=support).id == "2022"
-    assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == "2025"
+    assert (
+        select_revision(modelo, filing_year=support.floor, period="0A", support=support).id
+        == revision_covering("100", support.floor).id
+    )
+    assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == _m100_ids()[-1]
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(modelo, filing_year=support.floor - 1, period="0A", support=support)
-    assert select_revision(modelo, filing_year=support.horizon + 1, period="0A", support=support).id == "2025"
+    assert select_revision(modelo, filing_year=support.horizon + 1, period="0A", support=support).id == _m100_ids()[-1]
     closed = support.model_copy(update={"hard_ceiling": support.horizon})
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(modelo, filing_year=closed.horizon + 1, period="0A", support=closed)
     with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2024, period="3T", support=support)
+        select_revision(modelo, filing_year=support.floor, period="3T", support=support)
 
 
 def test_an_envelope_refusal_names_the_envelope_and_the_revisions_that_do_cover_it() -> None:
@@ -132,10 +169,12 @@ def test_an_envelope_refusal_names_the_envelope_and_the_revisions_that_do_cover_
     """
     modelo = _committed_modelo_100()
     support = _support()
-    assert modelo.revisions["2020"].period_selector.includes_year(2020)
+    oldest = _m100_ids()[0]
+    oldest_year = _oldest_year()
+    assert modelo.revisions[oldest].period_selector.includes_year(oldest_year)
 
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
-        select_revision(modelo, filing_year=2020, period="0A", support=support)
+        select_revision(modelo, filing_year=oldest_year, period="0A", support=support)
 
     err = excinfo.value
     assert isinstance(err, RegistrySnapshotError)
@@ -143,12 +182,12 @@ def test_an_envelope_refusal_names_the_envelope_and_the_revisions_that_do_cover_
     # must not absorb an envelope refusal, which is why it is a sibling type.
     assert not isinstance(err, NoRevisionForPeriodError)
     assert err.modelo_id == "100"
-    assert err.filing_year == 2020
+    assert err.filing_year == oldest_year
     assert err.period == "0A"
     assert err.floor == support.floor
     assert err.horizon == support.horizon
     assert err.hard_ceiling is None
-    assert "2020" in err.covering_revision_ids
+    assert oldest in err.covering_revision_ids
     assert "outside the registry support envelope" in str(err)
 
 
@@ -157,15 +196,16 @@ def test_every_envelope_gated_selector_refuses_with_the_envelope_error() -> None
     modelo = _committed_modelo_100()
     support = _support()
     directory = ModeloRevisionDirectory.from_modelo(modelo, support=support)
+    below = _oldest_year()
 
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        select_revision(modelo, filing_year=2020, period="0A", support=support)
+        select_revision(modelo, filing_year=below, period="0A", support=support)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        select_revision_for_year(modelo, filing_year=2020, support=support)
+        select_revision_for_year(modelo, filing_year=below, support=support)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        select_revision_metadata(directory, filing_year=2020, period="0A")
+        select_revision_metadata(directory, filing_year=below, period="0A")
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
-        select_revision_metadata_for_year(directory, filing_year=2020)
+        select_revision_metadata_for_year(directory, filing_year=below)
 
     # The year-only selectors name the coordinate they were actually given.
     assert excinfo.value.period == "year"
@@ -181,16 +221,18 @@ def test_resolving_outside_the_filing_envelope_stays_available_to_its_owners() -
     """
     modelo = _committed_modelo_100()
     directory = ModeloRevisionDirectory.from_modelo(modelo, support=_support())
+    oldest, oldest_year = _m100_ids()[0], _oldest_year()
 
-    assert select_revision(modelo, filing_year=2020, period="0A", support=None).id == "2020"
-    assert select_authored_revision_metadata(directory, filing_year=2020, period="0A").id == "2020"
-    reaching = _support().model_copy(update={"floor": 2020})
-    assert select_revision(modelo, filing_year=2020, period="0A", support=reaching).id == "2020"
+    assert select_revision(modelo, filing_year=oldest_year, period="0A", support=None).id == oldest
+    assert select_authored_revision_metadata(directory, filing_year=oldest_year, period="0A").id == oldest
+    reaching = _support().model_copy(update={"floor": oldest_year})
+    assert select_revision(modelo, filing_year=oldest_year, period="0A", support=reaching).id == oldest
 
 
 def test_technical_root_does_not_disable_projection_or_invent_continuity() -> None:
     modelo = _committed_modelo_100()
-    authored = modelo.revisions["2025"]
+    newest = _m100_ids()[-1]
+    authored = modelo.revisions[newest]
     source = authored.model_copy(
         update={
             "predecessor": NoPredecessor(
@@ -200,9 +242,10 @@ def test_technical_root_does_not_disable_projection_or_invent_continuity() -> No
             )
         }
     )
-    isolated = modelo.model_copy(update={"revisions": {"2025": source}})
+    isolated = modelo.model_copy(update={"revisions": {newest: source}})
+    support = _support()
 
-    projected = select_revision(isolated, filing_year=2026, period="0A", support=_support())
+    projected = select_revision(isolated, filing_year=support.horizon, period="0A", support=support)
 
     assert projected is source
     assert projected.model_dump() == source.model_dump()
@@ -219,24 +262,25 @@ def test_source_and_indexed_directory_select_the_same_authored_anchor() -> None:
     support = _support()
     directory = ModeloRevisionDirectory.from_modelo(modelo, support=support)
 
-    source = select_revision(modelo, filing_year=2026, period="0A", support=support)
-    indexed = select_revision_metadata(directory, filing_year=2026, period="0A")
+    source = select_revision(modelo, filing_year=support.horizon, period="0A", support=support)
+    indexed = select_revision_metadata(directory, filing_year=support.horizon, period="0A")
 
-    assert indexed.id == source.id == "2025"
+    assert indexed.id == source.id == _m100_ids()[-1]
 
 
 def test_resolution_exposes_requested_identity_and_authored_provenance() -> None:
-    revision = select_revision(_committed_modelo_100(), filing_year=2026, period="0A", support=_support())
+    support = _support()
+    revision = select_revision(_committed_modelo_100(), filing_year=support.horizon, period="0A", support=support)
     resolution = revision_temporal_resolution(
         revision,
-        filing_year=2026,
+        filing_year=support.horizon,
         period="0A",
-        support=_support(),
+        support=support,
     )
 
-    assert resolution.requested_filing_year == 2026
-    assert resolution.revision.id == "2025"
-    assert resolution.authored_filing_year == 2025
+    assert resolution.requested_filing_year == support.horizon
+    assert resolution.revision.id == _m100_ids()[-1]
+    assert resolution.authored_filing_year == _newest_year()
     assert resolution.projection_direction is TemporalProjectionDirection.FORWARD
 
 
@@ -248,14 +292,15 @@ def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> No
     form is resolved. Without it the snapshot disagreed with itself: its
     ``filing_period`` normalised through ``Period`` while ``period`` did not.
     """
-    snapshot = committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
+    year = _newest_year()
+    snapshot = committed_snapshot("100", year, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     assert snapshot.period == "0A"
     assert snapshot.filing_period is not None
     assert snapshot.filing_period.code == snapshot.period
     assert (
         snapshot.revision.id
-        == committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION).revision.id
+        == committed_snapshot("100", year, "0A", grade=RegistryAuthorityGrade.CALCULATION).revision.id
     )
 
 
@@ -267,17 +312,18 @@ def test_case_variant_periods_activate_the_same_relation_requirements() -> None:
     snapshot and a clean-looking empty obligation set instead of the required
     cross-model inputs.
     """
-    canonical = committed_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-    variant = committed_snapshot("100", 2025, "0a", grade=RegistryAuthorityGrade.CALCULATION)
+    year = _newest_year()
+    canonical = committed_snapshot("100", year, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    variant = committed_snapshot("100", year, "0a", grade=RegistryAuthorityGrade.CALCULATION)
 
     canonical_requirements = relation_source_requirements(
         canonical.revision,
-        filing_year=2025,
+        filing_year=year,
         period=canonical.period,
     )
     variant_requirements = relation_source_requirements(
         variant.revision,
-        filing_year=2025,
+        filing_year=year,
         period=variant.period,
     )
 
@@ -290,14 +336,14 @@ def test_case_variant_period_still_refuses_an_undeclared_token() -> None:
     modelo = _committed_modelo_100()
 
     with pytest.raises(RegistrySnapshotError, match="no revision for"):
-        select_revision(modelo, filing_year=2025, period="0b")
+        select_revision(modelo, filing_year=_newest_year(), period="0b")
 
 
 def test_select_revision_raises_when_no_revision_matches_year() -> None:
     modelo = _committed_modelo_100()
 
     with pytest.raises(RegistrySnapshotError, match="no revision for"):
-        select_revision(modelo, filing_year=2099, period="0A")
+        select_revision(modelo, filing_year=filing_year_envelope().horizon + 1, period="0A")
 
 
 def test_select_revision_raises_when_period_not_declared_by_selector() -> None:
@@ -305,22 +351,24 @@ def test_select_revision_raises_when_period_not_declared_by_selector() -> None:
     modelo = _committed_modelo_100()
 
     with pytest.raises(RegistrySnapshotError, match="no revision for"):
-        select_revision(modelo, filing_year=2025, period="3T")
+        select_revision(modelo, filing_year=_newest_year(), period="3T")
 
 
 def test_select_revision_honours_explicit_revision_id_filter() -> None:
     modelo = _committed_modelo_100()
 
-    revision = select_revision(modelo, filing_year=2024, period="0A", revision_id="2024")
+    revision_id = _m100_ids()[-2]
 
-    assert revision.id == "2024"
+    revision = select_revision(modelo, filing_year=_year_of(revision_id), period="0A", revision_id=revision_id)
+
+    assert revision.id == revision_id
 
 
 def test_select_revision_rejects_mismatching_revision_id_filter() -> None:
     modelo = _committed_modelo_100()
 
     with pytest.raises(RegistrySnapshotError, match="no revision for"):
-        select_revision(modelo, filing_year=2024, period="0A", revision_id="not-a-real-id")
+        select_revision(modelo, filing_year=_year_of(_m100_ids()[-2]), period="0A", revision_id="not-a-real-id")
 
 
 def test_select_revision_filters_by_on_date_outside_validity_window() -> None:
@@ -329,7 +377,7 @@ def test_select_revision_filters_by_on_date_outside_validity_window() -> None:
     modelo = _committed_modelo_100()
 
     with pytest.raises(RegistrySnapshotError, match="no revision for"):
-        select_revision(modelo, filing_year=2025, period="0A", on=date(1900, 1, 1))
+        select_revision(modelo, filing_year=_newest_year(), period="0A", on=date(1900, 1, 1))
 
 
 def test_select_revision_raises_on_ambiguous_selection() -> None:
@@ -337,12 +385,12 @@ def test_select_revision_raises_on_ambiguous_selection() -> None:
     requested year + period (+ optional on= window). Forge a twin
     revision so the candidates list grows past length 1."""
     modelo = _committed_modelo_100()
-    original = modelo.revisions["2025"]
-    twin = original.model_copy(update={"id": "2025-twin"})
+    original = modelo.revisions[_m100_ids()[-1]]
+    twin = original.model_copy(update={"id": f"{original.id}-twin"})
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, twin.id: twin}})
 
     with pytest.raises(RegistrySnapshotError, match="ambiguous revision selection"):
-        select_revision(mutated, filing_year=2025, period="0A")
+        select_revision(mutated, filing_year=_newest_year(), period="0A")
 
 
 def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None:
@@ -354,14 +402,15 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
     typed fields. The subclass is still catchable as the parent type, so
     every existing ``except RegistrySnapshotError`` site keeps working."""
     modelo = _committed_modelo_100()
+    unauthored = _newest_year() + 1
 
     with pytest.raises(NoRevisionForPeriodError) as excinfo:
-        select_revision(modelo, filing_year=2099, period="0A", revision_id="r9")
+        select_revision(modelo, filing_year=unauthored, period="0A", revision_id="r9")
 
     err = excinfo.value
     assert isinstance(err, RegistrySnapshotError)
     assert err.modelo_id == "100"
-    assert err.filing_year == 2099
+    assert err.filing_year == unauthored
     assert err.period == "0A"
     assert err.revision_id == "r9"
 
@@ -398,33 +447,34 @@ def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
     assertion: the candidate ids are read from ``candidate_ids``, never
     parsed out of the message."""
     modelo = _committed_modelo_100()
-    original = modelo.revisions["2025"]
-    twin = original.model_copy(update={"id": "2025-twin"})
+    original = modelo.revisions[_m100_ids()[-1]]
+    twin = original.model_copy(update={"id": f"{original.id}-twin"})
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, twin.id: twin}})
 
     with pytest.raises(AmbiguousRevisionSelectionError) as excinfo:
-        select_revision(mutated, filing_year=2025, period="0A")
+        select_revision(mutated, filing_year=_newest_year(), period="0A")
 
     err = excinfo.value
     assert isinstance(err, RegistrySnapshotError)
     assert err.modelo_id == "100"
     # Sorted tuple of every matching revision id, read from the typed field.
-    assert err.candidate_ids == ("2025", "2025-twin")
+    assert err.candidate_ids == (original.id, twin.id)
 
 
 def test_revision_validation_reports_non_adjacent_overlap_before_runtime_ambiguity() -> None:
     """A long revision cannot hide its overlap behind a shorter middle revision."""
 
     modelo = _committed_modelo_100()
-    template = modelo.revisions["2025"]
+    template = modelo.revisions[_m100_ids()[-1]]
+    year = _newest_year()
     revision_a = template.model_copy(
-        update={"id": "window-a", "valid_from": date(2020, 1, 1), "valid_to": date(2030, 12, 31)},
+        update={"id": "window-a", "valid_from": date(year - 5, 1, 1), "valid_to": date(year + 5, 12, 31)},
     )
     revision_b = template.model_copy(
-        update={"id": "window-b", "valid_from": date(2021, 1, 1), "valid_to": date(2022, 12, 31)},
+        update={"id": "window-b", "valid_from": date(year - 4, 1, 1), "valid_to": date(year - 3, 12, 31)},
     )
     revision_c = template.model_copy(
-        update={"id": "window-c", "valid_from": date(2025, 1, 1), "valid_to": date(2026, 12, 31)},
+        update={"id": "window-c", "valid_from": date(year, 1, 1), "valid_to": date(year + 1, 12, 31)},
     )
     mutated = modelo.model_copy(
         update={"revisions": {revision.id: revision for revision in (revision_a, revision_b, revision_c)}},
@@ -434,7 +484,7 @@ def test_revision_validation_reports_non_adjacent_overlap_before_runtime_ambigui
 
     assert "modelo 100: revisions 'window-a' and 'window-c' overlap on period selector" in failures
     with pytest.raises(AmbiguousRevisionSelectionError) as excinfo:
-        select_revision(mutated, filing_year=2025, period="0A", on=date(2025, 6, 1))
+        select_revision(mutated, filing_year=year, period="0A", on=date(year, 6, 1))
     assert excinfo.value.candidate_ids == ("window-a", "window-c")
 
 
@@ -442,13 +492,14 @@ def test_revision_validation_accepts_disjoint_windows_with_shared_period_selecto
     """Period-selector reuse remains valid when every date window is disjoint."""
 
     modelo = _committed_modelo_100()
-    template = modelo.revisions["2025"]
+    template = modelo.revisions[_m100_ids()[-1]]
+    year = _newest_year()
     revisions = tuple(
         template.model_copy(update={"id": revision_id, "valid_from": valid_from, "valid_to": valid_to})
         for revision_id, valid_from, valid_to in (
-            ("window-a", date(2020, 1, 1), date(2022, 12, 31)),
-            ("window-b", date(2023, 1, 1), date(2024, 12, 31)),
-            ("window-c", date(2025, 1, 1), date(2026, 12, 31)),
+            ("window-a", date(year - 5, 1, 1), date(year - 3, 12, 31)),
+            ("window-b", date(year - 2, 1, 1), date(year - 1, 12, 31)),
+            ("window-c", date(year, 1, 1), date(year + 1, 12, 31)),
         )
     )
     mutated = modelo.model_copy(update={"revisions": {revision.id: revision for revision in revisions}})
@@ -465,12 +516,13 @@ def test_revision_validation_separates_meeting_windows_from_a_single_shared_day(
     """
 
     modelo = _committed_modelo_100()
-    template = modelo.revisions["2025"]
+    template = modelo.revisions[_m100_ids()[-1]]
+    year = _newest_year()
 
     def _pair(later_valid_from: date) -> ModeloDefinition:
         revisions = (
             template.model_copy(
-                update={"id": "window-a", "valid_from": date(2023, 1, 1), "valid_to": date(2025, 2, 2)},
+                update={"id": "window-a", "valid_from": date(year - 2, 1, 1), "valid_to": date(year, 2, 2)},
             ),
             template.model_copy(
                 update={"id": "window-b", "valid_from": later_valid_from, "valid_to": None},
@@ -478,8 +530,8 @@ def test_revision_validation_separates_meeting_windows_from_a_single_shared_day(
         )
         return modelo.model_copy(update={"revisions": {revision.id: revision for revision in revisions}})
 
-    assert validate_revision_windows(_pair(date(2025, 2, 3))) == []
-    assert validate_revision_windows(_pair(date(2025, 2, 2))) == [
+    assert validate_revision_windows(_pair(date(year, 2, 3))) == []
+    assert validate_revision_windows(_pair(date(year, 2, 2))) == [
         "modelo 100: revisions 'window-a' and 'window-b' overlap on period selector",
     ]
 
@@ -542,49 +594,79 @@ def test_a_filing_window_admits_only_the_coordinate_it_declares() -> None:
     """The window widens nothing beyond the period it was declared for.
 
     THE FAIL-CLOSED HALF, and the reason this is not a blanket date widening.
-    Modelo 303's 2023 revision declares two windows that close on different
-    days: November's monthly filing on 2 January 2024, December's on the 30th.
-    On 15 January both periods are outside the governed year, and only the one
-    whose window is still open may resolve. A revision admitted for any period
-    once admitted for one would pass the sibling assertion above while quietly
-    making November filable a month late.
+    Modelo 303 declares, for a revision, a November and a December window that
+    close on different days: November's monthly filing in the first days of the
+    following January, December's near its end. On the middle of that January
+    both periods are outside the governed year, and only the one whose window is
+    still open may resolve. A revision admitted for any period once admitted for
+    one would pass the sibling assertion above while quietly making November
+    filable a month late.
     """
     modelo, _catalogues = committed_modelo("303")
+    windows = {
+        (revision_id, window.filing_year, window.period.registry_token): window
+        for modelo_id, revision_id, window in _declared_filing_windows()
+        if modelo_id == "303"
+    }
+    checked = 0
+    for (revision_id, filing_year, period), december in windows.items():
+        november = windows.get((revision_id, filing_year, "11"))
+        on = date(filing_year + 1, 1, 15)
+        valid_to = modelo.revisions[revision_id].valid_to
+        if (
+            period != "12"
+            or november is None
+            or valid_to is None
+            or not (valid_to < on and november.closes_on < on <= december.closes_on)
+        ):
+            continue
+        checked += 1
+        assert select_revision(modelo, filing_year=filing_year, period="12", on=on).id == revision_id
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period="11", on=on)
 
-    assert select_revision(modelo, filing_year=2023, period="12", on=date(2024, 1, 15)).id == "2023"
-    with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2023, period="11", on=date(2024, 1, 15))
+    assert checked, "the corpus must declare a November window closed and a December window open mid-January"
 
 
 def test_a_revision_is_refused_once_every_declared_window_has_closed() -> None:
     """Past the last declared filing date the revision stops resolving.
 
-    Modelo 390's 2025 window closes on 30 January 2026 (the thirtieth calendar
-    day of January, Orden EHA/3111/2009, art. 8). The 30th resolves and the 31st
-    does not: the reach is the declared window, not the following year.
+    Modelo 390's annual window closes on the thirtieth calendar day of January
+    (Orden EHA/3111/2009, art. 8). That day resolves and the next does not: the
+    reach is the declared window, not the following year.
     """
     modelo, _catalogues = committed_modelo("390")
+    annual = [
+        (revision_id, window)
+        for modelo_id, revision_id, window in _declared_filing_windows()
+        if modelo_id == "390" and window.period.registry_token in {"0A"}
+    ]
+    assert annual, "modelo 390 must declare annual filing windows"
 
-    assert select_revision(modelo, filing_year=2025, period="0A", on=date(2026, 1, 30)).id == "2025"
-    with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2025, period="0A", on=date(2026, 1, 31))
+    for revision_id, window in annual:
+        closing = window.closes_on
+        assert select_revision(modelo, filing_year=window.filing_year, period="0A", on=closing).id == revision_id
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=window.filing_year, period="0A", on=closing + timedelta(days=1))
 
 
 def test_a_revision_declaring_no_filing_window_claims_no_reach_beyond_its_periods() -> None:
     """Absence of a declaration is refusal, never an inferred deadline.
 
-    Modelo 390's 2021 revision is ``applicability`` grade and declares no
+    Modelo 390's oldest revision is ``applicability`` grade and declares no
     filing window at all. The selector must not deduce one from the article
-    that governs its 2022-2025 siblings: an undeclared window is an undeclared
+    that governs its later siblings: an undeclared window is an undeclared
     window, and it stays refused exactly as it was before the window tier
     existed.
     """
     modelo, _catalogues = committed_modelo("390")
-    revision = modelo.revisions["2021"]
-    assert not revision.deadline_windows
+    windowless = [revision for revision in modelo.revisions.values() if not revision.deadline_windows]
+    assert windowless, "modelo 390 must author a revision that declares no filing window"
 
-    with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2021, period="0A", on=date(2022, 1, 20))
+    for revision in windowless:
+        year = revision.valid_from.year
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=year, period="0A", on=date(year + 1, 1, 20))
 
 
 def test_a_live_governed_period_outranks_a_still_open_filing_window() -> None:
@@ -598,8 +680,10 @@ def test_a_live_governed_period_outranks_a_still_open_filing_window() -> None:
     answers stay reachable.
     """
     modelo, _catalogues = committed_modelo("303")
-    boundary = date(2024, 9, 15)
+    early, late = split_exercise_revisions("303", early_period="08", late_period="3T")
+    year = early.valid_from.year
+    boundary = late.valid_from.replace(day=15)
 
-    assert select_revision_for_year(modelo, filing_year=2024, on=boundary).id == "2024-desde-09-y-3t"
-    assert select_revision(modelo, filing_year=2024, period="3T", on=boundary).id == "2024-desde-09-y-3t"
-    assert select_revision(modelo, filing_year=2024, period="08", on=boundary).id == "2024-hasta-08-y-2t"
+    assert select_revision_for_year(modelo, filing_year=year, on=boundary).id == late.id
+    assert select_revision(modelo, filing_year=year, period="3T", on=boundary).id == late.id
+    assert select_revision(modelo, filing_year=year, period="08", on=boundary).id == early.id

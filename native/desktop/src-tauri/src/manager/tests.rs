@@ -54,6 +54,33 @@ async fn readiness_timeout_is_distinct_and_public_refusal_remains_prompt() {
     );
 }
 
+#[tokio::test(start_paused = true)]
+async fn requested_stop_during_startup_is_unavailable_not_a_timeout() {
+    let started = tokio::time::Instant::now();
+    let error = wait_for_readiness_or_stop(
+        std::future::pending(),
+        tokio::time::sleep(Duration::from_secs(3)),
+        STARTUP_TIMEOUT,
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::SessionUnavailable);
+    assert_eq!(error.reason, None);
+    assert_eq!(started.elapsed(), Duration::from_secs(3));
+    let error = wait_for_readiness_or_stop(
+        std::future::pending(),
+        std::future::pending(),
+        Duration::from_secs(7),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.reason.as_deref(), Some("runtime_timeout"));
+    wait_for_readiness_or_stop(async { Ok(()) }, std::future::pending(), STARTUP_TIMEOUT)
+        .await
+        .unwrap();
+}
+
 #[tokio::test]
 async fn failed_start_is_a_typed_public_status_and_close_still_settles() {
     let manager = fixture(Ok(Err("image_not_installed")));

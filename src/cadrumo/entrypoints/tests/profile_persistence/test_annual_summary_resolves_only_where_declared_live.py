@@ -161,8 +161,11 @@ def test_a_revision_declaring_the_summary_binding_still_refuses_an_iva_filer_wit
     revision = published_authority_operation().snapshot("390", filing_year=_filing_year(), period="0A").revision
     assert any(binding.source is _SUMMARY for binding in revision.bindings)
     # An IVA filer who never stated how the regimes compose: Modelo 390 applies to them, but the composition is absent.
+    # The simplified regime leaves the composition open (LIVA art. 122.Dos.1.º lets general-regime activities sit
+    # beside it), whereas a declared general regime settles it, so only the simplified regime still owes the answer.
     _seed_profile(
         UserProfileFact(path="activities.description", value="activity"),
+        UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
         persona_without=("iva.m303_regime_composition",),
     )
 

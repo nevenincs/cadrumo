@@ -55,6 +55,12 @@ from ..source_policy import SourceFamily
 from ..verification_cross_period import cross_period_clean_state_findings
 from ..work_form import build_modelo_work_form
 from ..work_form_declaration_facts import ModeloFormEditClosure, ModeloFormResultDirection
+from ..work_form_field_vocabulary import (
+    ModeloFormEarlierFiling,
+    ModeloFormEditability,
+    ModeloFormOrigin,
+    address_key,
+)
 from ..work_form_findings import (
     EXPLANATORY_FINDING_MESSAGE_KEYS,
     ModeloFormAttention,
@@ -62,12 +68,8 @@ from ..work_form_findings import (
     finding_attention,
 )
 from ..work_form_models import (
-    ModeloFormEarlierFiling,
-    ModeloFormEditability,
     ModeloFormField,
-    ModeloFormOrigin,
     ModeloWorkForm,
-    address_key,
 )
 from ..work_form_service import modelo_form_deadline, modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas

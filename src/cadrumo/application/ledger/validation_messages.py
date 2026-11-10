@@ -58,6 +58,20 @@ def _registered_cause(item: Mapping[str, object]) -> CadrumoError | None:
     return None
 
 
+def registered_refusal_causes(error: Exception) -> tuple[CadrumoError, ...]:
+    """Return the registered refusals ``error`` is, or wraps one entry at a time.
+
+    This is how a reader learns which typed refusal a Pydantic report carries
+    without reading its sentence.
+    """
+    if isinstance(error, CadrumoError):
+        return (error,)
+    if not isinstance(error, ValidationError):
+        return ()
+    found = (_registered_cause(item) for item in error.errors(include_input=False, include_url=False))
+    return tuple(cause for cause in found if cause is not None)
+
+
 def _located(item: Mapping[str, object]) -> str:
     """One Pydantic entry as its dotted field location and its own sentence."""
     location = item.get("loc", ())
@@ -101,4 +115,5 @@ __all__ = [
     "bounded_validation_messages",
     "ledger_refusal_messages",
     "ledger_refusal_sentence",
+    "registered_refusal_causes",
 ]

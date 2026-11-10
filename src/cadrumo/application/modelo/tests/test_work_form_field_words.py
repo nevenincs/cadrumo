@@ -23,11 +23,13 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ..edit_apply_scalar_contracts import wire_scalar_value
 from ..source_policy import SourceOverridePolicy
 from ..value_presentation import absent_value_text, format_casilla_value
+from ..work_form_field_vocabulary import (
+    ModeloFormEditability,
+    ModeloFormOrigin,
+)
 from ..work_form_models import (
     ModeloFormContextFieldBlock,
-    ModeloFormEditability,
     ModeloFormField,
-    ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
     ModeloWorkForm,

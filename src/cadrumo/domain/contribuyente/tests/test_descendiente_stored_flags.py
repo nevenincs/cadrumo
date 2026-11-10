@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant_facts import descendant_list_from_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_BIRTH_DATE = date(filing_year_envelope().horizon - 6, 4, 1).isoformat()
+
 _PREFIX = "renta_family.descendiente.0."
-_BASE = {f"{_PREFIX}birth_date": "2018-04-01"}
+_BASE = {f"{_PREFIX}birth_date": _BIRTH_DATE}
 
 _YES = ["true", "1", "si", "sí", "yes", "verdadero", "TRUE"]
 _NO = ["false", "0", "no", "n", "falso", "No"]

@@ -15,6 +15,8 @@ import type {
 } from "../shell/ledger";
 import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 
+/** The provinces a counterparty can be stated in, as the ledger serves them. */
+const PROVINCIA_CHOICES = servedEntryOptions.counterparty_provincias;
 const entryWord = (family: string, value: string, word = value) => ({
   value,
   label_key: `application.ledger.entry_options.${family}.${word}`,
@@ -291,10 +293,29 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       "evidenced_scope",
       "note",
       "asserted_by",
+      "provincia_code",
     ]);
     const action = required(request.action);
-    if (!["view", "confirm", "withdraw"].includes(action)) invalid();
+    if (!["view", "confirm", "withdraw", "provincia"].includes(action))
+      invalid();
     if (action !== "confirm" && text(request.note)) invalid();
+    // Only a provincia statement carries a provincia, and it states one the
+    // served catalogue names.
+    const provincia = text(request.provincia_code);
+    if (action === "provincia" ? !provincia : provincia !== null) invalid();
+    if (
+      provincia !== null &&
+      !PROVINCIA_CHOICES.some((choice) => choice.code === provincia)
+    )
+      invalid();
+    if (
+      action === "provincia" &&
+      (!text(request.asserted_by) ||
+        text(request.territorial_scope) ||
+        text(request.identification_state) ||
+        text(request.evidenced_scope))
+    )
+      invalid();
     if (
       action === "confirm" &&
       (!text(request.asserted_by) ||
@@ -309,15 +330,25 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       invalid();
     let facts = counterparties.get(tax) ?? null;
     let changed = false;
-    if (action === "confirm") {
+    if (action === "confirm" || action === "provincia") {
+      const kept = action === "provincia" ? facts : null;
       facts = {
         counterparty_key: hex64(`counterparty:${tax}`),
         canonical_tax_identifier: tax,
-        territorial_scope: text(request.territorial_scope),
-        identification_state: state,
+        territorial_scope:
+          action === "confirm"
+            ? text(request.territorial_scope)
+            : (kept?.territorial_scope ?? null),
+        identification_state:
+          action === "confirm" ? state : (kept?.identification_state ?? null),
         asserted_by: text(request.asserted_by),
         asserted_at: now(),
-        note: text(request.note) ?? "",
+        note:
+          action === "confirm"
+            ? (text(request.note) ?? "")
+            : (kept?.note ?? ""),
+        provincia_code:
+          action === "provincia" ? provincia : (kept?.provincia_code ?? null),
       };
       counterparties.set(tax, facts);
       changed = true;
@@ -333,7 +364,10 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       tax_identifier: tax,
       country_code: country,
       evidenced_scope: text(request.evidenced_scope),
-      facts: action === "confirm" ? (facts as JsonValue) : null,
+      facts:
+        action === "confirm" || action === "provincia"
+          ? (facts as JsonValue)
+          : null,
       resolution:
         action === "view"
           ? {
@@ -356,10 +390,14 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
               contradiction_detail: null,
             }
           : null,
-      recorded: action === "confirm" ? true : null,
+      recorded: action === "confirm" || action === "provincia" ? true : null,
       withdrawn: action === "withdraw" ? changed : null,
       changed,
       conflict_context: null,
+      provincia_code:
+        (facts?.provincia_code as string | null | undefined) ?? null,
+      // Served on a view, a confirmation and a provincia statement.
+      provincia_choices: action === "withdraw" ? [] : PROVINCIA_CHOICES,
     };
   }
 

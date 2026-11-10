@@ -146,7 +146,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "7d6295074dabbc0ec0a6d947178286ff8307758a93561d9ec514633a2f1a5a11",
+          "calculation_revision_id": "5d34c1e50aa993ea879227416b5c85402ce9e14276b9b23934e27620c63be0f8",
           "casilla_values": {
             "01": "4000",
             "02": "912.50",
@@ -296,7 +296,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 7d6295074dabbc0ec0a6d947178286ff8307758a93561d9ec514633a2f1a5a11 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 5d34c1e50aa993ea879227416b5c85402ce9e14276b9b23934e27620c63be0f8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -525,7 +525,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "7d6295074dabbc0ec0a6d947178286ff8307758a93561d9ec514633a2f1a5a11",
+          "calculation_revision_id": "5d34c1e50aa993ea879227416b5c85402ce9e14276b9b23934e27620c63be0f8",
           "completeness_status": "complete",
           "findings": [
             {
@@ -622,7 +622,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b3f8da779d8f01cb585ad1edc31db1f9bdb0e46ad69a6483d0f7c07c672b2927",
+          "verification_report_id": "72bdb36a6d78aba16ff129c23e39b7b1273ef238a5252b6e7d5c3e87c9c6c751",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -689,10 +689,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "da37d2aeeeb3ecafc3070d2678c9af9d761c9270b02551747aa732924bfec52d",
+          "bucket_event_id": "cd1a18337045ad8166c7c26f970150f78e789ec069fbbb5cf7c9818697284628",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "7d6295074dabbc0ec0a6d947178286ff8307758a93561d9ec514633a2f1a5a11",
+          "calculation_revision_id": "5d34c1e50aa993ea879227416b5c85402ce9e14276b9b23934e27620c63be0f8",
           "file_sha256": "fcc26fa6390a41b0460b8ed64d125df2966eda0088f6ed1d0aaec992e95886e7",
           "filing_year": 2026,
           "format": "fichero-boe",

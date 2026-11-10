@@ -346,7 +346,7 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "607d6093acf41b3a4b0b99acef28b3a1ee405702a2698cfc9094a4cd5e47744d",
+          "calculation_revision_id": "10bfac0257dcc3f22d24e8d1d88c21f1ae4e96598ecdf18103be9d7c5e6a0536",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -493,13 +493,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 607d6093acf41b3a4b0b99acef28b3a1ee405702a2698cfc9094a4cd5e47744d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 10bfac0257dcc3f22d24e8d1d88c21f1ae4e96598ecdf18103be9d7c5e6a0536 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:70d4fca0a2315065798ff97e6ad25225606883a2644e96014110743453d5ff84",
+              "fingerprint": "sha256:f12f51c3576db4bbbd61709987ff76733707995f08da8dca5bec584cc075ea06",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "m349_intracommunity_operation",

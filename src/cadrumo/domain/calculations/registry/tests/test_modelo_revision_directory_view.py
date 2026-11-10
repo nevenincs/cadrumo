@@ -16,14 +16,18 @@ from ..query_reports import ModeloListRow
 from ..revision_contracts import DeclaredPredecessor
 from ..schema import ModeloDefinition
 from ..temporal import ModeloDirectoryMetadata, ModeloRevisionDirectory
+from .authored_editions import authored_revisions, revision_last_exercise
 from .authority_fakes import FakeAuthorityComponentReader
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO = "038"
-_SUCCESSOR = "2025-y-siguientes"
-_PREDECESSOR = "2024-desde-06"
+_PREDECESSOR_METADATA, _SUCCESSOR_METADATA = authored_revisions(_MODELO)[-2:]
+_SUCCESSOR = str(_SUCCESSOR_METADATA.id)
+_PREDECESSOR = str(_PREDECESSOR_METADATA.id)
+_PREDECESSOR_EXERCISE = revision_last_exercise(_MODELO, _PREDECESSOR)
+_UNDECLARED = "undeclared-revision"
 
 
 def _modelo(modelo_id: str = _MODELO) -> ModeloDefinition:
@@ -70,14 +74,14 @@ def test_a_directory_backed_listing_counts_and_filters_by_every_directory_revisi
     modelo = _modelo()
     assert {_PREDECESSOR, _SUCCESSOR} <= set(modelo.revisions)
     assert len(modelo.revisions) > 2, "the listing must count directory revisions the view does not carry"
-    assert modelo.revisions[_PREDECESSOR].period_selector.includes_year(2024)
-    assert not modelo.revisions[_SUCCESSOR].period_selector.includes_year(2024)
+    assert modelo.revisions[_PREDECESSOR].period_selector.includes_year(_PREDECESSOR_EXERCISE)
+    assert not modelo.revisions[_SUCCESSOR].period_selector.includes_year(_PREDECESSOR_EXERCISE)
     predecessor_query = ModeloRevisionComponentQuery(_MODELO, _PREDECESSOR)
     service, reader = _pinned_service(modelo)
 
     (view,) = service.iter_modelo_definitions()
     (row,) = service.list_modelos().modelos
-    year_rows = service.list_modelos(year=2024).modelos
+    year_rows = service.list_modelos(year=_PREDECESSOR_EXERCISE).modelos
 
     assert tuple(view.revisions) == (_SUCCESSOR,)
     assert row.revision_count == len(modelo.revisions)
@@ -89,7 +93,7 @@ def test_a_listing_decodes_no_revision_payload() -> None:
     service, reader = _pinned_service(_modelo())
 
     service.list_modelos()
-    service.list_modelos(year=2024, domain=TaxDomain("iva"))
+    service.list_modelos(year=_PREDECESSOR_EXERCISE, domain=TaxDomain("iva"))
 
     assert reader.loads
     assert not [query for query in reader.loads if isinstance(query, ModeloRevisionComponentQuery)]
@@ -126,8 +130,8 @@ def test_the_published_listing_equals_the_listing_built_from_full_revision_views
         full = _rows_from_full_decode(operation)
         listed = service.list_modelos().modelos
         domain = TaxDomain("iva")
-        assert service.list_modelos(year=2024, domain=domain).modelos == _rows_from_full_decode(
-            operation, year=2024, domain=domain
+        assert service.list_modelos(year=_PREDECESSOR_EXERCISE, domain=domain).modelos == _rows_from_full_decode(
+            operation, year=_PREDECESSOR_EXERCISE, domain=domain
         )
 
     assert len(full) > 1
@@ -158,7 +162,7 @@ def test_a_published_snapshot_keeps_its_cross_revision_view_valid_when_nested() 
         directory_ids = {str(metadata.id) for metadata in operation.modelo_directory(_MODELO).revisions}
         snapshot = operation.snapshot(
             _MODELO,
-            filing_year=2025,
+            filing_year=_SUCCESSOR_METADATA.valid_from.year,
             period="01",
             grade=RegistryAuthorityGrade.APPLICABILITY,
         )
@@ -174,10 +178,12 @@ def test_a_published_snapshot_keeps_its_cross_revision_view_valid_when_nested() 
 def test_a_view_refuses_a_predecessor_its_directory_does_not_declare() -> None:
     modelo = _modelo()
     dangling = modelo.revisions[_SUCCESSOR].model_copy(
-        update={"predecessor": DeclaredPredecessor(revision_id="2023"), "reviewed_against": None},
+        update={"predecessor": DeclaredPredecessor(revision_id=_UNDECLARED), "reviewed_against": None},
     )
 
-    with pytest.raises(RegistryValidationError, match=r"declares predecessor '2023', which is not a revision"):
+    with pytest.raises(
+        RegistryValidationError, match=rf"declares predecessor '{_UNDECLARED}', which is not a revision"
+    ):
         ModeloRevisionDirectory.from_modelo(modelo).materialize(dangling)
 
 
@@ -189,24 +195,26 @@ def test_a_view_keeps_structural_succession_endpoints_resolved_by_its_directory(
     view = directory.materialize(target)
 
     assert view.revisions[target.id].casilla_structural_successions == target.casilla_structural_successions
-    relation = target.casilla_structural_successions[0].model_copy(update={"from_revision": "1999"})
+    relation = target.casilla_structural_successions[0].model_copy(update={"from_revision": _UNDECLARED})
     with pytest.raises(RegistryValidationError, match=r"unknown endpoint revision"):
         directory.materialize(target.model_copy(update={"casilla_structural_successions": (relation,)}))
 
 
 def test_a_view_refuses_a_review_reference_its_directory_does_not_declare() -> None:
     modelo = _modelo()
-    dangling = modelo.revisions[_SUCCESSOR].model_copy(update={"reviewed_against": "2023"})
+    dangling = modelo.revisions[_SUCCESSOR].model_copy(update={"reviewed_against": _UNDECLARED})
 
-    with pytest.raises(RegistryValidationError, match=r"dangling review reference reviewed_against='2023'"):
+    with pytest.raises(RegistryValidationError, match=rf"dangling review reference reviewed_against='{_UNDECLARED}'"):
         ModeloRevisionDirectory.from_modelo(modelo).materialize(dangling)
 
 
 def test_a_view_refuses_a_revision_its_directory_does_not_declare() -> None:
     modelo = _modelo()
-    foreign = modelo.revisions[_SUCCESSOR].model_copy(update={"id": "2030"})
+    foreign = modelo.revisions[_SUCCESSOR].model_copy(update={"id": _UNDECLARED})
 
-    with pytest.raises(RegistryValidationError, match=r"view revisions \['2030'\] are not revisions of its directory"):
+    with pytest.raises(
+        RegistryValidationError, match=rf"view revisions \['{_UNDECLARED}'\] are not revisions of its directory"
+    ):
         ModeloRevisionDirectory.from_modelo(modelo).materialize(foreign)
 
 
@@ -214,7 +222,7 @@ def test_a_complete_modelo_missing_the_reviewed_revision_is_refused() -> None:
     modelo = _modelo()
     successor = modelo.revisions[_SUCCESSOR]
 
-    with pytest.raises(ValidationError, match=r"dangling review reference reviewed_against='2024-desde-06'"):
+    with pytest.raises(ValidationError, match=rf"dangling review reference reviewed_against='{_PREDECESSOR}'"):
         ModeloDefinition(
             **ModeloDirectoryMetadata.from_modelo(modelo).model_dump(),
             revisions={successor.id: successor},
@@ -225,7 +233,7 @@ def test_a_complete_modelo_missing_the_named_predecessor_is_refused() -> None:
     modelo = _modelo()
     successor = modelo.revisions[_SUCCESSOR].model_copy(update={"reviewed_against": None})
 
-    with pytest.raises(ValidationError, match=r"declares predecessor '2024-desde-06', which is not a revision"):
+    with pytest.raises(ValidationError, match=rf"declares predecessor '{_PREDECESSOR}', which is not a revision"):
         ModeloDefinition(
             **ModeloDirectoryMetadata.from_modelo(modelo).model_dump(),
             revisions={successor.id: successor},

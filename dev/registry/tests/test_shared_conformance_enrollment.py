@@ -6,9 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .shared_conformance_enrollment import enrollment_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_EXERCISE = str(filing_year_envelope().horizon)
 
 
 def test_the_enrollment_key_covers_maps_profiles_vectors_and_modules_but_not_tests(tmp_path: Path) -> None:
@@ -16,8 +20,8 @@ def test_the_enrollment_key_covers_maps_profiles_vectors_and_modules_but_not_tes
     planted = {
         "module": registry / "filing_export_conformance_enrollment.py",
         "nested_module": registry / "pipeline" / "tree_check.py",
-        "semantic_map": registry / "mappings" / "modelo_303" / "2026" / "semantic_map.toml",
-        "render_profile": registry / "render_profiles" / "modelo_303" / "2026" / "profile.toml",
+        "semantic_map": registry / "mappings" / "modelo_303" / _EXERCISE / "semantic_map.toml",
+        "render_profile": registry / "render_profiles" / "modelo_303" / _EXERCISE / "profile.toml",
         "vector": registry / "conformance_vectors" / "modelo_200.toml",
     }
     excluded = {

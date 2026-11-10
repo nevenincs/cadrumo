@@ -11,10 +11,13 @@ import type {
   AgentDeclaredCatalog,
   AgentDeclaredLane,
   AgentEffort,
+  AgentEngineHealth,
   AgentProviderLane,
   AgentSelectionRecord,
 } from "./agentSession";
+import { parseEngineHealth } from "./agentSession";
 import type { AgentRanWith } from "./agentViews";
+import { engineNotRunningWords } from "./engineHealth";
 import type { Translate } from "./strings";
 
 // The agent column's choices, deduced from cadrumo-agent's provider catalog
@@ -62,9 +65,26 @@ const servedLanes = (answer: AgentCatalogAnswer): AgentProviderLane[] =>
 const wayId = (lane: AgentProviderLane) =>
   `${lane.provider_id}/${lane.transport}`;
 
+// A lane that states its engine's health outside the contract is not
+// understood, as one without a transport is not: it is not offered.
 const understood = (lane: AgentProviderLane) =>
   lane.provider_id !== "" &&
-  (lane.transport === "api" || lane.transport === "cli");
+  (lane.transport === "api" || lane.transport === "cli") &&
+  parseEngineHealth(lane) !== "malformed";
+
+/** The health of each local engine's lane the catalog states, by lane id
+ * (`<provider>_<transport>`): only a lane whose engine was measured. */
+export function laneEngines(
+  answer: AgentCatalogAnswer,
+): Record<string, AgentEngineHealth> {
+  const engines: Record<string, AgentEngineHealth> = {};
+  for (const lane of servedLanes(answer)) {
+    const engine = understood(lane) ? parseEngineHealth(lane) : null;
+    if (engine !== null && engine !== "malformed")
+      engines[`${lane.provider_id}_${lane.transport}`] = engine;
+  }
+  return engines;
+}
 
 /** The words for each effort cadrumo-agent names (agent/spec.py `Effort`). */
 const EFFORT_WORDS = {
@@ -130,6 +150,14 @@ function laneHeldBy(t: Translate, lane: AgentProviderLane): string {
     return t("desktop.agent.lane_not_configured");
   if (health.authentication === "unauthenticated")
     return t("desktop.agent.lane_signed_out");
+  // A local engine that does not run is the cause behind an unreachable
+  // transport, so it is said before the transport.
+  const engine = parseEngineHealth(lane);
+  const engineWords =
+    engine !== null && engine !== "malformed"
+      ? engineNotRunningWords(t, engine)
+      : null;
+  if (engineWords !== null) return engineWords;
   if (health.transport === "unavailable" || !lane.executable)
     return t("desktop.agent.lane_unreachable");
   if (health.admission === "not_admitted")
@@ -137,6 +165,18 @@ function laneHeldBy(t: Translate, lane: AgentProviderLane): string {
   if (health.catalog === "unavailable" || health.catalog === "unknown")
     return t("desktop.agent.lane_no_catalog");
   return t("desktop.agent.unavailable");
+}
+
+/** That a lane's engine does not run, in words, with the door the service
+ * names; null for a running engine. */
+function engineWordsOf(
+  t: Translate,
+  engine: AgentEngineHealth,
+): { words: string; door: string } | null {
+  const words = engineNotRunningWords(t, engine);
+  return words !== null && engine.state === "not_running"
+    ? { words, door: engine.door }
+    : null;
 }
 
 /** Authentication and saved configuration are independent of a provider's
@@ -331,6 +371,11 @@ export function catalogChoices(
         const usable =
           runs && (writesModel(lane) || (listed.length > 0 && !noneHeld));
         const toDownload = listed.some((model) => !heldModel(model));
+        const engine = parseEngineHealth(lane);
+        const notRunning =
+          engine !== null && engine !== "malformed"
+            ? engineWordsOf(t, engine)
+            : null;
         return {
           id: wayId(lane),
           transport: lane.transport,
@@ -344,6 +389,7 @@ export function catalogChoices(
                     : laneHeldBy(t, lane),
               }),
           ...(toDownload ? { modelsToDownload: true } : {}),
+          ...(notRunning ? { engineNotRunning: notRunning } : {}),
           ...(capabilities.length > 0 ? { capabilities } : {}),
           ...(lane.catalog.recommended_entry_id
             ? { defaultModelId: lane.catalog.recommended_entry_id }

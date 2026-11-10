@@ -10,10 +10,8 @@ from rich.cells import cell_len
 from textual.widgets import Static
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import (
-    ModeloFormCasillaAddressV1,
-    ModeloFormField,
-)
+from .....application.modelo.work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.overview.calendar import holiday_coverage_statement
 from .....core.i18n.render import tr
 from .....core.logging import get_logger

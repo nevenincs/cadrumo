@@ -17,6 +17,7 @@ from ..casilla_lineage_totality import CasillaRowKey, lineage_totality, unresolv
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import filing_year_envelope
 from .lineage_totality import is_total
 from .synthetic_locale_fixtures import synthetic_locale_scope, write_test_label
 
@@ -25,7 +26,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 __all__ = ["synthetic_locale_scope"]
 
 _MODELO = "123"
-_EVIDENCE = "disenos_registro/modelo_123/files/2025.txt:188 box [07] first printed in 2025"
+# The synthetic editions run annually from the support floor; only their order matters.
+_Y0 = filing_year_envelope().floor
+_E0, _E1, _E2 = (str(_Y0 + offset) for offset in range(3))
+_EVIDENCE = f"disenos_registro/modelo_123/files/{_E2}.txt:188 box [07] first printed in {_E2}"
 _NO_PREDECESSOR = {
     "none": {
         "reason": "a parallel scheme variant taking effect alongside its siblings",
@@ -66,7 +70,7 @@ def _modelo(
     names: Mapping[str, str] | None = None,
     concurrent_from: date | None = None,
 ) -> ModeloDefinition:
-    """Build editions from 2023 onward; ``names`` maps an edition id to the predecessor it names.
+    """Build annual editions from the support floor onward; ``names`` maps an edition id to the predecessor it names.
 
     ``concurrent_from`` gives every edition that same start date and no end,
     which is how a modelo's parallel scheme variants are declared: siblings
@@ -75,7 +79,7 @@ def _modelo(
     named = names or {}
     revisions: dict[str, ModeloRevision] = {}
     for offset, casillas in enumerate(editions):
-        year = 2023 + offset
+        year = _Y0 + offset
         payload: dict[str, object] = {
             "id": str(year),
             "localization_key": f"test.schema.revision.{year}.label",
@@ -119,7 +123,7 @@ _PREDECESSOR = [_row("06", chain="base")]
 def test_a_successor_row_with_neither_lineage_nor_a_none_is_uncovered() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07")])
     report = lineage_totality([modelo], ())
-    assert report.uncovered == (_key("2024", "07"),)
+    assert report.uncovered == (_key(_E1, "07"),)
     assert not is_total(report)
 
 
@@ -130,7 +134,7 @@ def test_a_successor_row_whose_id_the_predecessor_carries_resolves() -> None:
 
 def test_an_id_starting_its_chain_in_a_successor_edition_is_unresolved() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07", chain="nueva")])
-    assert unresolved_successor_rows(modelo) == (_key("2024", "07"),)
+    assert unresolved_successor_rows(modelo) == (_key(_E1, "07"),)
 
 
 @pytest.mark.parametrize(
@@ -146,7 +150,7 @@ def test_an_absence_origin_declares_its_kind_of_none(origin: CasillaLineageOrigi
     declared = _modelo(_PREDECESSOR, [_row("07", chain=chain, origin=origin)])
     undeclared = _modelo(_PREDECESSOR, [_row("07", chain=chain)])
     assert unresolved_successor_rows(declared) == ()
-    assert unresolved_successor_rows(undeclared) == (_key("2024", "07"),)
+    assert unresolved_successor_rows(undeclared) == (_key(_E1, "07"),)
 
 
 def test_a_declared_continuation_origin_carries_lineage() -> None:
@@ -155,7 +159,7 @@ def test_a_declared_continuation_origin_carries_lineage() -> None:
 
 
 def test_the_first_edition_is_never_judged() -> None:
-    assert unresolved_successor_rows(_modelo([_row("06")], [_row("06", chain="x")])) == (_key("2024", "06"),)
+    assert unresolved_successor_rows(_modelo([_row("06")], [_row("06", chain="x")])) == (_key(_E1, "06"),)
     assert unresolved_successor_rows(_modelo([_row("06")])) == ()
 
 
@@ -175,7 +179,7 @@ def test_an_edition_declaring_no_predecessor_is_still_judged_row_by_row() -> Non
     carries.
     """
     unchained = _modelo(_PREDECESSOR, [_row("07")], last_declares_no_predecessor=True)
-    assert unresolved_successor_rows(unchained) == (_key("2024", "07"),)
+    assert unresolved_successor_rows(unchained) == (_key(_E1, "07"),)
 
     continuing = _modelo(_PREDECESSOR, [_row("07", chain="base")], last_declares_no_predecessor=True)
     assert unresolved_successor_rows(continuing) == ()
@@ -202,17 +206,17 @@ def test_a_concurrent_none_rooted_sibling_is_not_judged_against_its_sibling() ->
         [_row("06", chain="base")],
         [_row("07")],
         last_declares_no_predecessor=True,
-        concurrent_from=date(2023, 7, 1),
+        concurrent_from=date(_Y0, 7, 1),
     )
     assert unresolved_successor_rows(concurrent) == ()
 
     succeeding = _modelo([_row("06", chain="base")], [_row("07")], last_declares_no_predecessor=True)
-    assert unresolved_successor_rows(succeeding) == (_key("2024", "07"),)
+    assert unresolved_successor_rows(succeeding) == (_key(_E1, "07"),)
 
 
 def test_only_the_adjacent_predecessor_edition_resolves_an_id() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("08")], [_row("09", chain="base")])
-    assert unresolved_successor_rows(modelo) == (_key("2024", "08"), _key("2025", "09"))
+    assert unresolved_successor_rows(modelo) == (_key(_E1, "08"), _key(_E2, "09"))
 
 
 _SILENT_MIDDLE = [_row("07", chain="mid", origin=CasillaLineageOrigin.PREDECESSOR_EDITION_SILENT)]
@@ -220,31 +224,31 @@ _JUDGED = [_row("08", chain="base"), _row("09", chain="mid")]
 
 
 def test_a_named_non_adjacent_predecessor_is_the_edition_rows_are_judged_against() -> None:
-    """2025 names 2023 across 2024: ``base`` resolves there and ``mid``, carried only by 2024, does not.
+    """The third edition names the first across the second: ``base`` resolves there and ``mid``, carried only by the second edition, does not.
 
-    The adjacent control names 2024 and gets the opposite answer, so a rule
+    The adjacent control names the second edition and gets the opposite answer, so a rule
     that ignored the named edge and paired adjacent editions would report
     ``08`` in place of ``09`` for the non-adjacent edge.
     """
-    non_adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={"2024": "2023", "2025": "2023"})
-    adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={"2024": "2023", "2025": "2024"})
-    assert unresolved_successor_rows(non_adjacent) == (_key("2025", "09"),)
-    assert unresolved_successor_rows(adjacent) == (_key("2025", "08"),)
+    non_adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={_E1: _E0, _E2: _E0})
+    adjacent = _modelo(_PREDECESSOR, _SILENT_MIDDLE, _JUDGED, names={_E1: _E0, _E2: _E1})
+    assert unresolved_successor_rows(non_adjacent) == (_key(_E2, "09"),)
+    assert unresolved_successor_rows(adjacent) == (_key(_E2, "08"),)
 
 
 def test_an_exception_keyed_to_the_unresolved_row_covers_it() -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07"), _row("08")])
-    covered = lineage_totality([modelo], {_key("2024", "07")})
-    assert covered.uncovered == (_key("2024", "08"),)
+    covered = lineage_totality([modelo], {_key(_E1, "07")})
+    assert covered.uncovered == (_key(_E1, "08"),)
     assert covered.stale == ()
-    assert is_total(lineage_totality([modelo], {_key("2024", "07"), _key("2024", "08")}))
+    assert is_total(lineage_totality([modelo], {_key(_E1, "07"), _key(_E1, "08")}))
 
 
 def test_an_exception_for_a_row_that_now_carries_lineage_is_stale() -> None:
-    exception = {_key("2024", "07")}
+    exception = {_key(_E1, "07")}
     resolved = lineage_totality([_modelo(_PREDECESSOR, [_row("07", chain="base")])], exception)
     still_unresolved = lineage_totality([_modelo(_PREDECESSOR, [_row("07")])], exception)
-    assert resolved.stale == (_key("2024", "07"),)
+    assert resolved.stale == (_key(_E1, "07"),)
     assert not is_total(resolved)
     assert is_total(still_unresolved)
 
@@ -252,13 +256,13 @@ def test_an_exception_for_a_row_that_now_carries_lineage_is_stale() -> None:
 @pytest.mark.parametrize(
     "exception",
     [
-        pytest.param(_key("2024", "99"), id="row-removed"),
-        pytest.param(_key("2023", "06"), id="first-edition-row"),
-        pytest.param(_key("2024", "07", modelo="999"), id="modelo-outside-corpus"),
+        pytest.param(_key(_E1, "99"), id="row-removed"),
+        pytest.param(_key(_E0, "06"), id="first-edition-row"),
+        pytest.param(_key(_E1, "07", modelo="999"), id="modelo-outside-corpus"),
     ],
 )
 def test_an_exception_naming_no_unresolved_row_is_stale(exception: CasillaRowKey) -> None:
     modelo = _modelo(_PREDECESSOR, [_row("07")])
-    report = lineage_totality([modelo], {_key("2024", "07"), exception})
+    report = lineage_totality([modelo], {_key(_E1, "07"), exception})
     assert report.stale == (exception,)
     assert report.uncovered == ()

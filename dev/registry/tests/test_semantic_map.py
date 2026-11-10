@@ -12,11 +12,23 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 
 from ..pipeline.semantic_map import SemanticMap, SemanticMapEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
+
+
+_EPOCH = _design_epoch("aeat-dr-303-2026")
 
 
 def _anchor() -> dict[str, object]:
@@ -105,7 +117,7 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
     semantic_map = SemanticMap.model_validate(
         {
             "modelo": "303",
-            "design_epoch": "2026",
+            "design_epoch": _EPOCH,
             "source_ref": "aeat-dr-303-2026",
             "source_sha256": "a" * 64,
             "records": (
@@ -122,7 +134,7 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
 
     entry = semantic_map.entries[0]
     assert semantic_map.modelo == "303"
-    assert semantic_map.design_epoch == "2026"
+    assert semantic_map.design_epoch == _EPOCH
     assert semantic_map.source_ref == "aeat-dr-303-2026"
     assert semantic_map.source_sha256 == "a" * 64
     assert semantic_map.records[0].export_record_id == "registro-tipo-1"
@@ -155,7 +167,7 @@ def test_semantic_map_refuses_design_epoch_only_identity(identity_key: str) -> N
     """A source-pinned map cannot fall back to the design epoch alone."""
     payload = {
         "modelo": "303",
-        "design_epoch": "2026",
+        "design_epoch": _EPOCH,
         "source_ref": "aeat-dr-303-2026",
         "source_sha256": "a" * 64,
         "records": (

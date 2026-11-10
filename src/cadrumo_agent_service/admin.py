@@ -21,6 +21,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from .host.credential_frame import wipe
 from .providers.application.ports import ProviderCatalogUnavailableError
+from .providers.domain.record import LocalEngine, LocalPlacement
 
 ADMIN_DOCUMENT_MAX_BYTES = 4096
 ADMIN_RESPONSE_MAX_BYTES = 256 * 1024
@@ -85,8 +86,8 @@ class AdminTarget(Protocol):
         scope: Literal["once", "session", "remember"] | None = None,
         grant_id: str | None = None,
         conversation_id: str | None = None,
-        engine: Literal["llamacpp", "ollama"] | None = None,
-        placement: Literal["auto", "cpu_only"] | None = None,
+        engine: LocalEngine | None = None,
+        placement: LocalPlacement | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -112,8 +113,8 @@ class AdminRequest(BaseModel):
     scope: Literal["once", "session", "remember"] | None = None
     grant_id: Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")] | None = None
     conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
-    engine: Literal["llamacpp", "ollama"] | None = None
-    placement: Literal["auto", "cpu_only"] | None = None
+    engine: LocalEngine | None = None
+    placement: LocalPlacement | None = None
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytearray:

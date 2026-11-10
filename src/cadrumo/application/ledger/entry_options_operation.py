@@ -60,6 +60,7 @@ from ...domain.transactions.enums import (
 from ...domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ...domain.transactions.m210_income_classification import m210_payer_modes
 from ...domain.usage_ratios.model import eligible_usage_ratio_categories
+from ..export.tabular import ExportSerializationFormat
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import (
@@ -100,6 +101,7 @@ type EntryOptionFamily = Literal[
     "capital_good_kind",
     "capital_good_disposal",
     "import_format",
+    "export_format",
 ]
 
 
@@ -316,6 +318,7 @@ def ledger_entry_options(
         ("capital_good_kind", _plain(capital.kind_choices)),
         ("capital_good_disposal", _plain(capital.disposal_regime_choices)),
         ("import_format", _plain(installed_ledger_providers())),
+        ("export_format", _plain(ExportSerializationFormat)),
     )
     return LedgerEntryOptionsProjection(
         profile_id=profile_id,

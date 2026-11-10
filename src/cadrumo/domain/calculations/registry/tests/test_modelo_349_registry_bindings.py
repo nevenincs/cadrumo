@@ -19,6 +19,7 @@ from ..invoice_bindings import (
 )
 from ..schema import BindingDefinition
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope, open_ended_revision
 from .modelo_349_registry_support import (
     DECL_IMPORTE_OPERACIONES_CASILLA,
     DECL_IMPORTE_RECTIFICACIONES_CASILLA,
@@ -31,6 +32,10 @@ from .modelo_349_registry_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+# A supported exercise before the one filed: the rectified operations' year.
+_RECTIFIED_YEAR = filing_year_envelope().floor
 
 
 def _selector(binding: BindingDefinition) -> dict[str, Any]:
@@ -88,7 +93,7 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
 
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
     modelo, catalogues = load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = modelo.revisions[str(open_ended_revision("349").id)]
     invoice_bindings = [binding for binding in revision.bindings if binding.source == "m349_intracommunity_operation"]
 
     assert len(invoice_bindings) == 17
@@ -115,7 +120,7 @@ def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
         ),
@@ -124,7 +129,7 @@ def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("500.50"),
             intracommunity_clave="S",
         ),
@@ -134,13 +139,13 @@ def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
         invoice_id="inv-it-1-rect",
         party_tax_id="IT12345678901",
         country_code="IT",
-        transaction_date=date(2026, 3, 8),
+        transaction_date=date(_YEAR, 3, 8),
         base_amount=Decimal("200.00"),
         intracommunity_clave="E",
         is_rectification=True,
         rectified_base_previous=Decimal("180.00"),
         rectified_period="4T",
-        rectified_year=2025,
+        rectified_year=_RECTIFIED_YEAR,
     )
     return (*non_rect_obs, rect_obs)
 
@@ -151,7 +156,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     observations = _mixed_invoice_observations()
     *non_rect_obs, rect_obs = observations
 
-    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert set(resolved) == {
         "iva-349-declarante-numero-operadores",
@@ -184,13 +189,13 @@ def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_ac
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("3000.00"),
             intracommunity_clave="I",
         ),
     )
 
-    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert resolved["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
@@ -205,7 +210,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             invoice_id="inv-de-sale",
             party_tax_id="DE111111111",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="SALE GMBH",
@@ -215,7 +220,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="DE222222222",
             country_code="DE",
-            transaction_date=date(2026, 3, 2),
+            transaction_date=date(_YEAR, 3, 2),
             base_amount=Decimal("750.00"),
             intracommunity_clave="A",
             party_legal_name="SUPPLIER GMBH",
@@ -225,14 +230,14 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 3),
+            transaction_date=date(_YEAR, 3, 3),
             base_amount=Decimal("3000.00"),
             intracommunity_clave="I",
             party_legal_name="SERVIZI SRL",
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "E"
     assert rows[("iva-349-operador-row-nif", 1)] == "111111111"
@@ -252,7 +257,7 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
             invoice_id=invoice_id,
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, day),
+            transaction_date=date(_YEAR, 3, day),
             base_amount=base,
             intracommunity_clave="T",
             party_legal_name="TRIANGLE SARL",
@@ -263,8 +268,8 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
         )
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
-    values = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
+    values = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "T"
     assert rows[("iva-349-operador-row-base", 1)] == Decimal("650.00")
@@ -343,7 +348,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
@@ -353,7 +358,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             invoice_id="inv-de-2",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("500.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
@@ -363,14 +368,14 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, 7),
+            transaction_date=date(_YEAR, 3, 7),
             base_amount=Decimal("300.50"),
             intracommunity_clave="S",
             party_legal_name="FRANCE SARL",
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     # Two row groups: (DE, DE123456789, E) at row 1 and (FR, FR12345678901, S) at row 2.
     assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
@@ -403,39 +408,39 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             invoice_id="inv-de-rect",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1100.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
             is_rectification=True,
             rectified_base_previous=Decimal("1000.00"),
             rectified_period="2T",
-            rectified_year=2025,
+            rectified_year=_RECTIFIED_YEAR,
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-it-rect",
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("200.00"),
             intracommunity_clave="E",
             party_legal_name="ITALIA SRL",
             is_rectification=True,
             rectified_base_previous=Decimal("180.00"),
             rectified_period="4T",
-            rectified_year=2025,
+            rectified_year=_RECTIFIED_YEAR,
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(2026, 3, 31))
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
-    # DE/DE123456789/E/2025/2T at row 1, IT/IT12345678901/E/2025/4T at row 2.
+    # DE/DE123456789/E/<rectified year>/2T at row 1, IT/IT12345678901/E/<rectified year>/4T at row 2.
     assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "DE"
     assert rows[("iva-349-rectificacion-row-nif", 1)] == "123456789"
     assert rows[("iva-349-rectificacion-row-apellidos", 1)] == "ALEMAN GMBH"
     assert rows[("iva-349-rectificacion-row-clave", 1)] == "E"
-    assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == "2025"
+    assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == str(_RECTIFIED_YEAR)
     assert rows[("iva-349-rectificacion-row-periodo", 1)] == "2T"
     assert rows[("iva-349-rectificacion-row-base-rectificada", 1)] == Decimal("1100.00")
     assert rows[("iva-349-rectificacion-row-base-anterior", 1)] == Decimal("1000.00")
@@ -449,7 +454,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
 
     observations = _mixed_invoice_observations()
 
-    binding_values = resolve_invoice_binding_values(revision, observations, effective_date=date(2026, 3, 31))
+    binding_values = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
     casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.

@@ -12,7 +12,7 @@ from cadrumo.core.errors.error_codes import (
     declared_error_codes_by_qualname,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _HISTORY = Path(__file__).with_name("declared_code_history.txt")
 """Append-only: every code the catalogue has declared, so a removal is seen rather than forgotten."""

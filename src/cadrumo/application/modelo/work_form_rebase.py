@@ -37,13 +37,15 @@ from .edit_models import (
     ModeloEditHeldKind,
     ModeloEditScalarAddressV1,
 )
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
+    address_key,
+)
+from .work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
-    address_key,
     edit_address,
 )
 

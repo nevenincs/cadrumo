@@ -2495,6 +2495,12 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      prior_carries_unstated:
+        renta_negative_general_bases_pending: 'No es pot calcular el Modelo %{modelo}
+          de %{filing_year}: no consta si queden bases liquidables generals negatives
+          d''exercicis anteriors pendents de compensar (caselles %{boxes}). Desa la
+          declaració de l''any anterior o indica a la declaració que no en queda cap
+          de pendent. No s''ha desat res.'
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{period}
         %{filing_year}; completa abans aquestes dades de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil

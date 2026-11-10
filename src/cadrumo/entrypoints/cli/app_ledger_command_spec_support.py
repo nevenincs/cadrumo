@@ -7,6 +7,7 @@ from typing import Final
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
     FLAG_VALUE,
+    NON_BLANK_CONSTRAINT,
     TEXT_VALUE,
     DeferredTarget,
     ParameterConstraint,
@@ -47,7 +48,9 @@ def irpf_category_option(help_key: str) -> OptionSpec:
     )
 
 
-def optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+def optional_text_option(
+    name: str, declarations: tuple[str, ...], help_key: str, *, non_blank: bool = False
+) -> OptionSpec:
     """Declare an optional free-text option defaulting to absent.
 
     The most repeated parameter contract in the ledger command surface. Only the
@@ -58,6 +61,7 @@ def optional_text_option(name: str, declarations: tuple[str, ...], help_key: str
         name: The parameter's identifier.
         declarations: The CLI tokens that introduce it, aliases included.
         help_key: The translation key for its help text.
+        non_blank: Refuse an empty or blank value at the parse boundary, for an identifier.
 
     Returns:
         The immutable option declaration.
@@ -74,13 +78,15 @@ def optional_text_option(name: str, declarations: tuple[str, ...], help_key: str
         multiple=False,
         count=False,
         eager=False,
-        constraint=ParameterConstraint(),
+        constraint=NON_BLANK_CONSTRAINT if non_blank else ParameterConstraint(),
         show_default=True,
         hidden=False,
     )
 
 
-def required_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+def required_text_option(
+    name: str, declarations: tuple[str, ...], help_key: str, *, non_blank: bool = False
+) -> OptionSpec:
     """Declare a mandatory free-text option.
 
     Distinct from :func:`optional_text_option` in exactly one field, and the
@@ -91,6 +97,7 @@ def required_text_option(name: str, declarations: tuple[str, ...], help_key: str
         name: The parameter's identifier.
         declarations: The CLI tokens that introduce it, aliases included.
         help_key: The translation key for its help text.
+        non_blank: Refuse an empty or blank value at the parse boundary, for an identifier.
 
     Returns:
         The immutable option declaration.
@@ -107,7 +114,7 @@ def required_text_option(name: str, declarations: tuple[str, ...], help_key: str
         multiple=False,
         count=False,
         eager=False,
-        constraint=ParameterConstraint(),
+        constraint=NON_BLANK_CONSTRAINT if non_blank else ParameterConstraint(),
         show_default=True,
         hidden=False,
     )
@@ -147,13 +154,16 @@ def blank_default_text_option(name: str, declarations: tuple[str, ...], help_key
     )
 
 
-def repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
+def repeatable_text_option(
+    name: str, declarations: tuple[str, ...], help_key: str, *, non_blank: bool = False
+) -> OptionSpec:
     """Declare a repeatable free-text option collecting into a tuple.
 
     Args:
         name: The parameter's identifier.
         declarations: The CLI tokens that introduce it, aliases included.
         help_key: The translation key for its help text.
+        non_blank: Refuse an empty or blank value at the parse boundary, for an identifier.
 
     Returns:
         The immutable option declaration.
@@ -170,7 +180,7 @@ def repeatable_text_option(name: str, declarations: tuple[str, ...], help_key: s
         multiple=True,
         count=False,
         eager=False,
-        constraint=ParameterConstraint(),
+        constraint=NON_BLANK_CONSTRAINT if non_blank else ParameterConstraint(),
         show_default=True,
         hidden=False,
     )
@@ -205,12 +215,13 @@ def boolean_flag_option(name: str, declarations: tuple[str, ...], help_key: str)
     )
 
 
-def required_text_argument(name: str, help_key: str) -> ArgumentSpec:
+def required_text_argument(name: str, help_key: str, *, non_blank: bool = False) -> ArgumentSpec:
     """Declare a mandatory positional free-text argument.
 
     Args:
         name: The parameter's identifier.
         help_key: The translation key for its help text.
+        non_blank: Refuse an empty or blank value at the parse boundary, for an identifier.
 
     Returns:
         The immutable argument declaration.
@@ -221,13 +232,13 @@ def required_text_argument(name: str, help_key: str) -> ArgumentSpec:
         default=ParameterDefault.required(),
         help_key=TranslationKey(help_key),
         metavar=None,
-        constraint=ParameterConstraint(),
+        constraint=NON_BLANK_CONSTRAINT if non_blank else ParameterConstraint(),
         show_default=True,
         hidden=False,
     )
 
 
-def optional_text_argument(name: str, help_key: str) -> ArgumentSpec:
+def optional_text_argument(name: str, help_key: str, *, non_blank: bool = False) -> ArgumentSpec:
     """Declare an optional positional free-text argument defaulting to absent."""
     return ArgumentSpec(
         name=name,
@@ -235,7 +246,7 @@ def optional_text_argument(name: str, help_key: str) -> ArgumentSpec:
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),
         metavar=None,
-        constraint=ParameterConstraint(),
+        constraint=NON_BLANK_CONSTRAINT if non_blank else ParameterConstraint(),
         show_default=True,
         hidden=False,
     )
@@ -267,7 +278,7 @@ EVIDENCE_TRANSACTION_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     default=ParameterDefault.required(),
     help_key=TranslationKey("cli.app.ledger.evidence.pull_id_help"),
     metavar=None,
-    constraint=ParameterConstraint(),
+    constraint=NON_BLANK_CONSTRAINT,
     show_default=True,
     hidden=False,
 )

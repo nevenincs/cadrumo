@@ -312,7 +312,7 @@ Expose the toolset to Claude or any MCP client, with the safety boundary intact.
 :link: sign-in-to-an-ai-provider-by-hand
 :link-type: doc
 
-Sign in from a console when the in-app sign-in under Ajustes > Proveedores de IA fails.
+Sign in from a console when the in-app sign-in under Settings > AI providers fails.
 :::
 
 :::{grid-item-card} Troubleshooting

@@ -1,5 +1,6 @@
 import type * as React from "react";
 import type { CellRange, CommitKey, SelectionCause } from "./dataGridModel";
+import type { GridClipboard } from "./dataGridClipboard";
 
 /** What a cell's renderer knows of where it stands. */
 export type CellContext = {
@@ -177,6 +178,10 @@ export type DataGridProps<R> = {
   /** The text to put on the clipboard for a range, or null for none. */
   onCopy?: (range: CellRange) => string | null;
   onPaste?: (range: CellRange, text: string) => void;
+  /** The host clipboard. With it Ctrl+C, Ctrl+X and Ctrl+V are handled on
+   * the key itself, since a desktop webview raises no clipboard event for
+   * them; without it the browser's own copy and paste events serve. */
+  clipboard?: GridClipboard;
   onFill?: (range: CellRange, direction: "down" | "right") => void;
   /** In rem. */
   onColumnResize?: (column: string, width: number) => void;

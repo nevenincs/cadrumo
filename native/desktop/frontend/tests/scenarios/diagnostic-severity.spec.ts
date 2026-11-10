@@ -1,28 +1,53 @@
 import { expect, test } from "@playwright/test";
 
-// A refusal the window answers by asking again is a warning; the refusal that
-// ends the asking, and any refusal that does not pass by waiting, is an error.
-// The real Tauri adapter runs against a recording invoke boundary.
+// A refusal the window answers by asking again, within the wait the caller
+// expects, is a debug note; one asked again past that wait is a warning; the
+// refusal that ends the asking, and any refusal that does not pass by
+// waiting, is an error. The real Tauri adapter runs against a recording
+// invoke boundary.
 
 type Report = { level: string; command: string | null; code: string | null };
 
-for (const [name, code, scheduled, level] of [
+for (const [name, code, scheduled, expected, level] of [
   [
-    "a busy refusal that will be asked again",
+    "a busy refusal that will be asked again within the expected wait",
     "agent_service_busy",
     true,
+    true,
+    "DEBUG",
+  ],
+  [
+    "a busy refusal that will be asked again past the expected wait",
+    "agent_service_busy",
+    true,
+    false,
     "WARNING",
   ],
   [
-    "a reconnecting refusal that will be asked again",
-    "agent_reconnecting",
+    "a busy refusal asked again by a caller that names no expected wait",
+    "agent_service_busy",
     true,
+    null,
     "WARNING",
   ],
-  ["a busy refusal with no further ask", "agent_service_busy", false, "ERROR"],
+  [
+    "a reconnecting refusal that will be asked again within the expected wait",
+    "agent_reconnecting",
+    true,
+    true,
+    "DEBUG",
+  ],
+  [
+    "a busy refusal with no further ask",
+    "agent_service_busy",
+    false,
+    true,
+    "ERROR",
+  ],
   [
     "a failure that waiting does not cure",
     "agent_service_failed",
+    true,
     true,
     "ERROR",
   ],
@@ -30,7 +55,7 @@ for (const [name, code, scheduled, level] of [
   test(`${name} is reported at ${level}`, async ({ page }) => {
     await page.goto("/scenarios.html");
     const reports = await page.evaluate(
-      async ({ code, scheduled }) => {
+      async ({ code, scheduled, expected }) => {
         const reports: Report[] = [];
         Object.assign(window, {
           __CADRUMO_SHELL__: { token: "c".repeat(64) },
@@ -49,11 +74,16 @@ for (const [name, code, scheduled, level] of [
         const { tauriHost } = await window.__scenarioModules!.tauriHost();
         const session = tauriHost().agentSession!;
         await session
-          .providerCatalog(catalogReadRetry(() => scheduled))
+          .providerCatalog(
+            catalogReadRetry(
+              () => scheduled,
+              expected === null ? undefined : () => expected,
+            ),
+          )
           .catch(() => undefined);
         return reports;
       },
-      { code, scheduled },
+      { code, scheduled, expected },
     );
     expect(reports).toMatchObject([
       { level, command: "agent_provider_catalog", code },
@@ -61,7 +91,7 @@ for (const [name, code, scheduled, level] of [
   });
 
 for (const busyReads of [1, 4])
-  test(`Local AI catalog reads busy ${busyReads} time(s): warnings while it retries, an error only when it gives up`, async ({
+  test(`Local AI catalog reads busy ${busyReads} time(s): debug notes while it retries, an error only when it gives up`, async ({
     page,
   }) => {
     await page.goto("/scenarios.html?scenario=signed-out&bar=off");
@@ -168,20 +198,120 @@ for (const busyReads of [1, 4])
     }, busyReads);
     expect(result).toEqual(
       busyReads === 1
-        ? { status: "ready", reads: 2, levels: ["WARNING"] }
+        ? { status: "ready", reads: 2, levels: ["DEBUG"] }
         : {
             status: "failed",
             reads: 4,
-            levels: ["WARNING", "WARNING", "WARNING", "ERROR"],
+            levels: ["DEBUG", "DEBUG", "DEBUG", "ERROR"],
           },
     );
   });
+
+/** What the agent column's catalog hook, mounted alone over the real Tauri
+ * adapter whose service answers every catalog read busy, has asked and had
+ * recorded. */
+type BusyColumn = { reads: number; levels: string[] };
+
+test("an agent column whose service stays busy past the quiet bound records one warning, and none before", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/scenarios.html?scenario=signed-out&bar=off");
+  await page.waitForFunction(() => Boolean(window.__scenarioModules));
+  const bound = await page.evaluate(async () => {
+    const { react, dom, client } =
+      await window.__scenarioModules!.profileViews();
+    const hook = await window.__scenarioModules!.agentCatalog();
+    const { CATALOG_BUSY_QUIET_MS } =
+      await window.__scenarioModules!.catalogReadPolicy();
+    const held: BusyColumn = { reads: 0, levels: [] };
+    (window as unknown as { __busyColumn: BusyColumn }).__busyColumn = held;
+    Object.assign(window, {
+      __CADRUMO_SHELL__: { token: "f".repeat(64) },
+      __TAURI_INTERNALS__: {
+        async invoke(command: string, args: unknown) {
+          if (command === "desktop_frontend_diagnostic") {
+            const report = (args as { report: Report }).report;
+            if (report.command === "agent_provider_catalog")
+              held.levels.push(report.level);
+            return null;
+          }
+          if (command === "agent_provider_catalog") {
+            held.reads += 1;
+            throw { code: "agent_service_busy" };
+          }
+          return null;
+        },
+      },
+    });
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
+    const session = tauriHost().agentSession!;
+    type Status = import("../../src/shell/agentSession").AgentServiceStatus;
+    const status: Status = { state: "ready", agent_version: "fixture" };
+    const t = ((key: string) =>
+      key) as unknown as import("../../src/shell/strings").Translate;
+    function Probe() {
+      hook.useAgentCatalog({
+        t,
+        reader: "A",
+        session,
+        status,
+        readingHost: null,
+        setupSettled: null,
+        settingsChanges: 0,
+        opened: 0,
+        listChanges: 0,
+        chosen: null,
+        ranWith: undefined,
+      });
+      return null;
+    }
+    const container = document.createElement("div");
+    document.body.append(container);
+    dom.flushSync(() =>
+      client.createRoot(container).render(react.createElement(Probe)),
+    );
+    return CATALOG_BUSY_QUIET_MS;
+  });
+  const column = () =>
+    page.evaluate(
+      () => (window as unknown as { __busyColumn: BusyColumn }).__busyColumn,
+    );
+  // Steps longer than the column's longest pause: each pause is scheduled
+  // only once the read before it has been shown.
+  const step = 5_000;
+  const advance = async (steps: number) => {
+    for (let at = 0; at < steps; at++) {
+      await page.clock.fastForward(step);
+      await page.waitForTimeout(50);
+    }
+  };
+  await expect
+    .poll(async () => (await column()).levels.length)
+    .toBeGreaterThanOrEqual(1);
+  // Up to a step short of the bound every busy read is the wait expected.
+  await advance(Math.floor(bound / step) - 1);
+  const within = await column();
+  expect(within.reads).toBeGreaterThan(10);
+  expect(within.levels).toEqual(Array(within.reads).fill("DEBUG"));
+  // Past the bound the first busy read is one warning, and the reads that
+  // follow it are noted below a warning again.
+  await advance(6);
+  const past = await column();
+  expect(past.reads).toBeGreaterThan(within.reads + 2);
+  expect(past.levels.filter((level) => level === "WARNING")).toHaveLength(1);
+  expect(past.levels.filter((level) => level !== "WARNING")).toEqual(
+    Array(past.levels.length - 1).fill("DEBUG"),
+  );
+  expect(past.levels.at(-1)).toBe("DEBUG");
+});
 
 // A send the agent refuses for a model this computer does not hold is said
 // to the person with its next step: it is noted as a warning with its code.
 // A send refusal the column has no next step for stays an error.
 for (const [code, level] of [
   ["agent_gateway_model_not_installed", "WARNING"],
+  ["agent_gateway_model_does_not_fit", "WARNING"],
   ["agent_gateway_422", "ERROR"],
 ] as const)
   test(`a send refused with ${code} is reported at ${level}`, async ({

@@ -29,7 +29,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...core.time.clock import now
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
@@ -140,6 +140,17 @@ class _Declaration:
         return str(unit.modelo), unit.filing_year, unit.period.registry_token
 
 
+def _current_finding_keys(unit: WorkUnit, revisions: CalculationRevisionCatalogue) -> frozenset[str]:
+    """The finding keys of the disagreements the unit's current calculation revision states."""
+    current_id = unit.current_calculation_revision_id
+    current = None if current_id is None else revisions.get(current_id)
+    return frozenset(
+        issue.disagreement.finding_key
+        for issue in (() if current is None else current.source_issues)
+        if issue.disagreement is not None
+    )
+
+
 class CreditResolutionExecutor:
     """Run the resolution write path under exact-profile worker custody."""
 
@@ -236,17 +247,11 @@ class CreditResolutionExecutor:
         unit = bundle.work_unit.load().get(revision.work_unit_id)
         if unit is None or unit.bucket_id != profile_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        current_id = unit.current_calculation_revision_id
-        current = None if current_id is None else revisions.get(current_id)
         return _Declaration(
             revision,
             unit,
             bundle.credit_resolution,
-            frozenset(
-                issue.disagreement.finding_key
-                for issue in (() if current is None else current.source_issues)
-                if issue.disagreement is not None
-            ),
+            _current_finding_keys(unit, revisions),
         )
 
     def _prepare(
