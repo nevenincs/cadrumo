@@ -635,6 +635,44 @@ if len(MODELO_PRECONDITION_PROFILE_REGISTRY) != len(MODELO_PRECONDITION_PROFILES
     raise ValueError("modelo precondition profile identities must be unique")
 
 
+def _action_argument_bindings(
+    declared_action_id: str | None,
+    action_argument_values: Mapping[str, str | int | bool | Decimal] | None,
+    missing_action_arguments: tuple[str, ...],
+) -> tuple[ActionArgumentBinding, ...]:
+    """Bind resolved and missing arguments, requiring exact coverage of the catalogue declaration."""
+    if declared_action_id is None:
+        if missing_action_arguments:
+            raise ValueError("modelo precondition failure without an action cannot name missing arguments")
+        return ()
+    declaration = lookup_action(declared_action_id)
+    values = action_argument_values or {}
+    missing = set(missing_action_arguments)
+    declared_names = {item.argument_name for item in declaration.argument_specifications}
+    if (
+        len(missing) != len(missing_action_arguments)
+        or missing & set(values)
+        or set(values) | missing != declared_names
+    ):
+        raise ValueError("modelo action argument values must exactly match the catalogue declaration")
+    return (
+        *(
+            ActionArgumentBinding(
+                argument_name=name,
+                status=ActionArgumentStatus.RESOLVED,
+                value=value,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key=name,
+            )
+            for name, value in values.items()
+        ),
+        *(
+            ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+            for name in missing_action_arguments
+        ),
+    )
+
+
 def build_modelo_precondition_failure(
     *,
     subject_leaf_key: str,
@@ -667,36 +705,7 @@ def build_modelo_precondition_failure(
         provenance=provenance,
         values=evidence_values,
     )
-    bindings: tuple[ActionArgumentBinding, ...] = ()
-    if declared_action_id is None and missing_action_arguments:
-        raise ValueError("modelo precondition failure without an action cannot name missing arguments")
-    if declared_action_id is not None:
-        declaration = lookup_action(declared_action_id)
-        values = action_argument_values or {}
-        missing = set(missing_action_arguments)
-        declared_names = {item.argument_name for item in declaration.argument_specifications}
-        if (
-            len(missing) != len(missing_action_arguments)
-            or missing & set(values)
-            or set(values) | missing != declared_names
-        ):
-            raise ValueError("modelo action argument values must exactly match the catalogue declaration")
-        bindings = (
-            *(
-                ActionArgumentBinding(
-                    argument_name=name,
-                    status=ActionArgumentStatus.RESOLVED,
-                    value=value,
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key=name,
-                )
-                for name, value in values.items()
-            ),
-            *(
-                ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
-                for name in missing_action_arguments
-            ),
-        )
+    bindings = _action_argument_bindings(declared_action_id, action_argument_values, missing_action_arguments)
     if declared_action_id is None:
         conditionality = ActionConditionality.NOT_APPLICABLE
     elif missing_action_arguments:

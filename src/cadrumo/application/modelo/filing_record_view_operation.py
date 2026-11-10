@@ -16,7 +16,6 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
-from ...core.i18n.render import tr
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import profile_operation_subject
@@ -50,14 +49,14 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .declarations_workspace_contracts import DeclarationsWorkspaceFilingRefV1
-from .filing_projection import ModeloRelatedFilingProjection
+from .filing_projection import ModeloRelatedFilingProjection, related_filing_projections
 from .filing_record_list_contracts import ModeloFilingRecordListEntryProjection
 from .filing_record_ownership import load_profile_filing_record
 from .historical_filing_projection import (
     ModeloHistoricalComparisonProjection,
     ModeloHistoricalFilingContentProjection,
     compare_historical_filing_content,
+    historical_display_words,
     project_historical_filing_content,
 )
 from .verification_repository_ports import VerificationRepositoryBundle, VerificationRepositoryBundleFactory
@@ -223,33 +222,45 @@ class ModeloFilingRecordViewProjection(BaseModel):
     @model_validator(mode="after")
     def _bound_result(self) -> Self:
         record = self.record
-        layers = self.observation_layers
-        if (
-            record.filing_record_id != self.filing_record_id
-            or record.bucket_id != str(self.profile_id)
-            or record.modelo != layers.modelo
-            or record.filing_year != layers.filing_year
-            or record.period != layers.period
-            or record.member_nif != layers.member_nif
-            or self.historical_content.calculation_revision_id != record.calculation_revision_id
-        ):
-            raise ValueError("filing view coordinates do not match the selected profile and receipt")
-        for related in self.related_filings:
-            if (
-                related.modelo != record.modelo
-                or related.filing_year != record.filing_year
-                or related.period != record.period
-                or related.member_nif != record.member_nif
-            ):
-                raise ValueError("related filing does not match the selected filing coordinate")
-        identities = tuple(item.filing_record_id for item in self.related_filings)
-        if len(identities) != len(set(identities)):
-            raise ValueError("related filings repeat an identity")
-        if self.related_filings and record.filing_record_id not in identities:
-            raise ValueError("related filings omit the selected filing")
+        _require_matching_coordinates(self, record)
+        _require_related_filings_match(self.related_filings, record)
         if self.comparison is not None and self.comparison.base_filing_record_id != record.amends_filing_record_id:
             raise ValueError("historical comparison does not select the filing's amendment base")
         return self
+
+
+def _require_matching_coordinates(
+    view: ModeloFilingRecordViewProjection, record: ModeloFilingRecordListEntryProjection
+) -> None:
+    layers = view.observation_layers
+    if (
+        record.filing_record_id != view.filing_record_id
+        or record.bucket_id != str(view.profile_id)
+        or record.modelo != layers.modelo
+        or record.filing_year != layers.filing_year
+        or record.period != layers.period
+        or record.member_nif != layers.member_nif
+        or view.historical_content.calculation_revision_id != record.calculation_revision_id
+    ):
+        raise ValueError("filing view coordinates do not match the selected profile and receipt")
+
+
+def _require_related_filings_match(
+    related_filings: tuple[ModeloRelatedFilingProjection, ...], record: ModeloFilingRecordListEntryProjection
+) -> None:
+    for related in related_filings:
+        if (
+            related.modelo != record.modelo
+            or related.filing_year != record.filing_year
+            or related.period != record.period
+            or related.member_nif != record.member_nif
+        ):
+            raise ValueError("related filing does not match the selected filing coordinate")
+    identities = tuple(item.filing_record_id for item in related_filings)
+    if len(identities) != len(set(identities)):
+        raise ValueError("related filings repeat an identity")
+    if related_filings and record.filing_record_id not in identities:
+        raise ValueError("related filings omit the selected filing")
 
 
 def _resolve_period(
@@ -281,17 +292,7 @@ def capture(
     revision = revisions.get(record.calculation_revision_id)
     historical_content = project_historical_filing_content(record, revision)
     catalogue = bundle.filing.load()
-    related = tuple(
-        ModeloRelatedFilingProjection.from_reference(
-            DeclarationsWorkspaceFilingRefV1.from_record(item), payload.output_language
-        )
-        for item in sorted(catalogue.records.values(), key=lambda item: (item.filed_at, item.filing_record_id))
-        if item.bucket_id == record.bucket_id
-        and item.modelo == record.modelo
-        and item.filing_year == record.filing_year
-        and item.period == record.period
-        and item.member_nif == record.member_nif
-    )
+    related = related_filing_projections(catalogue, record, payload.output_language)
     base = catalogue.get(record.amends_filing_record_id) if record.amends_filing_record_id is not None else None
     if base is not None and base.filing_record_id not in {item.filing_record_id for item in related}:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -302,17 +303,7 @@ def capture(
         observation_layers=ModeloFilingObservationLayersProjection.from_layers(layers),
         historical_content=historical_content,
         related_filings=related,
-        historical_display_words=(
-            tr(
-                "workspace.declarations.related_filings.historical_display_unavailable",
-                locale=payload.output_language.value,
-            )
-            if historical_content.availability == "available"
-            else tr(
-                "workspace.declarations.related_filings.historical_content_missing",
-                locale=payload.output_language.value,
-            )
-        ),
+        historical_display_words=historical_display_words(historical_content, payload.output_language),
         comparison=compare_historical_filing_content(
             historical_content,
             None
