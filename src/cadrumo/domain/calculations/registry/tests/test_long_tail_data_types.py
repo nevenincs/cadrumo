@@ -24,8 +24,11 @@ from ..schema_scalars import (
     validate_registry_text_scalar,
 )
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class _TextScalar:
@@ -177,7 +180,7 @@ class TestCCAACode:
 
         assert accepted, "the validator accepts nothing; this probe cannot discriminate"
         with bundled_indexed_authority().operation() as operation:
-            members = resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).choices
+            members = resolve_calendar_ccaa_catalogue(effective_date=date(_YEAR, 7, 1), authority=operation).choices
         assert len(accepted) == len(members), (
             f"the shape check accepts {len(accepted)} codes but Spain has {len(members)} autonomous territories"
         )
@@ -285,11 +288,23 @@ _DATE = TypeAdapter(CalendarDate)
 
 class TestCalendarDate:
     def test_accepted(self) -> None:
-        for raw in ("2024-01-15", "2024-12-31", "15012024", "31122024"):
+        for raw in (
+            date(_YEAR, 1, 15).isoformat(),
+            date(_YEAR, 12, 31).isoformat(),
+            date(_YEAR, 1, 15).strftime("%d%m%Y"),
+            date(_YEAR, 12, 31).strftime("%d%m%Y"),
+        ):
             assert _DATE.validate_python(raw) == raw, raw
 
     def test_rejected(self) -> None:
-        for raw in ("", "2024", "2024-13-01", "32012024", "00012024", "2024/01/15"):
+        for raw in (
+            "",
+            str(_YEAR),
+            f"{_YEAR}-13-01",
+            f"3201{_YEAR}",
+            f"0001{_YEAR}",
+            date(_YEAR, 1, 15).strftime("%Y/%m/%d"),
+        ):
             with pytest.raises(ValidationError):
                 _DATE.validate_python(raw)
 

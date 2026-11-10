@@ -13,9 +13,12 @@ from ..formula_expression import evaluate_expression
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import UnresolvedFormulaDependencyError
 from ..schema_formula import FormulaExpression
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 _COUNTRY = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1"
 _QUOTA = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-cuota-iva-1"
@@ -55,7 +58,7 @@ def test_unknown_empty_occupied_and_zero_have_distinct_membership() -> None:
     assert _evaluate(_unused(), texts={_COUNTRY: "DE"}) == 0
     assert _evaluate(_unused(_QUOTA), amounts={_QUOTA: Decimal(0)}) == 0
     assert _evaluate(_unused(), booleans={_COUNTRY: False}) == 0
-    assert _evaluate(_unused(), dates={_COUNTRY: date(2025, 9, 30)}) == 0
+    assert _evaluate(_unused(), dates={_COUNTRY: date(_YEAR, 9, 30)}) == 0
 
 
 @pytest.mark.parametrize("channel", ["amounts", "texts", "dates", "booleans"])
@@ -63,7 +66,7 @@ def test_unused_row_refuses_a_supplied_value_in_every_channel(channel):
     values = {
         "amounts": Decimal(0),
         "texts": "DE",
-        "dates": date(2025, 9, 30),
+        "dates": date(_YEAR, 9, 30),
         "booleans": False,
     }
     with pytest.raises(RegistryValidationError, match="unused record row"):
@@ -102,7 +105,7 @@ def test_row_predicate_requires_one_binding_leaf(args) -> None:
 
 @pytest.mark.parametrize("occupied", [False, True])
 def test_snapshot_runtime_consumes_closed_source_evidence(occupied: bool) -> None:
-    snapshot = published_snapshot("369", filing_year=2025, period="EXT-3T")
+    snapshot = published_snapshot("369", filing_year=_YEAR, period="EXT-3T")
     formula = snapshot.revision.formulas[0].model_copy(
         update={
             "expression": FormulaExpression(

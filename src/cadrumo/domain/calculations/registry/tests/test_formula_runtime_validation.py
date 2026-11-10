@@ -14,6 +14,7 @@ from ..formula_text_inputs import validated_text_input_casilla_ids
 from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_surfaces import CasillaConstraints
+from .authored_editions import filing_year_envelope
 from .formula_runtime_support import (
     M130_AGRARIAN_VOLUME_CASILLA,
     M130_AGRARIAN_WITHHELD_CASILLA,
@@ -31,6 +32,8 @@ from .formula_runtime_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_registry_formula_runtime_rejects_non_decimal_input(
     committed_modelo_130_snapshot: RegistrySnapshot,
@@ -39,7 +42,7 @@ def test_registry_formula_runtime_rejects_non_decimal_input(
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={M130_INGRESOS_CASILLA: 100},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
 
@@ -54,7 +57,7 @@ def test_registry_formula_runtime_rejects_non_string_input_key_at_entry(
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={1: Decimal("1"), "bad key": Decimal("2")},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
@@ -68,7 +71,7 @@ def test_registry_formula_runtime_aggregates_malformed_input_keys_with_numeric_i
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={"bad key": Decimal("1"), "also bad": Decimal("2")},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_input_casillas"
@@ -86,7 +89,7 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             committed_modelo_130_snapshot,
             inputs={},
             text_inputs={1: "general", "bad key": "general"},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
@@ -100,7 +103,7 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             committed_modelo_130_snapshot,
             inputs={},
             text_inputs={"bad key": "general", "also bad": "other"},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
     assert refused.value.translated_message == "errors.calc.unknown_text_input_casillas"
@@ -127,7 +130,7 @@ def test_registry_formula_runtime_rejects_binding_id_supplied_as_casilla_input(
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
 
@@ -139,7 +142,7 @@ def test_registry_formula_runtime_rejects_unknown_binding_values(
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={},
-            date_context={"filing_period": date(2026, 3, 31)},
+            date_context={"filing_period": date(_YEAR, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
             binding_values={
                 PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
@@ -155,7 +158,7 @@ def test_registry_formula_runtime_rejects_unknown_relation_values(
         calculate_registry_snapshot(
             committed_modelo_180_snapshot,
             inputs={},
-            date_context={"filing_period": date(2026, 12, 31)},
+            date_context={"filing_period": date(_YEAR, 12, 31)},
             relation_values={
                 "modelo-180-115-base-anual": Decimal("550.00"),
                 "modelo-180-115-retenciones-anual": Decimal("114.00"),
@@ -173,7 +176,7 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
         calculate_registry_snapshot(
             snapshot,
             inputs={},
-            date_context={"filing_period": date(2026, 4, 20)},
+            date_context={"filing_period": date(_YEAR, 4, 20)},
             relation_values={"modelo-180-115-base-anual": Decimal("1")},
         )
 
