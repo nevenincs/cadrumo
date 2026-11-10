@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.access_contracts import (
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -66,7 +67,7 @@ _SCOPE_DENIED = AccessDenialCode.OPERATION_DENIED.value
 _COMMITTING = frozenset(AccessAction)
 _READING = _COMMITTING - {AccessAction.COMMIT}
 
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 10, 10, 12, tzinfo=UTC)
 _BOOT = UUID("5bb00000-0000-4000-8000-000000000001")
 _CONNECTION = UUID("5bb00000-0000-4000-8000-000000000002")
 _PARENT_CONNECTION = UUID("5bb00000-0000-4000-8000-000000000003")

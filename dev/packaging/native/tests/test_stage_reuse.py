@@ -19,7 +19,7 @@ from ..hashing import digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-STAMP = BuildStamp("2026102001", 1, "2026-10-20T08:00:00Z")
+STAMP = BuildStamp("2026102001", 1, "1980-10-20T08:00:00Z")
 
 
 def _write(path: Path, content: str | bytes) -> Path:

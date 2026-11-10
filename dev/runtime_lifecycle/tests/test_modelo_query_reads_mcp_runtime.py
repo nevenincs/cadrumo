@@ -50,6 +50,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.modelo_query_operation_test_support import (
     ModeloQueryConformanceCase,
     prepare_modelo_query_conformance_case,
@@ -87,7 +88,6 @@ _GRANTED_IDS = (
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
 )
-_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _structured(result: CallToolResult) -> dict[str, JsonValue]:
@@ -103,7 +103,7 @@ _RESULT_MODELS: dict[type[BaseModel], type[OperationResultProjectionSuccessV1[An
 }
 
 
-def _scope(client_id: UUID) -> AccessScope:
+def _scope(client_id: UUID, period: Period) -> AccessScope:
     return AccessScope(
         operations=frozenset(_GRANTED_IDS),
         actions=frozenset(
@@ -142,7 +142,7 @@ def _scope(client_id: UUID) -> AccessScope:
                 ),
             }
         ),
-        periods=frozenset({_PERIOD}),
+        periods=frozenset({period}),
         allow_period_independent=False,
         allow_delegation=False,
     )
@@ -315,11 +315,23 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     """Release full canonical rows only for the exact enrolled profile and period."""
+    seeded: list[tuple[ModeloQueryConformanceCase, ...]] = []
+
+    def prepare(profile_id: UUID, _root: Path) -> tuple[ModeloQueryConformanceCase, ...]:
+        seeded.append(_prepare(profile_id, authority_operation))
+        return seeded[0]
+
+    def scope_for(client_id: UUID) -> AccessScope:
+        # The period the seeded work unit lives in is the only one the key may read.
+        listed = seeded[0][0].request
+        assert isinstance(listed, ModeloBindingsListRequest)
+        return _scope(client_id, Period.from_year_and_code(listed.year, listed.period_code))
+
     with native_api_cli_session(
         tmp_path,
         invoke_cli=run_cadrumo_cli,
-        scope_for_destination=_scope,
-        prepare_profile=lambda profile_id, _root: _prepare(profile_id, authority_operation),
+        scope_for_destination=scope_for,
+        prepare_profile=prepare,
     ) as enrolled:
         monkeypatch.setattr(credentials, "installed_automation_secret_store", lambda: enrolled._client_native)
         adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
@@ -331,15 +343,22 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
                 assert authenticated.is_error is False, _structured(authenticated)
                 assert _structured(authenticated)["session"] == "key", _structured(authenticated)
 
+                list_case = enrolled.prepared[0]
+                assert isinstance(list_case.request, ModeloBindingsListRequest)
                 published = await sdk.call_tool(
-                    "authority", {"query": "describe", "modelo": "303", "filing_year": 2025, "period": "1T"}
+                    "authority",
+                    {
+                        "query": "describe",
+                        "modelo": "303",
+                        "filing_year": list_case.request.year,
+                        "period": list_case.request.period_code,
+                    },
                 )
                 assert published.is_error is False, _structured(published)
                 assert _structured(published)["logical_generation"] == authority_operation.pin().logical_generation
 
-                list_case = enrolled.prepared[0]
-                assert isinstance(list_case.request, ModeloBindingsListRequest)
-                wrong_period_request = list_case.request.model_copy(update={"year": 2026})
+                other_year = next(year for year in filing_year_envelope().years if year != list_case.request.year)
+                wrong_period_request = list_case.request.model_copy(update={"year": other_year})
                 denied_period = await sdk.call_tool(
                     "execute",
                     {

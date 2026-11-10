@@ -51,7 +51,7 @@ def test_the_proposal_grants_every_agent_operation_and_each_category_to_the_mint
     contracts: OperationPublicContractSetV1,
 ) -> None:
     destination = uuid4()
-    issued = datetime(2026, 10, 12, 9, 30, tzinfo=UTC)
+    issued = datetime(1980, 10, 12, 9, 30, tzinfo=UTC)
 
     proposal = agent_key_proposal.agent_key_proposal(contracts, destination_id=destination, now=issued)
 
@@ -84,7 +84,7 @@ def test_the_packaged_requester_loads_the_builder_by_path_alone(contracts: Opera
     builder = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(builder)
     destination = uuid4()
-    issued = datetime(2026, 10, 12, 9, 30, tzinfo=UTC)
+    issued = datetime(1980, 10, 12, 9, 30, tzinfo=UTC)
 
     loaded = builder.agent_key_proposal(contracts, destination_id=destination, now=issued)
 

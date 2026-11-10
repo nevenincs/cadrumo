@@ -261,7 +261,7 @@ def test_manifest_readings_attach_only_to_the_pixels_they_were_recorded_against(
     described = _settled_frame(tmp_path, "home--ready__small__dark", (1, 1, 1))
     _settled_frame(tmp_path, "home--ready__small__light", (2, 2, 2))
     manifest = Manifest(
-        generated_at="2026-09-29T12:00:00+00:00",
+        generated_at="1980-09-29T12:00:00+00:00",
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
         cell_height=22,
