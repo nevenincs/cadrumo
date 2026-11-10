@@ -23,6 +23,7 @@ import { LEDGER_SHAPES } from "./ledgerFixture";
 import { modeloShape } from "./modeloFixture";
 import { findScenario, type Scenario } from "./scenarios";
 import { SETUP_SHAPES } from "./setupFixture";
+import { parseFixtureEngineHealth } from "./fixtures/agentCatalog";
 
 import "virtual:desktop-palette.css";
 
@@ -45,6 +46,17 @@ function docsLanguages(origin: string, search: string): DocsLanguage[] {
     code,
     entry: `${origin}/${code === "en" ? "" : `${code}/`}index.html?search=${search}`,
   }));
+}
+
+/** The engine and placement lists a scenario's address writes, each a
+ * comma-separated list; none where it writes neither. */
+function engineChoices(engines: string | null, placements: string | null) {
+  if (engines === null && placements === null) return undefined;
+  const list = (text: string) => text.split(",");
+  return {
+    ...(engines === null ? {} : { engines: list(engines) }),
+    ...(placements === null ? {} : { placements: list(placements) }),
+  };
 }
 
 function readParams() {
@@ -102,11 +114,21 @@ function readParams() {
         "declared",
         "unsupported",
         "local-only",
+        "engines-only",
       ] as const
     ).find((catalog) => catalog === params.get("catalog")),
     // Which of the local lane's models the made-up computer holds.
     localModels: (["none", "all"] as const).find(
       (held) => held === params.get("models"),
+    ),
+    // What the made-up agent states of each local engine: a JSON object
+    // keyed by engine token.
+    engineHealth: parseFixtureEngineHealth(params.get("engine_health")),
+    // The engines and placements the made-up agent offers, each a
+    // comma-separated list written as served.
+    engineChoices: engineChoices(
+      params.get("engine_choices"),
+      params.get("placement_choices"),
     ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
@@ -302,6 +324,8 @@ function Scenarios() {
       agentSkills: initial.agentSkills,
       agentCatalog: initial.agentCatalog,
       localModels: initial.localModels,
+      engineHealth: initial.engineHealth,
+      engineChoices: initial.engineChoices,
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,

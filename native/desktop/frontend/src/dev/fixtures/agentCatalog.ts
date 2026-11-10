@@ -2,6 +2,7 @@ import type {
   AgentCatalogEntry,
   AgentDeclaredCatalog,
   AgentEffort,
+  AgentEngineWire,
   AgentLaneCapability,
   AgentModelLicenceFacts,
   AgentNativeControl,
@@ -100,6 +101,8 @@ const HEALTHY: Health = {
   selectable: true,
   reasons: [],
   checked_at: CHECKED,
+  // Only the local engines' API lanes state one, below.
+  engine: null,
 };
 
 /** A lane held back, with the axis that holds it. */
@@ -316,6 +319,16 @@ const FIXTURES: Record<string, Fixture> = {
 
 const KEYED = new Set(["gateway/cli"]);
 
+/** The lanes of the local engines, which state whether the engine runs. */
+const ENGINE_LANES = new Set(["ollama/api", "llamacpp/api"]);
+
+const runningEngine = (key: string): AgentEngineWire => ({
+  engine: key.split("/")[0] ?? "",
+  state: "running",
+  reason: null,
+  door: null,
+});
+
 function lane(declared: DeclaredLane): AgentProviderLane {
   const key = `${declared.provider_id}/${declared.transport}`;
   const fixture = FIXTURES[key] ?? {};
@@ -332,7 +345,11 @@ function lane(declared: DeclaredLane): AgentProviderLane {
     execution_mode: declared.execution_mode,
     executable: declared.executable,
     model_source: declared.model_source,
-    health: { ...HEALTHY, ...(held ? HELD[held] : {}) },
+    health: {
+      ...HEALTHY,
+      ...(held ? HELD[held] : {}),
+      ...(ENGINE_LANES.has(key) ? { engine: runningEngine(key) } : {}),
+    },
     catalog: {
       schema_version: 1,
       state: held
@@ -368,6 +385,68 @@ export const FIXTURE_CATALOG: AgentProviderCatalog = {
   api_version: "v1",
   providers: DECLARED_LANES.map(lane),
 };
+
+/** What a scenario makes the made-up service say of each local engine, by
+ * engine token: the answer exactly as written, so a scenario can also state
+ * one that breaks the contract. Null states none was measured. */
+export type FixtureEngineHealth = Partial<
+  Record<"llamacpp" | "ollama", unknown>
+>;
+
+/** `catalog` with each stated engine's health as written. An engine stated
+ * as not running is held back as the service holds back a lane it cannot
+ * reach. */
+export function withEngineHealth(
+  catalog: AgentProviderCatalog,
+  health: FixtureEngineHealth,
+): AgentProviderCatalog {
+  return {
+    ...catalog,
+    providers: (catalog.providers ?? []).map((served) => {
+      const key = `${served.provider_id}/${served.transport}`;
+      if (!ENGINE_LANES.has(key) || !(served.provider_id in health))
+        return served;
+      const stated = health[served.provider_id as "llamacpp" | "ollama"];
+      const down =
+        typeof stated === "object" &&
+        stated !== null &&
+        "state" in stated &&
+        stated.state === "not_running";
+      return {
+        ...served,
+        health: {
+          ...served.health,
+          engine: stated as AgentEngineWire | null,
+          ...(down
+            ? {
+                transport: "unavailable" as const,
+                selectable: false,
+                reasons: ["engine_not_running"],
+              }
+            : {}),
+        },
+      };
+    }),
+  };
+}
+
+/** The engine health a scenario's address states: a JSON object keyed by
+ * engine token. */
+export function parseFixtureEngineHealth(
+  text: string | null,
+): FixtureEngineHealth | undefined {
+  if (text === null) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+      ? (parsed as FixtureEngineHealth)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /** Which models of the made-up catalog the made-up computer holds: the
  * setup fixture marks a model it downloaded or removed, and the made-up

@@ -14,8 +14,11 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
+import type { AgentEngineHealth } from "../../shell/agentSession";
+import { engineNotRunningWords } from "../../shell/engineHealth";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
+import { EngineDoor } from "../setup/EngineDoor";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
 import { SignInAdvice } from "./SignInAdvice";
 import type {
@@ -32,18 +35,26 @@ type ConnectionStatus =
   | "setup_needed"
   | "sign_in_needed"
   | "unconfirmed"
+  | "engine_not_running"
   | "off";
 
-/** Describe what is set, without claiming more than the reading says. */
-function connectionStatus(provider: ProviderStatus): ConnectionStatus {
+/** Describe what is set, without claiming more than the reading says. A
+ * keyless lane whose local engine the service measured as not running says
+ * so, once it is otherwise usable. */
+function connectionStatus(
+  provider: ProviderStatus,
+  engine: AgentEngineHealth | null = null,
+): ConnectionStatus {
   if (provider.reason === "record_unreadable") return "setup_needed";
   if (provider.mode === "disabled") return "off";
   if (provider.readiness === "unusable") return "setup_needed";
   // An app connection needs its app, whatever it signs in with.
   if (provider.cliState === "not_installed") return "setup_needed";
   // A connection with no key and no sign-in has nothing to set up.
-  if (provider.authKind === "none")
+  if (provider.authKind === "none") {
+    if (engine?.state === "not_running") return "engine_not_running";
     return provider.readiness === "ready" ? "ready" : "not_checked";
+  }
   if (provider.authKind === "provider_sign_in_only") {
     if (
       provider.cliState === "installed_signed_in" ||
@@ -78,6 +89,7 @@ const STATUS_WORDS = {
   setup_needed: "desktop.providers.status_setup_needed",
   sign_in_needed: "desktop.providers.status_sign_in_needed",
   unconfirmed: "desktop.providers.status_unconfirmed",
+  engine_not_running: "desktop.agent.engine_not_running",
   off: "desktop.providers.status_off",
 } as const satisfies Record<ConnectionStatus, string>;
 
@@ -96,6 +108,7 @@ const GLYPHS: Partial<
   ready: { icon: "check", tone: "text-success" },
   sign_in_needed: { icon: "alert", tone: "text-warning" },
   unconfirmed: { icon: "alert", tone: "text-warning" },
+  engine_not_running: { icon: "alert", tone: "text-warning" },
 };
 
 /** The text colour of a connection's name. */
@@ -155,8 +168,12 @@ function refusalWords(t: Translate, code: string): string {
 
 /** The one line that says what to do about a connection, or null where its
  * status already says it all. */
-function detailWords(t: Translate, provider: ProviderStatus): string | null {
-  const status = connectionStatus(provider);
+function detailWords(
+  t: Translate,
+  provider: ProviderStatus,
+  engine: AgentEngineHealth | null,
+): string | null {
+  const status = connectionStatus(provider, engine);
   if (status === "off")
     return provider.credentialSaved
       ? t("desktop.providers.detail_off_kept")
@@ -167,7 +184,10 @@ function detailWords(t: Translate, provider: ProviderStatus): string | null {
     return t("desktop.providers.detail_app_missing", {
       provider: provider.name,
     });
-  if (provider.authKind === "none") return null;
+  if (provider.authKind === "none")
+    return status === "engine_not_running" && engine
+      ? engineNotRunningWords(t, engine)
+      : null;
   if (status === "unconfirmed") return statusWords(t, status);
   if (provider.authKind === "provider_sign_in_only") {
     if (status === "setup_needed")
@@ -314,6 +334,7 @@ function WayRow({
   onSignIn,
   consoleSignInCommand,
   models,
+  engine,
 }: {
   provider: ProviderStatus;
   hidden?: boolean;
@@ -330,6 +351,8 @@ function WayRow({
   consoleSignInCommand?: string;
   /** The models of a keyless lane on this computer, shown while it is on. */
   models?: ReactNode;
+  /** What the service measured of the lane's local engine, where it did. */
+  engine: AgentEngineHealth | null;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -338,8 +361,8 @@ function WayRow({
   const keyless = provider.authKind === "none";
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
-  const state = connectionStatus(provider);
-  const detail = detailWords(t, provider);
+  const state = connectionStatus(provider, engine);
+  const detail = detailWords(t, provider, engine);
   const connection = connectionWords(t, provider.transport);
   // A keyless lane runs against the server on this computer that Cadrumo
   // launches the agent with, not the address the agent declares by default,
@@ -381,6 +404,11 @@ function WayRow({
         />
       </div>
       {detail && <p className="text-sm text-foreground">{detail}</p>}
+      {state === "engine_not_running" && engine?.state === "not_running" && (
+        <div className="flex flex-wrap gap-2">
+          <EngineDoor door={engine.door} />
+        </div>
+      )}
       {state === "unconfirmed" && (
         <SignInAdvice
           causes={[provider.cliStateCause]}
@@ -494,6 +522,7 @@ function providerGroups(providers: readonly ProviderStatus[]): ProviderGroup[] {
 function ProviderGroupRow({
   group,
   shownLanes,
+  engineOf,
   t,
   renderLane,
   searchMatch = true,
@@ -501,6 +530,7 @@ function ProviderGroupRow({
 }: {
   group: ProviderGroup;
   shownLanes: readonly ProviderStatus[];
+  engineOf: (lane: ProviderStatus) => AgentEngineHealth | null;
   t: Translate;
   renderLane: (lane: ProviderStatus) => ReactNode;
   searchMatch?: boolean;
@@ -531,7 +561,7 @@ function ProviderGroupRow({
           />
           <span className="flex w-full basis-full flex-wrap gap-x-3 gap-y-1">
             {shownLanes.map((lane) => {
-              const state = connectionStatus(lane);
+              const state = connectionStatus(lane, engineOf(lane));
               return (
                 <span
                   key={lane.id}
@@ -591,6 +621,7 @@ export function ProviderSettings({
   consoleSignInCommand,
   identity = null,
   localModels,
+  engines = {},
   query = "",
   searching = false,
   embedded = false,
@@ -628,6 +659,8 @@ export function ProviderSettings({
   /** The model controls of a keyless lane, where the host offers them: a
    * lane on this computer has no key or sign-in, only its models. */
   localModels?: (lane: ProviderStatus) => ReactNode;
+  /** What the service measured of each local engine's lane, by way id. */
+  engines?: Readonly<Record<string, AgentEngineHealth>>;
   query?: string;
   searching?: boolean;
   embedded?: boolean;
@@ -657,13 +690,15 @@ export function ProviderSettings({
     ? (signInMethods[selectedProvider.provider] ?? [])
     : [];
   const normalizedQuery = query.trim().toLocaleLowerCase();
+  const engineOf = (lane: ProviderStatus) =>
+    lane.authKind === "none" ? (engines[lane.id] ?? null) : null;
   const groups = providerGroups(providers);
   const laneMatches = (group: ProviderGroup, lane: ProviderStatus) =>
     !normalizedQuery ||
     [
       group.name,
       connectionWords(t, lane.transport),
-      statusWords(t, connectionStatus(lane)),
+      statusWords(t, connectionStatus(lane, engineOf(lane))),
     ]
       .join(" ")
       .toLocaleLowerCase()
@@ -691,6 +726,7 @@ export function ProviderSettings({
             key={group.provider}
             group={group}
             shownLanes={group.lanes.filter((lane) => laneMatches(group, lane))}
+            engineOf={engineOf}
             searchMatch={groupMatches(group)}
             searching={searching || Boolean(normalizedQuery)}
             t={t}
@@ -698,6 +734,7 @@ export function ProviderSettings({
               <WayRow
                 key={lane.id}
                 provider={lane}
+                engine={engineOf(lane)}
                 hidden={!laneMatches(group, lane)}
                 busy={busyId === lane.id}
                 outcome={outcomes[lane.id]}

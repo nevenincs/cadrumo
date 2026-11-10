@@ -41,9 +41,11 @@ import {
   type FixtureAsks,
   type FixtureCatalog,
   type FixtureDocuments,
+  type FixtureEngineChoices,
   type FixtureLocalModels,
   type FixtureStream,
 } from "./agentFixtureHost";
+import type { FixtureEngineHealth } from "./fixtures/agentCatalog";
 import { agentAccessFixture } from "./agentAccessFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
@@ -125,6 +127,12 @@ export type ScenarioHostOptions = {
   /** Which of the local lane's models the made-up computer holds, where not
    * as the fixture catalog writes it. */
   localModels?: FixtureLocalModels;
+  /** What the made-up agent states of each local engine, where not every
+   * engine running. */
+  engineHealth?: FixtureEngineHealth;
+  /** The engines and placements the made-up agent offers, where not all it
+   * knows. */
+  engineChoices?: FixtureEngineChoices;
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
@@ -609,6 +617,8 @@ export function scenarioHost(
     skills: options.agentSkills ?? "bundled",
     catalog: options.agentCatalog ?? "served",
     ...(options.localModels ? { localModels: options.localModels } : {}),
+    ...(options.engineHealth ? { engineHealth: options.engineHealth } : {}),
+    ...(options.engineChoices ? { engineChoices: options.engineChoices } : {}),
   });
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;

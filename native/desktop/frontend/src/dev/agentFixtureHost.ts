@@ -34,6 +34,8 @@ import type {
 import {
   FIXTURE_CATALOG,
   FIXTURE_DECLARED_CATALOG,
+  withEngineHealth,
+  type FixtureEngineHealth,
   type FixtureModelPresence,
 } from "./fixtures/agentCatalog";
 import {
@@ -121,14 +123,23 @@ export type FixtureLocalModels = "none" | "all";
  * starts and for a moment after the scenario publishes it ready, or starting
  * with only the agent's declared catalog until the scenario publishes it
  * ready, or served with the local lane alone, as on a computer where no
- * other provider is set up. */
+ * other provider is set up, or with the two local engines' lanes alone. */
 export type FixtureCatalog =
   | "served"
   | "busy"
   | "busy-past-ready"
   | "declared"
   | "unsupported"
-  | "local-only";
+  | "local-only"
+  | "engines-only";
+
+/** What the made-up service offers to choose among for the local engine and
+ * its placement, where not every engine and placement it knows: each list is
+ * served as written. */
+export type FixtureEngineChoices = {
+  engines?: readonly string[];
+  placements?: readonly string[];
+};
 
 /** How long a `busy-past-ready` service stays busy once it reports ready,
  * as work begun before it was ready ends: longer than reads asked back to
@@ -230,6 +241,8 @@ export function fixtureAgent({
   catalog = "served",
   models,
   localModels,
+  engineHealth,
+  engineChoices,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -254,6 +267,11 @@ export function fixtureAgent({
   /** The local lane holds none of its models yet, as before any setup, or
    * all of them, as after every download; where left out, as written. */
   localModels?: FixtureLocalModels;
+  /** What the service states of each local engine, where not as the fixture
+   * catalog writes it: every engine running. */
+  engineHealth?: FixtureEngineHealth;
+  /** The engines and placements the service offers, where not all it knows. */
+  engineChoices?: FixtureEngineChoices;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -282,9 +300,22 @@ export function fixtureAgent({
     engine: AgentLocalEngineToken;
     placement: AgentLocalPlacement;
   } = { engine: "llamacpp", placement: "auto" };
+  // The lists are served as written; a scenario that writes a token the
+  // contract does not know breaks the contract on purpose.
+  const engineChoicesServed = () => ({
+    choices: {
+      engine: [
+        ...(engineChoices?.engines ?? ["llamacpp", "ollama"]),
+      ] as AgentLocalEngineToken[],
+      placement: [
+        ...(engineChoices?.placements ?? ["auto", "cpu_only"]),
+      ] as AgentLocalPlacement[],
+    },
+  });
   const engineSnapshot = (): AgentLocalEngine => ({
     state: "readable",
     ...engine,
+    ...engineChoicesServed(),
     revision: revisionOf(committed),
   });
   const listSnapshot = (): AgentLocalModels => ({
@@ -946,11 +977,17 @@ export function fixtureAgent({
           const id = `${lane.provider_id}_${lane.transport}`;
           return (
             !off.has(id) &&
-            (catalog !== "local-only" || id === FIXTURE_LOCAL_LANE)
+            (catalog !== "local-only" || id === FIXTURE_LOCAL_LANE) &&
+            (catalog !== "engines-only" ||
+              lane.provider_id === "llamacpp" ||
+              lane.provider_id === "ollama")
           );
         }),
       };
-      return models ? models.report(served) : served;
+      const stated = engineHealth
+        ? withEngineHealth(served, engineHealth)
+        : served;
+      return models ? models.report(stated) : stated;
     },
     async localModels() {
       say("agentLocalModels");
