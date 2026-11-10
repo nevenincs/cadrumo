@@ -351,12 +351,19 @@ fn the_packaged_llama_server_answers_as_the_pinned_build_and_generates_from_a_fe
             .expect("the full check reaches an answer"),
         Observation::Present
     );
-    assert!(
-        listed(router)
-            .iter()
-            .all(|entry| entry["status"]["value"] == "unloaded"),
-        "the check unloads what it loaded"
-    );
+    // The check's unload is answered before the model has gone, as the one above is.
+    let released = Instant::now();
+    while !listed(router)
+        .iter()
+        .all(|entry| entry["status"]["value"] == "unloaded")
+    {
+        assert!(
+            released.elapsed() < FULL_CHECK_BUDGET,
+            "the check unloads what it loaded: {:?}",
+            listed(router)
+        );
+        std::thread::sleep(Duration::from_millis(100));
+    }
     llama.halt();
 }
 
