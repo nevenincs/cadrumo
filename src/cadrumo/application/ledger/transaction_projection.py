@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.transaction_ids import TransactionId
@@ -102,11 +102,40 @@ class LedgerTransactionProjection(BaseModel):
         return cls.model_validate_json(payload.model_dump_json())
 
 
+class LedgerMovementWithholdingProjection(BaseModel):
+    """The retención a received invoice leaves on the movement that pays it.
+
+    ``retencion`` is the euro amount the invoice recognises on this payment, as
+    Modelo 111 and 115 count it; ``held_back`` names why it reaches no
+    declaration, so a payment the declaration waits on is not read as a payment
+    without retención. Exactly one of the two is set.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    invoice_id: str
+    invoice_number: str
+    modelo: str | None
+    scheme: str | None
+    retencion: str | None
+    recognised_on: str | None
+    held_back: str | None
+
+    @model_validator(mode="after")
+    def retencion_xor_held_back(self) -> LedgerMovementWithholdingProjection:
+        """Refuse a row that is both a recognised retención and held back, or neither."""
+        if (self.retencion is None) == (self.held_back is None):
+            raise ValueError("a movement's withholding is either recognised or held back")
+        return self
+
+
 class LedgerTransactionReviewProjection(BaseModel):
     """A reviewed transaction with the group used by canonical list ordering.
 
     The own account is the register id the row is bound to, never its account
     number, so a listing can show and group by account without a second read.
+    ``withholding`` is empty for a movement that pays no invoice stating a
+    retención: its retención is absent, never zero.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -115,3 +144,4 @@ class LedgerTransactionReviewProjection(BaseModel):
     review_status: LedgerReviewStatus
     group_label: str | None
     own_account_id: OwnAccountId | None
+    withholding: tuple[LedgerMovementWithholdingProjection, ...] = ()
