@@ -142,14 +142,27 @@ def _write_xml_dictionary_entries(
         if rendered is None or rendered == "":
             continue
         rows = next((item for item in repeated_rows if item.holds(entry.path)), None)
-        if rows is None:
-            set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
-        elif rows.takes_box(entry.path) and not _is_zero_token(rendered):
-            boxes.setdefault(rows.element_path, {})[entry.path] = rendered
-        else:
-            _require_value_stated_by_rows(entry, rendered, rows)
+        _place_xml_dictionary_value(root, entry, rendered, rows, boxes=boxes, element_order=element_order)
     for rows in repeated_rows:
         _append_repeated_rows(root, rows.with_boxes(boxes.get(rows.element_path, {})), element_order=element_order)
+
+
+def _place_xml_dictionary_value(
+    root: ElementTree.Element[str],
+    entry: XmlDictionaryEntry,
+    rendered: str,
+    rows: XmlDictionaryRepeatedRows | None,
+    *,
+    boxes: dict[str, dict[str, str]],
+    element_order: dict[str, tuple[str, ...]],
+) -> None:
+    """Set a value at its path, hold it for its repeated rows, or require those rows to state it."""
+    if rows is None:
+        set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+    elif rows.takes_box(entry.path) and not _is_zero_token(rendered):
+        boxes.setdefault(rows.element_path, {})[entry.path] = rendered
+    else:
+        _require_value_stated_by_rows(entry, rendered, rows)
 
 
 def _finish_xml_dictionary_root(

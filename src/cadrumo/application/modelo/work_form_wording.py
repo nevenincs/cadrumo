@@ -264,18 +264,26 @@ def _special_origin_words(
     language: OutputLanguage | None,
 ) -> str | None:
     locale = _locale(language)
-    if field.stated_absent is not None:
-        return tr(STATED_ABSENT_LOCALE_KEYS[field.stated_absent], locale=locale)
-    if recorded and field.origin in FILED_LOCALE_KEYS:
-        return tr(FILED_LOCALE_KEYS[field.origin], locale=locale)
-    if field.origin in HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
-        return tr(HELD_ZERO_LOCALE_KEYS[field.origin], locale=locale)
+    held = _held_origin_words(field, recorded=recorded, locale=locale)
+    if held is not None:
+        return held
     if set_by_form(field):
         return tr(_FORM_SET_WORDS_LOCALE_KEY, locale=locale)
     if aeat_imported is not None and language is not None and _from_aeat_data(field):
         return tr(_AEAT_IMPORTED_ON_LOCALE_KEY, date=date_text(aeat_imported, language), locale=locale)
     if no_earlier_filing(field):
         return tr(_NO_EARLIER_WORDS_LOCALE_KEY, locale=locale)
+    return None
+
+
+def _held_origin_words(field: ModeloFormField, *, recorded: bool, locale: str) -> str | None:
+    """The words for a stated absence, a filed value or a held zero, which outrank every other origin."""
+    if field.stated_absent is not None:
+        return tr(STATED_ABSENT_LOCALE_KEYS[field.stated_absent], locale=locale)
+    if recorded and field.origin in FILED_LOCALE_KEYS:
+        return tr(FILED_LOCALE_KEYS[field.origin], locale=locale)
+    if field.origin in HELD_ZERO_LOCALE_KEYS and holds_zero(field.value):
+        return tr(HELD_ZERO_LOCALE_KEYS[field.origin], locale=locale)
     return None
 
 
