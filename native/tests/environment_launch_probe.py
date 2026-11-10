@@ -56,6 +56,7 @@ from cadrumo_agent_service.host.credential_frame import build_credential_frame
 from cadrumo_agent_service.host.launch_environment import agent_launch_environment
 from cadrumo_agent_service.host.native_refusal import NativeLaunchRefusalCode, native_launch_refusal_from
 from cadrumo_agent_service.installed_client import SERVICE_ID
+from cadrumo_agent_service.providers.domain.record import LocalEngine
 
 FIRST_LINE_SECONDS: Final = 180.0
 """How long a started program may take to write its first protocol line."""
@@ -504,6 +505,9 @@ class Probe:
             aeat=self.contract.aeat_path,
             python=self.contract.python_path,
             received=os.environ,
+            # The service names the engine the profile's record holds; a launch
+            # composes the same for either engine but that one variable.
+            local_engine=LocalEngine.LLAMACPP,
         )
 
     async def undeclared_invocation(self) -> Result:
