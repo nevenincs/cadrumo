@@ -48,7 +48,6 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.inventory_bindings import TAXPAYER_YEAR_ACTIVITY_GRAIN
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
@@ -59,15 +58,22 @@ from .export_xml_dictionary_modelo100 import (
     registry_modelo_100_xml_declarations,
 )
 from .export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
+from .export_xml_dictionary_xsd import (
+    XML_DICTIONARY_ROOT_TAG,
+    latest_xml_dictionary_xsd_version,
+    xml_dictionary_element_order,
+    xml_dictionary_optional_element_paths,
+    xml_dictionary_repeating_element_paths,
+    xml_dictionary_xsd_root,
+    xml_dictionary_xsd_source,
+)
 from .export_xml_value_limits import (
-    XSD_NS,
     XmlValueSchema,
     canonical_xml_text,
     prune_childless_negative_blocks,
     refuse_xml_missing_required_content,
     refuse_xml_values_outside_schema,
     xml_value_schema,
-    xsd_declared_children,
 )
 from .runtime import RegistrySchemaAccessor
 
@@ -222,15 +228,15 @@ def render_xml_dictionary_layout(
         source_payloads=schema_provider.source_payloads,
     )
     root = ElementTree.Element(
-        _XML_DICTIONARY_ROOT_TAG,
+        XML_DICTIONARY_ROOT_TAG,
         expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
     )
-    element_order = _xml_dictionary_element_order(
-        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+    element_order = xml_dictionary_element_order(
+        xml_dictionary_xsd_source(layout, schema_provider.sources),
         source_payloads=schema_provider.source_payloads,
     )
-    optional_element_paths = _xml_dictionary_optional_element_paths(
-        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+    optional_element_paths = xml_dictionary_optional_element_paths(
+        xml_dictionary_xsd_source(layout, schema_provider.sources),
         source_payloads=schema_provider.source_payloads,
     )
     append_declaration_aux(root, layout, aux_version=aux_version)
@@ -270,11 +276,11 @@ def xml_dictionary_value_schema(
     Returns:
         The :class:`XmlValueSchema` of that edition.
     """
-    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    source = xml_dictionary_xsd_source(layout, schema_provider.sources)
     return xml_value_schema(
-        _xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
         source_id=source.id,
-        root_tag=_XML_DICTIONARY_ROOT_TAG,
+        root_tag=XML_DICTIONARY_ROOT_TAG,
     )
 
 
@@ -328,10 +334,10 @@ def refuse_incomplete_xml_dictionary_payload(
     ``draft`` is the :class:`ModeloDraft`, the local modelo draft.
     """
     document = DefusedElementTree.fromstring(payload)
-    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    source = xml_dictionary_xsd_source(layout, schema_provider.sources)
     refuse_xml_missing_required_content(
         document,
-        schema=_xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        schema=xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
         source_id=source.id,
         entries=xml_dictionary_entries(
             layout,
@@ -350,16 +356,15 @@ def _refuse_values_outside_xsd(
     entries: tuple[XmlDictionaryEntry, ...],
     schema_provider: RegistrySchemaAccessor,
 ) -> None:
-    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    source = xml_dictionary_xsd_source(layout, schema_provider.sources)
     refuse_xml_values_outside_schema(
         document,
-        schema=_xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        schema=xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
         source_id=source.id,
         entries=entries,
     )
 
 
-_XML_DICTIONARY_ROOT_TAG = "Declaracion"
 _XSD_SCHEMA_LOCATION_ATTRIBUTE = f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation"
 
 
@@ -386,8 +391,8 @@ def expected_xml_dictionary_root_identity(
     Returns:
         The root attributes, keyed exactly as they appear on the element.
     """
-    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
-    version = _latest_xml_dictionary_xsd_version(xsd_source, source_payloads=schema_provider.source_payloads)
+    xsd_source = xml_dictionary_xsd_source(layout, schema_provider.sources)
+    version = latest_xml_dictionary_xsd_version(xsd_source, source_payloads=schema_provider.source_payloads)
     return {
         "modelo": draft.modelo,
         "ejercicio": str(draft.period.filing_year),
@@ -417,48 +422,11 @@ def read_xml_dictionary_root_identity(payload: bytes) -> Mapping[str, str]:
         root = DefusedElementTree.fromstring(payload)
     except DefusedElementTree.ParseError as exc:
         raise FilingExportValidationError("XML dictionary payload could not be parsed") from exc
-    if root.tag != _XML_DICTIONARY_ROOT_TAG:
+    if root.tag != XML_DICTIONARY_ROOT_TAG:
         raise FilingExportValidationError(
-            f"XML dictionary payload root is {root.tag!r}, expected {_XML_DICTIONARY_ROOT_TAG!r}",
+            f"XML dictionary payload root is {root.tag!r}, expected {XML_DICTIONARY_ROOT_TAG!r}",
         )
     return dict(root.attrib)
-
-
-def _xml_dictionary_xsd_source(
-    layout: ExportLayoutDefinition,
-    sources: Mapping[str, SourceReference],
-) -> SourceReference:
-    refs = set(layout.source_refs)
-    for source in sources.values():
-        if source.id in refs and source.kind == "xsd":
-            return source
-    raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
-
-
-def _xml_dictionary_xsd_root(
-    source: SourceReference, *, source_payloads: Mapping[str, bytes]
-) -> ElementTree.Element[str]:
-    """Return the parsed root from the signed XSD projection ``source`` names."""
-    try:
-        root = DefusedElementTree.fromstring(source_payloads[source.id])
-    except (DefusedElementTree.ParseError, KeyError) as exc:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
-    return root
-
-
-def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_payloads: Mapping[str, bytes]) -> str:
-    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
-    versions: list[str] = []
-    for simple_type in root.iter(f"{XSD_NS}simpleType"):
-        if simple_type.attrib.get("name") != "tipo_VersionXSD":
-            continue
-        for enumeration in simple_type.iter(f"{XSD_NS}enumeration"):
-            value = enumeration.attrib.get("value")
-            if value is not None and value:
-                versions.append(value)
-    if not versions:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
-    return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
 
 
 def append_declaration_aux(
@@ -551,192 +519,6 @@ def stamped_individual_return_titular(entry: XmlDictionaryEntry, payload: bytes)
     if economic is None or economic.get(_TAXATION_OPTION_ATTRIBUTE) != _INDIVIDUAL_TAXATION:
         return None
     return format_xml_dictionary_value(_HOLDER_DICTIONARY_TYPE, _DECLARANTE_HOLDER)
-
-
-def _xml_dictionary_element_order(
-    source: SourceReference,
-    *,
-    source_payloads: Mapping[str, bytes],
-) -> dict[str, tuple[str, ...]]:
-    """Return each element path's declared child order, read from the official XSD.
-
-    AEAT declares the declaration body as ``xs:sequence``, so sibling order is
-    part of the schema rather than a presentation choice. The dictionary's row
-    order is NOT that order -- it lists ``CalculoImpuestoRes`` first under
-    ``Resultados`` where the schema puts it later, and some sibling fields before
-    others under ``Declarante`` where the schema places them later.
-    Appending each element as its dictionary row is reached therefore emits a
-    document AEAT's own schema rejects, so the writer reads the order from the
-    schema instead.
-
-    The map is keyed by absolute path rather than by element name because a name
-    is not unique across the document: the same tag recurs under different
-    parents carrying different types, and a name-keyed map would silently apply
-    one parent's order to another's children.
-
-    Args:
-        source: The layout's resolved XSD :class:`SourceReference`.
-        source_payloads: Published authority bytes keyed by source reference.
-
-    Returns:
-        Absolute element path (``""`` for the root's own children) mapped to the
-        child element names the schema declares under it, in declared order. A
-        path the schema does not describe is absent, and the writer falls back to
-        first-encounter order for it.
-
-    Raises:
-        FilingExportValidationError: The published XSD projection could not be parsed, or declares no
-            root ``Declaracion`` element to walk from.
-    """
-    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
-    named_types = {name: node for node in root.iter(f"{XSD_NS}complexType") if (name := node.get("name")) is not None}
-    order: dict[str, tuple[str, ...]] = {}
-    declaration = next(
-        (node for node in root if node.tag == f"{XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
-        None,
-    )
-    if declaration is None:
-        raise FilingExportValidationError(
-            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
-        )
-    _record_xsd_child_order(
-        "",
-        declaration.find(f"{XSD_NS}complexType"),
-        named_types=named_types,
-        order=order,
-        seen=frozenset(),
-    )
-    return order
-
-
-def _xml_dictionary_repeating_element_paths(
-    source: SourceReference, *, source_payloads: Mapping[str, bytes]
-) -> Mapping[str, int | None]:
-    """Return each repeating element's absolute path and the occurrences it admits; ``None`` is unbounded."""
-    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
-    named_types = {
-        name: node for node in root.iter(f"{XSD_NS}complexType") if ((name := node.get("name")) is not None and name)
-    }
-    declaration = next(
-        (node for node in root if node.tag == f"{XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
-        None,
-    )
-    if declaration is None:
-        raise FilingExportValidationError(
-            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
-        )
-    repeating_paths: dict[str, int | None] = {}
-    _record_xsd_child_order(
-        "",
-        declaration.find(f"{XSD_NS}complexType"),
-        named_types=named_types,
-        order={},
-        seen=frozenset(),
-        repeating_paths=repeating_paths,
-    )
-    return repeating_paths
-
-
-def _xml_dictionary_optional_element_paths(
-    source: SourceReference, *, source_payloads: Mapping[str, bytes]
-) -> frozenset[str]:
-    """Return the absolute paths whose XSD element declaration is optional."""
-    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
-    named_types = {
-        name: node for node in root.iter(f"{XSD_NS}complexType") if ((name := node.get("name")) is not None and name)
-    }
-    declaration = next(
-        (node for node in root if node.tag == f"{XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
-        None,
-    )
-    if declaration is None:
-        raise FilingExportValidationError(
-            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
-        )
-    optional_paths: set[str] = set()
-    _record_xsd_child_order(
-        "",
-        declaration.find(f"{XSD_NS}complexType"),
-        named_types=named_types,
-        order={},
-        seen=frozenset(),
-        optional_paths=optional_paths,
-    )
-    return frozenset(optional_paths)
-
-
-def _record_xsd_child_order(
-    path: str,
-    type_node: ElementTree.Element[str] | None,
-    *,
-    named_types: Mapping[str, ElementTree.Element[str]],
-    order: dict[str, tuple[str, ...]],
-    seen: frozenset[str],
-    optional_paths: set[str] | None = None,
-    repeating_paths: dict[str, int | None] | None = None,
-) -> None:
-    """Record ``path``'s declared child order into ``order``, then descend into each child's type.
-
-    ``seen`` carries the named types already open on this branch, so a type that
-    reaches itself terminates instead of recursing without end.
-    """
-    if type_node is None or path in order:
-        return
-    children = xsd_declared_children(type_node)
-    if not children:
-        return
-    order[path] = tuple(str(child.get("name")) for child in children)
-    for child in children:
-        _record_xsd_child(
-            child,
-            path=path,
-            named_types=named_types,
-            order=order,
-            seen=seen,
-            optional_paths=optional_paths,
-            repeating_paths=repeating_paths,
-        )
-
-
-def _record_xsd_child(
-    child: ElementTree.Element[str],
-    *,
-    path: str,
-    named_types: Mapping[str, ElementTree.Element[str]],
-    order: dict[str, tuple[str, ...]],
-    seen: frozenset[str],
-    optional_paths: set[str] | None,
-    repeating_paths: dict[str, int | None] | None,
-) -> None:
-    child_path = f"{path}/{child.get('name')}"
-    if optional_paths is not None and child.get("minOccurs", "1") == "0":
-        optional_paths.add(child_path)
-    max_occurs = child.get("maxOccurs", "1")
-    if repeating_paths is not None and max_occurs != "1":
-        repeating_paths[child_path] = None if max_occurs == "unbounded" else int(max_occurs)
-    declared_type = child.get("type")
-    if declared_type is None or declared_type not in named_types:
-        _record_xsd_child_order(
-            child_path,
-            child.find(f"{XSD_NS}complexType"),
-            named_types=named_types,
-            order=order,
-            seen=seen,
-            optional_paths=optional_paths,
-            repeating_paths=repeating_paths,
-        )
-    elif declared_type not in seen:
-        # A type that reaches itself would recurse without end; its
-        # order is already recorded at the shallower path.
-        _record_xsd_child_order(
-            child_path,
-            named_types[declared_type],
-            named_types=named_types,
-            order=order,
-            seen=seen | {declared_type},
-            optional_paths=optional_paths,
-            repeating_paths=repeating_paths,
-        )
 
 
 #: The value converters a registry XML declaration may name, by that name. An
@@ -980,8 +762,8 @@ def xml_dictionary_repeated_rows(
     values = _row_values(draft)
     if not values:
         return ()
-    repeating = _xml_dictionary_repeating_element_paths(
-        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+    repeating = xml_dictionary_repeating_element_paths(
+        xml_dictionary_xsd_source(layout, schema_provider.sources),
         source_payloads=schema_provider.source_payloads,
     )
     bindings = {binding.id: binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}

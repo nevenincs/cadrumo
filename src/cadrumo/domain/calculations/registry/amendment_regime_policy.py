@@ -136,6 +136,12 @@ def _kind_restrictions(entries: Mapping[str, str]) -> dict[str, AmendmentKindRes
     if not restriction_entries:
         return {}
     models = _restriction_tokens(entries, _RESTRICTION_ORDER_KEY)
+    _require_complete_restriction_rows(restriction_entries, models)
+    procedures = frozenset(unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT))
+    return {modelo: _kind_restriction(entries, modelo, procedures) for modelo in models}
+
+
+def _require_complete_restriction_rows(restriction_entries: set[str], models: tuple[str, ...]) -> None:
     expected = {_RESTRICTION_ORDER_KEY}
     for modelo in models:
         _boundary_model(modelo)
@@ -144,25 +150,28 @@ def _kind_restrictions(entries: Mapping[str, str]) -> dict[str, AmendmentKindRes
         raise RegistryValidationError(
             "amendment-regime-policy restriction rows must match restriction.order and fields"
         )
-    procedures = frozenset(unique_mapping_tokens(entries, _PROCEDURE_ORDER_KEY, subject=_ENTRY_SUBJECT))
-    restrictions: dict[str, AmendmentKindRestriction] = {}
-    for modelo in models:
-        prefix = f"restriction.{modelo}"
-        required_mapping_entry(entries, f"{prefix}.source", subject=_ENTRY_SUBJECT)
-        raw_date = required_mapping_entry(entries, f"{prefix}.date", subject=_ENTRY_SUBJECT)
-        try:
-            effective_from = date.fromisoformat(raw_date)
-            if effective_from.isoformat() != raw_date:
-                raise ValueError("noncanonical date")
-        except ValueError as exc:
-            raise RegistryValidationError(
-                f"amendment-regime-policy restriction for {modelo!r} must be an ISO date",
-            ) from exc
-        kinds = frozenset(_restriction_tokens(entries, f"{prefix}.kinds"))
-        if not kinds.issubset(procedures):
-            raise RegistryValidationError("amendment-regime-policy restriction uses an undeclared procedure")
-        restrictions[modelo] = AmendmentKindRestriction(effective_from=effective_from, permitted_kinds=kinds)
-    return restrictions
+
+
+def _kind_restriction(
+    entries: Mapping[str, str],
+    modelo: str,
+    procedures: frozenset[str],
+) -> AmendmentKindRestriction:
+    prefix = f"restriction.{modelo}"
+    required_mapping_entry(entries, f"{prefix}.source", subject=_ENTRY_SUBJECT)
+    raw_date = required_mapping_entry(entries, f"{prefix}.date", subject=_ENTRY_SUBJECT)
+    try:
+        effective_from = date.fromisoformat(raw_date)
+        if effective_from.isoformat() != raw_date:
+            raise ValueError("noncanonical date")
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"amendment-regime-policy restriction for {modelo!r} must be an ISO date",
+        ) from exc
+    kinds = frozenset(_restriction_tokens(entries, f"{prefix}.kinds"))
+    if not kinds.issubset(procedures):
+        raise RegistryValidationError("amendment-regime-policy restriction uses an undeclared procedure")
+    return AmendmentKindRestriction(effective_from=effective_from, permitted_kinds=kinds)
 
 
 def amendment_regime_policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:

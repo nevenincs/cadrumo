@@ -8,6 +8,7 @@ import typer
 
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
 from ...application.ledger.entry_options_operation import (
@@ -40,35 +41,50 @@ def entry_options(ctx: typer.Context) -> None:
         timeout=120,
         allow_refusal_detail=False,
     )
-    if (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.effect is not OperationEffect.NONE
-        or completed.refusal_code is not None
-        or completed.projection.profile_id != client.profile_id
-    ):
-        raise invalid_completion_error(completed)
+    _require_correlated_completion(completed, profile_id=client.profile_id)
     result = LedgerEntryOptionsResult.model_validate(
         completed.projection.model_dump(mode="json", exclude={"profile_id"})
     )
-    options = (
-        f"{family.family}\t{option.value}"
-        + (f"\t{tr(option.label_key)}" if option.label_key is not None and option.label_key != "" else "")
-        for family in result.families
-        for option in family.options
-    )
-    classifications = (
-        f"classification\t{row.classification}\t{row.takes_business_share}\t{row.takes_usage_ratio}"
-        f"\t{row.carries_business_figures}\t{row.keeps_category}"
-        f"\t{row.rule_may_name_category}\t{row.split_part_requires_category}"
-        for row in result.classifications
-    )
-    limits = (f"limit\t{rule.rule}\t{rule.decimals}\t{rule.zero}" for rule in result.limits.decimal_rules)
     emit_envelope(
         ctx,
         command="ledger.entry-options",
         result=result,
-        lines=(f"default_currency\t{result.default_currency}", *options, *classifications, *limits),
+        lines=_entry_option_lines(result),
     )
+
+
+def _require_correlated_completion(
+    completed: RegisteredOperationCompletion[LedgerEntryOptionsProjection],
+    *,
+    profile_id: UUID,
+) -> None:
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.effect is not OperationEffect.NONE
+        or completed.refusal_code is not None
+        or completed.projection.profile_id != profile_id
+    ):
+        raise invalid_completion_error(completed)
+
+
+def _entry_option_lines(result: LedgerEntryOptionsResult) -> tuple[str, ...]:
+    options = (
+        f"{family.family}	{option.value}" + _option_label_column(option.label_key)
+        for family in result.families
+        for option in family.options
+    )
+    classifications = (
+        f"classification	{row.classification}	{row.takes_business_share}	{row.takes_usage_ratio}"
+        f"	{row.carries_business_figures}	{row.keeps_category}"
+        f"	{row.rule_may_name_category}	{row.split_part_requires_category}"
+        for row in result.classifications
+    )
+    limits = (f"limit	{rule.rule}	{rule.decimals}	{rule.zero}" for rule in result.limits.decimal_rules)
+    return (f"default_currency	{result.default_currency}", *options, *classifications, *limits)
+
+
+def _option_label_column(label_key: str | None) -> str:
+    return f"	{tr(label_key)}" if label_key is not None and label_key != "" else ""
 
 
 __all__ = ["entry_options"]
