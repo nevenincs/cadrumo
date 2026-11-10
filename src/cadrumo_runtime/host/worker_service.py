@@ -7,7 +7,7 @@ import logging
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import suppress
+from contextlib import AbstractContextManager, nullcontext, suppress
 from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
@@ -65,7 +65,7 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from ..adapters.worker_transport import WorkerChannel
 from . import worker_cleanup, worker_operation_requests
-from .operation_host import ProfileWorkerOperationHost
+from .operation_host import ProfileWorkerOperationHost, worker_request_served
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_submission_staging import WorkerSubmissionStaging
 
@@ -566,6 +566,11 @@ def _is_observational_control(request: object) -> bool:
     return isinstance(request, ProfileWorkerControlRequest) and request.action in _READS
 
 
+def _control_served(request: object) -> AbstractContextManager[None]:
+    """Let the grounding warm-up defer to a sign-in's controls, not to the supervisor's heartbeat reads."""
+    return nullcontext() if _is_observational_control(request) else worker_request_served()
+
+
 async def serve_control_requests(
     context: WorkerControl, input_executor: ThreadPoolExecutor, ready: asyncio.Event | None = None
 ) -> None:
@@ -580,7 +585,8 @@ async def serve_control_requests(
             raise RefusalError(RefusalCode.UNAVAILABLE)
         observed = False
         try:
-            disposition = await _timed_control_dispatch(context, request)
+            with _control_served(request):
+                disposition = await _timed_control_dispatch(context, request)
             if disposition == "stop":
                 return
             if disposition == "status":

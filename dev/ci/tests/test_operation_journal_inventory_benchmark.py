@@ -119,7 +119,8 @@ async def _settle_template(root: Path) -> None:
     await journal.commit_settlement(terminal, expected_revision=0, lease=lease)
 
 
-def _services(root: Path) -> OperationComposedServices:
+def inventory_services(root: Path) -> OperationComposedServices:
+    """Compose the operation services a profile worker reads its startup inventory through."""
     journal = OperationJournalRepository(storage_root=root)
     return compose_operation_services(
         registry=supervisor_registry(
@@ -141,19 +142,24 @@ def _services(root: Path) -> OperationComposedServices:
     )
 
 
+def seed_settled_journal(root: Path, records: int) -> None:
+    """Settle one record through the real adapters, then copy it under ``records - 1`` new identities."""
+    asyncio.run(_settle_template(root))
+    journal_root = root / "operation-journals"
+    template = (journal_root / f"{_TEMPLATE_ID}.json").read_text(encoding="utf-8")
+    for index in range(1, records):
+        operation_id = f"{index:064x}"
+        (journal_root / f"{operation_id}.json").write_text(
+            template.replace(_TEMPLATE_ID, operation_id), encoding="utf-8"
+        )
+
+
 @pytest.fixture(scope="module")
 def scale_journal() -> Iterator[Path]:
     """A storage root whose journal holds ``_RECORDS`` settled records."""
     with tempfile.TemporaryDirectory(prefix="cadrumo-journal-inventory-") as directory:
         root = Path(directory)
-        asyncio.run(_settle_template(root))
-        journal_root = root / "operation-journals"
-        template = (journal_root / f"{_TEMPLATE_ID}.json").read_text(encoding="utf-8")
-        for index in range(1, _RECORDS):
-            operation_id = f"{index:064x}"
-            (journal_root / f"{operation_id}.json").write_text(
-                template.replace(_TEMPLATE_ID, operation_id), encoding="utf-8"
-            )
+        seed_settled_journal(root, _RECORDS)
         yield root
 
 
@@ -161,7 +167,7 @@ def scale_journal() -> Iterator[Path]:
 @pytest.mark.serial
 def test_startup_inventory_cpu_within_budget_at_scale(scale_journal: Path) -> None:
     """The whole inventory of a long-used profile stays inside its CPU budget."""
-    services = _services(scale_journal)
+    services = inventory_services(scale_journal)
     cpu: list[float] = []
     wall: list[float] = []
     for _ in range(_SAMPLES):
