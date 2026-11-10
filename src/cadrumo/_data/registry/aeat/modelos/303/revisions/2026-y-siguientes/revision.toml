@@ -1742,9 +1742,12 @@ removed_fields = ["externally_grounded_casilla_ids"]
 sequence_additions = {source_refs = ["aeat-dr-303-2026"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
-[[revisions.2026-y-siguientes.family_removals]]
+[[revisions.2026-y-siguientes.family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2025", id = "modelo-303-m349-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-303-2026"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
 
 # The unchanged expression is inherited; only the new edition's evidence differs.
 [[revisions.2026-y-siguientes.family_overrides]]
