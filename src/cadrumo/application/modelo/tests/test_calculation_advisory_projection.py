@@ -26,6 +26,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -36,6 +37,9 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+_M130_REVISION = str(revision_covering("130", _YEAR).id)
 
 
 def _diagnostic() -> CalculationSourceDiagnostic:
@@ -55,29 +59,29 @@ def _diagnostic() -> CalculationSourceDiagnostic:
         source_refs=("aeat-modelo-130-instructions",),
         asserted_legal_refs=("ley-58-2003:art-120",),
         out_of_window_count=2,
-        out_of_window_min_filing_date=date(2025, 1, 1),
-        out_of_window_max_filing_date=date(2025, 3, 31),
+        out_of_window_min_filing_date=date(_YEAR, 1, 1),
+        out_of_window_max_filing_date=date(_YEAR, 3, 31),
     )
 
 
 def _work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2025, "4T")
+    period = Period.from_year_and_code(_YEAR, "4T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id="calculation-advisory-projection",
             modelo="130",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2019-y-siguientes",
+            revision_id=_M130_REVISION,
         ),
         bucket_id="calculation-advisory-projection",
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
-        name="M130 2025 4T",
-        created_at=datetime(2025, 12, 31, tzinfo=UTC),
-        updated_at=datetime(2025, 12, 31, tzinfo=UTC),
+        revision_id=_M130_REVISION,
+        name=f"M130 {_YEAR} 4T",
+        created_at=datetime(1980, 12, 31, tzinfo=UTC),
+        updated_at=datetime(1980, 12, 31, tzinfo=UTC),
     )
 
 
@@ -94,13 +98,13 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="130", revision_id="2019-y-siguientes", modelo_year=2025, period="4T"
+            modelo="130", revision_id=_M130_REVISION, modelo_year=_YEAR, period="4T"
         ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},
-        created_at=datetime(2025, 12, 31, tzinfo=UTC),
-        updated_at=datetime(2025, 12, 31, tzinfo=UTC),
+        created_at=datetime(1980, 12, 31, tzinfo=UTC),
+        updated_at=datetime(1980, 12, 31, tzinfo=UTC),
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -119,15 +123,15 @@ def test_diagnostic_all_fields_survive_json_and_domain_validation() -> None:
 
 def test_malformed_diagnostic_is_refused_before_rendering() -> None:
     value = CalculationSourceDiagnosticSnapshot.from_diagnostic(_diagnostic()).model_dump(mode="json")
-    value["out_of_window_max_filing_date"] = "2024-12-31"
+    value["out_of_window_max_filing_date"] = date(_YEAR - 1, 12, 31).isoformat()
     with pytest.raises(ValidationError):
         CalculationSourceDiagnosticSnapshot.model_validate(value)
 
 
 def test_overdue_preview_roundtrip_preserves_unassessed_rate_facts() -> None:
     posture = ModeloWorkDeadlinePosture(
-        closes_on=date(2025, 2, 3),
-        nominal_closes_on=date(2025, 2, 1),
+        closes_on=date(_YEAR, 2, 3),
+        nominal_closes_on=date(_YEAR, 2, 1),
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         days_overdue=28,
         conditional_recargo_preview=ModeloWorkConditionalRecargoPreview(
@@ -135,14 +139,14 @@ def test_overdue_preview_roundtrip_preserves_unassessed_rate_facts() -> None:
             surcharge_pct=Decimal("5.00"),
             interest_applies=False,
             legal_ref="ley-58-2003:art-27",
-            rate_reference_on=date(2025, 3, 3),
+            rate_reference_on=date(_YEAR, 3, 3),
         ),
     )
     snapshot = ModeloWorkDeadlinePostureSnapshot.from_posture(posture)
     restored = ModeloWorkDeadlinePostureSnapshot.model_validate_json(snapshot.model_dump_json())
 
     assert restored.to_posture() == posture
-    assert restored.nominal_closes_on == date(2025, 2, 1)
+    assert restored.nominal_closes_on == date(_YEAR, 2, 1)
     assert restored.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
     assert restored.conditional_recargo_preview is not None
     assert restored.conditional_recargo_preview.surcharge_pct == "5.00"
@@ -151,8 +155,8 @@ def test_overdue_preview_roundtrip_preserves_unassessed_rate_facts() -> None:
 def test_preview_cannot_be_attached_to_in_time_posture() -> None:
     overdue = ModeloWorkDeadlinePostureSnapshot.from_posture(
         ModeloWorkDeadlinePosture(
-            closes_on=date(2025, 12, 31),
-            nominal_closes_on=date(2025, 12, 31),
+            closes_on=date(_YEAR, 12, 31),
+            nominal_closes_on=date(_YEAR, 12, 31),
             holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
             days_overdue=1,
             conditional_recargo_preview=ModeloWorkConditionalRecargoPreview(
@@ -160,7 +164,7 @@ def test_preview_cannot_be_attached_to_in_time_posture() -> None:
                 surcharge_pct=Decimal("5"),
                 interest_applies=False,
                 legal_ref="ley-58-2003:art-27",
-                rate_reference_on=date(2026, 1, 1),
+                rate_reference_on=date(_YEAR + 1, 1, 1),
             ),
         )
     )
