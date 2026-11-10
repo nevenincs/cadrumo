@@ -1039,6 +1039,7 @@
         "cadrumo.application.ledger.read_ports",
         "cadrumo.application.ledger.readiness_query",
         "cadrumo.application.ledger.readiness_routes",
+        "cadrumo.application.ledger.reading_model_refusal",
         "cadrumo.application.ledger.regime_contradiction",
         "cadrumo.application.ledger.removal_receipt_projection",
         "cadrumo.application.ledger.remove_operation",

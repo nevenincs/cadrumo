@@ -76,6 +76,7 @@ from ...application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from ...application.ledger.reading_model_refusal import reading_model_not_selected
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -293,6 +294,11 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
     unread = ", ".join(fallback.unread_fields)
     count = len(fallback.unread_fields)
     match fallback.cause:
+        case LabelReadingFallbackCause.READER_UNAVAILABLE if reading_model_not_selected(fallback.refusal_code):
+            # The agent said which condition to put right, so the notice says it:
+            # a person who is told the reader "could not run" has nothing to act on.
+            code = "ledger.evidence.label_reading.no_model_selected"
+            message = tr("application.ledger.evidence.label_reading.no_model_selected", count=count, fields=unread)
         case LabelReadingFallbackCause.READER_UNAVAILABLE:
             code = "ledger.evidence.label_reading.reader_unavailable"
             message = tr("application.ledger.evidence.label_reading.reader_unavailable", count=count, fields=unread)
@@ -309,4 +315,6 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
     }
     if fallback.failed_condition_id is not None:
         context["failed_condition_id"] = fallback.failed_condition_id
+    if fallback.refusal_code is not None:
+        context["refusal_code"] = fallback.refusal_code
     return [Notice(severity=NoticeSeverity.WARNING, code=code, message=message, context=context)]

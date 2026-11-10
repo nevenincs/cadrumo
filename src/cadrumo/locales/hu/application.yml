@@ -1082,9 +1082,14 @@ application:
           Javítsd vagy töröld a tárolt számlát ahelyett, hogy ugyanazt a dokumentumot
           kétszer erősítenéd meg.'
       label_reading:
+        no_model_selected: 'Nincs kiválasztva olvasásra szolgáló modell, ezért a címkék
+          által nem lefedett %{count} mező üres marad: %{fields}. Válassz modellt,
+          majd olvasd be újra a dokumentumot, vagy töltsd ki magad.'
         reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
           által nem lefedett %{count} mező üres marad: %{fields}. Töltsd ki ezeket
           a mezőket.'
+      next_step:
+        choose_reading_model: Olvasómodell kiválasztása
     periods:
       served:
         annual: Év

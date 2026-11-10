@@ -1100,9 +1100,14 @@ application:
           y esta confirmación difiere en: %{divergent_fields}. Corrige o elimina la
           factura almacenada en lugar de confirmar dos veces el mismo documento.'
       label_reading:
+        no_model_selected: 'No has elegido ningún modelo para leer, así que los %{count}
+          campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}. Elige un
+          modelo y vuelve a leer el documento, o rellénalos tú.'
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
           Rellénalos tú.'
+      next_step:
+        choose_reading_model: Elegir un modelo de lectura
     periods:
       served:
         annual: Año

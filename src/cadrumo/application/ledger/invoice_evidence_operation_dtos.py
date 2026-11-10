@@ -53,10 +53,12 @@ from ..ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from ..ledger.reading_model_refusal import served_reading_model_refusal
 from ..ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
 )
 from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
+from ..operations.next_step import OperationNextStepV1
 from ..operations.public_scalar import PublicDecimal
 
 _BoundedText = Annotated[str, Field(max_length=16_384)]
@@ -160,6 +162,10 @@ class LabelReadingFallbackProjectionV1(BaseModel):
     Kept beside a draft projection, never inside it: the fallback describes the
     reader, not the document, and a stored draft does not carry it, so folding
     it into the draft would change the digest a review is bound to.
+
+    A fill that did not run for want of a picked model also serves the
+    refusal's own sentence and the step that leads to the choice, worded when
+    the projection is built; the stored fallback keeps only the refusal's code.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -168,15 +174,33 @@ class LabelReadingFallbackProjectionV1(BaseModel):
     unread_fields: Annotated[tuple[_FieldName, ...], Field(min_length=1, max_length=128)]
     reader_error_type: Annotated[str, Field(min_length=1, max_length=2_048)]
     failed_condition_id: _ShortText | None = None
+    refusal_code: _ShortText | None = None
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
+    next_step: OperationNextStepV1 | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> Self:
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served refusal words name the language they are in")
+        if self.next_step is not None and self.refusal_words_language is None:
+            raise ValueError("a served step is worded in the language of the refusal's own words")
+        return self
 
     @classmethod
     def from_fallback(cls, value: LabelReadingFallback) -> Self:
-        """Copy the machine facts of one fallback; it holds no document text."""
+        """Copy the machine facts of one fallback, with the words its refusal serves; it holds no document text."""
+        served = served_reading_model_refusal(value.refusal_code)
+        words, language, step = (None, None, None) if served is None else served
         return cls(
             cause=value.cause,
             unread_fields=value.unread_fields,
             reader_error_type=value.reader_error_type,
             failed_condition_id=value.failed_condition_id,
+            refusal_code=value.refusal_code,
+            refusal_words=words,
+            refusal_words_language=language,
+            next_step=step,
         )
 
     def to_fallback(self) -> LabelReadingFallback:
@@ -186,6 +210,7 @@ class LabelReadingFallbackProjectionV1(BaseModel):
             unread_fields=self.unread_fields,
             reader_error_type=self.reader_error_type,
             failed_condition_id=self.failed_condition_id,
+            refusal_code=self.refusal_code,
         )
 
 

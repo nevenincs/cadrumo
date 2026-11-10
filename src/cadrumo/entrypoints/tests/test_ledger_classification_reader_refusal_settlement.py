@@ -45,14 +45,17 @@ from ...application.ledger.llm_review_operation import (
     build_ledger_llm_review_registration,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
 )
 from ...application.operations.models import OperationRequest
+from ...application.operations.next_step import OperationChooseReadingModelStepV1
 from ...application.operations.registry import OperationRegistry
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
+from ...core.i18n.render import tr
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -211,8 +214,15 @@ def test_a_classification_with_no_text_selection_settles_naming_the_role_that_ne
     facts = _assert_refused_by_the_reader(
         settled,
         service,
-        message_key=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
+        message_key=NO_READING_MODEL_LOCALE_KEY,
         condition=LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,
     )
     assert facts["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
     assert facts["role_selection_required"] is True
+    detail = settled[2]
+    language = detail.refusal_words_language
+    assert language is not None
+    assert detail.refusal_words == tr(NO_READING_MODEL_LOCALE_KEY, locale=language.value)
+    step = detail.next_step
+    assert isinstance(step, OperationChooseReadingModelStepV1)
+    assert step.words == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language.value)

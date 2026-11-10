@@ -38,12 +38,14 @@ from click.testing import Result
 
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns
+from cadrumo.application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
 from cadrumo.core.config import load_settings
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from .ledger_ux_support import add_evidence, invoke, ledger_ux_bucket_session
+from .ledger_ux_support import add_evidence, imported_transaction_id, invoke, ledger_ux_bucket_session
 from .portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -51,7 +53,8 @@ __all__ = ["ledger_ux_bucket_session"]
 
 _HEADROOM_REFUSED = "ledger.evidence.label_reading.headroom_refused"
 _READER_UNAVAILABLE = "ledger.evidence.label_reading.reader_unavailable"
-_LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE}
+_NO_MODEL_SELECTED = "ledger.evidence.label_reading.no_model_selected"
+_LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE, _NO_MODEL_SELECTED}
 _BATCH_LABEL_READING_DEGRADED = "ledger.evidence.batch.label_reading_degraded"
 
 #: The precondition the agent's refusal to load a model too large for the free memory fails.
@@ -272,6 +275,94 @@ def test_an_unavailable_lane_leaves_the_label_reading_standing_with_a_warning(tm
     assert notice["context"]["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
 
 
+def _assert_names_the_unpicked_model(notice: dict[str, Any]) -> None:
+    """Not the generic "could not run" notice: the condition the person can put right."""
+    assert notice["code"] == _NO_MODEL_SELECTED
+    assert notice["severity"] == "warning"
+    assert notice["context"]["reason"] == "reader_unavailable"
+    assert notice["context"]["refusal_code"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert notice["context"]["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    assert notice["message"] == tr(
+        "application.ledger.evidence.label_reading.no_model_selected", count=1, fields="supplier_name"
+    )
+
+
+def _assert_serves_the_step_to_pick_a_model(fallback: dict[str, Any]) -> None:
+    """The result serves the refusal's sentence and the step to the choice, worded in one language."""
+    language = fallback["refusal_words_language"]
+    assert fallback["refusal_code"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert fallback["refusal_words"] == tr(NO_READING_MODEL_LOCALE_KEY, locale=language)
+    step = fallback["next_step"]
+    assert step["kind"] == "choose_reading_model"
+    assert step["words"] == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language)
+
+
+def test_no_picked_model_leaves_the_label_reading_standing_and_serves_the_refusal_and_the_step(
+    tmp_path: Path,
+) -> None:
+    """The role has no picked model: the notice and the result say so and serve the way to the choice."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code == 0, envelope
+    assert service.runs == []
+    (notice,) = _label_reading_notices(envelope)
+    _assert_names_the_unpicked_model(notice)
+    _assert_serves_the_step_to_pick_a_model(envelope["result"]["label_reading_fallback"])
+
+
+def test_an_unavailable_lane_serves_no_reading_model_step(tmp_path: Path) -> None:
+    """A lane that cannot run is not a model left unpicked: no step to the choice is served."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.LANE_UNAVAILABLE):
+        evidence_id = add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code == 0, envelope
+    fallback = envelope["result"]["label_reading_fallback"]
+    assert fallback["next_step"] is None
+    assert fallback["refusal_words"] is None
+
+
+def test_no_picked_model_for_the_whole_read_refuses_with_the_sentence_that_says_to_pick_one(tmp_path: Path) -> None:
+    """With no label reading to stand on, the refusal is the command's and tells the person to pick a model."""
+
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        evidence_id = add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
+        exit_code, envelope = _extract(evidence_id)
+
+    assert exit_code != 0, envelope
+    assert service.runs == []
+    error = envelope["error"]
+    assert error["code"] == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert error["message"] == tr(NO_READING_MODEL_LOCALE_KEY)
+    action = error["action"]
+    assert action["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    facts = action["evidence"][0]["values"]
+    assert facts["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert facts["role_selection_required"] is True
+
+
+def test_classify_with_no_picked_model_refuses_with_the_sentence_that_says_to_pick_one(tmp_path: Path) -> None:
+    """The model classification names the same refusal as the extraction does."""
+
+    transaction_id = imported_transaction_id(tmp_path)
+    with _recording_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+        classified = invoke(["--format", "json", "app", "ledger", "classify", transaction_id, "--llm"])
+        envelope = json.loads(classified.output)
+
+    assert classified.exit_code != 0, envelope
+    assert service.runs == []
+    error = envelope["error"]
+    assert error["code"] == "REFUSED_LEDGER_EVIDENCE_READER"
+    assert error["message"] == tr(NO_READING_MODEL_LOCALE_KEY)
+    action = error["action"]
+    assert action["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
+    assert action["evidence"][0]["values"]["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+
+
 def test_a_does_not_fit_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
     """With no label reading to stand on, the model read is required and its refusal is the command's."""
 
@@ -325,6 +416,7 @@ def test_a_batch_item_degraded_by_a_refused_load_is_stored_and_reported_with_its
         "unread_fields": ["supplier_name"],
         "reader_error_type": "LLMContentionError",
         "failed_condition_id": _LOAD_CAPACITY,
+        "refusal_code": None,
     }
     assert rows[_STRUCTURED]["label_reading_fallback"] is None
     (degraded,) = [notice for notice in first["notices"] if notice["code"] == _BATCH_LABEL_READING_DEGRADED]
