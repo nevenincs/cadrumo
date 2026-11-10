@@ -43,7 +43,9 @@ def test_compiled_intracommunity_summary_and_correction_share_invoice_projection
     assert "3T" in form_values
     assert Decimal("900") in form_values and Decimal("1000") in form_values
     year_cells = [
-        cell.address for cell in plan.value_cells if cell.address.tab is TabName.FORM and cell.value == Decimal("2025")
+        cell.address
+        for cell in plan.value_cells
+        if cell.address.tab is TabName.FORM and cell.value == Decimal(snapshot.filing_year)
     ]
     assert year_cells
     formats = {directive.address: directive.pattern for directive in plan.number_formats}

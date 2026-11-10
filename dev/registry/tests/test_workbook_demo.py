@@ -764,8 +764,10 @@ def _assert_232_text_discloses_declared_data_only(plan) -> None:
     assert "Importe sin IVA (€)" in text
     assert "Renta antes de la reducción, sin IVA (€)" in text
     assert "Escenario de cálculo" not in text
-    assert "2025-01-01" in text
-    assert "2025-12-31" in text
+    # The declared period is the scenario's filing year, read from the plan.
+    year = plan.metadata.filing_year
+    assert f"{year}-01-01" in text
+    assert f"{year}-12-31" in text
     assert plan.metadata.registry_sha not in text
     assert "dr23201" not in text
 

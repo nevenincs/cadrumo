@@ -200,12 +200,24 @@ def test_309_historical_example_keeps_seven_rows_and_cannot_acquire_filing_autho
     assert len(results) == 2 and results[0].formula == results[1].formula
 
 
-def test_309_2016_preview_uses_registry_layout_and_fictional_identity() -> None:
+def test_309_historical_preview_uses_registry_layout_and_fictional_identity() -> None:
     from ..workbook_demo_nonperiodic_historical import build_historical_nonperiodic_plan
 
     source, plan = build_historical_nonperiodic_plan()
-    assert source.revision.id == "2016-2017"
-    assert plan.metadata.preview_year == 2016
+    # The default preview is the last year of the newest edition that closed
+    # below the support floor, read from the registry.
+    authority = compiled_bundled_authority()
+    floor = authority.supported_filing_years().floor
+    newest_closed = max(
+        (
+            revision
+            for revision in authority.modelo("309").revisions.values()
+            if revision.period_selector.year_to is not None and revision.period_selector.year_to < floor
+        ),
+        key=lambda revision: revision.period_selector.year_to or 0,
+    )
+    assert source.revision.id == newest_closed.id
+    assert plan.metadata.preview_year == newest_closed.period_selector.year_to
     assert plan.human_presentation
     values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
     assert "12345678Z" in values
