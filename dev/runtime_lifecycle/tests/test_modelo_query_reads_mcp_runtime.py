@@ -325,6 +325,7 @@ async def test_native_mcp_discloses_only_scoped_typed_modelo_queries(
         # The period the seeded work unit lives in is the only one the key may read.
         listed = seeded[0][0].request
         assert isinstance(listed, ModeloBindingsListRequest)
+        assert listed.year is not None and listed.period_code is not None
         return _scope(client_id, Period.from_year_and_code(listed.year, listed.period_code))
 
     with native_api_cli_session(

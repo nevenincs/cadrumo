@@ -37,7 +37,9 @@ _REVISION_PROBES = tuple((str(revision.id), revision.valid_from) for revision in
 _CLOSED_303 = [revision for revision in authored_revisions("303") if revision.valid_to is not None][-1]
 _CLOSED_303_ID = str(_CLOSED_303.id)
 _CLOSED_303_PROBE = _CLOSED_303.valid_from
-_AFTER_CLOSED_303 = _CLOSED_303.valid_to + timedelta(days=1)
+_CLOSED_303_END = _CLOSED_303.valid_to
+assert _CLOSED_303_END is not None
+_AFTER_CLOSED_303 = _CLOSED_303_END + timedelta(days=1)
 #: A modelo 390 revision, which declares the capital-goods family not applicable.
 _M390_ID = str(revision_covering("390", filing_year_envelope().horizon).id)
 
