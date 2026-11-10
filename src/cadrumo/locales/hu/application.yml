@@ -1106,6 +1106,9 @@ application:
         november: November
         october: Október
         september: Szeptember
+    reason:
+      served:
+        command: Paranccsal rögzítve, indoklás nélkül
     staged_check:
       served:
         blocker:

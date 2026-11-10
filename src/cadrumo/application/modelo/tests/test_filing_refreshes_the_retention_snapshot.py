@@ -20,6 +20,7 @@ from uuid import UUID
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -35,8 +36,8 @@ from ..filing_revision_persistence import refresh_filing_retention_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "9c4e17b3-58da-4d2f-b6a1-3f70e9c85d26"
-_FILED_AT = datetime(2026, 6, 30, tzinfo=UTC)
-_OBSERVED_AT = datetime(2026, 8, 15, tzinfo=UTC)
+_FILED_AT = datetime(filing_year_envelope().horizon, 6, 30, tzinfo=UTC)
+_OBSERVED_AT = datetime(filing_year_envelope().horizon, 8, 15, tzinfo=UTC)
 
 
 def _catalogue() -> ModeloRecordCatalogue:

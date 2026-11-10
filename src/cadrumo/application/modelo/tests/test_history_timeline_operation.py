@@ -27,6 +27,7 @@ from ....domain.buckets.event import (
     derive_bucket_event_id,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry
@@ -57,6 +58,9 @@ def _registry() -> OperationRegistry:
     )
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 def _request(*, year: int | None = None, period: str | None = None) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id=MODELO_HISTORY_TIMELINE_OPERATION_DEFINITION_ID,
@@ -81,8 +85,8 @@ def test_timeline_external_client_result_disclosure_and_full_period_scope(
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
-    selected = resolve_operation_access(registry=registry, request=_request(year=2025, period="1T"), context=context)
-    assert selected.request.periods == frozenset({Period.from_year_and_code(2025, "1T")})
+    selected = resolve_operation_access(registry=registry, request=_request(year=_YEAR, period="1T"), context=context)
+    assert selected.request.periods == frozenset({Period.from_year_and_code(_YEAR, "1T")})
     assert not selected.policy.requires_all_periods
     assert AccessAction.COMMIT not in selected.policy.actions
     assert selected.policy.disclosures == frozenset(
@@ -94,7 +98,7 @@ def test_timeline_external_client_result_disclosure_and_full_period_scope(
             )
         }
     )
-    full = resolve_operation_access(registry=registry, request=_request(year=2025), context=context)
+    full = resolve_operation_access(registry=registry, request=_request(year=_YEAR), context=context)
     assert full.request.period_independent and full.policy.requires_all_periods
     assert full.request.periods == frozenset()
     with pytest.raises(ProfileAccessRefusedError) as refused:
@@ -103,10 +107,10 @@ def test_timeline_external_client_result_disclosure_and_full_period_scope(
 
 
 def test_timeline_omits_export_path_and_free_text_even_if_source_event_contains_them() -> None:
-    occurred_at = datetime(2025, 5, 1, 12, 34, 56, 123456, tzinfo=UTC)
+    occurred_at = datetime(1980, 5, 1, 12, 34, 56, 123456, tzinfo=UTC)
     payload = {
         "modelo": "130",
-        "filing_year": "2025",
+        "filing_year": str(_YEAR),
         "period": "1T",
         "output_path": "C:/private/tax-export.txt",
         "prior_domiciliation_baseline_source_header_locator": "private-source-locator",
@@ -135,7 +139,7 @@ def test_timeline_omits_export_path_and_free_text_even_if_source_event_contains_
         authority_generation="c" * 64,
         profile_id=_PROFILE,
         modelo="130",
-        year=2025,
+        year=_YEAR,
         period="1T",
         count=1,
         events=(ModeloTimelineEvent.from_event(event),),
@@ -166,8 +170,8 @@ def test_timeline_omits_export_path_and_free_text_even_if_source_event_contains_
 @pytest.mark.parametrize(
     "occurred_at",
     (
-        datetime(2025, 5, 1),
-        datetime(2025, 5, 1, tzinfo=timezone(timedelta(hours=2))),
+        datetime(1980, 5, 1),
+        datetime(1980, 5, 1, tzinfo=timezone(timedelta(hours=2))),
     ),
 )
 def test_timeline_rejects_noncanonical_timestamp(occurred_at: datetime) -> None:

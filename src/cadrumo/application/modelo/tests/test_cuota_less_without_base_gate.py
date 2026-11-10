@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import registry_category_projection
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.verification_report import ModeloVerificationFindingSeverity
@@ -29,7 +30,8 @@ from ..verification_gate_findings import cuota_less_without_base_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_T0 = datetime(2026, 3, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(1980, 3, 1, tzinfo=UTC)
 _AMOUNT = Decimal("1000.00")
 
 
@@ -43,8 +45,8 @@ def _transaction(
     payload: dict[str, object] = {
         "raw": RawTransaction(
             provider_transaction_id=provider_id,
-            booked_date=date(2026, 2, 15),
-            value_date=date(2026, 2, 15),
+            booked_date=date(_YEAR, 2, 15),
+            value_date=date(_YEAR, 2, 15),
             amount=_AMOUNT,
             currency="EUR",
             counterparty="Cliente",

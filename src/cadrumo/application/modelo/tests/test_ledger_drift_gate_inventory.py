@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.modelos.calculation_revision import (
@@ -31,28 +32,29 @@ from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepositor
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "28282828-2828-4828-8828-282828282828"
-_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
+_AT = datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC)
 _KEY = "application.modelo.findings.inventory_register_drift"
 _F1, _F2 = "a" * 64, "b" * 64
 
 
 def _draft(*rows: tuple[str, str]) -> tuple[WorkUnit, CalculationRevision]:
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
-    period = Period.from_year_and_code(2025, "0A")
+    snapshot = published_snapshot("100", filing_year=_YEAR, period="0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET,
             modelo="100",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET,
         modelo=ModeloCode("100"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
-        name="100-2025-0A",
+        name=f"100-{_YEAR}-0A",
         created_at=_AT,
         updated_at=_AT,
     )

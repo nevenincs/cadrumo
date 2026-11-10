@@ -15,6 +15,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.row_models import Modelo232VinculadaRow, Modelo349OperadorRow, Modelo349RectificacionRow
 from ..edit_execution import reconstruct_detail_rows
 from ..edit_models import (
@@ -47,7 +48,7 @@ def _rectificacion(nif_comunitario: str) -> Modelo349RectificacionRow:
         nif_comunitario=nif_comunitario,
         razon_social="ALEMAN GMBH",
         clave_operacion="E",
-        ejercicio="2025",
+        ejercicio=str(filing_year_envelope().horizon),
         periodo="2T",
         base_rectificada=Decimal("1100.00"),
         base_anterior=Decimal("1000.00"),

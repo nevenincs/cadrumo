@@ -31,6 +31,7 @@ from ....domain.calculations.registry.casilla_membership import (
 )
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -47,9 +48,9 @@ from ..calculate_input_validation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "calculate-override-verdict-bucket"
-_CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
+_CLOCK = datetime(1980, 1, 10, tzinfo=UTC)
 _WORK_UNIT_REVISION_ID = "b" * 64
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition("100")
 _PERIOD_CODE = "0A"
 _LEAF = "modelo.work.calculate"
 _UNDECLARED_CASILLA_KEY = "99999"

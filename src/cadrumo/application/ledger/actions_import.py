@@ -34,15 +34,12 @@ from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.models import (
-    BucketTransactionRef,
-    Transaction,
-    TransactionCatalogue,
+from ...domain.transactions.import_fingerprints import (
     derive_import_fingerprint,
     derive_movement_day_key,
-    derive_transaction_id,
     existing_transaction_import_fingerprints,
 )
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_transaction_id
 from ...domain.transactions.own_accounts import (
     OwnAccountRegister,
     OwnBankAccount,
@@ -216,7 +213,7 @@ def evaluate_import_rows(
     and the authoritative ``direction`` the provider derived from the source
     sign at the parse boundary; this classifier never re-derives flow from a
     sign. Deduplication keys on
-    :func:`~cadrumo.domain.transactions.models.derive_import_fingerprint` - a direction-
+    :func:`~cadrumo.domain.transactions.import_fingerprints.derive_import_fingerprint` - a direction-
     and currency-qualified identity that is stable across both later edits of a
     transaction and a re-export of the same movement in a different file format.
     The import/skip verdict itself comes from

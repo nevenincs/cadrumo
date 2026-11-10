@@ -426,6 +426,7 @@ export function DocumentsSection({
             rows={rows}
             inReview={inReview}
             pending={pending}
+            readings={queue.read.phase === "failed" ? null : waiting}
             selected={record}
             onSelect={setRecord}
             onWritten={rereadAll}

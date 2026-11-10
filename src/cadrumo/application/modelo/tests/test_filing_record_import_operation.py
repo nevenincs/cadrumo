@@ -27,6 +27,7 @@ from ....core.operations import (
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -70,13 +71,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _REFERENCE = "synthetic-expediente"
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=str(_PROFILE),
     modelo="303",
-    filing_year=2026,
-    period=Period.from_year_and_code(2026, "1T"),
+    filing_year=_FILING_YEAR,
+    period=Period.from_year_and_code(_FILING_YEAR, "1T"),
     revision_id="requested-revision",
 )
 
@@ -85,16 +87,16 @@ def _unit(*, revision_id: str = "requested-revision", created_at: datetime = _NO
     unit_id = derive_work_unit_id(
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id=revision_id,
     )
     return WorkUnit(
         work_unit_id=unit_id,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id=revision_id,
         name="Synthetic first quarter",
         created_at=created_at,
@@ -114,8 +116,8 @@ def _record(*, work_unit_id: str = _WORK_UNIT_ID) -> ModeloRecord:
         calculation_revision_id=_REVISION,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         filed_at=_NOW,
         filed_by="synthetic import actor",
         origin=FilingOrigin.AEAT,
@@ -136,8 +138,8 @@ def _reconciliation(record: ModeloRecord) -> FilingReconciliationResult:
         outcome=FilingReconciliationOutcome.APPENDED,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         member_nif=None,
         filing_record_id=record.filing_record_id,
         affected_filing_record_ids=(),
@@ -279,7 +281,7 @@ def test_secure_request_definition_and_commit_access_are_exact_profile() -> None
 
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
-    assert commit.request.periods == frozenset({Period.from_year_and_code(2026, "1T")})
+    assert commit.request.periods == frozenset({Period.from_year_and_code(_FILING_YEAR, "1T")})
     assert AccessAction.COMMIT in commit.policy.actions
     with pytest.raises(ProfileAccessRefusedError) as refused:
         resolve_operation_access(

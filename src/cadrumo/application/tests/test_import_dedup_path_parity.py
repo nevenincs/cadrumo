@@ -24,7 +24,8 @@ import pytest
 
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.transactions.enums import TransactionDirection
-from ...domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
+from ...domain.transactions.import_fingerprints import derive_import_fingerprint
+from ...domain.transactions.models import TransactionCatalogue, derive_transaction_id
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger.actions_import import evaluate_import_rows
 from ..ledger.protocols import ParsedLedgerRowProtocol

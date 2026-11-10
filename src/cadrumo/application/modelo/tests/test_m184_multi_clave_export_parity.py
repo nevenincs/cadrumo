@@ -26,6 +26,7 @@ from ....domain.calculations.registry.detail_record_bindings import (
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...filing.record_renderer import record_render_rows
@@ -35,7 +36,8 @@ from ..calculation_modelo_adjustments import union_detail_rows_by_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_REVISION = "2025-y-siguientes"
+_REVISION = str(open_ended_revision("184").id)
+_EXERCISE = newest_authored_edition("184")
 
 
 def _revision():
@@ -110,7 +112,7 @@ def _observation(
         source_id=source_id,
         member_tax_id=nif,
         member_legal_name=name,
-        transaction_date=date(2025, 1, 1),
+        transaction_date=date(_EXERCISE, 1, 1),
         share_percentage=Decimal(share),
         base_imponible_assigned=Decimal(base),
         clave=clave,
@@ -197,7 +199,7 @@ def test_clave_conditional_fields_resolve_only_for_the_row_that_declares_them() 
             nif="22222222B",
             name="Dos",
             share="100",
-            base="2000",
+            base="2200",
             clave="D",
             subclave="03",
             rendimiento_neto_previo_eo=Decimal("500"),

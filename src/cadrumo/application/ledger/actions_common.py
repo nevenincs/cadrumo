@@ -42,14 +42,9 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
-from ...domain.transactions.models import (
-    BucketTransactionRef,
-    Transaction,
-    TransactionCatalogue,
-    withheld_figures,
-    withheld_figures_event_entries,
-)
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
+from ...domain.transactions.withheld_figures import withheld_figures, withheld_figures_event_entries
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence

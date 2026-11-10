@@ -7,6 +7,7 @@
 
 import { useCallback, useMemo, useState, type RefObject } from "react";
 import type { LedgerView } from "../../../shell/layout";
+import type { OutputLanguage } from "../../../shell/ledger";
 import type { LedgerWindowScope } from "../../../shell/ledgerWindow";
 import {
   DEFAULT_SORT,
@@ -139,11 +140,14 @@ export function useMovementsView(
 export function windowScope(
   allPeriods: boolean,
   movements: Pick<MovementsView, "filters" | "sort" | "groupBy">,
+  language: OutputLanguage,
 ): LedgerWindowScope {
-  if (!allPeriods) return {};
+  // The rows' served words are said in the window's language either way.
+  if (!allPeriods) return { output_language: language };
   const field = serverSortField(movements.sort.key);
   const scopes = serverFilters(movements.filters);
   return {
+    output_language: language,
     ...(scopes.length === 1 ? scopes[0] : {}),
     ...(field ? { sort_by: field, sort_order: movements.sort.direction } : {}),
     ...(movements.groupBy === SERVER_GROUPING ? { by_group: true } : {}),

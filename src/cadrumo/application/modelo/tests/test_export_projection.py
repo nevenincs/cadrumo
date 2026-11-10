@@ -28,6 +28,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
@@ -53,7 +54,8 @@ _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 _BASELINE_FILING_ID = "c" * 64
 _FILE_DIGEST = "d" * 64
-_AT = datetime(2026, 9, 26, 8, 30, tzinfo=UTC)
+_AT = datetime(1980, 9, 26, 8, 30, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
@@ -130,8 +132,8 @@ def _canonical_receipt(
             decision_ref=f"sha256:{'e' * 64}",
             selected_authority="official_observation",
             divergence="none",
-            target_year=2025,
-            target_period=Period.from_year_and_code(2025, "4T"),
+            target_year=_FILING_YEAR - 1,
+            target_period=Period.from_year_and_code(_FILING_YEAR - 1, "4T"),
             authority_source_kinds=("aeat_capture", "app_filing"),
             authority_source_refs=(f"sha256:{'f' * 64}",),
         )
@@ -143,8 +145,8 @@ def _canonical_receipt(
         work_unit_id=_WORK_UNIT_ID,
         bucket_id="5aa00000-0000-4000-8000-0000000000aa",
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         output_path=Path("C:/tax exports/modelo-303.fichero-boe"),
         byte_size=18_432,
         file_sha256=_FILE_DIGEST,

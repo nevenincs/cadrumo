@@ -127,27 +127,40 @@ def main(argv: list[str] | None = None) -> int:
 def _refresh_mode(args: argparse.Namespace) -> int:
     """Refresh mode."""
     try:
-        if args.sequence is not None:
-            written, problems, advisories = refresh_sequences(
-                docs_root=args.docs_root,
-                goldens_root=args.goldens_root,
-                sequence_id=args.sequence,
-            )
-        else:
-            pages = _refresh_pages(args.page, args.command, args.docs_root)
-            if pages is not None and not pages:
-                print(f"no executed frame runs {args.command!r}; nothing to refresh")
-                return 0
-            written, problems, advisories = refresh_pages(
-                docs_root=args.docs_root,
-                goldens_root=args.goldens_root,
-                pages=pages,
-                jobs=args.jobs,
-                progress=lambda line: print(line, flush=True),
-            )
+        outcome = _refresh_outcome(args)
     except SequenceEngineError as exc:
         print(f"problem: {exc}", file=sys.stderr)
         return 1
+    if outcome is None:
+        print(f"no executed frame runs {args.command!r}; nothing to refresh")
+        return 0
+    return _report_refresh(*outcome)
+
+
+def _refresh_outcome(
+    args: argparse.Namespace,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]] | None:
+    """Refresh the selected sequence or pages; ``None`` when ``--command`` selects no executed frame."""
+    if args.sequence is not None:
+        return refresh_sequences(
+            docs_root=args.docs_root,
+            goldens_root=args.goldens_root,
+            sequence_id=args.sequence,
+        )
+    pages = _refresh_pages(args.page, args.command, args.docs_root)
+    if pages is not None and not pages:
+        return None
+    return refresh_pages(
+        docs_root=args.docs_root,
+        goldens_root=args.goldens_root,
+        pages=pages,
+        jobs=args.jobs,
+        progress=lambda line: print(line, flush=True),
+    )
+
+
+def _report_refresh(written: tuple[Path, ...], problems: tuple[str, ...], advisories: tuple[str, ...]) -> int:
+    """Print the refreshed goldens, advisories and problems; nonzero when any problem remains."""
     for target in written:
         print(f"{REFRESHED_PREFIX}{target}")
     for advisory in advisories:

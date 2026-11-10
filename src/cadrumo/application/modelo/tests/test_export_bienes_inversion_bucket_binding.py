@@ -17,6 +17,11 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     resolve_bienes_inversion_regularizacion_parameters,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    split_exercise_revisions,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...aggregation.iva_ledger import IvaLedgerAggregation
@@ -24,12 +29,25 @@ from ..export_preparation import resolve_m303_export_arrivals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FILING_YEAR = filing_year_envelope().horizon
+
+
+def _period_end_cases() -> list[tuple[int, str, str]]:
+    """Every supported exercise, with each period token and the authored revision that serves it."""
+    return [
+        (year, token, str(revision.id))
+        for year in filing_year_envelope().years
+        for revision in authored_revisions("303")
+        if revision.valid_from.year <= year and (revision.valid_to is None or year <= revision.valid_to.year)
+        for token in revision.period_selector.periods_for_year(year)
+    ]
+
 
 def _record(identifier: str, *, initial_percentage: Decimal) -> BienInversionIvaRecord:
     return BienInversionIvaRecord(
         identifier=identifier,
         description=f"Bien de inversion {identifier}",
-        acquisition_year=2024,
+        acquisition_year=_FILING_YEAR - 1,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=initial_percentage,
         kind=BienInversionKind.from_registry("mueble"),
@@ -39,17 +57,19 @@ def _record(identifier: str, *, initial_percentage: Decimal) -> BienInversionIva
 
 def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operation: PinnedAuthorityOperation) -> None:
     """Primary evidence cannot bleed into the secondary M303 export arrival."""
-    period = Period.from_year_and_code(2026, "4T")
+    period = Period.from_year_and_code(_FILING_YEAR, "4T")
     prorrata_register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_FILING_YEAR,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 definitive_percentage=Decimal("60"),
                 definitive_volume_con_derecho=Decimal("600.00"),
                 definitive_volume_sin_derecho=Decimal("400.00"),
-                source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="4T").snapshot_ref,),
+                source_registry_snapshot_refs=(
+                    published_snapshot("303", filing_year=_FILING_YEAR, period="4T").snapshot_ref,
+                ),
             ),
         ),
     )
@@ -75,20 +95,9 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operati
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "period_token", "revision_id", "resolved_on"),
-    [
-        (2024, "1T", "2024-hasta-08-y-2t", date(2024, 3, 31)),
-        (2024, "08", "2024-hasta-08-y-2t", date(2024, 8, 31)),
-        (2024, "3T", "2024-desde-09-y-3t", date(2024, 9, 30)),
-        (2025, "1T", "2025", date(2025, 3, 31)),
-        (2026, "01", "2026-hasta-01-y-1t", date(2026, 1, 31)),
-        (2026, "1T", "2026-hasta-01-y-1t", date(2026, 3, 31)),
-        (2026, "02", "2026-y-siguientes", date(2026, 2, 28)),
-        (2026, "03", "2026-y-siguientes", date(2026, 3, 31)),
-        (2026, "2T", "2026-y-siguientes", date(2026, 6, 30)),
-        (2026, "4T", "2026-y-siguientes", date(2026, 12, 31)),
-        (2026, "12", "2026-y-siguientes", date(2026, 12, 31)),
-    ],
+    ("filing_year", "period_token", "revision_id"),
+    _period_end_cases(),
+    ids=lambda value: str(value),
 )
 def test_m303_export_parameter_lookup_uses_the_selected_filing_period_end(
     *,
@@ -96,7 +105,6 @@ def test_m303_export_parameter_lookup_uses_the_selected_filing_period_end(
     filing_year: int,
     period_token: str,
     revision_id: str,
-    resolved_on: date,
 ) -> None:
     """A real empty-register arrival must resolve its selected revision's figures."""
     period = Period.from_year_and_code(filing_year, period_token)
@@ -120,7 +128,7 @@ def test_m303_export_parameter_lookup_uses_the_selected_filing_period_end(
     assert regularisation.parameters_provenance == parameters.provenance
     assert parameters.provenance.modelo_id == "303"
     assert parameters.provenance.revision_id == revision_id
-    assert parameters.provenance.resolved_on == resolved_on == period.end_date
+    assert parameters.provenance.resolved_on == period.end_date
     declared_ids = {parameter.id for parameter in snapshot.revision.parameters if "bien-inversion-" in parameter.id}
     assert len(declared_ids) == 5
     assert set(parameters.provenance.parameter_ids) == declared_ids
@@ -131,12 +139,14 @@ def test_m303_early_revision_still_refuses_a_year_end_parameter_date(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Period-correct admission must not weaken the underlying revision-window gate."""
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
-    assert snapshot.revision.id == "2026-hasta-01-y-1t"
+    early, _late = split_exercise_revisions("303", early_period="1T", late_period="2T")
+    split_year = early.valid_from.year
+    snapshot = operation.snapshot("303", filing_year=split_year, period="1T")
+    assert snapshot.revision.id == early.id
 
     with pytest.raises(BienesInversionParameterResolutionError, match="date lies outside the revision's window"):
         resolve_bienes_inversion_regularizacion_parameters(
             snapshot.revision,
             modelo_id="303",
-            filing_period_date=date(2026, 12, 31),
+            filing_period_date=date(split_year, 12, 31),
         )

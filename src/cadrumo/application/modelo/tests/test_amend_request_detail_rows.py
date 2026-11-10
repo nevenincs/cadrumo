@@ -31,6 +31,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.row_models import Modelo232VinculadaRow
 from ..calculation_modelo_adjustments import detail_row_declaration_modelos
@@ -43,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: test fails if the domain ever changes which they are rather than silently
 #: covering a set that no longer matches.
 _EXPECTED_BEARING = frozenset({"184", "232", "349"})
-_EFFECTIVE_DATE = date(2025, 12, 31)
+_EFFECTIVE_DATE = date(filing_year_envelope().horizon, 12, 31)
 
 
 def _request(**overrides: object) -> ModeloWorkAmendRequest:

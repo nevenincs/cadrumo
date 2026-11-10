@@ -23,12 +23,8 @@ from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.period import Period
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.models import (
-    BucketTransactionRef,
-    Transaction,
-    TransactionCatalogue,
-    withhold_figures_without_business,
-)
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.withheld_figures import withhold_figures_without_business
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..review.filter import LedgerReviewStatus
 from .action_ports import LedgerActionPorts

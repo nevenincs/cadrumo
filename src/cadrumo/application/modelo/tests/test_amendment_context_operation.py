@@ -59,7 +59,7 @@ def _saved_context(operation: PinnedAuthorityOperation, *, mismatch: str | None 
     if mismatch is not None:
         changed = {
             "modelo": {"modelo": "131"},
-            "year": {"modelo_year": 2025},
+            "year": {"modelo_year": unit.filing_year - 1},
             "period": {"period": "2T"},
             "revision": {"revision_id": "different-registry-revision"},
         }

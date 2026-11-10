@@ -1611,6 +1611,9 @@ cli:
           meg egy rövid nevet magadnak.
         allow_not_applicable_help: Bevallás létrehozása akkor is, ha a nyomtatvány
           nem vonatkozik az aktív profil adóalany-típusára.
+        amend_binding_help: Rovatforrás értéke, amelyet a javítás megad, ha a benyújtás
+          nem rögzítette, BINDING_ID=VALUE szintaxissal (ismételhető); az elutasított
+          javítás megnevezi a szükségeseket.
         amend_help: Helyesbítés készítése egy a Cadrumón kívül benyújtott bevalláshoz.
           Importált AEAT-bizonyítékot tartalmazó benyújtási rekord szükséges.
         amend_missing_options: 'A módosításhoz minden alábbi beállítás szükséges:

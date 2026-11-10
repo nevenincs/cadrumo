@@ -35,6 +35,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationFrontendProjection
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ...aggregation.counterpart import CounterpartObservation
 from ...aggregation.foreign_assets import ForeignAssetIngestObservation
@@ -110,7 +111,8 @@ def _pinned_authority() -> Iterator[None]:
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OTHER_PROFILE = UUID("33333333-3333-4333-8333-333333333333")
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _RESULT_REF = "e" * 64
 _SCOPE = WithholdingWindowScope(modelo="111", period=_PERIOD)
 _BASELINE = WithholdingWindowBaseline(scope_token=_SCOPE.token, generation_id="a" * 64)
@@ -127,7 +129,7 @@ def _capital_capture_request() -> LedgerPaymentWithholdingEvidenceRequest:
         scheme=RetencionScheme("intereses"),
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="payment-2025-02",
+        payment_event_id=f"payment-{_YEAR}-02",
         allocation_id="allocation-1",
         gross_base=Decimal("100.00"),
         withholding_amount=Decimal("19.00"),
@@ -135,8 +137,8 @@ def _capital_capture_request() -> LedgerPaymentWithholdingEvidenceRequest:
         idempotency_key="capture-1",
         perceptor_nif="00001500M",
         perceptor_name="Annual detail subject",
-        exigibility_event_id="exigible-2025-01",
-        exigibility_occurred_on=date(2025, 1, 10),
+        exigibility_event_id=f"exigible-{_YEAR}-01",
+        exigibility_occurred_on=date(_YEAR, 1, 10),
     )
 
 
@@ -378,7 +380,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2025-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
     with pytest.raises(ValueError, match="read from storage"):
         ModeloAggregateOperationRequest.from_inputs(
@@ -397,7 +399,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
         annual_detail = WithholdingObservation(
             source_id="transaction-1",
             perceptor_tax_id="00001500M",
-            transaction_date=date(2025, 1, 15),
+            transaction_date=date(_YEAR, 1, 15),
             clave=RetencionClave.from_registry("A"),
             percibido_dinerario=Decimal("100.00"),
             retencion_practicada=Decimal("15.00"),
@@ -420,7 +422,7 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
         operation_period="1T",
         taxable_base=Decimal("200.10"),
         invoice_total=Decimal("242.12"),
-        accrued_on="2025-02-10",
+        accrued_on=date(_YEAR, 2, 10).isoformat(),
     )
     foreign_asset = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -433,8 +435,8 @@ def test_public_command_round_trips_each_supported_observation_family() -> None:
         valuation_amount=Decimal("50000.50"),
         currency_code="USD",
         valuation_event=M720ValuationEvent.EXTINCTION,
-        valuation_event_date="2025-06-13",
-        acquisition_date="2024-06-30",
+        valuation_event_date=date(_YEAR, 6, 13).isoformat(),
+        acquisition_date=date(_YEAR - 1, 6, 30).isoformat(),
     )
     command = PerModeloAggregationCommand(
         modelo="347",
@@ -496,14 +498,14 @@ def test_regular_aggregate_reads_profile_rows_and_publishes_no_evidence(
     assert not {"perceptor_nif", "perceptor_name", "taxable_base", "retencion_amount", "observations"} & set(serialized)
 
 
-_ANNUAL_PERIOD = Period.from_year_and_code(2025, "0A")
+_ANNUAL_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _percepcion(source_id: str, nif: str, clave: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(2025, 2, 1),
+        transaction_date=date(_YEAR, 2, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
@@ -558,7 +560,7 @@ def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
 
     projection, events = _run_annual_190(monkeypatch, authority_operation, percepciones)
 
-    assert percepciones.annual_loads == [("111", 2025)]
+    assert percepciones.annual_loads == [("111", _YEAR)]
     assert events.effects == [OperationEffect.NONE]
     assert projection.outcome == "aggregated"
     assert projection.absent_source_families == ()
@@ -581,7 +583,7 @@ def test_annual_summary_without_stored_rows_names_the_absent_family_instead_of_a
 
     projection, _events = _run_annual_190(monkeypatch, authority_operation, percepciones)
 
-    assert percepciones.annual_loads == [("111", 2025)]
+    assert percepciones.annual_loads == [("111", _YEAR)]
     assert projection.clave_breakdown == ()
     assert projection.absent_source_families == (BindingSourceKind.WITHHOLDING,)
     assert projection.calculation_revision_id is not None
@@ -596,7 +598,7 @@ def _snapshot_observation() -> RetencionObservation:
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
         retencion_amount=Decimal("15.00"),
-        accrued_on="2025-01-15",
+        accrued_on=date(_YEAR, 1, 15).isoformat(),
     )
 
 

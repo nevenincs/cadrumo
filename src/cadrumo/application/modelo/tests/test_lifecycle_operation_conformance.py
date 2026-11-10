@@ -82,7 +82,7 @@ _ENROLMENT_AUTHORITIES: dict[str, frozenset[str]] = {
 
 _KNOWN_AUTHORITIES = frozenset().union(*_ENROLMENT_AUTHORITIES.values())
 
-_M303_CLOCK = datetime(2025, 4, 1, 10, tzinfo=UTC)
+_M303_CLOCK = datetime(1980, 4, 1, 10, tzinfo=UTC)
 
 
 class _LegacyCalculateRequestV1(CredentialFreeOperationRequest):

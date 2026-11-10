@@ -12,6 +12,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.attachments.protocols import AttachmentStoreProtocol
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
@@ -28,8 +29,9 @@ from ..work_lifecycle_ports import WorkLifecyclePorts
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_OBSERVED = datetime(2026, 12, 31, 10, tzinfo=UTC)
-_PERIOD = PublicPeriod(filing_year=2026, code="4T")
+_YEAR = filing_year_envelope().horizon
+_OBSERVED = datetime(_YEAR, 12, 31, 10, tzinfo=UTC)
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="4T")
 _UNIT = "a" * 64
 
 
@@ -62,7 +64,7 @@ def test_period_receipt_requires_matching_year_and_digest() -> None:
         ModeloWorkM303AttestationPublicResultV2(
             profile_id=_PROFILE,
             work_unit_id=None,
-            filing_year=2026,
+            filing_year=_YEAR,
             period=_PERIOD,
             attachment_id="a" * 64,
             sha256="b" * 64,

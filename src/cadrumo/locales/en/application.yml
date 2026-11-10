@@ -1058,6 +1058,9 @@ application:
         november: November
         october: October
         september: September
+    reason:
+      served:
+        command: Recorded by a command, with no reason stated
     staged_check:
       served:
         blocker:

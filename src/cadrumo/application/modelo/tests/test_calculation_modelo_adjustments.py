@@ -20,6 +20,7 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -52,7 +53,7 @@ _COMPENSACIONES_REAGP_BINDING: BindingId = "modelo-390-prev-303-compensaciones-r
 
 def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_alternate() -> None:
     """The adjustment consumes the canonical reverse join, including alternates."""
-    snapshot = published_snapshot(Modelo("390").value, filing_year=2025, period="0A")
+    snapshot = published_snapshot(Modelo("390").value, filing_year=filing_grade_exercises("390")[-1], period="0A")
     revised_casillas = tuple(
         CasillaDefinition.model_validate(
             {
@@ -77,7 +78,7 @@ def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_altern
     assert target[2] == (_TARGET_CASILLA,)
 
 
-def _work_unit(modelo: Modelo, *, filing_year: int = 2025) -> WorkUnit:
+def _work_unit(modelo: Modelo, *, filing_year: int = filing_year_envelope().horizon) -> WorkUnit:
     bucket_id = "calculation-modelo-adjustments-bucket"
     period = Period.from_year_and_code(filing_year, "0A")
     revision_id = "r" + "0" * 63
@@ -96,8 +97,8 @@ def _work_unit(modelo: Modelo, *, filing_year: int = 2025) -> WorkUnit:
         period=period,
         revision_id=revision_id,
         name=f"{code}-{filing_year}",
-        created_at=datetime(2025, 1, 1, tzinfo=UTC),
-        updated_at=datetime(2025, 1, 1, tzinfo=UTC),
+        created_at=datetime(1980, 1, 1, tzinfo=UTC),
+        updated_at=datetime(1980, 1, 1, tzinfo=UTC),
     )
 
 
@@ -146,7 +147,9 @@ def test_union_collapses_an_identical_row_named_by_both_paths_to_one() -> None:
     values = detail_row_binding_values_for_calculation(
         work_unit=_work_unit(Modelo("349")),
         # Modelo 349 declares only monthly and quarterly periods.
-        revision=published_snapshot(Modelo("349").value, filing_year=2025, period="4T").revision,
+        revision=published_snapshot(
+            Modelo("349").value, filing_year=filing_year_envelope().horizon, period="4T"
+        ).revision,
         detail_rows=unioned,
     )
     assert values["iva-349-declarante-numero-operadores"] == Decimal("1")

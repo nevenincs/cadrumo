@@ -21,6 +21,7 @@ from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import (
     OperationReplayPolicy,
@@ -76,7 +77,9 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 
 _PROFILE = UUID("44444444-4444-4444-8444-444444444444")
 _BUCKET = str(_PROFILE)
-_CREATED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("145").id)
+_CREATED_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 _VALUES = {
     "perceptor.nif": "12345678Z",
     "perceptor.primer-apellido": "Garcia",
@@ -90,16 +93,16 @@ def _canonical_record() -> M145CommunicationRecord:
     return M145CommunicationRecord(
         communication_record_id="a" * 64,
         bucket_id=_BUCKET,
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=M145CommunicationPeriod.COMMUNICATION,
-        revision_id="2012-01-31-y-siguientes",
+        revision_id=_REVISION_ID,
         state=M145CommunicationRecordState.LOCALLY_COMPLETED,
         field_values=_VALUES,
         legal_refs=("rd-439-2007:art-88",),
         source_refs=("aeat-modelo-145-form",),
         created_at=_CREATED_AT,
-        delivered_to_payer_at=datetime(2026, 5, 8, 10, 16, tzinfo=UTC),
-        locally_completed_at=datetime(2026, 5, 8, 10, 17, tzinfo=UTC),
+        delivered_to_payer_at=datetime(_YEAR, 5, 8, 10, 16, tzinfo=UTC),
+        locally_completed_at=datetime(_YEAR, 5, 8, 10, 17, tzinfo=UTC),
         note="Reviewed locally",
     )
 
@@ -148,9 +151,9 @@ def test_validation_projection_round_trips_ordered_findings_and_provenance() -> 
     result = M145CommunicationValidationResult(
         communication_record_id="a" * 64,
         bucket_id=_BUCKET,
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=M145CommunicationPeriod.COMMUNICATION,
-        revision_id="2012-01-31-y-siguientes",
+        revision_id=_REVISION_ID,
         valid=False,
         issue_count=2,
         issues=(
@@ -190,9 +193,9 @@ def test_export_projection_keeps_payload_bytes_and_checks_receipt() -> None:
     result = M145CommunicationExportResult(
         communication_record_id="a" * 64,
         bucket_id=_BUCKET,
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=M145CommunicationPeriod.COMMUNICATION,
-        revision_id="2012-01-31-y-siguientes",
+        revision_id=_REVISION_ID,
         export_layout_id="m145-comunicacion",
         encoding="iso-8859-1",
         record_count=1,
@@ -297,9 +300,9 @@ async def test_export_cancellation_waits_for_started_guarded_append_and_keeps_up
     export = M145CommunicationExportResult(
         communication_record_id="a" * 64,
         bucket_id=_BUCKET,
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=M145CommunicationPeriod.COMMUNICATION,
-        revision_id="2012-01-31-y-siguientes",
+        revision_id=_REVISION_ID,
         export_layout_id="m145-comunicacion",
         encoding="iso-8859-1",
         record_count=1,
@@ -418,7 +421,7 @@ def test_five_registrations_are_secure_and_require_all_periods_and_two_are_open_
     requests: dict[str, BaseModel] = {
         M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID: M145CommunicationCreateRequest.from_command(
             profile_id=_PROFILE,
-            command=M145CommunicationCreateCommand(communication_year=2026, field_values=_VALUES),
+            command=M145CommunicationCreateCommand(communication_year=_YEAR, field_values=_VALUES),
             actor="M145 operator",
         ),
         M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID: M145CommunicationValidateRequest(
@@ -485,7 +488,7 @@ def _create_request(values: dict[str, str]) -> OperationRequest[BaseModel]:
         subject_ref=profile_operation_subject(str(_PROFILE)),
         payload=M145CommunicationCreateRequest.from_command(
             profile_id=_PROFILE,
-            command=M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            command=M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             actor="M145 operator",
         ),
     )

@@ -15,7 +15,7 @@ import {
 import type { MovementsMemory } from "@/components/ledger/movements/useMovementsView";
 import type { PaneControl } from "@/components/PaneHeader";
 import { DEFAULT_LAYOUT, type LedgerView } from "../shell/layout";
-import type { LedgerPort, LedgerRow } from "../shell/ledger";
+import type { LedgerPort, LedgerRow, OutputLanguage } from "../shell/ledger";
 import type { LedgerPeriod } from "../shell/ledgerGrammar";
 import { REGISTER_YEARS, SCENARIO_TODAY } from "./assetsRegister";
 import {
@@ -204,6 +204,7 @@ export function LedgerStage({
 export function useLedgerRead(
   port: LedgerPort,
   period: LedgerPeriod | null = STORY_PERIOD,
+  language?: OutputLanguage,
 ): {
   window: LedgerWindow | null;
   reread: () => void;
@@ -219,6 +220,7 @@ export function useLedgerRead(
     STORY_READER,
     period,
     true,
+    language ? { output_language: language } : undefined,
   );
   const rows = read ? (shownRows(read)?.rows ?? null) : null;
   const generation = read?.phase === "ready" ? read.generation : null;

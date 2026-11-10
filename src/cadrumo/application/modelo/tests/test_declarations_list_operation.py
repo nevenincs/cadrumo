@@ -16,6 +16,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry
@@ -78,7 +79,7 @@ def test_the_list_needs_consent_to_every_period_and_holds_no_commit_door() -> No
         operations=frozenset({MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID}),
         actions=frozenset({AccessAction.SUBMIT}),
         disclosures=frozenset(),
-        periods=frozenset({Period.from_year_and_code(2026, "1T")}),
+        periods=frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "1T")}),
         allow_period_independent=True,
         allow_delegation=False,
     )

@@ -13,10 +13,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, derive_m036_declaration_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_ID = "31313131-3131-4131-8131-313131313131"
+_YEAR = filing_year_envelope().horizon
 
 
 def test_command_accepts_minimum_fields() -> None:
@@ -24,7 +26,7 @@ def test_command_accepts_minimum_fields() -> None:
     cmd = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
     )
 
     assert cmd.profile_id == _PROFILE_ID
@@ -38,7 +40,7 @@ def test_command_carries_optional_justificante_and_note() -> None:
     cmd = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante="AEAT-ACUSE-2026-0000123",
         note="Modificación de domicilio fiscal",
     )
@@ -66,7 +68,7 @@ def test_command_rejects_unknown_event_kind() -> None:
             {
                 "profile_id": _PROFILE_ID,
                 "event_kind": "cancelacion",
-                "declared_on": date(2026, 6, 3),
+                "declared_on": date(_YEAR, 6, 3),
             },
         )
 
@@ -79,8 +81,8 @@ def test_result_pins_declaration_id_to_64_char_lowercase_hex() -> None:
         bucket_id="bucket-test",
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(2026, 6, 3),
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        declared_on=date(_YEAR, 6, 3),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
 
     assert len(result.declaration_id) == 64
@@ -105,8 +107,8 @@ def test_result_rejects_non_sha256_declaration_id(bad_id: str) -> None:
             bucket_id="bucket-test",
             profile_id=_PROFILE_ID,
             event_kind=CensoModeloEventKind.ALTA,
-            declared_on=date(2026, 6, 3),
-            recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+            declared_on=date(_YEAR, 6, 3),
+            recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
         )
 
 
@@ -115,7 +117,7 @@ def test_derive_declaration_id_is_64_char_lowercase_hex() -> None:
     declaration_id = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante=None,
     )
 
@@ -129,13 +131,13 @@ def test_derive_declaration_id_is_deterministic() -> None:
     a = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante="ACUSE-123",
     )
     b = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante="ACUSE-123",
     )
 
@@ -151,13 +153,13 @@ def test_derive_declaration_id_distinguishes_justificante_presence() -> None:
     draft = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante=None,
     )
     confirmed = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante="ACUSE-XYZ",
     )
 
@@ -169,13 +171,13 @@ def test_derive_declaration_id_distinguishes_event_kind() -> None:
     alta = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante=None,
     )
     modificacion = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante=None,
     )
 
@@ -189,8 +191,8 @@ def test_result_carries_bucket_id_field() -> None:
         bucket_id="bucket-test",
         profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        declared_on=date(_YEAR, 6, 3),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
     assert result.bucket_id == "bucket-test"
 
@@ -203,8 +205,8 @@ def test_result_rejects_missing_bucket_id() -> None:
                 "declaration_id": "a" * 64,
                 "profile_id": _PROFILE_ID,
                 "event_kind": CensoModeloEventKind.ALTA,
-                "declared_on": date(2026, 6, 3),
-                "recorded_at": datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+                "declared_on": date(_YEAR, 6, 3),
+                "recorded_at": datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
             },
         )
 
@@ -217,8 +219,8 @@ def test_snapshot_id_computed_field_aliases_declaration_id() -> None:
         bucket_id="bucket-test",
         profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(2026, 6, 3),
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        declared_on=date(_YEAR, 6, 3),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
     assert result.snapshot_id == declaration_id
     assert result.snapshot_id == result.declaration_id
@@ -230,15 +232,15 @@ def test_result_roundtrips_through_strict_json_with_bucket_id() -> None:
         declaration_id=derive_m036_declaration_id(
             profile_id="31313131-3131-4131-8131-313131313131",
             event_kind=CensoModeloEventKind.ALTA,
-            declared_on=date(2026, 6, 3),
+            declared_on=date(_YEAR, 6, 3),
             sede_justificante="ACUSE-RT-001",
         ),
         bucket_id="bucket-rt-001",
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
+        declared_on=date(_YEAR, 6, 3),
         sede_justificante="ACUSE-RT-001",
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
     serialised = original.model_dump_json()
     restored = M036DeclarationResult.model_validate_json(serialised)
@@ -261,8 +263,8 @@ def test_result_serialisation_omits_snapshot_id_runtime_alias() -> None:
         bucket_id="bucket-test",
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(2026, 6, 3),
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        declared_on=date(_YEAR, 6, 3),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
     payload = _json.loads(result.model_dump_json())
     assert "snapshot_id" not in payload
@@ -286,8 +288,8 @@ def test_result_anti_tautology_proof_load_refuses_missing_bucket_id() -> None:
         bucket_id="bucket-tautology-test",
         profile_id="31313131-3131-4131-8131-313131313131",
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(2026, 6, 3),
-        recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        declared_on=date(_YEAR, 6, 3),
+        recorded_at=datetime(_YEAR, 6, 3, 14, 0, 0, tzinfo=UTC),
     )
     payload = _json.loads(result.model_dump_json())
     del payload["bucket_id"]

@@ -890,6 +890,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             channels.reconciliation.source_diagnostics,
             preparation.snapshot.revision,
             printed,
+            typed_casilla_ids=preparation.casilla_inputs.keys(),
         ),
         unresolved_casillas=unresolved_casilla_rows(calculation.engine_result, preparation.snapshot.revision, printed),
     )
