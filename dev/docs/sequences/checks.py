@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import re
 import subprocess
 import sys
-from collections.abc import Generator
+import time
+from collections.abc import Callable, Generator, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,7 +26,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.tests.golden_comparison import canonicalise
 from dev.packaging.command_execution import run_command
-from dev.paths import REPO_ROOT, UTF_8
+from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
 
 from .authority_currency import require_current_authority
@@ -50,17 +53,26 @@ from .schema import FrameKind, ParsedSequence, SequenceId
 from .seed_generator import check_seeds
 
 __all__ = [
+    "ADVISORY_PREFIX",
+    "DEFAULT_REFRESH_JOBS",
+    "PROBLEM_PREFIX",
     "READER_FRAME_OUTPUT_ADVISORY_BYTES",
+    "REFRESHED_PREFIX",
     "DiscoveredSequence",
+    "RefreshUnit",
     "check_page_coherence",
     "check_page_coherence_in_subprocess",
     "check_sequences",
     "check_sequences_in_subprocess",
     "default_docs_root",
     "discover_sequences",
+    "frame_runs_command",
     "oversized_frame_advisories",
+    "pages_running_command",
     "recorded_output_bytes",
+    "refresh_pages",
     "refresh_sequences",
+    "refresh_units",
     "unused_capture_advisories",
 ]
 
@@ -89,6 +101,22 @@ COHERENCE_TIER_PREFIX: str = "page-coherence (cumulative page run, not the golde
 #: commands legitimately print a lot, and only the author can judge whether a
 #: text view or a narrower command serves the page better.
 READER_FRAME_OUTPUT_ADVISORY_BYTES: Final[int] = 64 * 1024
+
+#: Page-sharded refresh children run at once when the operator names no ``--jobs``.
+#: Sequences are hermetically independent, so only the schedule changes; eight
+#: is the fleet's explicit lane width for a shared host, never the whole machine.
+DEFAULT_REFRESH_JOBS: Final[int] = 8
+
+#: Line prefixes a refresh child prints and its parent reads back. The CLI's own
+#: report uses the same constants, so the two ends cannot drift apart.
+REFRESHED_PREFIX: Final[str] = "refreshed: "
+ADVISORY_PREFIX: Final[str] = "advisory: "
+PROBLEM_PREFIX: Final[str] = "problem: "
+
+#: A sequence pays for its own runtime and profile worker before its first frame,
+#: roughly what three frames cost. The shard schedule weighs a sequence by its
+#: executed frames plus this, so the heaviest unit starts first.
+_SEQUENCE_STARTUP_FRAMES: Final[int] = 3
 
 
 class DiscoveredSequence(BaseModel):
@@ -354,6 +382,223 @@ def refresh_sequences(
     return tuple(written), tuple(all_problems), tuple(advisories)
 
 
+def frame_runs_command(argv: Sequence[str], command: Sequence[str]) -> bool:
+    """Return whether ``argv`` invokes ``command``: its tokens, consecutive, after the executable.
+
+    ``command`` is a command path such as ``("app", "ledger", "classify")``. Options
+    and their values may surround it, so the match is a consecutive run of tokens
+    rather than a prefix.
+    """
+    tokens = tuple(argv[1:])
+    wanted = tuple(command)
+    if not wanted:
+        return False
+    return any(tokens[start : start + len(wanted)] == wanted for start in range(len(tokens) - len(wanted) + 1))
+
+
+def pages_running_command(discovered: Sequence[DiscoveredSequence], command: Sequence[str]) -> tuple[str, ...]:
+    """Return the pages, in discovery order, with an EXECUTED frame invoking ``command``.
+
+    A ``@static`` frame only displays a command and no golden records it, so it
+    selects nothing. Seed frames execute and are recorded, so they count.
+    """
+    pages = dict.fromkeys(
+        item.page
+        for item in discovered
+        if any(frame_runs_command(frame.argv, command) for frame in item.sequence.executed_frames)
+    )
+    return tuple(pages)
+
+
+@dataclass(frozen=True)
+class RefreshUnit:
+    """One child's share of a refresh: a whole page, or one sequence of a heavy page."""
+
+    page: str
+    sequence_id: str | None
+    weight: int
+
+    @property
+    def label(self) -> str:
+        """Name the unit in progress lines."""
+        return self.page if self.sequence_id is None else f"{self.page} ({self.sequence_id})"
+
+
+def _sequence_refresh_weight(item: DiscoveredSequence) -> int:
+    return len(item.sequence.executed_frames) + _SEQUENCE_STARTUP_FRAMES
+
+
+def refresh_units(discovered: Sequence[DiscoveredSequence], *, jobs: int) -> tuple[RefreshUnit, ...]:
+    """Cut the executable sequences into the units one child each refreshes, in discovery order.
+
+    A page is one unit, so its sequences share one interpreter and one start-up. A
+    page heavier than an even share of the whole corpus across ``jobs`` workers
+    would set the finish time by itself, so it splits into one unit per sequence;
+    each sequence still runs in its own fresh sandbox, as in a serial refresh.
+    Weight is the executed frame count (seed frames included) plus the per-sequence
+    start-up.
+    """
+    by_page: dict[str, list[DiscoveredSequence]] = {}
+    for item in discovered:
+        if item.sequence.executed_frames:
+            by_page.setdefault(item.page, []).append(item)
+    total = sum(_sequence_refresh_weight(item) for items in by_page.values() for item in items)
+    share = total / max(1, jobs)
+    units: list[RefreshUnit] = []
+    for page, items in by_page.items():
+        weight = sum(_sequence_refresh_weight(item) for item in items)
+        if len(items) > 1 and weight > share:
+            units.extend(RefreshUnit(page, item.sequence_id, _sequence_refresh_weight(item)) for item in items)
+        else:
+            units.append(RefreshUnit(page, None, weight))
+    return tuple(units)
+
+
+def _refresh_child_command(*, unit: RefreshUnit, docs_root: Path | None, goldens_root: Path | None) -> list[str]:
+    scope = ("--page", unit.page) if unit.sequence_id is None else ("--sequence", unit.sequence_id)
+    command = [sys.executable, "-m", "dev.docs.sequences", "refresh", *scope, "--jobs", "1"]
+    if docs_root is not None:
+        command.extend(("--docs-root", str(docs_root)))
+    if goldens_root is not None:
+        command.extend(("--goldens-root", str(goldens_root)))
+    return command
+
+
+def _problem_entries(stderr: str) -> tuple[str, ...]:
+    """Split a refresh child's stderr back into the problems it reported."""
+    entries: list[str] = []
+    for line in stderr.splitlines():
+        if line.startswith(PROBLEM_PREFIX):
+            entries.append(line.removeprefix(PROBLEM_PREFIX))
+        elif entries:
+            entries[-1] += "\n" + line
+    return tuple(entries)
+
+
+@dataclass(frozen=True)
+class _UnitRefreshReport:
+    """What one refresh child wrote, advised and refused."""
+
+    written: tuple[Path, ...]
+    advisories: tuple[str, ...]
+    problems: tuple[str, ...]
+    seconds: float
+
+
+def _refresh_unit_in_child(unit: RefreshUnit, command: list[str]) -> _UnitRefreshReport:
+    started = time.monotonic()
+    result = run_command(command, cwd=REPO_ROOT, environment=english_pinned_environment())
+    lines = result.stdout.splitlines()
+    written = tuple(Path(line.removeprefix(REFRESHED_PREFIX)) for line in lines if line.startswith(REFRESHED_PREFIX))
+    advisories = tuple(line.removeprefix(ADVISORY_PREFIX) for line in lines if line.startswith(ADVISORY_PREFIX))
+    problems: tuple[str, ...] = ()
+    if result.returncode != 0:
+        report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+        reported = _problem_entries(result.stderr) if result.returncode == 1 else ()
+        problems = reported or (
+            f"page {unit.label}: refresh child failed (exit {result.returncode}):\n{report or '<no output>'}",
+        )
+    return _UnitRefreshReport(written, advisories, problems, time.monotonic() - started)
+
+
+def refresh_pages(
+    *,
+    docs_root: Path | None = None,
+    goldens_root: Path | None = None,
+    pages: Sequence[str] | None = None,
+    jobs: int = DEFAULT_REFRESH_JOBS,
+    progress: Callable[[str], None] | None = None,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]]:
+    """Refresh the named pages, or every enrolled page when ``pages`` is ``None``.
+
+    With ``jobs > 1`` and more than one :class:`RefreshUnit`, each unit is refreshed
+    by its own English-pinned child interpreter, ``jobs`` at a time, heaviest unit
+    first (:func:`refresh_units` says what a unit is). The goldens come from the
+    same :func:`refresh_sequences` engine in the same fresh per-sequence sandboxes a
+    serial run uses, so the written bytes do not depend on the schedule. Otherwise
+    the pages refresh serially in this process. Sharding also bounds what one
+    interpreter accumulates, which a single process refreshing every sequence does
+    not.
+
+    Args:
+        docs_root: The narrative pages tree; defaults to the committed ``docs/``.
+        goldens_root: Optional golden tree override.
+        pages: Docname-style pages to refresh; ``None`` for all.
+        jobs: Children run at once.
+        progress: Receives one line as each unit finishes.
+
+    Returns:
+        ``(written, problems, advisories)`` in page order, as :func:`refresh_sequences`.
+
+    Raises:
+        SequenceEngineError: When a sequence would execute and the registry
+            authority the runner reads is not current.
+    """
+    requested: list[str | None] = [None] if pages is None else list(dict.fromkeys(pages))
+    if jobs <= 1:
+        return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
+
+    discovered: list[DiscoveredSequence] = []
+    all_problems: list[str] = []
+    for page in requested:
+        found, problems = discover_sequences(docs_root=docs_root, page=page)
+        discovered.extend(found)
+        all_problems.extend(problems)
+    units = refresh_units(discovered, jobs=jobs)
+    if len(units) <= 1:
+        return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
+
+    require_current_authority()
+    advisories: list[str] = []
+    for item in discovered:
+        advisories.extend(unused_capture_advisories(item))
+    schedule = sorted(range(len(units)), key=lambda index: units[index].weight, reverse=True)
+    reports: dict[int, _UnitRefreshReport] = {}
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {
+            pool.submit(
+                _refresh_unit_in_child,
+                units[index],
+                _refresh_child_command(unit=units[index], docs_root=docs_root, goldens_root=goldens_root),
+            ): index
+            for index in schedule
+        }
+        for future in as_completed(futures):
+            index = futures[future]
+            reports[index] = report = future.result()
+            if progress is not None:
+                outcome = "FAILED" if report.problems else f"{len(report.written)} golden(s)"
+                progress(
+                    f"{units[index].label}: {outcome} in {report.seconds:.0f}s ({len(reports)}/{len(units)} units)"
+                )
+
+    written: list[Path] = []
+    for index in range(len(units)):
+        written.extend(reports[index].written)
+        advisories.extend(reports[index].advisories)
+        all_problems.extend(reports[index].problems)
+    return tuple(written), tuple(all_problems), tuple(dict.fromkeys(advisories))
+
+
+def _refresh_pages_serially(
+    requested: Sequence[str | None],
+    *,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+) -> tuple[tuple[Path, ...], tuple[str, ...], tuple[str, ...]]:
+    written: list[Path] = []
+    problems: list[str] = []
+    advisories: list[str] = []
+    for page in requested:
+        page_written, page_problems, page_advisories = refresh_sequences(
+            docs_root=docs_root, goldens_root=goldens_root, page=page
+        )
+        written.extend(page_written)
+        problems.extend(page_problems)
+        advisories.extend(page_advisories)
+    return tuple(written), tuple(problems), tuple(advisories)
+
+
 def check_sequences(
     *,
     docs_root: Path | None = None,
@@ -420,8 +665,14 @@ def english_pinned_environment() -> dict[str, str]:
     composed its own environment would drift from this one and measure a
     differently-configured product.
     """
+    authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = ambient_product_settings_removed()
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+    if authority_root:
+        # The parent confirmed currency of THIS authority; a child that fell back to
+        # its own default would execute against one the parent never checked. The
+        # native spelling is the one the checkout's own default takes.
+        environment[AUTHORITY_ROOT_ENV] = str(Path(authority_root))
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
     return environment
@@ -454,6 +705,17 @@ def _positive_finite_timeout(value: str) -> float:
     if not math.isfinite(timeout) or timeout <= 0:
         raise argparse.ArgumentTypeError("must be a finite number greater than zero")
     return timeout
+
+
+def _positive_jobs(value: str) -> int:
+    """Parse a worker count for argparse."""
+    try:
+        jobs = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a whole number of at least 1") from exc
+    if jobs < 1:
+        raise argparse.ArgumentTypeError("must be a whole number of at least 1")
+    return jobs
 
 
 def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str, ...]:
@@ -529,8 +791,6 @@ def _check_pages_in_subprocesses(
         followed by one complete diagnostic report per failing page child.
         Empty on a clean pass.
     """
-    from concurrent.futures import ThreadPoolExecutor
-
     discovered, discovery_problems = discover_sequences(docs_root=docs_root)
     counts: dict[str, int] = {}
     for item in discovered:
@@ -715,8 +975,32 @@ def build_argument_parser() -> argparse.ArgumentParser:
     ):
         sub = subparsers.add_parser(mode, help=help_text)
         scope = sub.add_mutually_exclusive_group()
-        scope.add_argument("--page", help="docname-style page path, e.g. tutorials/first-filing")
+        if mode == "refresh":
+            scope.add_argument(
+                "--page",
+                action="append",
+                help="docname-style page path, e.g. tutorials/first-filing; repeat to refresh several pages",
+            )
+        else:
+            scope.add_argument("--page", help="docname-style page path, e.g. tutorials/first-filing")
         scope.add_argument("--sequence", help="one sequence id")
+        if mode == "refresh":
+            scope.add_argument(
+                "--command",
+                help=(
+                    "refresh every page that EXECUTES this command path, e.g. 'app ledger classify'; "
+                    "pages that only display it as a @static frame are not selected"
+                ),
+            )
+            sub.add_argument(
+                "--jobs",
+                type=_positive_jobs,
+                default=DEFAULT_REFRESH_JOBS,
+                help=(
+                    "pages refreshed at once, each in its own child interpreter "
+                    f"(default {DEFAULT_REFRESH_JOBS}); 1 refreshes serially in this process"
+                ),
+            )
         sub.add_argument("--docs-root", type=Path, default=None, help=argparse.SUPPRESS)
         sub.add_argument("--goldens-root", type=Path, default=None, help=argparse.SUPPRESS)
         if mode == "check":
