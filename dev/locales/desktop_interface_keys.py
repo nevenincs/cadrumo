@@ -17,7 +17,19 @@ DESKTOP_AGENT_ENGINE_HEALTH_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 
-_PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS | DESKTOP_AGENT_ENGINE_HEALTH_KEYS
+#: The words for a local lane's refusal to load a model that does not fit, and
+#: for its connection label (a lane with no key, run on this computer). The
+#: agent service serves them and the shell translates them as they come.
+DESKTOP_LOCAL_LANE_WORD_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "desktop.agent.model_does_not_fit_refused",
+        "desktop.providers.connection_local",
+    }
+)
+
+_PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = (
+    DESKTOP_PROFILE_INTERFACE_KEYS | DESKTOP_AGENT_ENGINE_HEALTH_KEYS | DESKTOP_LOCAL_LANE_WORD_KEYS
+)
 
 DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | frozenset(
     {

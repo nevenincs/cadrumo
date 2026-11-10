@@ -134,6 +134,9 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
+    model_does_not_fit_refused: This model doesn't fit in what this computer can
+      give it right now. Choose a smaller model or change where models run in
+      the local AI settings.
     model_not_installed: '{name} (not downloaded)'
     model_not_installed_refused: The chosen model isn't on this computer. Download
       it, or choose another model.
@@ -301,6 +304,7 @@ desktop:
     change_failed: Could not save. Refresh and try again.
     connection_api: API key
     connection_app: Installed app
+    connection_local: On this computer
     console_command_label: 'Run this command in a terminal:'
     detail_app_missing: Install the {provider} app, then sign in.
     detail_off: 'Off: the agent doesn''t offer or use it.'

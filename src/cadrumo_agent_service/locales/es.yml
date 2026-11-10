@@ -139,6 +139,9 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_does_not_fit_refused: Este modelo no cabe en lo que este ordenador
+      puede darle ahora mismo. Elige un modelo más pequeño o cambia dónde se
+      ejecutan los modelos en los ajustes de la IA local.
     model_not_installed: '{name} (sin descargar)'
     model_not_installed_refused: El modelo elegido no está en este equipo. Descárgalo
       o elige otro modelo.
@@ -310,6 +313,7 @@ desktop:
     change_failed: No se ha podido guardar. Actualiza y vuelve a intentarlo.
     connection_api: Clave API
     connection_app: Aplicación instalada
+    connection_local: En este ordenador
     console_command_label: 'Ejecuta este comando en una terminal:'
     detail_app_missing: Instala la aplicación de {provider} y luego inicia sesión.
     detail_off: 'Desactivado: el agente no lo ofrece ni lo usa.'
