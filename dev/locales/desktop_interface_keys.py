@@ -6,7 +6,7 @@ from .desktop_profile_interface_keys import DESKTOP_PROFILE_INTERFACE_KEYS
 
 #: The words for the local AI engine's health, said when the engine is not
 #: running: the state, why, and the one door that repairs it. The agent
-#: service serves them and the shell translates them as they come.
+#: service serves the tokens and the shell names each word.
 DESKTOP_AGENT_ENGINE_HEALTH_KEYS: Final[frozenset[str]] = frozenset(
     {
         "desktop.agent.engine_door_local_ai_setup",
