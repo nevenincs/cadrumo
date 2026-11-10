@@ -23,11 +23,15 @@ from .....domain.period import calculation_filing_date
 from ..authority import PinnedAuthorityOperation
 from ..formula_runtime import calculate_registry_snapshot
 from .authored_editions import filing_year_envelope
+from .published_authority import published_legal_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # A year with the ordinary 5 per cent provision.
 _YEAR = filing_year_envelope().horizon
+# LIRPF disposición adicional quincuagésima sexta raises the percentage to 7 for the one
+# período impositivo its legal declaration is in force for.
+_RAISED_RATE_YEAR = published_legal_reference("ley-35-2006:da-56").effective_from.year
 _MODALITY = "modelo-130-estimacion-directa-modalidad"
 _PRIOR_EXPENSES = "gastos-deducibles-previos"
 _PROVISION = "provisiones-gastos-dificil-justificacion"
@@ -136,16 +140,14 @@ def test_a_negative_prior_net_income_has_no_provision(*, operation: PinnedAuthor
 
 @pytest.mark.parametrize(
     ("year", "period", "provision", "box_02"),
-    (
-        # 3.500 x 5 % = 175 in every year but 2023, where 3.500 x 7 % = 245.
-        (2022, "4T", "175.00", "675.00"),
-        (2023, "1T", "245.00", "745.00"),
-        (2023, "4T", "245.00", "745.00"),
-        (2024, "1T", "175.00", "675.00"),
-        (2026, "2T", "175.00", "675.00"),
+    # 3.500 x 5 % = 175 in every year but the disposición adicional's, where 3.500 x 7 % = 245.
+    tuple(
+        (year, period, *(("245.00", "745.00") if year == _RAISED_RATE_YEAR else ("175.00", "675.00")))
+        for year in filing_year_envelope().years
+        for period in ("1T", "4T")
     ),
 )
-def test_the_percentage_is_seven_per_cent_only_for_2023(
+def test_the_percentage_is_seven_per_cent_only_in_the_raised_rate_year(
     *, operation: PinnedAuthorityOperation, year: int, period: str, provision: str, box_02: str
 ) -> None:
     boxes = _boxes(operation, year=year, period=period, income="4000", expenses="500")
@@ -154,9 +156,9 @@ def test_the_percentage_is_seven_per_cent_only_for_2023(
     assert boxes["02"] == Decimal(box_02), boxes
 
 
-def test_the_2023_cap_is_still_two_thousand_euros(*, operation: PinnedAuthorityOperation) -> None:
+def test_the_raised_rate_cap_is_still_two_thousand_euros(*, operation: PinnedAuthorityOperation) -> None:
     """40.000 - 10.000 = 30.000 x 7 % = 2.100, held to 2.000."""
-    boxes = _boxes(operation, year=2023, period="4T", income="40000", expenses="10000")
+    boxes = _boxes(operation, year=_RAISED_RATE_YEAR, period="4T", income="40000", expenses="10000")
 
     assert boxes[_PROVISION] == Decimal("2000.00"), boxes
 

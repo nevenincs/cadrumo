@@ -102,14 +102,17 @@ def test_a_declared_legal_start_is_not_projected_across() -> None:
             ),
         )
 
+    with bundled_indexed_authority().operation() as operation:
+        legal_start = operation.legal_reference("real-decreto-ley-20-2012:art-23-dos").effective_from
+    assert legal_start is not None
     with bundled_indexed_authority().operation() as operation, reading_dated_facts_below_support():
-        resolved = operation.resolve_governed_fact(general_rate_query(date(2012, 9, 1)))
+        resolved = operation.resolve_governed_fact(general_rate_query(legal_start))
         assert isinstance(resolved, ResolvedMappingFact)
         assert _pct(resolved) == "21"
         assert resolved.projection_direction is TemporalProjectionDirection.BACKWARD
         # The day before, the 18 % that Ley 26/2009 art. 79 set from 2010-07-01 still applied: the 21 % is not
         # stretched back across its legal start while the registry authors the rate it replaced.
-        before_start = operation.resolve_governed_fact(general_rate_query(date(2012, 8, 31)))
+        before_start = operation.resolve_governed_fact(general_rate_query(legal_start - timedelta(days=1)))
         assert isinstance(before_start, ResolvedMappingFact)
         assert _pct(before_start) == "18"
 

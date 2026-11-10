@@ -53,6 +53,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.resources.bundled_data import bundled_path
+from ..authority import bundled_indexed_authority
+from .authored_editions import manual_editions_printing, revision_covering, supported_authored_exercises
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .scenarios import (
     RegistryCalculationScenario,
@@ -62,8 +65,21 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: The ejercicio of the manual worked example the anchor figures reproduce.
-_MANUAL_EJERCICIO = 2024
+#: The line the Aragon worked example prints its cuota integra estatal on.
+_ANCHOR_LINE = "Cuota íntegra estatal (2.140,50 + 266) = 2.406,50"
+#: Every authored ejercicio whose bundled Renta manual prints the worked example the anchor figures reproduce.
+_MANUAL_EJERCICIOS = tuple(
+    ejercicio
+    for ejercicio in manual_editions_printing("renta", "2.406,50", "2.360,64")
+    if ejercicio in supported_authored_exercises("100")
+)
+
+
+def _evidence_locator(ejercicio: int) -> str:
+    relative = f"corpus/manuals/renta/{ejercicio}/part1/source.pdf.extracted.md"
+    lines = (bundled_path() / relative).read_text(encoding="utf-8").splitlines()
+    (line,) = (number for number, text in enumerate(lines, start=1) if text.strip() == _ANCHOR_LINE)
+    return f"{relative}#L{line}"
 
 
 _CUOTA_INTEGRA_ESTATAL: CasillaId = validated_casilla_id("0545", surface="0545")
@@ -81,8 +97,11 @@ _BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="
 _RETENCION_TRABAJO: CasillaId = validated_casilla_id("0596", surface="0596")
 
 
-def _bindings() -> dict[str, Decimal]:
-    return {
+def _bindings(revision_id: str) -> dict[str, Decimal]:
+    """Return the neutral scenario bindings the edition declares; an edition without one has nothing to neutralise."""
+    with bundled_indexed_authority().operation() as operation:
+        declared = {str(binding.id) for binding in operation.revision("100", revision_id).bindings}
+    neutral = {
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
@@ -105,6 +124,7 @@ def _bindings() -> dict[str, Decimal]:
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
+    return {binding_id: value for binding_id, value in neutral.items() if binding_id in declared}
 
 
 _RELATION_VALUES: dict[str, Decimal] = {
@@ -113,12 +133,13 @@ _RELATION_VALUES: dict[str, Decimal] = {
 }
 
 
-def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenario:
+def _scenario(ejercicio: int, *, retencion: str, scenario_id: str) -> RegistryCalculationScenario:
+    revision_id = str(revision_covering("100", ejercicio).id)
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision=str(_MANUAL_EJERCICIO),
-        filing_year=_MANUAL_EJERCICIO,
+        revision=revision_id,
+        filing_year=ejercicio,
         period="0A",
         inputs={
             _BASE_LIQUIDABLE_GENERAL_LEAF: Decimal("23900.00"),
@@ -131,10 +152,10 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
                 "as the value it fills, so the scenario keys the certified amount directly"
             ),
         },
-        binding_values=_bindings(),
+        binding_values=_bindings(revision_id),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "aragon"},
         relation_values=_RELATION_VALUES,
-        date_context={"filing_period": date(_MANUAL_EJERCICIO, 12, 31)},
+        date_context={"filing_period": date(ejercicio, 12, 31)},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         # The harness requires at least one expected output; anchor it on the
         # manual-grounded cuota integra estatal (2.406,50, grounded in the
@@ -148,9 +169,7 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
                 source_refs=("lirpf-cuota-chain-authority",),
             ),
         ),
-        notes=(
-            f"raw_evidence_locator: corpus/manuals/renta/{_MANUAL_EJERCICIO}/part1/source.pdf.extracted.md#L58455-L58460",
-        ),
+        notes=(f"raw_evidence_locator: {_evidence_locator(ejercicio)}",),
     )
 
 
@@ -165,7 +184,8 @@ def _required_value(values: dict[CasillaId, Decimal | None], casilla_id: Casilla
     return value
 
 
-def test_final_settlement_chain_composes_manual_definitional_identities() -> None:
+@pytest.mark.parametrize("ejercicio", _MANUAL_EJERCICIOS)
+def test_final_settlement_chain_composes_manual_definitional_identities(ejercicio: int) -> None:
     """The final-settlement chain composes the Chapter-18 identities end to end.
 
     Anchored on the manual-grounded cuota integra estatal 2.406,50 (0545) /
@@ -175,7 +195,7 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
     cuota resultante = cuota liquida total, cuota diferencial = cuota resultante
     - pagos a cuenta, resultado = cuota diferencial.
     """
-    values = _values(_scenario(retencion="0", scenario_id="m100-final-settlement-no-pagos"))
+    values = _values(_scenario(ejercicio, retencion="0", scenario_id="m100-final-settlement-no-pagos"))
 
     cuota_integra_estatal = _required_value(values, _CUOTA_INTEGRA_ESTATAL)
     cuota_integra_autonomica = _required_value(values, _CUOTA_INTEGRA_AUTONOMICA)
@@ -206,7 +226,8 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
     assert values[_RESULTADO_DECLARACION] == values[_CUOTA_DIFERENCIAL]
 
 
-def test_final_settlement_pagos_a_cuenta_subtraction_is_wired() -> None:
+@pytest.mark.parametrize("ejercicio", _MANUAL_EJERCICIOS)
+def test_final_settlement_pagos_a_cuenta_subtraction_is_wired(ejercicio: int) -> None:
     """A retencion (pago a cuenta) must reduce cuota diferencial and resultado by its amount.
 
     Anti-tautology / wiring proof: feeding a 1.000 euro certified salary
@@ -215,8 +236,8 @@ def test_final_settlement_pagos_a_cuenta_subtraction_is_wired() -> None:
     no-pagos scenario, proving the pagos-a-cuenta subtraction is evaluated and
     not a passthrough constant.
     """
-    baseline = _values(_scenario(retencion="0", scenario_id="m100-settlement-baseline"))
-    with_retencion = _values(_scenario(retencion="1000", scenario_id="m100-settlement-retencion"))
+    baseline = _values(_scenario(ejercicio, retencion="0", scenario_id="m100-settlement-baseline"))
+    with_retencion = _values(_scenario(ejercicio, retencion="1000", scenario_id="m100-settlement-retencion"))
 
     assert baseline[_TOTAL_PAGOS_A_CUENTA] == Decimal("0.00")
     assert with_retencion[_TOTAL_PAGOS_A_CUENTA] == Decimal("1000.00")
