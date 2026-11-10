@@ -389,7 +389,7 @@ def _append_invoice_source_document_findings(
         invoice_repository=invoice_repository,
         transaction_repository=transaction_repository,
         attachment_store=attachment_store,
-        registry_revision=operation.snapshot(
+        registry_revision=operation.reading_snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
@@ -772,7 +772,7 @@ def iva_wallet_error_verification_finding(
     # The block concerns the carried-compensation casilla, so its provenance is
     # that casilla's own registry grounding for the work unit's revision.
     """Project a retained wallet refusal into its grounded verification finding."""
-    snapshot = operation.snapshot(
+    snapshot = operation.reading_snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
