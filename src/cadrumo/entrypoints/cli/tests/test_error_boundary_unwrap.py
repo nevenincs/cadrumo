@@ -25,12 +25,14 @@ import typer
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 
 from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
 from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....tests.log_records import delivered_records
 from ..errors import (
     command_error_boundary,
@@ -309,11 +311,11 @@ def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
     caplog: pytest.LogCaptureFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A command-resolution refusal retains its registered type and safe reason."""
+    """A command-resolution refusal that changed nothing keeps its type and safe reason, at INFO."""
     from ..terminal_errors import emit_crash
 
     with (
-        caplog.at_level(logging.WARNING, logger="cadrumo_client.commands.errors"),
+        caplog.at_level(logging.INFO, logger="cadrumo_client.commands.errors"),
         pytest.raises(SystemExit),
     ):
         emit_crash(_ProbeRefusal("no active bucket session; run switch"))
@@ -323,12 +325,41 @@ def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
         record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "cli_terminal"
     ]
     assert refusals, [record.message for record in delivered_records(caplog)]
-    assert refusals[0].levelno == logging.WARNING
+    assert refusals[0].levelno == logging.INFO
     assert refusals[0].exc_info is None
     chain = getattr(refusals[0], "error_chain", None)
     assert isinstance(chain, str) and _ProbeRefusal.__name__ in chain
     assert "CliUnexpectedBoundaryError" not in chain
     assert "no active bucket session; run switch" not in refusals[0].message
+
+
+@pytest.mark.parametrize("effect", [OperationEffect.UNKNOWN, OperationEffect.UPDATED])
+def test_terminal_boundary_keeps_a_refusal_with_an_effect_at_warning(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+    effect: OperationEffect,
+) -> None:
+    """A refusal that may have changed state is not an expected outcome and stays a warning."""
+    from ..terminal_errors import emit_crash
+
+    refusal = submitted_operation_error(
+        "a" * 64,
+        "REFUSED_MODELO_PROFILE_READINESS",
+        terminal_condition=OperationTerminalCondition.REFUSED,
+        effect=effect,
+    )
+    with (
+        caplog.at_level(logging.INFO, logger="cadrumo_client.commands.errors"),
+        pytest.raises(SystemExit),
+    ):
+        emit_crash(refusal)
+    capsys.readouterr()
+
+    refusals = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "cli_terminal"
+    ]
+    assert refusals, [record.message for record in delivered_records(caplog)]
+    assert refusals[0].levelno == logging.WARNING
 
 
 def test_terminal_boundary_survives_a_too_short_identifier_validation_failure(
