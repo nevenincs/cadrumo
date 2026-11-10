@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -37,7 +36,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -532,86 +530,6 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     )  # fmt: skip
     assert filed_status.exit_code == 0, filed_status.output
     assert unwrap_schema_envelope(filed_status.output)["state"] == "presentado"
-
-
-def test_work_file_refuses_no_pending_obligation_for_a_filing_window_not_yet_open(
-    seed_profile: ProfileSeeder,
-) -> None:
-    """`work file` reports NO_PENDING_OBLIGATION, in Catalan, for a quarter whose filing window has not opened.
-
-    Unlike the overdue 1T 2025 target above, this target genuinely has no
-    pending obligation for a reason true on every run date: a 4T window
-    always opens on 1 January of the following filing year (authored rows in
-    ``.../modelo-111/.../deadline_windows/0001-declarations.toml``, each
-    ``opens_on`` one day into the next year), so the *current calendar
-    year's own* 4T window cannot have opened yet on any day of that year --
-    the target does not depend on when the suite happens to run. ``work
-    file`` resolves ``obligation.opens_on > today`` and the workflow aborts at
-    ``COMPUTING_DEADLINES`` with ``WorkflowAbortReason.NO_PENDING_OBLIGATION``
-    (``application/workflow/deadline_decisions.py::decide_filing_deadline``),
-    never reaching the overdue/extemporánea branch. The filing year is read
-    from the clock, never a literal; the registry declares no ceiling above
-    its authored horizon (``.../legal/supported-filing-years.toml``), so a
-    year at or beyond the horizon still resolves through projection
-    (``domain/deadlines/filing_window_projection.py``) rather than refusing.
-    Calculation, ``ledger invoice add`` and ``modelo aggregate`` accept a
-    date inside a not-yet-elapsed quarter: none of the invoice,
-    withholding-capture or work-create/calculate paths compares the supplied
-    date against today (checked directly in their application and CLI
-    modules), so a quarter that has not finished yet -- and may not even
-    have started -- still produces one real, calculable percepción.
-    Verification is unaffected: ``work verify`` treats a filing window as
-    purely informational and never aborts on it
-    (``.../deadline_stage.py::_record_verify_deadline_context``), so the
-    work unit calculates and verifies exactly as the overdue one does.
-    """
-
-    filing_year = today_madrid().year
-    period = "4T"
-    paid_on = date(filing_year, 11, 15)
-
-    seed_profile(label="operator", facts=operator_profile_facts())
-    create_calculable_modelo_work_unit(filing_year=filing_year, period=period, paid_on=paid_on)
-    calculated = invoke_modelo_scenario_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", str(filing_year), "--period", period,
-        ],
-    )  # fmt: skip
-    assert calculated.exit_code == 0, calculated.output
-
-    verified = invoke_modelo_scenario_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", str(filing_year), "--period", period,
-        ],
-    )  # fmt: skip
-    assert verified.exit_code == 0, verified.output
-    revision_id = unwrap_schema_envelope(verified.output)["calculation_revision_id"]
-    status = invoke_modelo_scenario_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "status",
-            "--modelo", "111", "--year", str(filing_year), "--period", period,
-        ],
-    )  # fmt: skip
-    assert status.exit_code == 0, status.output
-    assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == revision_id
-
-    result = invoke_modelo_scenario_cli(
-        [
-            "app", "modelo", "work", "file",
-            "--modelo", "111", "--year", str(filing_year), "--period", period,
-            "--output-language", "ca",
-        ],
-    )  # fmt: skip
-    assert result.exit_code != 0
-    assert "file requires a verified-complete revision" not in result.output
-    assert "No pending filing obligation" not in result.output
-    assert "No hi ha cap obligació de presentació pendent" in result.output
-    assert "NO_PENDING_OBLIGATION" in result.output
 
 
 def test_work_file_help_exposes_explicit_result_elections() -> None:

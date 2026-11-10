@@ -374,6 +374,26 @@ class DeadlineEngine:
                 obligations.append(obligation)
         return obligations
 
+    def _window_conditions_admit(
+        self,
+        profile: TaxpayerProfile,
+        window: DeadlineWindowDefinition,
+        *,
+        admit_undecided: bool,
+    ) -> bool:
+        """Return whether the window's applicability conditions keep it for ``profile``.
+
+        Matched conditions keep the window. With ``admit_undecided``, conditions
+        that fail only on facts the profile has not answered keep it too.
+        """
+        from ..calculations.registry.schedules import undecided_profile_condition_fields
+
+        conditions = window.applicability_conditions
+        mode = window.applicability_condition_mode
+        if self._evaluate_conditions(profile, conditions, mode=mode) is not None:
+            return True
+        return admit_undecided and bool(undecided_profile_condition_fields(conditions, profile, mode=mode))
+
     def _obligation_for_window(
         self,
         *,
@@ -383,6 +403,7 @@ class DeadlineEngine:
         window: DeadlineWindowDefinition,
         reference_today: date,
         operation: PinnedAuthorityOperation,
+        admit_undecided: bool = False,
     ) -> ModeloDeadline | None:
         """Project one (modelo, revision, window) tuple into a :class:`ModeloDeadline`, or ``None``.
 
@@ -397,6 +418,12 @@ class DeadlineEngine:
         with its classified status and, for OVERDUE obligations with
         ≥1 day late, a registry-backed recovery payload (None when
         the recovery registry has no entry for the modelo).
+
+        ``admit_undecided`` keeps a window whose applicability conditions fail
+        only on facts the taxpayer has not answered. The calendar lists what a
+        profile positively owes and leaves it unset; one exact filing target
+        asks instead whether the profile excludes the obligation, and an
+        unanswered fact excludes nothing.
         """
         from ..calculations.registry.schedules import applicable_filing_schedules
 
@@ -409,14 +436,7 @@ class DeadlineEngine:
             period=registry_period,
         ):
             return None
-        if (
-            self._evaluate_conditions(
-                profile,
-                window.applicability_conditions,
-                mode=window.applicability_condition_mode,
-            )
-            is None
-        ):
+        if not self._window_conditions_admit(profile, window, admit_undecided=admit_undecided):
             return None
         if window_outside_activity_period(
             period=window.period,
@@ -459,6 +479,65 @@ class DeadlineEngine:
                 operation=operation,
             ),
         )
+
+    def target_obligation(
+        self,
+        profile: TaxpayerProfile,
+        *,
+        modelo: str,
+        period: Period,
+        today: date | None = None,
+    ) -> ModeloDeadline | None:
+        """Return the obligation ``profile`` owes for one exact modelo and period, or ``None``.
+
+        The windows are the ones :meth:`compute` reads for the period's own
+        filing year, so a past period resolves through the registry envelope
+        and its authored or projected windows, never through another year's
+        schedule. The obligation stays the same after its window closes: a
+        filing after the plazo is extemporánea, which Ley 58/2003 art. 27
+        surcharges, not extinguishes.
+
+        Unlike :meth:`compute`, a window condition that fails only on facts the
+        taxpayer has not answered keeps the obligation; a declared answer that
+        rules it out, a filing schedule that does not select the period, or an
+        activity period that excludes it still yield ``None``.
+
+        Raises:
+            ScheduleComputationError: If the registry projects more than one
+                window for the target, which no consumer may arbitrate.
+        """
+        reference_today = today or today_madrid()
+        with self._operation_context() as operation:
+            year_index = self._deadline_window_year(period.filing_year, operation=operation)
+            matches = [
+                obligation
+                for window_modelo, revision, window in year_index.dated
+                if window_modelo == modelo and window.period == period
+                for obligation in (
+                    self._obligation_for_window(
+                        profile=profile,
+                        modelo=window_modelo,
+                        revision=revision,
+                        window=window,
+                        reference_today=reference_today,
+                        operation=operation,
+                        admit_undecided=True,
+                    ),
+                )
+                if obligation is not None
+            ]
+        if len(matches) > 1:
+            raise ScheduleComputationError(
+                translated_message=SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                context={
+                    "registry_stage": "target_obligation",
+                    "modelo": modelo,
+                    "filing_year": period.filing_year,
+                    "period": period.registry_token,
+                    "match_count": len(matches),
+                },
+            )
+        return matches[0] if matches else None
 
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
         """Return registry-backed deadline applicability text for ``modelo``.

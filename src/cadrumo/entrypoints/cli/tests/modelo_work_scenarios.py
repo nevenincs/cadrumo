@@ -289,8 +289,8 @@ def create_calculable_modelo_work_unit(
     return work_unit_id
 
 
-def _capture_m115_invoice_withholding() -> None:
-    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
+def capture_m115_invoice_withholding(*, filing_year: int) -> None:
+    """Capture one received urban-rent invoice's retención as Modelo 115 first-quarter evidence for ``filing_year``.
 
     ``ledger invoice add`` mints a received rent invoice (2700.00 base, 19%
     retención = 513.00), then ``modelo aggregate --received-invoice-retencion``
@@ -298,7 +298,7 @@ def _capture_m115_invoice_withholding() -> None:
     requires. The settlement is the invoice grand total (2700.00 + 21% IVA =
     3267.00) less the retención: 2754.00.
     """
-    paid_on = date(2025, 3, 15)
+    paid_on = date(filing_year, 3, 15)
     created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
@@ -306,7 +306,7 @@ def _capture_m115_invoice_withholding() -> None:
             "--kind", "received",
             "--counterparty-name", "Arrendador Ejemplo SL",
             "--counterparty-nif", "B00015016",
-            "--invoice-number", "M115-RENT-2025-001",
+            "--invoice-number", f"M115-RENT-{filing_year}-001",
             "--invoice-date", paid_on.isoformat(),
             "--country-code", "ES",
             "--taxable-base", "2700.00", "--iva-rate", "21",
@@ -324,7 +324,7 @@ def _capture_m115_invoice_withholding() -> None:
         scheme="arrendamiento_urbano",
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_event_id=f"m115-rent-payment-{paid_on.isoformat()}",
         payment_occurred_on=paid_on,
         allocation_id="m115-rent-allocation-1",
         allocated_base=Decimal("2700.00"),
@@ -348,7 +348,7 @@ def _capture_m115_invoice_withholding() -> None:
             ),
             recipient_province_code="28",
             modality="1",
-            accrual_year=2025,
+            accrual_year=filing_year,
             withholding_percentage=Decimal("19.00"),
         ),
     )
@@ -356,7 +356,7 @@ def _capture_m115_invoice_withholding() -> None:
         [
             "--format", "json",
             "app", "modelo", "aggregate",
-            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--modelo", "115", "--year", str(filing_year), "--period", "1T",
             "--received-invoice-retencion", request.model_dump_json(),
         ],
     )  # fmt: skip
