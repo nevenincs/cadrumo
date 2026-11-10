@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -33,7 +34,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
 )
-from cadrumo.application.operations.next_step import OperationOpenIvaWalletStepV1
+from cadrumo.application.operations.next_step import OperationOpenIvaWalletStepV1, OperationOpenProfileFieldStepV1
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -56,7 +57,6 @@ from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support imp
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import seed_m303_period_cuotas
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....domain.deadlines.errors import ProfileError
 from ....domain.deadlines.models import IVARegime
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -196,8 +196,13 @@ def test_an_unstated_redeme_inscription_refuses_before_any_carry_is_read(
     with secure_backend(tmp_path):
         _store_profile(filing_year, without=("iva.redeme_enrolled",))
         quarters = _Quarters(operation=operation)
-        with pytest.raises(ProfileError, match=r"iva\.redeme_enrolled"):
+        with pytest.raises(ModeloProfileReadinessError) as refused:
             quarters.calculate(filing_year, "1T", repercutido=Decimal("210.00"), soportado=_SOPORTADO)
+
+    assert refused.value.translated_message == "application.modelo.errors.profile_readiness_missing"
+    step = refused.value.operation_next_step(OutputLanguage.ES)
+    assert isinstance(step, OperationOpenProfileFieldStepV1)
+    assert step.path == "iva.redeme_enrolled"
 
 
 def test_a_negative_last_quarter_refuses_because_a_refund_is_allowed(
