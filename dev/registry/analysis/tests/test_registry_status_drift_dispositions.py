@@ -30,10 +30,10 @@ from ..registry_status import (
     GeneratedTreeDispositionRow,
     ProjectedTargets,
     RegistryStatus,
-    declared_revision_filing_years,
     project_target_states,
     registry_status_payload,
 )
+from ..registry_target_classification import declared_revision_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

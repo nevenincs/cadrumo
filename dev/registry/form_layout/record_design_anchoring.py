@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.hashing import sha256_file
@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.modelo_localization import binding_locale_key
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportRecordDefinition,
@@ -60,30 +60,39 @@ def _profile_export_contexts(modelo_id: str, revision: ModeloRevision) -> dict[t
     for layout in derive_export_layouts_from_bindings(revision):
         if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
             continue
-        for record in layout.records:
-            if record.repeat is not None:
-                continue
-            for field in record.fields:
-                binding = None if field.binding is None else bindings.get(field.binding)
-                if (
-                    field.casilla_id is not None
-                    or binding is None
-                    or not isinstance(binding.provider, ProfileProvider)
-                    or binding.value.channel is BindingValueChannel.ROW_SET
-                    or binding.provider.repeating
-                ):
-                    continue
-                coordinate = (record.id, field.id)
-                if coordinate in contexts:
-                    raise RegistryValidationError("profile context field has multiple export layout owners")
-                contexts[coordinate] = FormContextFieldBlock(
-                    id="context",
-                    export_layout_id=layout.id,
-                    export_record_id=record.id,
-                    export_field_id=field.id,
-                    heading_key=binding_locale_key(modelo_id, binding.id, "label"),
-                )
+        for record, field, binding in _scalar_profile_fields(layout.records, bindings):
+            coordinate = (record.id, field.id)
+            if coordinate in contexts:
+                raise RegistryValidationError("profile context field has multiple export layout owners")
+            contexts[coordinate] = FormContextFieldBlock(
+                id="context",
+                export_layout_id=layout.id,
+                export_record_id=record.id,
+                export_field_id=field.id,
+                heading_key=binding_locale_key(modelo_id, binding.id, "label"),
+            )
     return contexts
+
+
+def _scalar_profile_fields(
+    records: Sequence[ExportRecordDefinition], bindings: Mapping[str, BindingDefinition]
+) -> Iterator[tuple[ExportRecordDefinition, ExportFieldDefinition, BindingDefinition]]:
+    """Yield each field of a non-repeating record that a scalar profile binding alone supplies."""
+    for record in records:
+        if record.repeat is not None:
+            continue
+        for field in record.fields:
+            binding = None if field.binding is None else bindings.get(field.binding)
+            if field.casilla_id is None and binding is not None and _is_scalar_profile_binding(binding):
+                yield record, field, binding
+
+
+def _is_scalar_profile_binding(binding: BindingDefinition) -> bool:
+    return (
+        isinstance(binding.provider, ProfileProvider)
+        and binding.value.channel is not BindingValueChannel.ROW_SET
+        and not binding.provider.repeating
+    )
 
 
 def _match_records(
