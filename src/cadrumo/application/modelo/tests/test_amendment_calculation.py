@@ -11,6 +11,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.identifiers import canonical_decimal_string
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -23,7 +24,8 @@ from ..calculation_helpers import amendment_prior_paid_values, calculate_amendme
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AT = datetime(2026, 4, 20, tzinfo=UTC)
+_AT = datetime(1980, 4, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
 
 
 def _box(token: str) -> CasillaId:
@@ -96,7 +98,7 @@ def test_changed_withholding_recomputes_dependent_outputs_and_provenance(
     operation: PinnedAuthorityOperation,
     imported: bool,
 ) -> None:
-    snapshot = operation.snapshot("130", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     source = _source(snapshot, imported=imported)
     saved = source.model_dump(mode="json")
     corrected = calculate_amendment(
@@ -126,7 +128,7 @@ def test_changed_withholding_recomputes_dependent_outputs_and_provenance(
 def test_income_correction_recomputes_provision_and_keeps_prior_quarter_deductions(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = operation.snapshot("130", filing_year=2025, period="2T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="2T")
     source = _source(snapshot, prior_quarters="200", negative_carry="50")
     corrected = calculate_amendment(
         source_revision=source,
@@ -160,7 +162,7 @@ def test_income_correction_recomputes_provision_and_keeps_prior_quarter_deductio
 def test_a_saved_explicit_formula_override_remains_a_dependency_boundary(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = operation.snapshot("130", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     source = _source(snapshot, operator_layer=CalculationOperatorLayer())
     first = calculate_amendment(
         source_revision=source,

@@ -32,6 +32,7 @@ from ..schema_references import LegalReference, PeriodSelector, SourceReference
 from ..schema_revision_members import ApplicationLinkDefinition
 from ..schema_surfaces import CasillaDefinition
 from ..schema_verification import WorkbookParityReference
+from .authored_editions import filing_year_envelope
 from .published_authority import published_supported_filing_years
 
 LEGAL_ID = "ley-35-2006:art-1"
@@ -39,6 +40,9 @@ SOURCE_ID = "aeat-dr-130-2019-v12"
 # Review, retrieval and in-force stamps of the synthetic references: epoch-era, so no filing year hides in them.
 _FIXTURE_STAMP = date(1980, 1, 1)
 _WORKBOOK_SOURCE_ID = "aeat-dr-130-2019-v12-layout"
+# The synthetic revision and its facts open at the support floor, so every supported exercise falls inside them.
+_FIRST_EXERCISE = filing_year_envelope().floor
+_FIRST_DAY = date(_FIRST_EXERCISE, 1, 1)
 
 
 def _minimal_source_ref() -> SourceReference:
@@ -59,8 +63,8 @@ def _minimal_source_ref() -> SourceReference:
 def _snapshot_checked_fact(
     fact_id: str, entries: tuple[tuple[str, str], ...], *, restated_on: date | None
 ) -> GovernedFact:
-    """Return a mapping fact valid from 2024, restated unchanged in a second variant from ``restated_on``."""
-    first = date(2024, 1, 1)
+    """Return a mapping fact valid from the support floor, restated unchanged in a second variant from ``restated_on``."""
+    first = _FIRST_DAY
     bounds = (
         ((first, None),) if restated_on is None else ((first, restated_on - timedelta(days=1)), (restated_on, None))
     )
@@ -169,7 +173,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
                 {
                     "variant_id": "spanish-tax-identifier-format:fixture",
                     "date_axis": "filing_period",
-                    "valid_from": date(2024, 1, 1),
+                    "valid_from": _FIRST_DAY,
                     "legal_refs": (LEGAL_ID,),
                     "review_status": "agent_reviewed",
                     "ownership": "authored",
@@ -278,8 +282,8 @@ def minimal_revision(
         # block publication of any artifact carrying it.
         authority_grade=RegistryAuthorityGrade.CALCULATION,
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        valid_from=_FIRST_DAY,
+        period_selector=PeriodSelector(year_from=_FIRST_EXERCISE, periods=("0A",)),
         legal_refs=(LEGAL_ID,),
         source_refs=(SOURCE_ID,),
         orden_aplicabilidad=(LEGAL_ID,),

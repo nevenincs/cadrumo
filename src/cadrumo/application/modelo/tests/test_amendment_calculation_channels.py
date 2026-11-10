@@ -70,6 +70,34 @@ def test_a_stated_binding_is_saved_and_recalculates_its_dependants(
     assert corrected.casilla_values[_box("02")] == Decimal("4982")
 
 
+@pytest.mark.parametrize("imported", [False, True], ids=["calculated", "imported-scalar-replay"])
+def test_a_stated_binding_reaches_its_bound_casilla_over_the_saved_figure(
+    operation: PinnedAuthorityOperation,
+    imported: bool,
+) -> None:
+    snapshot = _snapshot(operation, "1T")
+    source = _source(snapshot, imported=imported)
+    assert source.casilla_values[_box("gastos-deducibles-previos")] == Decimal("4982")
+    corrected = calculate_amendment(
+        source_revision=source,
+        overrides={},
+        prior_paid_values={},
+        snapshot=snapshot,
+        binding_overrides={
+            "modelo-130-estimacion-directa-modalidad": "directa_normal",
+            "modelo-130-actividad-economica-gastos-cumulative": "3982",
+        },
+    )
+    # The stated expenses replace the saved 4982 in their bound casilla; directa normal adds
+    # no provision, so box 02 is 3982, box 03 is 8840 - 3982 with no art. 32.1 reduction,
+    # and box 04 is 20 per cent of box 03.
+    assert corrected.casilla_values[_box("gastos-deducibles-previos")] == Decimal("3982")
+    assert corrected.casilla_values[_box("02")] == Decimal("3982")
+    assert corrected.casilla_values[_box("03")] == Decimal("4858")
+    assert corrected.casilla_values[_box("04")] == Decimal("971.60")
+    assert corrected.binding_overrides["modelo-130-actividad-economica-gastos-cumulative"] == "3982"
+
+
 @pytest.mark.parametrize("shift", [Decimal("7"), Decimal("0")], ids=["changed", "unchanged"])
 def test_a_legacy_amendment_without_operator_layer_recovers_changed_formula_values_as_authored(
     operation: PinnedAuthorityOperation,

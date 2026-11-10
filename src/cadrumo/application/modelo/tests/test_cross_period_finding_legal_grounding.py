@@ -23,6 +23,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.calculations.registry.schema_references import LegalReference
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.calculations.registry.tests.published_authority import (
     published_legal_evidence_text,
@@ -40,6 +41,8 @@ from ..action_errors import WORKFLOW_GATE_LEGAL_REFS
 from ..verification_cross_period import cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _APPLICATION_ROOT = Path(__file__).resolve().parents[2]
 _LEGAL_REF_CONSTANT_RE = re.compile(r"LEGAL_REFS?$")
@@ -115,8 +118,8 @@ def _unclean_evidence(
     return CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR - 1, "4T"),
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=origin_ids,
@@ -131,8 +134,8 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
     return CrossPeriodCleanStateVerdict(
         bucket_id="cross-period-grounding",
         target_modelo="303",
-        target_filing_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
+        target_filing_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
         dependencies=(evidence,),
     )
 
@@ -279,8 +282,8 @@ def test_not_applicable_suppression_summary_carries_dependency_legal_refs() -> N
     evidence = CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR - 1, "4T"),
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),
@@ -307,8 +310,8 @@ def test_non_official_local_chain_advisory_carries_dependency_legal_refs() -> No
     evidence = CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),

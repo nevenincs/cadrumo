@@ -18,6 +18,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import BindingSourceKind
@@ -38,6 +39,9 @@ _SALARIED = (UserProfileFact(path="taxpayer_type.irpf_income_categories", value=
 _ACTIVITY = (UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),)
 
 
+_YEAR = newest_authored_edition("100")
+
+
 class _LedgerStore:
     """An in-memory inventory ledger store that counts its reads."""
 
@@ -51,12 +55,12 @@ class _LedgerStore:
 
 
 def _revision() -> ModeloRevision:
-    return published_snapshot("100", filing_year=2025, period="0A").revision
+    return published_snapshot("100", filing_year=_YEAR, period="0A").revision
 
 
 def _inventory_binding_ids(revision: ModeloRevision) -> tuple[str, ...]:
     ids = tuple(sorted(binding.id for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY))
-    assert len(ids) == 3, "Modelo 100 2025 declares the three Anexo D inventory row bindings"
+    assert len(ids) == 3, f"Modelo 100 {_YEAR} declares the three Anexo D inventory row bindings"
     return ids
 
 
@@ -71,8 +75,8 @@ def _calculate(
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="100",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision=revision,
         profile=withholding_work_profile(operation, facts=facts),
     )

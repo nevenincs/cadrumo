@@ -49,7 +49,7 @@ from ..profile_derived_facts import resolve_maternidad_meses
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000626"
-_T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
+_T0 = datetime(1980, 8, 5, 10, 0, tzinfo=UTC)
 
 #: The first year the deduccion is correctly un-capped.
 _FIRST_UNCEILINGED_YEAR = 2023

@@ -794,6 +794,103 @@ def test_a_linked_invoice_blocks_until_its_factura_is_stored_then_verifies_and_f
         assert tuple(filing_repo.load().values()) != ()
 
 
+def test_an_issued_invoice_without_its_copy_warns_until_its_document_is_stored(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """An issued invoice that is the IVA source keeps the output-evidence advisory.
+
+    The sale is paid by a linked movement, so the invoice, not the movement, is
+    what the revision declares. RD 1619/2012 art. 2 makes the issued factura the
+    output document: while the records hold no document for it, verification
+    warns and names the invoice, without blocking; once its copy is stored with
+    it, the warning goes.
+    """
+    output_key = "application.modelo.findings.transaction_evidence_missing_output"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository, operation=operation)
+        )
+        invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+        with bundled_indexed_authority().operation() as operation:
+            invoice = build_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                kind=InvoiceKind.ISSUED,
+                counterparty_name="Cliente Ejemplo SL",
+                counterparty_tax_id="B00015016",
+                counterparty_country="ES",
+                invoice_number="V-0001",
+                issued_at=date(_YEAR, 2, 10),
+                taxable_base=Decimal("1000.00"),
+                iva_rate=Decimal("21"),
+                currency="EUR",
+                rate_provider=catalogue_ports.rate_provider,
+                operation=operation,
+            )
+        created = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
+        with _ledger_ports(
+            objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo, invoice_repo=invoice_repo
+        ) as ports:
+            link_manual_transaction_invoice(
+                bucket_id=_BUCKET_ID,
+                transaction_id=sale.transaction_id,
+                invoice_id=created.invoice.invoice_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
+        revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
+        assert sale.transaction_id not in revision.source_transaction_ids
+
+        def verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as operation:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=operation,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                ).report
+
+        warned = verify()
+        output = [finding for finding in warned.findings if finding.message_locale_key == output_key]
+        assert [(finding.kind, finding.severity, finding.message_facts["invoice_id"]) for finding in output] == [
+            (
+                ModeloVerificationFindingKind.ADVISORY,
+                ModeloVerificationFindingSeverity.WARNING,
+                created.invoice.invoice_id,
+            )
+        ]
+
+        add_attachment(
+            AttachmentStore(objects=profile.repository),
+            content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura V-0001"),
+            request=AttachmentIngestionRequest(
+                kind=AttachmentKind.INVOICE_PDF,
+                source=AttachmentSource.LOCAL_FILE,
+                source_reference="operator-evidence",
+                mime_type="application/pdf",
+                captured_at=_VERIFIED_AT,
+                bucket_id=_BUCKET_ID,
+                link_invoice_ids=(created.invoice.invoice_id,),
+            ),
+        )
+        assert not any(finding.message_locale_key == output_key for finding in verify().findings)
+
+
 def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifying_again(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:

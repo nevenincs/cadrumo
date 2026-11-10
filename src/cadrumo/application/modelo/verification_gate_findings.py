@@ -31,8 +31,9 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 )
 from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvider
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.models import Invoice
 from ...domain.iva.components import registry_category_projection
-from ...domain.iva.flow import is_deducible_flow
+from ...domain.iva.flow import IvaFlowDirection, is_deducible_flow, is_devengada_flow
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import (
@@ -54,10 +55,15 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
+    MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
     calculation_revision_claims_ledger_iva,
     missing_evidence_advisory_observations,
 )
-from ..aggregation.invoice_iva_source import documented_invoice_ids, invoices_missing_source_document
+from ..aggregation.invoice_iva_source import (
+    documented_invoice_ids,
+    invoices_missing_source_document,
+    issued_invoices_missing_source_document,
+)
 from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_membership
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
@@ -339,38 +345,71 @@ def invoice_source_document_findings(
 
     Only a return that deducts input IVA is held: a revision whose registry
     declares no deductible IVA binding (a Modelo 347 reads invoices for its
-    counterpart totals) claims no deduction the factura must grant.
+    counterpart totals) claims no deduction the factura must grant. A return
+    that accrues output IVA warns, without blocking, on each declared issued
+    invoice charging a cuota whose copy the records do not hold (RD 1619/2012
+    art. 2): the cuota is owed on the operation whether or not the copy is kept.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     fingerprint = target.invoice_fingerprint
-    if fingerprint is None or not fingerprint.rows or not _declares_iva_deduction(registry_revision):
+    deducts = _declares_iva_flow(registry_revision, is_deducible_flow)
+    accrues = _declares_iva_flow(registry_revision, is_devengada_flow)
+    if fingerprint is None or not fingerprint.rows or not (deducts or accrues):
         return []
     catalogue = invoice_repository.load()
     declared = tuple(invoice for row in fingerprint.rows if (invoice := catalogue.get(row.invoice_id)) is not None)
-    missing = invoices_missing_source_document(
-        declared,
-        documented=documented_invoice_ids(attachment_store),
-        window=transaction_repository.load(),
+    documented = documented_invoice_ids(attachment_store)
+    window = transaction_repository.load()
+    received = _when(deducts, lambda: invoices_missing_source_document(declared, documented=documented, window=window))
+    issued = _when(
+        accrues, lambda: issued_invoices_missing_source_document(declared, documented=documented, window=window)
     )
     return [
-        ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.invoice_source_document_missing",
-            message_facts={"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number},
-            legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
-        )
-        for invoice in missing
+        *(_received_invoice_document_finding(invoice) for invoice in received),
+        *(_issued_invoice_document_finding(invoice) for invoice in issued),
     ]
 
 
-def _declares_iva_deduction(registry_revision: ModeloRevision) -> bool:
-    """Whether a binding of this registry revision sums deductible input IVA."""
+def _when(applies: bool, select: Callable[[], tuple[Invoice, ...]]) -> tuple[Invoice, ...]:
+    """The invoices ``select`` finds missing their document, or none when the return does not declare that flow."""
+    return select() if applies else ()
+
+
+def _received_invoice_document_finding(invoice: Invoice) -> ModeloVerificationFinding:
+    """The blocking finding for a received invoice deducting without its factura."""
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.invoice_source_document_missing",
+        message_facts={"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number},
+        legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
+    )
+
+
+def _issued_invoice_document_finding(invoice: Invoice) -> ModeloVerificationFinding:
+    """The advisory for an issued invoice charging a cuota whose copy is not stored."""
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.transaction_evidence_missing_output",
+        message_facts={
+            "diagnostic_reason_code": "missing_transaction_evidence",
+            "source_kind_code": MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
+            "binding_id": invoice.invoice_id,
+            "invoice_id": invoice.invoice_id,
+            "invoice_number": invoice.invoice_number,
+        },
+        legal_refs=MISSING_EVIDENCE_LEGAL_REFS,
+    )
+
+
+def _declares_iva_flow(registry_revision: ModeloRevision, flow_test: Callable[[IvaFlowDirection], bool]) -> bool:
+    """Whether a binding of this registry revision sums IVA of the flow ``flow_test`` admits."""
     return any(
-        is_deducible_flow(provider_member(binding, LedgerIvaProvider).flow_direction)
+        flow_test(provider_member(binding, LedgerIvaProvider).flow_direction)
         for binding in registry_revision.bindings
         if binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     )
@@ -398,6 +437,8 @@ def _append_invoice_source_document_findings(
         ).revision,
     ):
         findings.append(finding)
+        if finding.kind is not ModeloVerificationFindingKind.BLOCKING_RULE:
+            continue
         failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=target.work_unit_id,

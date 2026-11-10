@@ -20,15 +20,14 @@ from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..date_partition import OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..errors import TransactionValidationError
-from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
-from ..models import (
-    Transaction,
+from ..import_fingerprints import (
     derive_import_fingerprint,
     derive_movement_day_key,
-    derive_transaction_id,
     existing_transaction_import_fingerprints,
     normalise_movement_reference,
 )
+from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
+from ..models import Transaction, derive_transaction_id
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 

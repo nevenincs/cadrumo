@@ -32,6 +32,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.grade_cap_support import recapped_snapshot
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import (
@@ -79,8 +80,8 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 _QUARTER = "1T"
 _CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _CAPPED_BOX = "06"
@@ -119,7 +120,7 @@ def _work_unit(snapshot: RegistrySnapshot) -> WorkUnit:
         filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name="130-2026-1T",
+        name=f"130-{_YEAR}-1T",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -153,7 +154,7 @@ def _receipt(provider_id: str, cash: Decimal) -> TransactionCatalogue:
         (
             actividad_transaction(
                 provider_id,
-                value_date=date(2026, 2, 10),
+                value_date=date(_YEAR, 2, 10),
                 amount=cash,
                 taxable_base=_BASE,
                 iva_rate=Decimal("0.21"),
@@ -533,7 +534,10 @@ def test_a_capped_modelo_keeps_the_reach_date_at_the_close_of_its_period(operati
 
 def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operation: PinnedAuthorityOperation) -> None:
     """The cap is on one binding, so Modelo 130 casilla 01 and Modelo 100 casilla 0171 keep their grade."""
-    for modelo, year, period, casilla in (("130", _YEAR, _QUARTER, "01"), ("100", 2025, "0A", "0171")):
+    for modelo, year, period, casilla in (
+        ("130", _YEAR, _QUARTER, "01"),
+        ("100", newest_authored_edition("100"), "0A", "0171"),
+    ):
         snapshot = operation.snapshot(modelo, filing_year=year, period=period)
         bindings = revision_bindings_by_id(snapshot.revision)
         (bound,) = [

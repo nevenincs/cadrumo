@@ -8,6 +8,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...aggregation.tests.ledger_transaction_support import iva_transaction
@@ -15,7 +16,7 @@ from ..m349_ledger_guard import is_active_guarded_transaction_in_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_Q1 = Period.from_year_and_code(2026, "1T")
+_Q1 = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 
 
 @pytest.mark.parametrize(

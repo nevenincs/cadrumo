@@ -14,6 +14,7 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -47,11 +48,13 @@ from ..declarations_workspace_contracts import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _OTHER_BUCKET = "22222222-2222-4222-8222-222222222222"
-_T0 = datetime(2026, 1, 2, 9, tzinfo=UTC)
-_T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
-_T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
+_T0 = datetime(_YEAR, 1, 2, 9, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 3, 10, tzinfo=UTC)
+_T2 = datetime(_YEAR, 1, 4, 11, tzinfo=UTC)
 _PRIVATE_NAME = "Taxpayer confidential declaration label"
 _PRIVATE_ACTOR = "private-operator"
 _PRIVATE_NOTES = "private filing notes"
@@ -73,12 +76,12 @@ def _revision_id(work_unit_id: str, *, amount: str = _PRIVATE_AMOUNT) -> str:
 
 
 def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, ModeloRecordCatalogue]:
-    period = Period.from_year_and_code(2026, "1T")
-    registry_revision_id = published_snapshot("130", filing_year=2026, period="1T").revision.id
+    period = Period.from_year_and_code(_YEAR, "1T")
+    registry_revision_id = published_snapshot("130", filing_year=_YEAR, period="1T").revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=registry_revision_id,
     )
@@ -93,7 +96,7 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=registry_revision_id,
         name=_PRIVATE_NAME,
@@ -130,7 +133,7 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         calculation_revision_id=calculation_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         member_nif=_PRIVATE_NIF,
         filed_at=_T2,
@@ -334,21 +337,21 @@ def test_available_empty_is_measured_zero_and_deterministic(operation: PinnedAut
 def test_reordered_multirow_inputs_project_in_semantic_chronological_order(operation: PinnedAuthorityOperation) -> None:
     work, revisions, filings = _filed_snapshot()
     first_unit = next(iter(work.values()))
-    second_period = Period.from_year_and_code(2025, "4T")
+    second_period = Period.from_year_and_code(_YEAR - 1, "4T")
     second_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=second_period,
-        revision_id="2025",
+        revision_id=str(_YEAR - 1),
     )
     second_unit = WorkUnit(
         work_unit_id=second_id,
         bucket_id=_BUCKET,
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=second_period,
-        revision_id="2025",
+        revision_id=str(_YEAR - 1),
         name="Synthetic second declaration",
         created_at=_T0,
         updated_at=_T0,

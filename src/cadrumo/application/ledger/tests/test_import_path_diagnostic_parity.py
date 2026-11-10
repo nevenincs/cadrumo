@@ -23,7 +23,8 @@ from pathlib import Path
 import pytest
 
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import TransactionCatalogue, derive_import_fingerprint, derive_transaction_id
+from ....domain.transactions.import_fingerprints import derive_import_fingerprint
+from ....domain.transactions.models import TransactionCatalogue, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.parsed_ledger_row_support import ParsedLedgerRowFake
 from ...transactions.import_diagnostics import import_ledger_with_diagnostics

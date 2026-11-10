@@ -100,12 +100,19 @@ def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: Profil
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
 
-    result = invoke_modelo_scenario_cli(["--language", "en", "app", "modelo", "work", "calculate", work_unit_id])
+    result = invoke_modelo_scenario_cli(
+        ["--format", "json", "--language", "en", "app", "modelo", "work", "calculate", work_unit_id]
+    )
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    # Which binding the formula evaluator reaches first is not the subject;
-    # that the refusal names a concrete binding id is.
-    assert re.search(r"Binding [a-z0-9-]+ has no supplied value", result.output), result.output
+    error = json.loads(result.output)["error"]
+    # Which unsatisfied binding the calculation reaches first is not the
+    # subject; that it is refused with nothing written, naming a concrete
+    # binding and the failed condition, is.
+    assert error["category"] == "REFUSED", error
+    assert error["context"]["effect"] == "none"
+    assert re.fullmatch(r"[a-z0-9-]+", error["context"]["binding_id"]), error
+    assert error["action"]["failed_condition_id"], error
 
 
 def test_work_revisions_accepts_a_positional_work_unit_id(seed_profile: ProfileSeeder) -> None:

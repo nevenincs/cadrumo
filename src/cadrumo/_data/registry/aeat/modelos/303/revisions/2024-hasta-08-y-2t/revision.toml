@@ -1845,6 +1845,12 @@ fields = {externally_grounded_casilla_ids = ["09", "11", "29", "33", "37"]}
 sequence_additions = {source_refs = ["aeat-dr-303-2024-early"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
+[[revisions.2024-hasta-08-y-2t.family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2023", id = "modelo-303-m349-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-303-2024-early"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
 [[revisions.2024-hasta-08-y-2t.family_removals]]
 family = "projection_endpoints"
 selector = {revision = "2023", id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-empleados-inicio-ejercicio-actual.slot-2"}

@@ -9,12 +9,18 @@ from functools import lru_cache
 
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..ids import LegalRefId, SourceRefId
+from .authored_editions import newest_authored_edition, revision_covering
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )
+
+#: The newest Modelo 100 edition the registry authors, which every scenario here calculates.
+_EXERCISE = newest_authored_edition("100")
+_REVISION_ID = str(revision_covering("100", _EXERCISE).id)
+_FILING_PERIOD_END = date(_EXERCISE, 12, 31)
 
 
 def registry_scenarios_operand_refs(*values: object) -> tuple[str, ...]:
@@ -42,9 +48,9 @@ def inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
 #: them into an aggregation test. Declaring it keeps the boundary visible where
 #: a reader meets the scenario, rather than leaving them to infer end-to-end
 #: coverage the fixtures never claimed.
-_INGRESOS_EXPLOTACION_2025: CasillaId = validated_casilla_id("0171", surface="_INGRESOS_EXPLOTACION_2025")
-_HAND_TYPED_INGRESOS_2025: dict[CasillaId, str] = {
-    _INGRESOS_EXPLOTACION_2025: (
+_INGRESOS_EXPLOTACION: CasillaId = validated_casilla_id("0171", surface="_INGRESOS_EXPLOTACION")
+_HAND_TYPED_INGRESOS: dict[CasillaId, str] = {
+    _INGRESOS_EXPLOTACION: (
         "archetype fixture exercising the estimacion-directa formula chain and the cuota path below it; "
         "the ledger-income aggregation feeding this casilla is out of its scope and is covered separately"
     ),
@@ -56,13 +62,13 @@ _HAND_TYPED_INGRESOS_2025: dict[CasillaId, str] = {
 #: formula-chain fixtures supply a literal acquisition cost instead of building
 #: inventory substrate and running that source resolver, so the value is
 #: deliberately hand-typed rather than chain-resolved.
-_ACTIVITY_ACQUISITION_COST_2025: CasillaId = validated_casilla_id(
+_ACTIVITY_ACQUISITION_COST: CasillaId = validated_casilla_id(
     "0181",
-    surface="_ACTIVITY_ACQUISITION_COST_2025",
+    surface="_ACTIVITY_ACQUISITION_COST",
 )
-_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025: dict[CasillaId, str] = {
-    **_HAND_TYPED_INGRESOS_2025,
-    _ACTIVITY_ACQUISITION_COST_2025: (
+_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY: dict[CasillaId, str] = {
+    **_HAND_TYPED_INGRESOS,
+    _ACTIVITY_ACQUISITION_COST: (
         "archetype fixture exercises the estimacion-directa formula chain and its cuota path; "
         "the inventory aggregation and binding resolver producing this acquisition cost are out of scope "
         "and covered separately"
@@ -78,9 +84,9 @@ _TYPED_ACTIVITY_RETENCIONES_0599 = (
 
 
 @lru_cache(maxsize=1)
-def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
+def _m100_newest_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
     modelo, _catalogues = bundled_modelo_components("100")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVISION_ID]
     refs: dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]] = {
         casilla.id: (
             tuple(casilla.legal_refs),
@@ -113,7 +119,7 @@ def expected(
         raise AssertionError("scenario expectations with operand_refs must declare operand_casilla_refs explicitly")
     expected_operand_casilla_refs = () if operand_casilla_refs is None else operand_casilla_refs
     target_casilla_id = validated_casilla_id(target, surface="test_registry_scenarios.casilla")
-    default_legal_refs, default_source_refs = _m100_2025_refs_by_target()[target_casilla_id]
+    default_legal_refs, default_source_refs = _m100_newest_refs_by_target()[target_casilla_id]
     return RegistryScenarioExpectedOutput(
         target_casilla_id=target_casilla_id,
         value=value,
@@ -128,7 +134,7 @@ def estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScena
     """B3 archetype: estimación objetiva (módulos)."""
     return normal_direct_estimation_payments_scenario().model_copy(
         update={
-            "id": "modelo-100-2025-estimacion-objetiva-modulos-archetype-passthrough",
+            "id": f"modelo-100-{_EXERCISE}-estimacion-objetiva-modulos-archetype-passthrough",
         },
     )
 
@@ -137,7 +143,7 @@ def tributacion_conjunta_family_joint_archetype_scenario() -> RegistryCalculatio
     """C1 archetype: tributación conjunta family-joint declaration."""
     return normal_direct_estimation_payments_scenario().model_copy(
         update={
-            "id": "modelo-100-2025-tributacion-conjunta-family-joint-archetype-passthrough",
+            "id": f"modelo-100-{_EXERCISE}-tributacion-conjunta-family-joint-archetype-passthrough",
         },
     )
 
@@ -146,17 +152,17 @@ def minimo_familiar_descendientes_discapacidad_archetype_scenario() -> RegistryC
     """C2 archetype: family with descendants/discapacidad (mínimo familiar)."""
     return normal_direct_estimation_payments_scenario().model_copy(
         update={
-            "id": "modelo-100-2025-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
+            "id": f"modelo-100-{_EXERCISE}-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
         },
     )
 
 
 def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-employee-trabajo-estimacion-directa-normal-autonomo-payments",
+        id=f"modelo-100-{_EXERCISE}-employee-trabajo-estimacion-directa-normal-autonomo-payments",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs(
             {
@@ -185,7 +191,7 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
             },
         ),
         hand_typed_bound_casillas={
-            **_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
+            **_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
             "0599": _TYPED_ACTIVITY_RETENCIONES_0599,
         },
         binding_values={
@@ -326,13 +332,13 @@ def normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
 
 def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-estimacion-directa-simplificada-statutory-cap",
+        id=f"modelo-100-{_EXERCISE}-estimacion-directa-simplificada-statutory-cap",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs({"0171": Decimal("100000.00")}),
-        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
+        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-estimacion-directa": Decimal("1"),
@@ -355,7 +361,7 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
             "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": _FILING_PERIOD_END},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             expected(
@@ -390,13 +396,13 @@ def simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
 
 def negative_simplified_base_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-estimacion-directa-simplificada-negative-base",
+        id=f"modelo-100-{_EXERCISE}-estimacion-directa-simplificada-negative-base",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs({"0171": Decimal("100.00"), "0181": Decimal("500.00")}),
-        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
+        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY,
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-estimacion-directa": Decimal("1"),
@@ -419,7 +425,7 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
             "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": _FILING_PERIOD_END},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
         expected_outputs=(
             expected(
@@ -452,10 +458,10 @@ def negative_simplified_base_scenario() -> RegistryCalculationScenario:
 
 def real_estate_capital_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-real-estate-rental-alquiler-inmobiliario-capital-rollup",
+        id=f"modelo-100-{_EXERCISE}-real-estate-rental-alquiler-inmobiliario-capital-rollup",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs(
             {
@@ -620,10 +626,10 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
 
 def final_settlement_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-final-settlement-ganancias-patrimoniales-ccaa-rollup",
+        id=f"modelo-100-{_EXERCISE}-final-settlement-ganancias-patrimoniales-ccaa-rollup",
         modelo="100",
-        revision="2025",
-        filing_year=2025,
+        revision=_REVISION_ID,
+        filing_year=_EXERCISE,
         period="0A",
         inputs=inputs(
             {

@@ -845,6 +845,7 @@ class ModeloWorkAmendExecutor:
                         bucket_id=require_active_bucket_id(), operation=context.authority_operation
                     ),
                     operation=context.authority_operation,
+                    binding_overrides={item.key: item.value for item in payload.binding_overrides},
                 )
 
         async def publish() -> str:

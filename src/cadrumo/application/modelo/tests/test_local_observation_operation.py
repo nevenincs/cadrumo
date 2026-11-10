@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.observations_repository import ObservationSourceKind
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.capabilities import OperationRequestStoragePolicy, OperationSensitiveInputPolicy
@@ -42,8 +43,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = PublicPeriod(filing_year=2026, code="1T")
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
+_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
 
 
 def _factory() -> CalculationActionPortsFactory:
@@ -167,7 +169,7 @@ def test_projection_keeps_the_canonical_record_and_its_persisted_layer_aligned()
     )
     layers = ModeloFilingObservationLayersProjection(
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
         pending_local=pending,
         effective_source_kind=ObservationSourceKind.OPERATOR_MANUAL,

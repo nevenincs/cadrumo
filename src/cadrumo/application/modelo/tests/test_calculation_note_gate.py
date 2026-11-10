@@ -19,6 +19,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
 from ....core.config import override_settings
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -51,7 +52,8 @@ from ..work_form_findings import ModeloFormAttention
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _WORK_UNIT = "e" * 64
-_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(1980, 4, 2, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
 
 
 def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
@@ -78,7 +80,9 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
     )
 
 
-_SNAPSHOT_REF = RegistrySnapshotRef(modelo="130", revision_id="2026", modelo_year=2026, period="1T")
+_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="130", revision_id=str(revision_covering("130", _YEAR).id), modelo_year=_YEAR, period="1T"
+)
 
 
 def _disagreement() -> SourceDisagreementFact:

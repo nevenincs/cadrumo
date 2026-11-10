@@ -33,6 +33,7 @@ from ....domain.calculations.registry.casilla_membership import (
 )
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -53,8 +54,10 @@ from ..calculation_modelo_adjustments import drop_row_field_template_outputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_AMENDED_AT = datetime(2026, 6, 11, 9, 0, tzinfo=UTC)
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_M193_YEAR = newest_authored_edition("193")
+_AMENDED_AT = datetime(_YEAR, 6, 11, 9, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
 _OBSERVATION = SimpleNamespace(
     casilla_id="base_retenciones", legal_refs=("art-75",), source_refs=("test-ledger-anchor",)
@@ -63,7 +66,7 @@ _WORK_BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 
 
 def _work_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     revision_id = "test-revision"
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -78,14 +81,14 @@ def _work_unit() -> WorkUnit:
         filing_year=period.filing_year,
         period=period,
         revision_id=revision_id,
-        name="303-2026-1T",
+        name=f"303-{_YEAR}-1T",
         created_at=_T0,
         updated_at=_T0,
     )
 
 
 def _raw_transaction(provider_id: str, *, amount: Decimal) -> RawTransaction:
-    booked_date = date(2026, 2, 15)
+    booked_date = date(_YEAR, 2, 15)
     return RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=booked_date,
@@ -246,8 +249,8 @@ def _m193_revision(
     persists, so the draft is what calculate would have stored for these
     inputs had it accepted them.
     """
-    snapshot = published_snapshot("193", filing_year=2024, period="0A")
-    period = Period.from_year_and_code(2024, "0A")
+    snapshot = published_snapshot("193", filing_year=_M193_YEAR, period="0A")
+    period = Period.from_year_and_code(_M193_YEAR, "0A")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_WORK_BUCKET,
@@ -261,7 +264,7 @@ def _m193_revision(
         filing_year=period.filing_year,
         period=period,
         revision_id=snapshot.revision.id,
-        name="193-2024-0A",
+        name=f"193-{_M193_YEAR}-0A",
         created_at=_T0,
         updated_at=_T0,
     )
@@ -269,6 +272,7 @@ def _m193_revision(
         snapshot,
         inputs=casilla_inputs,
         date_context={"filing_period": period.end_date},
+        binding_values={binding.id: Decimal(0) for binding in snapshot.revision.bindings},
     )
     casilla_values, observations = drop_row_field_template_outputs(
         revision=snapshot.revision,
@@ -362,7 +366,7 @@ def test_a_row_field_scalar_input_is_refused_at_calculate_before_any_amendment_c
         )
     assert capture_refusal.value.context == {"field_name": "legal_refs", "observation_present": False}
 
-    revision = published_snapshot("193", filing_year=2024, period="0A").revision
+    revision = published_snapshot("193", filing_year=_M193_YEAR, period="0A").revision
     with pytest.raises(RegistryValidationError) as calculate_refusal:
         reject_row_field_template_scalar_inputs(revision, inputs)
     assert calculate_refusal.value.context == {

@@ -24,6 +24,7 @@ from ....domain.buckets.event import (
     derive_bucket_event_id,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...bucket_event_projection import BucketEventProjection
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -48,21 +49,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
+_NOW = datetime(1980, 3, 10, 12, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("303").id)
 _EN = OutputLanguage.EN
 
 
 def _unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_FILING_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
+            bucket_id=str(_PROFILE), modelo="303", filing_year=_FILING_YEAR, period=period, revision_id=_REVISION_ID
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION_ID,
         name="First quarter",
         created_at=_NOW,
         updated_at=_NOW,
@@ -223,7 +226,7 @@ def _event(*, bucket_id: UUID = _PROFILE, occurred_at: datetime = _NOW, object_i
 
 def test_projection_preserves_canonical_event_and_rejects_foreign_duplicate_unordered() -> None:
     first = _event()
-    later = _event(occurred_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
+    later = _event(occurred_at=datetime(1980, 3, 10, 13, tzinfo=UTC))
     history = WorkUnitHistory(bucket_id=str(_PROFILE), work_unit_id=_unit().work_unit_id, events=(first, later))
     projection = ModeloWorkHistoryProjection(
         profile_id=_PROFILE,

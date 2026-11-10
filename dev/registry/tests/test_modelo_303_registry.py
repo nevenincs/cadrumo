@@ -11,6 +11,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     authored_revisions,
@@ -20,11 +21,11 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
     split_exercise_revisions,
 )
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
-    M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
-    M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
-    M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION,
     M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF,
-    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_SUPPORTED_EDITION_IDS,
+    m303_annual_orden_source,
+    m303_extraction_profile_target_legal_refs,
+    m303_record_design_source,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.deadlines.domiciliation_cutoff import DerivedPaymentCutoff, resolve_payment_cutoff
@@ -64,7 +65,7 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-3786-2008:art-1" in modelo.legal_refs
     assert "orden-eha-3786-2008:art-7" in modelo.legal_refs
-    assert M303_RECORD_DESIGN_SOURCE_BY_REVISION[str(_LAST_WHOLE_YEAR.id)] in modelo.source_refs
+    assert m303_record_design_source(str(_LAST_WHOLE_YEAR.id)) in modelo.source_refs
     assert "aeat-modelo-303-procedure" in modelo.source_refs
     assert catalogues.sources["aeat-modelo-303-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
@@ -223,21 +224,36 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
         )
 
 
+def _assert_further_sources_are_cited_forms(revision: ModeloRevision, catalogues: RegistryCatalogues) -> None:
+    """Every revision-level source past the four fixed ones is a printed form one of the edition's formulas cites."""
+    formula_sources = {ref for formula in revision.formulas for ref in formula.source_refs}
+    for further in revision.source_refs[4:]:
+        assert catalogues.sources[further].kind == "form_spec", (revision.id, further)
+        assert further in formula_sources, (revision.id, further)
+
+
 def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> None:
-    """Each post-2022 design has its own primary source, never a fallback."""
-    modelo, _ = load_modelo_303()
+    """Each design has its own primary source, never a fallback.
 
-    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
+    The design and the annual Orden are the ones whose applicability opens the
+    edition. A further revision-level source is only a printed BOE form that one
+    of the edition's own formulas cites, as the January and first-quarter edition
+    does for the prior form annex it is still filed on.
+    """
+    modelo, catalogues = load_modelo_303()
+
+    for revision_id in M303_SUPPORTED_EDITION_IDS:
         revision = modelo.revisions[revision_id]
-        record_design_source = M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
-        annual_orden_source = M303_ANNUAL_ORDEN_SOURCE_BY_REVISION[revision_id]
+        record_design_source = m303_record_design_source(revision_id)
+        annual_orden_source = m303_annual_orden_source(revision_id)
 
-        assert revision.source_refs == (
+        assert revision.source_refs[:4] == (
             record_design_source,
             "aeat-modelo-303-procedure",
             annual_orden_source,
             "boe-modelo-303-2008-form",
-        )
+        ), revision_id
+        _assert_further_sources_are_cited_forms(revision, catalogues)
         assert len(revision.workbook_parity_refs) == 1
         parity = revision.workbook_parity_refs[0]
         # The parity id is authored per revision (the 2024 split names its two
@@ -257,14 +273,15 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
     assert "orden-eha-3786-2008:art-1" in snapshot.legal
     assert "orden-eha-3786-2008:art-7" in snapshot.legal
     assert snapshot.legal["orden-eha-3786-2008:art-7"].article == "7"
-    assert M303_RECORD_DESIGN_SOURCE_BY_REVISION[str(_LAST_WHOLE_YEAR.id)] in snapshot.sources
+    assert m303_record_design_source(str(_LAST_WHOLE_YEAR.id)) in snapshot.sources
     assert "aeat-modelo-303-procedure" in snapshot.sources
     assert "boe-modelo-303-2008-form" in snapshot.sources
 
 
 def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = load_modelo_303()
-    for revision_id, expected_refs in M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items():
+    for revision_id in M303_SUPPORTED_EDITION_IDS:
+        expected_refs = m303_extraction_profile_target_legal_refs(revision_id)
         revision = modelo.revisions[revision_id]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -292,14 +309,14 @@ def test_modelo_303_layout_modification_authority_starts_only_with_the_late_spli
     ((day, month, year),) = re.findall(r"Fecha de entrada en vigor: (\d{2})/(\d{2})/(\d{4})", order_page)
     assert authority.effective_from == date(int(year), int(month), int(day))
 
-    split_at = M303_EXPLICIT_RECORD_DESIGN_REVISIONS.index(str(_SPLIT_2T_3T[1].id))
-    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS[:split_at]:
+    split_at = M303_SUPPORTED_EDITION_IDS.index(str(_SPLIT_2T_3T[1].id))
+    for revision_id in M303_SUPPORTED_EDITION_IDS[:split_at]:
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
         assert M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
 
-    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS[split_at:]:
+    for revision_id in M303_SUPPORTED_EDITION_IDS[split_at:]:
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )

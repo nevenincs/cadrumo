@@ -22,14 +22,14 @@ from .modelo_303_registry_constants import (
     M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
     M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
     M303_PRORRATA_REGULARIZACION_BINDING,
     M303_PRORRATA_REGULARIZACION_CASILLA,
     M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
     M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
-    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_SUPPORTED_EDITION_IDS,
     WWW1_HOST,
     WWW6_HOST,
+    m303_record_design_source,
 )
 from .modelo_303_registry_support import load_modelo_303
 
@@ -263,7 +263,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
 
 
-@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", M303_SUPPORTED_EDITION_IDS)
 def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     revision_id: str,
 ) -> None:
@@ -287,7 +287,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     assert casilla_43.binding == M303_BIENES_INVERSION_REGULARIZACION_BINDING
 
 
-@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", M303_SUPPORTED_EDITION_IDS)
 def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     revision_id: str,
 ) -> None:
@@ -310,7 +310,7 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
     assert {"ley-37-1992:art-104", "ley-37-1992:art-105"}.issubset(binding.legal_refs)
     assert binding.source_refs == (
-        M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id],
+        m303_record_design_source(revision_id),
         "aeat-modelo-303-procedure",
         "boe-modelo-303-2008-form",
     )
@@ -318,7 +318,7 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
 
-@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", M303_SUPPORTED_EDITION_IDS)
 def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -329,7 +329,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
-@pytest.mark.parametrize("revision_id", [_FLOOR_REVISION, *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", M303_SUPPORTED_EDITION_IDS)
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -351,6 +351,5 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
         M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     }
 
-    if revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
-        projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
-        assert projection.expression.casilla_id == M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
+    projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
+    assert projection.expression.casilla_id == M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA

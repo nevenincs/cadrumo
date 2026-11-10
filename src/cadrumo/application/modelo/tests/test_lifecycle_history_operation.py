@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationRegistry
@@ -29,6 +30,7 @@ from ..lifecycle_history_operation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 
@@ -63,10 +65,10 @@ def test_selected_filing_period_and_full_history_scope(authority_operation: Pinn
         published_authority=Availability.AVAILABLE,
         authority_operation=authority_operation,
     )
-    selected = resolve_operation_access(registry=registry, request=_request(year=2025, period="1T"), context=context)
-    assert selected.request.periods == frozenset({Period.from_year_and_code(2025, "1T")})
+    selected = resolve_operation_access(registry=registry, request=_request(year=_YEAR, period="1T"), context=context)
+    assert selected.request.periods == frozenset({Period.from_year_and_code(_YEAR, "1T")})
     assert not selected.request.period_independent and not selected.policy.requires_all_periods
-    full = resolve_operation_access(registry=registry, request=_request(year=2025), context=context)
+    full = resolve_operation_access(registry=registry, request=_request(year=_YEAR), context=context)
     assert not full.request.periods and full.request.period_independent and full.policy.requires_all_periods
     for resolved in (selected, full):
         assert AccessAction.COMMIT not in resolved.policy.actions
@@ -77,7 +79,7 @@ def test_selected_filing_period_and_full_history_scope(authority_operation: Pinn
 
 def test_public_history_roundtrips_and_rejects_missing_count() -> None:
     projection = ModeloHistoryOperationProjection(
-        profile_id=_PROFILE, modelo="303", year=2025, period="1T", count=0, events=()
+        profile_id=_PROFILE, modelo="303", year=_YEAR, period="1T", count=0, events=()
     )
     assert ModeloHistoryOperationProjection.model_validate_json(projection.model_dump_json()) == projection
     with pytest.raises(ValidationError):

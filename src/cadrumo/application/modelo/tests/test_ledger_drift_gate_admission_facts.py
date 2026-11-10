@@ -24,6 +24,7 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import EUMemberState
@@ -55,12 +56,13 @@ from ..ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_co
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "31313131-3131-4131-8131-313131313131"
-_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_AT = datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC)
 _DRIFT_KEY = "application.modelo.findings.ledger_snapshot_drift_changed"
 
 
 def _purchase() -> Transaction:
-    booked = date(2026, 2, 10)
+    booked = date(_YEAR, 2, 10)
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
@@ -102,22 +104,22 @@ def _purchase() -> Transaction:
 
 
 def _draft(contributor: Transaction, anchor: LedgerFilingSnapshot) -> tuple[WorkUnit, CalculationRevision]:
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
-    period = Period.from_year_and_code(2026, "1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET,
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
-        name="303-2026-1T",
+        name=f"303-{_YEAR}-1T",
         created_at=_AT,
         updated_at=_AT,
     )
@@ -233,7 +235,7 @@ def test_a_v2_anchored_draft_is_still_compared_under_v2(update: dict[str, object
     assert _gate(_draft(before, _anchor_sealed_under_v2(before)), after) == []
 
 
-_STATED_ACCRUAL = date(2026, 3, 30)
+_STATED_ACCRUAL = date(_YEAR, 3, 30)
 
 
 @pytest.mark.parametrize("version", [2, 5, 6])
@@ -262,7 +264,7 @@ def test_an_accrual_date_stated_before_a_current_anchor_is_not_drift_and_a_chang
     draft = _draft(stated, _current_anchor(stated))
     assert _gate(draft, stated) == []
 
-    (finding,) = _gate(draft, stated.model_copy(update={"accrual_date": date(2026, 4, 2)}))
+    (finding,) = _gate(draft, stated.model_copy(update={"accrual_date": date(_YEAR, 4, 2)}))
     assert finding.message_facts["changed_count"] == 1
 
 

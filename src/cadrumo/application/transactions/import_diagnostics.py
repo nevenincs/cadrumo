@@ -28,11 +28,8 @@ from ...core.errors.severity import BaseSeverity
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.transactions.models import (
-    TransactionCatalogue,
-    derive_transaction_id,
-    existing_transaction_import_fingerprints,
-)
+from ...domain.transactions.import_fingerprints import existing_transaction_import_fingerprints
+from ...domain.transactions.models import TransactionCatalogue, derive_transaction_id
 from ...domain.transactions.raw_transaction import RawTransaction
 from .diagnostics import LedgerImportDiagnostic, LedgerImportDiagnosticKind, build_ledger_import_diagnostic
 from .import_classification import ImportRowVerdict, classify_import_row
@@ -79,7 +76,7 @@ def import_ledger_with_diagnostics(
             caller with the flow direction the provider read at the parse
             boundary. Required rather than defaulted: a fingerprint derived
             here would carry no direction, and
-            :func:`~cadrumo.domain.transactions.models.derive_import_fingerprint`
+            :func:`~cadrumo.domain.transactions.import_fingerprints.derive_import_fingerprint`
             substitutes the literal ``UNSPECIFIED`` discriminator for a missing
             one, which can never equal a stored direction-qualified fingerprint.
             Dedup would then fail open and read every row as new.

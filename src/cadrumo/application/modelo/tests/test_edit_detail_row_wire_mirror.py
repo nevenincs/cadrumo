@@ -23,6 +23,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ....domain.modelos.row_models import (
     Modelo184MemberRow,
@@ -50,7 +51,8 @@ from ..edit_apply_row_contracts import (
 from ..edit_models import ModeloEditDetailRowIntentKind
 from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 
-_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_YEAR = filing_year_envelope().horizon
+_M210_EFFECTIVE_DATE = date(_YEAR, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -146,7 +148,7 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
         nif_comunitario="987654321",
         razon_social="RECTIFICADA SARL",
         clave_operacion="A",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         periodo="2T",
         base_rectificada="1500.00",
         base_anterior="1200.00",
@@ -156,7 +158,7 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
         nif_comunitario="987654321",
         razon_social="RECTIFICADA SARL",
         clave_operacion="A",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         periodo="2T",
         base_rectificada=Decimal("1500.00"),
         base_anterior=Decimal("1200.00"),
@@ -167,7 +169,7 @@ def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo3
 def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210AgrupacionRentaRow]:
     """Build one M210 agrupación row and its wire mirror."""
     mirror = Modelo210AgrupacionRentaRowWireV1(
-        source_id="alquiler-2025-01",
+        source_id=f"alquiler-{_YEAR}-01",
         tipo_renta_code="01",
         importe="7500.00",
         tipo_gravamen="0.19",
@@ -177,7 +179,7 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
         bien_derecho_id="inmueble-1",
     )
     row = Modelo210AgrupacionRentaRow(
-        source_id="alquiler-2025-01",
+        source_id=f"alquiler-{_YEAR}-01",
         tipo_renta_code="01",
         importe=Decimal("7500.00"),
         tipo_gravamen=Decimal("0.19"),
@@ -367,11 +369,11 @@ def test_a_component_carrying_the_separator_is_unambiguous_on_the_wire() -> None
     """
     with_separator = ModeloEditApplyDetailRowAddressV1(
         detail_row_kind="agrupacion_renta",
-        identity_components=("alquiler|2025",),
+        identity_components=(f"alquiler|{_YEAR}",),
     )
     as_two_parts = ModeloEditApplyDetailRowAddressV1(
         detail_row_kind="agrupacion_renta",
-        identity_components=("alquiler", "2025"),
+        identity_components=("alquiler", str(_YEAR)),
     )
 
     assert with_separator.identity_components != as_two_parts.identity_components

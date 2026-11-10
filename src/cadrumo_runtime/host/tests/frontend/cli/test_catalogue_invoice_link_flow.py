@@ -42,6 +42,7 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -64,6 +65,9 @@ _LINK_RUNTIME_OPERATIONS = _RUNTIME_OPERATIONS | {LEDGER_LINK_OPERATION_DEFINITI
 # aggregate validates the tax-id control digit, so an arbitrary token would be
 # refused at construction.
 _RECEIVED_COUNTERPARTY_CIF = "B00010157"
+# The movement and the received invoice it pays share one day of a supported exercise.
+_PAID_ON = date(filing_year_envelope().horizon, 3, 10)
+_INTRA_COMMUNITY_ISSUED_ON = date(_PAID_ON.year, 2, 10)
 
 
 def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> Result:
@@ -74,7 +78,7 @@ def _invoke_open_profile(session: NativeApiCliSession[None], *command: str) -> R
 def _add_outgoing_transaction(session: NativeApiCliSession[None]) -> str:
     result = session.invoke_password(
         "app", "ledger", "add",
-        "--date", "2026-03-10", "--amount", "121.00",
+        "--date", _PAID_ON.isoformat(), "--amount", "121.00",
         "--direction", "OUTGOING", "--description", f"Supplier {_RECEIVED_COUNTERPARTY_CIF}",
         output_format="text",
     )  # fmt: skip
@@ -88,8 +92,8 @@ def _create_catalogue_invoice(session: NativeApiCliSession[None]) -> str:
         "--kind", "received",
         "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
         "--counterparty-name", "Papeleria Sol SL",
-        "--invoice-number", "2026-0142",
-        "--invoice-date", "2026-03-10",
+        "--invoice-number", f"{_PAID_ON.year}-0142",
+        "--invoice-date", _PAID_ON.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "100.00", "--iva-rate", "21",
         output_format="text",
@@ -179,8 +183,8 @@ def test_link_refuses_cross_bucket_catalogue_invoice(
                 counterparty_name="Foreign SL",
                 counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
                 counterparty_country="ES",
-                invoice_number="2026-9999",
-                issued_at=date(2026, 3, 10),
+                invoice_number=f"{_PAID_ON.year}-9999",
+                issued_at=_PAID_ON,
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -255,8 +259,8 @@ def test_link_refuses_an_ambiguous_invoice_prefix_naming_the_candidates(
                     counterparty_name="Papeleria Sol SL",
                     counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
                     counterparty_country="ES",
-                    invoice_number=f"2026-{number:04d}",
-                    issued_at=date(2026, 3, 10),
+                    invoice_number=f"{_PAID_ON.year}-{number:04d}",
+                    issued_at=_PAID_ON,
                     taxable_base=Decimal("100.00"),
                     iva_rate=Decimal("21"),
                     currency="EUR",
@@ -321,7 +325,7 @@ def _write_raw_catalogue(catalogue: InvoiceCatalogue) -> None:
     """
     envelope = Envelope[InvoiceCatalogue](
         schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
-        written_at=datetime(2026, 3, 10, 12, 0, tzinfo=UTC),
+        written_at=datetime(1980, 1, 1, 12, 0, tzinfo=UTC),
         classification=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
         payload=catalogue,
     )
@@ -373,8 +377,8 @@ def test_catalogue_create_stamps_intra_community_category(
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",
-            "--invoice-number", "EU-2026-001",
-            "--invoice-date", "2026-02-10",
+            "--invoice-number", f"EU-{_INTRA_COMMUNITY_ISSUED_ON.year}-001",
+            "--invoice-date", _INTRA_COMMUNITY_ISSUED_ON.isoformat(),
             "--taxable-base", "2000.00", "--iva-rate", "0",
             "--country-code", "DE", "--operation-type", "E",
             output_format="text",
@@ -413,8 +417,8 @@ def test_catalogue_create_stamps_service_operation_type(
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",
-            "--invoice-number", "EU-2026-002",
-            "--invoice-date", "2026-02-10",
+            "--invoice-number", f"EU-{_INTRA_COMMUNITY_ISSUED_ON.year}-002",
+            "--invoice-date", _INTRA_COMMUNITY_ISSUED_ON.isoformat(),
             "--taxable-base", "2000.00", "--iva-rate", "0",
             "--country-code", "DE", "--operation-type", "S",
             output_format="text",

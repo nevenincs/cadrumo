@@ -14,6 +14,7 @@ import pytest
 
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -31,7 +32,8 @@ from .empty_borrador_revision_support import empty_borrador_revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "28282828-2828-4828-8828-282828282828"
-_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+_AT = datetime(1980, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
 _KEY = "application.modelo.findings.activity_asset_register_drift"
 _C1, _C2 = "1" * 64, "2" * 64
 _F1, _F2 = "a" * 64, "b" * 64
@@ -53,22 +55,22 @@ def _provenance(*source_refs: str) -> tuple[CalculationSourceRef, ...]:
 
 
 def _draft(*source_refs: str) -> tuple[WorkUnit, CalculationRevision]:
-    snapshot = published_snapshot("130", filing_year=2025, period="1T")
-    period = Period.from_year_and_code(2025, "1T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET,
             modelo="130",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
-        name="130-2025-1T",
+        name=f"130-{_YEAR}-1T",
         created_at=_AT,
         updated_at=_AT,
     )
