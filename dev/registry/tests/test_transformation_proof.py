@@ -68,7 +68,7 @@ def test_snapshot_keeps_unknown_defaults_nulls_locales_and_explicit_metadata() -
     definition = _Definition({"known": 1, "future_schema_field": {"defaulted": False, "nullable": None}})
     snapshot = snapshot_definition(
         definition,
-        locale_fields={"revisions.2026.casillas.1.localization_keys": ["modelo.1"]},
+        locale_fields={"revisions.edition.casillas.1.localization_keys": ["modelo.1"]},
         representation_metadata={"source_file_count": 2},
     )
 
@@ -78,28 +78,29 @@ def test_snapshot_keeps_unknown_defaults_nulls_locales_and_explicit_metadata() -
 
 
 def test_raw_mapping_snapshot_preserves_toml_scalar_type_distinctions() -> None:
-    temporal = snapshot_definition({"value": date(2026, 9, 14)}, locale_fields={})
-    string = snapshot_definition({"value": "2026-09-14"}, locale_fields={})
+    day = date(1970, 9, 14)
+    temporal = snapshot_definition({"value": day}, locale_fields={})
+    string = snapshot_definition({"value": day.isoformat()}, locale_fields={})
     number = snapshot_definition({"value": 1.0}, locale_fields={})
     boolean = snapshot_definition({"value": True}, locale_fields={})
 
-    assert temporal.definition == {"value": {"$toml_type": "date", "value": "2026-09-14"}}
+    assert temporal.definition == {"value": {"$toml_type": "date", "value": day.isoformat()}}
     assert len({temporal.sha256, string.sha256, number.sha256, boolean.sha256}) == 4
 
 
 def test_proof_reports_the_first_nested_definition_or_locale_mismatch() -> None:
     before = snapshot_definition(
-        _Definition({"revisions": {"2026": {"rows": [{"id": "1", "required": True}]}}}),
+        _Definition({"revisions": {"edition": {"rows": [{"id": "1", "required": True}]}}}),
         locale_fields={"1": ["one"]},
     )
     after = snapshot_definition(
-        _Definition({"revisions": {"2026": {"rows": [{"id": "1", "required": False}]}}}),
+        _Definition({"revisions": {"edition": {"rows": [{"id": "1", "required": False}]}}}),
         locale_fields={"1": ["one"]},
     )
 
     proof = prove_transformation(before, after)
     assert not proof.is_equivalent
-    assert proof.first_mismatch == "$.definition.revisions.2026.rows[0].required"
+    assert proof.first_mismatch == "$.definition.revisions.edition.rows[0].required"
 
     locale_after = snapshot_definition(_Definition(before.definition), locale_fields={"1": ["uno"]})
     assert prove_transformation(before, locale_after).first_mismatch == "$.locale_fields.1[0]"

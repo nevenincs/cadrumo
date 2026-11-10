@@ -28,15 +28,17 @@ from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishe
 from ....domain.calculations.registry.modelo_localization import binding_locale_key
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormEditability,
-    ModeloFormLayoutProvenance,
     ModeloFormOrigin,
-    ModeloFormRepeatingBlock,
     ModeloFormTextDisclosure,
-    ModeloWorkForm,
     address_key,
+)
+from ..work_form_models import (
+    ModeloFormLayoutProvenance,
+    ModeloFormRepeatingBlock,
+    ModeloWorkForm,
 )
 from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import uncalculated_review

@@ -10,6 +10,7 @@ from cadrumo_client.commands.secret_contracts import (
 )
 from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
+    NON_BLANK_CONSTRAINT,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -257,7 +258,7 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 multiple=True,
                 count=False,
                 eager=False,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),

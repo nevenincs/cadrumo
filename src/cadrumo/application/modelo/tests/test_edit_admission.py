@@ -79,11 +79,13 @@ from ..edit_review_wording import edit_finding_words, edit_refusal_words
 from ..edit_services import validate_binding_intent
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..edit_value_grammar import ModeloEditValueGrammarV1
-from ..work_form_models import (
+from ..work_form_field_vocabulary import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
+)
+from ..work_form_models import (
     ModeloWorkForm,
     revised_field,
 )

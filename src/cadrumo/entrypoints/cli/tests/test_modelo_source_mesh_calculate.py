@@ -1116,3 +1116,129 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
     # this absence claim was satisfied by every run whether or not an
     # advisory was surfaced -- the one thing the test exists to detect.
     assert "ADVISORY:" not in text_result.output
+
+
+_M303_ONLY_SHA256 = "a" * 64
+
+
+def _m100_work_unit(profile: RegisteredCliProfile) -> str:
+    result = _cli(
+        profile,
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "100",
+        "--year",
+        "2024",
+        "--period",
+        "0A",
+        "--revision",
+        "2024",
+    )
+    assert result.exit_code == 0, result.output
+    return str(unwrap_schema_envelope(result.output)["work_unit_id"])
+
+
+def _current_calculation_head(profile: RegisteredCliProfile, work_unit_id: str) -> object:
+    status = _cli(profile, "--format", "json", "app", "modelo", "work", "status", work_unit_id)
+    assert status.exit_code == 0, status.output
+    return unwrap_schema_envelope(status.output)["current_calculation_revision_id"]
+
+
+@pytest.mark.parametrize(
+    ("option_arguments", "named_option"),
+    (
+        pytest.param(("--joint-return-elected",), "--joint-return-elected", id="joint-return-elected"),
+        pytest.param(("--no-joint-return-elected",), "--joint-return-elected", id="no-joint-return-elected"),
+        pytest.param(
+            ("--m303-exonerado-390-sha256", _M303_ONLY_SHA256),
+            "--m303-exonerado-390-sha256",
+            id="exonerado-390-sha256",
+        ),
+    ),
+)
+@pytest.mark.parametrize("address_by_work_unit_id", (True, False), ids=("by-work-unit-id", "by-modelo-address"))
+def test_work_calculate_refuses_a_modelo_303_option_on_modelo_100_at_the_boundary(
+    tmp_path: Path, option_arguments: tuple[str, ...], named_option: str, address_by_work_unit_id: bool
+) -> None:
+    """A Modelo 303 filing-evidence option on a Modelo 100 calculation ends at the CLI, naming the option."""
+    with _operator_profile(tmp_path, _M100_FACTS) as profile:
+        work_unit_id = _m100_work_unit(profile)
+        address = (
+            (work_unit_id,)
+            if address_by_work_unit_id
+            else ("--modelo", "100", "--year", "2024", "--period", "0A", "--revision", "2024")
+        )
+        refused = _cli(profile, "--language", "en", "app", "modelo", "work", "calculate", *address, *option_arguments)
+        head = _current_calculation_head(profile, work_unit_id)
+
+    assert refused.exit_code != 0, refused.output
+    assert named_option in refused.output
+    assert "belong to Modelo 303 only" in refused.output
+    assert "Modelo 100 takes none of these options" in refused.output
+    assert "nothing was calculated" in refused.output
+    # A refusal the application raised would carry a runtime operation id and a
+    # filing-evidence condition; this one never reached the runtime.
+    assert "Operation id" not in refused.output
+    assert "m303_filing_evidence" not in refused.output
+    assert head in ("", None)
+
+
+def test_work_calculate_modelo_100_without_a_modelo_303_option_is_unaffected(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """Modelo 100 still calculates when none of the Modelo 303 options is supplied."""
+    with _operator_profile(tmp_path, _M100_FACTS) as profile:
+        work_unit_id = _m100_work_unit(profile)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            _seed_prior_m100_zero_carry()
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions((m100_activity_income_transaction(),)),
+            )
+            InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
+        imputation = _cli(
+            profile,
+            "config",
+            "profile",
+            "edit",
+            _PROFILE_LABEL,
+            "--quiet",
+            "--irpf-activity-income-imputation-criterion",
+            "cobros_y_pagos",
+            "--irpf-activity-income-imputation-year",
+            "2024",
+            "--no-irpf-codigo-comercio-accounting",
+        )
+        assert imputation.exit_code == 0, imputation.output
+        calculated = _cli(profile, "--format", "json", "app", "modelo", "work", "calculate", work_unit_id)
+        head = _current_calculation_head(profile, work_unit_id)
+
+    assert calculated.exit_code == 0, calculated.output
+    assert head == unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
+
+
+def test_work_calculate_modelo_303_still_takes_the_joint_return_option(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The option on the modelo that declares it passes the boundary and calculates."""
+    with _operator_profile(tmp_path) as profile:
+        work_unit = _create_303_work_unit(profile)
+        with _opened_profile(profile, authority_operation) as bucket_id:
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(TransactionCatalogue.from_transactions(()))
+            _seed_zero_iva_wallet_decision()
+        calculated = _cli(
+            profile,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(work_unit["work_unit_id"]),
+            *joint_return_options(),
+        )
+    assert calculated.exit_code == 0, calculated.output

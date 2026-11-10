@@ -33,6 +33,7 @@ from .....domain.bienes_inversion.register import (
 )
 from .....domain.bienes_inversion.vocabulary import BienInversionKind
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.transactions.classification_effects import fields_refused_by_classification
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -88,6 +89,8 @@ def _investment(
             "investment_asset_id": asset_id,
             "business_classification": business_classification,
             "lifecycle_state": lifecycle_state,
+            # A personal row is written without the business figures it refuses; it still names the good.
+            **dict.fromkeys(fields_refused_by_classification(business_classification)),
         }
     )
     return Transaction.model_validate(payload)

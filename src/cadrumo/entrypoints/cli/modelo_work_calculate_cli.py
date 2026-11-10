@@ -32,6 +32,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.rescate_type import RescateType
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from .argument_only_refusals import refuse_filing_evidence_options_for_other_modelo
 from .common import emit_envelope, no_active_profile_refusal
 from .modelo_cli_support import (
     calculation_overrides,
@@ -141,6 +142,14 @@ def run_work_calculate(
         period=period,
         revision=revision,
         bucket_id=bucket_id,
+    )
+    refuse_filing_evidence_options_for_other_modelo(
+        str(unit.modelo),
+        {
+            "joint_return_elected": joint_return_elected,
+            "m303_exonerado_390_attachment_id": m303_exonerado_390_attachment_id,
+            "m303_exonerado_390_sha256": m303_exonerado_390_sha256,
+        },
     )
     casilla_pairs, binding_pairs, relation_pairs, detail_rows = parse_work_calculate_wire_specs(
         casilla=casilla, binding=binding, relation=relation, row=row

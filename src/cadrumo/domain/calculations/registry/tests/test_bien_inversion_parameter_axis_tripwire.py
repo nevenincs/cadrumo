@@ -24,6 +24,7 @@ from __future__ import annotations
 import pytest
 
 from ..authority import PinnedAuthorityOperation
+from .authored_editions import authored_revisions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -33,14 +34,7 @@ _FAMILY = "bien-inversion-"
 #: Every modelo 303 revision. Modelo 390 is deliberately absent: its revisions
 #: declare ``parameters`` not applicable, on the verified ground that the resumen
 #: anual restates the periodic outcome and applies no figure of its own.
-_REVISION_IDS = (
-    "2022",
-    "2023",
-    "2024-hasta-08-y-2t",
-    "2024-desde-09-y-3t",
-    "2025",
-    "2026-y-siguientes",
-)
+_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("303"))
 
 _EXPECTED_SLUGS = frozenset(
     {

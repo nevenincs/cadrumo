@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....application.modelo.work_form_models import (
-    ModeloFormField,
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormOrigin,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
     confirmable,
     section_fields,
 )

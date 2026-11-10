@@ -21,10 +21,21 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 from dev.packaging import authority_staging
 from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.edition_delta_assessment import MigrationAssessment, assess_migration_state
+from dev.registry.tests.synthetic_delta_edition_support import (
+    PREDECESSOR_EDITION,
+    PREDECESSOR_EDITION_YEAR,
+    SUCCESSOR_EDITION,
+    SUCCESSOR_EDITION_YEAR,
+)
 from dev.registry.tests.test_restated_family_merge import build_modelo
 
 from .. import (
@@ -46,9 +57,21 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Boundary years just outside the two synthetic editions the fixture builds.
+_BELOW_EDITIONS_YEAR = PREDECESSOR_EDITION_YEAR - 1
+_ABOVE_EDITIONS_YEAR = SUCCESSOR_EDITION_YEAR + 1
+# An edition id and a year no fixture edition carries, distinct from both of its editions.
+_UNRELATED_FROM_YEAR = PREDECESSOR_EDITION_YEAR - 3
+_UNRELATED_FROM_EDITION = str(_UNRELATED_FROM_YEAR)
+_M188_EDITION = str(open_ended_revision("188").id)
+_M131_FILING_YEAR = filing_year_envelope().floor
+_M131_EDITION = str(revision_covering("131", _M131_FILING_YEAR).id)
+
 
 def _support() -> SupportedFilingYearsCatalogue:
-    return SupportedFilingYearsCatalogue(floor=2024, horizon=2025, hard_ceiling=2025)
+    return SupportedFilingYearsCatalogue(
+        floor=PREDECESSOR_EDITION_YEAR, horizon=SUCCESSOR_EDITION_YEAR, hard_ceiling=SUCCESSOR_EDITION_YEAR
+    )
 
 
 def _finding_fields(item: object) -> tuple[object, ...]:
@@ -101,17 +124,17 @@ def test_assessment_coverage_detects_a_skipped_scalar_bucket(tmp_path: Path) -> 
         stage="source",
     )
 
-    assert {str(item["revision"]) for item in gaps} == {"2024", "2025"}
+    assert {str(item["revision"]) for item in gaps} == {PREDECESSOR_EDITION, SUCCESSOR_EDITION}
     assert {item["family"] for item in gaps} == {"$scalars"}
     assert {item["reason"] for item in gaps} == {"assessment_row_missing"}
 
 
 def test_explicit_root_is_classified_instead_of_becoming_a_minimality_blind_spot(tmp_path: Path) -> None:
     modelo = build_modelo(tmp_path)
-    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    manifest = modelo / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            'predecessor = "2024"',
+            f'predecessor = "{PREDECESSOR_EDITION}"',
             'predecessor = { none = { cause = "predecessor_row_without_lineage", reason = "migration" } }',
         ),
         encoding="utf-8",
@@ -120,19 +143,19 @@ def test_explicit_root_is_classified_instead_of_becoming_a_minimality_blind_spot
 
     roots = registry_collapse_roots.root_eligibility(modelo)
 
-    successor = [item for item in roots if item["revision"] == "2025" and item["family"] == "formulas"]
+    successor = [item for item in roots if item["revision"] == SUCCESSOR_EDITION and item["family"] == "formulas"]
     assert successor == [
         {
-            "revision": "2025",
+            "revision": SUCCESSOR_EDITION,
             "family": "formulas",
             "status": registry_collapse_models.RootEligibility.CANDIDATE,
-            "candidate": "2024",
+            "candidate": PREDECESSOR_EDITION,
             "explicit_root": True,
         }
     ]
     overlap = registry_collapse_roots.root_overlap_diagnostics(modelo, roots)
     assert any(
-        item["revision"] == "2025"
+        item["revision"] == SUCCESSOR_EDITION
         and item["family"] == "formulas"
         and item["reason"] == "raw same-storage-id overlap requires baseline conversion proof"
         for item in overlap
@@ -141,31 +164,31 @@ def test_explicit_root_is_classified_instead_of_becoming_a_minimality_blind_spot
 
 def test_parallel_applicability_branch_is_not_reported_as_a_storage_candidate(tmp_path: Path) -> None:
     modelo = build_modelo(tmp_path)
-    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    manifest = modelo / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8")
-        .replace("valid_from = 2025-01-01", "valid_from = 2024-01-01")
+        .replace(f"valid_from = {SUCCESSOR_EDITION}-01-01", f"valid_from = {PREDECESSOR_EDITION}-01-01")
         .replace(
-            'period_selector = { years = [2025], periods = ["0A"] }',
-            'period_selector = { years = [2024], periods = ["0A"] }',
+            f'period_selector = {{ years = [{SUCCESSOR_EDITION}], periods = ["0A"] }}',
+            f'period_selector = {{ years = [{PREDECESSOR_EDITION}], periods = ["0A"] }}',
         )
-        .replace('predecessor = "2024"', 'predecessor = { none = { reason = "parallel scheme" } }'),
+        .replace(f'predecessor = "{PREDECESSOR_EDITION}"', 'predecessor = { none = { reason = "parallel scheme" } }'),
         encoding="utf-8",
         newline="\n",
     )
 
     roots = registry_collapse_roots.root_eligibility(modelo)
 
-    successor = [item for item in roots if item["revision"] == "2025" and item["family"] == "formulas"]
+    successor = [item for item in roots if item["revision"] == SUCCESSOR_EDITION and item["family"] == "formulas"]
     assert successor[0]["status"] == registry_collapse_models.RootEligibility.INCOMPATIBLE
 
 
 def test_grounded_lower_grade_root_is_not_reported_as_a_storage_candidate(tmp_path: Path) -> None:
     modelo = build_modelo(tmp_path)
-    manifest = modelo / "revisions" / "2025" / "revision.toml"
+    manifest = modelo / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            'predecessor = "2024"',
+            f'predecessor = "{PREDECESSOR_EDITION}"',
             'predecessor = { none = { cause = "lower_grade", reason = "The successor has lower authority." } }',
         ),
         encoding="utf-8",
@@ -175,7 +198,7 @@ def test_grounded_lower_grade_root_is_not_reported_as_a_storage_candidate(tmp_pa
     successor = [
         item
         for item in registry_collapse_roots.root_eligibility(modelo)
-        if item["revision"] == "2025" and item["family"] == "casillas"
+        if item["revision"] == SUCCESSOR_EDITION and item["family"] == "casillas"
     ]
 
     assert successor[0]["status"] == registry_collapse_models.RootEligibility.INCOMPATIBLE
@@ -193,8 +216,8 @@ def test_nonminimal_unchanged_candidate_is_reported_as_a_converter_defect(tmp_pa
         source,
         candidate,
         support=_support(),
-        floor=2024,
-        ceiling=2025,
+        floor=PREDECESSOR_EDITION_YEAR,
+        ceiling=SUCCESSOR_EDITION_YEAR,
         converter=dishonest_noop,
     )
 
@@ -228,7 +251,7 @@ def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path:
     before = load_modelo_directory(source)
     candidate = tmp_path / "candidate"
     shutil.copytree(source, candidate)
-    formula = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    formula = candidate / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
     formula.write_text(
         formula.read_text(encoding="utf-8").replace('literal = "0"', 'literal = "7"', 1),
         encoding="utf-8",
@@ -267,7 +290,7 @@ def test_typed_comparison_reads_an_entity_set_as_a_set() -> None:
 
 def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_provenance(tmp_path: Path) -> None:
     loaded = load_modelo_directory(build_modelo(tmp_path))
-    revision = loaded.revisions["2025"]
+    revision = loaded.revisions[SUCCESSOR_EDITION]
     casillas = tuple(
         casilla.model_copy(update={"continuidad_origin": CasillaLineageOrigin.SEEDED, "continuidad_evidence": None})
         if str(casilla.continuidad_id) == "cuota"
@@ -278,16 +301,16 @@ def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_proven
     attestation = LineageAttestation(
         family="casillas",
         continuidad_id="cuota",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=PREDECESSOR_EDITION,
+        to_revision=SUCCESSOR_EDITION,
         origin="seeded",
         legal_refs=row.legal_refs,
         source_refs=row.source_refs,
     )
     inline_revision = revision.model_copy(update={"casillas": casillas})
     sidecar_revision = inline_revision.model_copy(update={"lineage_attestations": (attestation,)})
-    inline = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": inline_revision}})
-    sidecar = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": sidecar_revision}})
+    inline = loaded.model_copy(update={"revisions": {**loaded.revisions, SUCCESSOR_EDITION: inline_revision}})
+    sidecar = loaded.model_copy(update={"revisions": {**loaded.revisions, SUCCESSOR_EDITION: sidecar_revision}})
 
     assert (
         registry_collapse_comparison.compare_modelos(inline, sidecar).status
@@ -296,7 +319,7 @@ def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_proven
 
     altered = attestation.model_copy(update={"source_refs": ("other-source",)})
     altered_revision = inline_revision.model_copy(update={"lineage_attestations": (altered,)})
-    altered_modelo = loaded.model_copy(update={"revisions": {**loaded.revisions, "2025": altered_revision}})
+    altered_modelo = loaded.model_copy(update={"revisions": {**loaded.revisions, SUCCESSOR_EDITION: altered_revision}})
     result = registry_collapse_comparison.compare_modelos(inline, altered_modelo)
     assert result.status is registry_collapse_models.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "mapping_keys_changed"
@@ -311,13 +334,13 @@ def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_proven
     [
         ("source_refs", ("other-source",)),
         ("legal_refs", ("other:article",)),
-        ("from_revision", "2021"),
-        ("to_revision", "2024"),
+        ("from_revision", _UNRELATED_FROM_EDITION),
+        ("to_revision", PREDECESSOR_EDITION),
     ],
 )
 def test_distinct_lineage_citations_and_edges_survive_typed_comparison(field: str, value: object) -> None:
     modelo = load_modelo_directory(REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/188")
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_M188_EDITION]
     assert revision.lineage_attestations
     assert (
         registry_collapse_comparison.compare_modelos(modelo, modelo).status
@@ -346,7 +369,7 @@ def test_distinct_lineage_citations_and_edges_survive_typed_comparison(field: st
 
 def test_lineage_claim_projection_still_refuses_an_unhydrated_origin() -> None:
     modelo = load_modelo_directory(REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/188")
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_M188_EDITION]
     changed = revision.lineage_attestations[0].model_copy(update={"origin": CasillaLineageOrigin.SEEDED})
     changed_revision = revision.model_copy(
         update={"lineage_attestations": (changed, *revision.lineage_attestations[1:])}
@@ -361,7 +384,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     finding = {
-        "revision": "2025",
+        "revision": SUCCESSOR_EDITION,
         "family": "casillas",
         "member": "0001",
         "fields": ["source_refs"],
@@ -382,7 +405,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
         unresolved_duplication=(finding,),
         blocked_work=(),
         by_revision_family=(
-            {"revision": "2025", "family": "casillas", "genuine_overrides": 0, "redundant_overrides": 1},
+            {"revision": SUCCESSOR_EDITION, "family": "casillas", "genuine_overrides": 0, "redundant_overrides": 1},
         ),
     )
     monkeypatch.setattr(
@@ -390,7 +413,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
-                "2025": {
+                SUCCESSOR_EDITION: {
                     "casilla_source_refs": ["successor-default"],
                     "casilla_overrides": [
                         {"selector": {"id": "0001"}, "fields": {"source_refs": ["predecessor-source"]}}
@@ -411,7 +434,7 @@ def test_successor_default_drift_makes_matching_predecessor_source_override_genu
 
 def test_override_equal_to_successor_default_remains_redundant(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     finding = {
-        "revision": "2025",
+        "revision": SUCCESSOR_EDITION,
         "family": "casillas",
         "member": "0001",
         "fields": ["source_refs"],
@@ -438,7 +461,7 @@ def test_override_equal_to_successor_default_remains_redundant(tmp_path: Path, m
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
-                "2025": {
+                SUCCESSOR_EDITION: {
                     "casilla_source_refs": ["same-source"],
                     "casilla_overrides": [{"selector": {"id": "0001"}, "fields": {"source_refs": ["same-source"]}}],
                 }
@@ -453,7 +476,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     finding = {
-        "revision": "2025",
+        "revision": SUCCESSOR_EDITION,
         "family": "casillas",
         "member": "01",
         "fields": ["data_type", "number"],
@@ -475,7 +498,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
         blocked_work=(),
         by_revision_family=(
             {
-                "revision": "2025",
+                "revision": SUCCESSOR_EDITION,
                 "family": "casillas",
                 "genuine_overrides": 0,
                 "redundant_overrides": 2,
@@ -488,9 +511,9 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
         "load_modelo_declarations",
         lambda _path: {
             "revisions": {
-                "2024": {"casillas": [{"id": "01", "continuidad_id": "old-concept"}]},
-                "2025": {
-                    "predecessor": "2024",
+                PREDECESSOR_EDITION: {"casillas": [{"id": "01", "continuidad_id": "old-concept"}]},
+                SUCCESSOR_EDITION: {
+                    "predecessor": PREDECESSOR_EDITION,
                     "casillas": [{"id": "01", "continuidad_id": "new-concept", "number": "01"}],
                 },
             }
@@ -510,7 +533,7 @@ def test_reused_storage_id_with_new_lineage_is_an_addition_not_a_redundant_overr
 @pytest.mark.parametrize("required_field", ["number", "section"])
 def test_new_storage_row_still_requires_schema_fields(tmp_path: Path, required_field: str) -> None:
     modelo = load_modelo_directory(build_modelo(tmp_path))
-    payload = modelo.revisions["2025"].casillas[0].model_dump(mode="python")
+    payload = modelo.revisions[SUCCESSOR_EDITION].casillas[0].model_dump(mode="python")
     payload.pop(required_field)
 
     with pytest.raises(ValidationError, match=required_field):
@@ -534,7 +557,7 @@ def test_tree_fingerprint_detects_changed_input(tmp_path: Path) -> None:
 def test_request_matrix_includes_authored_and_global_boundary_coordinates(tmp_path: Path) -> None:
     modelo = load_modelo_directory(build_modelo(tmp_path))
 
-    matrix = registry_collapse_requests.request_matrix(modelo, floor=2023, ceiling=2026)
+    matrix = registry_collapse_requests.request_matrix(modelo, floor=_BELOW_EDITIONS_YEAR, ceiling=_ABOVE_EDITIONS_YEAR)
 
     cases = {item.case for item in matrix}
     assert {"exact", "valid_from", "valid_to", "support_floor", "support_ceiling"} <= cases
@@ -707,7 +730,7 @@ def test_indexed_revision_and_snapshot_parity_include_form_layout_components(tmp
         profile_schema=source_artifact.profile_schema,
     )
     coordinate = registry_collapse_models.RequestCoordinate(
-        filing_year=2024,
+        filing_year=source_revision.valid_from.year,
         period="0A",
         on=None,
         revision_id=str(source_revision.id),
@@ -790,10 +813,10 @@ def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layo
     indexed_authority = IndexedRegistryAuthority(committed_published_authority.descriptor_path)
 
     coordinate = registry_collapse_models.RequestCoordinate(
-        filing_year=2022,
+        filing_year=_M131_FILING_YEAR,
         period="1T",
         on=None,
-        revision_id="2019-2023",
+        revision_id=_M131_EDITION,
         case="source-index-form-layout",
     )
     source = registry_collapse_authority_queries.snapshot_result(registry_authority.snapshot, "131", coordinate)
@@ -839,7 +862,7 @@ def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layo
         assert isinstance(revision, Mapping)
         revisions = modelo["revisions"]
         assert isinstance(revisions, Mapping)
-        selected = revisions["2019-2023"]
+        selected = revisions[_M131_EDITION]
         assert isinstance(selected, Mapping)
         return cast(Mapping[str, object], selected), cast(Mapping[str, object], revision)
 
@@ -856,7 +879,7 @@ def test_real_modelo_131_snapshot_parity_preserves_raw_and_effective_export_layo
     from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 
     declared_revision = next(modelo for modelo in registry_authority.modelos if modelo.id == "131").revisions[
-        "2019-2023"
+        _M131_EDITION
     ]
     assert source_declared_counts == tuple(
         tuple(len(record.fields) for record in layout.records) for layout in declared_revision.export_layouts
@@ -949,14 +972,14 @@ def test_root_eligibility_still_refuses_a_schedule_left_without_any_source(tmp_p
 def _source_default_lift_pair(tmp_path: Path, family: str, default_key: str) -> tuple[Path, Path]:
     """Two real directory-loader inputs: explicit row sources versus an edition default."""
     source = build_modelo(tmp_path / "source")
-    parameters = source / "revisions" / "2025" / "parameters"
+    parameters = source / "revisions" / SUCCESSOR_EDITION / "parameters"
     parameters.mkdir()
     (parameters / "0001-money.toml").write_text(
-        '[[revisions."2025".parameters]]\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".parameters]]\n'
         'id = "comparison-money"\n'
         'data_type = "money"\n'
         'unit = "EUR"\n'
-        'values = [{value = "0", date_axis = "filing_period", valid_from = 2025-01-01}]\n'
+        f'values = [{{value = "0", date_axis = "filing_period", valid_from = {SUCCESSOR_EDITION}-01-01}}]\n'
         'legal_refs = ["ley-58-2003:art-29"]\n'
         'source_refs = ["aeat-manual"]\n',
         encoding="utf-8",
@@ -964,7 +987,7 @@ def _source_default_lift_pair(tmp_path: Path, family: str, default_key: str) -> 
     )
     candidate = tmp_path / "candidate"
     shutil.copytree(source, candidate)
-    for revision_id in ("2024", "2025"):
+    for revision_id in (PREDECESSOR_EDITION, SUCCESSOR_EDITION):
         revision_dir = candidate / "revisions" / revision_id
         manifest = revision_dir / "revision.toml"
         header = f'[revisions."{revision_id}"]\n'
@@ -999,7 +1022,9 @@ def test_typed_comparison_accepts_real_source_default_lift(tmp_path: Path, famil
         registry_collapse_comparison.compare_modelos(before, after).status
         is registry_collapse_models.CheckStatus.PASSED
     )
-    temporal = registry_collapse_requests.compare_temporal(before, after, support=_support(), floor=2024, ceiling=2025)
+    temporal = registry_collapse_requests.compare_temporal(
+        before, after, support=_support(), floor=PREDECESSOR_EDITION_YEAR, ceiling=SUCCESSOR_EDITION_YEAR
+    )
     assert temporal.checked > 0
     assert temporal.status is registry_collapse_models.CheckStatus.PASSED
     assert temporal.differences == ()
@@ -1021,15 +1046,15 @@ def test_source_default_lift_still_detects_resolved_meaning_changes(
     source, candidate = _source_default_lift_pair(tmp_path, "formulas", "formula_source_refs")
     before = load_modelo_directory(source)
     if changed_field == "default_source":
-        owner = candidate / "revisions" / "2025" / "revision.toml"
+        owner = candidate / "revisions" / SUCCESSOR_EDITION / "revision.toml"
         old, new = 'formula_source_refs = ["aeat-manual"]', 'formula_source_refs = ["other-source"]'
     elif changed_field == "financial_value":
-        owner = candidate / "revisions" / "2025" / "parameters" / "0001-money.toml"
+        owner = candidate / "revisions" / SUCCESSOR_EDITION / "parameters" / "0001-money.toml"
         old, new = 'value = "0"', 'value = "7"'
     else:
-        owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+        owner = candidate / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
         if changed_field == "source_refs":
-            old = '[[revisions."2025".formulas]]\n'
+            old = f'[[revisions."{SUCCESSOR_EDITION}".formulas]]\n'
             new = old + 'source_refs = ["other-source"]\n'
         elif changed_field == "legal_refs":
             old, new = 'legal_refs = ["ley-58-2003:art-29"]', 'legal_refs = ["ley-58-2003:art-30"]'
@@ -1044,7 +1069,9 @@ def test_source_default_lift_still_detects_resolved_meaning_changes(
     assert result.differences[0]["reason"] == "value_changed"
     assert str(result.differences[0]["location"]).endswith(expected_location)
     assert (
-        registry_collapse_requests.compare_temporal(before, after, support=_support(), floor=2024, ceiling=2025).status
+        registry_collapse_requests.compare_temporal(
+            before, after, support=_support(), floor=PREDECESSOR_EDITION_YEAR, ceiling=SUCCESSOR_EDITION_YEAR
+        ).status
         is registry_collapse_models.CheckStatus.FAILED
     )
 
@@ -1056,7 +1083,7 @@ def test_source_default_lift_does_not_ignore_review_metadata(tmp_path: Path) -> 
         registry_collapse_comparison.compare_modelos(before, lifted).status
         is registry_collapse_models.CheckStatus.PASSED
     )
-    revision = lifted.revisions["2025"].model_copy(update={"reviewed_by": "different-reviewer"})
+    revision = lifted.revisions[SUCCESSOR_EDITION].model_copy(update={"reviewed_by": "different-reviewer"})
     changed = lifted.model_copy(update={"revisions": {**lifted.revisions, revision.id: revision}})
     result = registry_collapse_comparison.compare_modelos(before, changed)
     assert result.status is registry_collapse_models.CheckStatus.FAILED
@@ -1072,7 +1099,7 @@ def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, di
         'expression = { dispatch_table_entries = [{ key = "' + dispatch_key + '", parameter = "comparison-money" }] }'
     )
     for directory in (source, candidate):
-        parameters = directory / "revisions" / "2025" / "parameters" / "0001-money.toml"
+        parameters = directory / "revisions" / SUCCESSOR_EDITION / "parameters" / "0001-money.toml"
         text = parameters.read_text(encoding="utf-8")
         parameters.write_text(
             text
@@ -1082,7 +1109,7 @@ def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, di
             encoding="utf-8",
             newline="\n",
         )
-        formulas = directory / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+        formulas = directory / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
         text = formulas.read_text(encoding="utf-8")
         assert original_expression in text
         formulas.write_text(text.replace(original_expression, dispatched_expression, 1), encoding="utf-8", newline="\n")
@@ -1093,17 +1120,19 @@ def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, di
         is registry_collapse_models.CheckStatus.PASSED
     )
     assert (
-        registry_collapse_requests.compare_temporal(before, lifted, support=_support(), floor=2024, ceiling=2025).status
+        registry_collapse_requests.compare_temporal(
+            before, lifted, support=_support(), floor=PREDECESSOR_EDITION_YEAR, ceiling=SUCCESSOR_EDITION_YEAR
+        ).status
         is registry_collapse_models.CheckStatus.PASSED
     )
     expression = next(
         formula.expression
-        for formula in lifted.revisions["2025"].formulas
+        for formula in lifted.revisions[SUCCESSOR_EDITION].formulas
         if formula.expression.dispatch_table is not None
     )
     assert expression.dispatch_table == {dispatch_key: "comparison-money"}
 
-    owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    owner = candidate / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
     text = owner.read_text(encoding="utf-8")
     assert text.count('parameter = "comparison-money"') == 1
     owner.write_text(
@@ -1114,7 +1143,7 @@ def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, di
     changed = load_modelo_directory(candidate)
     changed_expression = next(
         formula.expression
-        for formula in changed.revisions["2025"].formulas
+        for formula in changed.revisions[SUCCESSOR_EDITION].formulas
         if formula.expression.dispatch_table is not None
     )
     assert changed_expression.dispatch_table == {dispatch_key: "comparison-money-other"}
@@ -1124,13 +1153,13 @@ def test_source_default_names_remain_meaningful_dispatch_keys(tmp_path: Path, di
     assert str(result.differences[0]["location"]).endswith(".expression.dispatch_table." + dispatch_key)
     assert (
         registry_collapse_requests.compare_temporal(
-            before, changed, support=_support(), floor=2024, ceiling=2025
+            before, changed, support=_support(), floor=PREDECESSOR_EDITION_YEAR, ceiling=SUCCESSOR_EDITION_YEAR
         ).status
         is registry_collapse_models.CheckStatus.FAILED
     )
     revision_difference = registry_collapse_comparison.first_difference(
-        registry_collapse_comparison.typed_projection(before.revisions["2025"]),
-        registry_collapse_comparison.typed_projection(changed.revisions["2025"]),
+        registry_collapse_comparison.typed_projection(before.revisions[SUCCESSOR_EDITION]),
+        registry_collapse_comparison.typed_projection(changed.revisions[SUCCESSOR_EDITION]),
     )
     assert revision_difference is not None
     assert str(revision_difference["location"]).endswith(".expression.dispatch_table." + dispatch_key)
@@ -1146,8 +1175,8 @@ def _comparison_snapshot(modelo: ModeloDefinition) -> RegistrySnapshot:
     """Wrap real loader output in a validated typed snapshot for projection tests."""
     return RegistrySnapshot(
         modelo=modelo,
-        revision=modelo.revisions["2025"],
-        filing_year=2025,
+        revision=modelo.revisions[SUCCESSOR_EDITION],
+        filing_year=SUCCESSOR_EDITION_YEAR,
         period="0A",
         legal={},
         sources={},
@@ -1171,7 +1200,7 @@ def test_source_default_lift_keeps_typed_snapshot_context(tmp_path: Path) -> Non
     equivalent = registry_collapse_comparison.typed_projection(_comparison_snapshot(lifted))
     assert registry_collapse_comparison.first_difference(original, equivalent) is None
 
-    owner = candidate / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    owner = candidate / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
     text = owner.read_text(encoding="utf-8")
     assert 'expression = { literal = "0" }' in text
     owner.write_text(

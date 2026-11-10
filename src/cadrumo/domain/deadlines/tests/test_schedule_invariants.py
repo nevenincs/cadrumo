@@ -25,6 +25,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..festivos import DeadlineHolidayCoverage
 from ..models import (
     CrossPeriodGroupMemberRoster,
@@ -36,7 +37,8 @@ from ..models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_UTC_STAMP = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_UTC_STAMP = datetime(_YEAR, 1, 1, 12, 0, tzinfo=UTC)
 
 
 def _profile() -> TaxpayerProfile:
@@ -59,8 +61,8 @@ def _obligation(*, filing_year: int, code: str = "1T") -> ModeloDeadline:
 def _schedule(**overrides: Any) -> Schedule:
     payload: dict[str, Any] = {
         "profile": _profile(),
-        "year": 2026,
-        "obligations": (_obligation(filing_year=2026),),
+        "year": _YEAR,
+        "obligations": (_obligation(filing_year=_YEAR),),
         "generated_at": _UTC_STAMP,
     }
     payload.update(overrides)
@@ -84,15 +86,15 @@ class TestTargetYearIsNotBoundToObligationFilingYear:
     """
 
     def test_a_schedule_may_carry_a_prior_tax_year_obligation(self) -> None:
-        january_annual_summary = _obligation(filing_year=2025, code="0A")
+        january_annual_summary = _obligation(filing_year=_YEAR - 1, code="0A")
 
-        schedule = _schedule(year=2026, obligations=(january_annual_summary,))
+        schedule = _schedule(year=_YEAR, obligations=(january_annual_summary,))
 
-        assert schedule.year == 2026
-        assert schedule.obligations[0].period.filing_year == 2025
+        assert schedule.year == _YEAR
+        assert schedule.obligations[0].period.filing_year == _YEAR - 1
 
     def test_a_same_year_schedule_is_equally_valid(self) -> None:
-        assert _schedule().obligations[0].period.filing_year == 2026
+        assert _schedule().obligations[0].period.filing_year == _YEAR
 
     def test_an_empty_schedule_remains_valid(self) -> None:
         assert _schedule(obligations=()).obligations == ()
@@ -109,18 +111,18 @@ class TestGeneratedAtIsUtc:
 
     def test_a_naive_stamp_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            _schedule(generated_at=datetime(2026, 1, 1, 12, 0))
+            _schedule(generated_at=datetime(_YEAR, 1, 1, 12, 0))
 
     @pytest.mark.parametrize("offset_hours", [1, -5, 2])
     def test_a_non_utc_offset_is_refused(self, offset_hours: int) -> None:
-        stamp = datetime(2026, 1, 1, 12, 0, tzinfo=timezone(timedelta(hours=offset_hours)))
+        stamp = datetime(_YEAR, 1, 1, 12, 0, tzinfo=timezone(timedelta(hours=offset_hours)))
 
         with pytest.raises(ValidationError):
             _schedule(generated_at=stamp)
 
     def test_a_zero_offset_tzinfo_is_accepted(self) -> None:
         """UTC-equivalence is the contract, not the tzinfo object's identity."""
-        stamp = datetime(2026, 1, 1, 12, 0, tzinfo=timezone(timedelta(0)))
+        stamp = datetime(_YEAR, 1, 1, 12, 0, tzinfo=timezone(timedelta(0)))
 
         assert _schedule(generated_at=stamp).generated_at == _UTC_STAMP
 
@@ -167,10 +169,10 @@ class TestModeloIdentitySyntax:
 def _obligation_with_modelo(raw: object) -> ModeloDeadline:
     return ModeloDeadline(
         modelo=raw,  # type: ignore[arg-type]
-        period=Period.from_year_and_code(2026, "1T"),
-        opens_on=date(2026, 4, 1),
-        closes_on=date(2026, 4, 20),
-        adjusted_closes_on=date(2026, 4, 20),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        opens_on=date(_YEAR, 4, 1),
+        closes_on=date(_YEAR, 4, 20),
+        adjusted_closes_on=date(_YEAR, 4, 20),
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         shift_reason="business_day",
         status=ObligationStatus.UPCOMING,
@@ -180,7 +182,7 @@ def _obligation_with_modelo(raw: object) -> ModeloDeadline:
 def _roster(raw: object) -> CrossPeriodGroupMemberRoster:
     return CrossPeriodGroupMemberRoster(
         source_modelo=raw,  # type: ignore[arg-type]
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         member_nifs=("12345678Z",),
     )

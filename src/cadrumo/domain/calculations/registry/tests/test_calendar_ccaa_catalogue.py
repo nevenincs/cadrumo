@@ -11,10 +11,11 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ..calendar_ccaa_catalogue import ENTRIES_FACT, catalogue, resolve_calendar_ccaa_catalogue
 from ..errors import RegistryValidationError
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EFFECTIVE = date(2026, 4, 1)
+_EFFECTIVE = date(filing_year_envelope().horizon, 4, 1)
 
 # ISO 3166-2:ES subdivision codes of the fifteen common-regime communities, the
 # two foral communities and the two autonomous cities, written out independently

@@ -21,7 +21,9 @@ DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
     True,
     False,
     False,
+    False,
 )
+NON_BLANK_CONSTRAINT_CONTRACT: Final[tuple[object, ...]] = (*DEFAULT_CONSTRAINT[:-1], True)
 _NO_TRANSPORT: Final[tuple[str, ...]] = ("none", "not_applicable", "not_applicable")
 
 REQUIRED_DEFAULT: Final[tuple[object, ...]] = ("REQUIRED", None, None)
@@ -216,6 +218,7 @@ def _constraint_contract(parameter: ParameterSpec) -> tuple[object, ...]:
         constraint.readable,
         constraint.resolve_path,
         constraint.allow_dash,
+        constraint.non_blank,
     )
 
 

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Callable
 
 from .....core.resources.bundled_data import bundled_path
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
+from .authored_editions import authored_revisions, open_ended_revision, supported_authored_exercises
 from .snapshot_support import build_snapshot
 
 
@@ -21,15 +23,21 @@ def check_modelo_303_monthly_snapshot_resolves_for_each_period(
     RegistrySnapshotError."""
     modelo, catalogues = load_modelo_303()
 
-    for period in ("01", "06", "12"):
+    for exercise, period in itertools.product(dict.fromkeys(supported_authored_exercises("303")), ("01", "06", "12")):
         snapshot = build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2025,
+            filing_year=exercise,
             period=period,
         )
-        assert snapshot.revision.id == "2025"
+        governing = {
+            str(revision.id)
+            for revision in authored_revisions("303")
+            if revision.valid_from.year <= exercise
+            and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        }
+        assert snapshot.revision.id in governing, f"exercise {exercise} period {period}"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
         assert "modelo-303-mensual" in schedule_ids, f"monthly schedule absent for period {period}"
 
@@ -49,7 +57,7 @@ def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profile
     from ..schedules import applicable_filing_schedules
 
     modelo, _catalogues = load_modelo_303()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(open_ended_revision("303").id)]
 
     monthly_profiles = (
         TaxpayerProfile(

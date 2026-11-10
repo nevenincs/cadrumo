@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.shared_contracts import (
+    NON_BLANK_CONSTRAINT,
     DeferredTarget,
     LazyBinding,
     ParameterConstraint,
@@ -48,7 +49,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.id_help"),
                 metavar=None,
-                constraint=ParameterConstraint(),
+                constraint=NON_BLANK_CONSTRAINT,
                 show_default=True,
                 hidden=False,
             ),

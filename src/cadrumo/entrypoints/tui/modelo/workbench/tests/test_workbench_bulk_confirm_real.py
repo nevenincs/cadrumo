@@ -28,11 +28,13 @@ from textual.widgets import Checkbox
 from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormAddressV1,
     ModeloFormBindingAddressV1,
-    ModeloFormField,
     ModeloFormOrigin,
+)
+from ......application.modelo.work_form_models import (
+    ModeloFormField,
     confirmable,
 )
 from ......application.modelo.work_form_wording import origin_words

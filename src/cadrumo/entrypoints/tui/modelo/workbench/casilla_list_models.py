@@ -36,14 +36,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .....application.modelo.work_form_models import (
+from .....application.modelo.work_form_field_vocabulary import (
     ASKS_FOR_A_VALUE,
     NEEDS_ATTENTION,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormStanding,
     address_key,
 )
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_wording import origin_words
 from .grid import (
     CasillaListRecords,

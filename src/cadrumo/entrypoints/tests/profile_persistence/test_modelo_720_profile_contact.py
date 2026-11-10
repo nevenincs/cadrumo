@@ -24,7 +24,8 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.profile_binding import resolve_profile_sourced_bindings
 from cadrumo.application.modelo.profile_export_binding import resolve_declaration_contact, resolve_export_identity
 from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs
-from cadrumo.application.modelo.work_form_models import ModeloFormBindingAddressV1, ModeloFormContextFieldBlock
+from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormBindingAddressV1
+from cadrumo.application.modelo.work_form_models import ModeloFormContextFieldBlock
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts

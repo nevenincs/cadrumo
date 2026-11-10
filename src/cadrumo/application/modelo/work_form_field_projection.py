@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.aggregation import BindingSourceKind
+from ...domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ...domain.calculations.registry.schema import BindingDefinition
@@ -29,6 +30,16 @@ from .work_form_field_state import (
     held_value_origin,
     summarize_bindings,
 )
+from .work_form_field_vocabulary import (
+    ModeloFormBinding,
+    ModeloFormBindingAddressV1,
+    ModeloFormBlocker,
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloFormText,
+    field_standing,
+)
 from .work_form_localization import (
     casilla_help,
     fed_box_label,
@@ -36,17 +47,7 @@ from .work_form_localization import (
     normalized_help_text,
     unnamed_casilla_label,
 )
-from .work_form_models import (
-    ModeloFormBinding,
-    ModeloFormBindingAddressV1,
-    ModeloFormBlocker,
-    ModeloFormCasillaAddressV1,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormScalar,
-    ModeloFormText,
-    field_standing,
-)
+from .work_form_models import ModeloFormField
 from .work_form_rates import parse_form_number
 from .work_form_sources import bound_value_source
 from .work_review import ModeloWorkReviewCasilla
@@ -64,10 +65,7 @@ def project_casilla_field(
     required = casilla_id in context.required
     editability, reason = casilla_editability(row, context)
     origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
-    value = row.value
-    if casilla_id in context.unworked and origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
-        # The calculation said this box could not be worked out: whatever it holds is not a figure.
-        origin, value = ModeloFormOrigin.CALCULATION_FAILED, None
+    origin, value = _unworked_origin(casilla_id, origin, row.value, context)
     blockers = tuple(ModeloFormBlocker(code=blocker.native_code) for blocker in row.blocked_by)
     return ModeloFormField(
         address=ModeloFormCasillaAddressV1(casilla_id=row.casilla_id),
@@ -80,8 +78,7 @@ def project_casilla_field(
         editability=editability,
         not_writable_reason=reason,
         required=required,
-        unattributed=origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM
-        or (origin is ModeloFormOrigin.OPTIONAL_EMPTY and row.realised_kind is not ModeloValueKind.EMPTY),
+        unattributed=_unattributed(origin, row),
         role=casilla_field_role(row),
         bindings=summarize_bindings(row),
         source=bound_value_source(
@@ -97,18 +94,33 @@ def project_casilla_field(
         legal_refs=row.legal_refs,
         also_appears_on=also_appears_on,
         standing=field_standing(origin, blockers, recorded=context.filed),
-        stated_absent=(
-            next(
-                (
-                    context.stated[bound.binding_id]
-                    for bound in row.concrete_bindings[:1]
-                    if bound.binding_id in context.stated
-                ),
-                None,
-            )
-            if origin in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}
-            else None
-        ),
+        stated_absent=_stated_absence(origin, row, context),
+    )
+
+
+def _unworked_origin(
+    casilla_id: str, origin: ModeloFormOrigin, value: ModeloFormScalar | None, context: WorkFormContext
+) -> tuple[ModeloFormOrigin, ModeloFormScalar | None]:
+    if casilla_id in context.unworked and origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
+        # The calculation said this box could not be worked out: whatever it holds is not a figure.
+        return ModeloFormOrigin.CALCULATION_FAILED, None
+    return origin, value
+
+
+def _unattributed(origin: ModeloFormOrigin, row: ModeloWorkReviewCasilla) -> bool:
+    return origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM or (
+        origin is ModeloFormOrigin.OPTIONAL_EMPTY and row.realised_kind is not ModeloValueKind.EMPTY
+    )
+
+
+def _stated_absence(
+    origin: ModeloFormOrigin, row: ModeloWorkReviewCasilla, context: WorkFormContext
+) -> AbsenceAttestationFamily | None:
+    if origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
+        return None
+    return next(
+        (context.stated[bound.binding_id] for bound in row.concrete_bindings[:1] if bound.binding_id in context.stated),
+        None,
     )
 
 

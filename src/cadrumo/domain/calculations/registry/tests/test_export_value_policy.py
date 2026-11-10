@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import calendar
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -15,8 +16,14 @@ from ..errors import RegistryValidationError
 from ..export_parse import parse_export_payload
 from ..export_value_policy import ExportValuePolicy, ParsedExportPolicyWireValue, project_export_value
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_YEAR_TAIL = str(_YEAR)[-2:]
+_FULLWIDTH_YEAR = "".join(chr(ord("０") + int(digit)) for digit in str(_YEAR))
+_LEAP_YEAR = next(year for year in filing_year_envelope().years if calendar.isleap(year))
 
 _GROUNDING = {
     "legal_refs": ("ley-27-2014:art-40",),
@@ -97,12 +104,17 @@ def test_checkbox_projector_refuses_every_other_shape(value: object) -> None:
         project_export_value(ExportValuePolicy.SELECTED_1_UNSELECTED_0, value)
 
 
-@pytest.mark.parametrize(("value", "expected"), [(2026, "26"), ("2026", "26"), (1000, "00"), ("0001", "01")])
+@pytest.mark.parametrize(
+    ("value", "expected"), [(_YEAR, _YEAR_TAIL), (str(_YEAR), _YEAR_TAIL), (1000, "00"), ("0001", "01")]
+)
 def test_short_year_projector_requires_four_digits(value: object, expected: str) -> None:
     assert project_export_value(ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, value) == expected
 
 
-@pytest.mark.parametrize("value", [26, "26", True, 2026.0, Decimal("2026"), "+2026", " 2026", "２０２６"])
+@pytest.mark.parametrize(
+    "value",
+    [int(_YEAR_TAIL), _YEAR_TAIL, True, float(_YEAR), Decimal(_YEAR), f"+{_YEAR}", f" {_YEAR}", _FULLWIDTH_YEAR],
+)
 def test_short_year_projector_refuses_noncanonical_inputs(value: object) -> None:
     with pytest.raises(RegistryValidationError):
         project_export_value(ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, value)
@@ -132,11 +144,11 @@ def test_schema_hydrates_only_public_policy_tokens() -> None:
         (ExportValuePolicy.ENUMERATED_DIGITS, "2", Decimal("2")),
         (ExportValuePolicy.DIGIT_STRING, "0123", "0123"),
         (ExportValuePolicy.IDENTIFIER_DIGITS, "0012345678901", "0012345678901"),
-        (ExportValuePolicy.FOUR_DIGIT_YEAR, 2026, "2026"),
+        (ExportValuePolicy.FOUR_DIGIT_YEAR, _YEAR, str(_YEAR)),
         (ExportValuePolicy.TWO_DIGIT_MONTH, 8, "08"),
         (ExportValuePolicy.TWO_DIGIT_DAY, "9", "09"),
-        (ExportValuePolicy.YYYYMMDD, date(2024, 2, 29), "20240229"),
-        (ExportValuePolicy.DDMMYYYY, date(2024, 2, 29), "29022024"),
+        (ExportValuePolicy.YYYYMMDD, date(_LEAP_YEAR, 2, 29), f"{_LEAP_YEAR}0229"),
+        (ExportValuePolicy.DDMMYYYY, date(_LEAP_YEAR, 2, 29), f"2902{_LEAP_YEAR}"),
     ),
 )
 def test_reviewed_singleton_policies_project_exact_semantic_values(

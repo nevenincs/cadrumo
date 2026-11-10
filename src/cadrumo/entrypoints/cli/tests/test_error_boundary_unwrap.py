@@ -329,3 +329,32 @@ def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
     assert isinstance(chain, str) and _ProbeRefusal.__name__ in chain
     assert "CliUnexpectedBoundaryError" not in chain
     assert "no active bucket session; run switch" not in refusals[0].message
+
+
+def test_terminal_boundary_survives_a_too_short_identifier_validation_failure(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A request model refusing an empty identifier still yields the full refusal document.
+
+    The diagnostic record for a leaked validation error names the failure by its
+    structural kind only; the terminal document must keep the failing record, the
+    broken rule and its own exit code, and must not be replaced by a crash wrapper.
+    """
+    from uuid import uuid4
+
+    from pydantic import ValidationError
+
+    from ....application.ledger.link_operation import LedgerLinkRequest
+    from ..terminal_errors import emit_crash
+
+    with pytest.raises(ValidationError) as leaked:
+        LedgerLinkRequest(profile_id=uuid4(), transaction_id="0123456789ab", invoice_id="", actor="operator")
+
+    with pytest.raises(SystemExit) as exit_info:
+        emit_crash(leaked.value)
+
+    rendered = capsys.readouterr().err
+    assert exit_info.value.code == 2
+    assert "LedgerLinkRequest" in rendered
+    assert "at least 1 character" in rendered
+    assert "CliUnexpectedBoundaryError" not in rendered

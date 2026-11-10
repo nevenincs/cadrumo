@@ -499,12 +499,12 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
     from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
     from cadrumo.application.modelo.source_policy import SourceFamily
-    from cadrumo.application.modelo.work_form_models import (
+    from cadrumo.application.modelo.work_form_field_vocabulary import (
         ModeloFormEditability,
-        ModeloFormLayoutProvenance,
         ModeloFormOrigin,
         ModeloFormTextDisclosure,
     )
+    from cadrumo.application.modelo.work_form_models import ModeloFormLayoutProvenance
     from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
     from cadrumo.application.modelo.work_form_typing_effect import TYPING_EFFECTS
     from cadrumo.application.modelo.work_form_wording import (

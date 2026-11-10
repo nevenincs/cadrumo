@@ -40,7 +40,10 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match
-from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_selected_revision_id,
+)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -644,7 +647,8 @@ def _filed_more_than_twelve_months_late_year() -> int:
 
 def _verify_rent_withholding_quarter(filing_year: int) -> str:
     """Create, calculate and verify one Modelo 115 first quarter; return the plazo close the calculation served."""
-    create_modelo_work_unit_via_cli(modelo="115", filing_year=filing_year, period="1T", revision="2019-y-siguientes")
+    revision = published_selected_revision_id("115", filing_year=filing_year, period="1T")
+    create_modelo_work_unit_via_cli(modelo="115", filing_year=filing_year, period="1T", revision=revision)
     capture_m115_invoice_withholding(filing_year=filing_year)
     target = ["--modelo", "115", "--year", str(filing_year), "--period", "1T"]
     calculated = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "calculate", *target])
@@ -780,7 +784,7 @@ def test_work_file_refuses_a_modelo_the_profile_rules_out(seed_profile: ProfileS
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "115", "--year", str(filing_year), "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--revision", published_selected_revision_id("115", filing_year=filing_year, period="1T"),
         ],
     )  # fmt: skip
     assert created.exit_code != 0

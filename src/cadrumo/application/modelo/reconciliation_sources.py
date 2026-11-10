@@ -135,12 +135,7 @@ def reconciliation_source_needs(
         reconciliation &= set(relation_ids)
     if not reconciliation:
         return ()
-    periods: dict[tuple[str, Period], None] = {}
-    for requirement in scoped_relation_source_requirements(snapshot, activity_start_date, operation=operation):
-        if not reconciliation.intersection(requirement.target_bindings):
-            continue
-        for code in requirement.periods:
-            periods[(str(requirement.source_modelo), Period.from_year_and_code(requirement.filing_year, code))] = None
+    periods = _source_periods(snapshot, reconciliation, activity_start_date, operation=operation)
     needs: list[ReconciliationSourceNeed] = []
     for modelo, period in sorted(periods, key=lambda key: (key[0], key[1].filing_year, key[1].quarter_ordinal or 0)):
         if _filed_values_stored(modelo, period, observations=observations, operation=operation):
@@ -150,6 +145,23 @@ def reconciliation_source_needs(
         if standing is not None:
             needs.append(ReconciliationSourceNeed(modelo=modelo, period=period, standing=standing, unit=unit))
     return tuple(needs)
+
+
+def _source_periods(
+    snapshot: RegistrySnapshot,
+    reconciliation: set[RelationId],
+    activity_start_date: date | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[tuple[str, Period], None]:
+    """The distinct (source modelo, period) pairs the reconciliation relations read, in first-seen order."""
+    periods: dict[tuple[str, Period], None] = {}
+    for requirement in scoped_relation_source_requirements(snapshot, activity_start_date, operation=operation):
+        if not reconciliation.intersection(requirement.target_bindings):
+            continue
+        for code in requirement.periods:
+            periods[(str(requirement.source_modelo), Period.from_year_and_code(requirement.filing_year, code))] = None
+    return periods
 
 
 def _filed_values_stored(

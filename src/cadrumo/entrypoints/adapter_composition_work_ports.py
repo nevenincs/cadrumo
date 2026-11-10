@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
     from ..application.aggregation.ledger_membership import LedgerMembershipPorts
     from ..application.auth.session_types import AeatSession
     from ..application.diagnostics_ports import DiagnosticsPorts
+    from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
     from ..application.ledger.column_roles import ColumnRoleMappingPort, ColumnRoleReaderUnavailable
     from ..application.ledger.evidence_ports import LedgerEvidencePorts
     from ..application.ledger.statement_reading import StatementReaderPort
@@ -60,6 +62,7 @@ if TYPE_CHECKING:
     from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
     from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..domain.usage_ratios.model import UsageRatioProfile
+    from .calculation_revision_composition import CalculationRevisionPersistenceBinding
 
 
 from .adapter_composition_ports import (
@@ -120,6 +123,56 @@ def build_state_projection_read_ports(
     )
 
 
+def _calculation_secure_objects(
+    bucket_id: str,
+    *,
+    objects: SecureObjectRepository | None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+) -> SecureObjectRepository:
+    """Use the caller's repository, or open the bucket's and fence its commits with ``mutation_writer``."""
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..core.errors.hierarchy import InternalInvariantError
+
+    if objects is not None and mutation_writer is not None:
+        raise InternalInvariantError("a calculation writer fences only the repository it opens")
+    if objects is None:
+        objects = secure_object_repository_for_bucket(bucket_id)
+        if mutation_writer is not None:
+            objects = objects.with_mutation_writer(mutation_writer)
+    return objects
+
+
+def _calculation_invoice_source_ports(
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
+    invoice_repository: InvoiceCatalogueRepository,
+    calculation_binding: CalculationRevisionPersistenceBinding,
+) -> InvoiceSourceResolverPorts:
+    """Compose the invoice-sourced resolvers a calculation reads: catalogue, filed M349 and counterpart provinces."""
+    from ..adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
+    from ..adapters.persistence.profile.invoice_source_resolver import (
+        CounterpartyProvinciaAdapter,
+        InvoiceCatalogueSourceResolverAdapter,
+        M349FiledDeclarationAdapter,
+    )
+    from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+
+    return InvoiceSourceResolverPorts(
+        catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
+            repository=invoice_repository,
+        ),
+        m349_filed_declarations=M349FiledDeclarationAdapter(
+            repository=calculation_binding.calculation_repository(),
+            operation=operation,
+        ),
+        counterparty_provincias=CounterpartyProvinciaAdapter(
+            repository=CounterpartyEstablishmentRepository(bucket_id=bucket_id, objects=objects),
+        ),
+    )
+
+
 def build_calculation_action_ports(
     *,
     bucket_id: str,
@@ -147,15 +200,9 @@ def build_calculation_action_ports(
         migrate_stored_relation_overrides_to_binding_ids,
     )
     from ..adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
-    from ..adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
     from ..adapters.persistence.profile.credit_resolution_records import CreditResolutionRepositoryAdapter
     from ..adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
-    from ..adapters.persistence.profile.invoice_source_resolver import (
-        CounterpartyProvinciaAdapter,
-        InvoiceCatalogueSourceResolverAdapter,
-        M349FiledDeclarationAdapter,
-    )
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -168,22 +215,14 @@ def build_calculation_action_ports(
     )
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
-    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
-    from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
     from ..application.modelo.calculation_action_ports import CalculationActionPorts
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-    from ..core.errors.hierarchy import InternalInvariantError
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     normalized_bucket_id = bucket_id.strip()
-    if objects is not None and mutation_writer is not None:
-        raise InternalInvariantError("a calculation writer fences only the repository it opens")
-    if objects is None:
-        objects = secure_object_repository_for_bucket(normalized_bucket_id)
-        if mutation_writer is not None:
-            objects = objects.with_mutation_writer(mutation_writer)
+    objects = _calculation_secure_objects(normalized_bucket_id, objects=objects, mutation_writer=mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,
@@ -240,17 +279,12 @@ def build_calculation_action_ports(
         invoice_catalogue_read_ports=build_invoice_catalogue_read_ports(
             bucket_id=normalized_bucket_id, objects=objects
         ),
-        invoice_source_ports=InvoiceSourceResolverPorts(
-            catalogue_reader=InvoiceCatalogueSourceResolverAdapter(
-                repository=invoice_repository,
-            ),
-            m349_filed_declarations=M349FiledDeclarationAdapter(
-                repository=calculation_binding.calculation_repository(),
-                operation=operation,
-            ),
-            counterparty_provincias=CounterpartyProvinciaAdapter(
-                repository=CounterpartyEstablishmentRepository(bucket_id=normalized_bucket_id, objects=objects),
-            ),
+        invoice_source_ports=_calculation_invoice_source_ports(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+            operation=operation,
+            invoice_repository=invoice_repository,
+            calculation_binding=calculation_binding,
         ),
         filing_repository=ModeloRecordCatalogueRepository(
             bucket_id=normalized_bucket_id,

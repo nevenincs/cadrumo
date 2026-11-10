@@ -10,7 +10,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ....domain.calculations.registry.form_context import resolve_form_context_field
 from ....domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
-from ...modelo.work_form_models import ModeloFormScalar
+from ...modelo.work_form_field_vocabulary import ModeloFormScalar
 from .errors import CalcSheetsEngineError
 from .template_source import WorkbookTemplateSource
 

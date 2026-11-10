@@ -17,12 +17,14 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 
 from .. import workbook_demo
 from ..compiler.authority import compiled_bundled_authority
 from ..workbook_demo import build_demonstration_plan
 from ..workbook_demo_cases import DEMO_CASES
 from ..workbook_demo_inputs import demonstration_inputs
+from .authored_edition_support import authored_revisions
 from .workbook_demo_oracle_support import expected_result, numeric_inputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -175,13 +177,15 @@ def test_309_payment_copy_and_liquidation_share_one_live_result() -> None:
 
 
 def test_309_historical_example_keeps_seven_rows_and_cannot_acquire_filing_authority() -> None:
-    case = next(c for c in DEMO_CASES if c.modelo == "309" and c.revision == "2018-2022")
+    floor = filing_year_envelope().floor
+    covering = str(revision_covering("309", floor).id)
+    case = next(c for c in DEMO_CASES if c.modelo == "309" and c.revision == covering)
     snapshot, plan = build_demonstration_plan(case)
     inputs, bindings = demonstration_inputs(snapshot, case)
     values = numeric_inputs(inputs)
     assert snapshot.revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
     with pytest.raises(RegistryValidationError, match="authority"):
-        compiled_bundled_authority().snapshot("309", filing_year=2022, period="0A", revision_id="2018-2022")
+        compiled_bundled_authority().snapshot("309", filing_year=floor, period="0A", revision_id=covering)
     assert {value.casilla_id for value in inputs.values}.isdisjoint(
         {"decl.rg-base-25", "decl.rg-tipo-26", "decl.rg-cuota-27"}
     )
@@ -200,12 +204,24 @@ def test_309_historical_example_keeps_seven_rows_and_cannot_acquire_filing_autho
     assert len(results) == 2 and results[0].formula == results[1].formula
 
 
-def test_309_2016_preview_uses_registry_layout_and_fictional_identity() -> None:
+def test_309_historical_preview_uses_registry_layout_and_fictional_identity() -> None:
     from ..workbook_demo_nonperiodic_historical import build_historical_nonperiodic_plan
 
     source, plan = build_historical_nonperiodic_plan()
-    assert source.revision.id == "2016-2017"
-    assert plan.metadata.preview_year == 2016
+    # The default preview is the last year of the newest edition that closed
+    # below the support floor, read from the registry.
+    authority = compiled_bundled_authority()
+    floor = authority.supported_filing_years().floor
+    newest_closed = max(
+        (
+            revision
+            for revision in authority.modelo("309").revisions.values()
+            if revision.period_selector.year_to is not None and revision.period_selector.year_to < floor
+        ),
+        key=lambda revision: revision.period_selector.year_to or 0,
+    )
+    assert source.revision.id == newest_closed.id
+    assert plan.metadata.preview_year == newest_closed.period_selector.year_to
     assert plan.human_presentation
     values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
     assert "12345678Z" in values
@@ -221,9 +237,12 @@ def test_309_2016_preview_uses_registry_layout_and_fictional_identity() -> None:
 def test_309_2015_preview_retains_original_mark_fields_and_paper_identity() -> None:
     from ..workbook_demo_nonperiodic_historical import build_historical_nonperiodic_plan
 
-    source, plan = build_historical_nonperiodic_plan(year=2015)
-    assert source.revision.id == "2004-2015"
-    assert plan.metadata.preview_year == 2015
+    oldest = authored_revisions("309")[0]
+    assert oldest.valid_to is not None
+    year = oldest.valid_to.year
+    source, plan = build_historical_nonperiodic_plan(year=year)
+    assert source.revision.id == oldest.id
+    assert plan.metadata.preview_year == year
     values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
     assert "12345678Z" in values
     inputs = {str(c.casilla_id): c.value for c in plan.value_cells if c.role == "operator_input"}

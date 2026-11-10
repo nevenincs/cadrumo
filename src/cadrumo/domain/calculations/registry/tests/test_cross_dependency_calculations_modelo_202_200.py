@@ -11,7 +11,12 @@ from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import RegistrySnapshot
-from .authored_editions import authored_revisions
+from .authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_before_first_declaring,
+    revision_covering,
+)
 from .cross_dependency_calculation_support import (
     M200_CUOTA_DIFERENCIAL_CASILLA,
     M202_CUOTA_BASE_CASILLA,
@@ -35,9 +40,10 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     period: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("202", 2026, period)
+    year = filing_year_envelope().horizon
+    snapshot = registry_snapshot("202", year, period)
     revision = snapshot.revision
-    assert revision.id == "2025-y-siguientes"
+    assert revision.id == revision_covering("202", year).id
     # The casilla POPULATION is not the subject here and is no longer pinned by
     # tally: it counted 50 when written and the revision declares 61 now, so the
     # constant only ever recorded a moment. What must hold is that every casilla
@@ -90,7 +96,7 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": date(2026, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values={
             "modelo-202-pagos-fraccionados-anteriores": Decimal("3000"),
             "modelo-202-cuota-base-ejercicio-anterior": inputs[M202_CUOTA_BASE_CASILLA],
@@ -106,31 +112,22 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     assert entries["34"].operand_refs == ("32", "33")
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "expected_revision"),
-    [
-        (2022, "2019-2022"),
-        (2023, "2023-2024"),
-        (2024, "2023-2024"),
-        (2025, "2025-y-siguientes"),
-        (2026, "2025-y-siguientes"),
-    ],
-)
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years)
 def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     filing_year: int,
-    expected_revision: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
+    expected = revision_covering("202", filing_year)
     snapshot = registry_snapshot("202", filing_year, "1P")
-    assert snapshot.revision.id == expected_revision
-    # Not a tally. The correcciones block 61..66 plus casilla 67 are what the 2025
-    # diseno ADDS over the earlier spans, so asserting the selected revision
-    # carries them exactly when it is the 2025 span proves the selection landed on
-    # the right CONTENT. A casilla count never did: it read 43 and 50 when written
-    # and the revisions declare 54 and 61 now.
+    assert snapshot.revision.id == expected.id
+    # Not a tally. The correcciones block 61..66 plus casilla 67 are what the newest
+    # diseno ADDS over the earlier spans, so asserting the selected revision carries
+    # them exactly when it is not older than the first revision declaring casilla 67
+    # proves the selection landed on the right CONTENT. A casilla count never did.
     declared_ids = {str(casilla.id) for casilla in snapshot.revision.casillas}
     correcciones_block = {"61", "62", "63", "64", "65", "66", "67"}
-    if expected_revision == "2025-y-siguientes":
+    last_without_correcciones = revision_before_first_declaring("202", "67")
+    if expected.valid_from > last_without_correcciones.valid_from:
         assert correcciones_block <= declared_ids
     else:
         assert correcciones_block.isdisjoint(declared_ids)
@@ -142,11 +139,12 @@ def test_modelo_202_revision_selection_refuses_years_below_the_supported_floor(
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     below_floor = supported_years.floor - 1
-    # The 2019-2022 revision still authors this year; the refusal is the floor's.
-    assert published_authored_revision("202", year=below_floor).id == "2019-2022"
+    # An older revision still authors this year; the refusal is the floor's.
+    covering = revision_covering("202", below_floor)
+    assert published_authored_revision("202", year=below_floor).id == covering.id
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         registry_snapshot("202", below_floor, "1P")
-    assert "2019-2022" in excinfo.value.covering_revision_ids
+    assert str(covering.id) in excinfo.value.covering_revision_ids
 
 
 def test_modelo_202_pre_b2_revision_total_correcciones_aumentos_excludes_complementario_column(

@@ -19,13 +19,15 @@ import pytest
 from textual.widgets import Footer, Input, Static
 
 from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
+from ......application.modelo.work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormText,
+    ModeloFormTextDisclosure,
+)
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormOrigin,
     ModeloFormSection,
-    ModeloFormText,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
 )
 from ......core.config import override_settings

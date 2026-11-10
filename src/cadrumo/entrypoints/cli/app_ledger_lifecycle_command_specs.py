@@ -48,7 +48,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.remove.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.remove.id_help", non_blank=True),
             blank_default_text_option("reason", ("--reason",), "cli.ledger.remove.reason_help"),
             boolean_flag_option("dry_run", ("--dry-run",), "cli.ledger.remove.dry_run_help"),
             boolean_flag_option("yes", ("--yes",), "cli.ledger.remove.yes_help"),
@@ -93,7 +93,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.restore.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.restore.id_help", non_blank=True),
             ARCHIVE_REASON_OPTION,
             boolean_flag_option("yes", ("--yes",), "cli.ledger.restore.yes_help"),
             LEDGER_ACTOR_OPTION,
@@ -115,7 +115,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            optional_text_argument("record_id", "cli.ledger.view.transaction_id_help"),
+            optional_text_argument("record_id", "cli.ledger.view.transaction_id_help", non_blank=True),
             repeatable_text_option("filters", ("--filter",), "cli.ledger.review.filter_help"),
             boolean_flag_option("verbose", ("--verbose",), "cli.ledger.review.verbose_help"),
         ),
@@ -149,7 +149,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.split.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.split.id_help", non_blank=True),
             repeatable_text_option("child_amount", ("--child-amount",), "cli.ledger.split.child_amount_help"),
             repeatable_text_option(
                 "child_description", ("--child-description",), "cli.ledger.split.child_description_help"
@@ -178,7 +178,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.stash.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.stash.id_help", non_blank=True),
             ARCHIVE_REASON_OPTION,
             boolean_flag_option("yes", ("--yes",), "cli.ledger.stash.yes_help"),
             LEDGER_ACTOR_OPTION,
@@ -219,7 +219,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.ledger.track.help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
-        parameters=(required_text_argument("transaction_id", "cli.ledger.track.transaction_id_help"),),
+        parameters=(required_text_argument("transaction_id", "cli.ledger.track.transaction_id_help", non_blank=True),),
         policy=POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_track", __package__)),
         result_schema=ResultSchemaSpec(
@@ -237,7 +237,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            required_text_argument("transaction_id", "cli.ledger.update.id_help"),
+            required_text_argument("transaction_id", "cli.ledger.update.id_help", non_blank=True),
             optional_text_option("booked_date", ("--date",), "cli.ledger.update.date_help"),
             optional_text_option("value_date", ("--value-date",), "cli.ledger.update.value_date_help"),
             optional_text_option("operation_date", ("--operation-date",), "cli.ledger.update.operation_date_help"),
@@ -289,7 +289,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         help_key=TranslationKey("cli.ledger.view.help"),
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
-        parameters=(required_text_argument("transaction_id", "cli.ledger.view.transaction_id_help"),),
+        parameters=(required_text_argument("transaction_id", "cli.ledger.view.transaction_id_help", non_blank=True),),
         policy=POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_view", __package__)),
         result_schema=ResultSchemaSpec(

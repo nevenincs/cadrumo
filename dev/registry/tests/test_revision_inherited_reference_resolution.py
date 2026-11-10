@@ -26,10 +26,20 @@ from dev.registry.compiler.identifier_lineage import EDITION_PLACEHOLDER, identi
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
+from .synthetic_delta_edition_support import (
+    PREDECESSOR_EDITION,
+    PREDECESSOR_EDITION_YEAR,
+    SUCCESSOR_EDITION,
+    SUCCESSOR_EDITION_YEAR,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_ID: Final = "999"
+_THIRD_EDITION_YEAR: Final = SUCCESSOR_EDITION_YEAR + 1
+_THIRD_EDITION: Final = str(_THIRD_EDITION_YEAR)
+_EARLIER_EDITION: Final = str(PREDECESSOR_EDITION_YEAR - 1)
+_EARLIER_SPAN: Final = f"{_EARLIER_EDITION}-{PREDECESSOR_EDITION}"
 _LEGAL_REF: Final = "ley-58-2003:art-29"
 _SOURCE_REF: Final = "aeat-manual"
 _SHARED_BINDING: Final = "modelo-999-comun"
@@ -131,19 +141,32 @@ def _modelo_root(root: Path) -> Path:
 
 def _root_edition(modelo_dir: Path) -> None:
     """2024 states a bound row with two alternates, one of them edition-free, and a computed row."""
-    formulas, bindings = _declarations("2024", formula_key="2024", binding_keys={"base": "2024", "alterna": "2024"})
+    formulas, bindings = _declarations(
+        PREDECESSOR_EDITION,
+        formula_key=PREDECESSOR_EDITION,
+        binding_keys={"base": PREDECESSOR_EDITION, "alterna": PREDECESSOR_EDITION},
+    )
     _write_edition(
         modelo_dir,
-        "2024",
-        year=2024,
+        PREDECESSOR_EDITION,
+        year=PREDECESSOR_EDITION_YEAR,
         casillas=(
             _casilla(
-                "2024",
+                PREDECESSOR_EDITION,
                 "01",
                 lineage="base",
-                references=_bound("modelo-999-2024-base", "modelo-999-2024-alterna", _SHARED_BINDING),
+                references=_bound(
+                    f"modelo-999-{PREDECESSOR_EDITION}-base",
+                    f"modelo-999-{PREDECESSOR_EDITION}-alterna",
+                    _SHARED_BINDING,
+                ),
             )
-            + _casilla("2024", "02", lineage="cuota", references=_computed("modelo-999-2024-cuota"))
+            + _casilla(
+                PREDECESSOR_EDITION,
+                "02",
+                lineage="cuota",
+                references=_computed(f"modelo-999-{PREDECESSOR_EDITION}-cuota"),
+            )
         ),
         formulas=formulas,
         bindings=bindings,
@@ -159,15 +182,17 @@ def _declared_ids(revision: ModeloRevision) -> frozenset[str]:
     return frozenset({*(formula.id for formula in revision.formulas), *(binding.id for binding in revision.bindings)})
 
 
-def _inheriting_edition(modelo_dir: Path, *, alterna_key: str = "2025", stated: str = "") -> None:
+def _inheriting_edition(modelo_dir: Path, *, alterna_key: str = SUCCESSOR_EDITION, stated: str = "") -> None:
     formulas, bindings = _declarations(
-        "2025", formula_key="2025", binding_keys={"base": "2025", "alterna": alterna_key}
+        SUCCESSOR_EDITION,
+        formula_key=SUCCESSOR_EDITION,
+        binding_keys={"base": SUCCESSOR_EDITION, "alterna": alterna_key},
     )
     _write_edition(
         modelo_dir,
-        "2025",
-        year=2025,
-        predecessor="2024",
+        SUCCESSOR_EDITION,
+        year=SUCCESSOR_EDITION_YEAR,
+        predecessor=PREDECESSOR_EDITION,
         casillas=stated,
         formulas=formulas,
         bindings=bindings,
@@ -181,16 +206,20 @@ def test_an_inherited_row_resolves_its_formula_and_bindings_to_the_successors_de
     _inheriting_edition(modelo_dir)
 
     definition = load_modelo_directory(modelo_dir)
-    predecessor, successor = definition.revisions["2024"], definition.revisions["2025"]
+    predecessor, successor = definition.revisions[PREDECESSOR_EDITION], definition.revisions[SUCCESSOR_EDITION]
 
-    assert _references(successor, "01") == (None, "modelo-999-2025-base", ("modelo-999-2025-alterna", _SHARED_BINDING))
-    assert _references(successor, "02") == ("modelo-999-2025-cuota", None, ())
+    assert _references(successor, "01") == (
+        None,
+        f"modelo-999-{SUCCESSOR_EDITION}-base",
+        (f"modelo-999-{SUCCESSOR_EDITION}-alterna", _SHARED_BINDING),
+    )
+    assert _references(successor, "02") == (f"modelo-999-{SUCCESSOR_EDITION}-cuota", None, ())
     assert _references(predecessor, "01") == (
         None,
-        "modelo-999-2024-base",
-        ("modelo-999-2024-alterna", _SHARED_BINDING),
+        f"modelo-999-{PREDECESSOR_EDITION}-base",
+        (f"modelo-999-{PREDECESSOR_EDITION}-alterna", _SHARED_BINDING),
     )
-    assert _references(predecessor, "02") == ("modelo-999-2024-cuota", None, ())
+    assert _references(predecessor, "02") == (f"modelo-999-{PREDECESSOR_EDITION}-cuota", None, ())
     for casilla_id in ("01", "02"):
         formula, binding, alternates = _references(successor, casilla_id)
         assert {ref for ref in (formula, binding, *alternates) if ref is not None} <= _declared_ids(successor)
@@ -201,13 +230,27 @@ def test_a_row_carried_down_a_chain_resolves_against_the_edition_it_now_sits_in(
     modelo_dir = _modelo_root(tmp_path)
     _root_edition(modelo_dir)
     _inheriting_edition(modelo_dir)
-    formulas, bindings = _declarations("2026", formula_key="2026", binding_keys={"base": "2026", "alterna": "2026"})
-    _write_edition(modelo_dir, "2026", year=2026, predecessor="2025", casillas="", formulas=formulas, bindings=bindings)
+    formulas, bindings = _declarations(
+        _THIRD_EDITION, formula_key=_THIRD_EDITION, binding_keys={"base": _THIRD_EDITION, "alterna": _THIRD_EDITION}
+    )
+    _write_edition(
+        modelo_dir,
+        _THIRD_EDITION,
+        year=_THIRD_EDITION_YEAR,
+        predecessor=SUCCESSOR_EDITION,
+        casillas="",
+        formulas=formulas,
+        bindings=bindings,
+    )
 
-    successor = load_modelo_directory(modelo_dir).revisions["2026"]
+    successor = load_modelo_directory(modelo_dir).revisions[_THIRD_EDITION]
 
-    assert _references(successor, "01") == (None, "modelo-999-2026-base", ("modelo-999-2026-alterna", _SHARED_BINDING))
-    assert _references(successor, "02") == ("modelo-999-2026-cuota", None, ())
+    assert _references(successor, "01") == (
+        None,
+        f"modelo-999-{_THIRD_EDITION}-base",
+        (f"modelo-999-{_THIRD_EDITION}-alterna", _SHARED_BINDING),
+    )
+    assert _references(successor, "02") == (f"modelo-999-{_THIRD_EDITION}-cuota", None, ())
 
 
 def test_an_inherited_reference_the_successor_does_not_declare_is_refused(tmp_path: Path) -> None:
@@ -220,8 +263,9 @@ def test_an_inherited_reference_the_successor_does_not_declare_is_refused(tmp_pa
     _inheriting_edition(modelo_dir, alterna_key="otra")
 
     expected = (
-        "revision '2025': inherited casilla '01' alternate_bindings reference 'modelo-999-2024-alterna', stated in "
-        f"revision '2024', has lineage 'modelo-999-{EDITION_PLACEHOLDER}-alterna', and revision '2025' carries no "
+        f"revision '{SUCCESSOR_EDITION}': inherited casilla '01' alternate_bindings reference "
+        f"'modelo-999-{PREDECESSOR_EDITION}-alterna', stated in revision '{PREDECESSOR_EDITION}', "
+        f"has lineage 'modelo-999-{EDITION_PLACEHOLDER}-alterna', and revision '{SUCCESSOR_EDITION}' carries no "
         "bindings declaration of that lineage"
     )
     with pytest.raises(RegistryLoadError, match=re.escape(expected)):
@@ -233,7 +277,7 @@ def test_an_inherited_edition_free_reference_must_be_declared_by_the_successor_i
     modelo_dir = _modelo_root(tmp_path)
     _root_edition(modelo_dir)
     _inheriting_edition(modelo_dir)
-    bindings = modelo_dir / "revisions" / "2025" / "bindings" / "0001-bindings.toml"
+    bindings = modelo_dir / "revisions" / SUCCESSOR_EDITION / "bindings" / "0001-bindings.toml"
     bindings.write_text(
         bindings.read_text(encoding="utf-8").replace(f'"{_SHARED_BINDING}"', '"modelo-999-otro-comun"'),
         encoding="utf-8",
@@ -241,17 +285,19 @@ def test_an_inherited_edition_free_reference_must_be_declared_by_the_successor_i
     )
     # Keyed families inherit, so the predecessor's member is removed explicitly
     # to leave the successor without the edition-free identifier.
-    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    manifest = modelo_dir / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8")
-        + '\n[[revisions."2025".family_removals]]\n'
+        + f'\n[[revisions."{SUCCESSOR_EDITION}".family_removals]]\n'
         + 'family = "bindings"\n'
-        + f'selector = {{ revision = "2024", id = "{_SHARED_BINDING}" }}\n',
+        + f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "{_SHARED_BINDING}" }}\n',
         encoding="utf-8",
         newline="\n",
     )
 
-    with pytest.raises(RegistryLoadError, match=re.escape(f"reference '{_SHARED_BINDING}', stated in revision '2024'")):
+    with pytest.raises(
+        RegistryLoadError, match=re.escape(f"reference '{_SHARED_BINDING}', stated in revision '{PREDECESSOR_EDITION}'")
+    ):
         load_modelo_directory(modelo_dir)
 
 
@@ -266,20 +312,26 @@ def test_a_stated_row_keeps_its_references_as_authored(tmp_path: Path) -> None:
     modelo_dir = _modelo_root(tmp_path)
     _root_edition(modelo_dir)
     _inheriting_edition(
-        modelo_dir, stated=_casilla("2025", "03", lineage="propia", references=_computed("modelo-999-2024-cuota"))
+        modelo_dir,
+        stated=_casilla(
+            SUCCESSOR_EDITION, "03", lineage="propia", references=_computed(f"modelo-999-{PREDECESSOR_EDITION}-cuota")
+        ),
     )
 
-    successor = load_modelo_directory(modelo_dir).revisions["2025"]
+    successor = load_modelo_directory(modelo_dir).revisions[SUCCESSOR_EDITION]
 
     assert [casilla.id for casilla in successor.casillas] == ["01", "02", "03"]
-    assert _references(successor, "03") == ("modelo-999-2024-cuota", None, ())
-    assert _references(successor, "02") == ("modelo-999-2025-cuota", None, ())
+    assert _references(successor, "03") == (f"modelo-999-{PREDECESSOR_EDITION}-cuota", None, ())
+    assert _references(successor, "02") == (f"modelo-999-{SUCCESSOR_EDITION}-cuota", None, ())
 
 
 def test_edition_free_identifiers_resolve_to_themselves(tmp_path: Path) -> None:
     """Once no identifier embeds its edition's key, resolution is the identity on every inherited reference."""
     modelo_dir = _modelo_root(tmp_path)
-    for revision_id, year, predecessor in (("2024", 2024, None), ("2025", 2025, "2024")):
+    for revision_id, year, predecessor in (
+        (PREDECESSOR_EDITION, PREDECESSOR_EDITION_YEAR, None),
+        (SUCCESSOR_EDITION, SUCCESSOR_EDITION_YEAR, PREDECESSOR_EDITION),
+    ):
         _write_edition(
             modelo_dir,
             revision_id,
@@ -298,7 +350,7 @@ def test_edition_free_identifiers_resolve_to_themselves(tmp_path: Path) -> None:
 
     definition = load_modelo_directory(modelo_dir)
 
-    for revision_id in ("2024", "2025"):
+    for revision_id in (PREDECESSOR_EDITION, SUCCESSOR_EDITION):
         revision = definition.revisions[revision_id]
         assert _references(revision, "01") == (None, "modelo-999-base", (_SHARED_BINDING,))
         assert _references(revision, "02") == ("modelo-999-cuota", None, ())
@@ -307,12 +359,29 @@ def test_edition_free_identifiers_resolve_to_themselves(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("identifier", "revision_id", "lineage"),
     [
-        pytest.param("modelo-131-2019-2023-cuota", "2019-2023", f"modelo-131-{EDITION_PLACEHOLDER}-cuota", id="inner"),
-        pytest.param("modelo-131-2024.page1.109", "2024", f"modelo-131-{EDITION_PLACEHOLDER}.page1.109", id="dotted"),
-        pytest.param("renta-2025", "2025", f"renta-{EDITION_PLACEHOLDER}", id="trailing"),
-        pytest.param("modelo-131-cuota", "2024", "modelo-131-cuota", id="edition-free"),
-        pytest.param("modelo-131-20245-cuota", "2024", "modelo-131-20245-cuota", id="not-a-whole-segment"),
-        pytest.param("modelo-131-2023-cuota", "2024", "modelo-131-2023-cuota", id="another-editions-key"),
+        pytest.param(
+            f"modelo-131-{_EARLIER_SPAN}-cuota", _EARLIER_SPAN, f"modelo-131-{EDITION_PLACEHOLDER}-cuota", id="inner"
+        ),
+        pytest.param(
+            f"modelo-131-{PREDECESSOR_EDITION}.page1.109",
+            PREDECESSOR_EDITION,
+            f"modelo-131-{EDITION_PLACEHOLDER}.page1.109",
+            id="dotted",
+        ),
+        pytest.param(f"renta-{SUCCESSOR_EDITION}", SUCCESSOR_EDITION, f"renta-{EDITION_PLACEHOLDER}", id="trailing"),
+        pytest.param("modelo-131-cuota", PREDECESSOR_EDITION, "modelo-131-cuota", id="edition-free"),
+        pytest.param(
+            f"modelo-131-{PREDECESSOR_EDITION}5-cuota",
+            PREDECESSOR_EDITION,
+            f"modelo-131-{PREDECESSOR_EDITION}5-cuota",
+            id="not-a-whole-segment",
+        ),
+        pytest.param(
+            f"modelo-131-{_EARLIER_EDITION}-cuota",
+            PREDECESSOR_EDITION,
+            f"modelo-131-{_EARLIER_EDITION}-cuota",
+            id="another-editions-key",
+        ),
     ],
 )
 def test_lineage_replaces_only_the_declaring_editions_key_as_a_whole_segment(

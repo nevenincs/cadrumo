@@ -19,7 +19,8 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Input, OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloWorkForm, address_key
+from ......application.modelo.work_form_field_vocabulary import address_key
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench

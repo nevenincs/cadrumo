@@ -2,9 +2,12 @@
 
 Three modes over one engine:
 
-- ``refresh [--page PAGE | --sequence ID]`` re-executes the addressed
-  sequences in fresh hermetic sandboxes and rewrites their committed golden
-  files. The author reviews the git diff — which IS the behaviour-change
+- ``refresh [--page PAGE ... | --sequence ID | --command CMD] [--jobs N]``
+  re-executes the addressed sequences in fresh hermetic sandboxes and rewrites
+  their committed golden files. Unscoped, or over several pages, it shards the
+  pages across ``--jobs`` child interpreters (heaviest first); the goldens do
+  not depend on the schedule. ``--command 'app ledger classify'`` addresses
+  every page that executes that command. The author reviews the git diff — which IS the behaviour-change
   review — and commits the goldens with the CLI change that legitimately
   moved them. This is the ONLY sanctioned way a golden changes.
 - ``check [--page PAGE | --sequence ID]`` re-executes the addressed sequences
@@ -46,14 +49,21 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from .checks import (
+    ADVISORY_PREFIX,
+    PROBLEM_PREFIX,
+    REFRESHED_PREFIX,
     build_argument_parser,
     check_page_coherence,
     check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
     checks_owning_page,
+    discover_sequences,
+    pages_running_command,
+    refresh_pages,
     refresh_sequences,
 )
 from .errors import SequenceEngineError
@@ -117,26 +127,49 @@ def main(argv: list[str] | None = None) -> int:
 def _refresh_mode(args: argparse.Namespace) -> int:
     """Refresh mode."""
     try:
-        written, problems, advisories = refresh_sequences(
-            docs_root=args.docs_root,
-            goldens_root=args.goldens_root,
-            page=args.page,
-            sequence_id=args.sequence,
-        )
+        if args.sequence is not None:
+            written, problems, advisories = refresh_sequences(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                sequence_id=args.sequence,
+            )
+        else:
+            pages = _refresh_pages(args.page, args.command, args.docs_root)
+            if pages is not None and not pages:
+                print(f"no executed frame runs {args.command!r}; nothing to refresh")
+                return 0
+            written, problems, advisories = refresh_pages(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                pages=pages,
+                jobs=args.jobs,
+                progress=lambda line: print(line, flush=True),
+            )
     except SequenceEngineError as exc:
         print(f"problem: {exc}", file=sys.stderr)
         return 1
     for target in written:
-        print(f"refreshed: {target}")
+        print(f"{REFRESHED_PREFIX}{target}")
     for advisory in advisories:
-        print(f"advisory: {advisory}")
+        print(f"{ADVISORY_PREFIX}{advisory}")
     for problem in problems:
-        print(f"problem: {problem}", file=sys.stderr)
+        print(f"{PROBLEM_PREFIX}{problem}", file=sys.stderr)
     if not written and not problems:
         print("no enrolled cli-sequence directives matched; nothing to refresh")
     if written and not problems:
         print(f"{len(written)} golden(s) rewritten; review the git diff and commit them")
     return 1 if problems else 0
+
+
+def _refresh_pages(page: list[str] | None, command_path: str | None, docs_root: Path | None) -> list[str] | None:
+    """Resolve the refresh scope to pages: ``None`` for every page, else the named or command-selected ones."""
+    if command_path is None:
+        return page
+    command = tuple(command_path.split())
+    if not command:
+        raise SequenceEngineError("--command needs a command path such as 'app ledger classify'")
+    discovered, _problems = discover_sequences(docs_root=docs_root)
+    return list(pages_running_command(discovered, command))
 
 
 def _seeds_mode(args: argparse.Namespace) -> int:

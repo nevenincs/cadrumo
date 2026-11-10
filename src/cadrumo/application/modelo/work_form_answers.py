@@ -26,7 +26,8 @@ from .edit_admission import permitted_binding_entry
 from .edit_models import ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .row_filled_bindings import row_filled_binding_ids
 from .work_form_field_projection import project_binding_field
-from .work_form_models import ModeloFormBindingAddressV1, ModeloFormField
+from .work_form_field_vocabulary import ModeloFormBindingAddressV1
+from .work_form_models import ModeloFormField
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext

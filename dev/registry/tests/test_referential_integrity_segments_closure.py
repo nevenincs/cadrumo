@@ -10,6 +10,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CalculationCompletenessCasilla,
@@ -274,15 +276,35 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
     )
 
 
+_TEMPORARY_REDUCTION_CASILLAS = frozenset({"0160", "0162"})
+_AGRARIAN_REDUCED_NET_YIELD_CASILLA = "1550"
+
+
+def _formula_operand_casillas(expression: FormulaExpression) -> frozenset[str]:
+    operands: set[str] = {str(expression.casilla_id)} if expression.casilla_id is not None else set()
+    for argument in expression.args:
+        operands |= _formula_operand_casillas(argument)
+    return frozenset(operands)
+
+
+def _subtracted_temporary_reductions(revision: ModeloRevision) -> frozenset[str]:
+    """Return the temporary-reduction casillas an edition's reduced agrarian net yield formula subtracts."""
+    formula = next(
+        item for item in revision.formulas if str(item.target_casilla_id) == _AGRARIAN_REDUCED_NET_YIELD_CASILLA
+    )
+    return _formula_operand_casillas(formula.expression) & _TEMPORARY_REDUCTION_CASILLAS
+
+
 def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_required() -> None:
-    """The resolved E5AF formulas and reviewed manifests agree for 2022-2024."""
+    """The resolved E5AF formulas and reviewed manifests agree for each edition that subtracts a temporary reduction."""
     modelos, catalogues = committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
     expected_by_revision = {
-        "2022": frozenset({"0160"}),
-        "2023": frozenset({"0160"}),
-        "2024": frozenset({"0160", "0162"}),
+        str(revision.id): expected
+        for revision in modelo.revisions.values()
+        if (expected := _subtracted_temporary_reductions(revision))
     }
+    assert len(expected_by_revision) > 1, "the temporary reductions are no longer subtracted by any edition"
     malformed_revisions = dict(modelo.revisions)
 
     for revision_id, expected in expected_by_revision.items():
@@ -314,9 +336,9 @@ def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_
         )
 
     failure = str(caught.value)
-    assert "revision 2022" in failure and "'0160'" in failure
-    assert "revision 2023" in failure and "'0160'" in failure
-    assert "revision 2024" in failure and "'0160', '0162'" in failure
+    for revision_id, expected in expected_by_revision.items():
+        assert f"revision {revision_id}" in failure
+        assert ", ".join(repr(casilla_id) for casilla_id in sorted(expected)) in failure
 
 
 def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:

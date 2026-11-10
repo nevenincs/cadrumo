@@ -101,6 +101,22 @@ class TransactionValidationError(TransactionError):
     """Raised on invalid transaction field values."""
 
 
+class TransactionFiguresWithoutBusinessError(TransactionValidationError):
+    """Raised when a row decided to have no business component would be written with business figures.
+
+    ``context["fields"]`` names the refused fields, comma separated, for a
+    reader that leads the person to them; the served sentence names none.
+    """
+
+    def __init__(self, message: str, *, context: Mapping[str, object]) -> None:
+        """Keep the untranslated detail for logs while a person reads the registered sentence."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=get_registered_error_code(type(self)).message_key,
+        )
+
+
 class LedgerLinkError(TransactionError):
     """Raised when linking a ledger transaction to a modelo binding fails."""
 

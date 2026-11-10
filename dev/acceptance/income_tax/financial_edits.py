@@ -83,7 +83,7 @@ async def _stage_workbench_value(
 
     from textual.widgets import Button, Static
 
-    from cadrumo.application.modelo.work_form_models import address_key
+    from cadrumo.application.modelo.work_form_field_vocabulary import address_key
 
     label = ":".join(address)
     await _open_visible_casilla_editor(pilot, workbench, address, label)

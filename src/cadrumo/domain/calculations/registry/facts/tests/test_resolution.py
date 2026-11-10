@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -11,6 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...errors import RegistryValidationError
 from ...schema_base import DateAxis, SourceCitation
 from ...snapshot_globals import SupportedFilingYearsCatalogue
+from ...tests.authored_editions import filing_year_envelope
 from ..payloads import GovernedFactFamily, ScalarFactPayload
 from ..resolution import (
     GovernedFactQuery,
@@ -28,8 +29,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The registry's single filing-year envelope, as ``supported-filing-years.toml``
 # declares it: a hard floor, an authored horizon and an open ceiling.
-_SUPPORT = SupportedFilingYearsCatalogue(floor=2022, horizon=2025)
-_CEILED_SUPPORT = SupportedFilingYearsCatalogue(floor=2022, horizon=2025, hard_ceiling=2026)
+_FLOOR = filing_year_envelope().floor
+_HORIZON = filing_year_envelope().horizon
+_CEILING = _HORIZON + 1
+_SUPPORT = SupportedFilingYearsCatalogue(floor=_FLOOR, horizon=_HORIZON)
+_CEILED_SUPPORT = SupportedFilingYearsCatalogue(floor=_FLOOR, horizon=_HORIZON, hard_ceiling=_CEILING)
+# One in-envelope day the query and resolved-context tests anchor on.
+_ON = date(_HORIZON, 1, 15)
 
 
 def test_query_union_hydrates_the_exact_family_and_context() -> None:
@@ -38,7 +44,7 @@ def test_query_union_hydrates_the_exact_family_and_context() -> None:
             "family": "scalar",
             "fact_id": "iva.general.rate",
             "date_axis": "transaction_date",
-            "effective_date": date(2026, 1, 15),
+            "effective_date": _ON,
             "selectors": ({"name": "territory", "value": "peninsula"},),
         },
     )
@@ -57,7 +63,7 @@ def test_query_union_refuses_unknown_families_and_ambiguous_coordinates() -> Non
                 "family": "free_form",
                 "fact_id": "iva.general.rate",
                 "date_axis": "transaction_date",
-                "effective_date": date(2026, 1, 15),
+                "effective_date": _ON,
             },
         )
     with pytest.raises(ValidationError, match="selector names must be unique"):
@@ -66,7 +72,7 @@ def test_query_union_refuses_unknown_families_and_ambiguous_coordinates() -> Non
                 "family": "scalar",
                 "fact_id": "iva.general.rate",
                 "date_axis": "transaction_date",
-                "effective_date": date(2026, 1, 15),
+                "effective_date": _ON,
                 "selectors": (
                     {"name": "territory", "value": "peninsula"},
                     {"name": "territory", "value": "canarias"},
@@ -81,8 +87,8 @@ def _resolved_scalar_data() -> dict[str, object]:
         "fact_id": "iva.general.rate",
         "variant_id": "iva.general.rate.2025",
         "date_axis": "transaction_date",
-        "effective_date": date(2026, 1, 15),
-        "valid_from": date(2025, 1, 1),
+        "effective_date": _ON,
+        "valid_from": date(_HORIZON, 1, 1),
         "valid_to": None,
         "matched_selectors": ({"name": "territory", "value": "peninsula"},),
         "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
@@ -111,7 +117,7 @@ def test_resolved_union_preserves_payload_identity_context_and_provenance() -> N
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     [
-        ("effective_date", date(2024, 12, 31), "must fall within its validity window"),
+        ("effective_date", date(_HORIZON, 1, 1) - timedelta(days=1), "must fall within its validity window"),
         ("authority_digest", "not-an-authority", "string_pattern_mismatch"),
         (
             "source_citations",
@@ -150,7 +156,7 @@ def test_authority_resolver_returns_a_provenance_bearing_result_for_exact_contex
                     "variant_id": "iva.general.rate.2025",
                     "selectors": ({"name": "territory", "value": "peninsula"},),
                     "date_axis": "transaction_date",
-                    "valid_from": date(2025, 1, 1),
+                    "valid_from": date(_HORIZON, 1, 1),
                     "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
                     "legal_refs": ("ley-37-1992-art-90",),
                     "source_refs": ("aeat-iva-rates",),
@@ -166,7 +172,7 @@ def test_authority_resolver_returns_a_provenance_bearing_result_for_exact_contex
             "family": "scalar",
             "fact_id": fact.fact_id,
             "date_axis": "transaction_date",
-            "effective_date": date(2026, 1, 15),
+            "effective_date": _ON,
             "selectors": ({"name": "territory", "value": "peninsula"},),
         },
     )
@@ -189,7 +195,7 @@ def test_authority_resolver_refuses_an_unregistered_fact() -> None:
             "family": "scalar",
             "fact_id": "missing.fact",
             "date_axis": "filing_period",
-            "effective_date": date(2026, 1, 1),
+            "effective_date": date(_HORIZON, 1, 1),
         },
     )
 
@@ -249,14 +255,14 @@ def _resolve(
 
 
 def test_an_authored_window_resolves_with_its_full_provenance() -> None:
-    fact = _scalar_fact(("iva.temporal.rate.early", date(2023, 1, 1), date(2023, 12, 31), Decimal("0.21")))
+    fact = _scalar_fact(("iva.temporal.rate.early", date(_FLOOR, 1, 1), date(_FLOOR, 12, 31), Decimal("0.21")))
 
-    resolved = _resolve(fact, date(2023, 6, 1))
+    resolved = _resolve(fact, date(_FLOOR, 6, 1))
 
     assert resolved.projection_direction == "authored"
     assert resolved.projected_from_date is None
-    assert resolved.valid_from == date(2023, 1, 1)
-    assert resolved.valid_to == date(2023, 12, 31)
+    assert resolved.valid_from == date(_FLOOR, 1, 1)
+    assert resolved.valid_to == date(_FLOOR, 12, 31)
     assert resolved.payload == ScalarFactPayload(value=Decimal("0.21"), unit="ratio")
     assert resolved.source_citations == (
         SourceCitation(source_ref="test-source-early", required_text=("test source",)),
@@ -265,10 +271,10 @@ def test_an_authored_window_resolves_with_its_full_provenance() -> None:
     assert resolved.source_revision_ids == ("iva.temporal.rate.early",)
 
 
-@pytest.mark.parametrize("effective_date", [date(2023, 6, 1), date(2022, 6, 1)])
+@pytest.mark.parametrize("effective_date", [date(_FLOOR, 12, 1), date(_FLOOR, 6, 1)])
 def test_an_explicit_endpoint_is_a_legal_boundary_nothing_projects_past(effective_date: date) -> None:
     """A date after an explicit valid_to, or before an explicit valid_from, has no variant."""
-    fact = _scalar_fact(("iva.temporal.rate.late", date(2022, 7, 1), date(2022, 12, 31), Decimal("0.23")))
+    fact = _scalar_fact(("iva.temporal.rate.late", date(_FLOOR, 7, 1), date(_FLOOR, 9, 30), Decimal("0.23")))
 
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         _resolve(fact, effective_date)
@@ -276,45 +282,45 @@ def test_an_explicit_endpoint_is_a_legal_boundary_nothing_projects_past(effectiv
 
 def test_a_gap_between_explicit_windows_resolves_to_nothing() -> None:
     fact = _scalar_fact(
-        ("iva.temporal.rate.early", date(2022, 1, 1), date(2022, 6, 30), Decimal("0.21")),
-        ("iva.temporal.rate.late", date(2022, 7, 11), None, Decimal("0.23")),
+        ("iva.temporal.rate.early", date(_FLOOR, 1, 1), date(_FLOOR, 6, 30), Decimal("0.21")),
+        ("iva.temporal.rate.late", date(_FLOOR, 7, 11), None, Decimal("0.23")),
     )
 
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
-        _resolve(fact, date(2022, 7, 8))
+        _resolve(fact, date(_FLOOR, 7, 8))
 
 
 def test_an_omitted_valid_from_reaches_the_shared_support_floor() -> None:
-    fact = _scalar_fact(("iva.temporal.rate.base", None, date(2024, 12, 31), Decimal("0.21")))
+    fact = _scalar_fact(("iva.temporal.rate.base", None, date(_FLOOR, 12, 31), Decimal("0.21")))
 
-    resolved = _resolve(fact, date(2022, 1, 1))
+    resolved = _resolve(fact, date(_FLOOR, 1, 1))
 
     assert resolved.projection_direction == "authored"
-    assert resolved.valid_from == date(2022, 1, 1)
+    assert resolved.valid_from == date(_FLOOR, 1, 1)
     assert resolved.authored_valid_from is None
-    assert fact.validity_window(fact.variants[0], _SUPPORT.date_envelope()).valid_from == date(2022, 1, 1)
+    assert fact.validity_window(fact.variants[0], _SUPPORT.date_envelope()).valid_from == date(_FLOOR, 1, 1)
 
 
 def test_only_the_first_variant_of_a_track_may_omit_valid_from() -> None:
     with pytest.raises(ValidationError, match="only the first declaration can reach the support floor"):
         _scalar_fact(
-            ("iva.temporal.rate.a", None, date(2022, 12, 31), Decimal("0.21")),
+            ("iva.temporal.rate.a", None, date(_FLOOR, 12, 31), Decimal("0.21")),
             ("iva.temporal.rate.b", None, None, Decimal("0.23")),
         )
 
 
 def test_an_open_final_window_carries_forward_past_the_horizon() -> None:
-    fact = _scalar_fact(("iva.temporal.rate.base", date(2022, 1, 1), None, Decimal("0.21")))
+    fact = _scalar_fact(("iva.temporal.rate.base", date(_FLOOR, 1, 1), None, Decimal("0.21")))
 
-    resolved = _resolve(fact, date(2027, 6, 1))
+    resolved = _resolve(fact, date(_HORIZON + 1, 6, 1))
 
     assert resolved.projection_direction == "forward"
-    assert resolved.projected_from_date == date(2025, 12, 31)
+    assert resolved.projected_from_date == date(_HORIZON, 12, 31)
 
 
 @pytest.mark.parametrize(
     ("effective_date", "support"),
-    [(date(2021, 12, 31), _SUPPORT), (date(2027, 1, 1), _CEILED_SUPPORT)],
+    [(date(_FLOOR - 1, 12, 31), _SUPPORT), (date(_CEILING + 1, 1, 1), _CEILED_SUPPORT)],
 )
 def test_the_shared_support_envelope_refuses_queries_outside_its_gates(
     effective_date: date,
@@ -332,12 +338,12 @@ def test_a_governed_fact_cannot_declare_its_own_support_envelope() -> None:
             {
                 "fact_id": "iva.temporal.rate",
                 "family": "scalar",
-                "support": {"floor": date(2020, 1, 1), "horizon": date(2025, 12, 31)},
+                "support": {"floor": date(_FLOOR, 1, 1), "horizon": date(_HORIZON, 12, 31)},
                 "variants": (
                     {
                         "variant_id": "iva.temporal.rate.base",
                         "date_axis": "transaction_date",
-                        "valid_from": date(2022, 1, 1),
+                        "valid_from": date(_FLOOR, 1, 1),
                         "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
                         "legal_refs": ("test-law",),
                         "review_status": "pending_review",

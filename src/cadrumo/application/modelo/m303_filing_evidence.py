@@ -33,6 +33,15 @@ _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
 
 
+def m303_filing_evidence_modelo() -> str:
+    """Return the one modelo whose filing instance carries the Modelo 303 filing evidence.
+
+    The registry's role routing names it, so a caller that must refuse the
+    evidence on any other work asks here instead of holding the code itself.
+    """
+    return form_for_role("iva.periodic")
+
+
 def m303_filing_evidence_failure(
     scenario_code: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
@@ -77,7 +86,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
-    if work_unit.modelo != form_for_role("iva.periodic"):
+    if work_unit.modelo != m303_filing_evidence_modelo():
         if evidence is not None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
@@ -258,4 +267,8 @@ def _validate_m303_exonerado_applicable_values(
         )
 
 
-__all__ = ["m303_filing_evidence_failure", "validate_m303_filing_instance_evidence_for_revision"]
+__all__ = [
+    "m303_filing_evidence_failure",
+    "m303_filing_evidence_modelo",
+    "validate_m303_filing_instance_evidence_for_revision",
+]

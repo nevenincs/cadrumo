@@ -13,7 +13,7 @@ path that decides none -- reads as ``unknown``. Unknown is not timely.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -39,6 +39,9 @@ _WORK_UNIT_ID = "b" * 64
 _REVISION_ID = "a" * 64
 _BUCKET_ID = "91fb7268-c9d4-4309-879c-d44fa7970f9d"
 _FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
+_DAYS_OVERDUE = 10
+_CLOSES_ON = _FILED_AT.date() - timedelta(days=_DAYS_OVERDUE)
+"""A plazo that closed ten days before the filing instant."""
 
 
 def _record(kept: FilingTimeliness | None) -> ModeloRecord:
@@ -114,17 +117,17 @@ def test_the_result_cannot_contradict_the_posture_its_record_kept() -> None:
 
 def _late_deadline(*, with_preview: bool) -> ModeloWorkDeadlinePostureSnapshot:
     return ModeloWorkDeadlinePostureSnapshot(
-        closes_on=date(2026, 4, 20),
-        nominal_closes_on=date(2026, 4, 20),
+        closes_on=_CLOSES_ON,
+        nominal_closes_on=_CLOSES_ON,
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-        days_overdue=10,
+        days_overdue=_DAYS_OVERDUE,
         conditional_recargo_preview=(
             ModeloWorkRecargoPreviewSnapshot(
                 band_id="completed_months_0",
                 surcharge_pct="1.00",
                 interest_applies=False,
                 legal_ref="ley-58-2003:art-27.2",
-                rate_reference_on=date(2026, 4, 30),
+                rate_reference_on=_FILED_AT.date(),
             )
             if with_preview
             else None

@@ -33,6 +33,7 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES
+from ...domain.modelos.filing_record import ModeloRecord
 from .common import emit_envelope
 from .modelo_behavior_support import resolve_optional_cli_period
 from .modelo_cli_support import (
@@ -326,6 +327,24 @@ def work_dependencies(
         ) from None
 
 
+def _work_file_result(
+    record: ModeloRecord,
+    projection: ModeloWorkFilePublicResultV2,
+    posture: ModeloWorkDeadlinePosture | None,
+) -> WorkFileResult:
+    """Return the structured file result, carrying the served lateness of a late filing."""
+    deadline_payload, _ = work_deadline_output_from_posture(
+        posture, fallback_legal_ref=projection.fallback_recargo_legal_ref
+    )
+    return WorkFileResult.model_validate(
+        filing_record_payload(record).model_dump(mode="python")
+        | {
+            "filing_timeliness": projection.filing_timeliness,
+            "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
+        }
+    )
+
+
 def work_file(
     ctx: typer.Context,
     calculation_revision_id: str | None = None,
@@ -396,16 +415,7 @@ def work_file(
     record = projection.record.to_record()
     timeliness = projection.filing_timeliness
     posture = projection.deadline.to_posture() if projection.deadline is not None else None
-    deadline_payload, _ = work_deadline_output_from_posture(
-        posture, fallback_legal_ref=projection.fallback_recargo_legal_ref
-    )
-    result = WorkFileResult.model_validate(
-        filing_record_payload(record).model_dump(mode="python")
-        | {
-            "filing_timeliness": timeliness,
-            "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
-        }
-    )
+    result = _work_file_result(record, projection, posture)
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
     lines.append(f"filing_timeliness\t{timeliness.value}")
     lines.extend(work_plazo_lines_from_posture(posture))

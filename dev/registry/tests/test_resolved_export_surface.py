@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
 from ..maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
@@ -121,8 +122,8 @@ def _three_path_revision() -> ModeloRevision:
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(filing_year_envelope().horizon, 1, 1),
+        period_selector=PeriodSelector(years=(filing_year_envelope().horizon,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         bindings=(binding,),

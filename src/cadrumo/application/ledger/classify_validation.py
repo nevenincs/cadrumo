@@ -14,7 +14,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.gross_validation import (
     GROSS_NEEDS_WITHHOLDING_CATEGORY_FIELD,
-    GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY,
+    GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY,
 )
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from .classify_result_contracts import (
@@ -35,7 +35,7 @@ _NEEDS_WITHHOLDING_CATEGORY_EVIDENCE = "ledger.transaction.withholding_category.
 def classify_validation_kind(error: Exception) -> LedgerClassifyValidationKind:
     """Retain the user-actionable refusal categories without raw context."""
     if any(
-        cause.translated_message == GROSS_NEEDS_WITHHOLDING_CATEGORY_MESSAGE_KEY
+        cause.translated_message == GROSS_NEEDS_WITHHOLDING_CATEGORY_LOCALE_KEY
         for cause in registered_refusal_causes(error)
     ):
         return "needs_withholding_category"

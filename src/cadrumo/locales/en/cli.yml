@@ -908,7 +908,7 @@ cli:
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
         received_invoice_finding: 'Modelo {modelo} {period} {filing_year}: {invoice_count}
-          received invoice(s) state a retención this window cannot declare ({reason}),
+          received invoice(s) state a withholding this window cannot declare ({reason}),
           so its calculation is held back. Calculate the modelo to see each invoice
           and correct it.'
         received_invoice_retencion_help: 'JSON `InvoiceWithholdingEvidenceRequest`:
@@ -1684,6 +1684,9 @@ cli:
           changes.'
         file_internal_disambiguation: This filing is internal only and is not submitted
           to the AEAT.
+        filing_evidence_option_other_modelo: 'Refused. Modelo %{modelo} takes none
+          of these options: %{options}. They belong to Modelo %{applies_to} only.
+          Remove them and run the calculation again; nothing was calculated.'
         formula_operation_calculation: calculation
         formula_operation_clamp: limit
         formula_operation_conditional: conditional
@@ -2044,6 +2047,7 @@ cli:
     still_missing: '{field} is still missing.'
   common:
     errors:
+      blank_value: The value cannot be empty or blank.
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
         is required.'
       parse_invalid_choice: 'Invalid value ''{value}''. Choose from: {accepted}.'

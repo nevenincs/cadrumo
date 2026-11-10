@@ -30,9 +30,10 @@ from ..edit_models import (
 from ..edit_value_grammar import binding_value_grammar, casilla_value_grammar
 from ..source_policy import SourceSurface
 from ..work_form_declaration_facts import ModeloFormCalculationNote
+from ..work_form_field_vocabulary import ModeloFormEditability
 from ..work_form_findings import ModeloFormIssue
 from ..work_form_issue_lines import form_issue_lines
-from ..work_form_models import ModeloFormEditability, ModeloWorkForm
+from ..work_form_models import ModeloWorkForm
 from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

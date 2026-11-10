@@ -13,8 +13,9 @@ def _composed_families(
 ) -> dict[str, tuple[str, ...]]:
     from cadrumo.application.modelo.declarations_list import DeclarationListGroup
     from cadrumo.application.modelo.source_policy import SourceFamily
+    from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormOrigin
     from cadrumo.application.modelo.work_form_findings import ModeloFormAttention
-    from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, ModeloFormSourceState
+    from cadrumo.application.modelo.work_form_models import ModeloFormSourceState
     from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
     from cadrumo.application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
     from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage

@@ -374,6 +374,26 @@ class DeadlineEngine:
                 obligations.append(obligation)
         return obligations
 
+    def _window_conditions_admit(
+        self,
+        profile: TaxpayerProfile,
+        window: DeadlineWindowDefinition,
+        *,
+        admit_undecided: bool,
+    ) -> bool:
+        """Return whether the window's applicability conditions keep it for ``profile``.
+
+        Matched conditions keep the window. With ``admit_undecided``, conditions
+        that fail only on facts the profile has not answered keep it too.
+        """
+        from ..calculations.registry.schedules import undecided_profile_condition_fields
+
+        conditions = window.applicability_conditions
+        mode = window.applicability_condition_mode
+        if self._evaluate_conditions(profile, conditions, mode=mode) is not None:
+            return True
+        return admit_undecided and bool(undecided_profile_condition_fields(conditions, profile, mode=mode))
+
     def _obligation_for_window(
         self,
         *,
@@ -405,7 +425,7 @@ class DeadlineEngine:
         asks instead whether the profile excludes the obligation, and an
         unanswered fact excludes nothing.
         """
-        from ..calculations.registry.schedules import applicable_filing_schedules, undecided_profile_condition_fields
+        from ..calculations.registry.schedules import applicable_filing_schedules
 
         if window.resultado_scope is not None or window.tipo_renta_scope is not None:
             return None
@@ -416,18 +436,7 @@ class DeadlineEngine:
             period=registry_period,
         ):
             return None
-        if self._evaluate_conditions(
-            profile,
-            window.applicability_conditions,
-            mode=window.applicability_condition_mode,
-        ) is None and not (
-            admit_undecided
-            and undecided_profile_condition_fields(
-                window.applicability_conditions,
-                profile,
-                mode=window.applicability_condition_mode,
-            )
-        ):
+        if not self._window_conditions_admit(profile, window, admit_undecided=admit_undecided):
             return None
         if window_outside_activity_period(
             period=window.period,

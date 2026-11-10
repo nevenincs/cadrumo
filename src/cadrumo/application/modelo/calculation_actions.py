@@ -421,19 +421,9 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     channels = prepared.channels
     replay_payloads = evaluation.replay_payloads
     casilla_values = evaluation.casilla_values
-    profile_diagnostics = _profile_diagnostics_for_open_boxes(
-        channels.profile_diagnostics, settled=casilla_values.keys() | evaluation.resolved_text_inputs.keys()
-    )
-    revision_source_issues, resolution_lookup = _with_credit_source_issues(
-        (
-            *source_issues,
-            *_precedence_issues(channels.precedence_diagnostics),
-            *unrouted_source_issues(profile_diagnostics, snapshot_printed_boxes(ports.operation, snapshot)),
-        ),
-        snapshot,
-        work_unit,
-        casilla_values=casilla_values,
-        channels=channels,
+    profile_diagnostics, revision_source_issues, resolution_lookup = _revision_source_issues(
+        evaluation,
+        source_issues,
         payment_year_binding_values=payment_year_binding_values,
         instalment_basis_binding_values=instalment_basis_binding_values,
         ports=ports,
@@ -498,6 +488,47 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         ),
         profile_diagnostics=profile_diagnostics,
     )
+
+
+def _revision_source_issues(
+    evaluation: TrustedMeshEvaluation,
+    source_issues: tuple[CalculationSourceIssue, ...],
+    *,
+    payment_year_binding_values: Mapping[BindingId, Decimal] | None,
+    instalment_basis_binding_values: Mapping[BindingId, Decimal] | None,
+    ports: CalculationActionPorts,
+) -> tuple[
+    tuple[CalculationSourceDiagnostic, ...],
+    tuple[CalculationSourceIssue, ...],
+    CreditResolutionLookup,
+]:
+    """Assemble every source issue the evaluated revision persists, with the profile notes and credit resolutions.
+
+    The caller's issues come first, then the blocking precedence divergences, the profile's unanswered
+    bindings that name a printed box the run left open, and finally the credit reconciliation issues.
+    """
+    prepared = evaluation.prepared
+    snapshot = prepared.snapshot
+    channels = prepared.channels
+    profile_diagnostics = _profile_diagnostics_for_open_boxes(
+        channels.profile_diagnostics,
+        settled=evaluation.casilla_values.keys() | evaluation.resolved_text_inputs.keys(),
+    )
+    revision_source_issues, resolution_lookup = _with_credit_source_issues(
+        (
+            *source_issues,
+            *_precedence_issues(channels.precedence_diagnostics),
+            *unrouted_source_issues(profile_diagnostics, snapshot_printed_boxes(ports.operation, snapshot)),
+        ),
+        snapshot,
+        prepared.work_unit,
+        casilla_values=evaluation.casilla_values,
+        channels=channels,
+        payment_year_binding_values=payment_year_binding_values,
+        instalment_basis_binding_values=instalment_basis_binding_values,
+        ports=ports,
+    )
+    return profile_diagnostics, revision_source_issues, resolution_lookup
 
 
 def _with_credit_source_issues(
@@ -726,6 +757,37 @@ def calculation_reconciliation_source_needs(
     )
 
 
+def _resolve_prepared_casilla_inputs(
+    prepared: PreparedCalculation,
+    ports: CalculationActionPorts,
+    *,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str]]:
+    """Resolve the numeric and text casilla inputs the engine runs over from every prepared channel."""
+    work_unit = prepared.work_unit
+    revision = prepared.snapshot.revision
+    channel_inputs = resolve_calculation_inputs(
+        revision=revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        backend_casilla_inputs=_trusted_backend_casilla_inputs(
+            prepared=prepared, work_unit=work_unit, revision=revision
+        ),
+        resolved_bindings=prepared.channels.bindings,
+        casilla_inputs=prepared.casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+        profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
+            revision,
+            profile_text_fact_index(
+                prepared.profile.record,
+                prepared.profile.profile_decode_context.schema,
+                operation=ports.operation,
+            ),
+        ).values,
+    )
+    return channel_inputs.casilla_inputs, validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
+
+
 def _evaluate_prepared_calculation(
     prepared: PreparedCalculation,
     ports: CalculationActionPorts,
@@ -765,31 +827,9 @@ def _evaluate_prepared_calculation(
     require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
     validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = _optional_mapping_as_dict(relation_values)
-    backend_casilla_inputs = _trusted_backend_casilla_inputs(
-        prepared=prepared,
-        work_unit=work_unit,
-        revision=snapshot.revision,
+    resolved_inputs, resolved_text_inputs = _resolve_prepared_casilla_inputs(
+        prepared, ports, text_casilla_inputs=text_casilla_inputs
     )
-    channel_inputs = resolve_calculation_inputs(
-        revision=snapshot.revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        backend_casilla_inputs=backend_casilla_inputs,
-        resolved_bindings=prepared.channels.bindings,
-        casilla_inputs=prepared.casilla_inputs,
-        text_casilla_inputs=text_casilla_inputs,
-        profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
-            snapshot.revision,
-            profile_text_fact_index(
-                prepared.profile.record,
-                prepared.profile.profile_decode_context.schema,
-                operation=ports.operation,
-            ),
-        ).values,
-    )
-    resolved_inputs = channel_inputs.casilla_inputs
-
-    resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
     _reject_clears_of_source_fed_casillas(
         cleared_casilla_ids,
         resolved_casilla_ids=(*resolved_inputs, *resolved_text_inputs),

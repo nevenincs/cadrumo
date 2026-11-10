@@ -19,7 +19,7 @@ from ...domain.calculations.registry.schema_form_layouts import FormContextField
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ..filing.export_producer import filing_producer_values
 from ..filing.producer_snapshot import FilingProducerSnapshot
-from .work_form_models import ModeloFormScalar
+from .work_form_field_vocabulary import ModeloFormScalar
 from .work_form_projection_records import saved_projection_context_value
 
 

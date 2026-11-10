@@ -9,11 +9,13 @@ from ..authority import bundled_indexed_authority
 from ..errors import RegistryValidationError
 from ..export_parse import parse_export_payload, parse_filed_payload
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PREFIX = b"<T303020241T0000>" + b" " * (328 - 17)
-_CLOSER = b"</T303020241T0000>"
+_YEAR = filing_year_envelope().floor
+_PREFIX = f"<T3030{_YEAR}1T0000>".encode() + b" " * (328 - 17)
+_CLOSER = f"</T3030{_YEAR}1T0000>".encode()
 _FIRST = b"A01234SIGZ"
 _SECOND = b"B00056   Z"
 
@@ -21,7 +23,7 @@ _SECOND = b"B00056   Z"
 @pytest.fixture
 def layout() -> ExportLayoutDefinition:
     with bundled_indexed_authority().operation() as operation:
-        source = operation.snapshot("303", filing_year=2024, period="1T").revision.export_layouts[0]
+        source = operation.snapshot("303", filing_year=_YEAR, period="1T").revision.export_layouts[0]
         assert source.filing_envelope is not None
         records = []
         for index, marker in enumerate(("A", "B")):

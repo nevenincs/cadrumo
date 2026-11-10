@@ -10,12 +10,13 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.authority_artifact import AuthorityGenerationPin
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import engine as deadline_engine
 from ..engine import indexed_deadline_window_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon - 1
 _OTHER_GENERATION = AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
 
@@ -187,7 +188,8 @@ def test_each_window_carries_the_filing_schedules_of_its_hydrated_owner(operatio
     the hydrating derivation owns none.
     """
     compared = 0
-    for year in range(2024, 2028):
+    envelope = filing_year_envelope()
+    for year in range(envelope.floor, envelope.horizon + 2):
         index = indexed_deadline_window_year(operation, year)
         # A window derived from a filing-window clause has no authored owner row to compare.
         projected = tuple(item for item in index.dated if item[2].id not in index.projected)
@@ -203,4 +205,6 @@ def test_each_window_carries_the_filing_schedules_of_its_hydrated_owner(operatio
             assert hydrated.id == metadata.id
             assert metadata.filing_schedules == hydrated.filing_schedules, (modelo, str(metadata.id), window.id)
             compared += 1
-    assert compared, "the bundled generation must carry deadline windows in 2024-2027, or equality proves nothing"
+    assert compared, (
+        "the bundled generation must carry deadline windows across the support envelope, or equality proves nothing"
+    )

@@ -206,6 +206,109 @@ def test_link_refuses_cross_bucket_catalogue_invoice(
         assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
 
 
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_link_accepts_the_invoice_prefix_that_match_prints(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """``invoice match`` prints twelve-character ids; ``link`` resolves them to the one invoice."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        invoice_id = _create_catalogue_invoice(session)
+
+        linked = _invoke_open_profile(
+            session, "app", "ledger", "link", transaction_id[:12], "--invoice-id", invoice_id[:12]
+        )
+
+        assert linked.exit_code == 0, linked.output
+        assert line_value(linked.output, "invoice_id") == invoice_id
+        stored = _stored_invoice(session.profile_id, authority_operation, invoice_id)
+        assert stored is not None, "catalogue invoice missing after link"
+        assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_link_refuses_an_ambiguous_invoice_prefix_naming_the_candidates(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli
+) -> None:
+    """A prefix that two invoices carry links nothing and lists both full ids."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        with bundled_indexed_authority().operation():
+            planted = [
+                build_catalogue_invoice(
+                    bucket_id=str(session.profile_id),
+                    kind=InvoiceKind.RECEIVED,
+                    counterparty_name="Papeleria Sol SL",
+                    counterparty_tax_id=_RECEIVED_COUNTERPARTY_CIF,
+                    counterparty_country="ES",
+                    invoice_number=f"2026-{number:04d}",
+                    issued_at=date(2026, 3, 10),
+                    taxable_base=Decimal("100.00"),
+                    iva_rate=Decimal("21"),
+                    currency="EUR",
+                    rate_provider=recorded_ecb_rate_provider(),
+                )
+                for number in range(1, 18)
+            ]
+        # Seventeen content-addressed hex ids cannot all begin with a different digit.
+        by_first_digit: dict[str, list[str]] = {}
+        for invoice in planted:
+            by_first_digit.setdefault(invoice.invoice_id[0], []).append(invoice.invoice_id)
+        prefix, candidates = next((digit, ids) for digit, ids in by_first_digit.items() if len(ids) > 1)
+        with password_profile_session(session.profile_id, authority_operation):
+            _write_raw_catalogue(build_invoice_catalogue(planted))
+
+        linked = session.invoke_password(
+            "app", "ledger", "link", transaction_id, "--invoice-id", prefix, output_format="text"
+        )
+
+        assert linked.exit_code != 0, linked.output
+        assert all(candidate in linked.output for candidate in candidates), linked.output
+        with password_profile_session(session.profile_id, authority_operation):
+            reloaded = _load_raw_catalogue()
+        assert all(row.linked_transaction_ids == () for row in reloaded.invoices.values())
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_link_refuses_a_blank_invoice_id_as_usage_naming_the_option(
+    authority_operation: PinnedAuthorityOperation, tmp_path: Path, run_cadrumo_cli, blank: str
+) -> None:
+    """An empty or blank ``--invoice-id`` is a usage refusal, not a crash, and links nothing."""
+    with native_invoice_runtime_session(
+        tmp_path,
+        invoke_cli=run_cadrumo_cli,
+        operation_ids=_LINK_RUNTIME_OPERATIONS,
+        profile_value_operation_ids=frozenset({LEDGER_LINK_OPERATION_DEFINITION_ID}),
+        authority_operation=authority_operation,
+    ) as session:
+        transaction_id = _add_outgoing_transaction(session)
+        invoice_id = _create_catalogue_invoice(session)
+
+        refused = _invoke_open_profile(session, "app", "ledger", "link", transaction_id, "--invoice-id", blank)
+
+        assert refused.exit_code == 2, refused.output
+        assert "'--invoice-id'" in refused.output, refused.output
+        stored = _stored_invoice(session.profile_id, authority_operation, invoice_id)
+        assert stored is not None
+        assert stored.linked_transaction_ids == ()
+
+
 def _stored_invoice(profile_id: UUID, authority_operation: PinnedAuthorityOperation, invoice_id: str) -> Invoice | None:
     return catalogue_after_password_login(profile_id, authority_operation).invoices.get(invoice_id)
 
