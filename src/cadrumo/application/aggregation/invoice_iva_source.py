@@ -103,6 +103,16 @@ class InvoicePaymentPartition:
     linked_movements: Mapping[str, Transaction] = field(default_factory=dict[str, Transaction])
 
 
+def _register_bound_ids(movements: Mapping[str, Transaction], *, operation: PinnedAuthorityOperation) -> frozenset[str]:
+    """Return the movements classified as a bien de inversión acquisition."""
+    return frozenset(
+        transaction_id
+        for transaction_id, movement in movements.items()
+        if movement.deduction_fact_kind is not None
+        and is_iva_deduction_kind(movement.deduction_fact_kind, "kind.investment_acquisition", authority=operation)
+    )
+
+
 def partition_invoice_payments(
     invoices: Iterable[Invoice],
     *,
@@ -118,12 +128,7 @@ def partition_invoice_payments(
     """
     bucket_invoices = tuple(invoice for invoice in invoices if invoice.bucket_id in (None, bucket_id))
     movements = {movement.transaction_id: movement for movement in linked_movements.values()}
-    register_bound = frozenset(
-        transaction_id
-        for transaction_id, movement in movements.items()
-        if movement.deduction_fact_kind is not None
-        and is_iva_deduction_kind(movement.deduction_fact_kind, "kind.investment_acquisition", authority=operation)
-    )
+    register_bound = _register_bound_ids(movements, operation=operation)
     source_invoices = tuple(
         invoice for invoice in bucket_invoices if not register_bound.intersection(invoice.linked_transaction_ids)
     )
@@ -135,6 +140,28 @@ def partition_invoice_payments(
     )
 
 
+def _fully_figured_payments(invoice: Invoice, linked_movements: Mapping[str, Transaction]) -> tuple[Transaction, ...]:
+    """Return the paying movements when every one states both a base and a cuota, else nothing."""
+    movements = tuple(
+        movement
+        for transaction_id in invoice.linked_transaction_ids
+        if (movement := linked_movements.get(transaction_id)) is not None
+    )
+    if any(movement.taxable_base is None or movement.iva_amount is None for movement in movements):
+        return ()
+    return movements
+
+
+def _paying_movements_contradict(invoice: Invoice, linked_movements: Mapping[str, Transaction]) -> bool:
+    """Whether every paying movement states figures that sum to a different base or cuota."""
+    movements = _fully_figured_payments(invoice, linked_movements)
+    if not movements:
+        return False
+    stated_base = sum((movement.taxable_base or Decimal("0") for movement in movements), Decimal("0"))
+    stated_cuota = sum((movement.iva_amount or Decimal("0") for movement in movements), Decimal("0"))
+    return (stated_base, stated_cuota) != (invoice.base_total_eur, invoice.iva_total_eur)
+
+
 def contradicting_linked_invoices(partition: InvoicePaymentPartition) -> tuple[Invoice, ...]:
     """Return the invoices whose paying movements state a different base or cuota.
 
@@ -142,20 +169,11 @@ def contradicting_linked_invoices(partition: InvoicePaymentPartition) -> tuple[I
     does, their sum must equal the invoice's EUR totals. A partial set of
     figures is payment evidence only and is not compared.
     """
-    contradicted: list[Invoice] = []
-    for invoice in partition.source_invoices:
-        movements = tuple(
-            movement
-            for transaction_id in invoice.linked_transaction_ids
-            if (movement := partition.linked_movements.get(transaction_id)) is not None
-        )
-        if not movements or any(movement.taxable_base is None or movement.iva_amount is None for movement in movements):
-            continue
-        stated_base = sum((movement.taxable_base or Decimal("0") for movement in movements), Decimal("0"))
-        stated_cuota = sum((movement.iva_amount or Decimal("0") for movement in movements), Decimal("0"))
-        if (stated_base, stated_cuota) != (invoice.base_total_eur, invoice.iva_total_eur):
-            contradicted.append(invoice)
-    return tuple(contradicted)
+    return tuple(
+        invoice
+        for invoice in partition.source_invoices
+        if _paying_movements_contradict(invoice, partition.linked_movements)
+    )
 
 
 def refuse_contradicting_linked_movements(contradicted: Sequence[Invoice]) -> None:
@@ -168,6 +186,17 @@ def refuse_contradicting_linked_movements(contradicted: Sequence[Invoice]) -> No
                 "invoice_count": str(len(contradicted)),
             },
         )
+
+
+def _outside_window_ids(invoices: Sequence[Invoice], *, period: Period, window_ids: set[str]) -> set[str]:
+    """Return the movement ids that invoices accruing in ``period`` name outside the window."""
+    return {
+        transaction_id
+        for invoice in invoices
+        if invoice_devengo_in_period(invoice, period=period)
+        for transaction_id in invoice.linked_transaction_ids
+        if transaction_id not in window_ids
+    }
 
 
 def linked_movements_for_period(
@@ -185,14 +214,7 @@ def linked_movements_for_period(
     """
     named = {transaction_id for invoice in invoices for transaction_id in invoice.linked_transaction_ids}
     in_window = [transaction for transaction in window if transaction.transaction_id in named]
-    window_ids = {transaction.transaction_id for transaction in in_window}
-    outside = {
-        transaction_id
-        for invoice in invoices
-        if invoice_devengo_in_period(invoice, period=period)
-        for transaction_id in invoice.linked_transaction_ids
-        if transaction_id not in window_ids
-    }
+    outside = _outside_window_ids(invoices, period=period, window_ids={t.transaction_id for t in in_window})
     if not outside:
         return TransactionCatalogue.from_transactions(in_window)
     return TransactionCatalogue.from_transactions((*in_window, *repository.load_by_ids(outside)))
@@ -315,24 +337,8 @@ class InvoiceIvaSource:
     screen: ScreenedInvoiceIva
 
 
-def invoice_iva_source(
-    partition: InvoicePaymentPartition,
-    *,
-    bucket_id: str,
-    period: Period,
-    unlinked_movements: Sequence[Transaction],
-    operation: PinnedAuthorityOperation,
-) -> InvoiceIvaSource:
-    """Project the period's source invoices and report what blocks filing grade."""
-    from .modelo_bindings_invoice_iva import invoice_iva_in_period, screened_invoice_iva_observations
-
-    screen = screened_invoice_iva_observations(
-        partition.source_invoices,
-        bucket_id=bucket_id,
-        period=period,
-        linked_movements=partition.linked_movements,
-        operation=operation,
-    )
+def _screen_findings(screen: ScreenedInvoiceIva) -> list[InvoiceIvaFinding]:
+    """Return the findings the invoice screen itself raises, in their reported order."""
     findings = [
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.DEDUCTION_FAMILY_UNRESOLVED, invoice_id=invoice.invoice_id)
         for invoice in screen.deduction_authority_missing
@@ -345,6 +351,19 @@ def invoice_iva_source(
         InvoiceIvaFinding(reason=InvoiceIvaFindingReason.RECARGO_SPLIT_UNRESOLVED, invoice_id=invoice.invoice_id)
         for invoice in screen.recargo_split_unresolved
     )
+    return findings
+
+
+def _double_count_findings(
+    partition: InvoicePaymentPartition,
+    *,
+    bucket_id: str,
+    period: Period,
+    unlinked_movements: Sequence[Transaction],
+) -> list[InvoiceIvaFinding]:
+    """Return a finding per unlinked self-figured movement the matcher pairs with an in-period invoice."""
+    from .modelo_bindings_invoice_iva import invoice_iva_in_period
+
     in_period = tuple(
         invoice
         for invoice in partition.source_invoices
@@ -356,13 +375,37 @@ def invoice_iva_source(
         if movement.transaction_id not in partition.paid_transaction_ids
         and (movement.taxable_base is not None or movement.iva_amount is not None)
     )
-    findings.extend(
+    return [
         InvoiceIvaFinding(
             reason=InvoiceIvaFindingReason.MOVEMENT_DOUBLE_COUNT,
             invoice_id=suggestion.pair.invoice.invoice_id,
             transaction_id=suggestion.pair.transaction.transaction_id,
         )
         for suggestion in suggest_payments(self_figured, in_period)
+    ]
+
+
+def invoice_iva_source(
+    partition: InvoicePaymentPartition,
+    *,
+    bucket_id: str,
+    period: Period,
+    unlinked_movements: Sequence[Transaction],
+    operation: PinnedAuthorityOperation,
+) -> InvoiceIvaSource:
+    """Project the period's source invoices and report what blocks filing grade."""
+    from .modelo_bindings_invoice_iva import screened_invoice_iva_observations
+
+    screen = screened_invoice_iva_observations(
+        partition.source_invoices,
+        bucket_id=bucket_id,
+        period=period,
+        linked_movements=partition.linked_movements,
+        operation=operation,
+    )
+    findings = _screen_findings(screen)
+    findings.extend(
+        _double_count_findings(partition, bucket_id=bucket_id, period=period, unlinked_movements=unlinked_movements)
     )
     return InvoiceIvaSource(observations=screen.observations, findings=tuple(findings), screen=screen)
 
