@@ -19,17 +19,25 @@ from ..analysis.temporal_enrollment_models import (
     TemporalEnrollmentExclusionPin,
 )
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions, newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PATH = "dev/registry/tests/yearless_fixture.py"
+#: The three newest authored modelo 390 revisions stand in for a small enumeration; the middle one is pinned below.
+_FIRST, _PINNED, _LAST = authored_revisions("390")[-3:]
+_FIRST_ID, _PINNED_ID, _LAST_ID = str(_FIRST.id), str(_PINNED.id), str(_LAST.id)
+_PINNED_SOURCE_REF = next(str(ref) for ref in _PINNED.source_refs if str(ref).startswith("aeat-dr-390-"))
+#: A revision id the registry does not declare: the exercise after the newest authored edition.
+_RETIRED_ID = str(newest_authored_edition("390") + 1)
 _EXPECTED = frozenset(
     {
-        RegistryRevisionSubject("390", "2022"),
-        RegistryRevisionSubject("390", "2023"),
-        RegistryRevisionSubject("390", "2024"),
+        RegistryRevisionSubject("390", _FIRST_ID),
+        RegistryRevisionSubject("390", _PINNED_ID),
+        RegistryRevisionSubject("390", _LAST_ID),
     }
 )
+_ROWS_WITHOUT_PINNED = f'    _GeneratedTree("390", "{_FIRST_ID}"),\n    _GeneratedTree("390", "{_LAST_ID}"),'
 
 
 @pytest.fixture(scope="module")
@@ -78,14 +86,14 @@ def test_a_retired_revision_identity_is_reported_against_the_live_registry(
 ) -> None:
     """The sweep's tooth: one row naming a revision the registry no longer declares."""
     (tmp_path / "literal.py").write_text(
-        '_ROWS = (("390", "2022"), ("390", "2099"))\n',
+        f'_ROWS = (("390", "{_FIRST_ID}"), ("390", "{_RETIRED_ID}"))\n',
         encoding="utf-8",
     )
 
     audit = audit_registry_test_enrollment_literals(authority, root=tmp_path)
 
     assert not audit.clean
-    assert audit.findings[0].absent == (RegistryRevisionSubject("390", "2099"),)
+    assert audit.findings[0].absent == (RegistryRevisionSubject("390", _RETIRED_ID),)
 
 
 def test_a_collection_keyed_by_something_other_than_a_revision_is_not_an_enumeration(
@@ -108,7 +116,8 @@ def test_yearless_constructor_collection_is_detected_without_filename_help(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2023"),\n    _GeneratedTree("390", "2024"),',
+        f'    _GeneratedTree("390", "{_FIRST_ID}"),\n    _GeneratedTree("390", "{_PINNED_ID}"),\n'
+        f'    _GeneratedTree("390", "{_LAST_ID}"),',
         authority,
     )
 
@@ -119,24 +128,25 @@ def test_yearless_constructor_collection_is_detected_without_filename_help(
 
 def test_removed_pair_reports_the_exact_missing_identity(authority: ValidatedRegistryAuthority) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2024"),',
+        _ROWS_WITHOUT_PINNED,
         authority,
     )
 
     assert len(audit.findings) == 1
-    assert audit.findings[0].missing == (RegistryRevisionSubject("390", "2023"),)
+    assert audit.findings[0].missing == (RegistryRevisionSubject("390", _PINNED_ID),)
     assert audit.findings[0].extra == ()
 
 
 def test_altered_pair_reports_exact_missing_and_extra_identities(authority: ValidatedRegistryAuthority) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2099"),\n    _GeneratedTree("390", "2024"),',
+        f'    _GeneratedTree("390", "{_FIRST_ID}"),\n    _GeneratedTree("390", "{_RETIRED_ID}"),\n'
+        f'    _GeneratedTree("390", "{_LAST_ID}"),',
         authority,
     )
 
     assert len(audit.findings) == 1
-    assert audit.findings[0].missing == (RegistryRevisionSubject("390", "2023"),)
-    assert audit.findings[0].extra == (RegistryRevisionSubject("390", "2099"),)
+    assert audit.findings[0].missing == (RegistryRevisionSubject("390", _PINNED_ID),)
+    assert audit.findings[0].extra == (RegistryRevisionSubject("390", _RETIRED_ID),)
 
 
 def test_imported_enrollment_is_not_counted_as_a_second_literal_declaration(
@@ -158,38 +168,38 @@ def test_imported_enrollment_is_not_counted_as_a_second_literal_declaration(
 def test_exclusion_pin_goes_dormant_when_its_source_is_reissued(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    source = authority.catalogues.sources["aeat-dr-390-2023"]
+    source = authority.catalogues.sources[_PINNED_SOURCE_REF]
     pin = TemporalEnrollmentExclusionPin(
         path=_PATH,
         symbol="_GENERATED_TREES",
         modelo="390",
-        revision="2023",
-        source_ref="aeat-dr-390-2023",
+        revision=_PINNED_ID,
+        source_ref=_PINNED_SOURCE_REF,
         source_sha256=source.sha256,
         reason="The isolated fixture deliberately withholds this subject.",
         reconsideration_condition="Re-enrol when the pinned design is reissued.",
     )
-    rows = '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2024"),'
+    rows = _ROWS_WITHOUT_PINNED
 
     assert _audit(rows, authority, pins=(pin,)).clean
 
     reissued = pin.model_copy(update={"source_sha256": "0" * 64})
     dormant = _audit(rows, authority, pins=(reissued,))
-    assert dormant.findings[0].missing == (RegistryRevisionSubject("390", "2023"),)
-    assert dormant.findings[0].dormant_pins == (RegistryRevisionSubject("390", "2023"),)
+    assert dormant.findings[0].missing == (RegistryRevisionSubject("390", _PINNED_ID),)
+    assert dormant.findings[0].dormant_pins == (RegistryRevisionSubject("390", _PINNED_ID),)
 
 
 def test_pin_cannot_survive_after_its_literal_declaration_is_removed(
     tmp_path: Path,
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    source = authority.catalogues.sources["aeat-dr-390-2023"]
+    source = authority.catalogues.sources[_PINNED_SOURCE_REF]
     pin = TemporalEnrollmentExclusionPin(
         path=(tmp_path / "removed.py").as_posix(),
         symbol="_GENERATED_TREES",
         modelo="390",
-        revision="2023",
-        source_ref="aeat-dr-390-2023",
+        revision=_PINNED_ID,
+        source_ref=_PINNED_SOURCE_REF,
         source_sha256=source.sha256,
         reason="The declaration used to omit this subject.",
         reconsideration_condition="Remove this pin with its declaration.",
@@ -199,7 +209,7 @@ def test_pin_cannot_survive_after_its_literal_declaration_is_removed(
     audit = audit_registry_test_enrollment_literals(authority, root=tmp_path, pins=(pin,))
 
     assert not audit.clean
-    assert audit.findings[0].unnecessary_pins == (RegistryRevisionSubject("390", "2023"),)
+    assert audit.findings[0].unnecessary_pins == (RegistryRevisionSubject("390", _PINNED_ID),)
 
 
 def test_scanner_accepts_an_isolated_test_root_without_import_double_counting(
@@ -207,7 +217,7 @@ def test_scanner_accepts_an_isolated_test_root_without_import_double_counting(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     (tmp_path / "literal.py").write_text(
-        '_ROWS = (("390", "2022"), ("390", "2023"), ("390", "2024"))\n',
+        f'_ROWS = (("390", "{_FIRST_ID}"), ("390", "{_PINNED_ID}"), ("390", "{_LAST_ID}"))\n',
         encoding="utf-8",
     )
     (tmp_path / "consumer.py").write_text(
