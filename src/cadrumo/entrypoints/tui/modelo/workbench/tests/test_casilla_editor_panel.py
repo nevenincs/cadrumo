@@ -23,13 +23,13 @@ from textual.geometry import Region
 from textual.widgets import Button, Input, Static
 
 from ......application.modelo.source_policy import SourceFamily, SourceSurface
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
 from ......application.modelo.work_form_wording import period_words
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings

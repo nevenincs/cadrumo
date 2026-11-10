@@ -22,7 +22,11 @@ from ....domain.calculations.registry.schema import FormulaDefinition, RegistryS
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormCredit, ModeloWorkForm
+from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from ..work_form_models import (
+    ModeloFormCredit,
+    ModeloWorkForm,
+)
 from ..workbench_projection import project_modelo_workbench_form
 from .work_form_fixture import built_form, form_snapshot, read_before_calculation, uncalculated_review
 

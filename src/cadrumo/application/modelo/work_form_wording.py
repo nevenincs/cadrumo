@@ -26,19 +26,21 @@ from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
 from .source_policy import SourceFamily
 from .value_presentation import absent_value_text, format_casilla_value
 from .work_form_declaration_facts import ModeloFormEditClosure
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ABSENT_FROM_ADMISSION,
     ASKS_FOR_A_VALUE,
     FED_BY_A_SOURCE,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
     ModeloFormRate,
     ModeloFormRateUnit,
+    ModeloFormScalar,
+)
+from .work_form_models import (
+    ModeloFormField,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
-    ModeloFormScalar,
     ModeloFormSection,
     ModeloWorkForm,
     map_form_fields,

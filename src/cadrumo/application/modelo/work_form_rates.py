@@ -15,16 +15,18 @@ from ...domain.calculations.registry.ledger_iva_bindings import LedgerIvaProvide
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition, FormPageDefinition
 from .edit_value_grammar import ModeloEditRatioUnit, ratio_unit
-from .work_form_models import (
+from .work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormField,
-    ModeloFormGridCell,
-    ModeloFormGridRow,
     ModeloFormOrigin,
     ModeloFormPrintedRate,
     ModeloFormRate,
-    ModeloFormRepeatingBlock,
     ModeloFormScalar,
+)
+from .work_form_models import (
+    ModeloFormField,
+    ModeloFormGridCell,
+    ModeloFormGridRow,
+    ModeloFormRepeatingBlock,
     ModeloFormSection,
     section_fields,
 )

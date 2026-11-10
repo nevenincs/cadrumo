@@ -16,7 +16,7 @@ from ......adapters.persistence.profile.modelos_verification_reports import Veri
 from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ......application.modelo.work_form_models import address_key
+from ......application.modelo.work_form_field_vocabulary import address_key
 from ......application.modelo.work_form_next_step import blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

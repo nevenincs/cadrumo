@@ -25,16 +25,18 @@ from ....domain.calculations.registry.schema_form_layouts import (
 )
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..work_form import build_modelo_work_form
+from ..work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormStanding,
+    ModeloFormTextDisclosure,
+)
 from ..work_form_layout import section_applies
 from ..work_form_models import (
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormOrigin,
     ModeloFormOutlineGroup,
     ModeloFormOutlineKind,
-    ModeloFormStanding,
-    ModeloFormTextDisclosure,
     ModeloWorkForm,
     section_fields,
 )

@@ -31,11 +31,13 @@ from ....application.modelo.edit_models import (
 )
 from ....application.modelo.history import assemble_work_unit_history
 from ....application.modelo.history_ports import ModeloHistoryPorts
-from ....application.modelo.work_form_models import (
+from ....application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
+)
+from ....application.modelo.work_form_models import (
+    ModeloFormField,
     ModeloWorkForm,
 )
 from ....application.modelo.work_form_rebase import accepts

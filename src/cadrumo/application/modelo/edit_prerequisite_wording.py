@@ -16,7 +16,11 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
+from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .work_form_models import (
+    ModeloFormField,
+    ModeloWorkForm,
+)
 from .work_form_service import load_modelo_work_form
 from .work_form_source_groups import earlier_filing_text
 

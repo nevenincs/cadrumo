@@ -49,7 +49,14 @@ from ..profile_export_binding import (
     resolve_profile_identity_producer_values,
 )
 from ..work_form_context_values import form_context_value
-from ..work_form_models import ModeloFormContextFieldBlock, ModeloFormOrigin, ModeloFormScalar, ModeloWorkForm
+from ..work_form_field_vocabulary import (
+    ModeloFormOrigin,
+    ModeloFormScalar,
+)
+from ..work_form_models import (
+    ModeloFormContextFieldBlock,
+    ModeloWorkForm,
+)
 from ..work_form_service import load_modelo_work_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

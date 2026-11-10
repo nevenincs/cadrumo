@@ -75,26 +75,28 @@ from .work_form_export_offer import (
     ModeloFormReceipt,
     ModeloFormReviewPackageOffer,
 )
+from .work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormBinding,
+    ModeloFormBlocker,
+    ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormRateUnit,
+    ModeloFormStanding,
+    ModeloFormText,
+)
 from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
-    ModeloFormAddressV1,
-    ModeloFormBinding,
-    ModeloFormBlocker,
     ModeloFormCarryAttestation,
     ModeloFormCounts,
     ModeloFormCredit,
-    ModeloFormEditability,
     ModeloFormGridColumn,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
     ModeloFormOutlineGroup,
-    ModeloFormRateUnit,
     ModeloFormSourceGroup,
-    ModeloFormStanding,
-    ModeloFormText,
 )
 from .work_form_next_step import ModeloFormNextStep
 from .work_form_service import ModeloWorkFormLoadV1

@@ -9,7 +9,8 @@ import pytest
 
 from cadrumo.application.modelo.tests.work_form_fixture import uncalculated_review
 from cadrumo.application.modelo.work_form import build_modelo_work_form
-from cadrumo.application.modelo.work_form_models import ModeloFormContextFieldBlock, ModeloFormScalar
+from cadrumo.application.modelo.work_form_field_vocabulary import ModeloFormScalar
+from cadrumo.application.modelo.work_form_models import ModeloFormContextFieldBlock
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path

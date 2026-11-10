@@ -39,7 +39,7 @@ from cadrumo.application.modelo.export_amendment_evidence import resolve_persist
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_form import build_modelo_work_form
-from cadrumo.application.modelo.work_form_models import address_key
+from cadrumo.application.modelo.work_form_field_vocabulary import address_key
 from cadrumo.application.modelo.work_form_service import modelo_form_snapshot
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts

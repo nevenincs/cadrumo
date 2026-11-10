@@ -51,7 +51,11 @@ from .edit_preflight import (
 from .edit_value_grammar import ModeloEditValueGrammarV1
 from .value_presentation import format_casilla_value
 from .work_form_field_state import BINDING_DATA_TYPE
-from .work_form_models import ModeloFormAddressV1, ModeloFormBindingAddressV1, ModeloFormCasillaAddressV1
+from .work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormBindingAddressV1,
+    ModeloFormCasillaAddressV1,
+)
 
 WORDED_FINDING_CODES: Final[tuple[str, ...]] = (
     INTENT_NOT_ADMITTED,

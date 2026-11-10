@@ -13,14 +13,16 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ......application.modelo.source_policy import SourceFamily
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormValueSource,
+)
+from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormLayoutProvenance,
-    ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,
-    ModeloFormValueSource,
     ModeloWorkForm,
 )
 from ......application.modelo.work_form_outline import form_outline

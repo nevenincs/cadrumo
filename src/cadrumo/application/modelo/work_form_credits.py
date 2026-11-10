@@ -25,7 +25,11 @@ from ...core.i18n.render import tr
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
 from ...domain.calculations.registry.schema import ModeloRevision
 from .source_policy import SourceSurface
-from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormCredit, ModeloFormField
+from .work_form_field_vocabulary import ModeloFormCasillaAddressV1
+from .work_form_models import (
+    ModeloFormCredit,
+    ModeloFormField,
+)
 
 
 def _formula_readers(revision: ModeloRevision) -> Mapping[str, frozenset[str]] | None:

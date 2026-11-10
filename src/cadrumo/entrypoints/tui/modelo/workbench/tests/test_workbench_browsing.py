@@ -15,10 +15,12 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Input, OptionList, Static
 
-from ......application.modelo.work_form_models import (
-    ModeloFormFieldBlock,
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormText,
     ModeloFormTextDisclosure,
+)
+from ......application.modelo.work_form_models import (
+    ModeloFormFieldBlock,
     ModeloWorkForm,
 )
 from ......core.config import override_settings
