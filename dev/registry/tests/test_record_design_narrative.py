@@ -42,9 +42,7 @@ def test_an_unnumbered_row_is_admitted_and_a_printed_label_is_admitted_verbatim(
     ``int``-typed ordinal could not represent.
     """
     root = RECORD_DESIGN_ROOT
-    unnumbered = (
-        root / "modelo_036" / "files" / "04-036-ejercicio-2021-y-siguientes-actualizado-11-04-2023-106-kb-xlsx.xlsx"
-    )
+    (unnumbered,) = (root / "modelo_036" / "files").glob("04-036-*-xlsx.xlsx")
     printed_label = (
         root / "modelo_303" / "files" / "12-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-292-kb-xlsx.xlsx"
     )
