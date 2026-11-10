@@ -121,8 +121,12 @@ class LedgerEntryLimitsPayload(OutputSchema):
 
 
 class LedgerEntryOptionsResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger entry-options``."""
+    """JSON envelope for ``aeat app ledger entry-options``.
 
+    ``default_currency`` is the ledger's functional currency, one of the served ``currency`` codes.
+    """
+
+    default_currency: str
     families: list[LedgerEntryOptionFamilyPayload]
     classifications: list[LedgerEntryClassificationPayload]
     limits: LedgerEntryLimitsPayload
