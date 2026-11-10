@@ -43,6 +43,7 @@ export const COLUMN_IDS = [
   "iva_rate",
   "iva_amount",
   "irpf_category",
+  "retencion",
   "documents",
   "group_label",
   "account",
@@ -103,6 +104,8 @@ export const COLUMN_SPECS: Record<ColumnId, ColumnSpec> = {
   iva_rate: { width: 4.5, align: "end", sortable: true },
   iva_amount: { width: 6, align: "end", sortable: true },
   irpf_category: { width: 9, sortable: true },
+  // What the paid invoices' retención leaves on the payment, as served.
+  retencion: { width: 7, align: "end", sortable: false },
   // The match beside the amount it accounts for: a glyph, kept in view.
   invoice: { width: 3, sticky: "end", sortable: false },
   documents: { width: 4.5, align: "end", sortable: false },
@@ -169,6 +172,7 @@ export const COLUMN_PRESETS: Record<PresetId, readonly ColumnId[]> = {
     "invoice",
     "classification",
     "category",
+    "retencion",
     "group_label",
   ],
   iva: [
@@ -198,6 +202,7 @@ export const COLUMN_PRESETS: Record<PresetId, readonly ColumnId[]> = {
     "classification",
     "category",
     "irpf_category",
+    "retencion",
   ],
   everything: COLUMN_IDS,
 };

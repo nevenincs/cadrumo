@@ -39,6 +39,7 @@ export function LedgerPageBody({
     onViewChange,
     memory,
     copy,
+    paste,
     onOpenLink,
   } = props;
   const {
@@ -280,6 +281,8 @@ export function LedgerPageBody({
             shownImport={shownImport}
             onImportCleared={() => setShownImport(null)}
             linked={linkedMovement}
+            copy={copy}
+            paste={paste}
           />
         </>
       );

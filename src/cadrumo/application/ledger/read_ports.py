@@ -8,16 +8,22 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.transactions.models import TransactionCatalogue
+    from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
     from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 
 
 @dataclass(frozen=True)
 class LedgerReadPorts:
-    """Read composition without invoice, calculation or evidence hydration."""
+    """Read composition without calculation or evidence hydration.
+
+    The invoice catalogue is read only to say which listed movements pay an
+    invoice that states a retención.
+    """
 
     operation: PinnedAuthorityOperation
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol
+    invoice_repository: InvoiceCatalogueReader
 
 
 class FullyValidatedTransactionCatalogueReader(Protocol):

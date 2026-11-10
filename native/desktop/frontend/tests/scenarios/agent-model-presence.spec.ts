@@ -178,3 +178,30 @@ test("a send for a model this computer no longer holds is refused in words with 
   await download(alert).click();
   await expect(settings(target)).toBeVisible();
 });
+
+// A model this computer cannot run is refused with its own sentence and the
+// way on, the local AI's settings, on either engine's lane; the generic
+// failure is never shown for it.
+for (const lane of ["llamacpp/api", "ollama/api"]) {
+  test(`a send for a model that does not fit on ${lane} is refused in the served words with the way on`, async ({
+    page: target,
+  }) => {
+    await open(target);
+    const picker = await openModelPicker(target);
+    await pickWay(target, picker, lane);
+    await target.keyboard.press("Escape");
+    await expect(picker).toBeHidden();
+    await ask(target, "Esto no cabe");
+    const alert = column(target)
+      .getByRole("alert")
+      .filter({ hasText: label("desktop.agent.model_does_not_fit_refused") });
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toContainText(
+      label("desktop.agent.request_failed"),
+    );
+    // The message is given back to try again.
+    await expect(messageField(target)).toHaveValue("Esto no cabe");
+    await download(alert).click();
+    await expect(settings(target)).toBeVisible();
+  });
+}

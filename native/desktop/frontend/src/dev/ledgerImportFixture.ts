@@ -219,6 +219,7 @@ export function importOperations(
           sealed: false,
           llm_rejected: false,
           idempotency_key: null,
+          withholding: [],
         });
       }
       // The rows already stored are named once, as the application does.

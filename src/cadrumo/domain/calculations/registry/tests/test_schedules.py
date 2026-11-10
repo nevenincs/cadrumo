@@ -30,8 +30,11 @@ from ..schedules import (
     resolve_profile_fact,
 )
 from ..schema_live_verification import ProfilePredicateDefinition
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _condition(field: str, op: str, value: bool | int | str, explanation: str = "test") -> ProfilePredicateDefinition:
@@ -87,8 +90,8 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
 @pytest.mark.parametrize(
     ("observed", "expected"),
     (
-        pytest.param(frozenset({"2025-1T", "2025-3T"}), True, id="member"),
-        pytest.param(frozenset({"2025-2T"}), False, id="other-quarter"),
+        pytest.param(frozenset({f"{_YEAR}-1T", f"{_YEAR}-3T"}), True, id="member"),
+        pytest.param(frozenset({f"{_YEAR}-2T"}), False, id="other-quarter"),
         pytest.param(frozenset(), False, id="empty-set"),
         pytest.param(None, False, id="absent-set"),
     ),
@@ -97,15 +100,15 @@ def test_profile_condition_includes_matches_only_a_member_token(
     observed: frozenset[str] | None,
     expected: bool,
 ) -> None:
-    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", f"{_YEAR}-1T")
     facts = SimpleNamespace(premio_loteria_gravamen_especial_trimestres=observed)
     assert profile_condition_matches(condition, facts) is expected
 
 
 def test_profile_condition_includes_refuses_a_scalar_observation() -> None:
-    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", f"{_YEAR}-1T")
     with pytest.raises(RegistryValidationError, match="non-set value"):
-        profile_condition_matches(condition, {"premio_loteria_gravamen_especial_trimestres": "2025-1T"})
+        profile_condition_matches(condition, {"premio_loteria_gravamen_especial_trimestres": f"{_YEAR}-1T"})
 
 
 @pytest.mark.parametrize("value", (True, 3, "  "), ids=("bool", "int", "blank"))

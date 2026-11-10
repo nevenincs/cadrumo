@@ -55,7 +55,8 @@ from ..operations.next_step import (
     OperationOpenProfileFieldStepV1,
     is_profile_field_path,
 )
-from ..operator_actions.preconditions import profile_setup_incomplete_verdict
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import profile_required_facts_missing_verdict, profile_setup_incomplete_verdict
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
 from ..user_profile.completeness import missing_required_field_paths, modelo_iva_block_missing_paths
 from ..user_profile.preflight import (
@@ -210,6 +211,17 @@ def _first_missing_field_step(
     return None
 
 
+def _missing_facts_verdict(
+    modelo: str,
+    requirements: tuple[ProfilePreflightRequirement, ...] | list[ProfilePreflightRequirement],
+) -> PreconditionVerdict:
+    """The profile-questions door for a refusal naming ``requirements``, by canonical field address."""
+    return profile_required_facts_missing_verdict(
+        modelo=modelo,
+        field_paths=tuple(f"{item.section_key}.{item.field_key}" for item in requirements),
+    )
+
+
 def modelo_work_profile_baseline_paths(
     record: UserProfileRecord,
     *,
@@ -223,6 +235,9 @@ def modelo_work_profile_baseline_paths(
     required decides what it marks, and which are missing decides what it
     counts. Deriving the mark from the missing set alone would unmark a field
     the moment it was filled in.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     return _modelo_work_baseline_paths(record, modelo=modelo)
 
@@ -473,6 +488,9 @@ def taxpayer_projection_missing_paths(
     Applicability is judged on that projection, so while any is unanswered
     applicability is unknown: a readiness surface reports the questions as
     missing and claims no applicability verdict either way.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     values = record_to_path_values(record)
     with _governed_facts_scope(operation):
@@ -494,6 +512,9 @@ def require_taxpayer_projection_facts_declared(
     are missing rather than guess either answer. A missing answer is the
     operator's to give, so it is refused here as a readiness gap whose door
     opens that question, before any projection or effect.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     missing_paths = taxpayer_projection_missing_paths(record, operation=operation)
     if not missing_paths:
@@ -517,6 +538,7 @@ def require_taxpayer_projection_facts_declared(
                 format_profile_preflight_requirement(requirement) for requirement in requirements
             ),
         },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, requirements),
         next_step=_first_missing_field_step(requirements),
     )
 
@@ -683,21 +705,9 @@ def _require_profile_filing_ready(
                 format_profile_preflight_requirement(requirement) for requirement in missing
             ),
         },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, missing),
         next_step=_first_missing_field_step(missing),
     )
-
-
-def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str:
-    """Render one missing requirement as its label plus the articles demanding it.
-
-    A label alone tells an operator WHICH field is missing; the refusal's job is
-    also to say on whose authority. Where the registry grounds the field, the
-    refs follow the label in parentheses; where it grounds nothing, the label
-    stands alone rather than trailing an empty bracket.
-    """
-    if not requirement.legal_refs:
-        return requirement.label
-    return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
 
 
 def load_modelo_work_profile(
@@ -753,7 +763,7 @@ def _require_profile_setup_complete(
             build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding)
             for path in missing_paths
         )
-        missing_labels = ", ".join(_render_missing_requirement(requirement) for requirement in requirements)
+        missing_labels = ", ".join(format_profile_preflight_requirement(requirement) for requirement in requirements)
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
             context={"bucket_id": bucket_id, "modelo": modelo, "profile_requirements": missing_labels},
@@ -795,6 +805,7 @@ def _raise_if_profile_preflight_missing(
                 format_profile_preflight_requirement(requirement) for requirement in report.missing
             ),
         },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, report.missing),
         next_step=_first_missing_field_step(report.missing),
     )
 

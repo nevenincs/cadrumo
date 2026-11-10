@@ -83,6 +83,7 @@ fn action_reason(action: &str) -> &'static str {
     match action {
         "catalog" => "admin_catalog",
         "status" => "admin_status",
+        "provider_lanes" => "admin_provider_lanes",
         "set" => "admin_set",
         "remove" => "admin_remove",
         "turn_on" => "admin_turn_on",
@@ -455,6 +456,7 @@ mod tests {
         for (action, reason) in [
             ("catalog", "admin_catalog"),
             ("status", "admin_status"),
+            ("provider_lanes", "admin_provider_lanes"),
             ("start", "admin_start"),
             ("connect_status", "admin_connect_status"),
             ("local_models", "admin_local_models"),

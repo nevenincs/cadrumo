@@ -201,6 +201,50 @@ def aggregate_renta_income_ledger_from_repositories(
     )
 
 
+def _classify_window_rows(
+    transactions: TransactionCatalogue,
+    resolved_invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
+    criteria: ImputationCriteria | None,
+    excluded_activity_codes: frozenset[TipoActividad],
+) -> tuple[list[RentaIncomeObservation], list[RentaIncomeLedgerAggregationIssue]]:
+    """Classify each active, non-excluded row into an observation or an issue, in catalogue order."""
+    observations: list[RentaIncomeObservation] = []
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+    receipts_by_invoice = None if criteria is None else _active_receipts_by_invoice(transactions, resolved_invoices)
+
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if transaction.tipo_actividad in excluded_activity_codes:
+            continue
+        outcome = classify_income_transaction(
+            transaction,
+            invoices=resolved_invoices,
+            receipts_by_invoice=receipts_by_invoice,
+            bucket_id=bucket_id,
+            cumulative_start=window_start,
+            cumulative_end=window_end,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
+        )
+        if outcome is None:
+            continue
+        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
+            issues.append(outcome)
+        else:
+            observations.append(_held_past_cut_off(outcome, transaction, cut_off=window_end))
+    return observations, issues
+
+
 def aggregate_renta_income_ledger(
     transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue | None = None,
@@ -246,34 +290,18 @@ def aggregate_renta_income_ledger(
     window = cumulative_year_to_date_window(period)
     resolved_invoices = _invoices_linked_from_either_side(invoices, window=transactions)
 
-    observations: list[RentaIncomeObservation] = []
-    issues: list[RentaIncomeLedgerAggregationIssue] = []
-    receipts_by_invoice = None if criteria is None else _active_receipts_by_invoice(transactions, resolved_invoices)
-
-    for transaction in transactions.values():
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        if transaction.tipo_actividad in excluded_activity_codes:
-            continue
-        outcome = classify_income_transaction(
-            transaction,
-            invoices=resolved_invoices,
-            receipts_by_invoice=receipts_by_invoice,
-            bucket_id=bucket_id,
-            cumulative_start=window.start,
-            cumulative_end=window.end,
-            target_casilla_id=target_casilla_id,
-            activity_category_matcher=activity_category_matcher,
-            employment_category_matcher=employment_category_matcher,
-            criteria=criteria,
-        )
-        if outcome is None:
-            continue
-        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
-            issues.append(outcome)
-        else:
-            observations.append(_held_past_cut_off(outcome, transaction, cut_off=window.end))
-
+    observations, issues = _classify_window_rows(
+        transactions,
+        resolved_invoices,
+        bucket_id=bucket_id,
+        window_start=window.start,
+        window_end=window.end,
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
+        criteria=criteria,
+        excluded_activity_codes=excluded_activity_codes,
+    )
     casilla_aggregation = _income_casilla_aggregation(
         window.period,
         observations,
@@ -645,6 +673,24 @@ def _bears_withholding(observation: RentaIncomeObservation) -> bool:
     return derivation is not LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE or observation.withheld_amount != 0
 
 
+def _tipo_actividad_value(transaction: Transaction | None) -> str | None:
+    """Return the row's declared tipo de actividad token, or ``None`` when untagged or absent."""
+    if transaction is None or transaction.tipo_actividad is None:
+        return None
+    return transaction.tipo_actividad.value
+
+
+def _handed_to_rental_credit(observation: RentaIncomeObservation) -> RentaIncomeObservation:
+    """Move a rental row's declared retención from the activity credit to the rental credit."""
+    if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE and (
+        observation.withheld_amount > 0
+    ):
+        return observation.model_copy(
+            update={"withheld_derivation": LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT}
+        )
+    return observation
+
+
 def _screen_rental_activity(
     observations: Sequence[RentaIncomeObservation],
     transactions: TransactionCatalogue,
@@ -663,16 +709,10 @@ def _screen_rental_activity(
     untagged: list[str] = []
     rental_shown = rental.declared
     for observation in observations:
-        transaction = transactions.get(observation.transaction_id)
-        tipo = None if transaction is None or transaction.tipo_actividad is None else transaction.tipo_actividad.value
+        tipo = _tipo_actividad_value(transactions.get(observation.transaction_id))
         if tipo in rental.codes:
             rental_shown = True
-            if observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE and (
-                observation.withheld_amount > 0
-            ):
-                observation = observation.model_copy(
-                    update={"withheld_derivation": LedgerWithholdingDerivation.RENTAL_ACTIVITY_COMPONENT}
-                )
+            observation = _handed_to_rental_credit(observation)
         elif tipo is None and _bears_withholding(observation):
             untagged.append(observation.transaction_id)
         screened.append(observation)

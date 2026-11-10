@@ -119,3 +119,41 @@ def test_a_second_complete_setup_writes_nothing(config_check_backend: None, tmp_
     state_after_second, revision_after_second = _stored_state(profile_id)
     assert state_after_second is ProfileSetupState.COMPLETE
     assert revision_after_second == revision_after_first, "the no-op must not advance the record revision"
+
+
+def test_complete_setup_refusal_names_the_missing_facts_in_words_and_opens_the_profile_questions(
+    config_check_backend: None, tmp_path: Path
+) -> None:
+    """A profile still missing required facts is refused in words, with the edit command as the way out.
+
+    The refusal is a typed settled refusal rather than a usage error, so it
+    carries no dotted field identifier in its sentence; the identifiers travel
+    in the action evidence, spelled as every profile surface spells them.
+    """
+    declined = {
+        "tax_residence.jurisdiction_scope": "",
+        "iva.redeme_enrolled": "",
+        "iva.voluntary_sii_enrolled": "",
+    }
+    register_cli_profile(label="missing-facts", facts=declined, complete=False, log_in=False)
+
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        refused = _native_complete_setup("missing-facts")
+
+    assert refused.exit_code != 0, refused.stdout + refused.stderr
+    assert "Usage:" not in refused.output, refused.output
+    error = _JSON_OBJECT_ADAPTER.validate_python(json.loads(refused.stderr))["error"]
+    assert isinstance(error, dict)
+    message = str(error["message"])
+    assert "tax_residence" not in message and "iva." not in message, message
+    action = error["action"]
+    assert isinstance(action, dict)
+    assert action["failed_condition_id"] == "profile.required_facts.declared", error
+    action_ref = action["action"]
+    assert isinstance(action_ref, dict)
+    assert action_ref["action_id"] == "operator.profile.edit", error
+    assert action_ref["cli_path"] == ["aeat", "config", "profile", "edit"], error
+    evidence = action["evidence"]
+    assert isinstance(evidence, list)
+    served = str(evidence[0]["values"]["missing_fields"]).split(", ")
+    assert "iva.redeme_enrolled" in served, error

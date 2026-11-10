@@ -45,6 +45,7 @@ from ....domain.transactions.model_validation import validate_business_pct_coupl
 from ....domain.transactions.models import Transaction
 from ....domain.usage_ratios.errors import UsageRatioValidationError
 from ....domain.usage_ratios.model import UsageRatioProfile, eligible_usage_ratio_categories
+from ...export.tabular import ExportSerializationFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -104,6 +105,7 @@ def test_every_family_is_served_once(served: dict[str, tuple[tuple[str, str | No
         "capital_good_kind",
         "capital_good_disposal",
         "import_format",
+        "export_format",
     }
 
 
@@ -641,3 +643,10 @@ def test_the_figure_flags_are_what_a_classification_write_keeps(
     assert (rebuilt.category_id is not None) is served.keeps_category
     assert (rebuilt.taxable_base is not None) is served.carries_business_figures
     assert served.carries_business_figures is (classification in BUSINESS_BEARING_STATES)
+
+
+def test_export_formats_are_the_serializations_an_export_writes(
+    served: dict[str, tuple[tuple[str, str | None], ...]],
+) -> None:
+    assert _values(served, "export_format") == [str(item) for item in ExportSerializationFormat]
+    assert all(label is None for _, label in served["export_format"])

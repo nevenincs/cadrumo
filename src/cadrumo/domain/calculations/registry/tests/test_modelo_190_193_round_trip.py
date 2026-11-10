@@ -28,7 +28,7 @@ declares two monetary output casillas as single-relation copies, while
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -37,6 +37,7 @@ from .....core.resources.bundled_data import bundled_path
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
+from .authored_editions import authored_revisions
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
@@ -44,17 +45,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> None:
-    """The 2024 M193 copies the modelo 123 money relations; its perceptor count counts the type-2 records.
+    """The last relation-fed M193 edition copies the modelo 123 money relations; its perceptor count counts the type-2 records.
 
-    The 2025 design sums and counts the type-2 records instead, keeping modelo
+    The open-ended design sums and counts the type-2 records instead, keeping modelo
     123 as a reconciliation check; that edition is proven by the registry's
     own Modelo 193 tests.
     """
 
     modelo, catalogues = bundled_modelo_components("193")
-    # 2024 is the last edition whose money totals are the modelo 123 relations;
-    # its design still counts the type-2 records for positions 136-144.
-    revision = modelo.revisions["2024"]
+    # The last closed edition before the open-ended one is the last whose money totals
+    # are the modelo 123 relations; its design still counts the type-2 records for
+    # positions 136-144.
+    last_relation_edition = authored_revisions("193")[-2]
+    revision = modelo.revisions[str(last_relation_edition.id)]
 
     # Graph-wiring assertions — each monetary output casilla must declare an
     # op=copy formula sourcing the matching 123 relation. The perceptor count
@@ -85,7 +88,9 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # Runtime threading — two distinct relation values must land in the
     # relation-backed casillas without cross-contamination; the count arrives
     # through the binding channel.
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+    snapshot = build_snapshot(
+        modelo, catalogues, source_root=bundled_path(), filing_year=last_relation_edition.valid_from.year, period="0A"
+    )
     assert snapshot.revision.id == revision.id
     relation_values = {
         "modelo-193-123-base-anual": Decimal("7000.50"),
@@ -95,7 +100,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2025, 1, 31)},
+        date_context={"filing_period": last_relation_edition.valid_to + timedelta(days=31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )

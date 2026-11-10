@@ -38,6 +38,9 @@ export type ServedVocabulary = {
   /** The statement formats an import offers: those whose parser this
    * installation carries. */
   importFormats: readonly string[];
+  /** The serialisations an export writes, in the order the ledger serves
+   * them. */
+  exportFormats: readonly string[];
   /** The currency a new movement is offered when no own account names one;
    * null until it is served. */
   defaultCurrency: string | null;
@@ -64,6 +67,7 @@ export const NO_VOCABULARY: ServedVocabulary = {
   capitalKinds: NONE,
   capitalDisposals: NONE,
   importFormats: NONE,
+  exportFormats: NONE,
   defaultCurrency: null,
 };
 
@@ -109,6 +113,7 @@ export function servedVocabulary(
     capitalKinds: values("capital_good_kind"),
     capitalDisposals: values("capital_good_disposal"),
     importFormats: values("import_format"),
+    exportFormats: values("export_format"),
     defaultCurrency: result.default_currency || null,
   };
 }

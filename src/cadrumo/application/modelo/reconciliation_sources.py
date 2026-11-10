@@ -129,6 +129,9 @@ def reconciliation_source_needs(
     without it every reconciliation relation the revision declares is read.
     Periods before the activity start owe no declaration and are not needed,
     as the fold itself scopes them out. Needs come in source-period order.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     reconciliation = {relation_id for relation_id, *_rest in reconciliation_relation_targets(snapshot)}
     if relation_ids is not None:

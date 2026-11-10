@@ -665,6 +665,10 @@ function bulkRow(
   };
   if (takesShare && facts.business_pct)
     cells.business_pct = wire("business_pct", facts.business_pct);
+  // A clear on a bulk row has no cell: a blank cell means unchanged. The
+  // clears that travel here are those the classification write performs on
+  // its own (the backend routes only those to the bulk), so the row names
+  // them in `fields` for the review and its CSV carries none.
   for (const field of fields) {
     const change = changes[field];
     const column = BULK_COLUMN[field];

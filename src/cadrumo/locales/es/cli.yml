@@ -1807,8 +1807,8 @@ cli:
           existente sin cambios.'
         file_internal_disambiguation: Esta presentación es solo interna y no se envía
           a la AEAT.
-        filing_evidence_option_other_modelo: 'Rechazado. El Modelo %{modelo} no admite
-          ninguna de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
+        filing_evidence_option_other_modelo: 'El Modelo %{modelo} no admite ninguna
+          de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
           Quítalas y vuelve a calcular; no se ha calculado nada.'
         formula_operation_calculation: cálculo
         formula_operation_clamp: límite

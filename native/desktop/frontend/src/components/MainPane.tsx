@@ -343,6 +343,7 @@ export function MainPane({
             memory={ledgerMemory}
             contribute={contribute}
             copy={(text) => host.writeClipboard(text)}
+            paste={() => host.readClipboard()}
             onOpenLink={openLink}
             onFloor={setLedgerFloor}
             pane={{

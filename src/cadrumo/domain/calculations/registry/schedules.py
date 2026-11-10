@@ -23,6 +23,7 @@ __all__ = [
     "applicable_filing_schedules",
     "evaluate_profile_conditions",
     "profile_condition_matches",
+    "undecided_profile_condition_fields",
     "unresolved_schedule_deciding_fields",
 ]
 
@@ -102,18 +103,43 @@ def unresolved_schedule_deciding_fields(
     for schedule in revision.filing_schedules:
         if period not in schedule.periods:
             continue
-        failing = [
-            condition
-            for condition in schedule.profile_conditions
-            if not profile_condition_matches(condition, profile_facts)
-        ]
-        unanswered = [
-            condition.field for condition in failing if resolve_profile_fact(profile_facts, condition.field) is None
-        ]
-        decidable = bool(unanswered) if schedule.profile_condition_mode == "any" else len(unanswered) == len(failing)
-        if decidable:
-            fields.update(dict.fromkeys(unanswered))
+        fields.update(
+            dict.fromkeys(
+                undecided_profile_condition_fields(
+                    schedule.profile_conditions,
+                    profile_facts,
+                    mode=schedule.profile_condition_mode,
+                ),
+            ),
+        )
     return tuple(fields)
+
+
+def undecided_profile_condition_fields(
+    conditions: tuple[ProfilePredicateDefinition, ...],
+    profile_facts: Mapping[str, object] | object,
+    *,
+    mode: str,
+) -> tuple[str, ...]:
+    """Return the unanswered facts that answering could make ``conditions`` match.
+
+    A predicate set that fails only on facts the profile has not answered is
+    undecided rather than failed. Under ``"any"`` every unanswered failing
+    predicate is reported; under ``"all"`` they are reported only when no
+    answered predicate fails. A set that fails on an answered fact under
+    ``"all"`` has nothing undecided, and the result is empty.
+
+    Args:
+        conditions: The declared predicates, evaluated under ``mode``.
+        profile_facts: Profile facts consulted by each predicate.
+        mode: ``"all"`` or ``"any"``, as the predicate set declares.
+    """
+    failing = [condition for condition in conditions if not profile_condition_matches(condition, profile_facts)]
+    unanswered = [
+        condition.field for condition in failing if resolve_profile_fact(profile_facts, condition.field) is None
+    ]
+    decidable = bool(unanswered) if mode == "any" else len(unanswered) == len(failing)
+    return tuple(dict.fromkeys(unanswered)) if decidable else ()
 
 
 def evaluate_profile_conditions(

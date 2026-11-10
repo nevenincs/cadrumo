@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
@@ -13,6 +14,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...domain.contribuyente.inventory.records import (
+    InventoryAcquisitionCost,
     InventoryCorrectionReason,
     InventoryHistoryKind,
     InventoryLedger,
@@ -34,6 +36,14 @@ from .registered_requests import InventoryRefusalCode, InventoryRefusalReason
 from .stock_projection import InventoryAcquisitionCostProjection, InventoryStockLayerProjection
 
 _RETIRED_BOOK_UNRESOLVED_LOCALE_KEY = "application.inventory.advisories.retired_book_leaves_year_unresolved"
+
+
+def _public(value: Decimal) -> PublicDecimal:
+    return PublicDecimal(decimal=str(value))
+
+
+def _public_or_none(value: Decimal | None) -> PublicDecimal | None:
+    return None if value is None else _public(value)
 
 
 class InventoryAdvisoryProjection(BaseModel):
@@ -76,6 +86,24 @@ class InventoryListRowProjection(BaseModel):
     advisories: tuple[InventoryAdvisoryProjection, ...] = ()
 
 
+def _acquisition_cost_projection(
+    acquisition: InventoryAcquisitionCost | None,
+) -> InventoryAcquisitionCostProjection | None:
+    """Project an acquisition cost to its totals and counts, leaving components and evidence out."""
+    if acquisition is None:
+        return None
+    return InventoryAcquisitionCostProjection(
+        consideration_excluding_iva=_public(acquisition.consideration_excluding_iva),
+        directly_attributable_cost_total=_public(acquisition.directly_attributable_cost_total),
+        nonrecoverable_iva_included=_public(acquisition.nonrecoverable_iva_included),
+        recoverable_iva_excluded=_public(acquisition.recoverable_iva_excluded),
+        total_acquisition_cost=_public(acquisition.total_acquisition_cost),
+        component_count=len(acquisition.attributable_cost_components),
+        evidence_count=len(acquisition.evidence),
+        complete=True,
+    )
+
+
 class InventoryMovementProjection(BaseModel):
     """One stored movement; acquisition detail stays out unless a caller asks for it by name."""
 
@@ -110,30 +138,13 @@ class InventoryMovementProjection(BaseModel):
             movement_date=movement.movement_date,
             kind=movement.kind,
             sku=movement.sku,
-            quantity=PublicDecimal(decimal=str(movement.quantity)),
-            unit_cost=PublicDecimal(decimal=str(movement.unit_cost)) if movement.unit_cost is not None else None,
-            taxable_base=(
-                PublicDecimal(decimal=str(movement.taxable_base)) if movement.taxable_base is not None else None
-            ),
-            iva_rate=PublicDecimal(decimal=str(movement.iva_rate)),
-            iva_amount=PublicDecimal(decimal=str(movement.iva_amount)) if movement.iva_amount is not None else None,
-            deductible_iva_ratio=PublicDecimal(decimal=str(movement.deductible_iva_ratio)),
-            acquisition_cost=(
-                InventoryAcquisitionCostProjection(
-                    consideration_excluding_iva=PublicDecimal(decimal=str(acquisition.consideration_excluding_iva)),
-                    directly_attributable_cost_total=PublicDecimal(
-                        decimal=str(acquisition.directly_attributable_cost_total),
-                    ),
-                    nonrecoverable_iva_included=PublicDecimal(decimal=str(acquisition.nonrecoverable_iva_included)),
-                    recoverable_iva_excluded=PublicDecimal(decimal=str(acquisition.recoverable_iva_excluded)),
-                    total_acquisition_cost=PublicDecimal(decimal=str(acquisition.total_acquisition_cost)),
-                    component_count=len(acquisition.attributable_cost_components),
-                    evidence_count=len(acquisition.evidence),
-                    complete=True,
-                )
-                if acquisition is not None
-                else None
-            ),
+            quantity=_public(movement.quantity),
+            unit_cost=_public_or_none(movement.unit_cost),
+            taxable_base=_public_or_none(movement.taxable_base),
+            iva_rate=_public(movement.iva_rate),
+            iva_amount=_public_or_none(movement.iva_amount),
+            deductible_iva_ratio=_public(movement.deductible_iva_ratio),
+            acquisition_cost=_acquisition_cost_projection(acquisition),
             schema_version=movement.schema_version,
             acquisition_detail=(
                 InventoryAcquisitionDetailProjection.from_acquisition(
@@ -192,9 +203,7 @@ class InventoryHistoryEntryProjection(BaseModel):
                 else None
             ),
             replacement_movement_id=entry.replacement_movement_id,
-            prior_opening_stock=(
-                PublicDecimal(decimal=str(entry.prior_opening_stock)) if entry.prior_opening_stock is not None else None
-            ),
+            prior_opening_stock=_public_or_none(entry.prior_opening_stock),
             prior_valuation_method=entry.prior_valuation_method,
             prior_descriptor=(
                 InventoryDescriptorProjection.from_descriptor(entry.prior_descriptor)
@@ -262,12 +271,12 @@ class InventoryLedgerProjection(BaseModel):
             actividad_id=ledger.actividad_id,
             year=ledger.year,
             valuation_method=ledger.valuation_method,
-            opening_stock=PublicDecimal(decimal=str(ledger.opening_stock)),
+            opening_stock=_public(ledger.opening_stock),
             opening_layers=tuple(
                 InventoryStockLayerProjection(
                     sku=layer.sku,
-                    quantity=PublicDecimal(decimal=str(layer.quantity)),
-                    unit_cost=PublicDecimal(decimal=str(layer.unit_cost)),
+                    quantity=_public(layer.quantity),
+                    unit_cost=_public(layer.unit_cost),
                     source_movement_id=layer.source_movement_id,
                 )
                 for layer in ledger.opening_layers

@@ -3,11 +3,13 @@ import { SERVED } from "./support/servedVocabulary";
 import { expect, test } from "@playwright/test";
 import {
   NO_ACCOUNT,
+  NO_CATEGORY,
   askedConflicts,
   changeGroups,
   clearRefusal,
   columnField,
   copyCell,
+  draftEdits,
   draftField,
   heldUnits,
   linksReady,
@@ -27,6 +29,7 @@ import type { LedgerRow } from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
 import {
   EMPTY_STAGE,
+  effectiveFacts,
   newDraft,
   reduceStage,
   type StagedAction,
@@ -163,10 +166,14 @@ test("what cannot be cleared says so, and No account is a clear", () => {
   const mixed = movement(B, {
     business_classification: "MIXED",
     business_pct: "0.3",
+    category_id: "material_oficina",
   });
-  expect(
-    rowCells(B, mixed, "business_classification", { value: "PERSONAL" }),
-  ).toEqual([
+  // ... and so does everything else Personal drops, the category included,
+  // each as a clear of its own, in one stage event.
+  const toPersonal = rowCells(B, mixed, "business_classification", {
+    value: "PERSONAL",
+  });
+  expect(toPersonal).toEqual([
     {
       id: B,
       field: "business_classification",
@@ -174,6 +181,49 @@ test("what cannot be cleared says so, and No account is a clear", () => {
       stored: "MIXED",
     },
     { id: B, field: "business_pct", value: { kind: "clear" }, stored: "0.3" },
+    {
+      id: B,
+      field: "category_id",
+      value: { kind: "clear" },
+      stored: "material_oficina",
+    },
+  ]);
+  const content = reduceStage(EMPTY_STAGE, {
+    type: "stage",
+    label: "set",
+    cells: toPersonal,
+  });
+  // Nothing of what Personal drops is shown for the staged row.
+  const facts = effectiveFacts(mixed, content.content.rows[B]);
+  expect(facts.business_classification).toBe("PERSONAL");
+  expect(facts.category_id).toBeNull();
+  expect(facts.business_pct).toBeNull();
+  // One undo restores the classification and what it dropped.
+  const undone = reduceStage(content, { type: "undo" });
+  expect(undone.content.rows[B]).toBeUndefined();
+  // Staying Business keeps the category.
+  expect(
+    rowCells(B, mixed, "business_classification", { value: "BUSINESS" }).map(
+      (cell) => cell.field,
+    ),
+  ).toEqual(["business_classification", "business_pct"]);
+});
+
+test("No category is a clear of the category, never a category id", () => {
+  const row = movement(A, {
+    business_classification: "BUSINESS",
+    category_id: "material_oficina",
+  });
+  expect(rowCells(A, row, "category_id", { value: NO_CATEGORY })).toEqual([
+    {
+      id: A,
+      field: "category_id",
+      value: { kind: "clear" },
+      stored: "material_oficina",
+    },
+  ]);
+  expect(draftEdits("k", "category_id", { value: NO_CATEGORY })).toEqual([
+    { key: "k", field: "category_id", value: null },
   ]);
 });
 

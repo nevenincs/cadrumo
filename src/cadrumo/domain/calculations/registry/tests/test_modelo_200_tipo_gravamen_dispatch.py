@@ -30,8 +30,9 @@ Two surfaces are covered:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
@@ -61,6 +62,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
 # art. 101 ERD 24 % -- for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+# The accounting period ending the day before DT 44ª first applies.
+_PERIOD_END_BEFORE_DT44 = date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1) - timedelta(days=1)
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
 
@@ -93,7 +96,7 @@ def _calculate_tipo_gravamen(
     *,
     incn: str,
     new_entity: Decimal = Decimal("0"),
-    exercise: int = 2024,
+    exercise: int = _PERIOD_END_BEFORE_DT44.year,
 ):
     """Run the M200 chain for one entity form, prior-12-month INCN and exercise, with no other adjustments."""
     return calculate_registry_snapshot(
@@ -114,7 +117,9 @@ def _calculate_tipo_gravamen(
 
 
 def _snapshot():
-    return published_snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return published_snapshot(
+        "200", filing_year=_DT44_FIRST_TRANSITIONAL_EXERCISE, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 def _parameters() -> dict[str, ParameterDefinition]:
@@ -185,7 +190,7 @@ def test_ley_49_2002_art_10_nonprofit_rate_links_to_bundled_corpus() -> None:
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-10.html#a10"
     assert reference.permalink.endswith("#a10")
-    assert reference.effective_from == date(2002, 12, 25)
+    assert reference.effective_from.isoformat() == "2002-12-25"
     assert reference.required_text == (
         "Artículo 10. Tipo de gravamen.",
         "La base imponible positiva",
@@ -224,25 +229,31 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
         window = (bracket.valid_from, bracket.valid_to)
         by_window.setdefault(window, {})[bracket.lower_bound] = bracket.marginal_rate
 
-    # LIS DT 44ª transitional micro-empresa scale (Ley 7/2024): the
-    # 2025/2026 first/rest tranche rates are the AEAT-published anchors.
-    rates_2025 = by_window[(date(2025, 1, 1), date(2025, 12, 31))]
-    assert rates_2025[Decimal("0")] == Decimal("0.21"), "2025 first tranche must be 21 % (LIS DT 44ª)"
-    assert rates_2025[Decimal("50000")] == Decimal("0.22"), "2025 rest tranche must be 22 % (LIS DT 44ª)"
+    # LIS DT 44ª transitional micro-empresa scale (Ley 7/2024): the first two
+    # transitional windows' first/rest tranche rates are the AEAT-published anchors.
+    transitional = [window for window in sorted(by_window) if window[0].year >= _DT44_FIRST_TRANSITIONAL_EXERCISE]
+    first_window, second_window = transitional[:2]
+    assert first_window == (
+        date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1),
+        date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31),
+    )
+    assert second_window[0] == first_window[1] + timedelta(days=1)
+    first_rates = by_window[first_window]
+    assert first_rates[Decimal("0")] == Decimal("0.21"), "first transitional tranche must be 21 % (LIS DT 44ª)"
+    assert first_rates[Decimal("50000")] == Decimal("0.22"), "first transitional rest tranche must be 22 % (LIS DT 44ª)"
 
-    rates_2026 = by_window[(date(2026, 1, 1), date(2026, 12, 31))]
-    assert rates_2026[Decimal("0")] == Decimal("0.19"), "2026 first tranche must be 19 %"
-    assert rates_2026[Decimal("50000")] == Decimal("0.21"), "2026 rest tranche must be 21 %"
+    second_rates = by_window[second_window]
+    assert second_rates[Decimal("0")] == Decimal("0.19"), "second transitional first tranche must be 19 %"
+    assert second_rates[Decimal("50000")] == Decimal("0.21"), "second transitional rest tranche must be 21 %"
 
-    # The 2025+ windows must not carry the pre-2025 flat 23 % figure;
-    # the two-tranche scale replaced it. The 2024 window is the
-    # legitimate backfill at 23 % (LIS Art. 29 pre-2025 pyme regime)
+    # The transitional windows must not carry the earlier flat 23 % figure;
+    # the two-tranche scale replaced it. The window before DT 44ª is the
+    # legitimate backfill at 23 % (LIS Art. 29 earlier pyme regime)
     # and is expected exactly there.
     for window, window_rates in by_window.items():
-        window_year = window[0].year
-        if window_year >= 2025:
+        if window[0].year >= _DT44_FIRST_TRANSITIONAL_EXERCISE:
             assert Decimal("0.23") not in window_rates.values(), (
-                f"2025+ window must not carry the pre-2025 flat 23 % rate (window {window})"
+                f"a transitional window must not carry the earlier flat 23 % rate (window {window})"
             )
         assert Decimal("23") not in window_rates.values()
 
@@ -259,12 +270,11 @@ def test_micro_empresa_display_rate_echoes_first_tranche_by_year() -> None:
     assert parameter.unit == "percent"
     assert "ley-27-2014:dt-44" in parameter.legal_refs
 
-    rates_by_year = {value.valid_from.year: value.value for value in parameter.values}
-    assert rates_by_year == {
-        2024: Decimal("23"),
-        2025: Decimal("21"),
-        2026: Decimal("19"),
-    }
+    dated = sorted((value.valid_from.year, value.value) for value in parameter.values)
+    years = [exercise for exercise, _ in dated]
+    assert [rate for _, rate in dated] == [Decimal("23"), Decimal("21"), Decimal("19")]
+    assert years[1] == _DT44_FIRST_TRANSITIONAL_EXERCISE
+    assert all(later - earlier == 1 for earlier, later in pairwise(years))
 
 
 def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranche() -> None:
@@ -285,8 +295,10 @@ def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranch
     for bracket in parameter.brackets:
         if bracket.lower_bound == Decimal("50000"):
             rest_by_year[bracket.valid_from.year] = bracket.fixed_addition
-    assert rest_by_year[2025] == Decimal("10500"), "2025 rest tranche fixed_addition = 50.000 x 21 % (LIS DT 44ª)"
-    assert rest_by_year[2026] == Decimal("9500"), "2026 rest tranche fixed_addition = 50.000 x 19 %"
+    transitional = [rest_by_year[year] for year in sorted(rest_by_year) if year >= _DT44_FIRST_TRANSITIONAL_EXERCISE]
+    assert transitional[:2] == [Decimal("10500"), Decimal("9500")], (
+        "the first two transitional rest tranches carry fixed_addition = 50.000 x 21 % (LIS DT 44ª) and 50.000 x 19 %"
+    )
 
 
 def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
@@ -317,7 +329,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
                 "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
         )
         return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[M200_CUOTA_INTEGRA_CASILLA]
 
@@ -370,7 +382,7 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
                 "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
         )
 
 
@@ -396,7 +408,7 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
                 "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
         )
 
 
@@ -455,15 +467,11 @@ def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
     assert "ley-27-2014:art-101" in erd.legal_refs
     assert "ley-27-2014:dt-44" in erd.legal_refs
 
-    rates_by_year = {value.valid_from.year: value.value for value in erd.values}
-    assert rates_by_year == {
-        2024: Decimal("25"),
-        2025: Decimal("24"),
-        2026: Decimal("23"),
-        2027: Decimal("22"),
-        2028: Decimal("21"),
-        2029: Decimal("20"),
-    }
+    dated = sorted((value.valid_from.year, value.value) for value in erd.values)
+    years = [exercise for exercise, _ in dated]
+    assert [rate for _, rate in dated] == [Decimal(rate) for rate in ("25", "24", "23", "22", "21", "20")]
+    assert years[1] == _DT44_FIRST_TRANSITIONAL_EXERCISE
+    assert all(later - earlier == 1 for earlier, later in pairwise(years))
 
 
 def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
@@ -490,7 +498,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         enum_binding_values={_DISPATCH_BINDING: "sal"},
         binding_values=common_bindings,
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
     )
     result_sl = calculate_registry_snapshot(
         _snapshot(),
@@ -498,7 +506,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values=common_bindings,
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": _PERIOD_END_BEFORE_DT44},
     )
 
     assert result_sal.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("23"), (

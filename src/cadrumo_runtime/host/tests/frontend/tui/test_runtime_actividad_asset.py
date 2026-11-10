@@ -21,12 +21,12 @@ from cadrumo.application.actividad_asset.activity_asset_contracts import (
 )
 from cadrumo.application.actividad_asset.activity_asset_projections import ActivityAssetInspectProjection
 from cadrumo.application.actividad_asset.activity_asset_read_models import project_reason_facts
-from cadrumo.application.actividad_asset.activity_asset_results import ActivityAssetInspectionRevision
 from cadrumo.application.actividad_asset.operation_dtos import ActivityAssetRevisionSnapshot
 from cadrumo.application.actividad_asset.registered_operations import (
     build_activity_asset_inspect_definition,
     build_activity_asset_inspect_registration,
 )
+from cadrumo.application.actividad_asset.result_requirements import ActivityAssetInspectionRevision
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
 )

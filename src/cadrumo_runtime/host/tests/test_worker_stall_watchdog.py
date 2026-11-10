@@ -33,6 +33,7 @@ from ..worker import serve_watched
 from ..worker_stall_watchdog import (
     DUMP_NAME_PREFIX,
     DUMP_NAME_SUFFIX,
+    HEADER_NOTE,
     RETAINED_DUMP_FILES,
     watch_event_loop,
 )
@@ -45,6 +46,15 @@ _LOGGER_NAME = "cadrumo_runtime.host.worker_stall_watchdog"
 
 def _dump_path(directory: Path) -> Path:
     return directory / f"{DUMP_NAME_PREFIX}{os.getpid()}{DUMP_NAME_SUFFIX}"
+
+
+def _header_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8").splitlines(keepends=True)[0]
+
+
+def _is_header_only(path: Path) -> bool:
+    text = path.read_text(encoding="utf-8")
+    return text == _header_text(path) and text.startswith("armed ") and text.endswith(chr(10))
 
 
 def _block_the_loop(seconds: float) -> None:
@@ -74,13 +84,17 @@ async def test_a_stalled_loop_writes_every_thread_stack_and_reports_it_once_the_
     with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
         async with watch_event_loop(directory=tmp_path, stall_seconds=0.2, tick_seconds=0.05):
             await asyncio.sleep(0.1)
-            assert dump.stat().st_size == 0
+            assert _is_header_only(dump)
             _block_the_loop(0.6)
             written = dump.stat().st_size
             await asyncio.sleep(0.15)
 
     text = dump.read_text(encoding="utf-8")
-    assert written > 0
+    assert written > len(_header_text(dump))
+    assert text.startswith("armed ")
+    assert (
+        f"pid {os.getpid()}; a stack follows only if the worker stalled" + chr(10) in text.splitlines(keepends=True)[0]
+    )
     assert re.search(r"^Timeout \(", text, re.MULTILINE)
     assert "(most recent call first):" in text
     assert "in _block_the_loop" in text
@@ -103,7 +117,7 @@ async def test_a_loop_stalled_while_holding_the_interpreter_lock_is_still_dumped
         _hold_the_interpreter_lock(0.6)
         written = dump.stat().st_size
 
-    assert written > 0
+    assert written > len(_header_text(dump))
     assert "in _hold_the_interpreter_lock" in dump.read_text(encoding="utf-8")
 
 
@@ -116,7 +130,7 @@ async def test_a_healthy_loop_writes_nothing_and_leaves_no_file(
         async with watch_event_loop(directory=tmp_path, stall_seconds=0.3, tick_seconds=0.05):
             # Far longer than the stall bound: only the loop's own re-arming keeps the timer from firing.
             await asyncio.sleep(0.8)
-            assert dump.stat().st_size == 0
+            assert _is_header_only(dump)
         assert not dump.exists()
         # Disarmed on exit: a thread blocked past the bound writes nowhere.
         _block_the_loop(0.5)
@@ -146,7 +160,7 @@ async def test_a_full_dump_file_stops_taking_dumps(tmp_path: Path, caplog: pytes
             await asyncio.sleep(0.15)
             second = dump.stat().st_size
 
-    assert first > 0
+    assert first > len(_header_text(dump))
     assert second == first
     assert [record.__dict__["outcome"] for record in _events(caplog, "profile_worker_event_loop_stall_dumped")] == [
         "capped"
@@ -185,6 +199,15 @@ async def test_a_new_watchdog_removes_only_the_empty_files_of_workers_that_no_lo
     try:
         abandoned = _named_for(tmp_path, ended.pid)
         abandoned.touch()
+        header_only = _named_for(tmp_path, ended.pid + 2)
+        header_only.write_text(
+            f"armed 2026-11-10T00:00:00Z pid {ended.pid + 2}{HEADER_NOTE}" + chr(10), encoding="utf-8"
+        )
+        header_then_stack = _named_for(tmp_path, ended.pid + 3)
+        header_then_stack.write_text(
+            f"armed 2026-11-10T00:00:00Z pid {ended.pid + 3}{HEADER_NOTE}" + chr(10) + "Timeout (0:00:10)!" + chr(10),
+            encoding="utf-8",
+        )
         still_armed = _named_for(tmp_path, running.pid)
         still_armed.touch()
         stalled_then_ended = _named_for(tmp_path, ended.pid + 1)
@@ -200,7 +223,8 @@ async def test_a_new_watchdog_removes_only_the_empty_files_of_workers_that_no_lo
         running.wait(timeout=60)
 
     assert abandoned.name not in remaining
-    assert {still_armed.name, stalled_then_ended.name, unnumbered.name} <= remaining
+    assert header_only.name not in remaining
+    assert {header_then_stack.name, still_armed.name, stalled_then_ended.name, unnumbered.name} <= remaining
 
 
 @pytest.mark.asyncio
@@ -256,3 +280,38 @@ async def test_the_worker_serves_both_channels_inside_the_watchdog(
         assert not _dump_path(default_log_file_path().parent).exists()
 
     assert served == [True]
+
+
+def test_a_worker_ended_while_armed_leaves_a_header_only_file_the_next_watchdog_removes(tmp_path: Path) -> None:
+    code = chr(10).join(
+        [
+            "import asyncio, os, sys",
+            "from pathlib import Path",
+            "from cadrumo_runtime.host.worker_stall_watchdog import watch_event_loop",
+            "async def main():",
+            "    async with watch_event_loop(directory=Path(sys.argv[1]), stall_seconds=60.0):",
+            "        print(os.getpid(), flush=True)",
+            "        sys.stdin.readline()",
+            "asyncio.run(main())",
+        ]
+    )
+    child = subprocess.Popen(  # noqa: S603 - exact interpreter and a fixed in-test script
+        [sys.executable, "-c", code, str(tmp_path)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
+    )
+    try:
+        assert child.stdout is not None
+        pid = int(child.stdout.readline())
+        leftover = _named_for(tmp_path, pid)
+        assert _is_header_only(leftover)
+        assert f"pid {pid}" in _header_text(leftover)
+    finally:
+        child.kill()
+        child.wait(timeout=60)
+
+    async def next_worker() -> None:
+        async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+            pass
+
+    assert leftover.exists()
+    asyncio.run(next_worker())
+    assert not leftover.exists()

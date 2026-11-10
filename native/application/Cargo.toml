@@ -60,6 +60,11 @@ path = "tests/helper_diagnostics.rs"
 required-features = ["diagnostics-test-support"]
 
 [[test]]
+name = "service_diagnostics"
+path = "tests/service_diagnostics.rs"
+required-features = ["diagnostics-test-support"]
+
+[[test]]
 name = "webview_diagnostics"
 path = "tests/webview_diagnostics.rs"
 required-features = ["diagnostics-test-support"]

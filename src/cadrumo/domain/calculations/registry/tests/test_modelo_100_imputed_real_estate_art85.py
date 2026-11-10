@@ -11,10 +11,14 @@ import pytest
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from .authored_editions import newest_authored_editions
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The two newest Modelo 100 editions the registry authors, oldest first.
+_PRIOR, _NEWEST = newest_authored_editions("100", 2)
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
@@ -44,7 +48,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
-    if year == 2025:
+    if year == _NEWEST:
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         values["renta-profile-has-economic-activity"] = Decimal("1")
@@ -60,7 +64,7 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # The 2025 edition computes the maternity deducción as well; neutral
         # zero for the same reason as in 2024 below.
         values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
-    if year == 2024:
+    if year == _PRIOR:
         values.update(
             {
                 "renta-profile-incremento-guarderia": Decimal("0"),
@@ -85,7 +89,7 @@ def _calculate(
     boolean_binding_values = (
         # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
         # when the chain under test is unrelated.
-        {"renta-maritime-path-rebeca": False} if year == 2025 else None
+        {"renta-maritime-path-rebeca": False} if year == _NEWEST else None
     )
     return calculate_registry_snapshot(
         _snapshot(year),
@@ -107,16 +111,24 @@ def _calculate(
     ("year", "expected_formula", "expected_legal_refs", "expected_source_refs"),
     (
         (
-            2025,
+            _NEWEST,
             "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85", "orden-hac-277-2026:art-3"),
-            ("aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
+            (
+                f"aeat-dr-100-{_NEWEST}-dictionary",
+                f"aeat-renta-{_NEWEST}-manual-parte1",
+                f"boe-modelo-100-{_NEWEST}-form",
+            ),
         ),
         (
-            2024,
+            _PRIOR,
             "renta-inmobiliario-renta-imputada-art-85",
             ("ley-35-2006:art-22", "ley-35-2006:art-85"),
-            ("aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"),
+            (
+                f"aeat-dr-100-{_PRIOR}-dictionary",
+                f"aeat-renta-{_PRIOR}-manual-parte1",
+                f"boe-modelo-100-{_PRIOR}-form",
+            ),
         ),
     ),
 )
@@ -155,13 +167,13 @@ def test_m100_art85_computes_manual_cadastral_example_for_revised_value(
 
 def test_m100_art85_rejects_no_catastral_branch_until_substitute_base_exists() -> None:
     with pytest.raises(RegistryValidationError, match="substitute-base casillas"):
-        _calculate(2025, inputs={"0085": Decimal("62")}, text_inputs={"0084": "X"})
+        _calculate(_NEWEST, inputs={"0085": Decimal("62")}, text_inputs={"0084": "X"})
 
 
 def test_m100_art85_rejects_non_official_revision_checkbox_value() -> None:
     with pytest.raises(RegistryValidationError, match="official X checkbox"):
         _calculate(
-            2025,
+            _NEWEST,
             inputs={"0083": Decimal("40800.00"), "0085": Decimal("365")},
             text_inputs={"0084": "SI"},
         )
@@ -170,7 +182,7 @@ def test_m100_art85_rejects_non_official_revision_checkbox_value() -> None:
 def test_m100_art85_casilla_0089_is_no_longer_manual_input() -> None:
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
         calculate_registry_snapshot(
-            _snapshot(2025),
+            _snapshot(_NEWEST),
             inputs={"0089": Decimal("448.80")},
-            date_context={"filing_period": date(2025, 12, 31)},
+            date_context={"filing_period": date(_NEWEST, 12, 31)},
         )

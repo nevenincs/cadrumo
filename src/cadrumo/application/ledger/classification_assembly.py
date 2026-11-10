@@ -756,6 +756,24 @@ def _initial_classification_state(
     )
 
 
+def _transaction_kind_for(
+    supply_nature: SupplyNature | None,
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> TransactionKind:
+    """The transaction kind the supply nature selects, or the nature-indifferent one when none is settled."""
+    if supply_nature is None:
+        return classification_assembly_rules.transaction_kind_indifferent(
+            effective_date=effective_date, operation=operation
+        )
+    return classification_assembly_rules.transaction_kind_for_nature(
+        supply_nature,
+        effective_date=effective_date,
+        operation=operation,
+    )
+
+
 def assemble_classification_criteria(
     *,
     operation: PinnedAuthorityOperation,
@@ -894,17 +912,7 @@ def assemble_classification_criteria(
     return ClassificationAssembly(
         criteria=_criteria_for(
             status if status is not None else _undetermined_status(operation=operation),
-            (
-                classification_assembly_rules.transaction_kind_for_nature(
-                    supply_nature,
-                    effective_date=transaction_date,
-                    operation=operation,
-                )
-                if supply_nature is not None
-                else classification_assembly_rules.transaction_kind_indifferent(
-                    effective_date=transaction_date, operation=operation
-                )
-            ),
+            _transaction_kind_for(supply_nature, effective_date=transaction_date, operation=operation),
         ),
     )
 

@@ -34,6 +34,7 @@ import {
   type AgentViews,
 } from "../shell/agentViews";
 import { queuedWords, runStateWords } from "../shell/agentWords";
+import { labelled } from "../shell/compose";
 import {
   useProviderSettings,
   type ProviderSettings,
@@ -53,7 +54,7 @@ import { ReadState } from "./agent/ReadState";
 import { ReplyFacts } from "./agent/ReplyFacts";
 import { RunPrompts } from "./agent/RunPrompts";
 import { useShownTranscript } from "./agent/useShownTranscript";
-import { ColumnNotice } from "./agent/ColumnNotice";
+import { ColumnNotice, type EngineNotice } from "./agent/ColumnNotice";
 import { ConversationDocuments } from "./agent/ConversationDocuments";
 import { SkillDialog } from "./agent/SkillDialog";
 import { useSkillInventory } from "./agent/SlashSuggestions";
@@ -335,8 +336,15 @@ export function AgentColumn({
     chosen: view.chosen,
     ranWith,
   });
-  const { catalog, catalogBusy, localLanes, offer, selection, remember } =
-    agentCatalog;
+  const {
+    catalog,
+    catalogBusy,
+    localLanes,
+    engines,
+    offer,
+    selection,
+    remember,
+  } = agentCatalog;
 
   const current =
     conversations.kind === "ready" && conversationId !== null
@@ -631,19 +639,41 @@ export function AgentColumn({
         !offer.providers.some((provider) => provider.selectable)));
   // Where no lane can run and some lane only lacks a downloaded model, the
   // way on is downloading one rather than setting up a provider.
-  const noModelHeld = noProvider && offer?.modelsToDownload === true;
+  // Where no lane can run and a local engine is the one that does not, the
+  // way on is the engine's door rather than setting up a provider or
+  // downloading a model.
+  const engineNotices: EngineNotice[] = noProvider
+    ? (offer?.providers ?? []).flatMap((provider) =>
+        provider.ways.flatMap((way) =>
+          way.engineNotRunning
+            ? [
+                {
+                  id: way.id,
+                  words: labelled(t, provider.name, way.engineNotRunning.words),
+                  door: way.engineNotRunning.door,
+                },
+              ]
+            : [],
+        ),
+      )
+    : [];
+  const engineHeld = engineNotices.length > 0 && !catalogBusy;
+  const noModelHeld =
+    noProvider && !engineHeld && offer?.modelsToDownload === true;
   const serviceNotice = status ? serviceWords(t, status) : null;
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
     : catalogBusy
       ? t("desktop.agent.service_starting")
-      : noModelHeld
-        ? t("desktop.agent.no_installed_model")
-        : noProvider
-          ? t("desktop.agent.no_provider")
-          : offer !== null && !offer.observed
-            ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
-            : serviceNotice;
+      : engineHeld
+        ? null
+        : noModelHeld
+          ? t("desktop.agent.no_installed_model")
+          : noProvider
+            ? t("desktop.agent.no_provider")
+            : offer !== null && !offer.observed
+              ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
+              : serviceNotice;
 
   return (
     <div
@@ -734,6 +764,7 @@ export function AgentColumn({
             onSignInTerminal={refreshProviderAfterSignIn}
             localModelHost={localModelHost}
             localLanes={localLanes}
+            engines={engines}
             localProviderId={localProvider?.id}
             catalogStatus={
               catalog.kind === "ready"
@@ -894,6 +925,7 @@ export function AgentColumn({
           <ColumnNotice
             failure={view.sendFailure}
             notice={notice}
+            engines={engineHeld ? engineNotices : undefined}
             onRetry={
               status?.state === "refused" && !unsupported && session?.retry
                 ? () => {
@@ -906,7 +938,9 @@ export function AgentColumn({
                 : undefined
             }
             onSetUpProviders={
-              noProvider && !noModelHeld ? openSettings : undefined
+              noProvider && !noModelHeld && !engineHeld
+                ? openSettings
+                : undefined
             }
             onDownloadModels={noModelHeld ? openSettings : undefined}
             onOpenModelSettings={openSettings}

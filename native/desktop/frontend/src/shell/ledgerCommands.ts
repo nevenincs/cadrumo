@@ -6,6 +6,7 @@
 
 import type { LedgerRow } from "./ledger";
 import {
+  fieldsDroppedBy,
   keepsCategory,
   takesBusinessShare,
   takesUsageRatio,
@@ -17,6 +18,7 @@ import {
   storedFieldValue,
   type StageCell,
   type StageEvent,
+  type StageField,
 } from "./ledgerStage";
 
 export const CLASSIFY_KINDS = ["business", "personal", "mixed"] as const;
@@ -214,7 +216,8 @@ export type ClassifyOutcome =
  * that take a spending category; income takes none. Mixed takes only a
  * category a share applies to. Where a movement takes a category and none
  * was given, the category is asked for. A category already stored is left
- * as it is for Personal, and for income. Mixed names the category as its
+ * as it is for income. What the classification drops, a category included
+ * for Personal, is cleared with it. Mixed names the category as its
  * usage ratio where the movement's year has a ratio configured for it, as
  * the product's readiness check asks of every Mixed movement; elsewhere
  * none is staged, and the step says so. Movements the rows do not hold are
@@ -270,6 +273,16 @@ export function classifyCells(
         value: { kind: "clear" },
         stored: storedShare,
       });
+    // What the classification drops is cleared with it, so that the grid,
+    // the inspector and the review say so and one undo restores it. The
+    // category given takes the place of a stored one, and a share is
+    // handled above.
+    for (const dropped of fieldsDroppedBy(CLASSIFICATION_OF[request.kind])) {
+      const name = dropped as StageField;
+      const held = storedFieldValue(row, name);
+      if (held != null && !cells.some((c) => c.id === id && c.field === name))
+        cells.push({ id, field: name, value: { kind: "clear" }, stored: held });
+    }
     if (
       category !== null &&
       request.check?.rows.get(id)?.takes_expense_category
@@ -353,6 +366,54 @@ export function categoryCells(
       field: "category_id",
       value: { kind: "set", value: category },
       stored: storedFieldValue(row, "category_id"),
+    });
+  }
+  return cells.length
+    ? {
+        kind: "staged",
+        event: { type: "stage", label: "bulk_set", cells },
+        movements: cells.length,
+        skipped,
+      }
+    : { kind: "nothing", skipped };
+}
+
+/**
+ * Clears the spending category of those of `ids` that take one and have
+ * one: a movement the ledger says takes no category, or has none stored,
+ * is left as it is and counted in `skipped`.
+ */
+export function clearCategoryCells(
+  ids: readonly string[],
+  rows: ReadonlyMap<string, LedgerRow>,
+  check: StagedCheck,
+):
+  | {
+      kind: "staged";
+      event: Extract<StageEvent, { type: "stage" }>;
+      movements: number;
+      skipped: number;
+    }
+  | { kind: "nothing"; skipped: number } {
+  const cells: StageCell[] = [];
+  let skipped = 0;
+  for (const id of ids) {
+    const row = rows.get(id);
+    const stored = row ? storedFieldValue(row, "category_id") : null;
+    if (
+      !row ||
+      !check.rows.get(id)?.category_settable ||
+      stored === null ||
+      stored === undefined
+    ) {
+      skipped += 1;
+      continue;
+    }
+    cells.push({
+      id,
+      field: "category_id",
+      value: { kind: "clear" },
+      stored,
     });
   }
   return cells.length

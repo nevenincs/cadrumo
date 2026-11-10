@@ -298,17 +298,7 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
     payable = single_consensus(
         "grand_total", (a for a, _ in collected.amounts.get(InvoiceLabelKind.PAYABLE, [])), assembly
     )
-    derived_from_payable = grand_total is None and payable is not None and retention is not None
-    if grand_total is None and payable is not None:
-        grand_total = _total_from_payable(payable, retention)
-    base = assembly.value("taxable_base")
-    grand_total = _check_grand_total(grand_total, base, assembly)
-    if base is not None and grand_total is not None and derived_from_payable:
-        assembly.values["grand_total"] = grand_total.value
-        assembly.derived["grand_total"] = ("payable", "retencion_amount")
-    elif base is not None:
-        # A total with no base has nothing to be checked against.
-        assembly.put("grand_total", grand_total)
+    _settle_grand_total(grand_total, payable, retention, assembly)
 
     retention = _match_retention_sign(retention, assembly.value("grand_total"))
     retention_rate = single_consensus(
@@ -322,6 +312,26 @@ def assemble_totals(collected: InvoiceLabelCollection, assembly: InvoiceLabelAss
     retention, retention_rate = _check_payable(payable, total, retention, retention_rate, assembly)
     assembly.put("retencion_amount", retention)
     assembly.put("retencion_rate", retention_rate)
+
+
+def _settle_grand_total(
+    grand_total: PrintedValue[Decimal] | None,
+    payable: PrintedValue[Decimal] | None,
+    retention: PrintedValue[Decimal] | None,
+    assembly: InvoiceLabelAssembly,
+) -> None:
+    """Derive the total from the payable where only that is printed, check it, and record it."""
+    derived_from_payable = grand_total is None and payable is not None and retention is not None
+    if grand_total is None and payable is not None:
+        grand_total = _total_from_payable(payable, retention)
+    base = assembly.value("taxable_base")
+    grand_total = _check_grand_total(grand_total, base, assembly)
+    if base is not None and grand_total is not None and derived_from_payable:
+        assembly.values["grand_total"] = grand_total.value
+        assembly.derived["grand_total"] = ("payable", "retencion_amount")
+    elif base is not None:
+        # A total with no base has nothing to be checked against.
+        assembly.put("grand_total", grand_total)
 
 
 def _total_from_payable(

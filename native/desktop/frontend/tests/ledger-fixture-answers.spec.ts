@@ -208,3 +208,21 @@ test("a counterparty's provincia is stated from the served choices and refused o
     }),
   ).rejects.toMatchObject({ reason: "invalid" });
 });
+
+test("every listed movement answers as the list serves it, a served retención included", async () => {
+  for (const shape of ["fixture", "withholding"] as const) {
+    const port = ledgerFixture({
+      say: () => undefined,
+      wait: async () => undefined,
+      signedIn: () => true,
+      shape,
+    });
+    const outcome = await port.submit("ledger.list", { limit: 500 });
+    if (outcome.kind !== "settled") throw new Error("the list did not settle");
+    expect(answerViolations("ledger.list", outcome.result), shape).toEqual([]);
+    const practised = outcome.result.rows.filter(
+      (row) => row.withholding.length > 0,
+    );
+    expect(practised.length > 0, shape).toBe(shape === "withholding");
+  }
+});

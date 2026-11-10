@@ -189,34 +189,51 @@ function LocalModelRow({
   );
 }
 
-/** The words of an engine and of a placement. Each key is named whole, so
- * the shell's key check sees every one. */
+/** The words of each engine and of each placement the service can name. Each
+ * key is named whole, so the shell's key check sees every one. A token this
+ * window has no words for is offered as nothing: no fallback wording. */
+const ENGINE_WORDS = {
+  llamacpp: {
+    label: "desktop.providers.local_engine_llamacpp",
+    detail: "desktop.providers.local_engine_llamacpp_detail",
+  },
+  ollama: {
+    label: "desktop.providers.local_engine_ollama",
+    detail: "desktop.providers.local_engine_ollama_detail",
+  },
+} as const satisfies Record<
+  AgentLocalEngineToken,
+  { label: string; detail: string }
+>;
+
+const PLACEMENT_WORDS = {
+  auto: {
+    label: "desktop.providers.local_placement_auto",
+    detail: "desktop.providers.local_placement_auto_detail",
+  },
+  cpu_only: {
+    label: "desktop.providers.local_placement_cpu_only",
+    detail: "desktop.providers.local_placement_cpu_only_detail",
+  },
+} as const satisfies Record<
+  AgentLocalPlacement,
+  { label: string; detail: string }
+>;
+
+const isEngine = (token: string): token is AgentLocalEngineToken =>
+  Object.hasOwn(ENGINE_WORDS, token);
+const isPlacement = (token: string): token is AgentLocalPlacement =>
+  Object.hasOwn(PLACEMENT_WORDS, token);
+
 function engineWords(t: Translate, engine: AgentLocalEngineToken) {
-  return engine === "llamacpp"
-    ? {
-        label: t("desktop.providers.local_engine_llamacpp"),
-        detail: t("desktop.providers.local_engine_llamacpp_detail"),
-      }
-    : {
-        label: t("desktop.providers.local_engine_ollama"),
-        detail: t("desktop.providers.local_engine_ollama_detail"),
-      };
+  const words = ENGINE_WORDS[engine];
+  return { label: t(words.label), detail: t(words.detail) };
 }
 
 function placementWords(t: Translate, placement: AgentLocalPlacement) {
-  return placement === "auto"
-    ? {
-        label: t("desktop.providers.local_placement_auto"),
-        detail: t("desktop.providers.local_placement_auto_detail"),
-      }
-    : {
-        label: t("desktop.providers.local_placement_cpu_only"),
-        detail: t("desktop.providers.local_placement_cpu_only_detail"),
-      };
+  const words = PLACEMENT_WORDS[placement];
+  return { label: t(words.label), detail: t(words.detail) };
 }
-
-const ENGINE_CHOICES: readonly AgentLocalEngineToken[] = ["llamacpp", "ollama"];
-const PLACEMENT_CHOICES: readonly AgentLocalPlacement[] = ["auto", "cpu_only"];
 
 /** One choice among a few, each with its label and the detail beneath it. */
 function Choice<T extends string>({
@@ -307,7 +324,7 @@ function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
         name="local-engine-choice"
         title={t("desktop.providers.local_engine_title")}
         value={value.engine}
-        values={ENGINE_CHOICES}
+        values={value.choices.engine.filter(isEngine)}
         words={(option) => engineWords(t, option)}
         disabled={engine.busy}
         onChoose={(next) => choose(next, value.placement)}
@@ -316,7 +333,7 @@ function LocalEngineChoice({ engine }: { engine: LocalEngineState }) {
         name="local-placement-choice"
         title={t("desktop.providers.local_placement_title")}
         value={value.placement}
-        values={PLACEMENT_CHOICES}
+        values={value.choices.placement.filter(isPlacement)}
         words={(option) => placementWords(t, option)}
         disabled={engine.busy}
         onChoose={(next) => choose(value.engine, next)}

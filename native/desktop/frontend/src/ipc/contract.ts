@@ -335,16 +335,29 @@ export type AgentLocalPlacement = "auto" | "cpu_only";
 /**
  * The local engine and placement stored beside the model lists, with the
  * revision a change sends back: the lists' own revision, as one record holds
- * both; or the same record unreadable.
+ * both; or the same record unreadable. Either carries the engines and the
+ * placements the service offers, in its order: the window offers exactly
+ * those and lists none of its own.
  */
 export type AgentLocalEngine =
   | {
       state: "readable";
       engine: AgentLocalEngineToken;
       placement: AgentLocalPlacement;
+      choices: AgentLocalChoices;
       revision: string;
     }
-  | { state: "unreadable"; revision: string };
+  | {
+      state: "unreadable";
+      choices: AgentLocalChoices;
+      revision: string;
+    };
+
+/** The engines and the placements the service offers, each in its order. */
+export type AgentLocalChoices = {
+  engine: AgentLocalEngineToken[];
+  placement: AgentLocalPlacement[];
+};
 
 // ---------------------------------------------------------------------------
 // Command table

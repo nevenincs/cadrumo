@@ -210,7 +210,11 @@ class ModeloFilingRecordSnapshot(BaseModel):
 def related_filing_projections(
     catalogue: ModeloRecordCatalogue, record: ModeloRecord, language: OutputLanguage
 ) -> tuple[ModeloRelatedFilingProjection, ...]:
-    """Every filing at the record's exact coordinate in the same profile, oldest first."""
+    """Every filing at the record's exact coordinate in the same profile, oldest first.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+    """
     return tuple(
         ModeloRelatedFilingProjection.from_reference(DeclarationsWorkspaceFilingRefV1.from_record(item), language)
         for item in sorted(catalogue.records.values(), key=lambda item: (item.filed_at, item.filing_record_id))
