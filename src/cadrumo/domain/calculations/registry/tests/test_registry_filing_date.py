@@ -8,6 +8,7 @@ import pytest
 
 from ....period import calculation_filing_date
 from ..schema import RegistrySnapshot
+from .authored_editions import filing_year_envelope
 from .registry_filing_date_support import registry_filing_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -33,7 +34,7 @@ def test_registry_filing_date_matches_the_engine_default_date_context(
     The expected value is read from the loaded snapshot, not restated here, so
     this asserts agreement with the authority rather than a copied literal.
     """
-    filing_year = 2025
+    filing_year = filing_year_envelope().horizon
     snapshot = registry_snapshot("130", filing_year, period)
     assert snapshot.filing_period is not None, "M130 snapshot must carry a typed filing period"
 
@@ -55,6 +56,6 @@ def test_registry_filing_date_stays_inside_the_filing_year(period: str) -> None:
     every 4T filing, which is the drift this module's date routing exists to
     prevent.
     """
-    filing_year = 2025
+    filing_year = filing_year_envelope().horizon
 
     assert registry_filing_date(filing_year, period).year == filing_year
