@@ -18,6 +18,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -51,7 +52,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CALCULATION_REVISION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _RESULT_REFERENCE = "f" * 64
 _ACTOR = "gestoria source"
 
@@ -258,7 +260,7 @@ def test_filing_reader_is_admitted_on_the_external_client_frontend_without_a_com
         ),
         (
             str(_PROFILE),
-            {"period": Period.from_year_and_code(2026, "2T")},
+            {"period": Period.from_year_and_code(_FILING_YEAR, "2T")},
             AccessDenialCode.PROFILE_MISMATCH,
         ),
     ],

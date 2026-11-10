@@ -22,6 +22,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -34,7 +35,19 @@ from ..profile_derived_facts import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2024
+_SELECTOR_PREFIX = "renta_family.incremento_guarderia_"
+
+
+def _declaring_edition() -> int:
+    """The newest authored Modelo 100 edition whose bindings declare the year-keyed increment selector."""
+    declaring = authored_revisions_where(
+        "100",
+        lambda revision: any(key.startswith(_SELECTOR_PREFIX) for key in declared_profile_selectors(revision)),
+    )
+    return declaring[-1].valid_from.year
+
+
+_YEAR = _declaring_edition()
 _KEY = f"renta_family.incremento_guarderia_{_YEAR}"
 
 
@@ -49,7 +62,7 @@ def _facts(child: DescendantInfo) -> dict[str, Any]:
 def _manual_worked_child() -> DescendantInfo:
     """The manual's hijo mayor, on its REAL facts.
 
-    Born 2 September 2021 and turning three within the period; the mother is
+    Born 2 September three years before the exercise and turning three within the period; the mother is
     entitled May to August; the nursery's complete months are January to June.
     The two month sets share May and June, so the basis is two months.
 
@@ -58,7 +71,7 @@ def _manual_worked_child() -> DescendantInfo:
     reached the same figure without ever intersecting anything.
     """
     return DescendantInfo(
-        birth_date=date(2021, 9, 2),
+        birth_date=date(_YEAR - 3, 9, 2),
         meses_madre_trabajo=(5, 6, 7, 8),
         gastos_guarderia_mensuales=parse_guarderia_mensual("1-6:1145", field="test"),
         # The manual's own child turns three in September, and states that month as

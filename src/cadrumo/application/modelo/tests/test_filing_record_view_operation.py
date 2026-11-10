@@ -28,6 +28,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import (
@@ -65,7 +66,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CALCULATION_REVISION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _RESULT_REFERENCE = "f" * 64
 _ACTOR = "gestoria source"
 
@@ -82,7 +84,7 @@ def _observation_layers() -> ObservationLayers:
     def observation(amount: str) -> RegistryModeloObservation:
         return RegistryModeloObservation(
             modelo="303",
-            filing_year=2026,
+            filing_year=_FILING_YEAR,
             period="1T",
             observations=(
                 CasillaObservation(
@@ -102,7 +104,7 @@ def _observation_layers() -> ObservationLayers:
     official = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
         captured_at=_NOW,
-        stamped_revision_id="revision-2026",
+        stamped_revision_id=f"revision-{_FILING_YEAR}",
         observation=observation("10.25"),
         result_disposition=disposition,
         m303_compensation_basis=M303CompensationBasis.RESULTADO,
@@ -117,7 +119,7 @@ def _observation_layers() -> ObservationLayers:
     pending = ObservationEnvelopePayload(
         source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         captured_at=_NOW,
-        stamped_revision_id="revision-2026",
+        stamped_revision_id=f"revision-{_FILING_YEAR}",
         observation=observation("11.50"),
         override=override,
         result_disposition=disposition,
@@ -125,7 +127,7 @@ def _observation_layers() -> ObservationLayers:
     )
     return ObservationLayers(
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period="1T",
         official=official,
         pending_local=pending,

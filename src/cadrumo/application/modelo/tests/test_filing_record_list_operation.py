@@ -22,6 +22,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -58,7 +59,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _REVISION = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _record(
@@ -66,7 +68,7 @@ def _record(
     profile_id: UUID = _PROFILE,
     actor: str = "synthetic filing operator",
     modelo: str = "303",
-    year: int = 2026,
+    year: int = _FILING_YEAR,
     period_code: str = "1T",
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE,
     confirmed: bool = False,
