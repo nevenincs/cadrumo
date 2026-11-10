@@ -14,12 +14,14 @@ from ..analysis.temporal_enrollment_models import (
 )
 from ..analysis.temporal_enrollment_source import literal_enrollment_declarations, subject_is_declared
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PATH = "dev/registry/tests/literal_fixture.py"
-_DECLARED_2023 = RegistryRevisionSubject("390", "2023")
-_DECLARED_2024 = RegistryRevisionSubject("390", "2024")
+_FIRST_ID, _SECOND_ID = (str(revision.id) for revision in authored_revisions("390")[-3:-1])
+_DECLARED_FIRST = RegistryRevisionSubject("390", _FIRST_ID)
+_DECLARED_SECOND = RegistryRevisionSubject("390", _SECOND_ID)
 _RETIRED = RegistryRevisionSubject("390", "1999")
 
 
@@ -48,17 +50,17 @@ def _pin(subject: RegistryRevisionSubject, *, source_sha256: str = "0" * 64) -> 
 def test_a_declared_revision_is_recognised_and_an_undeclared_one_is_not(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    assert subject_is_declared(_DECLARED_2023, authority=authority)
+    assert subject_is_declared(_DECLARED_FIRST, authority=authority)
     assert not subject_is_declared(_RETIRED, authority=authority)
 
 
 def test_a_collection_naming_a_declared_revision_is_an_enrolment(authority: ValidatedRegistryAuthority) -> None:
-    source = '_REVISIONS = (("390", "2023"), ("390", "1999"))\n_OTHER = 3\n'
+    source = f'_REVISIONS = (("390", "{_FIRST_ID}"), ("390", "1999"))\n_OTHER = 3\n'
 
     (declaration,) = literal_enrollment_declarations(source, path=_PATH, authority=authority)
 
     assert declaration.symbol == "_REVISIONS"
-    assert declaration.subjects == (_DECLARED_2023, _RETIRED)
+    assert declaration.subjects == (_DECLARED_FIRST, _RETIRED)
 
 
 @pytest.mark.parametrize(
@@ -80,8 +82,8 @@ def test_a_collection_that_names_no_declared_revision_is_not_an_enrolment(
 
 def test_a_collection_matching_its_denominator_has_no_finding(authority: ValidatedRegistryAuthority) -> None:
     finding = declaration_finding(
-        _declaration(_DECLARED_2023, _DECLARED_2024),
-        expected=frozenset({_DECLARED_2023, _DECLARED_2024}),
+        _declaration(_DECLARED_FIRST, _DECLARED_SECOND),
+        expected=frozenset({_DECLARED_FIRST, _DECLARED_SECOND}),
         authority=authority,
         pins=(),
     )
@@ -91,28 +93,28 @@ def test_a_collection_matching_its_denominator_has_no_finding(authority: Validat
 
 def test_missing_extra_duplicate_and_retired_rows_are_each_reported(authority: ValidatedRegistryAuthority) -> None:
     finding = declaration_finding(
-        _declaration(_DECLARED_2023, _DECLARED_2023, _RETIRED),
-        expected=frozenset({_DECLARED_2023, _DECLARED_2024}),
+        _declaration(_DECLARED_FIRST, _DECLARED_FIRST, _RETIRED),
+        expected=frozenset({_DECLARED_FIRST, _DECLARED_SECOND}),
         authority=authority,
         pins=(),
     )
 
     assert finding is not None
-    assert finding.missing == (_DECLARED_2024,)
+    assert finding.missing == (_DECLARED_SECOND,)
     assert finding.extra == (_RETIRED,)
-    assert finding.duplicates == (_DECLARED_2023,)
+    assert finding.duplicates == (_DECLARED_FIRST,)
     assert finding.absent == (_RETIRED,)
 
 
 def test_a_pin_whose_source_no_longer_matches_is_dormant(authority: ValidatedRegistryAuthority) -> None:
     finding = declaration_finding(
-        _declaration(_DECLARED_2023),
-        expected=frozenset({_DECLARED_2023}),
+        _declaration(_DECLARED_FIRST),
+        expected=frozenset({_DECLARED_FIRST}),
         authority=authority,
-        pins=(_pin(_DECLARED_2024), _pin(_DECLARED_2024)),
+        pins=(_pin(_DECLARED_SECOND), _pin(_DECLARED_SECOND)),
     )
 
     assert finding is not None
-    assert finding.dormant_pins == (_DECLARED_2024, _DECLARED_2024)
-    assert finding.duplicate_pins == (_DECLARED_2024,)
+    assert finding.dormant_pins == (_DECLARED_SECOND, _DECLARED_SECOND)
+    assert finding.duplicate_pins == (_DECLARED_SECOND,)
     assert finding.missing == ()
