@@ -16,7 +16,7 @@ import gc
 import os
 import sys
 import threading
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 if TYPE_CHECKING:
     import io
@@ -102,22 +102,36 @@ def _unsettled_resource_open() -> bool:
     child process. Those types are only reachable when their modules are
     loaded, so an unloaded module contributes nothing to look for.
     """
-    import io
-
     standard_ids = _standard_stream_ids()
-    buffered_types = (io.TextIOWrapper, io.BufferedWriter, io.BufferedRandom)
     connection_type = _loaded_sqlite_connection_type()
     popen_type = _loaded_popen_type()
-    for candidate in gc.get_objects():
-        if isinstance(candidate, buffered_types):
-            if id(candidate) not in standard_ids and _stream_writable(candidate):
-                return True
-        elif connection_type is not None and isinstance(candidate, connection_type):
-            if _sqlite_connection_writable(candidate):
-                return True
-        elif popen_type is not None and isinstance(candidate, popen_type) and candidate.poll() is None:
-            return True
-    return False
+    return any(
+        _candidate_unsettled(
+            candidate,
+            standard_ids=standard_ids,
+            connection_type=connection_type,
+            popen_type=popen_type,
+        )
+        for candidate in gc.get_objects()
+    )
+
+
+def _candidate_unsettled(
+    # Typed as the garbage collector reports it: any live object at all.
+    candidate: Any,
+    *,
+    standard_ids: frozenset[int],
+    connection_type: type[sqlite3.Connection] | None,
+    popen_type: type[subprocess.Popen[bytes]] | None,
+) -> bool:
+    """Report whether one live object is a resource whose release would still change something."""
+    import io
+
+    if isinstance(candidate, io.TextIOWrapper | io.BufferedWriter | io.BufferedRandom):
+        return id(candidate) not in standard_ids and _stream_writable(candidate)
+    if connection_type is not None and isinstance(candidate, connection_type):
+        return _sqlite_connection_writable(candidate)
+    return popen_type is not None and isinstance(candidate, popen_type) and candidate.poll() is None
 
 
 def _loaded_sqlite_connection_type() -> type[sqlite3.Connection] | None:

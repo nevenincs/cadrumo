@@ -28,9 +28,11 @@ from pydantic import AnyHttpUrl, BaseModel
 from cadrumo.adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    SecureObjectNamespaceDefinition,
+)
+from cadrumo.adapters.persistence.storage.secure_object_probe_namespaces import (
     TEST_RUNTIME_PROFILE_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
-    SecureObjectNamespaceDefinition,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.diagnostics_repair_documents import (

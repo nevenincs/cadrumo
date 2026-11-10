@@ -46,7 +46,7 @@ from .kdf_refusals import resource_refusal, supervision_refusal
 from .kdf_windows_job import WindowsJob
 from .kdf_worker_cleanup import KdfWorkerCleanup
 from .kdf_worker_identity import verify_ready_worker
-from .kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerStage
+from .kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerCleanupStatus, KdfWorkerStage
 from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 _NEVER_ATTESTED = "_kdf_worker_never_attested"
@@ -271,11 +271,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
             with self._phase("cleanup"):
                 self._close(failed=failed)
         except BaseException as cleanup_error:
-            if self._cleanup_pending():
-                retained = AsyncResourceCleanupError(
-                    (self,), (cleanup_error,), retry_task_name="profile-kdf-cleanup", close_attempts=1
-                )
-                attach_async_cleanup_error(cleanup_error, retained)
+            self._retain_pending_cleanup(cleanup_error)
             self._emit_diagnostic(
                 cleanup_status="failed",
                 cleanup_error=cleanup_error,
@@ -283,17 +279,27 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
                 exit_code=process.returncode if process is not None else None,
             )
             raise
-        if process is None:
-            cleanup_status = "unconfirmed" if self._launch_attempted or self._failure_stage == "start" else "completed"
-        else:
-            cleanup_status = "unconfirmed" if process.returncode is None else "completed"
         self._emit_diagnostic(
-            cleanup_status=cleanup_status,
+            cleanup_status=self._settled_cleanup_status(process),
             cleanup_error=None,
             primary_error=primary_error,
             exit_code=process.returncode if process is not None else None,
             exited_before_cleanup=exited_before_cleanup,
         )
+
+    def _retain_pending_cleanup(self, cleanup_error: BaseException) -> None:
+        """Attach this supervisor as the retry owner when a failed cleanup left work pending."""
+        if self._cleanup_pending():
+            retained = AsyncResourceCleanupError(
+                (self,), (cleanup_error,), retry_task_name="profile-kdf-cleanup", close_attempts=1
+            )
+            attach_async_cleanup_error(cleanup_error, retained)
+
+    def _settled_cleanup_status(self, process: subprocess.Popen[bytes] | None) -> KdfWorkerCleanupStatus:
+        """Report whether a cleanup that raised nothing can confirm the worker is gone."""
+        if process is None:
+            return "unconfirmed" if self._launch_attempted or self._failure_stage == "start" else "completed"
+        return "unconfirmed" if process.returncode is None else "completed"
 
     def _start(self) -> None:
         with ExitStack() as child_descriptors:
