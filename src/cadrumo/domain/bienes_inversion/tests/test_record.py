@@ -1,7 +1,6 @@
 """BienInversionIvaRecord / register structural invariants and window predicate."""
 
 from __future__ import annotations
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 
 from collections.abc import Callable, Iterator
 from datetime import date
@@ -14,6 +13,7 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...iva.flow import IvaFlowDirection
 from ...iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
