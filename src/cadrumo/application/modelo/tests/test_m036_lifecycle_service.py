@@ -18,6 +18,7 @@ from ....core.classification.policies import SensitivityClass
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from ....domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.errors import Modelo036PriorAltaRequiredError
 from ...live.errors import LiveApplicationInputError
 from ..m036_lifecycle import M036DeclarationCommand, M036DeclarationResult, record_m036_declaration
@@ -26,6 +27,7 @@ from ..m036_lifecycle_ports import M036LifecyclePorts
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "32323232-3232-4232-8232-323232323232"
+_YEAR = filing_year_envelope().horizon
 
 
 class _PreparedEventWrite(SecureObjectWrite):
@@ -63,7 +65,7 @@ class M036LifecycleServiceEventRepository:
             object_key="m036-event-history",
             classification=SensitivityClass.AUDIT,
             schema_version=1,
-            written_at=datetime(2026, 6, 4, tzinfo=UTC),
+            written_at=datetime(_YEAR, 6, 4, tzinfo=UTC),
             payload=b"m036-event-history",
             expected_revision_id=expected_revision_id,
             catalogue=catalogue,
@@ -125,7 +127,7 @@ def _command(event_kind: CensoModeloEventKind = CensoModeloEventKind.ALTA) -> M0
     return M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=event_kind,
-        declared_on=date(2026, 6, 4),
+        declared_on=date(_YEAR, 6, 4),
     )
 
 

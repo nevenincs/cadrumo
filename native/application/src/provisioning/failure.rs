@@ -19,6 +19,14 @@ pub enum FailureCategory {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    /// The engine's downloaded program could not be started because the system refused
+    /// it as no usable image: damaged after it was installed, or built for another
+    /// computer. Installing it afresh replaces its files.
+    EngineProgramUnusable,
+    /// The engine's program that came with Cadrumo could not be started because the
+    /// system refused it as no usable image. It runs from Cadrumo's own package, which
+    /// only repairing or reinstalling Cadrumo replaces.
+    EnginePackageDamaged,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
@@ -27,7 +35,7 @@ pub enum FailureCategory {
 }
 
 impl FailureCategory {
-    pub const ALL: [Self; 17] = [
+    pub const ALL: [Self; 19] = [
         Self::Offline,
         Self::HostUnreachable,
         Self::ServerError,
@@ -40,6 +48,8 @@ impl FailureCategory {
         Self::MemoryBusy,
         Self::ProgramMissing,
         Self::ProgramNotRunning,
+        Self::EngineProgramUnusable,
+        Self::EnginePackageDamaged,
         Self::Interrupted,
         Self::NeedsSignIn,
         Self::NotInThisBuild,
@@ -61,6 +71,8 @@ impl FailureCategory {
             Self::MemoryBusy => "memory_busy",
             Self::ProgramMissing => "program_missing",
             Self::ProgramNotRunning => "program_not_running",
+            Self::EngineProgramUnusable => "engine_program_unusable",
+            Self::EnginePackageDamaged => "engine_package_damaged",
             Self::Interrupted => "interrupted",
             Self::NeedsSignIn => "needs_sign_in",
             Self::NotInThisBuild => "not_in_this_build",
@@ -78,6 +90,8 @@ impl FailureCategory {
             Self::DiskFull
                 | Self::NoPermission
                 | Self::DamagedDownload
+                | Self::EngineProgramUnusable
+                | Self::EnginePackageDamaged
                 | Self::NotEnoughMemory
                 | Self::MemoryBusy
                 | Self::NotInThisBuild
@@ -221,7 +235,15 @@ mod tests {
                 serde_json::Value::String(category.as_str().into())
             );
         }
-        assert_eq!(FailureCategory::ALL.len(), 17);
+        assert_eq!(FailureCategory::ALL.len(), 19);
+        assert_eq!(
+            FailureCategory::EngineProgramUnusable.as_str(),
+            "engine_program_unusable"
+        );
+        assert_eq!(
+            FailureCategory::EnginePackageDamaged.as_str(),
+            "engine_package_damaged"
+        );
     }
 
     #[test]

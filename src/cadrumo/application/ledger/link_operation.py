@@ -146,26 +146,38 @@ class LedgerLinkOperationResult(BaseModel):
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> Self:
-        if self.outcome == "linked":
-            if (
-                self.reason is not None
-                or self.projection is None
-                or self.projection.profile_id != self.profile_id
-                or self.projection.invoice_id != self.invoice_id
-                or self.candidate_invoice_ids
-                or not self.projection.transaction_id.startswith(self.transaction_id.strip().lower())
-            ):
-                raise ValueError("ledger linkage outcome differs from its exact request")
-        elif self.reason is None or self.projection is not None:
-            raise ValueError("ledger linkage refusal is incomplete")
-        elif self.reason == "ambiguous_invoice":
-            if len(self.candidate_invoice_ids) < 2 or len(set(self.candidate_invoice_ids)) != len(
-                self.candidate_invoice_ids
-            ):
-                raise ValueError("ambiguous invoice linkage requires distinct candidates")
-        elif self.candidate_invoice_ids:
-            raise ValueError("only an ambiguous invoice selector carries candidates")
+        problem = _linked_result_problem(self) if self.outcome == "linked" else _refusal_result_problem(self)
+        if problem is not None:
+            raise ValueError(problem)
         return self
+
+
+def _linked_result_problem(result: LedgerLinkOperationResult) -> str | None:
+    """Why a linked result does not match its exact request, or ``None`` when it does."""
+    projection = result.projection
+    if (
+        result.reason is not None
+        or projection is None
+        or projection.profile_id != result.profile_id
+        or projection.invoice_id != result.invoice_id
+        or result.candidate_invoice_ids
+        or not projection.transaction_id.startswith(result.transaction_id.strip().lower())
+    ):
+        return "ledger linkage outcome differs from its exact request"
+    return None
+
+
+def _refusal_result_problem(result: LedgerLinkOperationResult) -> str | None:
+    """Why a refusal is incomplete or carries candidates it may not, or ``None`` when it is closed."""
+    if result.reason is None or result.projection is not None:
+        return "ledger linkage refusal is incomplete"
+    candidates = result.candidate_invoice_ids
+    if result.reason == "ambiguous_invoice":
+        if len(candidates) < 2 or len(set(candidates)) != len(candidates):
+            return "ambiguous invoice linkage requires distinct candidates"
+    elif candidates:
+        return "only an ambiguous invoice selector carries candidates"
+    return None
 
 
 class LedgerLinkExecutionResult(BaseModel):

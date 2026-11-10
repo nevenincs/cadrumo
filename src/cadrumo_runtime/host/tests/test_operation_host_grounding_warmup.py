@@ -1,7 +1,8 @@
 """A profile worker walks its grounding index in the background under its own lease.
 
 A person's admission starts the walk; the first read then finds the index cached
-for the worker's pinned generation. Shutdown abandons a walk under way and
+for the worker's pinned generation. The walk defers to the worker requests being
+served and resumes once they have been quiet for a moment. Shutdown abandons a walk under way and
 waits for it before the lease closes. A walk that fails leaves only a value-free
 diagnostic record, and the index is walked again on demand. Every case runs the
 real walk and the real lease against a private copy of the published authority.
@@ -19,12 +20,14 @@ import pytest
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.core.diagnostic_log import diagnostic_process
 from cadrumo.domain.calculations.registry import profile_grounding
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 from cadrumo.tests.log_records import delivered_records
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from .. import operation_host
-from ..operation_host import ProfileWorkerOperationHost
+from ..operation_host import ProfileWorkerOperationHost, worker_request_served
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -115,3 +118,41 @@ async def test_a_failed_walk_leaves_one_value_free_record_and_the_host_closes(
         assert str(tmp_path) not in rendered
         assert profile_grounding._grounding_index_cache == {}
         assert not (await host.close()).needs_containment
+
+
+@pytest.mark.asyncio
+async def test_the_warm_up_defers_to_a_served_request_and_completes_once_requests_are_quiet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(operation_host, "_GROUNDING_WARMUP_QUIET_SECONDS", 0.2)
+    decodes: list[str] = []
+    decode = PinnedAuthorityOperation.revision
+
+    def counted(operation: PinnedAuthorityOperation, modelo_id: str, revision_id: str) -> ModeloRevision:
+        decodes.append(revision_id)
+        return decode(operation, modelo_id, revision_id)
+
+    # Observed, not replaced: every decode still runs the real component read.
+    monkeypatch.setattr(PinnedAuthorityOperation, "revision", counted)
+    with isolated_shared_authority(tmp_path) as database:
+        host = _host()
+        with worker_request_served():
+            host.start_profile_grounding_warmup()
+            warmup = host._grounding_warmup
+            assert warmup is not None
+            await asyncio.sleep(0.5)
+            # Held before its first revision while the request is served: under way, nothing decoded or cached.
+            assert not warmup.done()
+            assert decodes == []
+            assert list(profile_grounding._grounding_index_flights) == [host.pinned().generation.logical_generation]
+            assert profile_grounding._grounding_index_cache == {}
+        # Still quiet for less than the window: the walk keeps deferring.
+        assert operation_host._grounding_deferred()
+        async with asyncio.timeout(120):
+            await warmup
+        assert not operation_host._grounding_deferred()
+        assert len(decodes) == len(host.pinned().revision_ids())
+        assert list(profile_grounding._grounding_index_cache) == [host.pinned().generation.logical_generation]
+
+        assert not (await host.close()).needs_containment
+        database.unlink()

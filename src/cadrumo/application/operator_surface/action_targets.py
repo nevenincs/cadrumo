@@ -211,6 +211,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "VerificationReportListResult",
     ),
     ActionTarget(
+        "modelo.work.attest_prior_carries",
+        ("app", "modelo", "work", "attest-prior-carries"),
+        "WorkAttestPriorCarriesResult",
+        required_inputs=("work_unit_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.work.calculate", ("app", "modelo", "work", "calculate"), "WorkCalculateResult", profile_bound_write=True
     ),
     ActionTarget(

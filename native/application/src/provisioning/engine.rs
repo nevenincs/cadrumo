@@ -198,7 +198,8 @@ impl Outcome {
 /// What one command found and did. `rows` is every item's state after the command;
 /// `plan` is the plan a setup reports; `item` and `failure` name the item and the
 /// category a refusal or failure is for, `failure_cause` what ran out or broke when
-/// that category is `program_not_running`, and `download_failure` the facts of a
+/// the local AI server did not come up or answer (`program_not_running`, or
+/// `engine_program_unusable` for a program the system refused), and `download_failure` the facts of a
 /// download that ended the item, both for diagnostics only; `items` are the items a
 /// removal removed, or the items another engine is changing.
 #[derive(Clone, Debug)]
@@ -264,6 +265,12 @@ pub struct SetupRequest {
     /// The digest of a plan the person already approved, such as the one a Resume
     /// repeats. A setup that carries one asks for no review.
     pub approved: Option<Sha256Digest>,
+    /// Installs the local AI's downloaded program afresh even where its files match
+    /// their receipt, for a program the system refused to start. The models are set up
+    /// as any setup sets them up and none is removed. The packaged llama-server runs
+    /// from the package, which no setup changes, so a reinstall with llama.cpp selected
+    /// is refused as `engine_package_damaged`.
+    pub reinstall: bool,
 }
 
 /// The person's answer to a plan's review.
@@ -352,10 +359,14 @@ struct Survey {
 enum Stop {
     Busy,
     Failed(FailureCategory),
-    /// Failed as `program_not_running`, for the cause it keeps.
+    /// Failed as the cause's category (`program_not_running`, or `engine_program_unusable` for a
+    /// program the operating system refused), for the cause it keeps.
     NotRunning(NotRunningCause),
     /// A download failed, as its category, for the facts it keeps.
     Download(TransferFailure),
+    /// The system refused the program that came with Cadrumo, which only a repair of
+    /// Cadrumo replaces: `engine_package_damaged`, for the cause it keeps.
+    PackageDamaged(NotRunningCause),
 }
 
 impl Stop {
@@ -364,7 +375,10 @@ impl Stop {
         match self {
             Self::Busy => None,
             Self::Failed(category) => Some((category, None)),
-            Self::NotRunning(cause) => Some((FailureCategory::ProgramNotRunning, Some(cause))),
+            Self::NotRunning(cause) => Some((cause.category(), Some(cause))),
+            Self::PackageDamaged(cause) => {
+                Some((FailureCategory::EnginePackageDamaged, Some(cause)))
+            }
             Self::Download(failure) => Some((failure.category, None)),
         }
     }
@@ -610,6 +624,16 @@ impl Relayed {
     }
 }
 
+/// The category a failure of the packaged llama-server reads as: it runs in place from
+/// Cadrumo's package, so a program of it the system refused is the package's damage, which
+/// no setup here replaces.
+fn packaged(category: FailureCategory) -> FailureCategory {
+    match category {
+        FailureCategory::EngineProgramUnusable => FailureCategory::EnginePackageDamaged,
+        other => other,
+    }
+}
+
 /// The nearest folder of `path` that exists, whose volume holds `path` once it is made.
 fn existing_ancestor(path: &Path) -> &Path {
     path.ancestors()
@@ -696,7 +720,8 @@ impl Engine {
     ) -> Report {
         let sink = Sink::new(events);
         let items = request.items.as_deref();
-        let (rows, plan) = match self.planned(items) {
+        let reinstall = request.reinstall;
+        let (rows, plan) = match self.planned(items, reinstall) {
             Ok((rows, Some(plan))) => (rows, plan),
             Ok((rows, None)) => return Report::new(Outcome::NothingToDo, rows),
             Err(report) if report.outcome == Outcome::Busy => {
@@ -733,7 +758,7 @@ impl Engine {
                 Answer::Decline => {
                     return Report::new(Outcome::NeedsApproval, rows).with_plan(plan);
                 }
-                Answer::Approve(approved) => match self.planned(items) {
+                Answer::Approve(approved) => match self.planned(items, reinstall) {
                     Ok((_, Some(again))) if again.digest() == approved => again,
                     Ok((rows, Some(again))) => {
                         return Report::new(Outcome::PlanChanged, rows).with_plan(again);
@@ -767,7 +792,7 @@ impl Engine {
                 .with_plan(plan)
                 .disk_full();
         }
-        let stopped = self.run_plan(&plan, reservation, &sink, cancellation);
+        let stopped = self.run_plan(&plan, reservation, &sink, cancellation, reinstall);
         let rows = self.quick_rows(&ItemId::ALL);
         let report = stopped.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
         Report { rows, ..report }.with_plan(plan)
@@ -987,10 +1012,12 @@ impl Engine {
         }
     }
 
-    fn survey(&mut self, item: ItemId) -> Survey {
+    /// One quick look at `item`; with `reinstall` the local AI's plan names its
+    /// downloaded program even where its files match their receipt.
+    fn survey(&mut self, item: ItemId, reinstall: bool) -> Survey {
         match item {
             ItemId::Browser => self.survey_browser(),
-            ItemId::LocalAi => self.survey_local_ai(),
+            ItemId::LocalAi => self.survey_local_ai(reinstall),
         }
     }
 
@@ -1016,7 +1043,7 @@ impl Engine {
         Survey { reading, entry }
     }
 
-    fn survey_local_ai(&mut self) -> Survey {
+    fn survey_local_ai(&mut self, reinstall: bool) -> Survey {
         // Quick status reads local facts only. Hardware discovery can launch slow
         // driver queries; full checks and setup own that work and retain its result.
         // An unmeasured capacity must not invent a hardware shortfall.
@@ -1036,7 +1063,7 @@ impl Engine {
         let (program_observation, version, model_observations) = match &program {
             EngineProgram::Ollama(program) => {
                 let observation = program.observe_quick();
-                if observation != present {
+                if observation != present || reinstall {
                     parts.push(program.plan_part());
                 }
                 (observation, program.version().to_owned(), stored.clone())
@@ -1120,7 +1147,7 @@ impl Engine {
             .into_iter()
             .filter(|item| items.contains(item))
             .map(|item| {
-                let survey = self.survey(item);
+                let survey = self.survey(item, false);
                 self.row(item, &survey)
             })
             .collect()
@@ -1140,7 +1167,7 @@ impl Engine {
                     item,
                     step: SetupStep::Verify,
                 });
-                let mut survey = self.survey(item);
+                let mut survey = self.survey(item, false);
                 survey.reading = match item {
                     ItemId::Browser => self.full_browser(cancellation),
                     ItemId::LocalAi => self.full_local_ai(),
@@ -1292,7 +1319,9 @@ impl Engine {
                 let program_observation = if running {
                     present
                 } else {
-                    Observation::Failed(FailureCategory::ProgramNotRunning)
+                    Observation::Failed(packaged(StartFailureKind::category_after(
+                        router.latest_start_failure(),
+                    )))
                 };
                 (
                     program_observation,
@@ -1314,13 +1343,17 @@ impl Engine {
     /// item, is being set up or removed elsewhere, the answer is busy with those items, for a
     /// setup to follow. A requested item this computer or build cannot hold refuses; one
     /// already set up is left out.
+    /// With `reinstall`, the local AI is planned whatever its row reads, its downloaded
+    /// program among its parts; with llama.cpp selected that is refused as
+    /// `engine_package_damaged`.
     fn planned(
         &mut self,
         items: Option<&[ItemId]>,
+        reinstall: bool,
     ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Box<Report>> {
         let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
             .into_iter()
-            .map(|item| (item, self.survey(item)))
+            .map(|item| (item, self.survey(item, reinstall)))
             .collect();
         let rows: Vec<StatusRow> = surveys
             .iter()
@@ -1341,13 +1374,29 @@ impl Engine {
                 ..Report::new(Outcome::Busy, rows.clone()).for_item(*first, None)
             }));
         }
+        let reinstalls_local_ai =
+            reinstall && items.is_none_or(|requested| requested.contains(&ItemId::LocalAi));
+        if reinstalls_local_ai && self.local_engine == LocalEngine::LlamaCpp {
+            return Err(Box::new(Report::new(Outcome::Refused, rows).for_item(
+                ItemId::LocalAi,
+                Some(FailureCategory::EnginePackageDamaged),
+            )));
+        }
         let chosen: Vec<ItemId> = match items {
-            None => state::items_to_set_up(&rows),
+            None => {
+                let mut chosen = state::items_to_set_up(&rows);
+                if reinstalls_local_ai && !chosen.contains(&ItemId::LocalAi) {
+                    chosen.push(ItemId::LocalAi);
+                }
+                chosen
+            }
             Some(requested) => {
                 let mut chosen = Vec::new();
                 for row in rows.iter().filter(|row| requested.contains(&row.item)) {
                     let refusal = match row.state {
-                        ItemState::Ready => continue,
+                        ItemState::Ready if !(reinstall && row.item == ItemId::LocalAi) => {
+                            continue;
+                        }
                         ItemState::Blocked(BlockedReason::NotInThisBuild)
                         | ItemState::Failed(FailureCategory::NotInThisBuild) => {
                             Some(FailureCategory::NotInThisBuild)
@@ -1434,6 +1483,7 @@ impl Engine {
         reservation: Reservation,
         sink: &Sink<'_>,
         cancellation: &Cancellation,
+        reinstall: bool,
     ) -> Option<Report> {
         let hardware = self.hardware();
         let run = RunMark {
@@ -1485,7 +1535,7 @@ impl Engine {
                 Slot::Own(writer) => match item {
                     ItemId::Browser => self.set_up_browser(entry, writer, sink, cancellation),
                     ItemId::LocalAi => {
-                        self.set_up_local_ai(entry, writer, hardware, sink, cancellation)
+                        self.set_up_local_ai(entry, writer, hardware, sink, cancellation, reinstall)
                     }
                 },
                 Slot::Follow => match self.follow_item(item, sink, cancellation) {
@@ -1724,6 +1774,7 @@ impl Engine {
         hardware: Hardware,
         sink: &Sink<'_>,
         cancellation: &Cancellation,
+        reinstall: bool,
     ) -> Result<(), Stop> {
         let item = ItemId::LocalAi;
         let present = Observation::Present;
@@ -1771,8 +1822,13 @@ impl Engine {
                         events: &mut on_event,
                         cancellation,
                     };
-                    // Waits for the manager to stop a server running the old version.
-                    program.install(&mut transfer)?;
+                    // Waits for the manager to stop a server running the old version, or
+                    // running the refused files a reinstall replaces.
+                    if reinstall {
+                        program.reinstall(&self.receipts, &mut transfer)?;
+                    } else {
+                        program.install(&mut transfer)?;
+                    }
                     reporter.offset += part.download_bytes.unwrap_or(0);
                     reporter.part = None;
                     writer.step(SetupStep::Install)?;
@@ -1852,7 +1908,15 @@ impl Engine {
                     }
                 }
                 EngineProgram::LlamaCpp(router) => {
-                    wait_for_router(router, &models, &mut pacing, cancellation, sink, &writer)?;
+                    wait_for_router(router, &models, &mut pacing, cancellation, sink, &writer)
+                        .map_err(|stop| match stop {
+                            Stop::NotRunning(cause)
+                                if cause.category() == FailureCategory::EngineProgramUnusable =>
+                            {
+                                Stop::PackageDamaged(cause)
+                            }
+                            stop => stop,
+                        })?;
                     for model in selected {
                         let observation =
                             models.check_full_on_router(router.folder(), model, &hardware)?;
@@ -2078,8 +2142,12 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
             Err(Stop::Failed(category))
         }
         Err(Stop::NotRunning(cause)) => {
-            writer.failed(FailureCategory::ProgramNotRunning)?;
+            writer.failed(cause.category())?;
             Err(Stop::NotRunning(cause))
+        }
+        Err(Stop::PackageDamaged(cause)) => {
+            writer.failed(FailureCategory::EnginePackageDamaged)?;
+            Err(Stop::PackageDamaged(cause))
         }
         Err(Stop::Download(failure)) => {
             writer.failed(failure.category)?;

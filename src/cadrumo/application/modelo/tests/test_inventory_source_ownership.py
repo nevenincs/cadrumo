@@ -11,6 +11,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
@@ -54,10 +55,13 @@ def _binding(operation: str, target: str) -> BindingDefinition:
     )
 
 
+_YEAR = newest_authored_edition("100")
+
+
 def _revision(*, declared: bool = True, alias: bool = False) -> ModeloRevision:
-    base = published_snapshot("100", filing_year=2025, period="0A").revision
+    base = published_snapshot("100", filing_year=_YEAR, period="0A").revision
     if not declared:
-        # "Undeclared" has to be BUILT now. Modelo 100/2025 ships three real
+        # "Undeclared" has to be BUILT now. Modelo 100 of the newest authored edition ships three real
         # inventory bindings, so returning the base revision unchanged asserted
         # the opposite of this branch's name: casilla 0181 arrived source-owned
         # and the caller-override lock refused it, correctly. Strip the

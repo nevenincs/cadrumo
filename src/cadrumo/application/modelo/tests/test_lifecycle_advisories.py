@@ -13,6 +13,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -34,7 +35,8 @@ from ..work_plazo import calculated_m210_plazo_resolution
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"
 
 
@@ -43,19 +45,19 @@ def _profile() -> TaxpayerProfile:
 
 
 def _work_unit(operation: PinnedAuthorityOperation, modelo: str) -> WorkUnit:
-    period = Period.from_year_and_code(2025, "0A")
-    revision_id = operation.snapshot(modelo, filing_year=2025, period="0A").snapshot_ref.revision_id
+    period = Period.from_year_and_code(_YEAR, "0A")
+    revision_id = operation.snapshot(modelo, filing_year=_YEAR, period="0A").snapshot_ref.revision_id
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
         name=f"{modelo} annual",
@@ -220,12 +222,12 @@ def test_public_advisories_refuse_mismatched_form_and_malformed_facts() -> None:
         )
     with pytest.raises(ValidationError):
         ModeloM210PlazoAdvisoryV1(
-            filing_year=2025,
+            filing_year=_YEAR,
             period="0A",
             resultado="I",
             deadline_window_id="window",
-            opens_on="2025-04-31",
-            closes_on="2025-05-01",
+            opens_on=f"{_YEAR}-04-31",
+            closes_on=f"{_YEAR}-05-01",
             legal_refs="law",
             source_refs="source",
         )
@@ -234,15 +236,15 @@ def test_public_advisories_refuse_mismatched_form_and_malformed_facts() -> None:
             work_unit_id="a" * 64,
             calculation_revision_id="b" * 64,
             modelo="184",
-            filing_year=2025,
+            filing_year=_YEAR,
             period="0A",
             m210_plazo=ModeloM210PlazoAdvisoryV1(
-                filing_year=2025,
+                filing_year=_YEAR,
                 period="0A",
                 resultado="I",
                 deadline_window_id="window",
-                opens_on="2025-04-01",
-                closes_on="2025-05-01",
+                opens_on=f"{_YEAR}-04-01",
+                closes_on=f"{_YEAR}-05-01",
                 legal_refs="law",
                 source_refs="source",
             ),

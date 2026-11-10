@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import cache
+
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
+from ..authority import bundled_indexed_authority
+from ..schema import ModeloRevision
+from ..schema_base import PublishingAuthority, RegistrySourceKind
+from ..schema_references import SourceReference, TemporalProjectionDirection
+from ..temporal import RevisionSelectionMetadata, revision_temporal_resolution
+from .authored_editions import authored_revisions, filing_year_envelope
 
 WWW1_HOST = aeat_host("www1")
 WWW6_HOST = aeat_host("www6")
@@ -32,45 +41,19 @@ M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     _M303_PRORRATA_PORCENTAJE_CASILLA,
 )
 M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
-M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
-    "2023",
-    "2024-hasta-08-y-2t",
-    "2024-desde-09-y-3t",
-    "2025",
-    "2026-y-siguientes",
+# The extraction-profile targets of the oldest authored design, which predates the prorrata and special-regime boxes.
+_M303_EARLIEST_RECORD_DESIGN_LEGAL_REFS = frozenset(
+    {
+        "ley-37-1992:art-88",
+        "ley-37-1992:art-90",
+        "ley-37-1992:art-91",
+        "ley-37-1992:art-92",
+        "ley-37-1992:art-94",
+        "ley-37-1992:art-95",
+        "orden-eha-3786-2008:art-1",
+        "rd-1624-1992:art-71",
+    }
 )
-M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
-    # `aeat-dr-303-2022`, not 2025. The 2022 revision borrowed a later design
-    # while it was still the open-ended 2009-2022 span with none of its own;
-    # it now cites the 2022 diseno, which is the one that governs its year.
-    "2022": "aeat-dr-303-2022",
-    "2023": "aeat-dr-303-2023",
-    "2024-hasta-08-y-2t": "aeat-dr-303-2024-early",
-    "2024-desde-09-y-3t": "aeat-dr-303-2024-late",
-    "2025": "aeat-dr-303-2025",
-    "2026-y-siguientes": "aeat-dr-303-2026",
-}
-M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
-    "2023": "boe-orden-hfp-1172-2022-iva-authority",
-    "2024-hasta-08-y-2t": "boe-orden-hfp-1359-2023-iva-authority",
-    "2024-desde-09-y-3t": "boe-orden-hfp-1359-2023-iva-authority",
-    "2025": "boe-orden-hac-1347-2024-iva-authority",
-    "2026-y-siguientes": "boe-orden-hac-1425-2025-iva-authority",
-}
-M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
-    "2022": frozenset(
-        {
-            "ley-37-1992:art-88",
-            "ley-37-1992:art-90",
-            "ley-37-1992:art-91",
-            "ley-37-1992:art-92",
-            "ley-37-1992:art-94",
-            "ley-37-1992:art-95",
-            "orden-eha-3786-2008:art-1",
-            "rd-1624-1992:art-71",
-        }
-    ),
-}
 _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS = frozenset(
     {
         "ley-37-1992:art-88",
@@ -92,5 +75,88 @@ _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS = frozenset(
     }
 )
 M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF = "orden-hac-819-2024:art-unico"
-for _revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
-    M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION[_revision_id] = _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS
+
+
+def _supported_editions() -> tuple[RevisionSelectionMetadata, ...]:
+    """Return the 303 editions the support envelope selects for some authored coordinate, oldest first.
+
+    Every period any edition serves is asked for in every supported exercise; an
+    edition counts when the canonical temporal resolution reports the coordinate
+    as authored by it rather than projected onto it.
+    """
+    envelope = filing_year_envelope()
+    authored = authored_revisions("303")
+    periods = sorted(
+        {
+            period
+            for revision in authored
+            for year in envelope.years
+            for period in revision.period_selector.periods_for_year(year)
+        }
+    )
+    selected: set[str] = set()
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for year in envelope.years:
+            for period in periods:
+                revision = operation.revision_for_context("303", filing_year=year, period=period)
+                resolution = revision_temporal_resolution(revision, filing_year=year, period=period, support=support)
+                if resolution.projection_direction is TemporalProjectionDirection.AUTHORED:
+                    selected.add(str(revision.id))
+    return tuple(revision for revision in authored if str(revision.id) in selected)
+
+
+M303_SUPPORTED_EDITIONS = _supported_editions()
+M303_SUPPORTED_EDITION_IDS = tuple(str(revision.id) for revision in M303_SUPPORTED_EDITIONS)
+_EARLIEST_EDITION_ID = str(authored_revisions("303")[0].id)
+
+
+@cache
+def _cited_sources() -> tuple[SourceReference, ...]:
+    """Return every source any supported 303 edition cites, so a selection never reads one edition's own answer."""
+    cited = sorted({ref for revision in M303_SUPPORTED_EDITIONS for ref in _edition(str(revision.id)).source_refs})
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(operation.source_reference(ref) for ref in cited)
+
+
+def _edition(revision_id: str) -> ModeloRevision:
+    with bundled_indexed_authority().operation() as operation:
+        return operation.revision("303", revision_id)
+
+
+def _covering_source(revision_id: str, predicate: Callable[[SourceReference], bool]) -> str:
+    """Return the one cited source that satisfies ``predicate`` and whose applicability covers the edition's start."""
+    start = next(revision.valid_from for revision in M303_SUPPORTED_EDITIONS if str(revision.id) == revision_id)
+    (source,) = (
+        source
+        for source in _cited_sources()
+        if predicate(source)
+        and source.applies_from is not None
+        and source.applies_from <= start
+        and (source.applies_to is None or start <= source.applies_to)
+    )
+    return source.id
+
+
+def m303_record_design_source(revision_id: str) -> str:
+    """Return the AEAT diseño de registro whose applicability window opens the edition."""
+    return _covering_source(revision_id, lambda source: source.kind is RegistrySourceKind.RECORD_DESIGN)
+
+
+def m303_annual_orden_source(revision_id: str) -> str:
+    """Return the BOE annual Orden whose single-exercise window governs the edition."""
+    return _covering_source(
+        revision_id,
+        lambda source: (
+            source.kind is RegistrySourceKind.INSTRUCTIONS
+            and source.authority is PublishingAuthority.BOE
+            and source.applies_to is not None
+        ),
+    )
+
+
+def m303_extraction_profile_target_legal_refs(revision_id: str) -> frozenset[str]:
+    """Return the legal references the declaration extraction profile's target boxes carry in one edition."""
+    if revision_id == _EARLIEST_EDITION_ID:
+        return _M303_EARLIEST_RECORD_DESIGN_LEGAL_REFS
+    return _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS

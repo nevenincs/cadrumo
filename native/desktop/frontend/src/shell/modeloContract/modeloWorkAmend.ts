@@ -11,6 +11,7 @@
 import type {
   FilingDeclarationKind,
   FilingRecordId,
+  ModeloCalculationOverride,
   ModeloDetailRowWireV1,
 } from "./modelo";
 import type {
@@ -70,5 +71,6 @@ export type ModeloWorkAmendRequest = {
   reason: string;
   m303_rectificativa_motive?: M303RectificativaMotive | null;
   detail_rows?: ModeloDetailRowWireV1[] | null;
+  binding_overrides?: ModeloCalculationOverride[];
   actor: string;
 };

@@ -109,7 +109,7 @@ def _harness(
     source = _catalog_source() if source is None else source
     gateway = _RecordingGateway()
     resolver = ProviderCredentialResolver(store=store, catalog_source=source)
-    settings = ProviderSettingsService(store=store, catalog_source=source)
+    settings = ProviderSettingsService(selected_engine=lambda: LocalEngine.LLAMACPP, store=store, catalog_source=source)
     runs = ModelRunService(
         model_list=model_list,
         resolver=resolver,

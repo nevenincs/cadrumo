@@ -40,7 +40,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .modelo_100_eo_agraria_support import calculate_neutral_modelo_100_2025
+from .modelo_100_eo_agraria_support import calculate_neutral_newest_modelo_100
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -94,7 +94,7 @@ def _run_calculation(
         _CASILLA_1538_AMORTIZACION: amortizacion,
     }
     inputs.update(indices_correctores or {})
-    return calculate_neutral_modelo_100_2025(inputs).values
+    return calculate_neutral_newest_modelo_100(inputs).values
 
 
 class TestFixtureReachesTheManualsOwnMinorado:
@@ -179,7 +179,7 @@ class TestPiensosIndiceIsTextTypedButStillApplies:
     """
 
     def test_text_typed_piensos_indice_applies_via_text_inputs(self) -> None:
-        calculation = calculate_neutral_modelo_100_2025(
+        calculation = calculate_neutral_newest_modelo_100(
             {
                 _CASILLA_1521_INGRESOS: _INGRESOS,
                 _CASILLA_1522_INDICE: _INDICE_RENDIMIENTO_NETO,

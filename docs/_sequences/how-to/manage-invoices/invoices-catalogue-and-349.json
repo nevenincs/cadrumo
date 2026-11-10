@@ -346,7 +346,7 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "10bfac0257dcc3f22d24e8d1d88c21f1ae4e96598ecdf18103be9d7c5e6a0536",
+          "calculation_revision_id": "3cc2cce9a7f8dfbf33cd9e16b1f48256e9b79fb61d2942923fc332d21ffdf78a",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -493,7 +493,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 10bfac0257dcc3f22d24e8d1d88c21f1ae4e96598ecdf18103be9d7c5e6a0536 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 3cc2cce9a7f8dfbf33cd9e16b1f48256e9b79fb61d2942923fc332d21ffdf78a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",

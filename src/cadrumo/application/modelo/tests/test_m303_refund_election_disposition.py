@@ -25,6 +25,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.refund_eligibility import resolve_refund_eligibility_policy_for_period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import (
     IVARegime,
@@ -46,10 +47,10 @@ from ..result_disposition_resolution import resolve_modelo_result_disposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_FILING_YEAR + 1, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"
 _MODELO = "303"
-_FILING_YEAR = 2025
 #: The settlement box of the periodic IVA declaration, "Resultado final".
 _RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="m303 refund election disposition test")
 _NEGATIVE = Decimal("-325.50")

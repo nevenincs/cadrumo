@@ -31,6 +31,9 @@ const INTERNAL = [
   "needs_person",
   "not_in_this_build",
   "damaged_download",
+  "engine_program_unusable",
+  "engine_package_damaged",
+  "reinstall_engine_program",
   "host_unreachable",
   "server_error",
   "blocked_by_network",
@@ -586,6 +589,43 @@ test("an interrupted setup resumes without a second approval while its plan is u
   );
   await expect(panel(target).locator("[data-setup-review]")).toHaveCount(0);
   expect(await hostCalls(target)).toContain("setup.start browser resume");
+});
+
+test("a program the system refused offers the served reinstall, which starts a reinstall", async ({
+  page: target,
+}) => {
+  await open(target, "engine_unusable");
+  await openLocalAi(target);
+  await expect(programRow(target)).toContainText(
+    label("desktop.setup.failure.engine_program_unusable"),
+  );
+  await programRow(target)
+    .getByRole("button", {
+      name: label("desktop.setup.action.reinstall_engine_program"),
+    })
+    .click();
+  const calls = await hostCalls(target);
+  expect(calls).toContain("setup.start local_ai reinstall");
+  expect(calls).not.toContain("setup.start local_ai");
+  await noInternalWords(target);
+});
+
+test("a damaged program that came with Cadrumo says so and offers no action", async ({
+  page: target,
+}) => {
+  await open(target, "package_damaged");
+  await openLocalAi(target);
+  const sentence = label("desktop.setup.failure.engine_package_damaged");
+  await expect(programRow(target)).toContainText(sentence);
+  await once(localAi(target), sentence);
+  await expect(programRow(target).getByRole("button")).toHaveCount(0);
+  expect(sentence).not.toBe(
+    label("desktop.setup.failure.engine_program_unusable"),
+  );
+  expect(
+    (await hostCalls(target)).filter((call) => call.startsWith("setup.start")),
+  ).toEqual([]);
+  await noInternalWords(target);
 });
 
 test("an interrupted setup whose plan changed asks for approval again", async ({

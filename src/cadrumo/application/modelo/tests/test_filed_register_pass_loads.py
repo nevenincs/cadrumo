@@ -21,6 +21,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -57,8 +58,9 @@ from .empty_borrador_revision_support import empty_borrador_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
-_YEARS = (2025, 2024, 2023)
+_AT = datetime(1980, 4, 20, 12, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
+_YEARS = (_YEAR, _YEAR - 1, _YEAR - 2)
 """One sealed revision per year; each year asks the stores a different window."""
 
 
@@ -105,7 +107,7 @@ class _CountingTransactions(InMemoryTransactionCatalogueRepository):
 
 def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, rows: tuple[Transaction, ...]):
     """Calculate each year's revision through the real resolver and seal what its provenance says."""
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=_YEAR, period="0A")
     units: dict[str, WorkUnit] = {}
     sealed: dict[str, CalculationRevision] = {}
     for year in _YEARS:
@@ -205,9 +207,9 @@ def test_a_later_pass_reads_the_register_again_and_sees_what_changed_in_between(
     findings = run_pass()
 
     assert history.loads > first_pass_loads
-    # Only the 2025 revision consumed claims; the earlier years' filings rested on none.
+    # Only the newest year's revision consumed claims; the earlier years' filings rested on none.
     ((revision, verdict),) = findings
     assert revision.work_unit_id in units.work_units
-    assert units.work_units[revision.work_unit_id].filing_year == 2025
+    assert units.work_units[revision.work_unit_id].filing_year == _YEAR
     assert verdict.register_state is FiledRegisterState.CHANGED
     assert verdict.register_change_count == 1

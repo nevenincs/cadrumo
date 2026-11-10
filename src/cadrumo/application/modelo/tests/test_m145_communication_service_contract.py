@@ -21,6 +21,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.modelo import Modelo
+from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
 from ..m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     M145CommunicationAction,
@@ -41,7 +42,7 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
         assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
         assert contract.modelo == Modelo("145").value
         assert contract.period_token == M145CommunicationPeriod.COMMUNICATION.value
-        assert contract.revision_id == "2012-01-31-y-siguientes"
+        assert contract.revision_id == str(open_ended_revision("145").id)
         assert contract.surfaces == ("communication", "payer_delivery", "export")
         assert contract.actions == (
             M145CommunicationAction.CREATE,

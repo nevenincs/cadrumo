@@ -375,7 +375,11 @@ fn run_windows(
 }
 
 fn main() -> ExitCode {
-    // First, so a panic on any thread is recorded once the log is configured,
+    // Before anything is created: an unusable program image must fail its creation, not
+    // raise a dialog nobody answers. Every start, the service included, enters here.
+    #[cfg(windows)]
+    cadrumo_platform::error_mode::suppress_dialogs_for_process();
+    // Next, so a panic on any thread is recorded once the log is configured,
     // and the default hook never prints a payload.
     let diagnostics = Arc::new(Diagnostics::new(DiagnosticSource::Manager));
     panic::install(diagnostics.clone());

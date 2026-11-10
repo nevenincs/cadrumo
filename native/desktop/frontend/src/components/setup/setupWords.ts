@@ -76,6 +76,7 @@ const ACTION_WORDS: Readonly<Record<SetupRecovery, Key>> = {
   try_again: "desktop.setup.action.try_again",
   resume: "desktop.setup.action.resume",
   check_again: "desktop.setup.action.check_again",
+  reinstall_engine_program: "desktop.setup.action.reinstall_engine_program",
 };
 
 const FAILURE_SENTENCE: Readonly<Record<SetupFailureCategory, Key>> = {
@@ -91,6 +92,8 @@ const FAILURE_SENTENCE: Readonly<Record<SetupFailureCategory, Key>> = {
   memory_busy: "desktop.setup.failure.memory_busy",
   program_missing: "desktop.setup.failure.program_missing",
   program_not_running: "desktop.setup.failure.program_not_running",
+  engine_program_unusable: "desktop.setup.failure.engine_program_unusable",
+  engine_package_damaged: "desktop.setup.failure.engine_package_damaged",
   interrupted: "desktop.setup.failure.interrupted",
   needs_sign_in: "desktop.setup.failure.needs_sign_in",
   not_in_this_build: "desktop.setup.failure.not_in_this_build",

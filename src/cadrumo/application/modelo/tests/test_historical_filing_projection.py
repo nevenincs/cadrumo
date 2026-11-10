@@ -14,6 +14,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -34,6 +35,8 @@ from ..historical_filing_projection import (
     project_historical_filing_content,
 )
 from .test_filing_record_view_operation import PROFILE, Repository, filing_record_view_operation_bundle, source
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -59,12 +62,12 @@ def _revision() -> CalculationRevision:
         source_issues=issues,
         filing_instance_evidence=None,
     )
-    now = datetime(2026, 4, 10, 9, tzinfo=UTC)
+    now = datetime(1980, 4, 10, 9, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", modelo_year=2026, period="1T", revision_id="saved-2026"
+            modelo="303", modelo_year=_FILING_YEAR, period="1T", revision_id=f"saved-{_FILING_YEAR}"
         ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values=outputs,
@@ -182,7 +185,7 @@ def _unresolved_outcome() -> RegistryCalculationUnresolvedOutcome:
         operand_values=(Decimal("7.125"),),
         legal_refs=("saved-law",),
         source_refs=("saved-publication",),
-        context={"tipo_renta": "02", "country": "FR", "filing_year": "2026"},
+        context={"tipo_renta": "02", "country": "FR", "filing_year": str(_FILING_YEAR)},
     )
 
 
@@ -240,7 +243,7 @@ def test_saved_rows_and_unresolved_outcomes_are_released_as_declared_fields_and_
         source_refs=("saved-publication",),
         context=(
             ModeloHistoricalContextEntryProjection(name="country", value="FR"),
-            ModeloHistoricalContextEntryProjection(name="filing_year", value="2026"),
+            ModeloHistoricalContextEntryProjection(name="filing_year", value=str(_FILING_YEAR)),
             ModeloHistoricalContextEntryProjection(name="tipo_renta", value="02"),
         ),
     )
@@ -286,7 +289,7 @@ def test_an_unresolved_outcome_context_that_repeats_or_misorders_a_name_is_refus
         )
 
 
-def _saved_content(values: dict[str, str], *, registry_revision: str = "saved-2026"):
+def _saved_content(values: dict[str, str], *, registry_revision: str = f"saved-{_FILING_YEAR}"):
     revision = _revision()
     amounts = {validated_casilla_id(key): Decimal(value) for key, value in values.items()}
     candidate = revision.model_copy(
@@ -349,7 +352,7 @@ def test_saved_comparison_never_pairs_unavailable_or_cross_revision_content(unav
     elif unavailable == "missing_content":
         base = ModeloHistoricalFilingContentProjection(calculation_revision_id="b" * 64, availability="missing")
     else:
-        base = _saved_content({"01": "100"}, registry_revision="different-2026")
+        base = _saved_content({"01": "100"}, registry_revision=f"different-{_FILING_YEAR}")
 
     result = compare_historical_filing_content(selected, base, base_filing_record_id=base_id)
 

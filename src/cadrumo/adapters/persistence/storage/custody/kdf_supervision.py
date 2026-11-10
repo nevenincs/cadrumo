@@ -5,21 +5,24 @@ from __future__ import annotations
 import atexit
 import base64
 import contextvars
+import logging
 import math
 import os
 import sys
 import threading
 import time
 from collections.abc import Callable, Generator, Mapping
-from contextlib import ExitStack, contextmanager, nullcontext
+from contextlib import ExitStack, closing, contextmanager, nullcontext
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal, NoReturn, cast
 from uuid import UUID
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import load_settings
+from .....core.diagnostic_log import diagnostic_event
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.logging import get_logger
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from ..crypto.aes_gcm import KEY_SIZE
@@ -62,6 +65,14 @@ PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
+#: Seconds of child launch and attestation a whole calibration may wait for,
+#: beyond its total deadline. Launching a contained child is uncancellable
+#: operating-system work that takes seconds on a loaded Windows host; charging
+#: it to the total deadline ended calibration before it could confirm a point,
+#: and that fallback is the weakest eligible point. Launch time therefore
+#: extends the total deadline instead, but only from this separate budget, so
+#: enrolment still ends when launches are unusable.
+PROFILE_CUSTODY_KDF_LAUNCH_BUDGET_SECONDS: Final = 20.0
 #: Default wall-clock bound on direct wrap or unwrap. Runtime first login supplies its
 #: retained absolute timeout deadline instead; no normal phase timeout applies there.
 #: Includes waiting for the installation's single
@@ -80,6 +91,7 @@ _MEBIBYTE: Final = 1024 * 1024
 _KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
 KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
 KDF_THREAD_CAPACITY: Final = threading.Condition()
+_log = get_logger(__name__)
 _KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
 
 
@@ -124,6 +136,31 @@ class ProfileCustodyUnlock:
 
 class CalibrationDeadlineElapsedError(CadrumoError):
     """Signal that a calibration grid cannot continue within its total deadline."""
+
+
+type _CalibrationStop = Literal["total_deadline_exhausted", "launch_budget_exhausted", "launch_retry_failed"]
+
+
+@dataclass(slots=True)
+class _CalibrationClock:
+    """The total deadline of one calibration, extended only by launch time paid from its launch budget."""
+
+    deadline: float
+    launch_budget_seconds: float
+    stop: _CalibrationStop | None = None
+
+    def excuse_launch(self, seconds: float) -> None:
+        """Move the deadline past ``seconds`` of launch, or stop once the budget cannot pay for it."""
+        paid = min(max(seconds, 0.0), self.launch_budget_seconds)
+        self.launch_budget_seconds -= paid
+        self.deadline += paid
+        if seconds > paid:
+            self.abandon("launch_budget_exhausted")
+
+    def abandon(self, stop: _CalibrationStop) -> NoReturn:
+        """Abandon the whole search for the fixed fallback, naming why."""
+        self.stop = stop
+        raise CalibrationDeadlineElapsedError
 
 
 def profile_password_wrap_aad(
@@ -272,6 +309,23 @@ def _fallback_profile_kdf_calibration(
     )
 
 
+def profile_kdf_at_fallback(parameters: ProfileCustodyKdfParameters) -> bool:
+    """Return whether stored parameters are exactly the fixed fallback point.
+
+    Calibration adopts that point whenever it cannot confirm a stronger one in
+    time, so a profile holding it may gain strength from a fresh calibration.
+    The salt is the profile's own and plays no part in the comparison.
+    """
+    fallback = fixed_profile_kdf_fallback(salt=bytes(16))
+    return (
+        parameters.algorithm,
+        parameters.version,
+        parameters.memory_mib,
+        parameters.iterations,
+        parameters.parallelism,
+    ) == (fallback.algorithm, fallback.version, fallback.memory_mib, fallback.iterations, fallback.parallelism)
+
+
 def profile_kdf_meets_fallback_floor(parameters: ProfileCustodyKdfParameters) -> bool:
     """Return whether a grid point is at least as strong as the fixed fallback.
 
@@ -301,42 +355,79 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
     if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
         return _fallback_profile_kdf_calibration(fallback)
 
-    deadline = time.monotonic() + PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS
     candidates = tuple(
         parameters
         for parameters in profile_kdf_grid(salt=salt)
         if profile_kdf_is_eligible(parameters, resources=resources) and profile_kdf_meets_fallback_floor(parameters)
     )
+    return _measured_calibration(candidates, fallback=fallback, settings=settings)
 
-    def probe(parameters: ProfileCustodyKdfParameters) -> float:
+
+def _measured_calibration(
+    candidates: tuple[ProfileCustodyKdfParameters, ...],
+    *,
+    fallback: ProfileCustodyKdfParameters,
+    settings: Settings | None,
+) -> ProfileCustodyKdfCalibration:
+    """Search the eligible grid under the total deadline and launch budget, else adopt the fallback."""
+    started = time.monotonic()
+    clock = _CalibrationClock(
+        deadline=started + PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS,
+        launch_budget_seconds=PROFILE_CUSTODY_KDF_LAUNCH_BUDGET_SECONDS,
+    )
+    with ExitStack() as owned:
+        # Every sample runs in a spare attested before its clock starts: the
+        # creation's bound prewarm, or one owned by this calibration alone.
+        prewarm = _KDF_PREWARM.get() or owned.enter_context(closing(ProfileKdfPrewarm(settings=settings)))
         try:
-            return _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
-        except TimeoutError as exc:
-            if time.monotonic() >= deadline:
-                raise CalibrationDeadlineElapsedError from exc
-            return math.inf
-        except ProfileCustodyRefusedError as exc:
-            if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
-                return math.inf
-            raise
-
-    try:
-        choice = search_profile_kdf_grid(
-            candidates,
-            probe=probe,
-            target_min_seconds=PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS,
-            target_max_seconds=PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS,
-            confirmation_samples=PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
-        )
-    except CalibrationDeadlineElapsedError:
-        choice = None
+            choice = search_profile_kdf_grid(
+                candidates,
+                probe=_calibration_probe(prewarm=prewarm, clock=clock, settings=settings),
+                target_min_seconds=PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS,
+                target_max_seconds=PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS,
+                confirmation_samples=PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
+            )
+        except CalibrationDeadlineElapsedError:
+            choice = None
     if choice is None:
+        _log_calibration_fallback(clock.stop or "no_in_band_point", started=started)
         return _fallback_profile_kdf_calibration(fallback)
     return ProfileCustodyKdfCalibration(
         version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
         parameters=choice.parameters,
         source="measured",
         median_seconds=choice.median_seconds,
+    )
+
+
+def _calibration_probe(
+    *, prewarm: ProfileKdfPrewarm, clock: _CalibrationClock, settings: Settings | None
+) -> Callable[[ProfileCustodyKdfParameters], float]:
+    """Score one grid point by a supervised sample; only a timed derivation's overrun reads as over the band."""
+
+    def probe(parameters: ProfileCustodyKdfParameters) -> float:
+        try:
+            return _measure_profile_kdf(parameters, prewarm=prewarm, clock=clock, settings=settings)
+        except TimeoutError:
+            if time.monotonic() >= clock.deadline:
+                clock.abandon("total_deadline_exhausted")
+            # Only a timed derivation overruns a sample, so this point is over the band.
+            return math.inf
+        except ProfileCustodyRefusedError as exc:
+            if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
+                return math.inf
+            raise
+
+    return probe
+
+
+def _log_calibration_fallback(reason: str, *, started: float) -> None:
+    """Name, at WARNING, why calibration adopted the fixed fallback instead of a measured point."""
+    diagnostic_event(
+        _log,
+        "profile_kdf_calibration_fallback",
+        fields={"reason": reason, "elapsed_seconds": round(time.monotonic() - started, 3), "outcome": "fallback"},
+        level=logging.WARNING,
     )
 
 
@@ -675,15 +766,35 @@ class ProfileKdfPrewarm:
                 break
             self._settled.wait(remaining)
 
+    @property
+    def launching(self) -> bool:
+        """Whether a spare is still launching and has neither attested nor failed."""
+        with self._lock:
+            return self._launching and self._spare is None
+
+    def settle_launch(self, *, deadline: float) -> None:
+        """Wait until a launching spare has attested or failed, or until ``deadline``.
+
+        A timed calibration sample calls this before its clock starts, so no
+        launch is in flight while its derivation is measured.
+        """
+        with self._settled:
+            self._wait_for_launch(deadline=deadline, cancellation=None)
+
     @contextmanager
-    def bound(self) -> Generator[None]:
-        """Let supervised KDF work in this context use the spare, then prepare the next one."""
+    def bound(self, *, refill: bool = True) -> Generator[None]:
+        """Let supervised KDF work in this context use the spare, then prepare the next one.
+
+        Without ``refill`` the scope launches no spare on exit, for an owner
+        whose last derivation runs here and would only contain it unused.
+        """
         token = _KDF_PREWARM.set(self)
         try:
             yield
         finally:
             _KDF_PREWARM.reset(token)
-            self.refill()
+            if refill:
+                self.refill()
 
     def _wake(self) -> None:
         with self._settled:
@@ -759,34 +870,56 @@ def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
 def _measure_profile_kdf(
     parameters: ProfileCustodyKdfParameters,
     *,
-    deadline: float,
+    prewarm: ProfileKdfPrewarm,
+    clock: _CalibrationClock,
     settings: Settings | None,
 ) -> float:
     """Return the worker-timed derivation seconds of one supervised sample.
 
     The worker times only the Argon2 call, so the band measures derivation
     cost rather than interpreter start-up; the wall clock still bounds the
-    whole sample, and a duration longer than the sample itself took is a lie
-    the parent refuses.
+    sample, and a duration longer than the sample itself took is a lie the
+    parent refuses.
+
+    The sample's child is a spare whose launch and attestation settled before
+    the sample's clock starts, so no launch competes with a measured
+    derivation, which could read its cost high and select a weaker point, and
+    the clock covers only the request, the derivation and the child's exit.
+    That launch time moves the total deadline instead, paid from the launch
+    budget. A spare that failed to launch or died idle is never scored; the
+    sample is retried once in a fresh spare.
     """
-    remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, deadline - time.monotonic())
-    if remaining <= 0:
-        raise TimeoutError("profile KDF calibration total deadline elapsed")
-    started = time.monotonic()
-    with (
-        profile_kdf_lease(settings=settings, deadline=deadline),
-        SupervisedKdfWorker(
-            deadline=time.monotonic() + remaining,
-            settings=settings,
-        ) as worker,
-    ):
-        derivation_seconds = worker.calibrate(parameters)
-    elapsed = time.monotonic() - started
-    if elapsed > PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS:
-        raise TimeoutError("profile KDF calibration sample deadline elapsed")
-    if derivation_seconds > elapsed:
-        raise supervision_refusal()
-    return derivation_seconds
+    for _attempt in range(2):
+        _settle_spare(prewarm, clock)
+        with ExitStack() as sample:
+            sample.enter_context(profile_kdf_lease(settings=settings, deadline=clock.deadline))
+            remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, clock.deadline - time.monotonic())
+            if remaining <= 0:
+                raise TimeoutError("profile KDF calibration total deadline elapsed")
+            started = time.monotonic()
+            spare = prewarm.take(deadline=started + remaining)
+            if spare is None:
+                continue
+            sample.push(spare)
+            derivation_seconds = spare.calibrate(parameters)
+            sample.close()
+            elapsed = time.monotonic() - started
+            if elapsed > PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS:
+                raise TimeoutError("profile KDF calibration sample deadline elapsed")
+            if derivation_seconds > elapsed:
+                raise supervision_refusal()
+            return derivation_seconds
+    clock.abandon("launch_retry_failed")
+
+
+def _settle_spare(prewarm: ProfileKdfPrewarm, clock: _CalibrationClock) -> None:
+    """Launch a spare if none is ready and wait for it, paying that wait from the launch budget."""
+    prewarm.refill()
+    waited_from = time.monotonic()
+    prewarm.settle_launch(deadline=waited_from + clock.launch_budget_seconds)
+    clock.excuse_launch(time.monotonic() - waited_from)
+    if prewarm.launching:
+        clock.abandon("launch_budget_exhausted")
 
 
 @contextmanager
@@ -845,6 +978,7 @@ def profile_kdf_lease(
 
 __all__ = [
     "PROFILE_CUSTODY_KDF_CALIBRATION_VERSION",
+    "PROFILE_CUSTODY_KDF_LAUNCH_BUDGET_SECONDS",
     "PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS",
     "PROFILE_CUSTODY_KDF_SAMPLE_COUNT",
     "PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS",
@@ -857,6 +991,7 @@ __all__ = [
     "ProfileKdfPrewarm",
     "calibrate_profile_kdf",
     "fixed_profile_kdf_fallback",
+    "profile_kdf_at_fallback",
     "profile_kdf_grid",
     "profile_kdf_is_eligible",
     "profile_kdf_lease",

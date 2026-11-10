@@ -19,6 +19,7 @@ from ....domain.calculations.registry.binding_terminal_origin import TerminalOri
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
 from ....domain.modelos.source_disagreement import SourceDisagreementRole
@@ -43,7 +44,8 @@ from ..registry_helpers import validate_casilla_input_ids
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
+_HORIZON = filing_year_envelope().horizon
 _PERIOD = "0A"
 _DECIMAL_BINDING: BindingId = "renta-retencion-soportada-trabajo"
 """A credit binding: a snapshot holds its value only to compare it, never to supply it."""
@@ -171,7 +173,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
 
 
 def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
-    snapshot = published_snapshot("303", filing_year=2025, period="1T")
+    snapshot = published_snapshot("303", filing_year=_HORIZON, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
     assert result_casilla.number == "69"
     assert result_casilla.id != result_casilla.number
@@ -194,7 +196,7 @@ def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
-    snapshot = published_snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=_HORIZON, period="0A")
 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
@@ -257,12 +259,12 @@ def _save_snapshot(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         registry_snapshot_ref=_modelo_100_registry_snapshot().snapshot_ref,
-        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        captured_at=datetime(1980, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_R210_SIMULATOR_URL,
         state=state,
         binding_values=values,
         superseded_by_snapshot_id=superseded_by_snapshot_id,
-        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC) if state is SnapshotLifecycleState.DISCARDED else None,
+        discarded_at=datetime(1980, 4, 4, 10, 0, tzinfo=UTC) if state is SnapshotLifecycleState.DISCARDED else None,
         discarded_by=discarded_by,
         discard_reason="refetched" if state is SnapshotLifecycleState.DISCARDED else "",
     )
@@ -351,14 +353,14 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    registry_snapshot = published_snapshot("303", filing_year=2026, period="2T")
+    registry_snapshot = published_snapshot("303", filing_year=_HORIZON, period="2T")
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(
                 borrador_snapshot_id="snapshot-does-not-need-loading",
                 modelo="303",
-                filing_year=2026,
+                filing_year=_HORIZON,
                 period="2T",
             ),
             registry_snapshot=registry_snapshot,
@@ -663,7 +665,7 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
-            _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=2024),
+            _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=_YEAR - 1),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
             operation=authority_operation,
@@ -676,7 +678,7 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
     assert exc_info.value.context == {
         "snapshot_year": _YEAR,
         "snapshot_period": _PERIOD,
-        "filing_year": 2024,
+        "filing_year": _YEAR - 1,
         "period": _PERIOD,
     }
 

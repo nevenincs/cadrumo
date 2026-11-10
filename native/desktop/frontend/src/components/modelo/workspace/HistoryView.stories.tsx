@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWork";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { HistoryView } from "./HistoryView";
 import { fixtureInstant, fixtureYear } from "@/dev/fixtureDates";

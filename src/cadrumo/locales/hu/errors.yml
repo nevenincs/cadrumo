@@ -104,7 +104,8 @@ errors:
       vagy felülírt értéket, mert nem ennek a változatnak a képletmezői.
     formula_recalculation_binding_unrecorded: A javítás újraszámítása olyan képletmezőket
       ér el ({casilla_ids}), amelyek a(z) {binding_ids} értéktől függnek. A benyújtás
-      ezt sosem rögzítette; add meg kifejezett kötésfelülírásként a javításon.
+      ezt sosem rögzítette; add meg a javításon a --binding BINDING_ID=VALUE kapcsolóval
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'A javítás újraszámítása után kötelező képletmezők
       maradtak feloldatlanul: {casilla_ids}.'
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
@@ -199,19 +200,19 @@ errors:
       az exportálási terv elkészítésekor.
     error_calc_sheets_record: Egy táblázat-rekordművelet érvénytelen oszlopindex vagy
       hibás A1-cím miatt meghiúsult.
-    error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,
-      feloldása vagy érvényesítése során.
+    error_calculations_registry: A számítási nyilvántartás betöltése, feloldása vagy
+      érvényesítése során hiba történt.
     error_calculations_registry_load: A számítási nyilvántartás fájljai nem elemezhetők.
     error_calculations_registry_snapshot: Nem sikerült benyújtási szintű nyilvántartás-pillanatképet
       kiválasztani.
     error_calculations_registry_validation: A számítási nyilvántartás definíciói hiányosak
       vagy ellentmondásosak.
-    error_categories: Hiba történt a kiadáskategóriákban.
+    error_categories: A kiadáskategóriákban hiba történt.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
     error_certificado_censal: A Certificado de Situación Censal művelet meghiúsult.
     error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
     error_corpus_search: A helyi korpuszkeresés nem fejeződött be.
-    error_deadlines_deadline: Hiba történt a határidő-számítás során.
+    error_deadlines_deadline: A határidő-számítás során hiba történt.
     error_deadlines_missing_windows: Hiányoznak a határidő-ablakok.
     error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
       vagy érvényesíteni a határidő-számításhoz.
@@ -226,13 +227,13 @@ errors:
     error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
       ellenőrzésén.
     error_domain_validation: Egy doménazonosító vagy modell érvénytelen.
-    error_filing_application: Hiba történt a benyújtási alkalmazási rétegben.
+    error_filing_application: A benyújtási alkalmazási rétegben hiba történt.
     error_filing_builder: A benyújtási építő kiválasztása vagy végrehajtása meghiúsult.
     error_filing_computation: Az építő nem tudta kiértékelni egy képlet-mezőt.
-    error_filing_draft: Hiba történt a benyújtási tervezetben.
+    error_filing_draft: A benyújtási tervezetben hiba történt.
     error_filing_export: Az AEAT formátumba való exportálás meghiúsult.
     error_filing_export_validation: Egy exportált mező értéke vagy elrendezése érvénytelen.
-    error_financial_aggregation: Hiba történt a pénzügyi tranzakciók összesítése során.
+    error_financial_aggregation: A pénzügyi tranzakciók összesítése során hiba történt.
     error_financial_aggregation_period: A kért bevallási időszakot nem sikerült egyértelműen
       értelmezni.
     error_financial_aggregation_validation: Az összesítési tartalom vagy állapot érvénytelen.
@@ -251,7 +252,7 @@ errors:
     error_financial_iva_rate_not_found: Nem található IVA-kulcs a kért tagállam és
       típus esetén.
     error_financial_iva_rate_overlap: Két IVA-kulcs azonos hatályossági ablakot oszt.
-    error_financial_provider: Hiba történt a pénzügyi dokumentum importálása során.
+    error_financial_provider: A pénzügyi dokumentum importálása során hiba történt.
     error_financial_provider_config: Egy pénzügyi szolgáltató alosztályának korpusz-attribútum
       deklarációi hiányoznak vagy érvénytelenek.
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
@@ -260,7 +261,7 @@ errors:
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesd manuálisan mindkét katalógust.
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
-    error_iva_prorrata: Hiba történt az IVA prorrata-számítás során.
+    error_iva_prorrata: Az IVA prorrata-számítás során hiba történt.
     error_iva_prorrata_input: Az IVA prorrata bemeneti adatai sértik az invariánsokat.
     error_iva_validation: Egy IVA-mezőérték érvénytelen.
     error_justificante: Igazolással kapcsolatos hiba történt.
@@ -310,7 +311,7 @@ errors:
     error_pdf_import_pdf_modelo_import: A bevallás PDF-ből való importálása meghiúsult.
     error_period: Időszakkal kapcsolatos hiba történt.
     error_period_validation: A megadott időszak-jelzés hibás formátumú.
-    error_portals_portal_registry: Hiba történt az AEAT portál-nyilvántartásban.
+    error_portals_portal_registry: Az AEAT portál-nyilvántartásban hiba történt.
     error_portals_unknown_portal: A megadott AEAT portál nem létezik.
     error_portals_validation: Egy portál metaadatai nem mentek át az érvényesítésen.
     error_profile_amortization_ledger: Egy profil amortizációs főkönyvi művelete érvénytelen.
@@ -326,7 +327,7 @@ errors:
     error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
     error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
     error_redaction: Egy szerkesztési segédprogram rossz típusú argumentumot kapott.
-    error_renta: Hiba történt a RENTA-számítás során.
+    error_renta: A RENTA-számítás során hiba történt.
     error_renta_profile_completeness_warning: 'RETMAR kötelező bevallás: ez a munkavállaló
       RETMAR-ban van nyilvántartva. 2023 óta a tengerészeti különleges társadalombiztosítási
       rendszerben nyilvántartott munkavállalóknak jövedelemszinttől függetlenül IRPF-bevallást
@@ -334,12 +335,12 @@ errors:
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
     error_retention: Nem sikerült kiértékelni az adónyilvántartás megőrzési szabályzatát.
     error_review: Felülvizsgálati hiba történt.
-    error_sede: Hiba történt az AEAT elektronikus Sede-n.
+    error_sede: Az AEAT elektronikus Sede-n hiba történt.
     error_sede_browser_adapter_type: A böngésző oldalas objektuma váratlan típust
       adott vissza a Sede adapter határán.
     error_sede_expediente_not_found: Egyetlen expediente sem felel meg a kért szűrőnek.
     error_sede_navigation: Az AEAT Sede navigációs lépése meghiúsult.
-    error_storage_bucket: Hiba történt a tároló-bucket életciklusában.
+    error_storage_bucket: A tároló-bucket életciklusában hiba történt.
     error_storage_bucket_path_too_long: A bucket könyvtár elérési útja meghaladja
       a Windows MAX_PATH korlátját. Helyezd át a CADRUMO_STORAGE_ROOT beállítást egy
       rövidebb útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat
@@ -721,17 +722,16 @@ errors:
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.
       Jelentsd a futtatott paranccsal együtt.
-    internal_active_profile_pointer_transaction: 'Belső hiba: az aktívprofil-mutató
-      tranzakciójának tulajdonjoga érvénytelen.'
+    internal_active_profile_pointer_transaction: Az aktívprofil-mutató tranzakciójának
+      tulajdonjoga érvénytelen.
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézd meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
-    internal_domiciliation_calendar_gap: 'Belső hiba: a naptár egy éve nem tudta besorolni
-      a napjait.'
-    internal_flow_copy_resolution: 'Belső hiba: a vezetett folyamat nem tudta feloldani
-      a megjelenítendő szövegeit.'
-    internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
-      elutasította a műveletet.'
+    internal_domiciliation_calendar_gap: A naptár egy éve nem tudta besorolni a napjait.
+    internal_flow_copy_resolution: A vezetett folyamat nem tudta feloldani a megjelenítendő
+      szövegeit.
+    internal_flow_validator_registry: A vezetett folyamat ellenőrző-nyilvántartása
+      elutasította a műveletet.
     internal_modelo_help_catalogue_gap: A rovat egyik súgószövege hiányzik a katalógusból.
     internal_modelo_source_kind_unclassified: Egy értékforrásnak nincs megadott családja,
       ezért nem magyarázható.
@@ -740,23 +740,19 @@ errors:
     internal_modelo_value_presentation_unknown: Egy rovat értéktípusához nincs megjelenítési
       szabály.
     internal_modelo_work_form_layout: A nyomtatvány elrendezése nem egyezik a változatával.
-    internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
-      fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
-      nem deklarál.'
-    internal_operation_executor_returned_no_result: 'Belső hiba: a művelet eredmény
-      nélkül állt le, és semmire sem vár, ezért sikertelenként lezárult. Többé nem
-      történik vele semmi; az okot a diagnosztikai naplókban keresd.'
-    internal_operation_unsettled: 'Belső hiba: a művelet leállt, mielőtt az eredményét
-      rögzíteni lehetett volna. Nyitva marad, és a tulajdonosi zárolás lejártakor
-      automatikusan lezárul; az okot a diagnosztikai naplókban keresd.'
-    internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
-      megjeleníteni.'
-    internal_wipe_type: 'Belső hiba: a törlési művelet olyan értéket kapott, amelyet
-      nem tud felülírni.'
-    internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
-      jelet adott ki.'
-    internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
-      kivételt dobott.'
+    internal_operation_declaration_breach: Egy művelet-végrehajtó olyan fázist, hatást,
+      erőforrást vagy interakciót igényelt, amelyet a definíciója nem deklarál.
+    internal_operation_executor_returned_no_result: A művelet eredmény nélkül állt
+      le, és semmire sem vár, ezért sikertelenként lezárult. Többé nem történik vele
+      semmi; az okot a diagnosztikai naplókban keresd.
+    internal_operation_unsettled: A művelet leállt, mielőtt az eredményét rögzíteni
+      lehetett volna. Nyitva marad, és a tulajdonosi zárolás lejártakor automatikusan
+      lezárul; az okot a diagnosztikai naplókban keresd.
+    internal_output_rendering: A parancs kimenetét nem sikerült biztonságosan megjeleníteni.
+    internal_wipe_type: A törlési művelet olyan értéket kapott, amelyet nem tud felülírni.
+    internal_workflow_abort_signal: Egy munkafolyamat-szakasz megszakítási jelet adott
+      ki.
+    internal_workflow_unhandled: Egy munkafolyamat-szakasz kezeletlen kivételt dobott.
   iva:
     rate_member_state_unregistered: Az IVA-kulcsnyilvántartás nem tartalmaz kulcsot
       a kért tagállamhoz.
@@ -1062,8 +1058,7 @@ errors:
       regisztrálva.
     refused_auth_configure_dangling_active_profile: Az aktív-profil mutató nem oldódik
       fel egy regisztrált bucket-re.
-    refused_auth_diagnostic_payload: 'Elutasítva: a hitelesítési diagnosztikai payload
-      érvénytelen.'
+    refused_auth_diagnostic_payload: A hitelesítési diagnosztikai payload érvénytelen.
     refused_auth_diagnostic_phone_state: A megadott telefonállapot-érték nem ismert.
       Használj egy érvényes operátori telefonállapot-értéket.
     refused_auth_login_live_tests_disabled: Az éles bejelentkezési próbák le vannak
@@ -1151,10 +1146,10 @@ errors:
     refused_invoice_retention_figures: A megadott visszatartás önmagának vagy a számla
       adóalapjának ellentmond. Add meg újra a kulcsot és az összeget úgy, hogy az
       összeg az adóalap és a kulcs szorzata legyen.
-    refused_iva_compensation_decimal_parse: 'Elutasítva: az IVA-kompenzáció összege
-      nem elemezhető decimálisként.'
-    refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
-      tartományon kívül van.'
+    refused_iva_compensation_decimal_parse: Az IVA-kompenzáció összege nem elemezhető
+      decimálisként.
+    refused_iva_compensation_year_range: Az IVA-kompenzáció éve az elfogadott tartományon
+      kívül van.
     refused_iva_prorrata_especial_margin_ungrounded: A kötelező különleges arányosítási
       küszöb nem alapozható meg erre az adóévre.
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
@@ -1387,7 +1382,7 @@ errors:
       Még ne ismételd meg: amikor a hozzáférés visszatér, először ellenőrizd a műveletet
       vagy azt, amit módosít.'
     refused_runtime_frontend: A profil futtatókörnyezete elutasította a kérést.
-    refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
+    refused_source_mesh_invariant: A forrásháló invariánsának megsértése.
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.
     refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet
       szükséges. Futtasd az `aeat config login NÉV` parancsot, majd próbáld újra.

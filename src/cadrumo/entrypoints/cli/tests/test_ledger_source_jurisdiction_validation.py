@@ -25,7 +25,9 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
     worldwide income with a Spanish-source default. The default-ES path
     must not require operator action."""
 
-    # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
+    # The harness profile is GENERAL but states no residency, and an unstated residency
+    # resolves to no jurisdiction rather than ES, so the resident fact is stated here.
+    set_profile_axis("taxpayer_type.fiscal_residency", "resident_irpf")
 
     result = invoke(
         [

@@ -93,6 +93,7 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProvi
         emit=lambda _event: None,
     )
     service._providers = ProviderSettingsService(
+        selected_engine=lambda: LocalEngine.LLAMACPP,
         store=store,
         catalog_source=StaticCatalogSource(),
     )

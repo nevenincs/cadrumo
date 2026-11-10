@@ -8,6 +8,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..edit_prerequisite_wording import form_prerequisite_words, prerequisite_words
 from ..work_form_field_vocabulary import ModeloFormCasillaAddressV1
 from ..work_form_source_groups import earlier_filing_text
@@ -15,13 +16,15 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _EN = OutputLanguage.EN
 
 
 def test_a_carried_box_names_its_earlier_declaration_and_the_boxes_its_source_reads(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "130", 2026, "2T", entered=frozenset())
+    form = built_form(operation, "130", _YEAR, "2T", entered=frozenset())
     carried = next(
         field
         for field in form.fields()
@@ -48,7 +51,7 @@ def test_a_carried_box_names_its_earlier_declaration_and_the_boxes_its_source_re
 
 
 def test_a_box_with_no_earlier_declaration_says_what_its_source_is(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "210", 2025, "0A", entered=frozenset())
+    form = built_form(operation, "210", _YEAR, "0A", entered=frozenset())
     plain = next(field for field in form.fields() if field.source is None or not field.source.earlier_filings)
 
     words = prerequisite_words(plain, operator_entries_known=True, source_boxes=(), language=OutputLanguage.ES)

@@ -400,10 +400,11 @@ impl SetupHost {
             Action::Start {
                 item,
                 resume,
+                reinstall,
                 download,
             } => {
                 self.components
-                    .start(*item, *resume, download.clone())
+                    .start(*item, *resume, *reinstall, download.clone())
                     .await
             }
             Action::Answer {
@@ -558,6 +559,7 @@ impl SetupHost {
                 item,
                 resume,
                 download,
+                ..
             } => self.components.downloads(*item, *resume, download.as_ref()),
             Action::Observe
             | Action::Check(_)
@@ -781,10 +783,14 @@ async fn desktop_setup_start(
     host: State<'_, Arc<SetupHost>>,
     item: String,
     resume: bool,
+    reinstall: Option<bool>,
     download: Option<wire::ModelDownload>,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
-    host.exchange(wire::start_request(&item, resume, download)?, true)
-        .await
+    host.exchange(
+        wire::start_request(&item, resume, reinstall.unwrap_or(false), download)?,
+        true,
+    )
+    .await
 }
 
 #[tauri::command]
@@ -1159,6 +1165,7 @@ mod tests {
             Action::Start {
                 item: ItemId::Browser,
                 resume: false,
+                reinstall: false,
                 download: None,
             }
         }
@@ -1319,6 +1326,7 @@ mod tests {
                     Action::Start {
                         item: ItemId::LocalAi,
                         resume: false,
+                        reinstall: false,
                         download: Some(requested(LOCAL, VISION)),
                     },
                 ),
@@ -1354,6 +1362,7 @@ mod tests {
             assert!(!host.profile_bound(&Action::Start {
                 item: ItemId::LocalAi,
                 resume: true,
+                reinstall: false,
                 download: None,
             }));
             assert!(!host.profile_bound(&Action::Remove(Removal::LocalAiProgram)));
@@ -1419,6 +1428,7 @@ mod tests {
                     Action::Start {
                         item: ItemId::LocalAi,
                         resume: false,
+                        reinstall: false,
                         download: Some(requested(LOCAL, VISION)),
                     },
                 ),

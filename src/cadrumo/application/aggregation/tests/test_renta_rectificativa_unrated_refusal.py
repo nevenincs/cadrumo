@@ -7,7 +7,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import Invoice
 from .test_renta_imputation_criterion import BASE as _GROSS
-from .test_renta_imputation_criterion import INCOME_0171
+from .test_renta_imputation_criterion import INCOME_0171, issued
 from .test_renta_rectificativa_income import (
     _ACCRUAL_YEAR,
     _F1_DATE,
@@ -15,7 +15,6 @@ from .test_renta_rectificativa_income import (
     _blocked_because,
     _rectificativa,
     _unretained,
-    issued,
     resolve,
 )
 

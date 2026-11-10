@@ -459,6 +459,7 @@ impl World {
         let request = SetupRequest {
             items,
             approved: None,
+            reinstall: false,
         };
         self.run_setup(
             &request,
@@ -474,6 +475,7 @@ impl World {
         let request = SetupRequest {
             items: None,
             approved: Some(digest.clone()),
+            reinstall: false,
         };
         self.run_setup(
             &request,
@@ -490,6 +492,7 @@ impl World {
         let request = SetupRequest {
             items: Some(vec![ItemId::LocalAi]),
             approved: None,
+            reinstall: false,
         };
         self.run_setup(
             &request,
@@ -646,6 +649,7 @@ impl World {
         let request = SetupRequest {
             items: Some(vec![ItemId::LocalAi]),
             approved: None,
+            reinstall: false,
         };
         let mut reviewed = None;
         let run = self.run_setup(
@@ -882,6 +886,7 @@ fn a_cancel_stops_a_setup_at_its_next_chunk_from_its_owner_or_another_engine() {
     let request = SetupRequest {
         items: None,
         approved: Some(digest.clone()),
+        reinstall: false,
     };
 
     // The owner cancels the setup it runs once its first chunk arrived.
@@ -1072,6 +1077,26 @@ fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
         "a program that could not be launched reads apart from a slow start"
     );
 
+    // The program itself was refused by the system: the setup fails as an unusable engine program,
+    // keeping the cause, where a program that only could not be launched stays not running.
+    fs::write(
+        world.programs().join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_program_damaged"}"#,
+    )
+    .unwrap();
+    let (category, kept) = no_server_within(program.latest_start_failure())
+        .failure()
+        .expect("a wait that runs out is a failure");
+    assert_eq!(category, FailureCategory::EngineProgramUnusable);
+    assert_eq!(
+        kept.and_then(|cause| cause.latest_start()),
+        Some(StartFailureKind::ProgramDamaged)
+    );
+    let launch = no_server_within(Some(StartFailureKind::Launch))
+        .failure()
+        .unwrap();
+    assert_eq!(launch.0, FailureCategory::ProgramNotRunning);
+
     // A record this build cannot read names no start.
     fs::write(
         world.programs().join(START_FAILURE_RECORD),
@@ -1144,6 +1169,7 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_ro
     let request = SetupRequest {
         items: Some(vec![ItemId::LocalAi]),
         approved: None,
+        reinstall: false,
     };
     let mut reviewed = None;
     let done = world.run_setup(
@@ -1872,4 +1898,340 @@ fn a_load_that_fails_or_an_answer_without_a_token_fails_the_full_check() {
     assert_eq!(full(&world), ItemState::Ready);
     assert_eq!(world.router_models()[TEXT], ModelStatus::Loaded);
     assert!(world.ollama_requests().is_empty());
+}
+
+/// What the manager's start-failure record says when the system refused the program
+/// itself as no usable image.
+const PROGRAM_REFUSED: &[u8] = br#"{"schema":1,"reason":"server_program_damaged"}"#;
+
+/// Every file under `folder` with its bytes, in path order.
+fn files_under(folder: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
+    let mut files = BTreeMap::new();
+    let mut pending = vec![folder.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        for entry in fs::read_dir(directory).unwrap() {
+            let path = entry.unwrap().path();
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                let bytes = fs::read(&path).unwrap();
+                files.insert(path, bytes);
+            }
+        }
+    }
+    files
+}
+
+impl World {
+    /// Plays the manager failing to start the program it runs from `folder` because the
+    /// system refused the program file: no server runs, and its latest start failure
+    /// reads the program damaged. The program's files are the fake's, which no system
+    /// runs as a program, and they still match their receipt.
+    fn refuse_program(&self, folder: &Path) {
+        let _ = fs::remove_file(folder.join(SERVER_RECORD));
+        fs::write(folder.join(START_FAILURE_RECORD), PROGRAM_REFUSED).unwrap();
+    }
+
+    /// A reinstall of the local AI the person approves as reviewed, whose server the
+    /// manager starts once the reinstall waits for it; with the plan the person reviewed.
+    fn reinstall_local_ai(
+        &self,
+        observe: &mut dyn FnMut(&Event),
+        cancellation: &Cancellation,
+    ) -> (Run, Option<SetupPlan>) {
+        let request = SetupRequest {
+            items: Some(vec![ItemId::LocalAi]),
+            approved: None,
+            reinstall: true,
+        };
+        let mut reviewed = None;
+        let run = self.run_setup(
+            &request,
+            &mut |plan| {
+                reviewed = Some(plan.clone());
+                Answer::Approve(plan.digest())
+            },
+            &mut |event| {
+                observe(event);
+                if matches!(event, Event::WaitingForServer { .. }) {
+                    self.serve_local_ai();
+                }
+            },
+            cancellation,
+        );
+        (run, reviewed)
+    }
+
+    /// The names in the Ollama program's `versions` folder.
+    fn program_versions(&self) -> Vec<String> {
+        match fs::read_dir(self.programs().join("versions")) {
+            Ok(entries) => entries
+                .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+                .collect(),
+            Err(_) => Vec::new(),
+        }
+    }
+}
+
+#[test]
+fn a_program_the_system_refused_is_reinstalled_from_its_download_and_the_models_stay() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    assert_eq!(
+        world.set_up_local_ai_serving(None).report.outcome,
+        Outcome::Completed
+    );
+    let models = files_under(&world.models());
+    let fetched = world.registry_requests();
+    assert_eq!(world.archive_requests(), 1);
+    world.refuse_program(&world.programs());
+
+    let refused = world.verify(&[ItemId::LocalAi]);
+    let local_ai = row(&refused, ItemId::LocalAi);
+    assert_eq!(
+        (local_ai.state, local_ai.recovery),
+        (
+            ItemState::Failed(FailureCategory::EngineProgramUnusable),
+            Some(RecoveryAction::ReinstallEngineProgram)
+        ),
+        "the refused files match their receipt, so trying again would start them again"
+    );
+    assert_eq!(
+        serde_json::to_value(local_ai).unwrap()["recovery"],
+        "reinstall_engine_program"
+    );
+    assert_eq!(
+        world.plan(Some(vec![ItemId::LocalAi])).outcome,
+        Outcome::NothingToDo,
+        "a setup that is no reinstall finds the program's files whole"
+    );
+
+    let mut receipt_at_install = None;
+    let (done, plan) = world.reinstall_local_ai(
+        &mut |event| {
+            if matches!(event, Event::Part { part, step: SetupStep::Install, .. } if part == PROGRAM_PART)
+            {
+                receipt_at_install = Some(world.receipt("local_ai.json").exists());
+            }
+        },
+        &Cancellation::default(),
+    );
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    assert_eq!(
+        parts(&plan.expect("the reinstall asked for a review")),
+        ["program"],
+        "the program alone: every model is whole"
+    );
+    assert_eq!(
+        receipt_at_install,
+        Some(false),
+        "the receipt is removed before the new files and written only once they verify"
+    );
+    assert!(world.receipt("local_ai.json").is_file());
+    assert_eq!(
+        world.archive_requests(),
+        2,
+        "the program is downloaded again"
+    );
+    assert_eq!(world.program_versions().len(), 1);
+    assert!(!world.programs().join("retired").exists());
+    assert!(
+        !world.programs().join(START_FAILURE_RECORD).exists(),
+        "the refusal said nothing of the new files"
+    );
+    assert_eq!(row(&done.report, ItemId::LocalAi).state, ItemState::Ready);
+    assert_eq!(
+        row(&world.verify(&[ItemId::LocalAi]), ItemId::LocalAi).state,
+        ItemState::Ready
+    );
+    assert_eq!(
+        files_under(&world.models()),
+        models,
+        "the models are untouched"
+    );
+    assert_eq!(world.registry_requests(), fetched, "no model is fetched");
+}
+
+#[test]
+fn a_reinstall_cut_off_at_any_step_leaves_the_program_unusable_and_a_rerun_converges() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    assert_eq!(
+        world.set_up_local_ai_serving(None).report.outcome,
+        Outcome::Completed
+    );
+    let models = files_under(&world.models());
+    let unusable = |report: &Report| {
+        let local_ai = row(report, ItemId::LocalAi);
+        assert!(
+            !local_ai.state.usable(),
+            "a cut-off reinstall leaves nothing trusted: {local_ai:?}"
+        );
+        assert!(!world.receipt("local_ai.json").exists());
+        assert!(
+            world.program_versions().is_empty(),
+            "no copy is kept to reuse"
+        );
+        assert_eq!(files_under(&world.models()), models);
+    };
+
+    // Cut off once the receipt is removed and the files retired, before any byte.
+    world.refuse_program(&world.programs());
+    let cancellation = Cancellation::default();
+    let (stopped, _) = world.reinstall_local_ai(
+        &mut |event| {
+            if matches!(event, Event::Part { part, step: SetupStep::Download, .. } if part == PROGRAM_PART)
+            {
+                cancellation.cancel();
+            }
+        },
+        &cancellation,
+    );
+    assert_eq!(
+        stopped.report.outcome,
+        Outcome::Cancelled,
+        "{:?}",
+        stopped.report
+    );
+    assert_eq!(world.archive_requests(), 1, "nothing was downloaded");
+    unusable(&stopped.report);
+    unusable(&world.status());
+
+    // A second reinstall converges.
+    let (again, _) = world.reinstall_local_ai(&mut |_| {}, &Cancellation::default());
+    assert_eq!(
+        again.report.outcome,
+        Outcome::Completed,
+        "{:?}",
+        again.report
+    );
+    assert_eq!(world.archive_requests(), 2);
+    assert_eq!(row(&again.report, ItemId::LocalAi).state, ItemState::Ready);
+
+    // Cut off with part of the new program's bytes downloaded.
+    world.refuse_program(&world.programs());
+    let gate = world.gate();
+    let cancellation = Cancellation::default();
+    let partial = std::thread::scope(|scope| {
+        let (progressed, progress) = mpsc::channel();
+        let owner = scope.spawn(|| {
+            world
+                .reinstall_local_ai(
+                    &mut move |event| {
+                        if matches!(event, Event::Progress { .. }) {
+                            let _ = progressed.send(());
+                        }
+                    },
+                    &cancellation,
+                )
+                .0
+        });
+        progress.recv().unwrap();
+        cancellation.cancel();
+        gate.open();
+        owner.join().unwrap()
+    });
+    assert_eq!(
+        partial.report.outcome,
+        Outcome::Cancelled,
+        "{:?}",
+        partial.report
+    );
+    let downloaded: Vec<u64> = fs::read_dir(world.programs().join("downloads"))
+        .unwrap()
+        .map(|entry| entry.unwrap().metadata().unwrap().len())
+        .collect();
+    assert!(
+        matches!(downloaded[..], [bytes] if bytes > 0 && bytes < program_archive().len() as u64),
+        "the partial bytes stay to resume from: {downloaded:?}"
+    );
+    unusable(&partial.report);
+
+    // The Try again the row then offers is a setup that is no reinstall, and converges
+    // as well: the program reads missing, so its plan downloads it.
+    let status = world.status();
+    assert_eq!(
+        row(&status, ItemId::LocalAi).recovery,
+        Some(RecoveryAction::TryAgain)
+    );
+    let mut reviewed = None;
+    let resumed = world.run_setup(
+        &SetupRequest {
+            items: Some(vec![ItemId::LocalAi]),
+            approved: None,
+            reinstall: false,
+        },
+        &mut |plan| {
+            reviewed = Some(plan.clone());
+            Answer::Approve(plan.digest())
+        },
+        &mut |event| {
+            if matches!(event, Event::WaitingForServer { .. }) {
+                world.serve_local_ai();
+            }
+        },
+        &Cancellation::default(),
+    );
+    let plan = reviewed.expect("the setup asked for a review");
+    assert_eq!(
+        resumed.report.outcome,
+        Outcome::Completed,
+        "{:?}",
+        resumed.report
+    );
+    assert_eq!(parts(&plan), ["program"]);
+    assert_eq!(
+        row(&resumed.report, ItemId::LocalAi).state,
+        ItemState::Ready
+    );
+    assert_eq!(world.program_versions().len(), 1);
+    assert_eq!(files_under(&world.models()), models);
+}
+
+#[test]
+fn a_packaged_program_the_system_refused_reads_a_damaged_package_with_no_button() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::llama_cpp(&text, &vision);
+    let (done, _) = world.set_up_local_ai_routed();
+    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
+    let package = files_under(&world.llama_package);
+    let models = files_under(&world.models());
+    world.refuse_program(&world.router_folder());
+
+    let refused = world.verify(&[ItemId::LocalAi]);
+    let local_ai = row(&refused, ItemId::LocalAi);
+    assert_eq!(
+        (local_ai.state, local_ai.recovery),
+        (
+            ItemState::Failed(FailureCategory::EnginePackageDamaged),
+            None
+        ),
+        "the program runs from the package, which only a repair of Cadrumo replaces"
+    );
+    let served = serde_json::to_value(local_ai).unwrap();
+    assert!(served.get("recovery").is_none(), "{served}");
+    assert!(state::items_to_set_up(&refused.rows).is_empty());
+
+    let (direct, reviewed) = world.reinstall_local_ai(&mut |_| {}, &Cancellation::default());
+    assert_eq!(
+        direct.report.outcome,
+        Outcome::Refused,
+        "{:?}",
+        direct.report
+    );
+    assert_eq!(direct.report.item, Some(ItemId::LocalAi));
+    assert_eq!(
+        direct.report.failure,
+        Some(FailureCategory::EnginePackageDamaged)
+    );
+    assert!(reviewed.is_none(), "nothing is planned");
+    assert_eq!(
+        files_under(&world.llama_package),
+        package,
+        "the package is untouched"
+    );
+    assert_eq!(files_under(&world.models()), models);
 }

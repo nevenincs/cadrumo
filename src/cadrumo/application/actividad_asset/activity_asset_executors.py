@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -108,7 +108,6 @@ from .activity_asset_results import (
     ActivityAssetFilingHandoffResult,
     ActivityAssetForecastResult,
     ActivityAssetFormOptionsResult,
-    ActivityAssetInspectionRevision,
     ActivityAssetInspectResult,
     ActivityAssetListResult,
     ActivityAssetOperationResult,
@@ -128,6 +127,7 @@ from .operations import (
     pinned_m130_periods,
 )
 from .register_reads import register_years
+from .result_requirements import ActivityAssetInspectionRevision
 from .schedule_walk import error_reason_facts
 from .served_words import (
     refusal_words,
@@ -269,6 +269,27 @@ def _worker_bucket[T: BaseModel](
     return bucket_id
 
 
+_REFUSAL_CODES: Final = (
+    (ActividadAssetIncompleteError, ACTIVITY_ASSET_REFUSED_INCOMPLETE),
+    (ActividadAssetAcceleratedDa18DepreciationError, ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18),
+    (ActividadAssetUnsupportedError, ACTIVITY_ASSET_REFUSED_UNSUPPORTED),
+    (ActividadAssetClaimConflictError, ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT),
+    (ActividadAssetValidationError, ACTIVITY_ASSET_REFUSED_VALIDATION),
+)
+
+
+def _code_specific_facts(
+    error: ActividadAssetError,
+) -> tuple[PreconditionVerdict | None, ActivityAssetAcceleratedDa18Facts | None]:
+    """The precondition verdict or accelerated-DA18 facts an error carries beyond its common reason."""
+    if isinstance(error, ActividadAssetIncompleteError):
+        terminal = error.terminal_precondition_verdict
+        return (terminal if isinstance(terminal, PreconditionVerdict) else None), None
+    if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
+        return None, ActivityAssetAcceleratedDa18Facts.from_error(error)
+    return None, None
+
+
 def activity_asset_executors_refusal(
     error: Exception, language: OutputLanguage | None = None
 ) -> ActivityAssetRefusalResult | None:
@@ -284,55 +305,20 @@ def activity_asset_executors_refusal(
     )
     words = None if sentence is None else sentence[0]
     words_language = None if sentence is None else sentence[1]
-    if isinstance(error, ActividadAssetIncompleteError):
-        verdict = error.terminal_precondition_verdict
-        return ActivityAssetRefusalResult(
-            code=ACTIVITY_ASSET_REFUSED_INCOMPLETE,
-            precondition_verdict=verdict if isinstance(verdict, PreconditionVerdict) else None,
-            reason_key=reason_key,
-            reason_facts=reason_facts,
-            reason_fact_kinds=reason_fact_kinds,
-            refusal_words=words,
-            refusal_words_language=words_language,
-        )
-    if isinstance(error, ActividadAssetAcceleratedDa18DepreciationError):
-        return ActivityAssetRefusalResult(
-            code=ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18,
-            accelerated_da18=ActivityAssetAcceleratedDa18Facts.from_error(error),
-            reason_key=reason_key,
-            reason_facts=reason_facts,
-            reason_fact_kinds=reason_fact_kinds,
-            refusal_words=words,
-            refusal_words_language=words_language,
-        )
-    if isinstance(error, ActividadAssetUnsupportedError):
-        return ActivityAssetRefusalResult(
-            code=ACTIVITY_ASSET_REFUSED_UNSUPPORTED,
-            reason_key=reason_key,
-            reason_facts=reason_facts,
-            reason_fact_kinds=reason_fact_kinds,
-            refusal_words=words,
-            refusal_words_language=words_language,
-        )
-    if isinstance(error, ActividadAssetClaimConflictError):
-        return ActivityAssetRefusalResult(
-            code=ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT,
-            reason_key=reason_key,
-            reason_facts=reason_facts,
-            reason_fact_kinds=reason_fact_kinds,
-            refusal_words=words,
-            refusal_words_language=words_language,
-        )
-    if isinstance(error, ActividadAssetValidationError):
-        return ActivityAssetRefusalResult(
-            code=ACTIVITY_ASSET_REFUSED_VALIDATION,
-            reason_key=reason_key,
-            reason_facts=reason_facts,
-            reason_fact_kinds=reason_fact_kinds,
-            refusal_words=words,
-            refusal_words_language=words_language,
-        )
-    return None
+    code = next((item_code for item_type, item_code in _REFUSAL_CODES if isinstance(error, item_type)), None)
+    if code is None:
+        return None
+    verdict, da18 = _code_specific_facts(error)
+    return ActivityAssetRefusalResult(
+        code=code,
+        precondition_verdict=verdict,
+        accelerated_da18=da18,
+        reason_key=reason_key,
+        reason_facts=reason_facts,
+        reason_fact_kinds=reason_fact_kinds,
+        refusal_words=words,
+        refusal_words_language=words_language,
+    )
 
 
 async def _store_refusal(

@@ -10,13 +10,14 @@ from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period
+from .authored_editions import newest_authored_edition
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 
 def neutral_binding_values() -> dict[str, Decimal]:
-    """The minimal neutral binding set every M100 2025 calculate run needs.
+    """The minimal neutral binding set every calculate run of the newest M100 edition needs.
 
     A childless, unmarried, estimación-directa-normal individual filer with no
     prior-year carry, so the chain under test is isolated from unrelated
@@ -52,14 +53,15 @@ def neutral_binding_values() -> dict[str, Decimal]:
     }
 
 
-def calculate_neutral_modelo_100_2025(
+def calculate_neutral_newest_modelo_100(
     inputs: Mapping[CasillaId, Decimal],
     *,
     text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
-    """Calculate the 2025 Modelo 100 annual snapshot for the neutral filer with the given casilla inputs."""
+    """Calculate the newest authored Modelo 100 annual snapshot for the neutral filer with the given casilla inputs."""
+    exercise = newest_authored_edition("100")
     modelo, catalogues = bundled_modelo_components("100")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=exercise, period="0A")
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -71,6 +73,6 @@ def calculate_neutral_modelo_100_2025(
             for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
         },
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(exercise, 12, 31)},
         text_inputs=text_inputs,
     )

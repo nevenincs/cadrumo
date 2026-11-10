@@ -51,6 +51,8 @@ export type SetupFailureCategory =
   | "memory_busy"
   | "program_missing"
   | "program_not_running"
+  | "engine_program_unusable"
+  | "engine_package_damaged"
   | "interrupted"
   | "needs_sign_in"
   | "not_in_this_build"
@@ -59,7 +61,12 @@ export type SetupFailureCategory =
 
 /** The one button a row offers, worded by the window. */
 export type SetupRecovery =
-  "set_up" | "update" | "try_again" | "resume" | "check_again";
+  | "set_up"
+  | "update"
+  | "try_again"
+  | "resume"
+  | "check_again"
+  | "reinstall_engine_program";
 
 export type SetupCheckMode = "quick" | "full";
 
@@ -106,6 +113,14 @@ export type SetupCheck = {
 
 /** One model explicitly requested for download, independently of task configuration. */
 export type SetupModelDownload = { lane: string; model: string };
+
+/** How one item's setup starts: as a resume of the plan approved before, as
+ * the reinstall of the local AI's program, or with one model to download. */
+export type SetupStartOptions = {
+  resume?: boolean;
+  reinstall?: boolean;
+  download?: SetupModelDownload;
+};
 
 /** A local AI plan part: the program, a configured task, or an explicit download.
  * A part sharing an earlier part's download has size 0. */

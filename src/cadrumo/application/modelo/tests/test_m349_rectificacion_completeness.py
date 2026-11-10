@@ -19,6 +19,7 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -34,28 +35,29 @@ from ..verification_required_fields import detail_row_template_casilla_is_satisf
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-_CLOCK = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 6, 29, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "5f0e7a52-2a3c-4f4e-9d1e-6a2b9c0f8e11"
 _TOTALS = (M349_NUMERO_RECTIFICACIONES_CASILLA, M349_IMPORTE_RECTIFICACIONES_CASILLA)
 
 
 def _snapshot_and_work_unit() -> tuple[RegistrySnapshot, WorkUnit]:
-    snapshot = published_snapshot(Modelo("349").value, filing_year=2026, period="1T")
-    period = Period.from_year_and_code(2026, "1T")
+    snapshot = published_snapshot(Modelo("349").value, filing_year=_YEAR, period="1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="349",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=snapshot.revision.id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("349"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
-        name="349-2026-1T",
+        name=f"349-{_YEAR}-1T",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )

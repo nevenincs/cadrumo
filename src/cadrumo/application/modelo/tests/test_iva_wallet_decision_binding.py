@@ -11,6 +11,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -20,6 +21,8 @@ from ..iva_wallet_binding import apply_iva_compensation_decision_binding
 from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "34343434-3434-4343-8343-343434343434"
 _TAXPAYER_REF = "taxpayeralpha"
@@ -51,10 +54,10 @@ def _decision(
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="2T").snapshot_ref,
-        source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="2T").snapshot_ref,),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_YEAR, period="2T").snapshot_ref,
+        source_registry_snapshot_refs=(published_snapshot("303", filing_year=_YEAR, period="2T").snapshot_ref,),
         selected_authority="aeat_wallet" if not blocked else "missing",
         selected_amount=amount,
         wallet_amount=Decimal("1200"),
@@ -63,11 +66,11 @@ def _decision(
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("1200") if not blocked else Decimal("800"),
-                source_locator="test:local-recurrence:2026:2T",
+                source_locator=f"test:local-recurrence:{_YEAR}:2T",
                 source_modelo="303",
-                source_filing_year=2026,
-                source_periods=(Period.from_year_and_code(2026, "2T"),),
-                registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="2T").snapshot_ref,),
+                source_filing_year=_YEAR,
+                source_periods=(Period.from_year_and_code(_YEAR, "2T"),),
+                registry_snapshot_refs=(published_snapshot("303", filing_year=_YEAR, period="2T").snapshot_ref,),
             ),
         ),
         override_amount=None,
@@ -75,13 +78,13 @@ def _decision(
         blocked=blocked,
         stale_wallet=False,
         reason_identity=("wallet_local_recurrence_divergence" if blocked else "aeat_wallet_validated"),
-        wallet_captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
-        decided_at=datetime(2026, 5, 19, 12, 1, 0, tzinfo=UTC),
+        wallet_captured_at=datetime(1980, 5, 19, 12, 0, 0, tzinfo=UTC),
+        decided_at=datetime(1980, 5, 19, 12, 1, 0, tzinfo=UTC),
     )
 
 
 def _revision():
-    return published_snapshot("303", filing_year=2026, period="2T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="2T").revision
 
 
 def _apply(
@@ -95,8 +98,8 @@ def _apply(
 ) -> None:
     apply_iva_compensation_decision_binding(
         "303",
-        2026,
-        Period.from_year_and_code(2026, "2T"),
+        _YEAR,
+        Period.from_year_and_code(_YEAR, "2T"),
         bucket_id=_BUCKET_ID,
         revision=_revision(),
         taxpayer_nif=taxpayer_nif,
@@ -130,8 +133,8 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -164,7 +167,7 @@ def test_blocked_wallet_refusal_precedes_caller_binding_conflict() -> None:
 
 def test_target_mismatch_refusal_precedes_missing_taxpayer_identity() -> None:
     wrong_period = _decision().model_copy(
-        update={"target_period": Period.from_year_and_code(2026, "1T")},
+        update={"target_period": Period.from_year_and_code(_YEAR, "1T")},
     )
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
@@ -177,8 +180,8 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -195,8 +198,8 @@ def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refuse
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -222,8 +225,8 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -240,8 +243,8 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,
@@ -258,8 +261,8 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_OTHER_TAXPAYER_REF,
@@ -276,8 +279,8 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "2T"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "2T"),
             bucket_id=_BUCKET_ID,
             revision=_revision(),
             taxpayer_nif=_TAXPAYER_REF,

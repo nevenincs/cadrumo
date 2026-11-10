@@ -1639,6 +1639,9 @@ cli:
           registra este comando, así que indica un nombre corto para ti.
         allow_not_applicable_help: Crear la declaración aunque el modelo no aplique
           al tipo de contribuyente del perfil activo.
+        amend_binding_help: Valor de una fuente de casilla que la corrección declara
+          cuando la presentación no lo registró, con sintaxis BINDING_ID=VALUE (repetible);
+          una rectificación rechazada nombra los que necesita.
         amend_help: Construir una corrección de una declaración presentada fuera de
           Cadrumo. Requiere un registro de presentación con evidencia de la AEAT importada
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
@@ -1694,6 +1697,16 @@ cli:
           del Modelo 303 del último periodo del año (código de periodo 12 o 4T), e
           imprime su identificador y SHA-256 para `work calculate`. Los demás periodos
           no lo preguntan.
+        attest_prior_carries_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
+          app modelo work attest-prior-carries %{work_unit_id} --yes` para declararlo.
+        attest_prior_carries_help: Indica que no te queda ningún importe pendiente
+          de ejercicios anteriores en una declaración (las bases liquidables generales
+          negativas de los cuatro ejercicios anteriores en un Modelo 100), para cada
+          importe al que su formulario ofrece la declaración. Muestra la declaración
+          y la comprobación del cambio; con --yes registra cada importe como un 0
+          que has declarado, distinto de una cifra escrita.
+        attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
+          autoliquidación
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
@@ -1807,8 +1820,8 @@ cli:
           existente sin cambios.'
         file_internal_disambiguation: Esta presentación es solo interna y no se envía
           a la AEAT.
-        filing_evidence_option_other_modelo: 'Rechazado. El Modelo %{modelo} no admite
-          ninguna de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
+        filing_evidence_option_other_modelo: 'El Modelo %{modelo} no admite ninguna
+          de estas opciones: %{options}. Son exclusivas del Modelo %{applies_to}.
           Quítalas y vuelve a calcular; no se ha calculado nada.'
         formula_operation_calculation: cálculo
         formula_operation_clamp: límite

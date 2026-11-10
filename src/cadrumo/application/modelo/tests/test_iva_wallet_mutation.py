@@ -45,7 +45,7 @@ def _write_receipt() -> OperationTerminalReceipt:
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),
         ),
         revision=1,
-        settled_at=datetime(2026, 1, 2, tzinfo=UTC),
+        settled_at=datetime(1980, 1, 2, tzinfo=UTC),
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         result_ref="d" * 64,

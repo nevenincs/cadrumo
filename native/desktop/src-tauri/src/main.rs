@@ -225,6 +225,10 @@ fn launch_error() -> ApplicationError {
 }
 
 fn main() {
+    // Before any role or window creates a process: an unusable program image must fail
+    // its creation, not raise a dialog nobody answers. Roles inherit the mode.
+    #[cfg(windows)]
+    cadrumo_platform::error_mode::suppress_dialogs_for_process();
     // A role is its own process of this binary; it shares nothing with the desktop below.
     if let Some(code) = role::dispatch() {
         std::process::exit(code);

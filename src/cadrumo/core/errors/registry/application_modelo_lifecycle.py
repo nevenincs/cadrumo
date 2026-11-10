@@ -218,6 +218,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.carry_attestation_submission.ModeloPriorCarryNothingOpenError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_carries_nothing_open",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_missing_input.ModeloPriorCarryAbsenceUnstatedError",
         ErrorCode(
             code="REFUSED_MODELO_PRIOR_CARRY_ABSENCE_UNSTATED",

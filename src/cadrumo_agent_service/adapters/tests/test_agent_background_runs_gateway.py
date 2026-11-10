@@ -143,14 +143,20 @@ class _Gateway:
 
         A lane's health is probed on demand, so a read just after start-up can
         show a lane unselectable that a later read admits. Two successive reads
-        that agree on every lane's selectability are taken as settled.
+        that agree on every lane's selectability are taken as settled, once no
+        configured lane still awaits its first measurement: such a lane reads
+        unselectable alike in both until its launcher is measured. A lane that
+        is not configured is never measured, so it does not hold the wait.
         """
         previous: list[tuple[Any, Any, Any]] | None = None
         records: list[dict[str, Any]] = []
         for _ in range(_HEALTH_SETTLE_READS):
             records = self._read_lane_records()
             state = [(r["provider_id"], r["transport"], r["health"]["selectable"]) for r in records]
-            if state == previous:
+            unmeasured = any(
+                r["health"]["configured"] == "available" and r["health"]["admission"] == "unknown" for r in records
+            )
+            if state == previous and not unmeasured:
                 break
             previous = state
             time.sleep(_HEALTH_SETTLE_PAUSE_SECONDS)
@@ -381,6 +387,8 @@ def gateway(tmp_path_factory: pytest.TempPathFactory, stub_ollama: int) -> Itera
                 "internal_token": secrets.token_urlsafe(32),
                 "host_token": host_token,
                 "ollama_base_url": f"http://127.0.0.1:{stub_ollama}",
+                # The service passes the engine the profile runs; Ollama's lane is served.
+                "local_engine": "ollama",
             },
         )
     )
@@ -566,7 +574,7 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
     assert installed.licence.spdx is None
 
     model_list = MemoryLocalModelListStore()
-    service = LocalModelListService(store=model_list, catalog_source=declared, default_engine=LocalEngine.LLAMACPP)
+    service = LocalModelListService(store=model_list, catalog_source=declared, default_engine=LocalEngine.OLLAMA)
     added = service.add("ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
     assert isinstance(added, LocalModelListStatus), added
     chosen = service.choose_reading("ollama_api", model=_INSTALLED_MODEL, expected_revision=added.revision)

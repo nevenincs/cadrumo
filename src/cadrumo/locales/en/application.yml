@@ -2368,6 +2368,9 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
+      prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
+        from earlier years left to state as not pending: each one already holds a
+        value or your statement, or the declaration carries none. Nothing was changed.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'Modelo %{modelo} for %{filing_year}
           cannot be calculated: it is not known whether negative general taxable bases
@@ -3469,6 +3472,10 @@ application:
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
+      kdf_at_fallback: This profile's password has the minimum protection, because
+        this computer could not confirm a stronger setting in time when the profile
+        was created. Change the password to strengthen it; you can enter the same
+        password again.
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'

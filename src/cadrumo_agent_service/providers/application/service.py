@@ -34,6 +34,7 @@ from ..domain.record import (
     AssistantAuth,
     CredentialKind,
     CredentialState,
+    LocalEngine,
     ProviderCredential,
     ProviderSettingsRecord,
     credential_secret_refusal,
@@ -51,6 +52,7 @@ from .contracts import (
     ProviderStatusEntry,
     is_provider_settings_revision,
 )
+from .local_model_list import engine_lanes
 from .ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -86,17 +88,24 @@ class ProviderSettingsService:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
+        selected_engine: Callable[[], LocalEngine | None],
         clock: Callable[[], datetime] = now,
         cli_state_probe: Callable[[ProviderCatalogEntry], CliObservation] | None = None,
     ) -> None:
-        """Bind the service to one profile's store and its catalog."""
+        """Bind the service to one profile's store and its catalog.
+
+        ``selected_engine`` reads the local engine the profile runs, ``None``
+        when its setting cannot be read; the status lists only that engine's
+        keyless lane, by the rule the picker and the local model lists share.
+        """
         self._store = store
         self._catalog_source = catalog_source
+        self._selected_engine = selected_engine
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
     def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
-        """Return masked status of every catalogued provider, or a typed refusal."""
+        """Return masked status of every catalogued provider the selected engine is served, or a typed refusal."""
         return self._status(observe_cli=True)
 
     def lanes(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
@@ -112,13 +121,14 @@ class ProviderSettingsService:
             catalog = self._catalog_source.catalog()
         except ProviderCatalogUnavailableError:
             return _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
-        reads = self._store.read(catalog.provider_ids)
+        entries = engine_lanes(catalog, self._selected_engine)
+        reads = self._store.read(tuple(entry.id for entry in entries))
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
         return ProviderSettingsStatus(
             providers=tuple(
                 self._status_entry(entry, read, observe_cli=observe_cli)
-                for entry, read in zip(catalog.providers, reads, strict=True)
+                for entry, read in zip(entries, reads, strict=True)
             ),
         )
 

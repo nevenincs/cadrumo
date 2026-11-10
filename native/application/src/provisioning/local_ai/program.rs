@@ -53,6 +53,7 @@ use crate::{
     error::Error,
     filesystem,
     package::Readiness,
+    process::creation::{self, CreationFailure},
     provisioning::{
         failure::FailureCategory,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
@@ -407,7 +408,10 @@ impl Server {
     /// announce that it listens, for llama-server then to answer ready, and then for it
     /// to answer with `version`. A program that exits, stays silent, unready or without
     /// a version answer past [`START_BUDGET`] or answers otherwise is ended and reads
-    /// `program_not_running`, with the [`ServerStartFailure`] that decided it.
+    /// `program_not_running`, with the [`ServerStartFailure`] that decided it. The start
+    /// budget begins once the process exists; its creation has its own bound,
+    /// [`creation::SPAWN_BUDGET`], past which the start reads a [`LaunchStep::Create`]
+    /// failure of kind `TimedOut`.
     pub(super) fn spawn(
         engine: LocalEngine,
         command: ServeCommand,
@@ -443,9 +447,17 @@ impl Server {
             group.map(|group| group.guard)
         };
         let loopback = Loopback::new(command.address)?;
+        let mut child = creation::spawn_within(creation::SPAWN_BUDGET, process).map_err(
+            |failure| match failure {
+                CreationFailure::Failed(error) => launch_failure(LaunchStep::Create, &error),
+                CreationFailure::TimedOut { .. } => {
+                    launch_failure(LaunchStep::Create, &io::ErrorKind::TimedOut.into())
+                }
+            },
+        )?;
+        // The start budget is the program's: creation waits for every other process
+        // holding the creation step and for the system's scan of the program.
         let started = Instant::now();
-        let mut child = crate::process::creation::run(|| process.spawn())
-            .map_err(|error| launch_failure(LaunchStep::Create, &error))?;
         let guard = match containment.contain(&child) {
             Ok(guard) => guard,
             Err(error) => {
@@ -669,10 +681,28 @@ impl Drop for Server {
 
 /// The failure of one step of launching the server, which the operating system refused.
 fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
+    if step == LaunchStep::Create && refused_as_program(error) {
+        return LocalAiError::NotRunning(NotRunningCause::Start(
+            ServerStartFailure::ProgramDamaged,
+        ));
+    }
     LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
         step,
         kind: error.kind(),
     }))
+}
+
+/// Whether creating the process failed because the file is no valid program image for
+/// this computer: Windows' `ERROR_BAD_EXE_FORMAT` (193) or
+/// `ERROR_EXE_MACHINE_TYPE_MISMATCH` (216). Both engines' programs read the same.
+fn refused_as_program(error: &io::Error) -> bool {
+    const ERROR_BAD_EXE_FORMAT: i32 = 193;
+    const ERROR_EXE_MACHINE_TYPE_MISMATCH: i32 = 216;
+    cfg!(windows)
+        && matches!(
+            error.raw_os_error(),
+            Some(ERROR_BAD_EXE_FORMAT | ERROR_EXE_MACHINE_TYPE_MISMATCH)
+        )
 }
 
 /// The line `engine`'s program writes on standard error once it accepts connections.
@@ -843,7 +873,9 @@ impl Program {
         }
         match self.running_server() {
             Some(_) => Observation::Present,
-            None => Observation::Failed(FailureCategory::ProgramNotRunning),
+            None => Observation::Failed(StartFailureKind::category_after(
+                self.latest_start_failure(),
+            )),
         }
     }
 
@@ -919,6 +951,25 @@ impl Program {
             return Ok(active);
         }
         let _change = self.change()?;
+        Ok(self.store.download_and_activate(&self.artifact, transfer)?)
+    }
+
+    /// Installs the pinned version afresh, for a program the system refused to start
+    /// although its files match their receipt. The running server is stopped first and
+    /// kept from starting again; then the local AI's receipt is removed and every stored
+    /// copy of the version retired, so nothing trusts or reuses the refused files; then the
+    /// version is downloaded and activated as [`Self::install`] does, its receipt written
+    /// in the version before the active pointer names it. A stop at any step leaves the
+    /// program missing, never ready, and the next install or reinstall downloads it again,
+    /// resuming a partial download. The models are not touched.
+    pub fn reinstall(
+        &mut self,
+        receipts: &ReceiptStore,
+        transfer: &mut Transfer<'_>,
+    ) -> Result<ActiveComponent, LocalAiError> {
+        let _change = self.change()?;
+        receipts.remove(ItemId::LocalAi)?;
+        self.store.retire(&self.artifact)?;
         Ok(self.store.download_and_activate(&self.artifact, transfer)?)
     }
 

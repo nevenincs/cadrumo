@@ -16,8 +16,10 @@ from cadrumo_client.contracts.deadline_budget import exchange_timeout
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationControl,
+    OperationFinancialInput,
     OperationReply,
     OperationRequest,
+    OperationSubmit,
     OperationSubmitted,
 )
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
@@ -30,13 +32,16 @@ def require_registered_definition_contract(
     expected_request: OperationSchemaIdentityV1,
     expected_result: OperationSchemaIdentityV1,
     secret: bytearray | None,
+    *,
+    financial_input: bool = False,
 ) -> None:
-    """Require exact payload, result and secret admission contracts."""
+    """Require exact payload, result, secret and transient financial operand admission contracts."""
     if (
         contract.definition_id != definition_id
         or contract.request_schema != expected_request
         or contract.result_schema != expected_result
         or contract.ephemeral_secret_required is not (secret is not None)
+        or (contract.transient_financial_operand is not None) is not financial_input
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
@@ -69,6 +74,40 @@ def encode_registered_payload(payload: BaseModel) -> str:
         # Refuse before Pydantic can retain a long private row in its error.
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return payload_json
+
+
+def registered_submission(
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+    definition_id: str,
+    subject_ref: str,
+    payload_json: str,
+    financial_input: bool,
+) -> OperationSubmit | OperationFinancialInput:
+    """Frame one submission: volatile operator input for a financial-operand contract, else the request itself.
+
+    Financial input is converted into the amount-free registered request by the
+    worker, so it travels apart from an ordinary submission and carries no
+    idempotency key.
+    """
+    if financial_input:
+        return OperationFinancialInput(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=session_id,
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            payload_json=payload_json,
+        )
+    return OperationSubmit(
+        request_id=uuid4(),
+        profile_id=profile_id,
+        session_id=session_id,
+        definition_id=definition_id,
+        subject_ref=subject_ref,
+        payload_json=payload_json,
+    )
 
 
 def submit_registered_secret(

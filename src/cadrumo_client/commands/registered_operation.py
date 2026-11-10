@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import overload
-from uuid import uuid4
 
 from pydantic import BaseModel
 
@@ -16,6 +15,7 @@ from cadrumo_client.commands.errors import (
 )
 from cadrumo_client.commands.registered_operation_admission import (
     encode_registered_payload,
+    registered_submission,
     require_registered_definition_contract,
     require_registered_review_contract,
     start_registered_operation,
@@ -40,10 +40,7 @@ from cadrumo_client.commands.registered_operation_exchange import RegisteredOper
 from cadrumo_client.commands.registered_operation_observations import wait_registered_settlement
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after
-from cadrumo_client.contracts.operation_access import (
-    OperationSubmit,
-    OperationSubmitted,
-)
+from cadrumo_client.contracts.operation_access import OperationSubmitted
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 
@@ -64,6 +61,7 @@ def run_registered_operation[ResultT: BaseModel](
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
+    financial_request_type: type[BaseModel] | None = None,
 ) -> RegisteredOperationCompletion[ResultT]: ...
 
 
@@ -84,6 +82,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
+    financial_request_type: type[BaseModel] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]: ...
 
 
@@ -103,6 +102,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     settlement_timeout: float | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
+    financial_request_type: type[BaseModel] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]:
     """Run one registered operation with exact contract and result correlation.
 
@@ -114,6 +114,10 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     with its identity and unknown effect, never as a refusal of work that may commit.
     ``on_events`` receives each observed event page, so a command can draw
     the operation's progress while it waits; it never decides settlement.
+    ``financial_request_type`` names the amount-free registered request of an
+    operation whose contract takes a transient financial operand: ``payload``
+    is then the operator input the worker converts into that request, and the
+    operand never enters the journal.
     Any one-shot secret is wiped on every exit.
     """
     try:
@@ -127,12 +131,17 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
         profile_id, session_id, frontend = client.profile_id, client.session_id, client.frontend
         contract = client.contract(definition_id, deadline=call_deadline())
         expected_request = OperationSchemaIdentityV1.from_model(
-            schema_id=definition_id + ".request", schema_version=request_version, model_type=type(payload)
+            schema_id=definition_id + ".request",
+            schema_version=request_version,
+            model_type=financial_request_type or type(payload),
         )
         expected_result = OperationSchemaIdentityV1.from_model(
             schema_id=definition_id + ".result", schema_version=result_version, model_type=result_type
         )
-        require_registered_definition_contract(contract, definition_id, expected_request, expected_result, secret)
+        financial_input = financial_request_type is not None
+        require_registered_definition_contract(
+            contract, definition_id, expected_request, expected_result, secret, financial_input=financial_input
+        )
         require_registered_review_contract(contract, review)
 
         progress = RegisteredOperationProgress()
@@ -143,13 +152,13 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
 
         payload_json = encode_registered_payload(payload)
         submitted = exchange(
-            OperationSubmit(
-                request_id=uuid4(),
+            registered_submission(
                 profile_id=profile_id,
                 session_id=session_id,
                 definition_id=definition_id,
                 subject_ref=subject_ref,
                 payload_json=payload_json,
+                financial_input=financial_input,
             ),
         )
         if not isinstance(submitted, OperationSubmitted):

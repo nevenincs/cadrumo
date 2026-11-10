@@ -14,6 +14,7 @@ from .conformance_diagnostics_support import DIAGNOSTICS_CONFORMANCE_FAMILY
 from .conformance_family_contract import ConformanceFamily
 from .conformance_google_support import GOOGLE_CONFORMANCE_FAMILY
 from .conformance_inventory_support import INVENTORY_FACTS_CONFORMANCE_FAMILY
+from .conformance_invoice_document_attach_support import INVOICE_DOCUMENT_ATTACH_CONFORMANCE_FAMILY
 from .conformance_invoice_intake_support import INVOICE_INTAKE_CONFORMANCE_FAMILY
 from .conformance_ledger_classification_support import LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY
 from .conformance_ledger_evidence_automation_support import LEDGER_EVIDENCE_AUTOMATION_CONFORMANCE_FAMILY
@@ -43,6 +44,7 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     DIAGNOSTICS_CONFORMANCE_FAMILY,
     DIAGNOSTICS_REPAIR_CONFORMANCE_FAMILY,
     GOOGLE_CONFORMANCE_FAMILY,
+    INVOICE_DOCUMENT_ATTACH_CONFORMANCE_FAMILY,
     INVOICE_INTAKE_CONFORMANCE_FAMILY,
     INVENTORY_FACTS_CONFORMANCE_FAMILY,
     LEDGER_CLASSIFICATION_CONFORMANCE_FAMILY,

@@ -22,6 +22,8 @@ pub mod application_icon;
 mod conformance_tests;
 #[cfg(windows)]
 pub mod desktop;
+#[cfg(windows)]
+pub mod error_mode;
 pub mod file_changes;
 #[cfg(windows)]
 pub mod installation;

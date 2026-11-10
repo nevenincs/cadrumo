@@ -104,8 +104,8 @@ errors:
       valor conservat o substituït perquè no són caselles de fórmula d'aquesta revisió.
     formula_recalculation_binding_unrecorded: El recàlcul de la rectificació arriba
       a caselles de fórmula ({casilla_ids}) que depenen de {binding_ids}. La presentació
-      mai no ho va registrar; indica-ho com a substitució explícita d'enllaç a la
-      rectificació.
+      mai no ho va registrar; indica-ho a la rectificació amb --binding BINDING_ID=VALUE
+      (aeat app modelo work amend).
     formula_recalculation_unresolved: 'El recàlcul de la rectificació ha deixat sense
       resoldre caselles de fórmula obligatòries: {casilla_ids}.'
     lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
@@ -419,8 +419,8 @@ errors:
   fail:
     canonical_auth_diagnostic_persistence: No s'han pogut desar els diagnòstics d'autenticació.
     canonical_catalogue_invoice_persistence: No s'ha pogut desar el catàleg de factures.
-    canonical_catalogue_invoice_rate: Ha fallat la consulta del tipus de canvi del
-      catàleg de factures.
+    canonical_catalogue_invoice_rate: La consulta del tipus de canvi del catàleg de
+      factures no s'ha completat.
     canonical_counterparty_establishment_persistence: No s'ha pogut desar el registre
       d'establiment de la contrapart.
     canonical_credit_resolution_persistence: No s'han pogut llegir ni desar les discrepàncies
@@ -446,8 +446,8 @@ errors:
       del Model.
     canonical_operator_scope_session: No s'ha pogut llegir la sessió de custòdia activa
       de l'operador.
-    canonical_operator_scope_storage: Ha fallat l'operació d'emmagatzematge de l'autenticació
-      de l'operador.
+    canonical_operator_scope_storage: L'operació d'emmagatzematge de l'autenticació
+      de l'operador no s'ha completat.
     canonical_percepcion_observation_persistence: No s'han pogut desar les observacions
       de percepcions.
     canonical_persistence_degradation: La capacitat de persistència no ha pogut proporcionar
@@ -474,7 +474,7 @@ errors:
     canonical_workflow_gate_persistence: No s'ha pogut desar el control d'accés del
       flux de treball.
     censo_sync: La sincronització del cens del Model 036 ha fallat.
-    currency_error: Ha fallat la normalització de la moneda.
+    currency_error: La normalització de la moneda no s'ha completat.
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
       per a la conciliació.
     exchange_rate_provider: El proveïdor de tipus de canvi no ha respost.

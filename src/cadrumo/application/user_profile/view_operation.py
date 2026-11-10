@@ -303,6 +303,14 @@ class ProfileViewNoticeContextEntry(BaseModel):
     value: str
 
 
+class ProfileViewNoticeAction(BaseModel):
+    """The catalogue action a notice offers, resolved before it is served."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    action_id: str = Field(min_length=1)
+    target_command_key: str = Field(min_length=1)
+
+
 class ProfileViewNoticeItem(BaseModel):
     """One overview notice from the canonical projector."""
 
@@ -312,6 +320,7 @@ class ProfileViewNoticeItem(BaseModel):
     code: str
     message: str
     context: tuple[ProfileViewNoticeContextEntry, ...] | None = None
+    action: ProfileViewNoticeAction | None = None
 
 
 type ProfileViewItem = Annotated[

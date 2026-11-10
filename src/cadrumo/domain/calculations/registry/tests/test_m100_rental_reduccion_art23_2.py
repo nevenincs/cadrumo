@@ -1,4 +1,4 @@
-"""Modelo 100 2024 Art. 23.2 housing-rental reduction calculation tests."""
+"""Modelo 100 Art. 23.2 housing-rental reduction calculation tests, on the edition that declares the tier."""
 
 from __future__ import annotations
 
@@ -15,19 +15,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 
 @pytest.fixture(scope="module")
-def m100_2024_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
+def m100_tier_edition_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]) -> RegistrySnapshot:
     """A formula-runtime calculation claim, never a filing one."""
     return registry_snapshot(
         "100",
-        2024,
+        scenarios.TIER_EDITION_EXERCISE,
         "0A",
-        revision_id="2024",
+        revision_id=scenarios.TIER_EDITION_ID,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
 
-def test_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot)
+def test_tier_binding_is_layout_and_law_grounded(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_tier_binding_is_layout_and_law_grounded(m100_tier_edition_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -40,13 +40,15 @@ def test_tier_binding_is_layout_and_law_grounded(m100_2024_snapshot: RegistrySna
     ),
 )
 def test_0150_uses_operator_selected_art23_2_tier(
-    m100_2024_snapshot: RegistrySnapshot, tier: str, expected: Decimal
+    m100_tier_edition_snapshot: RegistrySnapshot, tier: str, expected: Decimal
 ) -> None:
-    scenarios.check_0150_uses_operator_selected_art23_2_tier(m100_2024_snapshot, tier, expected)
+    scenarios.check_0150_uses_operator_selected_art23_2_tier(m100_tier_edition_snapshot, tier, expected)
 
 
-def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_snapshot)
+def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(
+    m100_tier_edition_snapshot: RegistrySnapshot,
+) -> None:
+    scenarios.check_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_tier_edition_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -57,14 +59,14 @@ def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(m100_2024_sna
     ),
 )
 def test_0150_non_positive_0149_does_not_create_positive_reduction(
-    m100_2024_snapshot: RegistrySnapshot, inputs: dict[str, Decimal]
+    m100_tier_edition_snapshot: RegistrySnapshot, inputs: dict[str, Decimal]
 ) -> None:
-    scenarios.check_0150_non_positive_0149_does_not_create_positive_reduction(m100_2024_snapshot, inputs)
+    scenarios.check_0150_non_positive_0149_does_not_create_positive_reduction(m100_tier_edition_snapshot, inputs)
 
 
-def test_0150_positive_checked_rental_fails_closed_without_tier(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_positive_checked_rental_fails_closed_without_tier(m100_2024_snapshot)
+def test_0150_positive_checked_rental_fails_closed_without_tier(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0150_positive_checked_rental_fails_closed_without_tier(m100_tier_edition_snapshot)
 
 
-def test_0150_rejects_unknown_tier_key(m100_2024_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_0150_rejects_unknown_tier_key(m100_2024_snapshot)
+def test_0150_rejects_unknown_tier_key(m100_tier_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_0150_rejects_unknown_tier_key(m100_tier_edition_snapshot)

@@ -243,18 +243,24 @@ test("providers start collapsed and keep each connection separately accessible",
       `[data-choice="${SERVED_ENGINE}"] [role="radio"][aria-checked="true"]`,
     ),
   ).toHaveCount(1);
-  const words: string[] = [];
+  const words: { text: string; keyless: boolean }[] = [];
   for (const declared of FIXTURE_SETTINGS_LANES) {
     const card = lane(target, declared.id);
-    words.push(await card.getByRole("heading", { level: 5 }).innerText());
-    if (declared.auth_kind !== "none")
-      words.push(...(await card.locator(":scope > p").allInnerTexts()));
+    const keyless = declared.auth_kind === "none";
+    words.push({
+      text: await card.getByRole("heading", { level: 5 }).innerText(),
+      keyless,
+    });
+    if (!keyless)
+      for (const text of await card.locator(":scope > p").allInnerTexts())
+        words.push({ text, keyless });
   }
-  for (const laneWords of words) {
-    expect(laneWords).not.toMatch(/\bCLI\b/i);
-    expect(laneWords).not.toMatch(/command[- ]line/i);
-    expect(laneWords).not.toMatch(/over the internet/i);
-    expect(laneWords).not.toMatch(/on this computer/i);
+  for (const { text, keyless } of words) {
+    expect(text).not.toMatch(/\bCLI\b/i);
+    expect(text).not.toMatch(/command[- ]line/i);
+    expect(text).not.toMatch(/over the internet/i);
+    // A lane that takes no key is served as on this computer; no other is.
+    if (!keyless) expect(text).not.toMatch(/on this computer/i);
   }
 
   const credits = settings(target).locator("details").last();
@@ -359,10 +365,19 @@ test("settings search finds providers and agent keys", async ({
   for (const declared of FIXTURE_SETTINGS_LANES) {
     const connection = lane(target, declared.id);
     await expect(connection).toHaveCount(1);
+    // The search matches the words a connection is shown with.
     if (connectionLabel(declared) === label("desktop.providers.connection_api"))
       await expect(connection).toBeVisible();
     else await expect(connection).toBeHidden();
   }
+  // A lane that takes no key is found by the words it is shown with.
+  const keyless = FIXTURE_SETTINGS_LANES.filter(
+    (declared) => declared.auth_kind === "none",
+  );
+  expect(keyless.length).toBeGreaterThan(0);
+  await search.fill(label("desktop.providers.connection_local"));
+  for (const declared of keyless)
+    await expect(lane(target, declared.id)).toBeVisible();
 
   await search.fill(keyName);
   await expect(access).toBeVisible();

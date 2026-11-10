@@ -56,7 +56,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.
 _PROFILE_ID = "10000000-0000-4000-8000-000000000591"
 _PERIOD = "0A"
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
-_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(1980, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
 def _latest_snapshot_declaring_the_ccaa_binding() -> RegistrySnapshot:

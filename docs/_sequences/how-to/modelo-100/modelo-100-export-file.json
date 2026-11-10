@@ -278,10 +278,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "ae3d161a08de1661ab37c80977f57ea46dbc64ab5bbc2f6af857e0cfec76b5c1",
+          "bucket_event_id": "e242cc241c46489dd8d5c49c73da847c308af9521d396a8db84066f979bd9c4b",
           "bucket_id": "<bucket-id>",
           "byte_size": 2665,
-          "calculation_revision_id": "25d420a21fb921ae83f7f43952123239a8ffabc6347f087c71eee7a171f5a024",
+          "calculation_revision_id": "6bff74916279de4f2da1365058373f76b7c7037e65dbd634509eefdf1e6301ed",
           "file_sha256": "2f29e6378e49abfc4492d780dbb5cd0fa0b3eb9c0cf7c840af77f7e18a640a52",
           "filing_year": 2025,
           "format": "xml-dictionary",
