@@ -43,11 +43,13 @@ from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider
 from ..schema_references import TemporalSupportEnvelope
 from ..snapshot_globals import SupportedFilingYearsCatalogue
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_ID = "ley-37-1992:art-90"
-_EFFECTIVE = date(2025, 6, 1)
+_ENVELOPE = filing_year_envelope()
+_EFFECTIVE = date(_ENVELOPE.horizon, 6, 1)
 
 # A deliberately narrower vocabulary than the shipped registry declares: the
 # reduced and super-reduced tiers are absent, so a test that accepts them proves
@@ -141,7 +143,7 @@ def _mapping_fact(fact_id: str, *, date_axis: str, entries: tuple[dict[str, str]
                 {
                     "variant_id": f"{fact_id}:scope-fixture",
                     "date_axis": date_axis,
-                    "valid_from": date(2020, 1, 1),
+                    "valid_from": date(_ENVELOPE.floor, 1, 1),
                     "legal_refs": (_LEGAL_ID,),
                     "review_status": "agent_reviewed",
                     "ownership": "authored",
@@ -174,7 +176,7 @@ def _scoped_facts() -> CandidateFactAuthority:
     )
     return CandidateFactAuthority(
         GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}),
-        SupportedFilingYearsCatalogue(floor=2022, horizon=2026),
+        SupportedFilingYearsCatalogue(floor=_ENVELOPE.floor, horizon=_ENVELOPE.horizon),
     )
 
 
