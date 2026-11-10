@@ -440,10 +440,64 @@ test("an empty Windows socket table leaves ownership to the nonce, but a foreign
 });
 
 const NONCE = "ab".repeat(32);
-const answering = (value) => ({ execute: async () => value });
+/** A driver whose current window is one of its open windows. */
+function driver({ current = "main", open = ["main"], answers = {} } = {}) {
+  const state = { current, switched: [] };
+  return {
+    state,
+    getWindowHandles: async () => open,
+    getWindowHandle: async () => {
+      if (state.current === null) throw new Error("no such window");
+      return state.current;
+    },
+    switchToWindow: async (handle) => {
+      state.switched.push(handle);
+      state.current = handle;
+    },
+    execute: async () => {
+      if (!open.includes(state.current)) throw new Error("no such window");
+      return answers[state.current] ?? null;
+    },
+  };
+}
+const answering = (value) => driver({ answers: { main: value } });
 
 test("a launched host answers its own nonce", async () => {
   await proveOwnership(answering(NONCE), NONCE);
+});
+
+test("a closed startup window hands the proof to the open workspace window", async () => {
+  const browser = driver({
+    current: "startup",
+    open: ["main"],
+    answers: { main: NONCE },
+  });
+  await proveOwnership(browser, NONCE);
+  assert.deepEqual(browser.state.switched, ["main"]);
+});
+
+test("an open current window is kept and an unnamed one is the fallback", async () => {
+  const kept = driver({
+    current: "startup",
+    open: ["startup", "main"],
+    answers: { startup: NONCE },
+  });
+  await proveOwnership(kept, NONCE);
+  assert.deepEqual(kept.state.switched, []);
+  const unnamed = driver({
+    current: null,
+    open: ["other"],
+    answers: { other: NONCE },
+  });
+  await proveOwnership(unnamed, NONCE);
+  assert.deepEqual(unnamed.state.switched, ["other"]);
+});
+
+test("a host with no open window is refused", async () => {
+  await assert.rejects(
+    proveOwnership(driver({ current: "startup", open: [] }), NONCE),
+    /did not answer this launch's nonce/,
+  );
 });
 
 test("a foreign, stale, missing or malformed nonce answer is refused", async () => {
@@ -460,6 +514,7 @@ test("a foreign, stale, missing or malformed nonce answer is refused", async () 
   ])
     await assert.rejects(proveOwnership(answering(presented), NONCE), refused);
   const failing = {
+    ...driver(),
     execute: async () => {
       throw new Error("no session");
     },

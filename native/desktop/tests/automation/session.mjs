@@ -456,6 +456,7 @@ function sameNonce(expected, presented) {
 export async function proveOwnership(browser, nonce) {
   let presented;
   try {
+    await focusLiveWindow(browser);
     presented = await browser.execute(
       () => window.__cadrumoAutomationNonce ?? null,
     );
@@ -466,6 +467,24 @@ export async function proveOwnership(browser, nonce) {
     throw new Error(
       "The WebDriver endpoint did not answer this launch's nonce, so it is not this native test host.",
     );
+}
+
+/**
+ * The host closes its startup window once the workspace opens, but the
+ * driver's session keeps the closed window current, so every command would
+ * fail. Move to the workspace window, or the first open one, when the current
+ * window is gone; with no open window the commands fail as before.
+ */
+export async function focusLiveWindow(browser) {
+  const handles = await browser.getWindowHandles();
+  let current = null;
+  try {
+    current = await browser.getWindowHandle();
+  } catch {
+    current = null;
+  }
+  if (handles.includes(current) || handles.length === 0) return;
+  await browser.switchToWindow(handles.includes("main") ? "main" : handles[0]);
 }
 
 /** Resume only after the former host is gone, discarding its queued answer. */
