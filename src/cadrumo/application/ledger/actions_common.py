@@ -15,12 +15,11 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import TypeAdapter
 
 from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, UTF_8_ENCODING
-from ...core.hashing import sha256_hex
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time.clock import now
 
 if TYPE_CHECKING:
@@ -43,7 +42,13 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
-from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue, withheld_figures
+from ...domain.transactions.models import (
+    BucketTransactionRef,
+    Transaction,
+    TransactionCatalogue,
+    withheld_figures,
+    withheld_figures_event_entries,
+)
 from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
@@ -977,30 +982,10 @@ def withheld_figures_event_payload(current: Transaction) -> dict[str, str]:
     """Return the event entries that record the business figures a write of ``current`` stops storing.
 
     A personal row stored before such rows were refused business figures is
-    read without them, so its next write persists their absence. The event of
-    that write keeps each prior value under ``withheld_<field>``, with their
-    count, so the history still holds what the stored row said. A value longer
-    than an event value may be is kept as its digest instead.
+    read without them, so its next write persists their absence; the event of
+    that write names each one with its prior value.
     """
-    figures = withheld_figures(current)
-    if not figures:
-        return {}
-    payload = {"withheld_figure_count": str(len(figures))}
-    for name, value in sorted(figures.items()):
-        text = _withheld_figure_text(value)
-        if len(text) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
-            payload[f"withheld_{name}_sha256"] = sha256_hex(text.encode(UTF_8_ENCODING))
-        else:
-            payload[f"withheld_{name}"] = text
-    return payload
-
-
-def _withheld_figure_text(value: object) -> str:
-    if isinstance(value, Decimal):
-        return format_decimal(value)
-    if isinstance(value, BaseModel):
-        return value.model_dump_json()
-    return str(value)
+    return withheld_figures_event_entries(withheld_figures(current))
 
 
 def build_ledger_bucket_event(

@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Annotated, Self, override
+from typing import Annotated, Final, Self, override
 
 from pydantic import (
     AfterValidator,
@@ -23,9 +23,10 @@ from pydantic_core import core_schema
 
 from ...core.concepto_ingreso import ConceptoIngreso
 from ...core.decimal.constants import ONE
+from ...core.decimal.formatting import format_decimal
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
-from ...core.hashing import content_hash_hex
+from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY, UTF_8_ENCODING
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
@@ -37,6 +38,7 @@ from ...core.time.clock import now
 from ...core.tipos_actividad import TipoActividad
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_mapping
+from ..buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ..calculations.registry.concepto_ingreso import require_concepto_ingreso
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.eu_member_state_catalogue import (
@@ -331,13 +333,23 @@ def withhold_figures_without_business(transaction: Transaction) -> Transaction:
     admission check, and absent figures are what any write of its
     classification would carry.
     """
+    held = figures_held_without_business(transaction)
+    if not held:
+        return transaction
+    read = transaction.model_copy(update=dict.fromkeys(held))
+    _remember_withheld_figures(read, held)
+    return read
+
+
+def figures_held_without_business(transaction: Transaction) -> Mapping[str, object]:
+    """Return the business figures ``transaction`` holds although its classification refuses them.
+
+    Empty for every row built or written since the refusal existed; a stored
+    row decoded through :func:`validate_stored_transaction_json` can hold some.
+    """
     figures = refusable_figures_of(transaction.business_classification, transaction)
     present = figures_without_business(transaction.business_classification, figures)
-    if not present:
-        return transaction
-    read = transaction.model_copy(update=dict.fromkeys(present))
-    _remember_withheld_figures(read, {name: figures[name] for name in present})
-    return read
+    return MappingProxyType({name: figures[name] for name in present})
 
 
 _WITHHELD_FIGURES: dict[int, Mapping[str, object]] = {}
@@ -363,6 +375,38 @@ def withheld_figures(transaction: Transaction) -> Mapping[str, object]:
     produce, such as a copy or a row built from a request.
     """
     return _WITHHELD_FIGURES.get(id(transaction), MappingProxyType({}))
+
+
+WITHHELD_FIGURE_COUNT_KEY: Final[str] = "withheld_figure_count"
+"""The event entry that marks an event as recording a row's withheld figures."""
+
+
+def withheld_figures_event_entries(figures: Mapping[str, object]) -> dict[str, str]:
+    """Return the bucket-event entries that record ``figures`` a write stops storing.
+
+    Each prior value is kept under ``withheld_<field>``, with their count under
+    ``withheld_figure_count``, so the event history still holds what the stored
+    row said. A value longer than an event value may be is kept as its digest,
+    under ``withheld_<field>_sha256``.
+    """
+    if not figures:
+        return {}
+    entries = {WITHHELD_FIGURE_COUNT_KEY: str(len(figures))}
+    for name, value in sorted(figures.items()):
+        text = _withheld_figure_text(value)
+        if len(text) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+            entries[f"withheld_{name}_sha256"] = sha256_hex(text.encode(UTF_8_ENCODING))
+        else:
+            entries[f"withheld_{name}"] = text
+    return entries
+
+
+def _withheld_figure_text(value: object) -> str:
+    if isinstance(value, Decimal):
+        return format_decimal(value)
+    if isinstance(value, BaseModel):
+        return value.model_dump_json()
+    return str(value)
 
 
 def _effective_date_for_enum_projection(info: core_schema.ValidationInfo) -> date | None:
