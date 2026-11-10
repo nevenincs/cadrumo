@@ -7,8 +7,8 @@ across the owning modules listed below. :class:`~domain.transactions.models.Tran
 :class:`~domain.transactions.models.TransactionCatalogue` keeps the immutable mapping keyed by the
 content-derived transaction id. Import helpers such as
 :func:`~domain.transactions.models.derive_transaction_id`,
-:func:`~domain.transactions.models.derive_import_fingerprint`, and
-:func:`~domain.transactions.models.normalise_movement_reference` are the public identity helpers.
+:func:`~domain.transactions.import_fingerprints.derive_import_fingerprint`, and
+:func:`~domain.transactions.import_fingerprints.normalise_movement_reference` are the public identity helpers.
 
 The row model separates amount magnitude from
 :class:`~domain.transactions.enums.TransactionDirection`; downstream tax calculations route by direction

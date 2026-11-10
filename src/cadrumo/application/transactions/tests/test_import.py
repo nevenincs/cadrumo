@@ -37,12 +37,8 @@ from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import (
-    Transaction,
-    TransactionCatalogue,
-    derive_import_fingerprint,
-    derive_transaction_id,
-)
+from ....domain.transactions.import_fingerprints import derive_import_fingerprint
+from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..diagnostics import LedgerImportDiagnosticKind
 from ..import_diagnostics import LedgerImportResult, import_ledger_with_diagnostics

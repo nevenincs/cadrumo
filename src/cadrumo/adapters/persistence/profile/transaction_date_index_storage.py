@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from typing import TYPE_CHECKING
 
 from sqlalchemy import delete, insert, select, update
@@ -11,7 +12,9 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....domain.transactions.models import (
     Transaction,
+    TransactionCatalogue,
 )
+from ..storage.errors import SecureObjectRevisionConflictError
 from ..storage.sql.tables import transaction_date_index_table
 from .transaction_date_projection import (
     IndexedTransactionDates,
@@ -19,6 +22,8 @@ from .transaction_date_projection import (
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from sqlalchemy import Connection
+
+    from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def date_index_revision(rows: dict[str, tuple[int, IndexedTransactionDates]]) -> str:
@@ -107,3 +112,94 @@ def date_routing_unchanged(current: Transaction, replacement: Transaction) -> bo
     return current.transaction_id == replacement.transaction_id and IndexedTransactionDates.for_transaction(
         current
     ) == IndexedTransactionDates.for_transaction(replacement)
+
+
+def sync_date_index_rows(objects: SecureObjectRepository, bucket_id: str, catalogue: TransactionCatalogue) -> None:
+    """Bring ``bucket_id``'s routing rows to ``catalogue``, retrying a conflicting baseline up to three times.
+
+    Each attempt reads the bucket baseline, returns when it already matches,
+    and otherwise writes the diff in a transaction that first asserts the
+    baseline is unchanged; a third conflict propagates.
+    """
+    incoming: dict[str, IndexedTransactionDates] = {
+        transaction_id: IndexedTransactionDates.for_transaction(transaction)
+        for transaction_id, transaction in catalogue.transactions.items()
+    }
+
+    for attempt in range(3):
+        with objects.guarded_session_scope() as session:
+            baseline = read_date_index_rows(bucket_id, session)
+        if {key: value[1] for key, value in baseline.items()} == incoming:
+            return
+
+        def commit(session: Connection, baseline: dict[str, tuple[int, IndexedTransactionDates]] = baseline) -> None:
+            current = read_date_index_rows(bucket_id, session)
+            if current != baseline:
+                # No DML has occurred: the whole transaction is a proven
+                # prewrite conflict, including convergence by another writer.
+                raise SecureObjectRevisionConflictError(
+                    translated_message="errors.fail.fail_storage_secure_object_revision_conflict",
+                    context={
+                        "namespace": "transaction-date-index",
+                        "expected_revision_id": date_index_revision(baseline),
+                        "current_revision_id": date_index_revision(current),
+                    },
+                )
+            write_date_index_rows(bucket_id, session, incoming=incoming, existing=current)
+
+        try:
+            objects.write_transaction(commit)
+        except SecureObjectRevisionConflictError:
+            if attempt == 2:
+                raise
+        else:
+            return
+
+
+def date_index_ids_and_count(objects: SecureObjectRepository, bucket_id: str) -> tuple[set[str], int]:
+    """Return date-index ids and physical row count for the completeness gate.
+
+    The partition path only needs identity for the gate; loading all four
+    routing columns into Python is deferred to the targeted window query.
+    Keeping the row count alongside the id set also refuses duplicate index
+    rows instead of allowing set projection to hide them.
+    """
+    with objects.guarded_session_scope() as session:
+        rows = (
+            session.execute(
+                select(transaction_date_index_table.c.transaction_id).where(
+                    transaction_date_index_table.c.bucket_id == bucket_id,
+                ),
+            )
+            .scalars()
+            .all()
+        )
+    return set(rows), len(rows)
+
+
+def date_index_candidate_ids(
+    objects: SecureObjectRepository, bucket_id: str, start: date, end: date
+) -> set[str] | None:
+    """Return the candidate transaction ids in ``[start, end]`` per the plaintext index.
+
+    Returns ``None`` when this bucket has no rows in the index at all
+    (distinguishing "index absent" from "index present but window empty",
+    so a date-range load can tell a genuinely stale/missing index apart
+    from a real empty result).
+    """
+    with objects.guarded_session_scope() as session:
+        any_row = session.execute(
+            select(transaction_date_index_table.c.id)
+            .where(transaction_date_index_table.c.bucket_id == bucket_id)
+            .limit(1),
+        ).first()
+        if any_row is None:
+            return None
+        rows = session.execute(
+            select(transaction_date_index_table.c.transaction_id).where(
+                transaction_date_index_table.c.bucket_id == bucket_id,
+                transaction_date_index_table.c.filing_date >= start,
+                transaction_date_index_table.c.filing_date <= end,
+            ),
+        ).scalars()
+        return set(rows)

@@ -714,10 +714,7 @@ def command_from_patch(
     direction = required_patched(patch, patch_fields, "direction", current.direction)
     description = required_patched(patch, patch_fields, "description", raw.description)
     business_classification = required_patched(
-        patch,
-        patch_fields,
-        "business_classification",
-        current.business_classification,
+        patch, patch_fields, "business_classification", current.business_classification
     )
     business_pct = optional_patched(patch, patch_fields, "business_pct", current.business_pct)
     category_id = optional_patched(patch, patch_fields, "category_id", current.category_id)
@@ -727,10 +724,7 @@ def command_from_patch(
     recargo_amount = optional_patched(patch, patch_fields, "recargo_amount", current.recargo_amount)
     irpf_category = optional_patched(patch, patch_fields, "irpf_category", current.irpf_category)
     m210_income_classification = optional_patched(
-        patch,
-        patch_fields,
-        "m210_income_classification",
-        current.m210_income_classification,
+        patch, patch_fields, "m210_income_classification", current.m210_income_classification
     )
     usage_ratio_id = optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
     prorrata_reference = optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
@@ -754,56 +748,25 @@ def command_from_patch(
     notes = required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = optional_patched(patch, patch_fields, "iva_category", current.iva_category)
-    deduction_fact_kind = optional_patched(
-        patch,
-        patch_fields,
-        "deduction_fact_kind",
-        current.deduction_fact_kind,
-    )
-    investment_asset_id = optional_patched(
-        patch,
-        patch_fields,
-        "investment_asset_id",
-        current.investment_asset_id,
-    )
+    deduction_fact_kind = optional_patched(patch, patch_fields, "deduction_fact_kind", current.deduction_fact_kind)
+    investment_asset_id = optional_patched(patch, patch_fields, "investment_asset_id", current.investment_asset_id)
     iva_vehicle_use = _unless_cleared(
         "iva_vehicle_use",
         optional_patched(patch, patch_fields, "iva_vehicle_use", current.iva_vehicle_use),
         cleared,
     )
-    counterparty_country = optional_patched(
-        patch,
-        patch_fields,
-        "counterparty_country",
-        current.counterparty_country,
-    )
+    counterparty_country = optional_patched(patch, patch_fields, "counterparty_country", current.counterparty_country)
     counterparty_identification_state = optional_patched(
-        patch,
-        patch_fields,
-        "counterparty_identification_state",
-        current.counterparty_identification_state,
+        patch, patch_fields, "counterparty_identification_state", current.counterparty_identification_state
     )
     group_label = optional_patched(patch, patch_fields, "group_label", current.group_label)
     own_account_id = optional_patched(patch, patch_fields, "own_account_id", current.own_account_id)
     # Preserve the three add-time prorrata declarations during reclassification.
     art_104_tres_exclusion = optional_patched(
-        patch,
-        patch_fields,
-        "art_104_tres_exclusion",
-        current.art_104_tres_exclusion,
+        patch, patch_fields, "art_104_tres_exclusion", current.art_104_tres_exclusion
     )
-    input_classification = optional_patched(
-        patch,
-        patch_fields,
-        "input_classification",
-        current.input_classification,
-    )
-    prorrata_sector_id = optional_patched(
-        patch,
-        patch_fields,
-        "prorrata_sector_id",
-        current.prorrata_sector_id,
-    )
+    input_classification = optional_patched(patch, patch_fields, "input_classification", current.input_classification)
+    prorrata_sector_id = optional_patched(patch, patch_fields, "prorrata_sector_id", current.prorrata_sector_id)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -916,13 +879,16 @@ def _update_event_specs(
                 {**common_payload, "mutation_kind": "correction"},
             ),
         )
+    return _with_withheld_figures(tuple(specs), current)
+
+
+def _with_withheld_figures(specs: tuple[EventSpec, ...], current: Transaction) -> tuple[EventSpec, ...]:
+    """Carry the figures the stored row still held, which the write drops, on the write's first event."""
     withheld = withheld_figures_event_payload(current)
-    if withheld:
-        # The write stores the row without figures its stored form still held; the first
-        # event of the write keeps what they were.
-        event_type, object_type, object_id, payload = specs[0]
-        specs[0] = (event_type, object_type, object_id, {**payload, **withheld})
-    return tuple(specs)
+    if not withheld:
+        return specs
+    event_type, object_type, object_id, payload = specs[0]
+    return ((event_type, object_type, object_id, {**payload, **withheld}), *specs[1:])
 
 
 def _core_edit_changed(current: Transaction, replacement: Transaction) -> bool:

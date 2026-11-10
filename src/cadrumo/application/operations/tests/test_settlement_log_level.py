@@ -15,7 +15,7 @@ from ..settlement_snapshot import log_settlement, settlement_log_level
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+_NOW = datetime(1980, 1, 1, 12, 0, tzinfo=UTC)
 _LOGGER_NAME = "cadrumo.application.operations.settlement_snapshot"
 
 

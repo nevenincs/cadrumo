@@ -20,6 +20,7 @@ from ....core.errors.error_codes import get_registered_error_code, resolve_error
 from ....core.external_constants import OutputLanguage
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.vehicle_use import IvaVehicleUse
 from ..classification_effects import fields_refused_by_classification
 from ..classification_origin import ClassificationOrigin
@@ -32,14 +33,15 @@ from ..models import (
     require_no_figures_without_business,
     validate_authenticated_stored_transaction_json,
     validate_stored_transaction_json,
-    withhold_figures_without_business,
 )
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..service import set_classification
+from ..withheld_figures import withhold_figures_without_business
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 _PERSONAL = BusinessClassification.PERSONAL
+_BOOKED = date(filing_year_envelope().horizon, 4, 10)
 
 #: The operator's rule, stated independently of the code that enforces it: a
 #: personal row carries no spending category, no IVA or IRPF figure, no Modelo
@@ -66,7 +68,7 @@ def _row(classification: BusinessClassification, **fields: object) -> Transactio
         {
             "raw": RawTransaction(
                 provider_transaction_id="synthetic-personal-row",
-                booked_date=date(2026, 4, 10),
+                booked_date=_BOOKED,
                 amount=Decimal("121.00"),
                 currency="EUR",
                 description="synthetic row",
@@ -75,7 +77,7 @@ def _row(classification: BusinessClassification, **fields: object) -> Transactio
                     source_sha256="d" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+                    ingested_at=datetime(_BOOKED.year, 4, 14, 9, 30, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={"source": "synthetic"},

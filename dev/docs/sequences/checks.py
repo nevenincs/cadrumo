@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.tests.golden_comparison import canonicalise
-from dev.packaging.command_execution import run_command
+from dev.packaging.command_execution import CommandResult, run_command
 from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
 
@@ -491,14 +491,17 @@ def _refresh_unit_in_child(unit: RefreshUnit, command: list[str]) -> _UnitRefres
     lines = result.stdout.splitlines()
     written = tuple(Path(line.removeprefix(REFRESHED_PREFIX)) for line in lines if line.startswith(REFRESHED_PREFIX))
     advisories = tuple(line.removeprefix(ADVISORY_PREFIX) for line in lines if line.startswith(ADVISORY_PREFIX))
-    problems: tuple[str, ...] = ()
-    if result.returncode != 0:
-        report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
-        reported = _problem_entries(result.stderr) if result.returncode == 1 else ()
-        problems = reported or (
-            f"page {unit.label}: refresh child failed (exit {result.returncode}):\n{report or '<no output>'}",
-        )
+    problems = _refresh_child_problems(unit, result) if result.returncode != 0 else ()
     return _UnitRefreshReport(written, advisories, problems, time.monotonic() - started)
+
+
+def _refresh_child_problems(unit: RefreshUnit, result: CommandResult) -> tuple[str, ...]:
+    """The problems a failed refresh child reported, else one entry carrying its whole output."""
+    report = "\n".join(part.strip() for part in (result.stdout, result.stderr) if part.strip())
+    reported = _problem_entries(result.stderr) if result.returncode == 1 else ()
+    return reported or (
+        f"page {unit.label}: refresh child failed (exit {result.returncode}):\n{report or '<no output>'}",
+    )
 
 
 def refresh_pages(
@@ -538,12 +541,7 @@ def refresh_pages(
     if jobs <= 1:
         return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
 
-    discovered: list[DiscoveredSequence] = []
-    all_problems: list[str] = []
-    for page in requested:
-        found, problems = discover_sequences(docs_root=docs_root, page=page)
-        discovered.extend(found)
-        all_problems.extend(problems)
+    discovered, all_problems = _discover_requested_pages(requested, docs_root=docs_root)
     units = refresh_units(discovered, jobs=jobs)
     if len(units) <= 1:
         return _refresh_pages_serially(requested, docs_root=docs_root, goldens_root=goldens_root)
@@ -552,6 +550,40 @@ def refresh_pages(
     advisories: list[str] = []
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
+    reports = _refresh_units_in_children(
+        units, jobs=jobs, docs_root=docs_root, goldens_root=goldens_root, progress=progress
+    )
+
+    written: list[Path] = []
+    for index in range(len(units)):
+        written.extend(reports[index].written)
+        advisories.extend(reports[index].advisories)
+        all_problems.extend(reports[index].problems)
+    return tuple(written), tuple(all_problems), tuple(dict.fromkeys(advisories))
+
+
+def _discover_requested_pages(
+    requested: Sequence[str | None], *, docs_root: Path | None
+) -> tuple[list[DiscoveredSequence], list[str]]:
+    """Discover every requested page's sequences and discovery problems, in page order."""
+    discovered: list[DiscoveredSequence] = []
+    all_problems: list[str] = []
+    for page in requested:
+        found, problems = discover_sequences(docs_root=docs_root, page=page)
+        discovered.extend(found)
+        all_problems.extend(problems)
+    return discovered, all_problems
+
+
+def _refresh_units_in_children(
+    units: Sequence[RefreshUnit],
+    *,
+    jobs: int,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+    progress: Callable[[str], None] | None,
+) -> dict[int, _UnitRefreshReport]:
+    """Refresh each unit in its own child, ``jobs`` at a time and heaviest first, reporting each as it finishes."""
     schedule = sorted(range(len(units)), key=lambda index: units[index].weight, reverse=True)
     reports: dict[int, _UnitRefreshReport] = {}
     with ThreadPoolExecutor(max_workers=jobs) as pool:
@@ -571,13 +603,7 @@ def refresh_pages(
                 progress(
                     f"{units[index].label}: {outcome} in {report.seconds:.0f}s ({len(reports)}/{len(units)} units)"
                 )
-
-    written: list[Path] = []
-    for index in range(len(units)):
-        written.extend(reports[index].written)
-        advisories.extend(reports[index].advisories)
-        all_problems.extend(reports[index].problems)
-    return tuple(written), tuple(all_problems), tuple(dict.fromkeys(advisories))
+    return reports
 
 
 def _refresh_pages_serially(
