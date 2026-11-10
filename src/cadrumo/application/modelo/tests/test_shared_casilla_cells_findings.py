@@ -14,6 +14,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
@@ -35,7 +36,7 @@ from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 1, 15, 12, 0, 0, tzinfo=UTC)
 _MODELO = "200"
 _MESSAGE = "application.modelo.findings.shared_casilla_cells_unadjudicated"
 _TRIBUTOS_SHEETS = {"DP200007", "DP200022", "DP200031", "DP200038", "DP200047", "DP200053"}

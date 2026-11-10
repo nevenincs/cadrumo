@@ -37,34 +37,37 @@ from cadrumo.domain.transactions.protocols import TransactionCatalogueRepository
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.tests.ledger_source_mesh_support import InMemoryInvoiceCatalogueRepository
 from ...tests.ledger_partition_support import CatalogueTransactionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(revision_serving_period("303", _YEAR, "1T").id)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _SIMPLIFICADO_PROFILE_ID = "30300000-0000-4000-8000-000000000303"
 _GENERAL_PROFILE_ID = "30300000-0000-4000-8000-000000000304"
 
 
 def _build_work_unit(bucket_id: str) -> WorkUnit:
     modelo = ModeloCode("303")
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo,
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2022",
+            revision_id=_REVISION,
         ),
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2022",
-        name="m303-2026-1T",
+        revision_id=_REVISION,
+        name=f"m303-{_YEAR}-1T",
         created_at=_T0,
         updated_at=_T0,
         state=WorkUnitState.BORRADOR,
@@ -75,8 +78,8 @@ def _blocking_transaction() -> Transaction:
     """Return an ACTIVE unclassified transaction in Q1-2026 (NOT_YET_PROCESSED → blocks preflight)."""
     raw = RawTransaction(
         provider_transaction_id="tx-block-001",
-        booked_date=date(2026, 2, 10),
-        value_date=date(2026, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor",
@@ -130,7 +133,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     bucket_id = _SIMPLIFICADO_PROFILE_ID
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
 
     # Must not raise for SIMPLIFICADO even with a blocking transaction.
     raise_if_ledger_preflight_blocks_calculation(
@@ -155,7 +158,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     bucket_id = _GENERAL_PROFILE_ID
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
 
     with pytest.raises(ModeloLedgerPreflightBlockedError) as exc_info:
         raise_if_ledger_preflight_blocks_calculation(
