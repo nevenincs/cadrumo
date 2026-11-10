@@ -26,16 +26,13 @@ files need a newer glibc is refused here, before anything is staged.
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 import re
 import shutil
-import tarfile
-import zipfile
 from collections import deque
 from collections.abc import Callable, Mapping
 from pathlib import Path, PurePosixPath
-from typing import IO, Final
+from typing import Final
 
 import httpx
 from pydantic import BaseModel, Field, PositiveInt, ValidationError
@@ -45,7 +42,8 @@ from dev.env.llamacpp_pins import LicensePin, ServerArchivePin, ServerPins, load
 
 from ..runtime_wheelhouse_contract import target_platform
 from .hashing import digest
-from .package_inventory import checked_member
+from .llama_server_archive import resolve_link, unpack_tar, unpack_zip
+from .llama_server_errors import ArchiveMismatchError, GlibcFloorError, LlamaServerError, UnresolvedImportError
 from .platforms.elf import read_elf_requirements
 from .platforms.macos_macho import inspect_macho
 from .platforms.pe import imports as pe_imports
@@ -63,7 +61,6 @@ _RECEIPT_SCHEMA: Final = 2
 _MAX_REDIRECTS: Final = 3
 _TIMEOUT_S: Final = 120.0
 _REDIRECTS: Final = frozenset({301, 302, 303, 307, 308})
-_LIBRARY_LINK_DEPTH: Final = 8
 #: Backends ggml loads by scanning its own directory rather than by linking them.
 _BACKEND: Final = re.compile(r"(?:lib)?ggml-[a-z0-9_.-]+\.(?:dll|so|dylib)")
 _LICENSE: Final = re.compile(r"LICEN[CS]E(?:[-._].*)?", re.IGNORECASE)
@@ -104,22 +101,6 @@ DRIVER_LIBRARIES: Final[Mapping[str, frozenset[str]]] = {"vulkan-1.dll": frozens
 
 type PinnedDownload = ServerArchivePin | LicensePin
 type Fetch = Callable[[PinnedDownload, tuple[str, ...]], bytes]
-
-
-class LlamaServerError(ValueError):
-    """The pinned llama-server cannot be admitted into the package."""
-
-
-class ArchiveMismatchError(LlamaServerError):
-    """An archive, an acquired tree or a receipt differs from the pin it must match."""
-
-
-class GlibcFloorError(LlamaServerError):
-    """A Linux archive needs a newer glibc than the package supports."""
-
-
-class UnresolvedImportError(LlamaServerError):
-    """A staged Windows image imports a library that is neither the operating system's nor in the program directory."""
 
 
 class LlamaServerReceipt(BaseModel):
@@ -207,85 +188,6 @@ def fetch_pinned(pin: PinnedDownload, hosts: tuple[str, ...]) -> bytes:
         raise LlamaServerError(f"{_named(pin)} could not be fetched: {error}") from error
 
 
-def _flat_name(raw: str, base: PurePosixPath) -> str | None:
-    """Return the file name of an archive member of the program directory, or ``None`` for the directory itself."""
-    name = raw.removeprefix("./").rstrip("/")
-    if name in {"", "."}:
-        return None
-    path = PurePosixPath(name)
-    if path.is_absolute() or "\\" in name or "\x00" in name or any(part in {"", ".", ".."} for part in path.parts):
-        raise ArchiveMismatchError(f"the llama-server archive holds an unsafe member name: {raw!r}")
-    if path == base:
-        return None
-    if path.parent != base:
-        raise ArchiveMismatchError(f"the llama-server archive holds a member outside its program directory: {raw!r}")
-    return checked_member(path.name)
-
-
-def _write(scratch: Path, name: str, source: IO[bytes], mode: int | None) -> None:
-    target = scratch / name
-    with target.open("xb") as output:
-        shutil.copyfileobj(source, output)
-    if mode is not None:
-        target.chmod(mode & 0o777 | 0o400)
-
-
-def _unpack_tar(content: bytes, base: PurePosixPath, scratch: Path) -> dict[str, str]:
-    links: dict[str, str] = {}
-    seen: set[str] = set()
-    with tarfile.open(fileobj=io.BytesIO(content), mode="r:gz") as tar:
-        for member in tar:
-            name = _flat_name(member.name, base)
-            if name is None:
-                if not member.isdir():
-                    raise ArchiveMismatchError(f"the llama-server archive holds a non-directory root: {member.name!r}")
-                continue
-            if name.casefold() in seen:
-                raise ArchiveMismatchError(f"the llama-server archive repeats the member {name!r}")
-            seen.add(name.casefold())
-            if member.isfile():
-                source = tar.extractfile(member)
-                if source is None:
-                    raise ArchiveMismatchError(f"the llama-server archive member is unreadable: {name!r}")
-                _write(scratch, name, source, member.mode)
-            elif member.issym():
-                if "/" in member.linkname or member.linkname in {"", ".", ".."}:
-                    raise ArchiveMismatchError(f"the llama-server archive links {name!r} beyond its directory")
-                links[name] = member.linkname
-            else:
-                raise ArchiveMismatchError(f"the llama-server archive holds a special member: {name!r}")
-    return links
-
-
-def _unpack_zip(content: bytes, base: PurePosixPath, scratch: Path) -> dict[str, str]:
-    seen: set[str] = set()
-    with zipfile.ZipFile(io.BytesIO(content)) as archive:
-        for info in archive.infolist():
-            name = _flat_name(info.orig_filename, base)
-            if name is None:
-                continue
-            if info.is_dir() or (info.external_attr >> 16) & 0o170000 == 0o120000:
-                raise ArchiveMismatchError(f"the llama-server archive holds a directory or link: {name!r}")
-            if name.casefold() in seen:
-                raise ArchiveMismatchError(f"the llama-server archive repeats the member {name!r}")
-            seen.add(name.casefold())
-            with archive.open(info) as source:
-                _write(scratch, name, source, None)
-    return {}
-
-
-def _resolve(name: str, links: Mapping[str, str], scratch: Path) -> str:
-    """Follow library links to the regular file that holds the bytes."""
-    current = name
-    for _ in range(_LIBRARY_LINK_DEPTH):
-        if current not in links:
-            if not (scratch / current).is_file():
-                raise ArchiveMismatchError(f"the llama-server archive link {name!r} names no file")
-            return current
-        current = links[current]
-    raise ArchiveMismatchError(f"the llama-server archive link {name!r} does not end in a file")
-
-
 def _kind(path: Path) -> str:
     with path.open("rb") as stream:
         magic = stream.read(4)
@@ -334,19 +236,28 @@ def _select(scratch: Path, links: Mapping[str, str], executable: str) -> tuple[d
         name = queue.popleft()
         if name in selected:
             continue
-        source = _resolve(name, links, scratch)
+        source = resolve_link(name, links, scratch)
         selected[name] = source
         bundled, system = _needs(scratch / source, name)
         host.update(system)
-        for dependency in bundled:
-            found = by_fold.get(dependency.casefold())
-            if found is not None:
-                queue.append(found)
-            elif kind == "macho":
-                raise ArchiveMismatchError(f"{name} needs {dependency}, which the archive does not hold")
-            else:
-                host.add(dependency)
+        queue.extend(_bundled_dependencies(name, bundled, by_fold, host, strict=kind == "macho"))
     return selected, tuple(sorted(host))
+
+
+def _bundled_dependencies(
+    name: str, bundled: list[str], by_fold: Mapping[str, str], host: set[str], *, strict: bool
+) -> list[str]:
+    """Return the archive files ``name`` needs; one the archive lacks is the host's, or a refusal if ``strict``."""
+    found: list[str] = []
+    for dependency in bundled:
+        present = by_fold.get(dependency.casefold())
+        if present is not None:
+            found.append(present)
+        elif strict:
+            raise ArchiveMismatchError(f"{name} needs {dependency}, which the archive does not hold")
+        else:
+            host.add(dependency)
+    return found
 
 
 def _require_glibc_floor(scratch: Path, selected: Mapping[str, str], pin: ServerArchivePin) -> None:
@@ -436,9 +347,9 @@ def acquire_llama_server(
     scratch = destination / _EXTRACTION_DIRECTORY
     scratch.mkdir()
     base = PurePosixPath(pin.executable).parent
-    links = _unpack_tar(content, base, scratch) if pin.format == "tar.gz" else _unpack_zip(content, base, scratch)
+    links = unpack_tar(content, base, scratch) if pin.format == "tar.gz" else unpack_zip(content, base, scratch)
     for link in links:
-        _resolve(link, links, scratch)
+        resolve_link(link, links, scratch)
     executable = PurePosixPath(pin.executable).name
     selected, host = _select(scratch, links, executable)
     _require_glibc_floor(scratch, selected, pin)
@@ -501,6 +412,28 @@ def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None
         raise ArchiveMismatchError(
             f"the llama-server receipt is missing or unreadable at {path}; build the llama_server step"
         ) from error
+    _require_receipt_pin(receipt, pins, pin, target)
+    for directory, expected in ((PROGRAM_DIRECTORY, receipt.files), (LICENSE_DIRECTORY, receipt.licenses)):
+        _require_tree(source, directory, expected)
+    if receipt.licenses.get(LICENSE_NAME) != pins.license.sha256:
+        raise ArchiveMismatchError(
+            f"the acquired llama-server notices do not hold the pinned llama.cpp {LICENSE_NAME}; "
+            "build the llama_server step again"
+        )
+    return receipt
+
+
+def _require_tree(source: Path, directory: str, expected: Mapping[str, str]) -> None:
+    root = source / directory
+    if root.is_symlink() or any(item.is_symlink() for item in root.rglob("*")):
+        raise ArchiveMismatchError(f"the acquired llama-server holds a link under {directory}")
+    if _tree_digests(root) != expected or len(list(root.rglob("*"))) != len(expected):
+        raise ArchiveMismatchError(
+            f"the acquired llama-server {directory} differ from the receipt; build the llama_server step again"
+        )
+
+
+def _require_receipt_pin(receipt: LlamaServerReceipt, pins: ServerPins, pin: ServerArchivePin, target: str) -> None:
     pinned = (
         target,
         pins.tag,
@@ -525,20 +458,15 @@ def verify_acquired(source: Path, target: str, *, pins: ServerPins | None = None
         )
     if receipt.executable not in receipt.files:
         raise ArchiveMismatchError("the llama-server receipt names no program file for its executable")
-    for directory, expected in ((PROGRAM_DIRECTORY, receipt.files), (LICENSE_DIRECTORY, receipt.licenses)):
-        root = source / directory
-        if root.is_symlink() or any(item.is_symlink() for item in root.rglob("*")):
-            raise ArchiveMismatchError(f"the acquired llama-server holds a link under {directory}")
-        if _tree_digests(root) != expected or len(list(root.rglob("*"))) != len(expected):
-            raise ArchiveMismatchError(
-                f"the acquired llama-server {directory} differ from the receipt; build the llama_server step again"
-            )
-    if receipt.licenses.get(LICENSE_NAME) != pins.license.sha256:
-        raise ArchiveMismatchError(
-            f"the acquired llama-server notices do not hold the pinned llama.cpp {LICENSE_NAME}; "
-            "build the llama_server step again"
-        )
-    return receipt
+
+
+def _provided_by_system(image: Path, name: str) -> bool:
+    """Whether the operating system, or the graphics driver for the Vulkan backend alone, provides ``name``."""
+    return (
+        name in SYSTEM_LIBRARIES
+        or name.startswith(SYSTEM_PREFIXES)
+        or image.name.casefold() in DRIVER_LIBRARIES.get(name, frozenset())
+    )
 
 
 def require_resolved_imports(program: Path) -> tuple[str, ...]:
@@ -556,14 +484,8 @@ def require_resolved_imports(program: Path) -> tuple[str, ...]:
     for path in sorted(program.iterdir()):
         if not path.is_file() or _kind(path) != "pe":
             continue
-        for name in sorted(pe_imports(path)):
-            if name in present:
-                continue
-            if (
-                name in SYSTEM_LIBRARIES
-                or name.startswith(SYSTEM_PREFIXES)
-                or path.name.casefold() in DRIVER_LIBRARIES.get(name, frozenset())
-            ):
+        for name in sorted(pe_imports(path) - present):
+            if _provided_by_system(path, name):
                 system.add(name)
             else:
                 unresolved.append(f"{path.name} imports {name}")
