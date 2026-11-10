@@ -6,6 +6,18 @@ import {
 import { SERVED_ENGINE } from "../support/servedLocalLanes";
 import { label } from "../support/strings";
 
+/** The words a connection is shown with, by what it signs in with as served:
+ * a lane that takes no key is on this computer, whatever its transport. */
+const connectionKey = (declared: {
+  transport: string;
+  auth_kind: string;
+}): string =>
+  declared.auth_kind === "none"
+    ? "desktop.providers.connection_local"
+    : declared.transport === "api"
+      ? "desktop.providers.connection_api"
+      : "desktop.providers.connection_app";
+
 // The agent's settings: the signed-in profile's model providers, one card
 // for each lane cadrumo-agent has, named as the catalog names it and drawn
 // with its provider's own mark, each lane set up on its own. They are opened
@@ -205,11 +217,7 @@ test("providers start collapsed and keep each connection separately accessible",
     const card = lane(target, declared.id);
     await expect(card).toHaveCount(1);
     await expect(card.getByRole("heading", { level: 5 })).toHaveText(
-      label(
-        declared.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ),
+      label(connectionKey(declared)),
     );
     const mark = providerGroup(target, declared.provider).locator(
       "[data-slot=provider-mark]",
@@ -313,11 +321,7 @@ test("a connection is drawn only when ready or waiting on the person, and is qui
     expect(status, declared.id).toBeTruthy();
     await expect(statusMark(chip)).toHaveAttribute("data-status", status ?? "");
     await expect(chip).toHaveText(
-      label(
-        declared.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ) + (await statusMark(chip).textContent()),
+      label(connectionKey(declared)) + (await statusMark(chip).textContent()),
     );
     await expect(chip.locator("[data-icon]")).toHaveCount(
       GLYPH[status as Status] ? 1 : 0,
@@ -366,9 +370,19 @@ test("settings search finds providers and agent keys", async ({
   for (const declared of FIXTURE_SETTINGS_LANES) {
     const connection = lane(target, declared.id);
     await expect(connection).toHaveCount(1);
-    if (declared.transport === "api") await expect(connection).toBeVisible();
+    // The search matches the words a connection is shown with.
+    if (connectionKey(declared) === "desktop.providers.connection_api")
+      await expect(connection).toBeVisible();
     else await expect(connection).toBeHidden();
   }
+  // A lane that takes no key is found by the words it is shown with.
+  const keyless = FIXTURE_SETTINGS_LANES.filter(
+    (declared) => declared.auth_kind === "none",
+  );
+  expect(keyless.length).toBeGreaterThan(0);
+  await search.fill(label("desktop.providers.connection_local"));
+  for (const declared of keyless)
+    await expect(lane(target, declared.id)).toBeVisible();
 
   await search.fill(keyName);
   await expect(access).toBeVisible();
