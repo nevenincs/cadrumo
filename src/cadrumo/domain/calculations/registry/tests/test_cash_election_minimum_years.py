@@ -21,6 +21,7 @@ def _first_declared_ejercicio(operation: PinnedAuthorityOperation) -> int:
     return min(
         variant.valid_from.year
         for variant in operation.governed_fact("rirpf-art-7-cash-election-minimum-years").variants
+        if variant.valid_from is not None
     )
 
 

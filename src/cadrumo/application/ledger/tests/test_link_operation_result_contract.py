@@ -105,7 +105,7 @@ def test_a_linked_result_that_departs_from_its_request_is_refused(
     linked: LedgerLinkOperationResult, change: str
 ) -> None:
     projection = _projection(linked)
-    changes: dict[str, object] = {
+    changes: dict[str, dict[str, object]] = {
         "reason": {"reason": "missing_invoice"},
         "no_projection": {"projection": None},
         "other_profile": {"profile_id": uuid4()},

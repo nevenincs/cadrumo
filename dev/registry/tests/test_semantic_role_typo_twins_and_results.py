@@ -257,7 +257,7 @@ class TestTypoTwinWarning:
                     )
 
         for item in reviewed_singletons:
-            found = carriers.get((item.modelo_id, item.casilla_id, item.role))
+            found = carriers.get((item.modelo_id, item.casilla_id, item.role), [])
             assert found, f"no edition of modelo {item.modelo_id} declares casilla {item.casilla_id} as {item.role}"
             for revision_id, casilla in found:
                 assert casilla.semantic_role == item.role, (item, revision_id)
