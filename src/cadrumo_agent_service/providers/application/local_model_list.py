@@ -202,6 +202,13 @@ def _installed(entry: ProviderCatalogEntry, model: str, live_models: LiveCatalog
     return None if live is None else live.installed
 
 
+def _reads_for(held: LiveCatalogModel | None, capability: ModelCapability, *, reads_images: bool) -> bool:
+    """Whether a model the local server reports can read for *capability*: installed, and seeing images for vision."""
+    if held is None or held.installed is not True:
+        return False
+    return capability is not ModelCapability.VISION or (held.vision is True and reads_images)
+
+
 def _first_installed(
     entry: ProviderCatalogEntry,
     added: tuple[ListedModel, ...],
@@ -215,9 +222,7 @@ def _first_installed(
     eligible = [
         model
         for model in listed_models(entry, (held.model for held in added if held.lane == entry.id))
-        if (held := live.get(model)) is not None
-        and held.installed is True
-        and (capability is not ModelCapability.VISION or (held.vision is True and reads_images))
+        if _reads_for(live.get(model), capability, reads_images=reads_images)
     ]
     preferred = entry.recommended.get(capability.value)
     if preferred in eligible:
