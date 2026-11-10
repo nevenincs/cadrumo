@@ -39,10 +39,13 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     GB_NON_RESIDENT_PROFILE_FACTS,
+    capture_m115_invoice_withholding,
     create_calculable_modelo_work_unit,
     create_m130_work_unit,
     invoke_modelo_scenario_cli,
@@ -612,6 +615,179 @@ def test_work_file_refuses_no_pending_obligation_for_a_filing_window_not_yet_ope
     assert "No pending filing obligation" not in result.output
     assert "No hi ha cap obligació de presentació pendent" in result.output
     assert "NO_PENDING_OBLIGATION" in result.output
+
+    # The gate refused before the filing wrote anything, so nothing changed:
+    # the refused attempt's own run record is not an effect of the filing.
+    refused = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "file",
+            "--modelo", "111", "--year", str(filing_year), "--period", period,
+        ],
+    )  # fmt: skip
+    assert refused.exit_code != 0
+    error = require_error_document(refused.output)["error"]
+    assert error["context"]["abort_code"] == "NO_PENDING_OBLIGATION"
+    assert error["context"]["effect"] == "none"
+
+
+def _filed_more_than_twelve_months_late_year() -> int:
+    """Return the newest supported year whose first-quarter plazo closed over twelve months before today.
+
+    A first-quarter window closes in the spring of its own filing year, so two
+    calendar years back is past the Art. 27.2 LGT twelve-month boundary on any
+    run date. The year comes from the registry envelope, never a literal.
+    """
+    support = PublishedGovernedFactSource().supported_filing_years()
+    return max(year for year in support.years if year <= today_madrid().year - 2)
+
+
+def _verify_rent_withholding_quarter(filing_year: int) -> str:
+    """Create, calculate and verify one Modelo 115 first quarter; return the plazo close the calculation served."""
+    create_modelo_work_unit_via_cli(modelo="115", filing_year=filing_year, period="1T", revision="2019-y-siguientes")
+    capture_m115_invoice_withholding(filing_year=filing_year)
+    target = ["--modelo", "115", "--year", str(filing_year), "--period", "1T"]
+    calculated = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "calculate", *target])
+    assert calculated.exit_code == 0, calculated.output
+    verified = invoke_modelo_scenario_cli(["--format", "json", "app", "modelo", "work", "verify", *target])
+    assert verified.exit_code == 0, verified.output
+    assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is True
+    served_close = unwrap_schema_envelope(calculated.output)["deadline"]["closes_on"]
+    assert isinstance(served_close, str), calculated.output
+    return served_close
+
+
+@pytest.mark.parametrize(
+    "rent_answer",
+    (
+        pytest.param({}, id="unanswered"),
+        pytest.param({"withholding.pays_rent_with_retencion": "true"}, id="declared-yes"),
+    ),
+)
+def test_work_file_records_a_late_unfiled_period_with_its_served_recargo(
+    seed_profile: ProfileSeeder, rent_answer: dict[str, str]
+) -> None:
+    """A period past its plazo is still owed, so `work file` records it locally as extemporánea.
+
+    Ley 58/2003 art. 27.1 makes the recargo an accessory charge on a return
+    presented "fuera de plazo": the late return remains owed. The filing serves
+    its lateness on the day it is recorded -- the effective plazo close, the
+    days overdue, and the Art. 27.2 rate preview -- and the rate is the one the
+    provision prints for a presentation more than twelve months late. An
+    unanswered rent-withholding question rules nothing out: the work unit was
+    created and verified on the taxpayer's own figures.
+    """
+    filing_year = _filed_more_than_twelve_months_late_year()
+    seed_profile(
+        label="operator",
+        facts=persona_fact_strings(
+            {"withholding.pays_professionals_with_retencion": "true", **rent_answer},
+            without=() if rent_answer else ("withholding.pays_rent_with_retencion",),
+        ),
+    )
+
+    calculated_close = _verify_rent_withholding_quarter(filing_year)
+    filed = invoke_modelo_scenario_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "file",
+            "--modelo",
+            "115",
+            "--year",
+            str(filing_year),
+            "--period",
+            "1T",
+        ]
+    )
+
+    assert filed.exit_code == 0, filed.output
+    payload = unwrap_schema_envelope(filed.output)
+    assert payload["filing_timeliness"] == "extemporanea"
+    assert payload["declaration_kind"] == "original"
+    assert payload["aeat_accepted"] is False
+    deadline = payload["deadline"]
+    assert deadline["closes_on"] == calculated_close
+    closes_on = date.fromisoformat(deadline["closes_on"])
+    assert deadline["days_overdue"] == (today_madrid() - closes_on).days
+    assert deadline["days_remaining"] is None
+    preview = deadline["conditional_recargo_preview"]
+    statutory_pct = legal_text_match("ley-58-2003:art-27.2", r"el recargo sera del (\d+) por ciento").group(1)
+    assert Decimal(preview["surcharge_pct"]) == Decimal(statutory_pct)
+    assert preview["interest_applies"] is True
+    assert preview["legal_ref"] == "ley-58-2003:art-27.2"
+    assert preview["assessment_status"] == "unassessed"
+    notice = next(
+        item for item in unwrap_envelope_notices(filed.output) if item["code"] == "modelo.work.file.extemporanea"
+    )
+    assert notice["context"]["days_overdue"] == str(deadline["days_overdue"])
+    assert notice["context"]["conditional_recargo_preview_pct"] == preview["surcharge_pct"]
+
+    status = invoke_modelo_scenario_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "status",
+            "--modelo",
+            "115",
+            "--year",
+            str(filing_year),
+            "--period",
+            "1T",
+        ]
+    )
+    assert status.exit_code == 0, status.output
+    assert unwrap_schema_envelope(status.output)["state"] == "presentado"
+
+    # The period is now filed, so filing it again is refused before any write.
+    refiled = invoke_modelo_scenario_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "file",
+            "--modelo",
+            "115",
+            "--year",
+            str(filing_year),
+            "--period",
+            "1T",
+        ]
+    )
+    assert refiled.exit_code != 0
+    refusal = require_error_document(refiled.output)["error"]
+    assert refusal["code"] == "REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE"
+    assert refusal["context"]["state"] == "presentado"
+    assert refusal["context"]["effect"] == "none"
+
+
+def test_work_file_refuses_a_modelo_the_profile_rules_out(seed_profile: ProfileSeeder) -> None:
+    """A declared "no" to paying rent with retención leaves no Modelo 115 obligation, so no work to file exists."""
+    filing_year = _filed_more_than_twelve_months_late_year()
+    seed_profile(label="operator", facts=operator_profile_facts())
+    assert operator_profile_facts()["withholding.pays_rent_with_retencion"] == "false"
+
+    created = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "115", "--year", str(filing_year), "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code != 0
+    assert "Traceback" not in created.output
+    error = require_error_document(created.output)["error"]
+    assert error["context"]["refusal_code"] == "REFUSED_MODELO_WORK_CREATE_APPLICABILITY", error
+    assert error["context"]["effect"] == "none"
 
 
 def test_work_file_help_exposes_explicit_result_elections() -> None:

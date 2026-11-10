@@ -23,6 +23,7 @@ from ...application.modelo.work_filing_contracts import (
     ModeloWorkFilePublicResultV2,
     ModeloWorkFileRequest,
 )
+from ...application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...core.external_constants import OutputLanguage
 from ...core.filing_timeliness import FilingTimeliness
@@ -47,6 +48,8 @@ from .modelo_rendering import (
     verification_report_lines,
     verification_report_notices,
     verification_report_payload,
+    work_deadline_output_from_posture,
+    work_plazo_lines_from_posture,
 )
 from .modelo_results import (
     CrossPeriodCleanStatePayload,
@@ -180,6 +183,31 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
         for evidence in result.clean_state.dependencies
     )
     return lines
+
+
+def _late_filing_notice_facts(
+    posture: ModeloWorkDeadlinePosture | None, *, fallback_legal_ref: str | None
+) -> dict[str, str]:
+    """Carry an extemporánea filing's served plazo and unassessed rate preview as notice facts."""
+    if posture is None or posture.days_overdue is None:
+        return {}
+    facts = {
+        "closes_on": posture.closes_on.isoformat(),
+        "nominal_closes_on": posture.nominal_closes_on.isoformat(),
+        "days_overdue": str(posture.days_overdue),
+    }
+    preview = posture.conditional_recargo_preview
+    if preview is None:
+        if fallback_legal_ref is not None:
+            facts["legal_refs"] = fallback_legal_ref
+        return facts
+    return facts | {
+        "legal_refs": preview.legal_ref,
+        "conditional_recargo_preview_band": preview.band_id,
+        "conditional_recargo_preview_pct": str(preview.surcharge_pct),
+        "conditional_recargo_preview_interest_applies": str(preview.interest_applies),
+        "conditional_recargo_preview_reference_on": preview.rate_reference_on.isoformat(),
+    }
 
 
 __all__ = ["work_dependencies", "work_file", "work_verify"]
@@ -367,11 +395,20 @@ def work_file(
         raise RefusalError(RefusalCode.INVALID_FRAME)
     record = projection.record.to_record()
     timeliness = projection.filing_timeliness
+    posture = projection.deadline.to_posture() if projection.deadline is not None else None
+    deadline_payload, _ = work_deadline_output_from_posture(
+        posture, fallback_legal_ref=projection.fallback_recargo_legal_ref
+    )
     result = WorkFileResult.model_validate(
-        filing_record_payload(record).model_dump(mode="python") | {"filing_timeliness": timeliness}
+        filing_record_payload(record).model_dump(mode="python")
+        | {
+            "filing_timeliness": timeliness,
+            "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
+        }
     )
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
     lines.append(f"filing_timeliness\t{timeliness.value}")
+    lines.extend(work_plazo_lines_from_posture(posture))
     lines.append(f"filing_disambiguation\t{tr('cli.app.modelo.work.file_internal_disambiguation')}")
     notices: list[Notice] = []
     if timeliness is FilingTimeliness.EXTEMPORANEA:
@@ -385,6 +422,7 @@ def work_file(
                     "filing_record_id": record.filing_record_id,
                     "filing_timeliness": timeliness.value,
                     "late_filing_assessment_status": "unassessed",
+                    **_late_filing_notice_facts(posture, fallback_legal_ref=projection.fallback_recargo_legal_ref),
                 },
             )
         )

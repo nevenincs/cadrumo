@@ -368,6 +368,9 @@ def build_filing_action_ports(
 
     ``mutation_writer`` admits each actual secure-object commit, so every
     repository in the bundle shares the one fenced secure-object repository.
+    The workflow run history is the exception: it journals each gate attempt,
+    a refused one included, as the attempt's own record rather than an effect
+    of the filing, so a gate refusal settles with no effect.
     """
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
@@ -389,6 +392,7 @@ def build_filing_action_ports(
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    run_history_objects = objects
     if mutation_writer is not None:
         objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
@@ -420,7 +424,7 @@ def build_filing_action_ports(
         iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         iva_compensation_decision_repository=IvaWalletDecisionRepository(objects=objects, operation=operation),
-        workflow_run_repository=WorkflowRunRepository(objects=objects),
+        workflow_run_repository=WorkflowRunRepository(objects=run_history_objects),
         draft_review_ports=build_draft_review_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects
         ),
@@ -589,7 +593,9 @@ def build_verification_repository_bundle(
     """Bind one profile's repositories and rectificativa identity to the held authority.
 
     ``mutation_writer`` admits each actual secure-object commit; it fences a
-    repository this call opens, so it cannot be combined with ``objects``.
+    repository this call opens, so it cannot be combined with ``objects``. The
+    workflow run history stays outside the fence: it journals each gate
+    attempt, a refused one included, rather than an effect of the verification.
 
     Parameter types: ``objects``
     (:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`).
@@ -621,8 +627,11 @@ def build_verification_repository_bundle(
         raise InternalInvariantError("a verification writer fences only the repository it opens")
     if objects is None:
         objects = secure_object_repository_for_bucket(normalized_bucket_id)
+        run_history_objects = objects
         if mutation_writer is not None:
             objects = objects.with_mutation_writer(mutation_writer)
+    else:
+        run_history_objects = objects
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,
@@ -640,7 +649,7 @@ def build_verification_repository_bundle(
         iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects, operation=operation),
         participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
-        workflow_run=WorkflowRunRepository(objects=objects),
+        workflow_run=WorkflowRunRepository(objects=run_history_objects),
         justificante=JustificanteRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(
             bucket_id=normalized_bucket_id, operation=operation, objects=objects

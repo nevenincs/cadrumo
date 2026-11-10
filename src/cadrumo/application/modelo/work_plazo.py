@@ -35,6 +35,7 @@ from pydantic import BaseModel
 
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -221,15 +222,39 @@ def modelo_work_deadline_posture(
         :func:`cadrumo.entrypoints.cli.modelo_rendering.work_unit_deadline_output_from_posture`:
             Converts the summary into operator-facing payloads and notices.
     """
+    return modelo_deadline_posture(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        reference_on=reference_on,
+        operation=operation,
+    )
+
+
+def modelo_deadline_posture(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    reference_on: date | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> ModeloWorkDeadlinePosture | None:
+    """Return the voluntary-deadline posture of one filing coordinate, if known.
+
+    The coordinate form of :func:`modelo_work_deadline_posture`, for a caller
+    holding a filed record rather than its work unit. A filing reads it on its
+    own presentation date, so the posture it serves agrees with the timeliness
+    the record kept.
+    """
     from ...domain.deadlines.errors import DeadlineValidationError
     from ...domain.deadlines.recargo import build_recovery_for_overdue
 
     resolved_reference_on = reference_on or today_madrid()
     with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as pinned:
         deadline = resolve_effective_filing_deadline(
-            str(work_unit.modelo),
-            work_unit.filing_year,
-            work_unit.period,
+            modelo,
+            filing_year,
+            period,
             operation=pinned,
         )
         if deadline is None:
@@ -252,17 +277,17 @@ def modelo_work_deadline_posture(
             recovery = build_recovery_for_overdue(
                 closes_on=deadline.closes_on,
                 reference_today=resolved_reference_on,
-                modelo=str(work_unit.modelo),
-                period=work_unit.period,
+                modelo=modelo,
+                period=period,
                 operation=pinned,
             )
         except DeadlineValidationError:
             _LOG.debug(
                 "modelo work deadline preview resolution failed; returning overdue posture without preview "
                 "modelo=%s filing_year=%s period=%s days_overdue=%s",
-                work_unit.modelo,
-                work_unit.filing_year,
-                work_unit.period.registry_token,
+                modelo,
+                filing_year,
+                period.registry_token,
                 days_overdue,
                 exc_info=True,
             )
@@ -376,6 +401,7 @@ __all__ = [
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkDeadlinePosture",
     "calculated_m210_plazo_resolution",
+    "modelo_deadline_posture",
     "modelo_work_deadline_posture",
     "validate_modelo_work_deadline_posture",
 ]
