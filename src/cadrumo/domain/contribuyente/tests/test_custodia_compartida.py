@@ -63,7 +63,7 @@ def _custodia_count_cases() -> tuple[tuple[str, tuple[DescendantInfo, ...], int]
         ("no-descendants", (), 0),
         ("none-flagged", (DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False),), 0),
         ("one-eligible", (DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=True),), 1),
-        ("ineligible", (DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),), 0),
+        ("ineligible", (DescendantInfo(birth_date=date(FILING_YEAR - 26, 1, 1), custodia_compartida=True),), 0),
     )
 
 
@@ -79,7 +79,11 @@ def _prorrata_factor_cases() -> tuple[tuple[str, DescendantInfo, Decimal], ...]:
             DescendantInfo(birth_date=date(FILING_YEAR - 4, 3, 15), custodia_compartida=False),
             Decimal("1"),
         ),
-        ("ineligible-custodia", DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True), Decimal("1")),
+        (
+            "ineligible-custodia",
+            DescendantInfo(birth_date=date(FILING_YEAR - 26, 1, 1), custodia_compartida=True),
+            Decimal("1"),
+        ),
     )
 
 

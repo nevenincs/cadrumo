@@ -7,6 +7,7 @@ in the fact surfaces as a mismatch instead of being asserted back at itself.
 from __future__ import annotations
 
 import re
+from datetime import date
 from xml.etree.ElementTree import Element
 
 import pytest
@@ -16,6 +17,7 @@ from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ...calculations.registry.form_codes import resolve_form_codes
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..renta_codes import (
     RentaDeclaracionType,
@@ -26,6 +28,8 @@ from ..renta_codes import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_BIRTH_DATE = date(filing_year_envelope().horizon - 4, 1, 1).isoformat()
 
 _XS = "{http://www.w3.org/2001/XMLSchema}"
 _M100_FILES = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files")
@@ -101,6 +105,6 @@ def test_a_descendant_grade_is_held_to_the_governed_catalogue() -> None:
     assert accepted, "the governed catalogue declares no grade"
     grade = max(accepted)
 
-    assert DescendantInfo(birth_date="2020-01-01", discapacidad_grado=grade).discapacidad_grado == grade
+    assert DescendantInfo(birth_date=_BIRTH_DATE, discapacidad_grado=grade).discapacidad_grado == grade
     with pytest.raises(ValueError, match="grade the governed catalogue accepts"):
-        DescendantInfo(birth_date="2020-01-01", discapacidad_grado=grade + 1)
+        DescendantInfo(birth_date=_BIRTH_DATE, discapacidad_grado=grade + 1)

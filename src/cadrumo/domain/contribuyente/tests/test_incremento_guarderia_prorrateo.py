@@ -24,6 +24,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -33,7 +34,8 @@ from .registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2024
+
+_YEAR = filing_year_envelope().horizon
 _THRESHOLDS = registry_thresholds(_YEAR)
 
 #: "puede alcanzar hasta 1.000 euros anuales". Supplied by the caller in
@@ -104,13 +106,13 @@ class TestManualWorkedOracles:
         returned 333,33 — a 2x over-grant, which under-declares tax. A test that
         reaches the right number through the wrong mechanism is why that survived.
         """
-        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 3, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
 
         assert _total(child) == Decimal("166.67")
 
     def test_six_qualifying_months_prorate_to_500(self) -> None:
         """1.000 ÷ 12 × 6 = 500 exactly."""
-        child = _child(date(2022, 3, 1), mensual="1-6:400")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-6:400")
 
         assert _total(child) == Decimal("500.00")
 
@@ -139,7 +141,7 @@ class TestManualWorkedOracles:
         the same shape as the substitution this docstring warns about, one
         field over.
         """
-        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre="1-8", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 3, 9, 15), mensual="1-6:500", meses_madre="1-8", segundo_ciclo_mes=9)
 
         assert child.age_at_year_end(_YEAR) == 3
         assert _total(child) == Decimal("500.00")
@@ -153,7 +155,7 @@ class TestManualWorkedOracles:
         Asserting the delta pins what was removed, so a regression to a
         flat cap fails with the figure that motivated the fix.
         """
-        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 3, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
 
         assert _total(child) == Decimal("166.67")
         assert Decimal("1000") - _total(child) == Decimal("833.33")
@@ -173,8 +175,8 @@ class TestTheCapIsPerChildNotPerHousehold:
         ``min(5.100, 1.166,67) = 1.166,67`` and grant child B's unused 66,67 to
         child A, who has no entitlement to it.
         """
-        heavy = _child(date(2022, 3, 1), mensual="1-12:417")
-        light = _child(date(2022, 4, 1), mensual="5:50;6:50")
+        heavy = _child(date(_YEAR - 2, 3, 1), mensual="1-12:417")
+        light = _child(date(_YEAR - 2, 4, 1), mensual="5:50;6:50")
 
         assert _total(heavy, light) == Decimal("1100.00")
 
@@ -185,7 +187,7 @@ class TestTheCapIsPerChildNotPerHousehold:
         A cap applied without the spend bound would grant 500 against 120 of
         evidenced expense.
         """
-        child = _child(date(2022, 3, 1), mensual="1-6:20")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-6:20")
 
         assert _total(child) == Decimal("120")
 
@@ -218,7 +220,7 @@ class TestTheThreeGeometries:
         against a "fix" that chases the rare geometries and moves this one. Two
         of the three rows below discriminate; this one anchors.
         """
-        child = _child(date(2022, 3, 1), mensual="1-6:500", meses_madre="1-12")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-6:500", meses_madre="1-12")
 
         assert _total(child) == Decimal("500.00")
 
@@ -229,7 +231,7 @@ class TestTheThreeGeometries:
         SEVEN and returns 583,33 — measured, not inferred. The answer is neither
         size, which is the point: only the months can say which three coincide.
         """
-        child = _child(date(2022, 3, 1), mensual="1-8:500", meses_madre="6-12")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-8:500", meses_madre="6-12")
 
         assert _total(child) == Decimal("250.00")
 
@@ -239,7 +241,7 @@ class TestTheThreeGeometries:
         Both sides declare six months, so every count-based reading yields six
         and 500,00. The correct answer is zero, and only the months can say so.
         """
-        child = _child(date(2022, 3, 1), mensual="7-12:500", meses_madre="1-6")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="7-12:500", meses_madre="1-6")
 
         assert _total(child) == Decimal("0")
 
@@ -253,7 +255,7 @@ class TestSimultaneityBound:
         The requirements must hold SIMULTANEOUSLY, so three months is the basis:
         1.000 ÷ 12 × 3 = 250.
         """
-        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre="1-3")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-12:500", meses_madre="1-3")
 
         assert _total(child) == Decimal("250.00")
 
@@ -265,7 +267,7 @@ class TestSimultaneityBound:
         mother's own requirement. A mother who never met it has no simultaneous
         months whatever the child's age.
         """
-        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre="")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-12:500", meses_madre="")
 
         assert _total(child) == Decimal("0")
 
@@ -292,7 +294,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         the Art. 81.1 deducción has zero months. Five declared nursery months
         from February still prorate: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 1, 20), mensual="2-6:500", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 2, 1, 20), mensual="2-6:500", segundo_ciclo_mes=9)
 
         assert (
             child.maternidad_contributing_meses(
@@ -311,7 +313,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         mother did not work; the increment prorates by her nine worked months
         bounded by the five declared nursery months: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre="4-12", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 2, 3, 10), mensual="4-8:500", meses_madre="4-12", segundo_ciclo_mes=9)
 
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
@@ -336,7 +338,7 @@ class TestZeroCases:
 
     def test_a_child_with_no_declared_spend_contributes_nothing(self) -> None:
         """Qualifying months alone grant nothing; the increment is of SPEND."""
-        assert _total(_child(date(2022, 3, 1), annual=0)) == Decimal("0")
+        assert _total(_child(date(_YEAR - 2, 3, 1), annual=0)) == Decimal("0")
 
 
 class TestSegundoCicloCeiling:
@@ -359,7 +361,7 @@ class TestSegundoCicloCeiling:
         reduce the window — the increment was granting 1.000,00 where 666,67 is due,
         an over-grant that under-declares tax.
         """
-        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
+        child = _child(date(_YEAR - 2, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
 
         assert _total(child, year=_YEAR + 1) == Decimal("666.67")
 
@@ -371,14 +373,14 @@ class TestSegundoCicloCeiling:
         the operator can see the advisory and supply the month their centre already
         reports on the modelo 233.
         """
-        child = _child(date(2022, 1, 20), mensual="1-12:500")
+        child = _child(date(_YEAR - 2, 1, 20), mensual="1-12:500")
 
         assert _total(child, year=_YEAR + 1) == Decimal("0")
         assert child.guarderia_needs_segundo_ciclo_month(_YEAR + 1, context=_context(_YEAR + 1)) is True
 
     def test_a_declared_month_is_not_needed_before_the_turning_three_period(self) -> None:
         """No ceiling, no advisory: the question is only put where it can change an answer."""
-        child = _child(date(2022, 3, 1), mensual="1-12:500")
+        child = _child(date(_YEAR - 2, 3, 1), mensual="1-12:500")
 
         assert child.guarderia_needs_segundo_ciclo_month(_YEAR, context=_context(_YEAR)) is False
 

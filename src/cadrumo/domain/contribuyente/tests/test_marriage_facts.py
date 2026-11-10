@@ -17,6 +17,7 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..marriage_facts import (
     marriage_full_year,
     marriage_month_start,
@@ -24,29 +25,30 @@ from ..marriage_facts import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-FILING_YEAR = 2024
+
+FILING_YEAR = filing_year_envelope().horizon
 _FULL_YEAR_CASES = (
-    ("prior-year", date(2023, 9, 15), True),
-    ("same-year", date(2024, 3, 22), False),
-    ("same-year-first-day", date(2024, 1, 1), False),
-    ("future-year", date(2025, 1, 1), False),
+    ("prior-year", date(FILING_YEAR - 1, 9, 15), True),
+    ("same-year", date(FILING_YEAR, 3, 22), False),
+    ("same-year-first-day", date(FILING_YEAR, 1, 1), False),
+    ("future-year", date(FILING_YEAR + 1, 1, 1), False),
 )
 _MONTH_START_CASES = (
-    ("prior-year", date(2023, 9, 15), 1),
-    ("march", date(2024, 3, 22), 3),
-    ("december", date(2024, 12, 1), 12),
-    ("future-year", date(2025, 3, 1), None),
+    ("prior-year", date(FILING_YEAR - 1, 9, 15), 1),
+    ("march", date(FILING_YEAR, 3, 22), 3),
+    ("december", date(FILING_YEAR, 12, 1), 12),
+    ("future-year", date(FILING_YEAR + 1, 3, 1), None),
 )
 _ORACLE_CASES = (
     (
         "sobrevenido-march-2024",
-        date(2024, 3, 22),
+        date(FILING_YEAR, 3, 22),
         False,
         3,
     ),
     (
         "full-year-september-2023",
-        date(2023, 9, 15),
+        date(FILING_YEAR - 1, 9, 15),
         True,
         1,
     ),

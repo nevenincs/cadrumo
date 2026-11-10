@@ -406,7 +406,7 @@ def test_a_stored_entry_date_under_an_excluded_relacion_refuses_on_reload() -> N
     """
     child = DescendantInfo(birth_date=_OLD_BIRTH, relacion=DescendantRelacion.from_registry("acogimiento_temporal"))
     facts = dict(descendant_facts_from_list((child,)))
-    facts["renta_family.descendiente.0.acogimiento_resolucion"] = "2020-01-01"
+    facts["renta_family.descendiente.0.acogimiento_resolucion"] = date(_YEAR - 4, 1, 1).isoformat()
 
     with pytest.raises(ValidationError):
         descendant_list_from_facts(facts)

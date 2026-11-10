@@ -21,6 +21,7 @@ from datetime import date
 import pytest
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -31,6 +32,8 @@ from ..family_types import GuarderiaMonthSpend
 from ..guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+EXERCISE = filing_year_envelope().horizon
 
 _FIELD = "probe"
 
@@ -202,7 +205,7 @@ class TestFactRoundTrip:
     ) -> DescendantInfo:
         """Typed rather than ``**kwargs: object``, so the checker sees the real fields."""
         return DescendantInfo(
-            birth_date=date(2021, 4, 15),
+            birth_date=date(EXERCISE - 3, 4, 15),
             gastos_guarderia_euros=gastos_guarderia_euros,
             gastos_guarderia_mensuales=gastos_guarderia_mensuales,
         )
@@ -246,7 +249,7 @@ class TestFactRoundTrip:
         """
         first = self._child(gastos_guarderia_mensuales=parse_guarderia_mensual("1:100", field=_FIELD))
         second = DescendantInfo(
-            birth_date=date(2019, 2, 2),
+            birth_date=date(EXERCISE - 5, 2, 2),
             gastos_guarderia_mensuales=parse_guarderia_mensual("6:300;7:300", field=_FIELD),
         )
 
@@ -287,7 +290,7 @@ class TestStoredValueAntiTautology:
     ) -> None:
         facts = dict(
             descendant_facts_from_list(
-                [DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_mensuales=())],
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_mensuales=())],
             ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia_mensuales"] = corrupted
@@ -321,7 +324,9 @@ class TestStoredValueAntiTautology:
         test proving it works passes, so nothing signals the hole.
         """
         facts = dict(
-            descendant_facts_from_list([DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=900)]),
+            descendant_facts_from_list(
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_euros=900)]
+            ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia"] = corrupted
 
@@ -337,7 +342,9 @@ class TestStoredValueAntiTautology:
         traded that diagnostic for an untranslated ``ValueError`` naming nothing.
         """
         facts = dict(
-            descendant_facts_from_list([DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=900)]),
+            descendant_facts_from_list(
+                [DescendantInfo(birth_date=date(EXERCISE - 3, 4, 15), gastos_guarderia_euros=900)]
+            ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia"] = "nine hundred"
 
