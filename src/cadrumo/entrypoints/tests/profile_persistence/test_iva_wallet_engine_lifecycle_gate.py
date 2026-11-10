@@ -23,10 +23,10 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
     require_persisted_iva_compensation_decision_matches_revision,
     resolve_iva_compensation_decision_for_calculation,
 )
+from cadrumo.application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1

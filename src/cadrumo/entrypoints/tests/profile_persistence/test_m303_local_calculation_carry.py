@@ -29,10 +29,8 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.iva_wallet_gate import (
-    ModeloIvaWalletReconciliationBlocked,
-    require_persisted_iva_compensation_decision_matches_revision,
-)
+from cadrumo.application.modelo.iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from cadrumo.application.modelo.iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.operations.next_step import OperationOpenIvaWalletStepV1
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, OutputLanguage
