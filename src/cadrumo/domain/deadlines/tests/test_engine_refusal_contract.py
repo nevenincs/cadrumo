@@ -49,6 +49,7 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_window_year",
         "DeadlineEngine._evaluate_conditions",
+        "DeadlineEngine.target_obligation",
         "project_deadline_windows",
     },
 )
@@ -153,7 +154,8 @@ def _pinned_raise_sites() -> tuple[tuple[str, ast.Call], ...]:
 class TestEveryPinnedRaiseSiteIsStructurallyClean:
     """No pinned raise site may reintroduce a positional sentence.
 
-    The runtime assertions above reach four of the five sites.  The
+    The runtime assertions above reach four of the six sites; the deadline
+    engine's own tests reach the duplicate-target refusal.  The
     validation-stage refusal in ``_deadline_windows`` is not reachable from a
     test: an authority is only ever compiled validated, so a registry
     that would fail per-modelo validation is refused at the load stage instead.

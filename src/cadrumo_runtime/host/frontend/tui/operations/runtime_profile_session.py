@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Callable
-from typing import Final
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -30,8 +29,6 @@ from cadrumo_client.transport.operation_controller import OperationController, a
 from ..runtime_account_session import read_runtime_account_session, session_lost_with_receipt
 
 OPERATION_TIMEOUT_SECONDS = 120
-#: The effects a read may settle with: neither leaves records changed.
-_RECORDS_UNCHANGED: Final = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
 def _unknown_submission_outcome(
@@ -269,11 +266,9 @@ class RuntimeProfileSession:
 def _may_change_records(contract: OperationPublicDefinitionContractV1 | None) -> bool:
     """Whether an operation registered under ``contract`` may leave records changed.
 
-    Every definition may settle with an unknown effect once its owner is lost,
-    reads included, so only a permitted updated or partial effect marks a
-    write. Without a contract nothing says the operation cannot change records.
+    Without a contract nothing says the operation cannot change records.
     """
-    return contract is None or not contract.permitted_effects <= _RECORDS_UNCHANGED
+    return contract is None or contract.may_change_records()
 
 
 def _refusal_detail_is_allowed(

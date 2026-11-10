@@ -24,6 +24,7 @@ from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
+from ...domain.user_profile.values import UserProfileRecord
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     CalculationSourceContext,
@@ -107,6 +108,32 @@ def _direct_estimation_activities(context: CalculationSourceContext) -> _DirectE
     """
     if context.profile is None:
         return None
+    record = context.profile.record
+    activities: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
+    regime_undeclared = False
+    for day in _fact_change_days(record, context.filing_year):
+        day_activities, day_undeclared = _direct_estimation_activities_on(record, day)
+        activities |= day_activities
+        regime_undeclared = regime_undeclared or day_undeclared
+    return _DirectEstimationActivities(count=len(activities), regime_undeclared=regime_undeclared)
+
+
+def _fact_change_days(record: UserProfileRecord, filing_year: int) -> set[date]:
+    """Return the days the ejercicio is read on: its ends and each day a dated profile fact starts or stops."""
+    first, last = date(filing_year, 1, 1), date(filing_year, 12, 31)
+    days = {first, last}
+    for fact in record.facts:
+        if fact.valid_from is not None and first <= fact.valid_from <= last:
+            days.add(fact.valid_from)
+        if fact.valid_to is not None and first <= fact.valid_to < last:
+            days.add(fact.valid_to + timedelta(days=1))
+    return days
+
+
+def _direct_estimation_activities_on(
+    record: UserProfileRecord, day: date
+) -> tuple[set[tuple[str, tuple[tuple[str, str], ...]]], bool]:
+    """Return the direct-estimation activities in force on ``day`` and whether their regime is undeclared."""
     from ...domain.calculations.registry.irpf_regimes import (
         irpf_estimation_regime_directa_normal_token,
         irpf_estimation_regime_directa_simplificada_token,
@@ -120,31 +147,20 @@ def _direct_estimation_activities(context: CalculationSourceContext) -> _DirectE
         str(irpf_estimation_regime_directa_normal_token()),
         str(irpf_estimation_regime_directa_simplificada_token()),
     }
-    record = context.profile.record
-    first, last = date(context.filing_year, 1, 1), date(context.filing_year, 12, 31)
-    days = {first, last}
-    for fact in record.facts:
-        if fact.valid_from is not None and first <= fact.valid_from <= last:
-            days.add(fact.valid_from)
-        if fact.valid_to is not None and first <= fact.valid_to < last:
-            days.add(fact.valid_to + timedelta(days=1))
+    values = record_to_path_values(record, as_of=day)
+    present = [path for path, value in values.items() if profile_value_is_present(value)]
+    rows = profile_section_rows(_ACTIVITIES_SECTION, present)
+    regime = values.get(_ESTIMATION_REGIME_PATH, "").strip()
+    regime_undeclared = bool(rows) and regime not in declared
     activities: set[tuple[str, tuple[tuple[str, str], ...]]] = set()
-    regime_undeclared = False
-    for day in days:
-        values = record_to_path_values(record, as_of=day)
-        present = [path for path, value in values.items() if profile_value_is_present(value)]
-        rows = profile_section_rows(_ACTIVITIES_SECTION, present)
-        regime = values.get(_ESTIMATION_REGIME_PATH, "").strip()
-        if rows and regime not in declared:
-            regime_undeclared = True
-        if regime not in direct:
-            continue
-        for row, fields in rows.items():
-            prefix = f"{_ACTIVITIES_SECTION}.{row}" if row else _ACTIVITIES_SECTION
-            # Every populated field identifies the activity, so a later dated field that does not
-            # identify it still splits the row in two and refuses rather than mismatching a book.
-            activities.add((row, tuple(sorted((field, values[f"{prefix}.{field}"].strip()) for field in fields))))
-    return _DirectEstimationActivities(count=len(activities), regime_undeclared=regime_undeclared)
+    if regime not in direct:
+        return activities, regime_undeclared
+    for row, fields in rows.items():
+        prefix = f"{_ACTIVITIES_SECTION}.{row}" if row else _ACTIVITIES_SECTION
+        # Every populated field identifies the activity, so a later dated field that does not
+        # identify it still splits the row in two and refuses rather than mismatching a book.
+        activities.add((row, tuple(sorted((field, values[f"{prefix}.{field}"].strip()) for field in fields))))
+    return activities, regime_undeclared
 
 
 def _activity_books_refusal(
@@ -359,22 +375,31 @@ def _load_inventory_ledgers(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
+    selected = tuple(item for item in document.ledgers if item.year == filing_year)
+    return _ledgers_or_not_ready(
+        selected, binding_ids=binding_ids, filing_year=filing_year, resolver_id=resolver_id, owned_sources=owned_sources
+    )
+
+
+def _ledgers_or_not_ready(
+    selected: tuple[InventoryLedger, ...],
+    *,
+    binding_ids: tuple[str, ...],
+    filing_year: int,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> tuple[InventoryLedger, ...] | CalculationSourceResolution:
+    """Return the live ledgers sorted by activity, or the first reason the cohort is not ready."""
     # A retired ledger with no stock facts has nothing to declare. One still
     # holding facts refuses rather than dropping them from the Anexo D rows,
     # because retirement is not proof that the stock never existed.
-    selected = tuple(item for item in document.ledgers if item.year == filing_year)
     if any(item.leaves_year_unresolved for item in selected):
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="source_domain_not_ready",
-                    state="retired_ledger_holds_stock_facts",
-                    message=f"a retired {filing_year} inventory activity ledger still holds stock facts",
-                ),
-            ),
+        return _ledger_not_ready(
+            binding_ids,
+            resolver_id,
+            owned_sources,
+            state="retired_ledger_holds_stock_facts",
+            message=f"a retired {filing_year} inventory activity ledger still holds stock facts",
         )
     ledgers = tuple(sorted((item for item in selected if not item.is_retired), key=lambda item: item.actividad_id))
     # The closing value is the operator's decision for the year, so a book that
@@ -382,36 +407,44 @@ def _load_inventory_ledgers(
     # finales are unknown until it is recorded, and only then can the variation
     # of casillas 0177 and 0182 be derived.
     if any(item.closing_authority_record is None for item in ledgers):
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="source_domain_not_ready",
-                    state="closing_value_not_recorded",
-                    message=f"a {filing_year} inventory activity ledger has no recorded closing value",
-                    remedy=(
-                        "Record the year's closing value of each activity's inventory, the existencias finales "
-                        "valued at acquisition price, so the stock variation can be derived."
-                    ),
-                ),
+        return _ledger_not_ready(
+            binding_ids,
+            resolver_id,
+            owned_sources,
+            state="closing_value_not_recorded",
+            message=f"a {filing_year} inventory activity ledger has no recorded closing value",
+            remedy=(
+                "Record the year's closing value of each activity's inventory, the existencias finales "
+                "valued at acquisition price, so the stock variation can be derived."
             ),
         )
     if not ledgers:
-        return CalculationSourceResolution(
-            resolver_id=resolver_id,
-            owned_sources=owned_sources,
-            unresolved_binding_ids=binding_ids,
-            diagnostics=(
-                _diagnostic(
-                    reason="source_domain_not_ready",
-                    state="missing_activity_ledgers",
-                    message=f"no complete {filing_year} inventory activity ledger is available",
-                ),
-            ),
+        return _ledger_not_ready(
+            binding_ids,
+            resolver_id,
+            owned_sources,
+            state="missing_activity_ledgers",
+            message=f"no complete {filing_year} inventory activity ledger is available",
         )
     return ledgers
+
+
+def _ledger_not_ready(
+    binding_ids: tuple[str, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    *,
+    state: str,
+    message: str,
+    remedy: str | None = None,
+) -> CalculationSourceResolution:
+    """Return the not-ready resolution that leaves every binding unresolved."""
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=binding_ids,
+        diagnostics=(_diagnostic(reason="source_domain_not_ready", state=state, message=message, remedy=remedy),),
+    )
 
 
 def _row_provenance(content_fingerprint: str) -> CalculationSourceProvenance:

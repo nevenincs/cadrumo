@@ -684,6 +684,21 @@ export type LedgerM210Income = {
   asset_or_right_id: string | null;
 };
 
+/** The retención a received invoice leaves on the movement that pays it, as
+ * the declarations read it. `retencion` is the euro amount recognised on this
+ * payment, canonical decimal text; `held_back` names why the invoice reaches
+ * no declaration yet, so a payment the declaration waits on is never shown
+ * as a payment without retención. Exactly one of the two is set. */
+export type LedgerMovementWithholding = {
+  invoice_id: string;
+  invoice_number: string;
+  modelo: string | null;
+  scheme: string | null;
+  retencion: string | null;
+  recognised_on: string | null;
+  held_back: string | null;
+};
+
 /** One movement as the product projects it. Amounts are canonical decimal
  * text; the amount is a magnitude and `direction` carries its sense. */
 export type LedgerTransaction = {
@@ -735,6 +750,9 @@ export type LedgerRow = {
   group_label: string | null;
   /** The own account's register id, never its number; null for none. */
   own_account_id: string | null;
+  /** What the invoices this movement pays leave on it; empty where it pays
+   * none that states a retención, which is absent, not zero. */
+  withholding: LedgerMovementWithholding[];
 };
 
 /** The order is the product's: filter, group selection, sort, group
@@ -871,8 +889,9 @@ export type LedgerPreflightResult = {
   ready: boolean;
 };
 
-export type LedgerProvider =
-  "auto" | "csv" | "ofx" | "qfx" | "xlsx" | "xls" | "pdf";
+/** A statement format as `ledger.entry-options` serves it; the ledger refuses
+ * one it does not parse. */
+export type LedgerProvider = string;
 
 /** A bank statement import. Preview with `dry_run`, then apply naming the
  * previewed files' digests in `expected_source_sha256`: a file that changed
@@ -959,7 +978,8 @@ export type LedgerImportResult = {
   source_digests: { file_index: number; sha256: string }[];
 };
 
-export type LedgerExportFormat = "csv" | "jsonl" | "xlsx";
+/** An export serialisation as `ledger.entry-options` serves it. */
+export type LedgerExportFormat = string;
 
 /** An export replaces the file the person chose in the save dialog, for
  * the same format. */

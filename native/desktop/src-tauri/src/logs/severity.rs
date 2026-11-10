@@ -57,9 +57,9 @@ pub fn level(event: &Event) -> Level {
             ServiceFact::FeatureRefused { .. } => Level::Warning,
             ServiceFact::AgentRetryExhausted { .. } => Level::Error,
             ServiceFact::EnvironmentResolved { .. } => Level::Debug,
-            ServiceFact::AgentReady { .. } | ServiceFact::ManagerInstallationCompleted { .. } => {
-                Level::Info
-            }
+            ServiceFact::AgentReady { .. }
+            | ServiceFact::ManagerInstallationCompleted { .. }
+            | ServiceFact::SetupAdmissionRead { .. } => Level::Info,
             _ => Level::Debug,
         };
     }

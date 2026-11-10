@@ -2007,12 +2007,14 @@ desktop:
       category: Category
       category_needs_classification: Classify them as Business or Mixed first
       choose_category: Choose a category
+      cleared_category: Category removed · {count} not saved yet
       expense_category: Expense category · {count}
       inactive_only: Only active movements change
       income_no_category: Income {count} · no category needed
       no_category_match: No category matches
       not_saved: Not saved yet
       nothing: Select movements first
+      nothing_to_clear: None of the selected movements has a category to remove.
       overwritten: '{count} changed from another classification'
       partial: loaded rows only
       range_differs: 'Selected: {selected} · range: {range}'
@@ -2057,6 +2059,7 @@ desktop:
       lifecycle: State
       modified: Modified
       notes: Notes
+      retencion: Withholding
       select: Selection
       status: Status
       taxable_base: Taxable base
@@ -3788,6 +3791,22 @@ desktop:
         prorrata: Prorrata
         withholding: Withholding
       areas: Registers areas
+    retencion:
+      held_back: Held back
+      practised: Withholding practised on invoice {invoice}, declared on Modelo {modelo}
+    retencion_held_back:
+      received_invoice_entity_professional_fee: 'Not declared: the issuer is a company,
+        and a company''s professional fee carries no withholding. Correct the invoice.'
+      received_invoice_income_kind_undeclared: 'Not declared yet: choose the IRPF
+        category of this payment so its withholding reaches a modelo.'
+      received_invoice_invoice_incomplete: 'Not declared yet: the invoice lacks the
+        issuer''s NIF or its amounts in euros.'
+      received_invoice_non_resident: 'Not declared on this modelo: the issuer is not
+        resident in Spain.'
+      received_invoice_rate_unrecognised: 'Not declared yet: the invoice''s withholding
+        matches no activity withholding rate.'
+      received_invoice_recipient_unknown: 'Not declared yet: the issuer''s NIF does
+        not show whether it pays IRPF or Impuesto sobre Sociedades.'
     retry: Retry
     reveal:
       dismiss: Dismiss
@@ -3892,8 +3911,9 @@ desktop:
       shown: Select the shown movements · Ctrl-click adds them
     selected: '{count} selected'
     selection:
-      actions: Selection actions
+      actions_count: Actions · {count} selected
       all_shown: 'All shown are selected: {count}.'
+      clear_category: Remove category
       hidden: 'Hidden: {hidden} of {selected} selected'
       keep_visible: Keep only visible
       select_all: Select all {count} in {period}
@@ -4754,6 +4774,8 @@ desktop:
       cancelled: You cancelled the setup.
       damaged_download: The download was damaged and could not be used.
       disk_full: There is not enough free disk space.
+      engine_program_unusable: 'The local AI program couldn''t start: it''s damaged
+        or doesn''t work on this computer. Repairing local AI reinstalls it.'
       host_unreachable: The download server could not be reached. Check your internet
         connection, then try again.
       interrupted: Setup was interrupted before it finished.

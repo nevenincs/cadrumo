@@ -14,6 +14,7 @@ from ..m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
+from .authored_editions import filing_grade_exercises, filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,7 +25,7 @@ _RETIRED_BINDING_ID = "modelo-390-prev-303-cuota-devengada-simplificado"
 
 def _revision():
     """Return the live 2022-grounded annual Modelo 390 revision."""
-    return published_snapshot("390", filing_year=2025, period="0A").revision
+    return published_snapshot("390", filing_year=filing_grade_exercises("390")[-1], period="0A").revision
 
 
 def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
@@ -90,7 +91,7 @@ def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
     assert repr(target_number) in "\n".join(failures)
 
 
-@pytest.mark.parametrize("filing_year", (2022, 2023, 2024, 2025, 2026))
+@pytest.mark.parametrize("filing_year", filing_year_envelope().years)
 def test_each_edition_declares_the_boxes_the_official_form_prints(filing_year: int) -> None:
     """Read from the AEAT Modelo 390 and Modelo 303 record designs, not from the declaration."""
     with bundled_indexed_authority().operation() as operation:

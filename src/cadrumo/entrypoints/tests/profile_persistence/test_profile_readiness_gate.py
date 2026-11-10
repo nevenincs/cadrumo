@@ -548,7 +548,8 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
         assert excinfo.value.context is not None
         missing_text = excinfo.value.context["profile_requirements"]
         assert isinstance(missing_text, str)
-        assert "orden-hac-242-2025:art-3" in missing_text or "orden-hac-277-2026:art-3" in missing_text
+        assert "Orden HAC/242/2025, art.\u00a03" in missing_text or "Orden HAC/277/2026, art.\u00a03" in missing_text
+        assert "orden-hac" not in missing_text
 
 
 def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(tmp_path: Path) -> None:

@@ -8,6 +8,7 @@ import {
   classifyAsksCategory,
   classifyAvailability,
   classifyCells,
+  clearCategoryCells,
   type ClassifyKind,
   type ClassifyScope,
   type ConfiguredRatios,
@@ -313,6 +314,38 @@ export function useClassifyCommand({
     });
   }
 
+  /** Stages the removal of the spending category from those of `ids` that
+   * hold one; the others are named in the message, never given one. */
+  async function clearCategory(ids: string[]) {
+    const named = ids.filter((id) => byId.has(id));
+    const check = named.length > 0 ? await askCheck(named) : null;
+    if (named.length > 0 && !check) {
+      say(t("desktop.ledger.apply.read_failed"));
+      return;
+    }
+    if (!check || !named.some((id) => check.rows.get(id)?.category_settable)) {
+      say(t("desktop.ledger.classify.category_needs_classification"));
+      return;
+    }
+    const outcome = clearCategoryCells(named, byId, check);
+    if (outcome.kind === "nothing") {
+      say(t("desktop.ledger.classify.nothing_to_clear"));
+      return;
+    }
+    stageChecked(outcome.event, () =>
+      say(
+        facts(t, [
+          t("desktop.ledger.classify.cleared_category", {
+            count: outcome.movements,
+          }),
+          outcome.skipped > 0
+            ? t("desktop.ledger.classify.skipped", { count: outcome.skipped })
+            : "",
+        ]),
+      ),
+    );
+  }
+
   return {
     asking,
     setAsking,
@@ -323,6 +356,7 @@ export function useClassifyCommand({
     classifySelection,
     availabilityOf,
     askCategory,
+    clearCategory,
   };
 }
 

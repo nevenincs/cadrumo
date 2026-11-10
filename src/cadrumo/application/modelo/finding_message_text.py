@@ -61,6 +61,8 @@ class FindingFactKind(StrEnum):
     COUNT = "count"
     #: An official code the filer reads on AEAT's own forms, such as a country or income type code.
     OFFICIAL_CODE = "official_code"
+    #: A number the filer reads printed on one of their own documents, such as an invoice number, kept as written.
+    DOCUMENT_NUMBER = "document_number"
     #: An identifier with no meaning to the filer; kept for technical details, never in the sentence.
     TECHNICAL = "technical"
 
@@ -150,6 +152,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "tipo_renta_code": FindingFactKind.OFFICIAL_CODE,
         "entered": FindingFactKind.OFFICIAL_CODE,
         "expected": FindingFactKind.OFFICIAL_CODE,
+        # Numbers printed on the filer's own documents.
+        "invoice_number": FindingFactKind.DOCUMENT_NUMBER,
         # Identifiers, for technical details only.
         "anchored": FindingFactKind.TECHNICAL,
         "membership_available": FindingFactKind.TECHNICAL,
@@ -164,6 +168,7 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "error_type": FindingFactKind.TECHNICAL,
         "fact_id": FindingFactKind.TECHNICAL,
         "group_code": FindingFactKind.TECHNICAL,
+        "invoice_id": FindingFactKind.TECHNICAL,
         "iva_category_code": FindingFactKind.TECHNICAL,
         "mismatch_kind": FindingFactKind.TECHNICAL,
         "origin_code": FindingFactKind.TECHNICAL,
@@ -307,6 +312,10 @@ def _official_code(value: FindingFactValue, language: OutputLanguage) -> str:
     return str(value)
 
 
+def _document_number(value: FindingFactValue, language: OutputLanguage) -> str:
+    return str(value)
+
+
 # The kinds written from their value and the output language alone; the box kinds
 # also read the form's box words, and every remaining kind is a figure.
 _VALUE_WRITERS: Final[Mapping[FindingFactKind, Callable[[FindingFactValue, OutputLanguage], str]]] = MappingProxyType(
@@ -317,6 +326,7 @@ _VALUE_WRITERS: Final[Mapping[FindingFactKind, Callable[[FindingFactValue, Outpu
         FindingFactKind.MODELO: _modelo_number,
         FindingFactKind.YEAR: _year,
         FindingFactKind.OFFICIAL_CODE: _official_code,
+        FindingFactKind.DOCUMENT_NUMBER: _document_number,
     }
 )
 

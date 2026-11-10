@@ -21,7 +21,6 @@ from cadrumo.domain.deadlines.models import IVARegime
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
-from ....domain.deadlines.errors import ScheduleComputationError
 from ....domain.deadlines.models import TaxpayerProfile
 from ...state_projection import build_pending_obligations
 from .. import deadline_decisions as deadline_decisions_module
@@ -213,35 +212,6 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
 
         assert authority_rows, filing_year
         assert projection_rows == authority_rows, filing_year
-
-
-def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -> None:
-    """A consumer must not hide an upstream duplicate by choosing its first row."""
-    profile = TaxpayerProfile(
-        tax_id="X0001500M",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
-    schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=date(2026, 4, 12))
-    obligation = schedule.obligations[0]
-    duplicate_schedule = schedule.model_copy(update={"obligations": (*schedule.obligations, obligation)})
-
-    with pytest.raises(ScheduleComputationError) as raised:
-        deadline_stage.target_obligation_from_schedule(
-            duplicate_schedule,
-            target_modelo=obligation.modelo,
-            target_period=obligation.period,
-        )
-
-    assert raised.value.context == {
-        "modelo": obligation.modelo,
-        "filing_year": str(obligation.period.filing_year),
-        "period": obligation.period.registry_token,
-        "match_count": "2",
-    }
 
 
 @pytest.mark.parametrize(

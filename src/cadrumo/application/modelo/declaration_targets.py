@@ -58,6 +58,10 @@ def declaration_targets(
     With ``profile``, the selected revision's filing schedules narrow its periods to the family the
     profile selects. A profile the taxpayer projection refuses, or no profile, decides no family,
     and every admitted period is offered.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     support = operation.supported_filing_years()
     schema = operation.profile_schema()

@@ -265,6 +265,32 @@ def sales_invoice_evidence_payload(
     return _linked_invoice_payload(invoice, transaction, receipts_by_invoice=receipts_by_invoice)
 
 
+def _part_payment_payload(
+    invoice: Invoice,
+    transaction: Transaction,
+    receipts: Sequence[Transaction] | None,
+    *,
+    share: Decimal,
+    base_eur: Decimal,
+    iva_eur: Decimal,
+) -> SalesInvoiceEvidencePayload:
+    """Return the receipt's part of the invoice: exact when the receipts settle it in parts, else by share."""
+    if receipts is not None and invoice_settled_in_parts(invoice, receipts):
+        return SalesInvoiceEvidencePayload(
+            taxable_base=_settled_part_of(invoice, transaction, receipts, base_eur),
+            iva_amount=_settled_part_of(invoice, transaction, receipts, iva_eur),
+            retencion_amount=_settled_part_of(
+                invoice, transaction, receipts, invoice.retention_amount_eur or Decimal("0")
+            ),
+        )
+    return SalesInvoiceEvidencePayload(
+        taxable_base=round_to_cents(base_eur * share),
+        iva_amount=round_to_cents(iva_eur * share),
+        retencion_amount=round_to_cents((invoice.retention_amount_eur or Decimal("0")) * share),
+        allocated_to_part_payment=True,
+    )
+
+
 def _linked_invoice_payload(
     invoice: Invoice, transaction: Transaction, *, receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None
 ) -> tuple[SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
@@ -274,24 +300,8 @@ def _linked_invoice_payload(
     receipts = None if receipts_by_invoice is None else receipts_by_invoice.get(invoice.invoice_id, ())
     share = None if receipts is None else part_payment_share(invoice, transaction)
     if share is not None and base_eur is not None and iva_eur is not None:
-        if receipts is not None and invoice_settled_in_parts(invoice, receipts):
-            return (
-                SalesInvoiceEvidencePayload(
-                    taxable_base=_settled_part_of(invoice, transaction, receipts, base_eur),
-                    iva_amount=_settled_part_of(invoice, transaction, receipts, iva_eur),
-                    retencion_amount=_settled_part_of(
-                        invoice, transaction, receipts, invoice.retention_amount_eur or Decimal("0")
-                    ),
-                ),
-                None,
-            )
         return (
-            SalesInvoiceEvidencePayload(
-                taxable_base=round_to_cents(base_eur * share),
-                iva_amount=round_to_cents(iva_eur * share),
-                retencion_amount=round_to_cents((invoice.retention_amount_eur or Decimal("0")) * share),
-                allocated_to_part_payment=True,
-            ),
+            _part_payment_payload(invoice, transaction, receipts, share=share, base_eur=base_eur, iva_eur=iva_eur),
             None,
         )
     refusal = _whole_invoice_refusal(invoice, transaction)

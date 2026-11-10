@@ -5,6 +5,7 @@
 // served true or false alone, and a refusal stays the ledger's to give.
 
 import { useSyncExternalStore } from "react";
+import { FIELDS_DROPPED_BY_PERSONAL } from "./ledgerContract";
 import type { LedgerEntryClassification } from "./ledgerSetup";
 
 let held: readonly LedgerEntryClassification[] | null = null;
@@ -78,3 +79,20 @@ export const ruleMayNameCategory = (id: string): boolean | null =>
  * served. */
 export const splitPartAdvisedCategory = (id: string): boolean | null =>
   classificationRule(id)?.split_part_requires_category ?? null;
+
+/**
+ * The stored fields a write of `id` drops from a movement, from what the
+ * backend serves of the classification: the share where it takes none, the
+ * usage ratio where it takes none, and the business figures, category
+ * included, where it carries none. Only the fields the ledger lists as
+ * dropped are named; nothing is named for a classification that is not
+ * served.
+ */
+export const fieldsDroppedBy = (id: string): readonly string[] =>
+  FIELDS_DROPPED_BY_PERSONAL.filter((field) =>
+    field === "business_pct"
+      ? takesBusinessShare(id) === false
+      : field === "usage_ratio_id"
+        ? takesUsageRatio(id) === false
+        : carriesBusinessFigures(id) === false,
+  );

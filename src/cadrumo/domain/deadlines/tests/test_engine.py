@@ -5,12 +5,14 @@ from __future__ import annotations
 import calendar
 from collections import Counter
 from datetime import date, timedelta
+from decimal import Decimal
 
 import pytest
 
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ...calculations.registry.tests.authored_editions import (
@@ -25,7 +27,15 @@ from ...calculations.registry.tests.published_authority import (
 )
 from ...contribuyente.renta_codes import FiscalResidency
 from ..effective_close import DEFAULT_DUE_SOON_DAYS
-from ..engine import DeadlineEngine, applies_to, explain, next_deadline
+from ..engine import (
+    DEADLINE_WINDOW_INDEX,
+    DeadlineEngine,
+    DeadlineWindowYearIndex,
+    applies_to,
+    explain,
+    indexed_deadline_window_year,
+    next_deadline,
+)
 from ..errors import DeadlineValidationError, NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
     IrpfEstimationRegime,
@@ -744,3 +754,151 @@ class TestScheduleRoundTrip:
         schedule = _engine().compute(_profile(), _YEAR, today=date(_YEAR, 1, 1))
         restored = Schedule.model_validate_json(schedule.model_dump_json())
         assert restored == schedule
+
+
+# Modelo 115 owes its quarterly windows only to a taxpayer who pays urban rent
+# subject to retención, a fact a window condition reads, so it separates an
+# answered "yes" from an unanswered question.
+_RENT_WITHHOLDING_MODELO = "115"
+_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
+
+
+def _statutory_recargo_pct(pattern: str) -> Decimal:
+    """Read one Art. 27.2 LGT surcharge percentage from the provision's own text."""
+    return Decimal(legal_text_match(_RECARGO_LEGAL_REF, pattern).group(1))
+
+
+class TestTargetObligation:
+    """One exact filing target keeps its obligation after its window closes.
+
+    Ley 58/2003 art. 27.1 defines the recargo as an accessory charge on a
+    return presented "fuera de plazo"; it presupposes the late return rather
+    than extinguishing the duty to present it.
+    """
+
+    @staticmethod
+    def _rent_quarter(operation: PinnedAuthorityOperation, filing_year: int, *, today: date) -> ModeloDeadline:
+        """Return the declared rent-withholding payer's first-quarter target obligation on ``today``."""
+        target = DeadlineEngine(authority=operation).target_obligation(
+            _profile(pays_rent_with_retencion=True),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=today,
+        )
+        assert target is not None
+        return target
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_open_target_carries_no_recargo(self, operation: PinnedAuthorityOperation, filing_year: int) -> None:
+        upcoming = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1))
+        assert upcoming.period == _period(filing_year, "1T")
+        assert upcoming.status is not ObligationStatus.OVERDUE
+        assert upcoming.recovery is None
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_closed_window_keeps_the_obligation_with_the_first_recargo_band(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
+        late = self._rent_quarter(operation, filing_year, today=close + timedelta(days=1))
+        assert (late.adjusted_closes_on, late.status) == (close, ObligationStatus.OVERDUE)
+        assert late.recovery is not None
+        assert late.recovery.still_filable is True
+        band = late.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"porcentaje igual al (\d+) por ciento")
+        assert band.interest_applies is False
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_target_over_twelve_months_late_serves_the_final_band_like_the_schedule(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        close = self._rent_quarter(operation, filing_year, today=date(filing_year, 1, 1)).adjusted_closes_on
+        long_after = date(close.year + 2, close.month, 1)
+        stale = self._rent_quarter(operation, filing_year, today=long_after)
+        assert stale.recovery is not None
+        band = stale.recovery.recargo_band
+        assert band.surcharge_pct == _statutory_recargo_pct(r"el recargo sera del (\d+) por ciento")
+        assert band.interest_applies is True
+
+        schedule = DeadlineEngine(authority=operation).compute(
+            _profile(pays_rent_with_retencion=True), filing_year, today=long_after
+        )
+        matching = [
+            obligation
+            for obligation in schedule.obligations
+            if obligation.modelo == _RENT_WITHHOLDING_MODELO and obligation.period == stale.period
+        ]
+        assert matching == [stale]
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_unanswered_window_fact_does_not_rule_the_target_out(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        engine = DeadlineEngine(authority=operation)
+        profile = _profile()
+        assert profile.pays_rent_with_retencion is None
+        period = _period(filing_year, "1T")
+        today = date(filing_year + 2, 1, 1)
+
+        schedule = engine.compute(profile, filing_year, today=today)
+        assert all(obligation.modelo != _RENT_WITHHOLDING_MODELO for obligation in schedule.obligations)
+
+        target = engine.target_obligation(profile, modelo=_RENT_WITHHOLDING_MODELO, period=period, today=today)
+        assert target is not None
+        assert target.period == period
+        assert target.status is ObligationStatus.OVERDUE
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_a_declared_no_rules_the_target_out(self, operation: PinnedAuthorityOperation, filing_year: int) -> None:
+        engine = DeadlineEngine(authority=operation)
+        target = engine.target_obligation(
+            _profile(pays_rent_with_retencion=False),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=date(filing_year + 2, 1, 1),
+        )
+        assert target is None
+
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_an_unselected_filing_schedule_rules_the_target_out(
+        self, operation: PinnedAuthorityOperation, filing_year: int
+    ) -> None:
+        """A cadence the profile has not chosen selects no period; answering it is a readiness requirement."""
+        engine = DeadlineEngine(authority=operation)
+        target = engine.target_obligation(
+            _profile(pays_rent_with_retencion=True, enrollment=ModeloEnrollment(large_company=None)),
+            modelo=_RENT_WITHHOLDING_MODELO,
+            period=_period(filing_year, "1T"),
+            today=date(filing_year + 2, 1, 1),
+        )
+        assert target is None
+
+    def test_duplicate_canonical_windows_are_refused(
+        self, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A consumer must not hide an upstream duplicate by choosing its first row."""
+        filing_year = _SUPPORTED_YEARS[-1]
+        index = indexed_deadline_window_year(operation, filing_year)
+        row = next(
+            item
+            for item in index.dated
+            if item[0] == _RENT_WITHHOLDING_MODELO and item[2].period == _period(filing_year, "1T")
+        )
+        monkeypatch.setitem(
+            DEADLINE_WINDOW_INDEX,
+            (operation.pin(), filing_year),
+            DeadlineWindowYearIndex(dated=(*index.dated, row), projected=index.projected),
+        )
+
+        with pytest.raises(ScheduleComputationError) as raised:
+            DeadlineEngine(authority=operation).target_obligation(
+                _profile(pays_rent_with_retencion=True),
+                modelo=_RENT_WITHHOLDING_MODELO,
+                period=_period(filing_year, "1T"),
+                today=date(filing_year, 1, 1),
+            )
+
+        assert str(raised.value) == "errors.error.error_deadlines_schedule_computation"
+        assert raised.value.context is not None
+        assert raised.value.context["registry_stage"] == "target_obligation"
+        assert raised.value.context["match_count"] == 2

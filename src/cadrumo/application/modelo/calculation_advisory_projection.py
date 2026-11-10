@@ -202,9 +202,10 @@ class PrintedBoxNumberSnapshot(BaseModel):
     number: str = Field(min_length=1, max_length=32)
 
 
-def _fallback_recargo_legal_ref(
+def pinned_fallback_recargo_legal_ref(
     posture: ModeloWorkDeadlinePosture | None, operation: PinnedAuthorityOperation
 ) -> str | None:
+    """Return the pinned Art. 27 reference an overdue posture without a rate preview still cites."""
     return (
         modelo_rendering_value("extemporaneous_recargo.legal_ref", authority=operation)
         if posture is not None and posture.days_overdue is not None and posture.conditional_recargo_preview is None
@@ -250,7 +251,7 @@ class ModeloCalculationAdvisories(BaseModel):
     ) -> Self:
         """Capture all advisories under the calculation's pinned registry lease."""
         posture = modelo_work_deadline_posture(result.work_unit, operation=operation)
-        fallback_ref = _fallback_recargo_legal_ref(posture, operation)
+        fallback_ref = pinned_fallback_recargo_legal_ref(posture, operation)
         named = tuple(dict.fromkeys(row.casilla_id for row in result.source_diagnostics if row.casilla_id is not None))
         boxes = (
             snapshot_printed_boxes(
@@ -313,4 +314,5 @@ __all__ = [
     "ModeloCalculationAdvisories",
     "ModeloWorkDeadlinePostureSnapshot",
     "ModeloWorkRecargoPreviewSnapshot",
+    "pinned_fallback_recargo_legal_ref",
 ]

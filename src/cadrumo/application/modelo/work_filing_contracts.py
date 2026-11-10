@@ -11,6 +11,7 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ..operations.models import CredentialFreeOperationRequest
+from .calculation_advisory_projection import ModeloWorkDeadlinePostureSnapshot
 from .filing_projection import ModeloFilingRecordSnapshot
 from .lifecycle_advisories import ModeloLifecycleAdvisories
 from .work_change_contracts import ModeloWorkUnitSubjectId
@@ -63,6 +64,12 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     filing time, normalised so a caller outside this package always reads a
     value: a record that kept no posture reads ``unknown``. It is a calendar
     posture, and assesses nothing.
+
+    ``deadline`` serves an extemporánea filing's lateness, read on the filing's
+    own presentation date: the effective plazo close, the days overdue and the
+    unassessed Ley 58/2003 art. 27.2 rate preview from the governed band table.
+    ``fallback_recargo_legal_ref`` is the pinned reference a frontend cites when
+    no band resolved. Both are absent for any other timeliness.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -72,6 +79,8 @@ class ModeloWorkFilePublicResultV2(BaseModel):
     advisories: ModeloLifecycleAdvisories
     published: bool
     filing_timeliness: FilingTimeliness
+    deadline: ModeloWorkDeadlinePostureSnapshot | None = None
+    fallback_recargo_legal_ref: Annotated[str, Field(min_length=1, max_length=256)] | None = None
     filing_record_id: Annotated[str, Field(min_length=1, max_length=128)]
     work_unit_id: ModeloWorkUnitSubjectId
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
@@ -84,7 +93,22 @@ class ModeloWorkFilePublicResultV2(BaseModel):
         kept = self.record.filing_timeliness
         if self.filing_timeliness is not (kept if kept is not None else FilingTimeliness.UNKNOWN):
             raise ValueError("filing timeliness does not match the posture the record kept")
+        _require_served_lateness_matches_posture(self)
         return self
+
+
+def _require_served_lateness_matches_posture(result: ModeloWorkFilePublicResultV2) -> None:
+    """Refuse a served deadline beside a non-late posture, or a fallback reference that does not fit it."""
+    deadline = result.deadline
+    if deadline is not None and (
+        result.filing_timeliness is not FilingTimeliness.EXTEMPORANEA or deadline.days_overdue is None
+    ):
+        raise ValueError("a served deadline posture belongs only to an extemporánea filing")
+    needs_ref = (
+        deadline is not None and deadline.days_overdue is not None and deadline.conditional_recargo_preview is None
+    )
+    if (result.fallback_recargo_legal_ref is not None) != needs_ref:
+        raise ValueError("deadline fallback legal reference does not match posture")
 
 
 def _matches_record(result: ModeloWorkFilePublicResultV2) -> bool:

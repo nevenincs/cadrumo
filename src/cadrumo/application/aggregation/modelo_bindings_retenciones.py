@@ -325,28 +325,52 @@ def _empty_window_refusal(context: CalculationSourceContext) -> RetencionesWindo
     """
     from ..calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
     from ..calculations.m115_no_relevant_payments import M115_NO_RELEVANT_PAYMENT_PROFILE_PATH
-    from ..modelo.profile_readiness_gate import open_profile_path_step
     from ..modelo.work_form_wording import period_words
     from ..operations.error_detail import served_words_language
 
+    modelo = str(context.modelo)
+    period = period_words(context.period, served_words_language())
     if context.modelo == form_for_role("withholding.work_periodic"):
-        message = tr("application.aggregation.retenciones.window_empty_work")
-        profile_path: str | None = M111_NO_RETENCIONES_PROFILE_PATH
-    elif context.modelo == form_for_role("withholding.lease_periodic"):
-        message = tr("application.aggregation.retenciones.window_empty_lease")
-        profile_path = M115_NO_RELEVANT_PAYMENT_PROFILE_PATH
-    else:
-        message = tr("application.aggregation.retenciones.window_empty")
-        profile_path = None
+        return _refusal_with_words(
+            tr("application.aggregation.retenciones.window_empty_work"),
+            source=context,
+            context={"modelo": modelo, "period": period},
+            profile_path=M111_NO_RETENCIONES_PROFILE_PATH,
+        )
+    if context.modelo == form_for_role("withholding.lease_periodic"):
+        return _refusal_with_words(
+            tr("application.aggregation.retenciones.window_empty_lease"),
+            source=context,
+            context={"modelo": modelo, "period": period},
+            profile_path=M115_NO_RELEVANT_PAYMENT_PROFILE_PATH,
+        )
+    return _refusal_with_words(
+        tr("application.aggregation.retenciones.window_empty"),
+        source=context,
+        context={"modelo": modelo, "period": period},
+        profile_path=None,
+    )
+
+
+def _refusal_with_words(
+    message: tr,
+    *,
+    source: CalculationSourceContext,
+    context: dict[str, str],
+    profile_path: str | None,
+) -> RetencionesWindowEmptyError:
+    """Build the refusal from its words, the facts they name and the profile detail that answers it."""
+    from ..modelo.profile_readiness_gate import open_profile_path_step
+
     return RetencionesWindowEmptyError(
         message,
-        context={"modelo": str(context.modelo), "period": period_words(context.period, served_words_language())},
+        context=context,
         precondition_verdict=aggregation_no_recovery_verdict(
             AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
             facts={
-                "modelo": str(context.modelo),
-                "filing_year": str(context.filing_year),
-                "period": context.period.registry_token,
+                "modelo": str(source.modelo),
+                "filing_year": str(source.filing_year),
+                "period": source.period.registry_token,
                 "source_kind": "retenciones_aggregation",
             },
         ),

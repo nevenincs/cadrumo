@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -34,7 +35,8 @@ from .registry_thresholds import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-FILING_YEAR = 2024
+
+FILING_YEAR = filing_year_envelope().horizon
 _FACT_CONTEXT = FamilyFactResolutionContext(
     PublishedGovernedFactSource(),
     date(FILING_YEAR, 12, 31),
@@ -99,8 +101,8 @@ class TestLimbOneFlatCuantia:
         against an implementation that ranks the deceased normally.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 6, 15)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 6, 15)),
         )
         assert total == _MANUAL_PRIMERO + _MANUAL_FALLECIMIENTO
         assert total == Decimal("4800")
@@ -114,7 +116,9 @@ class TestLimbOneFlatCuantia:
         against a single-child household would look correct while being wrong
         for every larger one.
         """
-        assert _total(DescendantInfo(birth_date=date(2010, 1, 1), death_date=date(FILING_YEAR, 6, 15))) == Decimal(
+        assert _total(
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1), death_date=date(FILING_YEAR, 6, 15))
+        ) == Decimal(
             "2400",
         )
 
@@ -138,9 +142,9 @@ class TestLimbTwoOrderingExclusion:
         unless a test ranks a sibling BELOW the deceased.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
-            DescendantInfo(birth_date=date(2014, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 10, 1, 1)),
         )
         assert total == Decimal("7500")
         assert total != Decimal("9100"), "survivors kept ranks the deceased should have vacated"
@@ -153,9 +157,9 @@ class TestLimbTwoOrderingExclusion:
         stay at 2.700 + 4.000, giving 9.100.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1), death_date=date(FILING_YEAR, 3, 20)),
-            DescendantInfo(birth_date=date(2012, 1, 1)),
-            DescendantInfo(birth_date=date(2014, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1), death_date=date(FILING_YEAR, 3, 20)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 10, 1, 1)),
         )
         assert total == _MANUAL_FALLECIMIENTO + _MANUAL_PRIMERO + _MANUAL_SEGUNDO
         assert total == Decimal("7500")
@@ -175,9 +179,9 @@ class TestLimbTwoOrderingExclusion:
         assert limb_one_only != both_limbs
         assert (
             _total(
-                DescendantInfo(birth_date=date(2010, 1, 1)),
-                DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
-                DescendantInfo(birth_date=date(2014, 1, 1)),
+                DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+                DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
+                DescendantInfo(birth_date=date(FILING_YEAR - 10, 1, 1)),
             )
             == both_limbs
         )
@@ -200,18 +204,18 @@ class TestDevengoBoundary:
         this case cannot be satisfied by collapsing the two conditions either way.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 12, 31)),
-            DescendantInfo(birth_date=date(2014, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 12, 31)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 10, 1, 1)),
         )
         assert total == Decimal("8800")
 
     def test_death_one_day_before_the_devengo_excludes_from_the_ordering(self) -> None:
         """30 December is inside both limbs; the pair pins the boundary to the exact day."""
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 12, 30)),
-            DescendantInfo(birth_date=date(2014, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 12, 30)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 10, 1, 1)),
         )
         assert total == Decimal("7500")
 
@@ -230,7 +234,7 @@ class TestMenorTresSupplementSurvivesDeath:
         UNDER-grant a bereaved filer — the opposite error to the one the rest of
         this module guards, and just as wrong.
         """
-        total = _total(DescendantInfo(birth_date=date(2023, 5, 1), death_date=date(FILING_YEAR, 8, 1)))
+        total = _total(DescendantInfo(birth_date=date(FILING_YEAR - 1, 5, 1), death_date=date(FILING_YEAR, 8, 1)))
         assert total == _MANUAL_FALLECIMIENTO + _MANUAL_MENOR_TRES
         assert total == Decimal("5200")
 
@@ -247,8 +251,8 @@ class TestDeathOutsideThePeriod:
         "el primero" at 2.400.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1), death_date=date(FILING_YEAR - 1, 4, 4)),
-            DescendantInfo(birth_date=date(2012, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1), death_date=date(FILING_YEAR - 1, 4, 4)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1)),
         )
         assert total == _MANUAL_PRIMERO
 
@@ -259,8 +263,8 @@ class TestDeathOutsideThePeriod:
         2.400 + 2.700.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR + 1, 2, 2)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR + 1, 2, 2)),
         )
         assert total == _MANUAL_PRIMERO + _MANUAL_SEGUNDO
 
@@ -276,9 +280,9 @@ class TestDeathInteractionWithProrrata:
         once the deceased vacates the ordering. Total 3.600.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2010, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 14, 1, 1)),
             DescendantInfo(
-                birth_date=date(2012, 1, 1),
+                birth_date=date(FILING_YEAR - 12, 1, 1),
                 death_date=date(FILING_YEAR, 6, 1),
                 custodia_compartida=True,
             ),
@@ -290,7 +294,7 @@ class TestDeathInteractionWithProrrata:
 class TestDeathDateRecordValidation:
     def test_death_before_birth_is_refused(self) -> None:
         with pytest.raises(ValueError, match="precedes birth_date"):
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(2010, 1, 1))
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR - 14, 1, 1))
 
     def test_twins_are_ranked_separately_when_one_dies(self) -> None:
         """Identically-declared siblings must not collapse onto one rank.
@@ -302,7 +306,7 @@ class TestDeathDateRecordValidation:
         surviving twin is "el primero" at 2.400. Total 4.800.
         """
         total = _total(
-            DescendantInfo(birth_date=date(2012, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1)),
+            DescendantInfo(birth_date=date(FILING_YEAR - 12, 1, 1), death_date=date(FILING_YEAR, 6, 1)),
         )
         assert total == Decimal("4800")

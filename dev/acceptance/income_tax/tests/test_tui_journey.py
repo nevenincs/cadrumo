@@ -296,6 +296,7 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
                 "held_zero",
                 "takes_typed_value",
                 "clearable",
+                "removable",
                 "own_value",
                 "confirm_comparable",
                 "state_digest",

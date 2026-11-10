@@ -4,6 +4,7 @@
 // not know as the id itself, never a guess.
 
 import type {
+  LedgerMovementWithholding,
   LedgerReviewStatus,
   LedgerTransaction,
 } from "../../../shell/ledger";
@@ -74,6 +75,25 @@ export const classificationLabel = (t: Translate, classification: string) =>
   isClassification(classification)
     ? t(`desktop.ledger.classification.${lower(classification)}`)
     : classification;
+
+/** The sentence a retención cell carries as its tooltip: that the invoice's
+ * retención was practised and where it is declared, or why it is held back.
+ * A reason the catalogue has no word for shows as its served token. */
+export function withholdingTitle(
+  t: Translate,
+  entry: LedgerMovementWithholding,
+): string {
+  if (entry.held_back !== null)
+    return wordOrToken(
+      t,
+      "desktop.ledger.retencion_held_back.",
+      entry.held_back,
+    );
+  return t("desktop.ledger.retencion.practised", {
+    invoice: entry.invoice_number,
+    modelo: entry.modelo ?? "",
+  });
+}
 
 /** The classification as the grid writes it: Mixed with its share. */
 export function classificationText(

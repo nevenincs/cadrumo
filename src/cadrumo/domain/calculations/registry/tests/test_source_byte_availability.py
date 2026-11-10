@@ -15,8 +15,12 @@ from ..source_byte_availability import (
     layout_embedded_source_ids,
     source_bytes_are_embedded,
 )
+from .authored_editions import filing_year_envelope, newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_HORIZON = filing_year_envelope().horizon
+_M100_EXERCISE = newest_authored_edition("100")
 
 _BYTES_EMBEDDED_BY_KIND: dict[RegistrySourceKind, bool] = {
     RegistrySourceKind.RECORD_DESIGN: False,
@@ -30,8 +34,8 @@ _BYTES_EMBEDDED_BY_KIND: dict[RegistrySourceKind, bool] = {
 """Independent statement of the runtime byte needs: only XML parsing and XSD versioning read bytes."""
 
 
-def _m100_2023(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    return operation.snapshot("100", filing_year=2023, period="0A")
+def _m100_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+    return operation.snapshot("100", filing_year=_M100_EXERCISE, period="0A")
 
 
 def test_every_source_kind_declares_its_byte_availability() -> None:
@@ -40,7 +44,7 @@ def test_every_source_kind_declares_its_byte_availability() -> None:
 
 @pytest.mark.parametrize("kind", tuple(RegistrySourceKind))
 def test_source_kind_classification(kind: RegistrySourceKind, operation: PinnedAuthorityOperation) -> None:
-    source = next(iter(_m100_2023(operation).sources.values())).model_copy(update={"kind": kind})
+    source = next(iter(_m100_snapshot(operation).sources.values())).model_copy(update={"kind": kind})
 
     assert (kind in EMBEDDED_SOURCE_KINDS) is _BYTES_EMBEDDED_BY_KIND[kind]
     assert source_bytes_are_embedded(source) is _BYTES_EMBEDDED_BY_KIND[kind]
@@ -48,7 +52,7 @@ def test_source_kind_classification(kind: RegistrySourceKind, operation: PinnedA
 
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period"),
-    [("100", 2023, "0A"), ("111", 2025, "1T"), ("130", 2026, "1T"), ("180", 2026, "0A")],
+    [("100", _M100_EXERCISE, "0A"), ("111", _HORIZON, "1T"), ("130", _HORIZON, "1T"), ("180", _HORIZON, "0A")],
 )
 def test_published_generation_holds_bytes_exactly_for_embedded_sources(
     operation: PinnedAuthorityOperation, modelo: str, filing_year: int, period: str
@@ -65,7 +69,7 @@ def test_published_generation_holds_bytes_exactly_for_embedded_sources(
 
 
 def test_fixed_width_layout_reads_no_source_bytes(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("111", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("111", filing_year=_HORIZON, period="1T")
     layout = resolve_export_layout(snapshot).layout
 
     assert layout.source_refs
@@ -73,7 +77,7 @@ def test_fixed_width_layout_reads_no_source_bytes(operation: PinnedAuthorityOper
 
 
 def test_xml_dictionary_layout_reads_its_dictionary_and_xsd(operation: PinnedAuthorityOperation) -> None:
-    snapshot = _m100_2023(operation)
+    snapshot = _m100_snapshot(operation)
     layout = resolve_export_layout(snapshot).layout
     kinds = {
         snapshot.sources[source_id].kind
@@ -87,7 +91,7 @@ def test_xml_dictionary_layout_reads_its_dictionary_and_xsd(operation: PinnedAut
 def test_xml_dictionary_layout_refuses_a_dictionary_without_embedded_bytes(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = _m100_2023(operation)
+    snapshot = _m100_snapshot(operation)
     layout = resolve_export_layout(snapshot).layout
     dictionary_id = str(layout.dictionary_source_ref)
     sources = dict(snapshot.sources)
@@ -98,7 +102,7 @@ def test_xml_dictionary_layout_refuses_a_dictionary_without_embedded_bytes(
 
 
 def test_layout_citing_an_uncatalogued_source_refuses(operation: PinnedAuthorityOperation) -> None:
-    snapshot = _m100_2023(operation)
+    snapshot = _m100_snapshot(operation)
     layout = resolve_export_layout(snapshot).layout
     sources = {key: value for key, value in snapshot.sources.items() if key != layout.dictionary_source_ref}
 

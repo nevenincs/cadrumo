@@ -9,6 +9,8 @@ the frontend receives only their typed results.
 Opening a declaration's workbench is the start of its edit session, so the form
 read admits the edit baseline that every parse and apply is judged against. An
 admission refusal is part of the result, never hidden as "no edit surface".
+
+Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

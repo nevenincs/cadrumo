@@ -20,6 +20,7 @@ from ..nif_iva_catalogue import resolve_nif_iva_catalogue
 from ..schema_exports import ExportRecordDefinition
 from ..schema_scalars import validate_registry_text_scalar
 from ..withholding_bindings import WithholdingObservation
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -79,7 +80,9 @@ def test_the_nif_iva_body_envelope_is_the_catalogue_s_own() -> None:
     codes = resolve_form_codes("nif-iva-country-format-catalogue")
     bodies = [
         width
-        for definition in resolve_nif_iva_catalogue(effective_date=date(2025, 1, 1)).definitions
+        for definition in resolve_nif_iva_catalogue(
+            effective_date=date(filing_year_envelope().horizon, 1, 1)
+        ).definitions
         for width in import_module("re._parser").parse(definition.spec.pattern.pattern).getwidth()
     ]
     assert codes.integer("nif_iva.body_min_length") == min(bodies) - 2

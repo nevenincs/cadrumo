@@ -285,7 +285,9 @@ impl SetupHost {
         let package_root = agent.package_root().to_path_buf();
         let components = Components::new(
             components::installation(),
-            Arc::new(Admission::new(agent, selection_root, package_root)),
+            Arc::new(
+                Admission::new(agent, selection_root, package_root).measured(diagnostics.clone()),
+            ),
             diagnostics.clone(),
         );
         Self::with_components(sign_in, components, diagnostics)

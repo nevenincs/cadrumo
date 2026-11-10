@@ -23,12 +23,14 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...ledger.preflight import HeldTransactionCatalogue
+from ..errors import AggregationValidationError
 from ..invoice_iva_source import (
     InvoiceIvaFinding,
     InvoiceIvaFindingReason,
     invoices_missing_source_document,
     period_invoice_iva_findings,
     period_invoice_iva_side,
+    refuse_contradicting_linked_movements,
 )
 from .ledger_source_mesh_support import (
     BUCKET_ID,
@@ -167,6 +169,21 @@ def test_a_paying_movement_whose_own_figures_disagree_is_reported() -> None:
     side = _side((agreeing, disagreeing), (own, other))
 
     assert side.contradicted == (disagreeing,)
+
+
+def test_a_contradicting_paying_movement_refuses_the_calculation() -> None:
+    own = _movement("own-figures", figures=True)
+    disagreeing = _received("R-9", base=Decimal("900.00"), paid_by=(own,))
+
+    side = _side((disagreeing,), (own,))
+
+    with pytest.raises(AggregationValidationError) as refusal:
+        refuse_contradicting_linked_movements(side.contradicted)
+    assert refusal.value.context == {"invoice_id": disagreeing.invoice_id, "invoice_count": "1"}
+
+
+def test_no_contradiction_means_no_refusal() -> None:
+    refuse_contradicting_linked_movements(())
 
 
 def test_an_unlinked_movement_with_figures_that_pairs_an_invoice_is_a_double_count() -> None:

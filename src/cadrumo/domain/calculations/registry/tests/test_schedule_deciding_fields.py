@@ -20,6 +20,8 @@ from ....deadlines.models import (
     TaxpayerProfile,
 )
 from ..schedules import unresolved_schedule_deciding_fields
+from ..schema import ModeloRevision
+from .authored_editions import authored_revisions
 from .modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -43,30 +45,44 @@ def _profile(*, large_company: bool | None, redeme: bool = False) -> TaxpayerPro
     )
 
 
-def _revision():
+# The schedule rule is the same in every edition that serves both a monthly and a
+# quarterly period in its first exercise, so each such authored edition is checked.
+_REVISION_IDS = tuple(
+    str(revision.id)
+    for revision in authored_revisions("303")
+    if {"1T", "01"} <= set(revision.period_selector.periods_for_year(revision.valid_from.year))
+)
+
+
+@pytest.fixture(params=_REVISION_IDS)
+def revision(request: pytest.FixtureRequest) -> ModeloRevision:
     modelo, _catalogues = load_modelo_303()
-    return modelo.revisions["2025"]
+    return modelo.revisions[request.param]
 
 
 @pytest.mark.parametrize("period", ["1T", "01"])
-def test_an_unanswered_gran_empresa_condition_decides_the_303_period(period: str) -> None:
-    assert unresolved_schedule_deciding_fields(_revision(), _profile(large_company=None), period=period) == (
+def test_an_unanswered_gran_empresa_condition_decides_the_303_period(revision: ModeloRevision, period: str) -> None:
+    assert unresolved_schedule_deciding_fields(revision, _profile(large_company=None), period=period) == (
         _LARGE_COMPANY,
     )
 
 
 @pytest.mark.parametrize(("large_company", "period"), [(False, "1T"), (True, "01")])
-def test_an_answered_condition_whose_schedule_matches_leaves_nothing_to_ask(large_company: bool, period: str) -> None:
-    assert unresolved_schedule_deciding_fields(_revision(), _profile(large_company=large_company), period=period) == ()
+def test_an_answered_condition_whose_schedule_matches_leaves_nothing_to_ask(
+    revision: ModeloRevision, large_company: bool, period: str
+) -> None:
+    assert unresolved_schedule_deciding_fields(revision, _profile(large_company=large_company), period=period) == ()
 
 
 @pytest.mark.parametrize(("large_company", "period"), [(False, "01"), (True, "1T")])
-def test_a_genuine_cadence_mismatch_is_not_an_unanswered_fact(large_company: bool, period: str) -> None:
+def test_a_genuine_cadence_mismatch_is_not_an_unanswered_fact(
+    revision: ModeloRevision, large_company: bool, period: str
+) -> None:
     """A quarterly filer asking for a month, or a gran empresa for a quarter, answered everything."""
-    assert unresolved_schedule_deciding_fields(_revision(), _profile(large_company=large_company), period=period) == ()
+    assert unresolved_schedule_deciding_fields(revision, _profile(large_company=large_company), period=period) == ()
 
 
-def test_a_redeme_enrolee_is_monthly_whatever_the_gran_empresa_answer() -> None:
+def test_a_redeme_enrolee_is_monthly_whatever_the_gran_empresa_answer(revision: ModeloRevision) -> None:
     profile = _profile(large_company=None, redeme=True)
 
-    assert unresolved_schedule_deciding_fields(_revision(), profile, period="01") == ()
+    assert unresolved_schedule_deciding_fields(revision, profile, period="01") == ()
