@@ -73,6 +73,7 @@ from .actions_common import (
     resolve_revision_guarded_transaction_repository,
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
+    withheld_figures_event_payload,
 )
 from .evidence_advisory import printed_iva_advisory
 from .llm_classification_ports import (
@@ -448,6 +449,7 @@ def apply_llm_classification(
             "provider": _bounded_transport_label(transport_from_provenance(suggestion.provenance)),
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
+            **withheld_figures_event_payload(current),
         },
     )
     save_transaction_catalogue_and_events(
