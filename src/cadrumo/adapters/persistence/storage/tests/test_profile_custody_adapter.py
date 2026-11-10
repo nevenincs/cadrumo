@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import subprocess
 from pathlib import Path
 from uuid import UUID
 
@@ -12,8 +14,12 @@ from .....application.user_profile.custody_crypto_contracts import (
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,
 )
+from .....application.user_profile.proof_cancellation import ProfileProofCancellation
+from .....core.config import override_settings
 from ..crypto.aead import EncryptedBlob, decrypt_record
+from ..custody import kdf_process
 from ..custody.capsule_records import ProfileCustodyCapsuleLabel
+from ..custody.kdf_worker_supervision import SupervisedKdfWorker
 from ..custody.label_head_models import ProfileLabelHead
 from ..custody.label_head_repository import ProfileLabelHeadRepository
 from ..custody.tests.label_head_probe import begin_advance
@@ -22,6 +28,8 @@ from ..profile_custody import build_profile_custody_port
 from .passphrase_probe import open_with_passphrase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_SYNTHETIC_PHRASE = "synthetic registration phrase"
 
 
 def test_local_record_store_preserves_bounded_read_write_and_clear(tmp_path: Path) -> None:
@@ -175,3 +183,45 @@ def test_label_head_caller_explicitly_recovers_then_verifies_or_publishes(tmp_pa
     assert recovered_head.label_revision == 2
     assert repository.verify(label=replacement) == recovered_head
     assert not repository.pending_path(profile_id).exists()
+
+
+def test_registration_wraps_in_a_child_prewarmed_for_this_mint_and_leaves_none_running(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    launched: list[subprocess.Popen[bytes]] = []
+    adopted: list[bool] = []
+    launch_process = kdf_process.launch_worker_process
+    adopt = SupervisedKdfWorker.adopt
+
+    def observe_launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
+        process = launch_process(command, launch_kwargs)
+        launched.append(process)
+        return process
+
+    def observe_adopt(
+        worker: SupervisedKdfWorker, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> bool:
+        verdict = adopt(worker, deadline=deadline, cancellation=cancellation)
+        adopted.append(verdict)
+        return verdict
+
+    monkeypatch.setattr(kdf_process, "launch_worker_process", observe_launch)
+    monkeypatch.setattr(SupervisedKdfWorker, "adopt", observe_adopt)
+    profile_id = UUID("00000000-0000-4000-8000-0000000000a1")
+    dek = bytes(range(32))
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=False):
+        port = build_profile_custody_port()
+        material = port.create_registration_material(
+            profile_id=profile_id,
+            password=_SYNTHETIC_PHRASE,
+            dek=dek,
+            dek_epoch=base64.b64encode(b"e" * 16).decode("ascii"),
+            salt=b"s" * 16,
+            predecessor=None,
+        )
+        assert adopted == [True], "the wrap ran in the spare launched for this mint"
+        assert len(launched) == 1, "no successor is launched after the mint's last derivation"
+        assert all(process.poll() is not None for process in launched), "nothing outlives the mint"
+
+        unlocked = port.unlock_password(material, password=_SYNTHETIC_PHRASE)
+    assert unlocked.dek == dek

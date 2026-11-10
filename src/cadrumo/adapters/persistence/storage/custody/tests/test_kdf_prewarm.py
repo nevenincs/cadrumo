@@ -214,3 +214,91 @@ def test_closing_while_the_spare_launches_contains_it_before_returning(
     prewarm.close()
     assert not prewarm._launching and prewarm._spare is None
     assert all(process.poll() is not None for process in launches)
+
+
+@pytest.fixture
+def adoptions(monkeypatch: pytest.MonkeyPatch) -> list[tuple[SupervisedKdfWorker, bool]]:
+    """Record every handover of a prewarmed child and its real verdict, unchanged."""
+    adopted: list[tuple[SupervisedKdfWorker, bool]] = []
+    adopt = SupervisedKdfWorker.adopt
+
+    def observe(
+        worker: SupervisedKdfWorker, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> bool:
+        verdict = adopt(worker, deadline=deadline, cancellation=cancellation)
+        adopted.append((worker, verdict))
+        return verdict
+
+    monkeypatch.setattr(SupervisedKdfWorker, "adopt", observe)
+    return adopted
+
+
+def test_back_to_back_derivations_each_adopt_a_spare_launched_while_the_previous_one_held_its_child(
+    settings: Settings,
+    launches: list[subprocess.Popen[bytes]],
+    adoptions: list[tuple[SupervisedKdfWorker, bool]],
+) -> None:
+    prewarm = ProfileKdfPrewarm(settings=settings)
+    workers: list[SupervisedKdfWorker] = []
+    children: list[subprocess.Popen[bytes] | None] = []
+    try:
+        prewarm.refill()
+        with prewarm.bound(overlap=True):
+            for _ in range(2):
+                with kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker:
+                    # The successor is already launching before this child derives.
+                    assert prewarm._launching or prewarm._spare is not None
+                    workers.append(worker)
+                    children.append(worker._process)
+                    assert worker.calibrate(_kdf()) > 0
+        with (
+            prewarm.bound(refill=False),
+            kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
+        ):
+            assert not prewarm._launching and prewarm._spare is None, "the last derivation launches no successor"
+            workers.append(worker)
+            children.append(worker._process)
+            assert worker.calibrate(_kdf()) > 0
+        assert not prewarm._launching and prewarm._spare is None
+    finally:
+        prewarm.close()
+
+    assert [verdict for _, verdict in adoptions] == [True, True, True]
+    assert [worker for worker, _ in adoptions] == workers, "every derivation ran in an adopted spare"
+    assert len(launches) == 3, "one child per derivation and none launched only to be contained"
+    assert len({process.pid for process in launches}) == 3
+    assert children == launches
+    assert all(process.returncode == 0 for process in launches), "each child performed one derivation and exited"
+
+
+def test_a_spare_never_crosses_from_one_owner_to_another_and_is_contained_when_its_owner_closes(
+    settings: Settings,
+    launches: list[subprocess.Popen[bytes]],
+    adoptions: list[tuple[SupervisedKdfWorker, bool]],
+) -> None:
+    first = ProfileKdfPrewarm(settings=settings)
+    second = ProfileKdfPrewarm(settings=settings)
+    try:
+        first.refill()
+        first_spare = _ready_spare(first)
+        first_child = first_spare._process
+        assert first_child is not None
+
+        with (
+            second.bound(overlap=True, refill=False),
+            kdf_supervision.supervised_kdf_worker(deadline=time.monotonic() + 60, settings=settings) as worker,
+        ):
+            assert worker is not first_spare
+            assert worker._process is not None and worker._process.pid != first_child.pid
+            assert worker.calibrate(_kdf()) > 0
+        assert first._spare is first_spare, "the other owner's operation left this spare untouched"
+        assert all(adopted is not first_spare for adopted, _ in adoptions)
+
+        first.close()
+        assert first_child.poll() is not None, "closing the owner contains its idle spare"
+        first.refill()
+        assert not first._launching and first._spare is None, "a closed owner launches nothing more"
+    finally:
+        first.close()
+        second.close()
+    assert all(process.poll() is not None for process in launches)

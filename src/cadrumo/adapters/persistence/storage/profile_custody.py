@@ -8,7 +8,7 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Mapping
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, closing, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
@@ -115,7 +115,7 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
-from .custody.kdf_supervision import calibrate_profile_kdf, unlock_profile_custody
+from .custody.kdf_supervision import ProfileKdfPrewarm, calibrate_profile_kdf, unlock_profile_custody
 from .custody.label_head_repository import ProfileLabelHeadRepository
 from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope
 from .custody.recovery import (
@@ -638,16 +638,23 @@ class _PersistenceProfileCustody:
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
     ) -> ProfileCustodyRegistrationMaterial:
-        calibration = calibrate_profile_kdf(salt=salt)
-        envelope = create_profile_custody_password_envelope(
-            profile_id=profile_id,
-            password=password,
-            dek=dek,
-            dek_epoch=dek_epoch,
-            kdf=calibration.parameters,
-            password_generation=1 if predecessor is None else predecessor.password_generation + 1,
-            previous_envelope_digest=None if predecessor is None else predecessor.self_digest,
-        )
+        # Each calibration sample and the wrap run in a fresh contained child; a
+        # spare scoped to this one mint launches the next while the current one
+        # derives, and is contained before the mint returns.
+        with closing(ProfileKdfPrewarm()) as prewarm:
+            prewarm.refill()
+            with prewarm.bound(overlap=True):
+                calibration = calibrate_profile_kdf(salt=salt)
+            with prewarm.bound(refill=False):
+                envelope = create_profile_custody_password_envelope(
+                    profile_id=profile_id,
+                    password=password,
+                    dek=dek,
+                    dek_epoch=dek_epoch,
+                    kdf=calibration.parameters,
+                    password_generation=1 if predecessor is None else predecessor.password_generation + 1,
+                    previous_envelope_digest=None if predecessor is None else predecessor.self_digest,
+                )
         sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
