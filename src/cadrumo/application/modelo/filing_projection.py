@@ -25,6 +25,7 @@ from ...domain.modelos.filing_record import (
     IvaSettlementRefundState,
     IvaSettlementSnapshot,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordStatus,
 )
 from ...domain.modelos.filing_text import FilingNotes, ModeloActorLabel
@@ -204,3 +205,18 @@ class ModeloFilingRecordSnapshot(BaseModel):
     def _canonical_record(self) -> Self:
         self.to_record()
         return self
+
+
+def related_filing_projections(
+    catalogue: ModeloRecordCatalogue, record: ModeloRecord, language: OutputLanguage
+) -> tuple[ModeloRelatedFilingProjection, ...]:
+    """Every filing at the record's exact coordinate in the same profile, oldest first."""
+    return tuple(
+        ModeloRelatedFilingProjection.from_reference(DeclarationsWorkspaceFilingRefV1.from_record(item), language)
+        for item in sorted(catalogue.records.values(), key=lambda item: (item.filed_at, item.filing_record_id))
+        if item.bucket_id == record.bucket_id
+        and item.modelo == record.modelo
+        and item.filing_year == record.filing_year
+        and item.period == record.period
+        and item.member_nif == record.member_nif
+    )

@@ -25,7 +25,8 @@ from ..user_profile.projections import projection_for_taxpayer
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.temporal import RevisionSelectionMetadata
+    from ...domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+    from ...domain.calculations.registry.temporal import ModeloRevisionDirectory, RevisionSelectionMetadata
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
@@ -69,19 +70,30 @@ def declaration_targets(
         )
         for year in support.years:
             for code in codes:
-                period = Period.from_year_and_code(year, code)
-                try:
-                    revision = select_revision_metadata(
-                        directory, filing_year=year, period=period.registry_token, support=support
-                    )
-                except NoRevisionForPeriodError:
-                    continue
-                requirements = (
-                    () if taxpayer is None else _schedule_requirements(revision, taxpayer, period=period, schema=schema)
-                )
-                if requirements is not None:
-                    targets.append(DeclarationTarget(modelo, period, requirements))
+                target = _target_for(modelo, directory, year, code, support=support, taxpayer=taxpayer, schema=schema)
+                if target is not None:
+                    targets.append(target)
     return tuple(targets)
+
+
+def _target_for(
+    modelo: str,
+    directory: ModeloRevisionDirectory,
+    year: int,
+    code: str,
+    *,
+    support: SupportedFilingYearsCatalogue,
+    taxpayer: TaxpayerProfile | None,
+    schema: ProfileSchemaDefinition,
+) -> DeclarationTarget | None:
+    """The offered target for one modelo period, or ``None`` when no revision admits it or the schedule drops it."""
+    period = Period.from_year_and_code(year, code)
+    try:
+        revision = select_revision_metadata(directory, filing_year=year, period=period.registry_token, support=support)
+    except NoRevisionForPeriodError:
+        return None
+    requirements = () if taxpayer is None else _schedule_requirements(revision, taxpayer, period=period, schema=schema)
+    return None if requirements is None else DeclarationTarget(modelo, period, requirements)
 
 
 def _taxpayer(profile: UserProfileRecord, schema: ProfileSchemaDefinition) -> TaxpayerProfile | None:
