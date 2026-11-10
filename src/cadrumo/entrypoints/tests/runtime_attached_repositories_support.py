@@ -47,6 +47,12 @@ from ...domain.buckets.event import (
 )
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    open_ended_revision,
+    revision_covering,
+)
 from ...domain.calculations.registry.tests.published_authority import published_snapshot
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
@@ -110,6 +116,8 @@ from ...tests.aeat_literal_fixtures import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+FILING_YEAR = filing_year_envelope().horizon
+
 _DEK = b"d" * 32
 
 _MASTER_KEY = b"m" * 32
@@ -162,8 +170,8 @@ def workflow_state(label: str) -> WorkflowState:
 def runtime_attached_repositories_transaction(label: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=f"tx-{label}",
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
+        booked_date=date(FILING_YEAR, 4, 5),
+        value_date=date(FILING_YEAR, 4, 5),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -202,7 +210,7 @@ def runtime_attached_repositories_hex(label: str) -> str:
 
 
 def workflow_run(label: str) -> WorkflowResult:
-    when = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    when = datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     step = WorkflowStep(
         stage=WorkflowStage.LOADING_PROFILE,
         started_at=when,
@@ -222,7 +230,7 @@ def workflow_run(label: str) -> WorkflowResult:
 
 
 def bucket_event(label: str) -> BucketEvent:
-    occurred_at = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+    occurred_at = datetime(FILING_YEAR, 5, 26, 10, 0, tzinfo=UTC)
     payload = {"label": label}
     return BucketEvent(
         event_id=derive_bucket_event_id(
@@ -257,7 +265,7 @@ def invoice(label: str) -> Invoice:
     invoice_id = derive_invoice_id(
         kind=InvoiceKind.ISSUED,
         invoice_number=f"INV-{label.upper()}",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(FILING_YEAR, 4, 1),
         counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
@@ -266,7 +274,7 @@ def invoice(label: str) -> Invoice:
         invoice_id=invoice_id,
         kind=InvoiceKind.ISSUED,
         invoice_number=f"INV-{label.upper()}",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(FILING_YEAR, 4, 1),
         counterparty_name="Cliente SL",
         counterparty_tax_id="B00015016",
         counterparty_country="ES",
@@ -282,12 +290,12 @@ def invoice(label: str) -> Invoice:
 
 def modelo_draft(label: str) -> ModeloDraft:
     now = datetime.now(UTC).replace(microsecond=0)
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
     profile_tax_id = "12345678Z"
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id="2026-y-siguientes",
-        modelo_year=2026,
+        revision_id=str(open_ended_revision("303").id),
+        modelo_year=FILING_YEAR,
         period="1T",
     )
     values = (
@@ -318,19 +326,19 @@ def modelo_draft(label: str) -> ModeloDraft:
         findings=(),
         created_at=now,
         updated_at=now,
-        schema_version=registry_schema_version(modelo="303", revision_id="2026-y-siguientes"),
+        schema_version=registry_schema_version(modelo="303", revision_id=str(open_ended_revision("303").id)),
     )
 
 
 def submission(label: str) -> ModeloPresentado:
-    submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    submitted_at = datetime(FILING_YEAR, 4, 27, 10, 0, tzinfo=UTC)
     draft_id = f"draft-{label}"
     submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,
         modelo="303",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         profile_tax_id="00000000T",
         status=SubmissionStatus.PRESENTADA,
         submitted_at=submitted_at,
@@ -352,29 +360,29 @@ def justificante(tmp_path: Path, label: str) -> Justificante:
     return Justificante(
         csv=csv,
         modelo="303",
-        period=Period.from_year_and_code(2026, "1T"),
-        ejercicio="2026",
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
+        ejercicio=str(FILING_YEAR),
         presentation_id=None,
-        presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
+        presented_at=datetime(FILING_YEAR, 4, 10, 11, 23, 45, tzinfo=UTC),
         tax_id="00000000T",
         total_a_ingresar=Decimal("10.00"),
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE)),
         source_pdf_path=pdf,
         source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
-        parsed_at=datetime(2026, 4, 12, tzinfo=UTC),
+        parsed_at=datetime(FILING_YEAR, 4, 12, tzinfo=UTC),
     )
 
 
 def work_unit(bucket_id: str, label: str) -> WorkUnit:
-    now = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    now = datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     modelo = ModeloCode("303")
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = str(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref.revision_id)
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
+    revision_id = str(published_snapshot("303", filing_year=FILING_YEAR, period="1T").snapshot_ref.revision_id)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=2026,
+        filing_year=FILING_YEAR,
         period=period,
         revision_id=revision_id,
     )
@@ -382,10 +390,10 @@ def work_unit(bucket_id: str, label: str) -> WorkUnit:
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=2026,
+        filing_year=FILING_YEAR,
         period=period,
         revision_id=revision_id,
-        name=f"IVA 2026 {label}",
+        name=f"IVA {FILING_YEAR} {label}",
         created_at=now,
         updated_at=now,
         state=WorkUnitState.BORRADOR,
@@ -419,7 +427,7 @@ def calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=FILING_YEAR, period="1T").snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
@@ -433,8 +441,8 @@ def calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
                 source_refs=("runtime-attached-repository-test",),
             ),
         ),
-        created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
-        updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        created_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
+        updated_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -442,7 +450,7 @@ def calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
 
 
 def filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogue:
-    filed_at = datetime(2026, 5, 26, 11, 0, tzinfo=UTC)
+    filed_at = datetime(FILING_YEAR, 5, 26, 11, 0, tzinfo=UTC)
     work_unit_id = runtime_attached_repositories_hex(f"filing-work-unit-{label}")
     revision_id = runtime_attached_repositories_hex(f"filing-revision-{label}")
     record_id = derive_filing_record_id(
@@ -456,8 +464,8 @@ def filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogue
         calculation_revision_id=revision_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         notes=f"runtime attached filing record {label}",
@@ -474,7 +482,7 @@ def filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogue
 
 
 def verification_catalogue(label: str) -> VerificationReportCatalogue:
-    run_at = datetime(2026, 5, 26, 12, 0, tzinfo=UTC)
+    run_at = datetime(FILING_YEAR, 5, 26, 12, 0, tzinfo=UTC)
     revision_id = _calculation_revision_id_for(label)
     report_id = derive_verification_report_id(
         calculation_revision_id=revision_id,
@@ -485,7 +493,7 @@ def verification_catalogue(label: str) -> VerificationReportCatalogue:
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
-        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("303", filing_year=FILING_YEAR, period="1T").snapshot_ref,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
         resolved_casilla_ids=(validated_casilla_id("iva.devengado"),),
@@ -498,14 +506,14 @@ def verification_catalogue(label: str) -> VerificationReportCatalogue:
 
 
 def history(label: str) -> ModeloHistory:
-    submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
+    submitted_at = datetime(FILING_YEAR, 5, 26, 13, 0, tzinfo=UTC)
     period = "1T" if label.endswith("a") else "2T"
     return ModeloHistory(
         modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
                 modelo=ModeloIdentifier("303"),
-                period=Period.from_year_and_code(2026, period),
+                period=Period.from_year_and_code(FILING_YEAR, period),
                 submitted_at=submitted_at,
                 status="presentada",
             ),
@@ -515,21 +523,21 @@ def history(label: str) -> ModeloHistory:
 
 def iva_state(label: str) -> IvaCompensationPeriodState:
     period = "1T" if label.endswith("a") else "2T"
-    period_value = Period.from_year_and_code(2026, period)
+    period_value = Period.from_year_and_code(FILING_YEAR, period)
     return IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif="00000000T",
-        filing_year=2026,
+        filing_year=FILING_YEAR,
         period=period_value,
         registry_snapshot_ref=published_snapshot(
-            "303", filing_year=2026, period=period_value.registry_token
+            "303", filing_year=FILING_YEAR, period=period_value.registry_token
         ).snapshot_ref,
         expediente_id="202610013522456T",
         status="presentada",
-        presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
+        presented_at=datetime(FILING_YEAR, 4, 20, 10, 0, tzinfo=UTC),
         generated_amount=Decimal("10.00"),
         available_end_amount=Decimal("10.00"),
-        source_observation_key=f"303:2026:1T:{label}",
+        source_observation_key=f"303:{FILING_YEAR}:1T:{label}",
     )
 
 
@@ -540,7 +548,7 @@ def usage_profile(category: SpendingCategory, ratio: str) -> UsageRatioProfile:
 def inventory_ledger(label: str) -> InventoryLedger:
     return InventoryLedger(
         actividad_id=f"retail-{label}",
-        year=2026,
+        year=FILING_YEAR,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,
@@ -548,7 +556,7 @@ def inventory_ledger(label: str) -> InventoryLedger:
 
 
 def google_records(label: str) -> tuple[OAuthToken, OAuthMetadata, DriveConfig]:
-    issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    issued_at = datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     return (
         OAuthToken.model_validate(
             {
@@ -579,7 +587,7 @@ def llm_response(label: str) -> LLMResponse:
         output_tokens=5,
         cost_estimate_usd=Decimal("0.01"),
         cache_hit=False,
-        created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        created_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         request_id=f"request-{label}",
     )
 
@@ -610,21 +618,21 @@ def sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
             content_type="application/pdf",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+            captured_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         ),
         body,
     )
 
 
 def borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
-    filing_year = 2026
-    period = Period.from_year_and_code(2026, "0A")
-    captured_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    filing_year = FILING_YEAR
+    period = Period.from_year_and_code(FILING_YEAR, "0A")
+    captured_at = datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC)
     source_url = aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE)
     binding_values = {"renta-retencion-soportada-trabajo": Decimal("1.00")}
     registry_snapshot_ref = RegistrySnapshotRef(
         modelo="100",
-        revision_id="2025",
+        revision_id=str(revision_covering("100", newest_authored_edition("100")).id),
         modelo_year=filing_year,
         period=period.registry_token,
     )
@@ -650,13 +658,13 @@ def borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
 
 
 def iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
-    period = Period.from_year_and_code(2026, target_period)
+    period = Period.from_year_and_code(FILING_YEAR, target_period)
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=WALLET_SUBJECT_ID,
-        target_year=2026,
+        target_year=FILING_YEAR,
         target_period=period,
         target_registry_snapshot_ref=published_snapshot(
-            "303", filing_year=2026, period=period.registry_token
+            "303", filing_year=FILING_YEAR, period=period.registry_token
         ).snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
@@ -668,8 +676,8 @@ def iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensa
         blocked=False,
         stale_wallet=False,
         reason_identity="aeat_wallet_validated",
-        wallet_captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
-        decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        wallet_captured_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
+        decided_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
     )
 
 
@@ -678,7 +686,7 @@ def save_auth_diagnostic(label: str) -> None:
         "diagnostic_id": f"diagnostic-{label}",
         "reason": "runtime attached auth diagnostic",
         "url": aeat_url("sede", AUTH_DIAGNOSTIC_PATH_FIXTURE),
-        "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
+        "captured_at": datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
         "auth_attempt": {"auth_mode": "clave", "headless": True},
     }
     secure_object_repository_for_active_bucket().save(
@@ -686,7 +694,7 @@ def save_auth_diagnostic(label: str) -> None:
         object_key=payload["diagnostic_id"],
         classification=SensitivityClass.SESSION,
         schema_version=1,
-        written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        written_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         payload=json.dumps(payload, sort_keys=True).encode(),
     )
 
@@ -697,6 +705,6 @@ def save_diagnostic_probe_row(label: str) -> None:
         object_key=f"diagnostic-probe-{label}",
         classification=LLM_USAGE_NAMESPACE.sensitivity,
         schema_version=LLM_USAGE_NAMESPACE.schema_version,
-        written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        written_at=datetime(FILING_YEAR, 5, 26, 9, 0, tzinfo=UTC),
         payload=f"diagnostic-probe-{label}".encode(),
     )

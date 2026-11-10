@@ -30,7 +30,11 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.log_records import delivered_records
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _ROW_COUNT = 270
 _BUCKET_ID = "18181818-1818-4818-8818-181818181818"
@@ -39,8 +43,8 @@ _BUCKET_ID = "18181818-1818-4818-8818-181818181818"
 def _raw(idx: int) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"provider-row-{idx:04d}",
-        booked_date=date(2026, 5, 1),
-        value_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
+        value_date=date(_YEAR, 5, 1),
         amount=Decimal("80.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -50,7 +54,7 @@ def _raw(idx: int) -> RawTransaction:
             source_sha256="d" * 64,
             source_row_index=idx + 1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": f"row {idx}"},

@@ -50,23 +50,28 @@ from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_authored_revision_metadata
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 from ..aeat_sync_status_composition import compose_aeat_sync_status_ports, degrade_storage_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CAPTURED_AT = datetime(2026, 10, 20, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_BORRADOR_YEAR = newest_authored_edition("100")
+_LEGACY_YEAR = filing_year_envelope().floor
+
+_CAPTURED_AT = datetime(_YEAR, 10, 20, 9, 0, tzinfo=UTC)
 
 
 def _store_filed(operation: PinnedAuthorityOperation, *, modelo: str) -> None:
     """Persist one filed observation through the store the history capture writes to."""
     store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
-    period = Period.from_year_and_code(2026, "1T")
-    expediente = f"{modelo}2026Q1SYNTHETIC0001"
+    period = Period.from_year_and_code(_YEAR, "1T")
+    expediente = f"{modelo}{_YEAR}Q1SYNTHETIC0001"
     body = b"synthetic register row"
     artefact = store.persist_artefact(
-        (modelo, 2026, period, expediente),
+        (modelo, _YEAR, period, expediente),
         FiledDeclaracionArtefact(
             kind="register_row",
             source_url=TypeAdapter(AnyHttpUrl).validate_python(SEDE_ROOT_URL_FIXTURE),
@@ -77,11 +82,11 @@ def _store_filed(operation: PinnedAuthorityOperation, *, modelo: str) -> None:
         ),
         body,
     )
-    snapshot = operation.snapshot(modelo, filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = operation.snapshot(modelo, filing_year=_YEAR, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
     store.persist_observation(
         FiledDeclaracionObservation(
             modelo=modelo,
-            ejercicio=2026,
+            ejercicio=_YEAR,
             period=period,
             expediente_id=expediente,
             status="ALTA",
@@ -95,18 +100,18 @@ def _store_filed(operation: PinnedAuthorityOperation, *, modelo: str) -> None:
 
 
 def _store_legacy_borrador(operation: PinnedAuthorityOperation, bucket_id: str) -> Borrador100Snapshot:
-    """Store an active 2023 borrador keyed by a free casilla id, as the earlier key contract did."""
-    period = Period.from_year_and_code(2023, "0A")
-    ref = operation.snapshot("100", filing_year=2023, period="0A").snapshot_ref
+    """Store an active earlier-year borrador keyed by a free casilla id, as the earlier key contract did."""
+    period = Period.from_year_and_code(_LEGACY_YEAR, "0A")
+    ref = operation.snapshot("100", filing_year=_LEGACY_YEAR, period="0A").snapshot_ref
     values = {"casilla.0596": Decimal("15.25")}
     source = "file-import:sha256:" + "1" * 64
     snapshot = Borrador100Snapshot(
         snapshot_id=derive_borrador_100_snapshot_id(
-            filing_year=2023, period=period, registry_snapshot_ref=ref, source_url=source, binding_values=values
+            filing_year=_LEGACY_YEAR, period=period, registry_snapshot_ref=ref, source_url=source, binding_values=values
         ),
         bucket_id=bucket_id,
         modelo="100",
-        filing_year=2023,
+        filing_year=_LEGACY_YEAR,
         period=period,
         registry_snapshot_ref=ref,
         captured_at=_CAPTURED_AT,
@@ -147,13 +152,13 @@ def _store_borrador_below_support_floor(operation: PinnedAuthorityOperation, buc
 
 
 def _capture_borrador(operation: PinnedAuthorityOperation, bucket_id: str, *, captured_at: datetime) -> str:
-    """Capture an admitted 2025 borrador through the canonical service."""
+    """Capture an admitted borrador through the canonical service."""
     service = Borrador100SnapshotService(
         bucket_id=bucket_id, repository=build_borrador_100_snapshot_repository(bucket_id=bucket_id)
     )
     return service.capture(
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_BORRADOR_YEAR,
+        period=Period.from_year_and_code(_BORRADOR_YEAR, "0A"),
         captured_at=captured_at,
         source_url="file-import:sha256:" + "2" * 64,
         binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},
@@ -266,8 +271,8 @@ def test_an_earlier_schema_borrador_beside_a_current_one_is_counted_and_the_area
             bucket_id=runtime.bucket_id, repository=build_borrador_100_snapshot_repository(bucket_id=runtime.bucket_id)
         )
         service.capture(
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
+            filing_year=_BORRADOR_YEAR,
+            period=Period.from_year_and_code(_BORRADOR_YEAR, "0A"),
             captured_at=valid_at,
             source_url="file-import:sha256:" + "8" * 64,
             binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},

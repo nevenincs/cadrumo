@@ -44,6 +44,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -54,14 +55,16 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_TARGET_PERIOD = Period.from_year_and_code(2025, "3T")
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_TARGET_PERIOD = Period.from_year_and_code(_YEAR, "3T")
 _TAXPAYER_NIF = "12345678Z"
 _REPORT = IvaWalletCaptureReport(
     taxpayer_ref="synthetic-taxpayer-ref",
-    target_year=2025,
+    target_year=_YEAR,
     target_period=_TARGET_PERIOD,
-    observation_path="encrypted-observations/iva-wallet/2025-3T.json",
+    observation_path=f"encrypted-observations/iva-wallet/{_YEAR}-3T.json",
     decision_key="synthetic-wallet-decision",
     row_count=2,
     total_pending="120.00",
@@ -124,7 +127,7 @@ class _SyntheticIvaRemoteStatePort:
     ) -> IvaWalletCaptureReport:
         assert session is self.session
         assert settings is self.settings
-        assert (target_year, target_period) == (2025, _TARGET_PERIOD)
+        assert (target_year, target_period) == (_YEAR, _TARGET_PERIOD)
         assert taxpayer_nif == _TAXPAYER_NIF
         assert output_root == Path("synthetic-wallet-output")
         assert progress_context is None
@@ -188,7 +191,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=IvaWalletCaptureRequest(
                 profile_id=profile_id,
-                target_year=2025,
+                target_year=_YEAR,
                 target_period="3T",
                 taxpayer_nif=_TAXPAYER_NIF,
             ),
@@ -218,7 +221,7 @@ def test_supervisor_admits_exact_profile_and_projects_guarded_wallet_capture(tmp
     assert isinstance(projected, OperationResultProjectionSuccessV1)
     assert isinstance(projected.projection, IvaWalletCapturePublicResultV1)
     result = projected.projection
-    assert (result.target_year, result.target_period) == (2025, "3T")
+    assert (result.target_year, result.target_period) == (_YEAR, "3T")
     assert result.taxpayer_ref == _REPORT.taxpayer_ref
     assert _TAXPAYER_NIF not in result.model_dump_json()
     assert not hasattr(result, "taxpayer_nif")
