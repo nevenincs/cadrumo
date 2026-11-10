@@ -12,11 +12,25 @@ import datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.temporal_site_agreement import site_agreement_findings
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _whole_year_revision_with_windows(modelo_id: str):
+    """The newest authored revision of one modelo that governs a whole calendar year and declares deadline windows."""
+    return [
+        revision
+        for revision in authored_revisions(modelo_id)
+        if revision.deadline_windows
+        and revision.valid_to is not None
+        and (revision.valid_from.month, revision.valid_from.day) == (1, 1)
+        and (revision.valid_to.month, revision.valid_to.day) == (12, 31)
+    ][-1]
 
 
 @pytest.fixture(scope="module")
@@ -26,14 +40,14 @@ def authority() -> ValidatedRegistryAuthority:
 
 def test_an_agreeing_revision_reports_nothing(authority: ValidatedRegistryAuthority) -> None:
     """A revision whose sites agree yields no finding."""
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _whole_year_revision_with_windows("303")
     assert revision.deadline_windows, "the fixture revision must declare deadline windows"
     assert site_agreement_findings(revision, modelo_id="303") == ()
 
 
 def test_a_revision_without_deadline_windows_is_reported(authority: ValidatedRegistryAuthority) -> None:
     """An absent deadline declaration surfaces as its own kind, not as a year gap."""
-    revision = authority.modelo("840").revisions["2003-y-siguientes"]
+    revision = next(revision for revision in authored_revisions("840") if not revision.deadline_windows)
     kinds = [finding.kind for finding in site_agreement_findings(revision, modelo_id="840")]
     assert kinds == ["no_deadline_windows"]
 
@@ -47,9 +61,10 @@ def test_screen_detects_a_deadline_year_outside_the_declared_window(
     exhibit: a screen that never sees the defect cannot be trusted to report it,
     so the defect is constructed on a copy.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _whole_year_revision_with_windows("303")
+    beyond = filing_year_envelope().horizon + 1
     moved = revision.model_copy(
-        update={"valid_from": datetime.date(2030, 1, 1), "valid_to": datetime.date(2031, 12, 31)}
+        update={"valid_from": datetime.date(beyond, 1, 1), "valid_to": datetime.date(beyond + 1, 12, 31)}
     )
     kinds = {finding.kind for finding in site_agreement_findings(moved, modelo_id="303")}
     assert "deadline_year_outside_window" in kinds
@@ -61,7 +76,7 @@ def test_open_ended_windows_are_not_measured_for_year_gaps(authority: ValidatedR
     Measuring it against an invented horizon would manufacture findings the
     declaration does not support, which is the failure this exclusion prevents.
     """
-    revision = authority.modelo("303").revisions["2026-y-siguientes"]
+    revision = next(revision for revision in authored_revisions("303") if revision.valid_to is None)
     assert revision.valid_to is None
     kinds = {finding.kind for finding in site_agreement_findings(revision, modelo_id="303")}
     assert "window_year_without_deadline" not in kinds
@@ -69,11 +84,11 @@ def test_open_ended_windows_are_not_measured_for_year_gaps(authority: ValidatedR
 
 def test_a_closed_window_missing_a_year_is_reported(authority: ValidatedRegistryAuthority) -> None:
     """A closed window with no deadline window for one of its years is a gap."""
-    revision = authority.modelo("353").revisions["2021-hasta-2026-01"]
+    revision = next(revision for revision in authored_revisions("353") if revision.valid_to is not None)
     findings = site_agreement_findings(revision, modelo_id="353")
     gaps = [finding for finding in findings if finding.kind == "window_year_without_deadline"]
     assert gaps
-    assert "2021" in gaps[0].detail
+    assert str(revision.valid_from.year) in gaps[0].detail
 
 
 def test_every_declared_year_level_site_resolves_on_the_live_schema() -> None:
@@ -134,19 +149,20 @@ def test_a_selector_declaring_both_forms_is_reported(authority: ValidatedRegistr
     Constructed from a real revision rather than a stub, so the screen sees the
     shape it would meet in the registry.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _whole_year_revision_with_windows("303")
+    year = revision.valid_from.year
     selector = revision.period_selector
     assert not selector.years, "the fixture revision must not already carry both forms"
 
     dual = revision.model_copy(
-        update={"period_selector": selector.model_copy(update={"years": (2025,), "year_from": 2025})}
+        update={"period_selector": selector.model_copy(update={"years": (year,), "year_from": year})}
     )
 
     findings = site_agreement_findings(dual, modelo_id="303")
     dual_form = [finding for finding in findings if finding.kind == "selector_dual_form"]
 
     assert len(dual_form) == 1, "one constructed disagreement must yield one finding"
-    assert dual_form[0].detail == "years=[2025] and year_from=2025"
+    assert dual_form[0].detail == f"years=[{year}] and year_from={year}"
 
 
 def test_the_unmodified_revision_carries_no_dual_form(authority: ValidatedRegistryAuthority) -> None:
@@ -156,7 +172,7 @@ def test_the_unmodified_revision_carries_no_dual_form(authority: ValidatedRegist
     fire and does not, which is what makes a zero readable. Either alone leaves
     the reader unable to tell a clean registry from a dead check.
     """
-    revision = authority.modelo("303").revisions["2025"]
+    revision = _whole_year_revision_with_windows("303")
     kinds = [finding.kind for finding in site_agreement_findings(revision, modelo_id="303")]
     assert "selector_dual_form" not in kinds
 
@@ -170,7 +186,8 @@ def test_a_year_between_two_revisions_is_reported_unserved() -> None:
     """
     from ..analysis.temporal_site_agreement import unserved_interior_years
 
-    assert unserved_interior_years(((2020, 2021), (2023, 2024))) == (2022,)
+    first = filing_year_envelope().floor
+    assert unserved_interior_years(((first, first + 1), (first + 3, first + 4))) == (first + 2,)
 
 
 def test_years_before_the_first_revision_are_not_a_gap() -> None:
@@ -183,20 +200,22 @@ def test_years_before_the_first_revision_are_not_a_gap() -> None:
     """
     from ..analysis.temporal_site_agreement import unserved_interior_years
 
-    assert unserved_interior_years(((2022, 2022), (2023, 2023), (2024, 2025))) == ()
+    first = filing_year_envelope().floor
+    assert unserved_interior_years(((first, first), (first + 1, first + 1), (first + 2, first + 3))) == ()
 
 
 def test_an_open_ended_revision_creates_no_gap_to_a_horizon_nobody_declared() -> None:
     """An unclosed window is closed at the latest year any revision mentions."""
     from ..analysis.temporal_site_agreement import unserved_interior_years
 
-    assert unserved_interior_years(((2020, 2021), (2022, None))) == ()
+    first = filing_year_envelope().floor
+    assert unserved_interior_years(((first, first + 1), (first + 2, None))) == ()
     # It still cannot paper over a real gap beneath it.
-    assert unserved_interior_years(((2020, 2020), (2022, None))) == (2021,)
+    assert unserved_interior_years(((first, first), (first + 2, None))) == (first + 1,)
 
 
 def test_a_modelo_with_no_closed_window_yields_nothing() -> None:
     """With no closed revision there is no span to find an interior of."""
     from ..analysis.temporal_site_agreement import unserved_interior_years
 
-    assert unserved_interior_years(((2020, None),)) == ()
+    assert unserved_interior_years(((filing_year_envelope().floor, None),)) == ()

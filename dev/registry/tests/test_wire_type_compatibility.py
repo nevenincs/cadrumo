@@ -11,10 +11,12 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..analysis.wire_type_compatibility import transitions_for_revision
 from ..compiler.authority import compiled_bundled_authority
 from ..maintenance_support import resolved_export_endpoints
+from .authored_edition_support import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,7 +28,14 @@ def authority() -> ValidatedRegistryAuthority:
 
 @pytest.fixture(scope="module")
 def revision(authority: ValidatedRegistryAuthority) -> ModeloRevision:
-    return authority.modelo("303").revisions["2025"]
+    whole_year = [
+        candidate
+        for candidate in authored_revisions("303")
+        if candidate.valid_to is not None
+        and (candidate.valid_from.month, candidate.valid_from.day) == (1, 1)
+        and (candidate.valid_to.month, candidate.valid_to.day) == (12, 31)
+    ][-1]
+    return authority.modelo("303").revisions[str(whole_year.id)]
 
 
 def test_identity_transitions_are_not_reported_divergent(revision: ModeloRevision) -> None:
@@ -54,7 +63,7 @@ def test_row_mapped_endpoints_are_excluded_not_mispaired(authority: ValidatedReg
     record maps a repeated counterparty row onto casillas, and reading that
     edge without the mapping is what produced two wrong figures before.
     """
-    revision = authority.modelo("347").revisions["2025-y-siguientes"]
+    revision = authority.modelo("347").revisions[str(open_ended_revision("347").id)]
     endpoints = resolved_export_endpoints(revision)
     row_mapped = [item for item in endpoints if item.path == "row_field"]
     assert row_mapped, "modelo 347 carries row-mapped endpoints"

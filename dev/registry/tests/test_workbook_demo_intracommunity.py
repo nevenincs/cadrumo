@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..workbook_demo import build_demonstration_plan
 from ..workbook_demo_cases import DemoCase
@@ -15,7 +16,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.
 
 
 def test_compiled_intracommunity_summary_and_correction_share_invoice_projection() -> None:
-    snapshot, plan = build_demonstration_plan(DemoCase("349", "2020-y-siguientes", None, None))
+    snapshot, plan = build_demonstration_plan(DemoCase("349", str(open_ended_revision("349").id), None, None))
     summary = intracommunity_summary(snapshot)
     expected = {
         "numero-operadores": Decimal("2"),

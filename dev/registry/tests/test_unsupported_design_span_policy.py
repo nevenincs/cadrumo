@@ -7,6 +7,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .revision_span_boundary_support import boundaries_for
@@ -30,9 +31,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: regression.
 _KNOWN_UNSUPPORTED_SPANS = frozenset(
     {
-        ("126", "2019-y-siguientes"),
-        ("128", "2019-y-siguientes"),
-        ("345", "2023"),
+        *((modelo_id, str(open_ended_revision(modelo_id).id)) for modelo_id in ("126", "128")),
+        *(
+            (modelo.id, revision_id)
+            for modelo, revision_id, revision in declared_revisions()
+            if modelo.id == "345"
+            and revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
+            and boundaries_for(modelo.id, revision)
+        ),
     },
 )
 
