@@ -6,7 +6,7 @@ a single fixed occurrence regardless of how many counterparties the resolver
 produced -- a multi-counterparty declaration would have truncated to one
 counterparty, the exact defect this module guards against. This module
 proves the repoint against BOTH real bundled revisions
-(``2025-y-siguientes`` and ``2011-2024``, since the underlying defect names no
+(every authored one, since the underlying defect names no
 revision qualifier) and the real production entry points:
 :func:`resolve_invoice_binding_row_values` and :func:`record_render_rows`.
 
@@ -38,13 +38,15 @@ from ....domain.calculations.registry.invoice_bindings import (
 )
 from ....domain.calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_threshold_buckets
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from ....domain.filing.errors import FilingExportValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REPOINTED_REVISIONS = ("2025-y-siguientes", "2011-2024")
-_M347_EFFECTIVE_DATE = date(2025, 12, 31)
+_YEAR = filing_year_envelope().horizon
+_REPOINTED_REVISIONS = tuple(str(revision.id) for revision in authored_revisions("347"))
+_M347_EFFECTIVE_DATE = date(_YEAR, 12, 31)
 
 
 @pytest.fixture(autouse=True)
@@ -127,7 +129,7 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
             invoice_id="inv-1",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 2, 10),
+            transaction_date=date(_YEAR, 2, 10),
             total="5000.00",
             operation_clave="A",
         ),
@@ -135,7 +137,7 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
             invoice_id="inv-2",
             party_tax_id="C22222229",
             party_legal_name="Contraparte Dos SA",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(_YEAR, 6, 15),
             total="3200.00",
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -168,7 +170,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             invoice_id="inv-below",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Bajo Umbral SL",
-            transaction_date=date(2025, 2, 10),
+            transaction_date=date(_YEAR, 2, 10),
             total=str(threshold - Decimal("0.01")),
             operation_clave="A",
         ),
@@ -176,7 +178,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             invoice_id="inv-exactly",
             party_tax_id="C22222229",
             party_legal_name="Contraparte Umbral Exacto SA",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(_YEAR, 6, 15),
             total=str(threshold),
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -185,7 +187,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             invoice_id="inv-above",
             party_tax_id="D33333335",
             party_legal_name="Contraparte Sobre Umbral SL",
-            transaction_date=date(2025, 9, 1),
+            transaction_date=date(_YEAR, 9, 1),
             total=str(threshold + Decimal("0.01")),
             operation_clave="A",
         ),
@@ -220,7 +222,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             invoice_id="inv-c-below",
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
-            transaction_date=date(2025, 2, 10),
+            transaction_date=date(_YEAR, 2, 10),
             total=str(_m347_clave_c_threshold() - Decimal("0.01")),
             operation_clave="C",
         ),
@@ -228,7 +230,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             invoice_id="inv-c-above",
             party_tax_id="C22222229",
             party_legal_name="Colegiado Sobre Umbral SA",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(_YEAR, 6, 15),
             total=str(_m347_clave_c_threshold() + Decimal("0.01")),
             operation_clave="C",
         ),
@@ -236,7 +238,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             invoice_id="inv-b-below-general",
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
-            transaction_date=date(2025, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             total=str(_m347_clave_c_threshold() + Decimal("100.00")),
             operation_clave="B",
         ),
@@ -265,7 +267,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_i
             invoice_id="inv-1",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 2, 10),
+            transaction_date=date(_YEAR, 2, 10),
             total="5000.00",
             operation_clave="A",
         ),
@@ -273,7 +275,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_i
             invoice_id="inv-2",
             party_tax_id="C22222229",
             party_legal_name="Contraparte Dos SA",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(_YEAR, 6, 15),
             total="3200.00",
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -282,7 +284,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_i
             invoice_id="inv-3",
             party_tax_id="D33333335",
             party_legal_name="Contraparte Tres SL",
-            transaction_date=date(2025, 9, 1),
+            transaction_date=date(_YEAR, 9, 1),
             total="7000.00",
             operation_clave="A",
         ),
@@ -311,7 +313,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
             invoice_id="q1",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 1, 15),
+            transaction_date=date(_YEAR, 1, 15),
             total="1000.00",
             operation_clave="A",
         ),
@@ -319,7 +321,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
             invoice_id="q2",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 4, 20),
+            transaction_date=date(_YEAR, 4, 20),
             total="2000.00",
             operation_clave="A",
         ),
@@ -327,7 +329,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
             invoice_id="q3",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 8, 5),
+            transaction_date=date(_YEAR, 8, 5),
             total="3000.00",
             operation_clave="A",
         ),
@@ -335,7 +337,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
             invoice_id="q4",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 12, 25),
+            transaction_date=date(_YEAR, 12, 25),
             total="4000.00",
             operation_clave="A",
         ),
@@ -374,7 +376,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
             invoice_id="boundary-q1",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 3, 31),
+            transaction_date=date(_YEAR, 3, 31),
             total="2000.00",
             operation_clave="A",
         ),
@@ -382,7 +384,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
             invoice_id="boundary-q2",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 4, 1),
+            transaction_date=date(_YEAR, 4, 1),
             total="1200.00",
             operation_clave="A",
         ),
@@ -466,7 +468,7 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
             invoice_id="inv-es",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 2, 10),
+            transaction_date=date(_YEAR, 2, 10),
             total="5000.00",
             operation_clave="A",
             country_code="ES",
@@ -475,7 +477,7 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
             invoice_id="inv-us",
             party_tax_id="C22222229",
             party_legal_name="Acme Imports Inc",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(_YEAR, 6, 15),
             total="3200.00",
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -485,7 +487,7 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
             invoice_id="inv-mx",
             party_tax_id="D33333336",
             party_legal_name="Importadora Mexicana SA",
-            transaction_date=date(2025, 9, 15),
+            transaction_date=date(_YEAR, 9, 15),
             total="4100.00",
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -529,7 +531,7 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
             invoice_id="sale",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             total=str(above_general),
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -538,7 +540,7 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
             invoice_id="purchase",
             party_tax_id="B11111112",
             party_legal_name="Contraparte Uno SL",
-            transaction_date=date(2025, 6, 1),
+            transaction_date=date(_YEAR, 6, 1),
             total=str(above_general),
             operation_clave="A",
         ),
@@ -546,7 +548,7 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
             invoice_id="collection",
             party_tax_id="A22222224",
             party_legal_name="Beneficiario Dos SA",
-            transaction_date=date(2025, 9, 1),
+            transaction_date=date(_YEAR, 9, 1),
             total=str(above_clave_c),
             operation_clave="C",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -555,7 +557,7 @@ def test_declarante_totals_count_and_sum_the_emitted_declarado_records(revision_
             invoice_id="below",
             party_tax_id="B33333336",
             party_legal_name="Contraparte Tres SL",
-            transaction_date=date(2025, 10, 1),
+            transaction_date=date(_YEAR, 10, 1),
             total="1000.00",
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
