@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 import typer
@@ -59,7 +59,7 @@ def test_parse_bucket_event_types_rejects_unknown_value_with_localized_message()
 
 
 def test_parse_bucket_history_instant_normalises_naive_date_to_utc() -> None:
-    parsed = parse_bucket_history_instant("2026-01-01", flag="--since")
+    parsed = parse_bucket_history_instant(date(1980, 1, 1).isoformat(), flag="--since")
 
     assert parsed is not None
     assert parsed.tzinfo is not None
@@ -74,7 +74,7 @@ def test_bucket_history_event_payload_carries_payload_version() -> None:
     projection while the canonical BucketEvent carries it is the defect this
     regression pins.
     """
-    event = _event_at(datetime(2026, 1, 15, tzinfo=UTC))
+    event = _event_at(datetime(1980, 1, 15, tzinfo=UTC))
 
     payload = bucket_history_event_payload(event)
 
@@ -88,7 +88,7 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
             {
                 "event_id": "e" * 64,
                 "event_type": BucketEventType.PROFILE_SELECTED,
-                "occurred_at": datetime(2026, 1, 15, tzinfo=UTC),
+                "occurred_at": datetime(1980, 1, 15, tzinfo=UTC),
                 "actor": "cadrumo.config.profile.history",
                 "object_type": BucketEventObjectType.PROFILE,
                 "object_id": "profile-1",
