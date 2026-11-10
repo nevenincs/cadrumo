@@ -171,6 +171,8 @@ class RuntimeProfileConnections(
         self._attendance_holders: dict[UUID, UUID] = {}
         # Per connection, the non-terminal operations it observed and the session it observed them under.
         self._operation_watches: dict[UUID, dict[OperationId, UUID]] = {}
+        # A person's submitted changes not yet observed settled, with the connection and session that submitted them.
+        self._person_writes: dict[OperationId, tuple[UUID, UUID]] = {}
         self._attended: dict[UUID, AttendedConnection] = {}
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()
