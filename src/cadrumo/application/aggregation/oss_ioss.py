@@ -132,6 +132,30 @@ def _cuota_at(base: Decimal, rate: IvaRateRecord) -> Decimal:
     return round_to_cents(base * rate.pct / Decimal("100"))
 
 
+def _ordinary_rate(
+    member_state: EUMemberState, rate_kind: IvaRateKind, on_date: date, *, operation: PinnedAuthorityOperation
+) -> IvaRateRecord:
+    """Return the ordinary rate of the tier, refusing a tier the Member State never had."""
+    try:
+        return lookup_rate(member_state, rate_kind, on_date, operation=operation)
+    except IvaRateNotFoundError as exc:
+        # The table answers every date of a tier a state has, so this state never had the tier.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rate_tier_absent"),
+            context={
+                "destination_member_state": member_state.value,
+                "rate_kind": rate_kind.value,
+                "transaction_date": on_date.isoformat(),
+            },
+        ) from exc
+
+
+def _closest_rates(rates: Sequence[IvaRateRecord], base: Decimal, persisted: Decimal) -> list[IvaRateRecord]:
+    """Return the rates giving exactly the persisted cuota, else those within a cent of it."""
+    exact = [rate for rate in rates if _cuota_at(base, rate) == persisted]
+    return exact or [rate for rate in rates if abs(_cuota_at(base, rate) - persisted) <= CENT]
+
+
 def _applied_rate(
     member_state: EUMemberState,
     rate_kind: IvaRateKind,
@@ -148,24 +172,12 @@ def _applied_rate(
     percentage unknown, so that refuses, as does a tier the Member State never had.
     A nil line says nothing and reads the ordinary rate.
     """
-    try:
-        ordinary = lookup_rate(member_state, rate_kind, on_date, operation=operation)
-    except IvaRateNotFoundError as exc:
-        # The table answers every date of a tier a state has, so this state never had the tier.
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.rate_tier_absent"),
-            context={
-                "destination_member_state": member_state.value,
-                "rate_kind": rate_kind.value,
-                "transaction_date": on_date.isoformat(),
-            },
-        ) from exc
+    ordinary = _ordinary_rate(member_state, rate_kind, on_date, operation=operation)
     persisted = round_to_cents(iva)
     if base == Decimal("0") and persisted == Decimal("0"):
         return ordinary
     rates = (ordinary, *coexisting_tier_rates(member_state, rate_kind, on_date, operation=operation))
-    exact = [rate for rate in rates if _cuota_at(base, rate) == persisted]
-    near = exact or [rate for rate in rates if abs(_cuota_at(base, rate) - persisted) <= CENT]
+    near = _closest_rates(rates, base, persisted)
     if len(near) > 1:
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.rate_tier_ambiguous"),
@@ -850,27 +862,47 @@ def _caller_correction_slots(
         if not given:
             continue
         held.add(index)
-        country, year, period_type, period, cuota = row
         details = {"row": str(index + 1)}
-        if (
-            len(given) != _CORRECTION_ROW_COLUMNS
-            or texts.get(country) not in country_codes
-            or texts.get(period_type) != _period_type(filed)
-            or not str(texts.get(period, "")).isdecimal()
-            or year not in numbers
-            or cuota not in numbers
-        ):
+        if not _correction_row_is_complete(context, row, len(given), country_codes, filed):
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details)
-        number = int(texts[period])
-        try:
-            code = quarter_code(number).value if _period_type(filed) == _QUARTER_PERIOD_TYPE else f"{number:02d}"
-            corrected = Period.from_year_and_code(int(numbers[year]), code)
-        except (PeriodError, ValueError) as exc:
-            raise AggregationValidationError(
-                tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details
-            ) from exc
+        corrected = _entered_corrected_period(context, row, filed, details)
         _require_correctable(corrected, filed, years=int(declarations["correction.limit_years"]), context=details)
     return frozenset(held)
+
+
+def _correction_row_is_complete(
+    context: CalculationSourceContext,
+    row: tuple[BindingId, ...],
+    given: int,
+    country_codes: set[str],
+    filed: Period,
+) -> bool:
+    """Whether the operator entered every column of a corrections row, each in its column's form."""
+    numbers, texts = context.caller_binding_values, context.caller_enum_binding_values
+    country, year, period_type, period, cuota = row
+    return not (
+        given != _CORRECTION_ROW_COLUMNS
+        or texts.get(country) not in country_codes
+        or texts.get(period_type) != _period_type(filed)
+        or not str(texts.get(period, "")).isdecimal()
+        or year not in numbers
+        or cuota not in numbers
+    )
+
+
+def _entered_corrected_period(
+    context: CalculationSourceContext, row: tuple[BindingId, ...], filed: Period, details: dict[str, str]
+) -> Period:
+    """Return the period an entered corrections row corrects, refusing one that is no period."""
+    _, year, _, period, _ = row
+    number = int(context.caller_enum_binding_values[period])
+    try:
+        code = quarter_code(number).value if _period_type(filed) == _QUARTER_PERIOD_TYPE else f"{number:02d}"
+        return Period.from_year_and_code(int(context.caller_binding_values[year]), code)
+    except (PeriodError, ValueError) as exc:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.correction_row_invalid"), context=details
+        ) from exc
 
 
 def correction_binding_values(
@@ -897,6 +929,34 @@ def correction_binding_values(
     declarations = _projection_declarations(filed.end_date, operation=operation)
     slots = record_row_slots(context.revision, record_id)
     held = _caller_correction_slots(context, slots, declarations, filed)
+    nets = _correction_nets(context, observations, record_id, declarations, filed, operation=operation)
+    rows = sorted(item for item in nets.items() if item[1] != Decimal("0"))
+    free = [slot for index, slot in enumerate(slots) if index not in held]
+    if len(rows) > len(free):
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_rows_exceed_page"),
+            context={"record": record_id, "rows": str(len(rows)), "capacity": str(len(free))},
+        )
+    for slot, ((country_code, year, period_type, period), cuota) in zip(free, rows, strict=False):
+        country, year_slot, period_type_slot, period_slot, cuota_slot = slot
+        enum_values[country] = country_code
+        decimal_values[year_slot] = Decimal(year)
+        enum_values[period_type_slot] = period_type
+        enum_values[period_slot] = period
+        decimal_values[cuota_slot] = cuota
+    return decimal_values, enum_values
+
+
+def _correction_nets(
+    context: CalculationSourceContext,
+    observations: Sequence[OssIossLedgerObservation],
+    record_id: str,
+    declarations: Mapping[str, str],
+    filed: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[tuple[str, int, str, str], Decimal]:
+    """Return the net cuota the lines do to each destination and corrected period, refusing a late one."""
     nets: dict[tuple[str, int, str, str], Decimal] = {}
     for observation in observations:
         corrected = observation.corrected_period
@@ -915,21 +975,7 @@ def correction_binding_values(
             _wire_period(corrected),
         )
         nets[key] = nets.get(key, Decimal("0")) + observation.signed_iva_amount
-    rows = sorted(item for item in nets.items() if item[1] != Decimal("0"))
-    free = [slot for index, slot in enumerate(slots) if index not in held]
-    if len(rows) > len(free):
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.detail_rows_exceed_page"),
-            context={"record": record_id, "rows": str(len(rows)), "capacity": str(len(free))},
-        )
-    for slot, ((country_code, year, period_type, period), cuota) in zip(free, rows, strict=False):
-        country, year_slot, period_type_slot, period_slot, cuota_slot = slot
-        enum_values[country] = country_code
-        decimal_values[year_slot] = Decimal(year)
-        enum_values[period_type_slot] = period_type
-        enum_values[period_slot] = period
-        decimal_values[cuota_slot] = cuota
-    return decimal_values, enum_values
+    return nets
 
 
 def _can_close_detail_rows(
@@ -976,7 +1022,8 @@ def closed_detail_record_rows(
     """
     if not _can_close_detail_rows(context, projection, supplied_binding_ids):
         return ()
-    if context.work_unit_id is None or projection.catalogue_fingerprint is None:
+    work_unit_id, fingerprint = context.work_unit_id, projection.catalogue_fingerprint
+    if work_unit_id is None or fingerprint is None:
         return ()
     revision = _layout_hydrated_revision(context, operation=operation)
     effective_date = projection_period(context.period).end_date
@@ -988,43 +1035,62 @@ def closed_detail_record_rows(
     # The operator's rows of the corrections table belong to the table's membership.
     entered = frozenset(context.caller_binding_values) | frozenset(context.caller_enum_binding_values)
     for record_id in (*_closable_records(revision, effective_date, operation=operation), *corrections):
-        slots = record_row_slots(revision, record_id)
-        if len(slots) != capacity:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-        require_wire_geometry(revision, record_id, slots)
+        slots = _validated_record_slots(revision, record_id, capacity)
         occupying = supplied_binding_ids | entered if record_id in corrections else supplied_binding_ids
         require_slot_coverage(slots, occupying)
         covered.update(binding for row in slots for binding in row)
-        closed.append(
-            ClosedRecordRowSet(
-                record_id=record_id,
-                bucket_id=context.bucket_id,
-                work_unit_id=context.work_unit_id,
-                registry_snapshot_ref=RegistrySnapshotRef(
-                    modelo=context.modelo,
-                    revision_id=context.revision.id,
-                    modelo_year=context.filing_year,
-                    period=context.period.registry_token,
-                ),
-                authority_generation=operation.pin().logical_generation,
-                source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-                # The actual profile-local singleton catalogue, not a synthesized
-                # aggregate pretending to be an independently persisted source.
-                source_ref="invoice_catalogue:catalogue",
-                source_fingerprint=projection.catalogue_fingerprint,
-                rows=tuple(
-                    RecordRowMembership(
-                        row_index=index,
-                        binding_ids=row,
-                        occupied=bool(occupying.intersection(row)),
-                    )
-                    for index, row in enumerate(slots, start=1)
-                ),
-            ),
-        )
+        closed.append(_closed_row_set(context, record_id, slots, occupying, work_unit_id, fingerprint, operation))
     if not supplied_binding_ids.issubset(covered):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
     return tuple(closed)
+
+
+def _validated_record_slots(
+    revision: ModeloRevision, record_id: str, capacity: int
+) -> tuple[tuple[BindingId, ...], ...]:
+    """Return the record's row slots once they are the page's size and agree with the wire geometry."""
+    slots = record_row_slots(revision, record_id)
+    if len(slots) != capacity:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    require_wire_geometry(revision, record_id, slots)
+    return slots
+
+
+def _closed_row_set(
+    context: CalculationSourceContext,
+    record_id: str,
+    slots: tuple[tuple[BindingId, ...], ...],
+    occupying: frozenset[BindingId],
+    work_unit_id: str,
+    fingerprint: ContentDigest,
+    operation: PinnedAuthorityOperation,
+) -> ClosedRecordRowSet:
+    """Close one record's table, marking the rows an occupying binding sits in."""
+    return ClosedRecordRowSet(
+        record_id=record_id,
+        bucket_id=context.bucket_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=context.modelo,
+            revision_id=context.revision.id,
+            modelo_year=context.filing_year,
+            period=context.period.registry_token,
+        ),
+        authority_generation=operation.pin().logical_generation,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        # The actual profile-local singleton catalogue, not a synthesized
+        # aggregate pretending to be an independently persisted source.
+        source_ref="invoice_catalogue:catalogue",
+        source_fingerprint=fingerprint,
+        rows=tuple(
+            RecordRowMembership(
+                row_index=index,
+                binding_ids=row,
+                occupied=bool(occupying.intersection(row)),
+            )
+            for index, row in enumerate(slots, start=1)
+        ),
+    )
 
 
 class OssIossInvoiceProjection(BaseModel):

@@ -383,7 +383,21 @@ class LedgerIvaAggregationSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             source_transaction_ids=tuple(sorted(transaction_ids)),
-            diagnostics=out_of_window_summary_diagnostics(
+            diagnostics=self._screening_diagnostics(context, aggregation_period, aggregation, invoice_screen)
+            + self._unrouted_diagnostics(context, unconsumed, unrouted_quantities, unroutable_categories),
+            provenance=self._ledger_provenance(context, aggregation_period, aggregation),
+        )
+
+    def _screening_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation_period: Period,
+        aggregation: IvaLedgerAggregation,
+        invoice_screen: ScreenedInvoiceIva,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the window, invoice-screen, cash-accounting and ledger-issue findings."""
+        return (
+            out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
@@ -438,7 +452,18 @@ class LedgerIvaAggregationSourceResolver:
                 aggregation.issues,
                 resolver_id=self.resolver_id,
             )
-            + source_diagnostics_for(
+        )
+
+    def _unrouted_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        unconsumed: Sequence[IvaLedgerObservation],
+        unrouted_quantities: Sequence[UnroutedLedgerQuantity[IvaLedgerObservation]],
+        unroutable_categories: Sequence[IvaCategory],
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the amounts and categories that no binding consumes."""
+        return (
+            source_diagnostics_for(
                 unconsumed,
                 reason="unrouted_observation",
                 source_kind="ledger_iva_aggregation",
@@ -482,40 +507,48 @@ class LedgerIvaAggregationSourceResolver:
                     "period. Cuota is legitimately zero or already declared elsewhere for this category, "
                     "so no tax is lost, but the base amount itself is not represented in this filing"
                 ),
-            ),
-            provenance=(
-                source_provenance_for(
-                    aggregation.observations,
-                    lambda observation: CalculationSourceProvenance(
-                        resolver_id=self.resolver_id,
-                        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        contributor_source_kind="ledger_iva_aggregation",
-                        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        lineage_role=CalculationSourceLineageRole.PRIMARY,
-                        source_ref=_observation_source_ref(observation),
-                        parent_source_ref=None,
-                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                    ),
-                )
-                + source_provenance_for(
-                    aggregation.prorrata_references,
-                    lambda reference: CalculationSourceProvenance(
-                        resolver_id=self.resolver_id,
-                        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        contributor_source_kind="ledger_iva_aggregation",
-                        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                        lineage_role=CalculationSourceLineageRole.PRIMARY,
-                        source_ref=f"prorrata:{reference.transaction_id}",
-                        parent_source_ref=None,
-                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
-                    ),
-                )
-                + _iva_prorrata_apportionment_provenance(
-                    context.revision,
-                    aggregation_period,
-                    aggregation.prorrata_apportionment,
-                )
-            ),
+            )
+        )
+
+    def _ledger_provenance(
+        self,
+        context: CalculationSourceContext,
+        aggregation_period: Period,
+        aggregation: IvaLedgerAggregation,
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        """Name each observation, prorrata reference and apportionment the resolution rests on."""
+        return (
+            source_provenance_for(
+                aggregation.observations,
+                lambda observation: CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                    contributor_source_kind="ledger_iva_aggregation",
+                    contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=_observation_source_ref(observation),
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                ),
+            )
+            + source_provenance_for(
+                aggregation.prorrata_references,
+                lambda reference: CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                    contributor_source_kind="ledger_iva_aggregation",
+                    contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=f"prorrata:{reference.transaction_id}",
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                ),
+            )
+            + _iva_prorrata_apportionment_provenance(
+                context.revision,
+                aggregation_period,
+                aggregation.prorrata_apportionment,
+            )
         )
 
 

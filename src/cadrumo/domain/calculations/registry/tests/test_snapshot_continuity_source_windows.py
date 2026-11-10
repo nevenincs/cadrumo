@@ -34,11 +34,23 @@ from ..snapshot_globals import SnapshotGlobalCatalogues
 from ..snapshot_references import collect_snapshot_ref_ids
 from ..snapshot_source_windows import revision_scoped_source_window_failures
 from ..temporal import ModeloRevisionDirectory
+from .authored_editions import authored_revisions, authored_revisions_where
 from .authority_fakes import FakeAuthorityComponentReader
 from .registry_tree import bundled_registry_tree
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+# The editions below are chosen by the evidence they carry, not by a year: the first
+# Modelo 322 edition that evolves from a predecessor, the newest Modelo 308 edition and
+# the one Modelo 309 edition that records structural successions.
+_M322_EDITION = authored_revisions_where("322", lambda revision: bool(revision.casilla_continuidad_evolutions))[0]
+_M322_ID = str(_M322_EDITION.id)
+_M322_EXERCISE = _M322_EDITION.valid_from.year
+_M322_PRIOR_ID = str(_M322_EDITION.casilla_continuidad_evolutions[0].from_revision)
+_M308_NEWEST = authored_revisions("308")[-1]
+_M309_EDITION = authored_revisions_where("309", lambda revision: bool(revision.casilla_structural_successions))[0]
 
 
 def _modelo_and_catalogues(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -49,8 +61,8 @@ def _modelo_and_catalogues(modelo_id: str) -> tuple[ModeloDefinition, RegistryCa
 @pytest.mark.parametrize(
     ("modelo_id", "filing_year", "period", "revision_id", "historical_source"),
     [
-        ("322", 2023, "01", "2023", "aeat-dr-322-2022"),
-        ("308", 2019, "0A", "2019-y-siguientes", "aeat-dr-308-2009"),
+        ("322", _M322_EXERCISE, "01", _M322_ID, "aeat-dr-322-2022"),
+        ("308", _M308_NEWEST.valid_from.year, "0A", str(_M308_NEWEST.id), "aeat-dr-308-2009"),
     ],
 )
 def test_real_historical_continuity_sources_are_carried_from_their_valid_endpoints(
@@ -79,7 +91,7 @@ def test_real_historical_continuity_sources_are_carried_from_their_valid_endpoin
 
 def test_a_historical_source_reused_by_a_current_casilla_keeps_the_revision_window_check() -> None:
     modelo, catalogues = _modelo_and_catalogues("322")
-    revision = modelo.revisions["2023"]
+    revision = modelo.revisions[_M322_ID]
     historical_source = "aeat-dr-322-2022"
     assert historical_source not in modelo.source_refs
     assert all(historical_source not in casilla.source_refs for casilla in revision.casillas)
@@ -96,7 +108,7 @@ def test_a_historical_source_reused_by_a_current_casilla_keeps_the_revision_wind
             changed_modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2023,
+            filing_year=_M322_EXERCISE,
             period="01",
             grade=RegistryAuthorityGrade.APPLICABILITY,
         )
@@ -105,7 +117,7 @@ def test_a_historical_source_reused_by_a_current_casilla_keeps_the_revision_wind
 @pytest.mark.parametrize("defect", ["unknown-source", "unrelated-source", "unknown-endpoint"])
 def test_historical_evolution_sources_must_match_a_real_declared_endpoint(defect: str) -> None:
     modelo, catalogues = _modelo_and_catalogues("322")
-    revision = modelo.revisions["2023"]
+    revision = modelo.revisions[_M322_ID]
     evolution = revision.casilla_continuidad_evolutions[0]
     if defect == "unknown-source":
         evolution = evolution.model_copy(update={"source_refs": ("missing-source",)})
@@ -128,7 +140,7 @@ def test_historical_evolution_sources_must_match_a_real_declared_endpoint(defect
 
 def test_structural_endpoint_sources_cannot_be_reversed() -> None:
     modelo, catalogues = _modelo_and_catalogues("309")
-    revision = modelo.revisions["2016-2017"]
+    revision = modelo.revisions[str(_M309_EDITION.id)]
     reversed_relations = tuple(
         relation.model_copy(
             update={
@@ -156,7 +168,7 @@ def test_structural_succession_grounding_is_available_in_the_snapshot() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2016,
+        filing_year=_M309_EDITION.valid_from.year,
         period="0A",
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
@@ -175,8 +187,8 @@ def test_directory_component_round_trip_preserves_complete_endpoint_source_enrol
 
     assert decoded == directory
     assert isinstance(decoded, ModeloRevisionDirectory)
-    assert decoded.endpoint_source_ids("2008-2022")
-    assert decoded.endpoint_source_ids("2023")
+    assert decoded.endpoint_source_ids(_M322_PRIOR_ID)
+    assert decoded.endpoint_source_ids(_M322_ID)
 
 
 def test_directory_component_without_endpoint_source_enrollment_is_refused() -> None:
@@ -227,8 +239,8 @@ class _PublishedFactReader(FakeAuthorityComponentReader):
 
 def test_indexed_snapshot_uses_directory_endpoint_context_without_loading_prior_revision() -> None:
     modelo, catalogues = _modelo_and_catalogues("322")
-    revision = modelo.revisions["2023"]
-    prior_revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_M322_ID]
+    prior_revision = modelo.revisions[_M322_PRIOR_ID]
     directory = ModeloRevisionDirectory.from_modelo(modelo, support=catalogues.supported_filing_years)
     directory_query = ModeloDirectoryComponentQuery(modelo.id)
     revision_query = ModeloRevisionComponentQuery(modelo.id, str(revision.id))
@@ -257,7 +269,7 @@ def test_indexed_snapshot_uses_directory_endpoint_context_without_loading_prior_
         with validating_governed_facts(operation):
             snapshot = operation.snapshot(
                 modelo.id,
-                filing_year=2023,
+                filing_year=_M322_EXERCISE,
                 period="01",
                 grade=RegistryAuthorityGrade.APPLICABILITY,
             )

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
+from .authored_editions import authored_revisions, newest_authored_edition, revision_covering
 from .published_authority import published_legal_reference
 from .registry_scenarios_support import (
     estimacion_objetiva_modulos_archetype_scenario,
@@ -34,6 +35,9 @@ from .scenarios import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_M100_EXERCISE = newest_authored_edition("100")
+_M100_REVISION = str(revision_covering("100", _M100_EXERCISE).id)
 
 
 @pytest.fixture(scope="module")
@@ -258,8 +262,8 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
         RegistryCalculationScenario(
             id="ungrounded-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
@@ -274,8 +278,8 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
         RegistryCalculationScenario(
             id="blank-legal-ref-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
@@ -290,15 +294,17 @@ def test_registry_scenario_expected_output_requires_grounding() -> None:
         RegistryCalculationScenario(
             id="blank-source-ref-expected-output",
             modelo="100",
-            revision="2025",
-            filing_year=2025,
+            revision=_M100_REVISION,
+            filing_year=_M100_EXERCISE,
             period="0A",
             expected_outputs=(RegistryScenarioExpectedOutput.model_validate(output_dict),),
         )
 
 
 def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> None:
-    scenario = simplified_direct_estimation_cap_scenario().model_copy(update={"revision": "2024"})
+    scenario = simplified_direct_estimation_cap_scenario().model_copy(
+        update={"revision": str(authored_revisions("100")[-2].id)}
+    )
 
-    with pytest.raises(RegistrySnapshotError, match="revision='2024'"):
+    with pytest.raises(RegistrySnapshotError, match=f"revision='{authored_revisions('100')[-2].id}'"):
         run_registry_calculation_scenario(scenario)

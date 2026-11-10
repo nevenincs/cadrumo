@@ -8,13 +8,16 @@ from ..errors import RegistryValidationError
 from ..fixed_width_codec import render_fixed_width_export_field
 from ..fixed_width_parser import parse_fixed_width_export_field
 from ..schema_exports import ExportFieldDefinition
+from .authored_editions import filing_year_envelope
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _correction_amount() -> ExportFieldDefinition:
-    snapshot = published_snapshot("369", filing_year=2026, period="EXT-1T", revision_id="esquema-exterior")
+    snapshot = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period="EXT-1T", revision_id="esquema-exterior"
+    )
     [record] = [
         record for record in snapshot.revision.export_layouts[0].records if record.id == "modelo-369-exterior-t36902"
     ]

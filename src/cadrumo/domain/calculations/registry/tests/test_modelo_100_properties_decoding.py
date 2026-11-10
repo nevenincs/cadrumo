@@ -9,6 +9,7 @@ from ..errors import RegistryValidationError
 from ..export_xml_dictionary import decode_dictionary_text, xml_dictionary_entries
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
+from .authored_editions import authored_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -16,10 +17,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_cp1252_dictionary_preserves_runtime_ids_and_decodes_0x96_as_punctuation(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    """The canonical parser retains the 2020 row set without Latin-1 C1 degradation."""
+    """The canonical parser retains the oldest authored edition's row set without Latin-1 C1 degradation."""
     modelos, catalogues = registry_tree
     modelo = next(item for item in modelos if item.id == "100")
-    revision = modelo.revisions["2020"]
+    revision = modelo.revisions[str(authored_revisions("100")[0].id)]
     layout = next(item for item in revision.export_layouts if item.dictionary_source_ref is not None)
     source_ref = layout.dictionary_source_ref
     assert source_ref is not None

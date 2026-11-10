@@ -444,6 +444,13 @@ class RuntimeProfileHost:
             connection.owner_scope = (self._contracts, connection.client_id, scope)
         return scope
 
+    def may_change_records(self, definition_id: str) -> bool:
+        """Whether the registered definition may leave records changed; an unregistered one is never said to."""
+        try:
+            return self._registry.lookup_public_contract(definition_id).may_change_records()
+        except KeyError:
+            return False
+
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
         """Observe committed profile fencing and native dependencies as their OS-invalidated observations stand."""
         connection = self._connected(connection_id)

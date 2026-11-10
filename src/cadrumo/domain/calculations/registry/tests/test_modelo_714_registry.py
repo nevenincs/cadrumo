@@ -17,7 +17,7 @@ from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
-from .authored_editions import authored_revisions
+from .authored_editions import authored_revisions, newest_authored_edition
 from .published_authority import (
     PublishedGovernedFactSource,
     published_legal_evidence_text,
@@ -27,6 +27,9 @@ from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = newest_authored_edition("714")
+_FIRST_REVISION = authored_revisions("714")[0]
 
 # The authored Modelo 714 event-period revisions below the support floor; they stay
 # storage roots whose declarations are inspected but never selected for filing.
@@ -184,11 +187,11 @@ def _zero_m100_relation_values() -> dict[str, Decimal]:
 def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str, expected_cuota: str) -> None:
     """The art. 30 escala formula computes casilla 29 exactly per the BOE table."""
     modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=_YEAR, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_zero_art31_inputs(Decimal(base_liquidable)),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=_zero_m100_relation_values(),
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
@@ -226,7 +229,7 @@ def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
 
 def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_714()
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_FIRST_REVISION.id)]
     legal = {_PATRIMONIO_FORM_ORDER_REF: catalogues.legal[_PATRIMONIO_FORM_ORDER_REF]}
 
     assert published_legal_evidence_text(_PATRIMONIO_FORM_ORDER_REF)
@@ -243,7 +246,7 @@ def test_modelo_714_form_order_is_boe_corpus_backed() -> None:
 
 def test_modelo_714_boe_form_source_is_layout_only() -> None:
     modelo, catalogues = _load_modelo_714()
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_FIRST_REVISION.id)]
 
     assert "boe-modelo-714-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-714-procedure"].evidence_tier == "official_source_guidance"
@@ -291,7 +294,7 @@ def test_modelo_714_below_floor_revision_cuota_integra_computed_via_grounded_esc
 
 def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_FIRST_REVISION.id)]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
     # Each ejercicio is its own revision, so the selector names exactly one year
@@ -299,7 +302,7 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
     # split. The relations below still reach 2021-2025 on the M100 side, because
     # that window describes which SOURCE revisions they may read, not which
     # filings this revision governs.
-    assert revision.period_selector.years == (2021,)
+    assert revision.period_selector.years == (_FIRST_REVISION.valid_from.year,)
     assert revision.period_selector.periods == ("0A",)
     assert {formula.target_casilla_id for formula in revision.formulas} == set(_PATRIMONIO_COMPUTED_TARGETS)
 
@@ -330,12 +333,12 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
         assert isinstance(binding.applicability, TargetPeriods)
         assert binding.applicability.periods == ("0A",)
 
-    requirements = relation_source_requirements(revision, filing_year=2024, period="0A")
+    requirements = relation_source_requirements(revision, filing_year=_YEAR, period="0A")
     assert {requirement.target_bindings[0]: requirement.filing_year for requirement in requirements} == {
-        _M714_REL_100_BASE_IMPONIBLE_GENERAL: 2024,
-        _M714_REL_100_BASE_IMPONIBLE_AHORRO: 2024,
-        _M714_REL_100_CUOTA_INTEGRA_ESTATAL: 2024,
-        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: 2024,
+        _M714_REL_100_BASE_IMPONIBLE_GENERAL: _YEAR,
+        _M714_REL_100_BASE_IMPONIBLE_AHORRO: _YEAR,
+        _M714_REL_100_CUOTA_INTEGRA_ESTATAL: _YEAR,
+        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: _YEAR,
     }
 
     for casilla_id in _PATRIMONIO_COMPUTED_TARGETS:
@@ -351,7 +354,7 @@ def test_modelo_714_art31_m100_same_year_relation_chain_is_declared() -> None:
 def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations() -> None:
     """The Ley 19/1991 art.31 chain computes casilla 40 from M100 and M714 inputs."""
     modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=_YEAR, period="0A")
 
     result = calculate_registry_snapshot(
         snapshot,
@@ -362,7 +365,7 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
             _PATRIMONIO_IRPF_CUOTAS_EXCLUIDAS_BASE_AHORRO_CASILLA: Decimal("2000.00"),
             _PATRIMONIO_CUOTA_INTEGRA_SUSCEPTIBLE_LIMITACION_CASILLA: Decimal("5490.36"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values={
             _M714_REL_100_BASE_IMPONIBLE_GENERAL: Decimal("10000.00"),
             _M714_REL_100_BASE_IMPONIBLE_AHORRO: Decimal("20000.00"),
@@ -451,11 +454,11 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
 ) -> None:
     """Casilla 39 (Ley 19/1991 art. 31 suelo) computes as 80% of the cuota integra."""
     modelo, catalogues = _load_modelo_714()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=_YEAR, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_zero_art31_inputs(Decimal(base_liquidable)),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=_zero_m100_relation_values(),
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
@@ -472,7 +475,7 @@ def test_modelo_714_no_longer_carries_cuota_integra_manual_handoff_advisory() ->
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=_YEAR,
         period="0A",
     )
 
@@ -490,7 +493,7 @@ def _load_714_snapshot_and_casillas() -> tuple[frozenset[str], dict[CasillaId, C
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=_YEAR,
         period="0A",
     )
     predicate_ids = frozenset(p.predicate_id for p in snapshot.revision.verification_predicates)

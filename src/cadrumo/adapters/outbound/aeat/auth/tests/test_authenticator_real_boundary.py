@@ -320,6 +320,9 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         settings = _settings(tmp_path)
         async with opened_http_boundary() as boundary:
+            # Readiness cannot expire before the provider's own navigation guard:
+            # Chromium may still be starting that navigation under load.
+            readiness_budget_s = settings.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             boundary.configure("blocking")
             authenticator = AeatAuthenticator(
                 settings,
@@ -334,7 +337,10 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
                 authenticate_task = asyncio.create_task(authenticator.authenticate())
                 try:
                     await wait_for_task_readiness(
-                        boundary.wait_until_blocked(), authenticate_task, after="blocked authentication proof"
+                        boundary.wait_until_blocked(timeout_seconds=readiness_budget_s),
+                        authenticate_task,
+                        after="blocked authentication proof",
+                        timeout_seconds=readiness_budget_s,
                     )
                     browser = authenticator._browser_session
                     assert isinstance(browser, DefaultBrowserSession)

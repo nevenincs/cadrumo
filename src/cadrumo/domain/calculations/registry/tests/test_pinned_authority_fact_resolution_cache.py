@@ -12,6 +12,7 @@ from ..facts.resolution import MappingFactQuery
 from ..schema_base import DateAxis
 from ..snapshot_globals import SnapshotGlobalCatalogues
 from .artifact_runtime_support import minimal_catalogues
+from .authored_editions import filing_year_envelope
 from .authority_fakes import FakeAuthorityComponentReader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -31,7 +32,7 @@ def test_pinned_operation_reuses_one_typed_resolution_for_an_identical_query() -
     query = MappingFactQuery(
         fact_id=fact.fact_id,
         date_axis=DateAxis.FILING_PERIOD,
-        effective_date=date(2025, 1, 1),
+        effective_date=date(filing_year_envelope().horizon, 1, 1),
     )
 
     first = operation.resolve_governed_fact(query)

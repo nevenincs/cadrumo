@@ -45,6 +45,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..formula_runtime import calculate_registry_snapshot
+from .authored_editions import filing_year_envelope
 from .modelo_131_modulos_engine_support import (
     ALIMENTACION_647_1,
     AUTOTAXI_721_2,
@@ -431,7 +432,9 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
     """The pequeña-dimensión-ignorado and temporada/inicio-conflicto advisory-support flags."""
 
     def test_pequena_dimension_ignorado_flag_fires_on_especial_epigrafe(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot(
+            "131", filing_year=filing_year_envelope().horizon, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -446,7 +449,9 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_on_ordinary_epigrafe(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot(
+            "131", filing_year=filing_year_envelope().horizon, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -460,7 +465,9 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_pequena_dimension_ignorado_flag_stays_zero_when_not_declared(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot(
+            "131", filing_year=filing_year_envelope().horizon, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -471,7 +478,9 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
     def test_temporada_inicio_conflicto_flag_fires_when_both_declared(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot(
+            "131", filing_year=filing_year_envelope().horizon, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,
@@ -486,7 +495,9 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
 
     def test_temporada_inicio_conflicto_flag_stays_zero_when_only_one_declared(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+        snapshot = published_snapshot(
+            "131", filing_year=filing_year_envelope().horizon, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        )
         assert snapshot.filing_period is not None
         result = calculate_registry_snapshot(
             snapshot,

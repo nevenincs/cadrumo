@@ -15,7 +15,7 @@ This module stops at the base sign-to-code mapping. The application resolver
 :func:`application.modelo.result_disposition_resolution.resolve_modelo_result_disposition`
 validates the full revision in its work-unit and registry context, then layers
 :class:`~core.refund_election.RefundElection` and
-:func:`~domain.iva.refund_eligibility.refund_disposition_available` for Modelo 303. Export
+:func:`~domain.iva.refund_eligibility.resolve_refund_eligibility` for Modelo 303. Export
 and cross-period carry read that single resolved fact through
 :func:`result_disposition_is_refund`.
 

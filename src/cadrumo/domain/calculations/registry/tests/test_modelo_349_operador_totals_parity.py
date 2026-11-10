@@ -56,8 +56,11 @@ from .....core.aggregation import BindingSourceKind
 from ..invoice_bindings import (
     InvoiceObservation,
 )
+from .authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
     InvoiceObservation(
@@ -65,7 +68,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         invoice_id="inv-de-1",
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2026, 3, 1),
+        transaction_date=date(_YEAR, 3, 1),
         base_amount=Decimal("1000.00"),
         intracommunity_clave="E",
         party_legal_name="DE Auto GmbH",
@@ -75,7 +78,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         invoice_id="inv-fr-1",
         party_tax_id="FR12345678901",
         country_code="FR",
-        transaction_date=date(2026, 3, 5),
+        transaction_date=date(_YEAR, 3, 5),
         base_amount=Decimal("500.50"),
         intracommunity_clave="S",
         party_legal_name="Equipement Garage SARL",
@@ -89,7 +92,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         invoice_id="inv-de-2",
         party_tax_id="DE123456789",
         country_code="DE",
-        transaction_date=date(2026, 3, 12),
+        transaction_date=date(_YEAR, 3, 12),
         base_amount=Decimal("250.25"),
         intracommunity_clave="E",
         party_legal_name="DE Auto GmbH",

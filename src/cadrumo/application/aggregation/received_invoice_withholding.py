@@ -251,6 +251,10 @@ def received_invoice_withholding(
     ``captured_invoice_ids`` names invoices the per-perceptor store already holds
     an allocation of; their stored rows stand and they are not read again.
     Findings are those that concern ``modelo`` or whose modelo cannot be known.
+
+    Core types:
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     live = _live(transactions)
     received = tuple(
@@ -272,6 +276,27 @@ def received_invoice_withholding(
     return ReceivedInvoiceWithholding(observations=tuple(observations), findings=tuple(findings))
 
 
+@dataclass(frozen=True, slots=True)
+class _ReadableInvoice:
+    """What an invoice that passed every refusal gate says about its retención."""
+
+    target: str
+    income_kind: WithholdingIncomeKind
+    regime: WithholdingRecipientTaxRegime
+    scheme: RetencionScheme
+
+
+def _scoped_finding(
+    invoice: Invoice,
+    modelo: str,
+    kind: ReceivedInvoiceWithholdingFindingKind,
+    finding_modelo: str | None,
+) -> ReceivedInvoiceWithholding:
+    if finding_modelo not in (None, modelo):
+        return _NOTHING
+    return ReceivedInvoiceWithholding(observations=(), findings=(_finding(invoice, kind, finding_modelo),))
+
+
 def _read_invoice(
     invoice: Invoice,
     payments: tuple[Transaction, ...],
@@ -279,44 +304,14 @@ def _read_invoice(
     modelo: str,
     period: Period,
 ) -> ReceivedInvoiceWithholding:
-    def finding(kind: ReceivedInvoiceWithholdingFindingKind, finding_modelo: str | None) -> ReceivedInvoiceWithholding:
-        if finding_modelo not in (None, modelo):
-            return _NOTHING
-        return ReceivedInvoiceWithholding(observations=(), findings=(_finding(invoice, kind, finding_modelo),))
-
-    not_subject = _not_subject_finding(invoice, payments)
-    if not_subject is not None:
-        if not_subject.modelo not in (None, modelo):
-            return _NOTHING
-        return ReceivedInvoiceWithholding(observations=(), findings=(not_subject,))
-    income_kind = _income_kind(payments)
-    target = None if income_kind is None else modelo_for_income_kind(income_kind)
-    defects = invoice_retencion_liability_defects(invoice)
-    if InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER in defects:
-        return finding(ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
-    if defects:
-        return finding(ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, target)
-    if not payments:
-        # An unpaid invoice is not yet a retención for an IRPF supplier; rent owed
-        # to an IS supplier falls due on its date, and needs its kind to know so.
+    gate = _readable_or_refused(invoice, payments, modelo=modelo)
+    if isinstance(gate, ReceivedInvoiceWithholding):
+        return gate
+    if gate.target != modelo:
         return _NOTHING
-    if income_kind is None or target is None:
-        return finding(ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED, None)
-    regime = recipient_tax_regime(invoice.counterparty_tax_id or "", country=invoice.counterparty_country)
-    if regime is WithholdingRecipientTaxRegime.UNKNOWN:
-        return finding(ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
-    if regime is WithholdingRecipientTaxRegime.IRNR:
-        return finding(ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
-    if withholding_subjectness(regime, income_kind, on=invoice.issued_at)[0] is not True:
-        return finding(ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
-    scheme = _scheme(invoice, income_kind)
-    if scheme is None:
-        return finding(ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED, target)
-    if target != modelo:
-        return _NOTHING
-    allocations = _allocations(invoice, payments, regime=regime, income_kind=income_kind)
+    allocations = _allocations(invoice, payments, regime=gate.regime, income_kind=gate.income_kind)
     if allocations is None:
-        return finding(ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, target)
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, gate.target)
     return ReceivedInvoiceWithholding(
         observations=tuple(
             RetencionObservation(
@@ -324,7 +319,7 @@ def _read_invoice(
                 source_object_id=invoice.invoice_id,
                 perceptor_nif=invoice.counterparty_tax_id or "",
                 perceptor_name=invoice.counterparty_name,
-                scheme=scheme,
+                scheme=gate.scheme,
                 taxable_base=base,
                 retencion_amount=retencion,
                 accrued_on=recognised_on.isoformat(),
@@ -334,6 +329,48 @@ def _read_invoice(
         ),
         findings=(),
     )
+
+
+def _readable_or_refused(
+    invoice: Invoice, payments: tuple[Transaction, ...], *, modelo: str
+) -> _ReadableInvoice | ReceivedInvoiceWithholding:
+    """Return the invoice's readable facts, or the result its first refusal gate gives."""
+    not_subject = _not_subject_finding(invoice, payments)
+    if not_subject is not None:
+        if not_subject.modelo not in (None, modelo):
+            return _NOTHING
+        return ReceivedInvoiceWithholding(observations=(), findings=(not_subject,))
+    income_kind = _income_kind(payments)
+    target = None if income_kind is None else modelo_for_income_kind(income_kind)
+    defects = invoice_retencion_liability_defects(invoice)
+    if InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER in defects:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
+    if defects:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, target)
+    if not payments:
+        # An unpaid invoice is not yet a retención for an IRPF supplier; rent owed
+        # to an IS supplier falls due on its date, and needs its kind to know so.
+        return _NOTHING
+    if income_kind is None or target is None:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED, None)
+    return _recipient_readable_or_refused(invoice, modelo=modelo, income_kind=income_kind, target=target)
+
+
+def _recipient_readable_or_refused(
+    invoice: Invoice, *, modelo: str, income_kind: WithholdingIncomeKind, target: str
+) -> _ReadableInvoice | ReceivedInvoiceWithholding:
+    """Return the supplier's regime and the retención scheme, or the result of the first refusal."""
+    regime = recipient_tax_regime(invoice.counterparty_tax_id or "", country=invoice.counterparty_country)
+    if regime is WithholdingRecipientTaxRegime.UNKNOWN:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
+    if regime is WithholdingRecipientTaxRegime.IRNR:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
+    if withholding_subjectness(regime, income_kind, on=invoice.issued_at)[0] is not True:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
+    scheme = _scheme(invoice, income_kind)
+    if scheme is None:
+        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED, target)
+    return _ReadableInvoice(target=target, income_kind=income_kind, regime=regime, scheme=scheme)
 
 
 _NOTHING: Final = ReceivedInvoiceWithholding(observations=(), findings=())

@@ -12,7 +12,12 @@ import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
 
-from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry
+from ....application.modelo.iva_wallet_refusal import (
+    ModeloIvaWalletReconciliationBlockedError,
+    raise_iva_wallet_precondition,
+)
+from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS
+from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -27,6 +32,9 @@ from ....application.operator_surface.action_targets import (
 )
 from ....application.operator_surface.manifest import ReconciledOperatorLeaf
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ..common import resolve_cli_precondition_action
 from ..operator_surface_reconciliation import operator_surface_target_reconciliation
 
@@ -130,6 +138,55 @@ def test_the_recorded_resolver_prints_the_action_the_command_line_prints_for_eve
             entry.action_id
         )
         assert recorded.action.target_command_key == entry.target_command_key
+
+
+def test_the_opening_balance_action_resolves_to_the_live_leaf_with_its_required_inputs() -> None:
+    entry = lookup_action("operator.modelo.iva_wallet.seed")
+    served = resolve_recorded_precondition_action(_verdict(entry))
+    (leaf,) = operator_surface_target_reconciliation(entry.target_command_key).leaves
+
+    assert served.action is not None
+    assert served.action.target_command_key == "modelo.iva_wallet.seed"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    assert leaf.input_schema is not None
+    assert set(served.missing_argument_names) == set(leaf.input_schema.required_input_names)
+
+
+def _refused_wallet_verdict(reason_code: str, carry_period: Period) -> PreconditionVerdict:
+    """Raise the real 303 wallet gate refusal for ``reason_code`` and return the verdict it records."""
+    with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code=reason_code,
+            translated_message="application.modelo.errors.iva_wallet_not_seeded",
+            evidence_values={"reason": reason_code},
+            carry_period=carry_period,
+        )
+    return refused.value.precondition_failure.verdict
+
+
+def test_each_real_opening_balance_refusal_records_an_action_that_resolves_to_the_live_leaf(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "1T")
+
+    for reason_code in sorted(IVA_WALLET_OPENING_BALANCE_SCENARIOS):
+        served = resolve_recorded_precondition_action(_refused_wallet_verdict(reason_code, carry_period))
+        (leaf,) = operator_surface_target_reconciliation("modelo.iva_wallet.seed").leaves
+
+        assert served.action is not None, reason_code
+        assert served.action.action_id == "operator.modelo.iva_wallet.seed", reason_code
+        assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+        bound = {item.argument_name: item for item in served.argument_bindings}
+        assert bound["filing_year"].value == carry_period.filing_year
+        assert bound["period"].value == carry_period.registry_token
+        assert bound["amount"].status is ActionArgumentStatus.MISSING
+        assert served.missing_argument_names == ("amount",)
+        assert leaf.input_schema is not None
+        assert set(bound) == set(leaf.input_schema.required_input_names)
 
 
 def test_the_record_refuses_a_command_no_catalogue_action_targets() -> None:
