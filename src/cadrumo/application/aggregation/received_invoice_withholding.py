@@ -257,18 +257,12 @@ def received_invoice_withholding(
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     live = _live(transactions)
-    received = tuple(
-        invoice
-        for invoice in invoices.values()
-        if _states_retencion(invoice)
-        and invoice.bucket_id in (None, bucket_id)
-        and invoice.invoice_id not in captured_invoice_ids
-    )
     observations: list[RetencionObservation] = []
     findings: list[ReceivedInvoiceWithholdingFinding] = []
-    for invoice in with_movement_side_links(received, window=TransactionCatalogue.from_transactions(live.values())):
-        payments = _payments(invoice, live)
-        read = _read_invoice(invoice, payments, modelo=modelo, period=period)
+    for invoice, payments in _stated_invoices(invoices, live, bucket_id=bucket_id):
+        if invoice.invoice_id in captured_invoice_ids:
+            continue
+        read = _read_invoice(_assess_invoice(invoice, payments), modelo=modelo, period=period)
         observations.extend(read.observations)
         found_on = _paid_on(payments[0]) if payments else invoice.issued_at
         if period.start_date <= found_on <= period.end_date:
@@ -277,41 +271,179 @@ def received_invoice_withholding(
 
 
 @dataclass(frozen=True, slots=True)
-class _ReadableInvoice:
-    """What an invoice that passed every refusal gate says about its retención."""
+class MovementWithholding:
+    """What one received invoice's retención means for one movement that pays it.
 
-    target: str
-    income_kind: WithholdingIncomeKind
-    regime: WithholdingRecipientTaxRegime
-    scheme: RetencionScheme
+    Either the euro ``retencion`` the invoice recognises on this payment, read by
+    the rules Modelo 111 and 115 calculate with, or the reason it reaches no
+    declaration (``held_back``), so a movement the declaration waits on is never
+    shown as a movement with no retención.
+    """
+
+    transaction_id: str
+    invoice_id: str
+    invoice_number: str
+    modelo: str | None
+    """The modelo the retención reaches, or ``None`` where the income kind is not known."""
+    scheme: RetencionScheme | None
+    retencion: Decimal | None
+    """The euro retención recognised on this payment; ``None`` where the invoice is held back."""
+    recognised_on: date | None
+    held_back: ReceivedInvoiceWithholdingFindingKind | None
 
 
-def _scoped_finding(
-    invoice: Invoice,
-    modelo: str,
-    kind: ReceivedInvoiceWithholdingFindingKind,
-    finding_modelo: str | None,
-) -> ReceivedInvoiceWithholding:
-    if finding_modelo not in (None, modelo):
-        return _NOTHING
-    return ReceivedInvoiceWithholding(observations=(), findings=(_finding(invoice, kind, finding_modelo),))
+def states_received_retencion(invoices: InvoiceCatalogue, *, bucket_id: str) -> bool:
+    """Return whether any received invoice of ``bucket_id`` states a retención; if none, no movement carries one."""
+    return any(_states_retencion(invoice) and invoice.bucket_id in (None, bucket_id) for invoice in invoices.values())
 
 
-def _read_invoice(
-    invoice: Invoice,
-    payments: tuple[Transaction, ...],
+def received_invoice_movement_withholding(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
     *,
-    modelo: str,
-    period: Period,
-) -> ReceivedInvoiceWithholding:
-    gate = _readable_or_refused(invoice, payments, modelo=modelo)
-    if isinstance(gate, ReceivedInvoiceWithholding):
-        return gate
-    if gate.target != modelo:
-        return _NOTHING
-    allocations = _allocations(invoice, payments, regime=gate.regime, income_kind=gate.income_kind)
+    bucket_id: str,
+) -> dict[str, tuple[MovementWithholding, ...]]:
+    """Return, by movement id, the retención each paying movement carries.
+
+    It runs the same per-invoice assessment the declarations calculate with,
+    over every period and modelo, so a listed movement and the modelo that
+    declares it cannot disagree. A movement that pays no invoice stating a
+    retención has no entry: its retención is absent, which is not zero.
+    """
+    live = _live(transactions)
+    by_movement: dict[str, list[MovementWithholding]] = {}
+    for invoice, payments in _stated_invoices(invoices, live, bucket_id=bucket_id):
+        assessment = _assess_invoice(invoice, payments)
+        for payment in payments:
+            entry = _movement_entry(assessment, payment)
+            if entry is not None:
+                by_movement.setdefault(payment.transaction_id, []).append(entry)
+    return {transaction_id: tuple(rows) for transaction_id, rows in by_movement.items()}
+
+
+def _movement_entry(assessment: _Assessment, payment: Transaction) -> MovementWithholding | None:
+    """Return what ``assessment`` leaves on ``payment``, or ``None`` where it leaves nothing."""
+    invoice, finding = assessment.invoice, assessment.finding
+    recognised = next((row for row in assessment.recognitions if row.payment_id == payment.transaction_id), None)
+    if finding is not None:
+        return MovementWithholding(
+            transaction_id=payment.transaction_id,
+            invoice_id=invoice.invoice_id,
+            invoice_number=invoice.invoice_number,
+            modelo=finding.modelo,
+            scheme=assessment.scheme,
+            retencion=None,
+            recognised_on=None,
+            held_back=finding.kind,
+        )
+    if recognised is None:
+        return None
+    return MovementWithholding(
+        transaction_id=payment.transaction_id,
+        invoice_id=invoice.invoice_id,
+        invoice_number=invoice.invoice_number,
+        modelo=assessment.target,
+        scheme=assessment.scheme,
+        retencion=recognised.retencion,
+        recognised_on=recognised.recognised_on,
+        held_back=None,
+    )
+
+
+def _stated_invoices(
+    invoices: InvoiceCatalogue, live: Mapping[str, Transaction], *, bucket_id: str
+) -> Iterable[tuple[Invoice, tuple[Transaction, ...]]]:
+    """Yield each received invoice stating a retención with its live paying movements."""
+    received = tuple(
+        invoice
+        for invoice in invoices.values()
+        if _states_retencion(invoice) and invoice.bucket_id in (None, bucket_id)
+    )
+    for invoice in with_movement_side_links(received, window=TransactionCatalogue.from_transactions(live.values())):
+        yield invoice, _payments(invoice, live)
+
+
+@dataclass(frozen=True, slots=True)
+class _Recognition:
+    """The euro base and retención an invoice recognises on one payment."""
+
+    payment_id: str
+    recognised_on: date
+    base: Decimal
+    retencion: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class _Assessment:
+    """What one invoice's retención amounts to, before any modelo or period is chosen."""
+
+    invoice: Invoice
+    target: str | None
+    """The modelo the retención reaches; ``None`` where nothing is recognised or the kind is unknown."""
+    finding: ReceivedInvoiceWithholdingFinding | None
+    scheme: RetencionScheme | None
+    recognitions: tuple[_Recognition, ...]
+
+
+def _assess_invoice(invoice: Invoice, payments: tuple[Transaction, ...]) -> _Assessment:
+    """Decide, from the invoice and its payments alone, what its retención is and where it goes."""
+
+    def held(kind: ReceivedInvoiceWithholdingFindingKind, target: str | None) -> _Assessment:
+        return _Assessment(invoice, target, _finding(invoice, kind, target), None, ())
+
+    not_subject = _not_subject_finding(invoice, payments)
+    if not_subject is not None:
+        return _Assessment(invoice, not_subject.modelo, not_subject, None, ())
+    income_kind = _income_kind(payments)
+    target = None if income_kind is None else modelo_for_income_kind(income_kind)
+    defects = invoice_retencion_liability_defects(invoice)
+    if InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER in defects:
+        return held(ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
+    if defects:
+        return held(ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, target)
+    if not payments:
+        # An unpaid invoice is not yet a retención for an IRPF supplier; rent owed
+        # to an IS supplier falls due on its date, and needs its kind to know so.
+        return _Assessment(invoice, None, None, None, ())
+    if income_kind is None or target is None:
+        return held(ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED, None)
+    return _assess_recipient(invoice, payments, income_kind, target)
+
+
+def _assess_recipient(
+    invoice: Invoice, payments: tuple[Transaction, ...], income_kind: WithholdingIncomeKind, target: str
+) -> _Assessment:
+    """Decide, once the income kind is known, whether the supplier's retención is declared and on which payments."""
+
+    def held(kind: ReceivedInvoiceWithholdingFindingKind) -> _Assessment:
+        return _Assessment(invoice, target, _finding(invoice, kind, target), None, ())
+
+    regime = recipient_tax_regime(invoice.counterparty_tax_id or "", country=invoice.counterparty_country)
+    if regime is WithholdingRecipientTaxRegime.IRNR:
+        return held(ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT)
+    if (
+        regime is WithholdingRecipientTaxRegime.UNKNOWN
+        or withholding_subjectness(regime, income_kind, on=invoice.issued_at)[0] is not True
+    ):
+        return held(ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN)
+    scheme = _scheme(invoice, income_kind)
+    if scheme is None:
+        return held(ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED)
+    allocations = _allocations(invoice, payments, regime=regime, income_kind=income_kind)
     if allocations is None:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, gate.target)
+        return held(ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE)
+    return _Assessment(invoice, target, None, scheme, allocations)
+
+
+def _read_invoice(assessment: _Assessment, *, modelo: str, period: Period) -> ReceivedInvoiceWithholding:
+    """Narrow one assessment to what ``modelo`` declares in ``period`` and what holds it back."""
+    if assessment.finding is not None:
+        if assessment.finding.modelo not in (None, modelo):
+            return _NOTHING
+        return ReceivedInvoiceWithholding(observations=(), findings=(assessment.finding,))
+    if assessment.target != modelo or assessment.scheme is None:
+        return _NOTHING
+    invoice, scheme = assessment.invoice, assessment.scheme
     return ReceivedInvoiceWithholding(
         observations=tuple(
             RetencionObservation(
@@ -319,58 +451,16 @@ def _read_invoice(
                 source_object_id=invoice.invoice_id,
                 perceptor_nif=invoice.counterparty_tax_id or "",
                 perceptor_name=invoice.counterparty_name,
-                scheme=gate.scheme,
-                taxable_base=base,
-                retencion_amount=retencion,
-                accrued_on=recognised_on.isoformat(),
+                scheme=scheme,
+                taxable_base=row.base,
+                retencion_amount=row.retencion,
+                accrued_on=row.recognised_on.isoformat(),
             )
-            for recognised_on, base, retencion in allocations
-            if period.start_date <= recognised_on <= period.end_date and (base or retencion)
+            for row in assessment.recognitions
+            if period.start_date <= row.recognised_on <= period.end_date and (row.base or row.retencion)
         ),
         findings=(),
     )
-
-
-def _readable_or_refused(
-    invoice: Invoice, payments: tuple[Transaction, ...], *, modelo: str
-) -> _ReadableInvoice | ReceivedInvoiceWithholding:
-    """Return the invoice's readable facts, or the result its first refusal gate gives."""
-    not_subject = _not_subject_finding(invoice, payments)
-    if not_subject is not None:
-        if not_subject.modelo not in (None, modelo):
-            return _NOTHING
-        return ReceivedInvoiceWithholding(observations=(), findings=(not_subject,))
-    income_kind = _income_kind(payments)
-    target = None if income_kind is None else modelo_for_income_kind(income_kind)
-    defects = invoice_retencion_liability_defects(invoice)
-    if InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER in defects:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
-    if defects:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INVOICE_INCOMPLETE, target)
-    if not payments:
-        # An unpaid invoice is not yet a retención for an IRPF supplier; rent owed
-        # to an IS supplier falls due on its date, and needs its kind to know so.
-        return _NOTHING
-    if income_kind is None or target is None:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.INCOME_KIND_UNDECLARED, None)
-    return _recipient_readable_or_refused(invoice, modelo=modelo, income_kind=income_kind, target=target)
-
-
-def _recipient_readable_or_refused(
-    invoice: Invoice, *, modelo: str, income_kind: WithholdingIncomeKind, target: str
-) -> _ReadableInvoice | ReceivedInvoiceWithholding:
-    """Return the supplier's regime and the retención scheme, or the result of the first refusal."""
-    regime = recipient_tax_regime(invoice.counterparty_tax_id or "", country=invoice.counterparty_country)
-    if regime is WithholdingRecipientTaxRegime.UNKNOWN:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
-    if regime is WithholdingRecipientTaxRegime.IRNR:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.NON_RESIDENT, target)
-    if withholding_subjectness(regime, income_kind, on=invoice.issued_at)[0] is not True:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RECIPIENT_UNKNOWN, target)
-    scheme = _scheme(invoice, income_kind)
-    if scheme is None:
-        return _scoped_finding(invoice, modelo, ReceivedInvoiceWithholdingFindingKind.RATE_UNRECOGNISED, target)
-    return _ReadableInvoice(target=target, income_kind=income_kind, regime=regime, scheme=scheme)
 
 
 _NOTHING: Final = ReceivedInvoiceWithholding(observations=(), findings=())
@@ -408,14 +498,37 @@ def _scheme(invoice: Invoice, income_kind: WithholdingIncomeKind) -> RetencionSc
     return None
 
 
+def _entity_rent_recognition(
+    invoice: Invoice,
+    first: Transaction,
+    *,
+    income_kind: WithholdingIncomeKind,
+    base_eur: Decimal,
+    retencion_eur: Decimal,
+) -> tuple[_Recognition, ...] | None:
+    """Return the whole retención recognised on the first payment, or ``None`` where no date is recognised."""
+    evidence = _evidence(
+        invoice,
+        regime=WithholdingRecipientTaxRegime.IS,
+        income_kind=income_kind,
+        payment=first,
+        exigible_on=invoice.issued_at,
+    )
+    try:
+        recognition = derive_withholding_recognition(evidence)
+    except WithholdingRecognitionError:
+        return None
+    return (_Recognition(first.transaction_id, recognition.recognized_on, base_eur, retencion_eur),)
+
+
 def _allocations(
     invoice: Invoice,
     payments: tuple[Transaction, ...],
     *,
     regime: WithholdingRecipientTaxRegime,
     income_kind: WithholdingIncomeKind,
-) -> tuple[tuple[date, Decimal, Decimal], ...] | None:
-    """Return each recognition date with the euro base and retención recognised on it.
+) -> tuple[_Recognition, ...] | None:
+    """Return each payment with the recognition date, euro base and retención recognised on it.
 
     An IS supplier's rent is recognised whole, when it falls due or when first
     paid if earlier. An IRPF supplier's retención is recognised as it is paid,
@@ -427,12 +540,10 @@ def _allocations(
     if base_eur is None or retencion_eur is None:
         return None
     if regime is WithholdingRecipientTaxRegime.IS:
-        first = payments[0]
-        recognition = derive_withholding_recognition(
-            _evidence(invoice, regime=regime, income_kind=income_kind, payment=first, exigible_on=invoice.issued_at)
+        return _entity_rent_recognition(
+            invoice, payments[0], income_kind=income_kind, base_eur=base_eur, retencion_eur=retencion_eur
         )
-        return ((recognition.recognized_on, base_eur, retencion_eur),)
-    allocations: list[tuple[date, Decimal, Decimal]] = []
+    allocations: list[_Recognition] = []
     recognised_base = Decimal("0")
     recognised_retencion = Decimal("0")
     for index, payment in enumerate(payments):
@@ -455,7 +566,8 @@ def _allocations(
         except WithholdingRecognitionError:
             return None
         allocations.append(
-            (
+            _Recognition(
+                payment.transaction_id,
                 recognition.recognized_on,
                 cumulative_base - recognised_base,
                 cumulative_retencion - recognised_retencion,
@@ -496,11 +608,14 @@ def captured_invoice_ids(observations: Iterable[RetencionObservation]) -> frozen
 
 
 __all__ = [
+    "MovementWithholding",
     "ReceivedInvoiceWithholding",
     "ReceivedInvoiceWithholdingFinding",
     "ReceivedInvoiceWithholdingFindingKind",
     "captured_invoice_ids",
+    "received_invoice_movement_withholding",
     "received_invoice_withholding",
     "recipient_tax_regime",
+    "states_received_retencion",
     "withholding_subjectness",
 ]

@@ -1021,6 +1021,7 @@ export function draftRow(draft: Draft): LedgerRow {
     review_status: "pending",
     group_label: null,
     own_account_id: fields.own_account_id ?? null,
+    withholding: [],
   };
 }
 

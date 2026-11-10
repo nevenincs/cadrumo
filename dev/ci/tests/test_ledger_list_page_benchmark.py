@@ -30,6 +30,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -132,6 +133,7 @@ def _read_page(
         operation=operation,
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
     )
     page = query_ledger_transaction_list(
         LedgerTransactionListQuery(

@@ -2084,6 +2084,7 @@ desktop:
       lifecycle: Állapot
       modified: Módosítva
       notes: Megjegyzések
+      retencion: Levonás
       select: Kijelölés
       status: Státusz
       taxable_base: Adóalap
@@ -3824,6 +3825,23 @@ desktop:
         prorrata: Prorrata
         withholding: Levonások
       areas: A nyilvántartások részei
+    retencion:
+      held_back: Visszatartva
+      practised: A(z) {invoice} számlán levont adó, a(z) {modelo} modellen bevallva
+    retencion_held_back:
+      received_invoice_entity_professional_fee: 'Nincs bevallva: a kibocsátó társaság,
+        és a társaságok szakmai díjából nem vonnak le adót. Javítsd a számlát.'
+      received_invoice_income_kind_undeclared: 'Még nincs bevallva: válaszd ki ennek
+        a kifizetésnek az IRPF-kategóriáját, hogy a levonása eljusson egy modellhez.'
+      received_invoice_invoice_incomplete: 'Még nincs bevallva: a számláról hiányzik
+        a kibocsátó adószáma vagy az összegei euróban.'
+      received_invoice_non_resident: 'Ezen a modellen nincs bevallva: a kibocsátó
+        nem spanyolországi illetőségű.'
+      received_invoice_rate_unrecognised: 'Még nincs bevallva: a számla levonása egyik
+        tevékenységi levonási kulccsal sem egyezik.'
+      received_invoice_recipient_unknown: 'Még nincs bevallva: a kibocsátó adószámából
+        nem derül ki, hogy IRPF-et vagy társasági adót (Impuesto sobre Sociedades)
+        fizet.'
     retry: Újra
     reveal:
       dismiss: Elrejtés
