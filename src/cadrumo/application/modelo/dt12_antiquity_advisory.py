@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -29,6 +30,7 @@ def dt12_antiquity_advisory_finding(
     *,
     operation: PinnedAuthorityOperation,
     modelo: str,
+    effective_date: date,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm the DT 12ª antiquity condition when reduction applies."""
     try:
@@ -48,7 +50,10 @@ def dt12_antiquity_advisory_finding(
         return None
 
     declaration = resolve_dt12_verification_mapping(
-        revision, operation=operation, fact_id="lirpf-dt12-antiquity-verification-mapping"
+        revision,
+        operation=operation,
+        fact_id="lirpf-dt12-antiquity-verification-mapping",
+        effective_date=effective_date,
     )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,

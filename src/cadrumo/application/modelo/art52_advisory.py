@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.errors import ModeloError
@@ -81,8 +80,13 @@ def art52_reduccion_advisory_finding(
     *,
     operation: PinnedAuthorityOperation,
     modelo: str,
+    effective_date: date,
 ) -> ModeloVerificationFinding | None:
-    """Warn when individual previdencia-social reduction exceeds its sub-limit."""
+    """Warn when individual previdencia-social reduction exceeds its sub-limit.
+
+    ``effective_date`` is the filing coordinate the caller resolves every other
+    dated fact at, so the declaration follows the work's filing year.
+    """
     try:
         reduccion_id = casilla_id_for_unique_revision_semantic_role(
             revision,
@@ -123,7 +127,6 @@ def art52_reduccion_advisory_finding(
     autonomos_empresarios_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(
         casilla_values, autonomos_empresarios_id
     )
-    effective_date = getattr(revision, "valid_to", None) or today_madrid()
     _registry_art52_declaration(
         revision,
         operation=operation,
