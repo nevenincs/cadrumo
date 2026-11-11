@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-10-27'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:be1ff9a016fe79ae3da9689aff013cb218baf2383f83e03d0775d9909344521c'
+body_hash: 'sha256:a72759ea1733e02fb414f0c2775e70e1f4335becc401e750a8a30b4d1ba3b7d9'
 related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
-  - '[[2026-09-26-mcp-purpose-authentication-ledger]]'
-  - '[[2026-09-26-mcp-purpose-authentication-plan]]'
   - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-reference]]'
   - '[[2026-09-26-mcp-purpose-authentication-research]]'
@@ -35,14 +33,6 @@ Auto-generated index of all documents tagged with `#mcp-purpose-authentication`.
 ### audit
 
 - `2026-09-26-mcp-purpose-authentication-audit` - `mcp-purpose-authentication` audit: profile authorization and custody
-
-### exec
-
-- `2026-09-26-mcp-purpose-authentication-ledger` - `mcp-purpose-authentication` ledger
-
-### plan
-
-- `2026-09-26-mcp-purpose-authentication-plan` - `mcp-purpose-authentication` plan
 
 ### reference
 

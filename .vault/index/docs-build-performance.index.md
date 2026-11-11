@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#docs-build-performance'
 date: '2026-09-24'
-modified: '2026-09-24'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:55d577735f3c4282a9dd67461e2566991768bc0c6bef072648d83e20c4017852'
+body_hash: 'sha256:04978995d7489463d4131c683d5ff33741d0e4b5e445c4bd5c733f5fa6287b1f'
 related:
   - '[[2026-09-24-docs-build-performance-adr]]'
-  - '[[2026-09-24-docs-build-performance-ledger]]'
-  - '[[2026-09-24-docs-build-performance-plan]]'
   - '[[2026-09-24-docs-build-performance-research]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#docs-build-performance`.
 ### adr
 
 - `2026-09-24-docs-build-performance-adr` - `docs-build-performance` adr: `the documentation build does each piece of work once` | (**status:** `accepted`)
-
-### exec
-
-- `2026-09-24-docs-build-performance-ledger` - `docs-build-performance` ledger
-
-### plan
-
-- `2026-09-24-docs-build-performance-plan` - `docs-build-performance` plan
 
 ### research
 

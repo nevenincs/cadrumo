@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#sede-browser'
 date: '2026-10-27'
-modified: '2026-10-28'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:201a5b644c849a880e1cb830216b5e5b7b6d967a27329ec411f8c7779673b622'
+body_hash: 'sha256:6abb04225f26adcabbccc478999e4616b9330309fcdf432275eed2f7b9dcbf49'
 related:
   - '[[2026-10-27-sede-browser-adr]]'
-  - '[[2026-10-27-sede-browser-ledger]]'
-  - '[[2026-10-27-sede-browser-plan]]'
   - '[[2026-10-27-sede-browser-reference]]'
   - '[[2026-10-28-sede-browser-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#sede-browser`.
 ### audit
 
 - `2026-10-28-sede-browser-audit` - `sede-browser` audit: `Sede browser plan-close integrated review`
-
-### exec
-
-- `2026-10-27-sede-browser-ledger` - `sede-browser` ledger
-
-### plan
-
-- `2026-10-27-sede-browser-plan` - `sede-browser` plan
 
 ### reference
 

@@ -4,17 +4,15 @@ tags:
   - '#index'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-11-02'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:3830fd3adb332983f25f5739feaba9fcdf8e19e9d940eed1f36111f5ff71957d'
+body_hash: 'sha256:0fc6424caae99bc53db8348b9490f7d177aeca7f27bc315e1c6264c7787025d5'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
   - '[[2026-09-26-export-parity-calculation-report-adr]]'
   - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
   - '[[2026-09-26-export-parity-calculation-summary-pdf-research]]'
-  - '[[2026-09-26-export-parity-ledger]]'
-  - '[[2026-09-26-export-parity-plan]]'
   - '[[2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr]]'
   - '[[2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-research]]'
   - '[[2026-09-27-export-parity-renta-withholding-sources-adr]]'
@@ -23,9 +21,7 @@ related:
   - '[[2026-11-01-export-parity-datos-fiscales-format-research]]'
   - '[[2026-11-01-export-parity-income-imputation-criterion-adr]]'
   - '[[2026-11-01-export-parity-income-imputation-criterion-research]]'
-  - '[[2026-11-01-export-parity-ledger]]'
   - '[[2026-11-01-export-parity-observation-filing-kind-adr]]'
-  - '[[2026-11-01-export-parity-plan]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]'
   - '[[2026-11-01-export-parity-suffered-withholding-schemas-reference]]'
   - '[[2026-11-01-export-parity-withholding-legal-readings-research]]'
@@ -52,16 +48,6 @@ Auto-generated index of all documents tagged with `#export-parity`.
 ### audit
 
 - `2026-09-26-export-parity-audit` - `export-parity` audit: `export parity campaign findings`
-
-### exec
-
-- `2026-09-26-export-parity-ledger` - `export-parity` ledger
-- `2026-11-01-export-parity-ledger` - `export-parity` ledger
-
-### plan
-
-- `2026-09-26-export-parity-plan` - `export-parity` plan
-- `2026-11-01-export-parity-plan` - `export-parity` plan
 
 ### reference
 

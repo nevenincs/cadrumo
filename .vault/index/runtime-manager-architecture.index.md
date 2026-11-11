@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#runtime-manager-architecture'
 date: '2026-10-03'
-modified: '2026-10-12'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:feec0230beb45a331688845d69c3018cf04fd85354d8b86af6fac9830171f70c'
+body_hash: 'sha256:58384fb1230c973047d553c7f80d88a252b5faa4a7291a17a3611864f65f982f'
 related:
   - '[[2026-10-03-runtime-manager-architecture-research]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
-  - '[[2026-10-04-runtime-manager-architecture-ledger]]'
-  - '[[2026-10-04-runtime-manager-architecture-plan]]'
   - '[[2026-10-04-runtime-manager-architecture-requirements-research]]'
   - '[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]'
   - '[[2026-10-05-runtime-manager-architecture-audit]]'
@@ -39,14 +37,6 @@ Auto-generated index of all documents tagged with `#runtime-manager-architecture
 
 - `2026-10-05-runtime-manager-architecture-audit` - `runtime-manager-architecture` audit: `Manager lane checkpoint review`
 - `2026-10-09-runtime-manager-architecture-windows-admission-recovery-audit` - `runtime-manager-architecture` audit: `Windows Session 0 and explicit manager recovery`
-
-### exec
-
-- `2026-10-04-runtime-manager-architecture-ledger` - `runtime-manager-architecture` ledger
-
-### plan
-
-- `2026-10-04-runtime-manager-architecture-plan` - `runtime-manager-architecture` plan
 
 ### research
 

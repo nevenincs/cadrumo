@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#local-inference-engine'
 date: '2026-11-07'
-modified: '2026-11-07'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:7245e9e8727bbd42f6f1fa609a24d477c3edaeaceb4d9759452299c196d0f1ec'
+body_hash: 'sha256:77385fd9bbc6c61dedea14ae433f719945981b7a17be7b400fb8bb2e9f252260'
 related:
   - '[[2026-11-07-local-inference-engine-adr]]'
   - '[[2026-11-07-local-inference-engine-audit]]'
-  - '[[2026-11-07-local-inference-engine-ledger]]'
-  - '[[2026-11-07-local-inference-engine-plan]]'
   - '[[2026-11-07-local-inference-engine-research]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#local-inference-engine`.
 ### audit
 
 - `2026-11-07-local-inference-engine-audit` - `local-inference-engine` audit: `Ollama qwen3-vl thinking defect in the ollama_api lane`
-
-### exec
-
-- `2026-11-07-local-inference-engine-ledger` - `local-inference-engine` ledger
-
-### plan
-
-- `2026-11-07-local-inference-engine-plan` - `local-inference-engine` plan
 
 ### research
 

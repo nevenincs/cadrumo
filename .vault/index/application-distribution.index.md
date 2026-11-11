@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-29'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f31008870f2b682cf217c7b264ad15646c25ed08066021a6c650463004cc55c'
+body_hash: 'sha256:d02230149a5a689f772e09d88eb053b6ab3770c8ba7733fcc03b3328a36c48ac'
 related:
   - '[[2026-10-04-application-distribution-adr]]'
   - '[[2026-10-04-application-distribution-audit]]'
-  - '[[2026-10-04-application-distribution-ledger]]'
-  - '[[2026-10-04-application-distribution-plan]]'
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
   - '[[2026-10-08-application-distribution-darwin-versioned-installation-adr]]'
@@ -36,14 +34,6 @@ Auto-generated index of all documents tagged with `#application-distribution`.
 ### audit
 
 - `2026-10-04-application-distribution-audit` - Application distribution verification
-
-### exec
-
-- `2026-10-04-application-distribution-ledger` - `application-distribution` ledger
-
-### plan
-
-- `2026-10-04-application-distribution-plan` - Application distribution
 
 ### research
 

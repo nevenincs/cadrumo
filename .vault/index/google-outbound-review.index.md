@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#google-outbound-review'
 date: '2026-10-05'
-modified: '2026-10-12'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:66f409ec99daf152c4397cf4a9586b3e7674c256859a6c68784f2e66aa2db8be'
+body_hash: 'sha256:865927463f9bc99a6f9d578f83d95d31d035c05a50afe0c73c509a3e7dc9a382'
 related:
   - '[[2026-10-05-google-outbound-review-adr]]'
   - '[[2026-10-05-google-outbound-review-backup-custody-policy-adr]]'
-  - '[[2026-10-05-google-outbound-review-ledger]]'
-  - '[[2026-10-05-google-outbound-review-plan]]'
   - '[[2026-10-05-google-outbound-review-reference]]'
   - '[[2026-10-05-google-outbound-review-research]]'
   - '[[2026-10-07-google-outbound-review-decision-coverage-repair-audit]]'
@@ -31,14 +29,6 @@ Auto-generated index of all documents tagged with `#google-outbound-review`.
 ### audit
 
 - `2026-10-07-google-outbound-review-decision-coverage-repair-audit` - `google-outbound-review` audit: `Google plan decision coverage repair`
-
-### exec
-
-- `2026-10-05-google-outbound-review-ledger` - `google-outbound-review` ledger
-
-### plan
-
-- `2026-10-05-google-outbound-review-plan` - `google-outbound-review` plan
 
 ### reference
 

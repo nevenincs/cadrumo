@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#attended-live-sign-in'
 date: '2026-10-12'
-modified: '2026-10-13'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:c0e0c59d5862478705ce4b3239892056b0f755c3a69a667e5f060923f742eb98'
+body_hash: 'sha256:2404633f079d04e9d814c5718d912d19b07a863bcdb398b98639c7767f2f496e'
 related:
-  - '[[2026-10-12-attended-live-sign-in-ledger]]'
-  - '[[2026-10-12-attended-live-sign-in-plan]]'
   - '[[2026-10-13-attended-live-sign-in-audit]]'
 ---
 
@@ -22,11 +20,3 @@ Auto-generated index of all documents tagged with `#attended-live-sign-in`.
 ### audit
 
 - `2026-10-13-attended-live-sign-in-audit` - `attended-live-sign-in` audit: `Plan-close review`
-
-### exec
-
-- `2026-10-12-attended-live-sign-in-ledger` - `attended-live-sign-in` ledger
-
-### plan
-
-- `2026-10-12-attended-live-sign-in-plan` - `attended-live-sign-in` plan

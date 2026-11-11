@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:af65c02a7f89d7b8d6387d587b19cb69969937ebe6c9e2eb9a4e2875ded76805'
+body_hash: 'sha256:8d6927ec73337cd032f253dff05e2841c8e917fe0e858ed689e4e3791e37b1bb'
 related:
   - '[[2026-10-03-application-core-packaging-audit]]'
-  - '[[2026-10-03-application-core-packaging-ledger]]'
-  - '[[2026-10-03-application-core-packaging-plan]]'
 ---
 
 # `application-core-packaging` feature index
@@ -22,11 +20,3 @@ Auto-generated index of all documents tagged with `#application-core-packaging`.
 ### audit
 
 - `2026-10-03-application-core-packaging-audit` - `application-core-packaging` audit: `independent Rust application library`
-
-### exec
-
-- `2026-10-03-application-core-packaging-ledger` - `application-core-packaging` ledger
-
-### plan
-
-- `2026-10-03-application-core-packaging-plan` - `application-core-packaging` plan

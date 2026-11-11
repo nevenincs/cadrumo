@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#native-agent'
 date: '2026-10-13'
-modified: '2026-11-02'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:e63bb5911e5cabdd887993ea67e711971621f498a0329f46277c54de8279f3cc'
+body_hash: 'sha256:4a0ab79a83b613815bd8d9ea111074ee6ab5f123532b2a7b4235667805688a27'
 related:
   - '[[2026-10-13-native-agent-adr]]'
   - '[[2026-10-13-native-agent-audit]]'
-  - '[[2026-10-13-native-agent-ledger]]'
-  - '[[2026-10-13-native-agent-plan]]'
 ---
 
 # `native-agent` feature index
@@ -27,11 +25,3 @@ Auto-generated index of all documents tagged with `#native-agent`.
 ### audit
 
 - `2026-10-13-native-agent-audit` - `native-agent` audit: `Native agent dependency ownership`
-
-### exec
-
-- `2026-10-13-native-agent-ledger` - `native-agent` ledger
-
-### plan
-
-- `2026-10-13-native-agent-plan` - `native-agent` plan
