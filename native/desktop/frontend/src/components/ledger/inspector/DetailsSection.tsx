@@ -171,6 +171,16 @@ export function DetailsSection({
             </span>
           )}
         </dd>
+        <dt className="pt-1 text-sm text-muted-foreground">
+          {t("desktop.ledger.inspector.statement_reference")}
+        </dt>
+        <dd className="ledger-statement-reference px-1.5 py-1 text-sm break-words">
+          {tx.statement_reference ?? (
+            <span className="text-muted-foreground">
+              {t("desktop.ledger.inspector.not_stated")}
+            </span>
+          )}
+        </dd>
         {field(
           "own_account_id",
           "account",

@@ -749,6 +749,9 @@ export type LedgerTransaction = {
   classification_reason: string;
   classification_confidence: string | null;
   source_jurisdiction: string | null;
+  /** The reference the bank statement printed; null when it printed none
+   * or the movement was added by hand. */
+  statement_reference: string | null;
   value_in_eur: string | null;
   fx_rate: string | null;
   created_at: string;

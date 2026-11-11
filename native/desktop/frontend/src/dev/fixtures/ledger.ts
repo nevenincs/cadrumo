@@ -607,6 +607,12 @@ export function fixtureLedger(
           : "aeat app ledger classify",
       classification_confidence: null,
       source_jurisdiction: null,
+      // The bank prints a reference on most movements; every fifth one it
+      // left without, so both states are on the page.
+      statement_reference:
+        sequence % 5 === 0
+          ? null
+          : `${String(month).padStart(2, "0")}${String(sequence).padStart(7, "0")}`,
       value_in_eur: extra.value_in_eur ?? null,
       fx_rate: extra.fx_rate ?? null,
       created_at: created,
