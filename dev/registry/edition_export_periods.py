@@ -5,7 +5,9 @@ for. The table is read from the registry, never written out: an edition is
 rendered at the first supported ``(year, period)`` that the canonical revision
 selection resolves to that very edition, so the support envelope and each
 edition's own period selector decide the year and the period token. An edition
-that serves no supported year has no renderable export and no entry.
+that serves no supported year, or that carries a layout below filing grade,
+has no renderable export and no entry: the exporter admits only a filing-grade
+snapshot.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from collections.abc import Iterator, Mapping
 from functools import cache
 from typing import Final, override
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError
@@ -53,13 +56,13 @@ def _first_supported_period(
 
 @cache
 def _edition_periods(modelo_id: str) -> Mapping[str, Period]:
-    """Every export-bearing edition of ``modelo_id`` that serves a supported year, with its rendering period."""
+    """Every filing-grade export-bearing edition of ``modelo_id`` serving a supported year, with its period."""
     registry_root = bundled_path("registry", "aeat")
     support = load_shared_catalogues(registry_root).require_supported_filing_years()
     modelo = load_modelo_directory(registry_root / "modelos" / modelo_id)
     periods: dict[str, Period] = {}
     for revision_id, revision in modelo.revisions.items():
-        if not revision.export_layouts:
+        if not revision.export_layouts or revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
             continue
         period = _first_supported_period(modelo, revision, support)
         if period is not None:

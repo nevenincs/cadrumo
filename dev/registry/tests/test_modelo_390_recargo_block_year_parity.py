@@ -95,7 +95,7 @@ def _editions_declaring_the_block(definition: ModeloDefinition) -> tuple[ModeloR
 
 def _design_boxes(revision: ModeloRevision) -> set[str]:
     """The recargo rate boxes this edition's own diseño de registro prints."""
-    refs = revision.casilla_source_refs or revision.source_refs
+    refs = _cited_refs(revision)
     sources = compiled_bundled_authority().catalogues.sources
     printed: set[str] = set()
     for ref in refs:
@@ -108,12 +108,18 @@ def _design_boxes(revision: ModeloRevision) -> set[str]:
     return printed
 
 
+def _cited_refs(revision: ModeloRevision) -> tuple[str, ...]:
+    """The edition's own casilla and binding source defaults, or its revision sources when it states neither."""
+    own = (*(revision.casilla_source_refs or ()), *(revision.binding_source_refs or ()))
+    return tuple(str(ref) for ref in own or revision.source_refs)
+
+
 def _cites_a_record_design(revision: ModeloRevision) -> bool:
-    """Whether the edition's casillas cite a diseño de registro rather than only the approving form."""
+    """Whether the edition's casillas or bindings cite a diseño de registro rather than only the approving form."""
     sources = compiled_bundled_authority().catalogues.sources
     return any(
-        (source := sources.get(str(ref))) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
-        for ref in revision.casilla_source_refs or revision.source_refs
+        (source := sources.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
+        for ref in _cited_refs(revision)
     )
 
 
