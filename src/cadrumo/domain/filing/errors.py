@@ -6,6 +6,8 @@ callers can catch the project-wide base.
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
 
@@ -111,3 +113,84 @@ class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
             f"required export record {export_record_id!r} has no applicable occurrence",
             context={"export_record_id": export_record_id},
         )
+
+
+class FilingExportDeclaredPartyNameError(FilingExportValidationError):
+    """Refuses a party-name slot whose party has no filing name the record design can take.
+
+    The design prescribes the slot's content from the party's own name parts and
+    allows no shortening, so a name nobody stated, one the design cannot compose
+    or one wider than the slot leaves nothing truthful to write. The context
+    names where the slot is, a non-identifying handle of the party, both widths
+    and the action that states the party's filing name; never the name or the
+    party's tax identifier.
+    """
+
+    reason: ClassVar[str] = "unstated"
+
+    def __init__(
+        self,
+        *,
+        modelo: str,
+        export_record_id: str,
+        export_field_id: str,
+        field_length: int,
+        door_action_id: str,
+        party_handle: str | None = None,
+        row_index: int | None = None,
+        composed_length: int | None = None,
+        tax_identifier: str | None = None,
+        country_code: str | None = None,
+    ) -> None:
+        """Record which slot refuses, for which party, and the action that remedies it.
+
+        ``tax_identifier`` and ``country_code`` name the party for the door's
+        own arguments; they are attributes only, never part of the context.
+        """
+        self.modelo = modelo
+        self.tax_identifier = tax_identifier
+        self.country_code = country_code
+        self.export_record_id = export_record_id
+        self.export_field_id = export_field_id
+        self.field_length = field_length
+        self.door_action_id = door_action_id
+        self.party_handle = party_handle
+        self.row_index = row_index
+        self.composed_length = composed_length
+        context: dict[str, object] = {
+            "reason": self.reason,
+            "modelo": modelo,
+            "export_record_id": export_record_id,
+            "export_field_id": export_field_id,
+            "field_length": field_length,
+            "door_action_id": door_action_id,
+        }
+        if party_handle is not None:
+            context["party_handle"] = party_handle
+        if row_index is not None:
+            context["row_index"] = row_index
+        if composed_length is not None:
+            context["composed_length"] = composed_length
+        super().__init__(
+            f"export record {export_record_id!r} field {export_field_id!r} has no declared party name it can file "
+            f"({self.reason})",
+            context=context,
+        )
+
+
+class FilingExportDeclaredPartyNameMissingError(FilingExportDeclaredPartyNameError):
+    """The party's filing name was never stated, so the slot would be left without its content."""
+
+    reason: ClassVar[str] = "missing"
+
+
+class FilingExportDeclaredPartyNameSingleSurnameError(FilingExportDeclaredPartyNameError):
+    """The party is a natural person stated with one surname, which no design says how to compose."""
+
+    reason: ClassVar[str] = "single_surname"
+
+
+class FilingExportDeclaredPartyNameTooWideError(FilingExportDeclaredPartyNameError):
+    """The composed name is wider than the slot and the operator stated no rendering that fits it."""
+
+    reason: ClassVar[str] = "too_wide"

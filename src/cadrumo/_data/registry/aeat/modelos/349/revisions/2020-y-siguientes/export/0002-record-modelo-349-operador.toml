@@ -147,6 +147,15 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-349-2020-current"]
 
+[revisions.2020-y-siguientes.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
+
 [[revisions.2020-y-siguientes.export_layouts.records.fields]]
 id = "modelo-349-op-clave"
 offset = 133
@@ -271,7 +280,7 @@ source_refs = ["aeat-dr-349-2020-current"]
 base_imponible = "op.base-imponible"
 clave = "op.clave-operacion"
 country_code = "op.codigo-pais"
-party_legal_name = "op.apellidos-razon-social"
+party_filing_name = "op.apellidos-razon-social"
 party_tax_id = "op.nif-comunitario"
 
 [revisions.2020-y-siguientes.export_layouts.records.discriminator]

@@ -150,9 +150,10 @@ def _calculation_invoice_source_ports(
     invoice_repository: InvoiceCatalogueRepository,
     calculation_binding: CalculationRevisionPersistenceBinding,
 ) -> InvoiceSourceResolverPorts:
-    """Compose the invoice-sourced resolvers a calculation reads: catalogue, filed M349 and counterpart provinces."""
+    """Compose the invoice-sourced resolvers a calculation reads: catalogue, filed M349 and counterpart facts."""
     from ..adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
     from ..adapters.persistence.profile.invoice_source_resolver import (
+        CounterpartyFilingNameAdapter,
         CounterpartyProvinciaAdapter,
         InvoiceCatalogueSourceResolverAdapter,
         M349FiledDeclarationAdapter,
@@ -168,6 +169,9 @@ def _calculation_invoice_source_ports(
             operation=operation,
         ),
         counterparty_provincias=CounterpartyProvinciaAdapter(
+            repository=CounterpartyEstablishmentRepository(bucket_id=bucket_id, objects=objects),
+        ),
+        counterparty_filing_names=CounterpartyFilingNameAdapter(
             repository=CounterpartyEstablishmentRepository(bucket_id=bucket_id, objects=objects),
         ),
     )

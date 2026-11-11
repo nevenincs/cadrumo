@@ -364,6 +364,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.counterparty.filing_name",
+            target_command_key="ledger.counterparty.filing_name",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="tax_identifier",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="tax_identifier",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="country_code",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="country_code",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),

@@ -103,6 +103,15 @@ source_row = 819
 ordinal = "7"
 record_identity = "Tipo 2 - Registro De Inmueble"
 
+[entries.party_name]
+natural_person_statement = "el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden"
+entity_statement = "se consignará la razón social o la denominación completa de la entidad, sin anagramas"
+
+[entries.party_name.composition]
+natural_person = ["primer_apellido", "segundo_apellido", "nombre"]
+separator = " "
+entity = ["razon_social"]
+
 
 [[entries]]
 export_field_id = "m347-2011.inmueble.f008"

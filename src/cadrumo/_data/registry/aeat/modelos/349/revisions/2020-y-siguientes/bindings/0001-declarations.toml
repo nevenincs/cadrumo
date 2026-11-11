@@ -83,7 +83,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-apellidos"
-provider = { kind = "m349_intracommunity_operation", fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador", data_type = "text" }
+provider = { kind = "m349_intracommunity_operation", fact = "row_field", row_field = "party_filing_name", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador", data_type = "text" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
@@ -153,7 +153,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-apellidos"
-provider = { kind = "m349_intracommunity_operation", fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion", data_type = "text" }
+provider = { kind = "m349_intracommunity_operation", fact = "row_field", row_field = "party_filing_name", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion", data_type = "text" }
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]

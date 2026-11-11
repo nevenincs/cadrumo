@@ -100,8 +100,9 @@ persona or a projection, a pool member or a refusal.
 | `persona` | string | owning persona id |
 | `kind` | `nif` \| `nie` \| `cif` \| `nif_iva` | identifier family |
 | `value` | string | the identifier; unique across the file |
-| `name`, `surnames` | string | natural persons |
-| `legal_name` | string | entities |
+| `primer_apellido`, `segundo_apellido`, `nombre` | string | natural persons: the filing name the designs compose, surnames first |
+| `no_second_surname` | bool | a natural person with a single surname says so and leaves `segundo_apellido` out |
+| `razon_social` | string | entities: the complete razón social, verbatim |
 | `country` | string | `nif_iva` only, ISO 3166-1 alpha-2 |
 | `primary` | bool | only on `fontanero.titular` |
 
@@ -155,7 +156,7 @@ each, in file order. An unknown id is refused by that operation. Value forms:
 | string array (checkbox questions) | members joined with `,` |
 | date table | ISO-8601 date |
 | `{ identity = "<role>" }` | the role's `value` |
-| `{ identity = "<role>", field = "name" \| "surnames" \| "legal_name" }` | that field of the role |
+| `{ identity = "<role>", field = "primer_apellido" \| "segundo_apellido" \| "nombre" \| "razon_social" }` | that field of the role; `name`, `surnames` (both surnames joined) and `legal_name` read the same parts |
 
 A question whose subject does not apply to the persona (IVA questions for a
 non-entrepreneur, `iva-m303-regime-composition` for a recargo de equivalencia

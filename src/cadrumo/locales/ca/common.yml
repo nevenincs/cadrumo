@@ -6446,7 +6446,7 @@ sheets:
       operation_date: Data de l'operació
       operation_kind_code: Clau d'operació
       pago: Pagament
-      party_legal_name: Raó social
+      party_filing_name: Cognoms i nom o raó social
       party_tax_id: NIF
       penalizaciones: Penalitzacions
       pendiente_flag: Pendent

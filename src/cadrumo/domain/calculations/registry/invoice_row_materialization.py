@@ -35,6 +35,17 @@ _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
 }
 
 
+def invoice_party_reference(country_code: str, party_tax_id: str) -> str:
+    """Return the reference a row carries in its ``party_filing_name`` slot until the name is composed.
+
+    A row names its party, never the party's name: the name filed is the one the
+    person declared for that party, composed for the slot that files it
+    (:func:`~.invoice_bindings.resolve_invoice_binding_row_values`). No invoice
+    text reaches the slot.
+    """
+    return f"{country_code}|{party_tax_id}"
+
+
 def normalise_m349_nif_export_rows(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
@@ -84,12 +95,11 @@ def build_invoice_rows(
 
 
 class _InvoiceRowBucket(Protocol):
-    """Shared identity and optional-name surface of every row accumulator."""
+    """Shared identity surface of every row accumulator."""
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
     clave: str
-    party_legal_name: str | None
 
 
 def _materialize_grouped_invoice_rows[InvoiceRowBucketT: _InvoiceRowBucket](
@@ -99,10 +109,11 @@ def _materialize_grouped_invoice_rows[InvoiceRowBucketT: _InvoiceRowBucket](
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Build ordered export rows from already-grouped invoice accumulators.
 
-    This owns only the repeated mapping construction and optional legal-name
-    projection. Each grouping retains its own ordered buckets and explicitly
-    supplies its legal row-value mapping, so M349's base and rectification
-    semantics cannot be conflated with M347's annual and quarterly amounts.
+    This owns only the repeated mapping construction and the party reference
+    each row carries for its filing name. Each grouping retains its own ordered
+    buckets and explicitly supplies its legal row-value mapping, so M349's base
+    and rectification semantics cannot be conflated with M347's annual and
+    quarterly amounts.
     """
     rows: list[Mapping[str, Decimal | str]] = []
     for bucket in buckets:
@@ -112,8 +123,7 @@ def _materialize_grouped_invoice_rows[InvoiceRowBucketT: _InvoiceRowBucket](
             "clave": bucket.clave,
         }
         row.update(values(bucket))
-        if bucket.party_legal_name is not None:
-            row["party_legal_name"] = bucket.party_legal_name
+        row["party_filing_name"] = invoice_party_reference(bucket.country_code, bucket.party_tax_id)
         rows.append(row)
     return tuple(rows)
 
@@ -136,13 +146,10 @@ def _build_operator_clave_rows(
                 country_code=observation.country_code,
                 party_tax_id=observation.party_tax_id,
                 clave=observation.intracommunity_clave,
-                party_legal_name=observation.party_legal_name,
                 base_total=Decimal("0"),
             ),
         )
         bucket.base_total += observation.base_amount
-        if bucket.party_legal_name is None and observation.party_legal_name is not None:
-            bucket.party_legal_name = observation.party_legal_name
     return _materialize_grouped_invoice_rows(
         (grouped[key] for key in sorted(grouped)),
         values=lambda bucket: {"base_imponible": bucket.base_total},
@@ -210,7 +217,6 @@ class _ContraparteClaveAccumulator(BaseModel):
     country_code: str
     party_tax_id: TaxIdIdentityToken
     clave: str
-    party_legal_name: str | None
     provincia_code: str | None
     cash_accounting_operation: bool
     reverse_charge_recipient: bool
@@ -284,7 +290,6 @@ def _build_contraparte_clave_rows(
                 country_code=observation.country_code,
                 party_tax_id=observation.party_tax_id,
                 clave=observation.operation_clave,
-                party_legal_name=observation.party_legal_name,
                 provincia_code=observation.party_provincia_code,
                 cash_accounting_operation=observation.cash_accounting_operation,
                 reverse_charge_recipient=observation.reverse_charge_recipient,
@@ -300,8 +305,6 @@ def _build_contraparte_clave_rows(
         bucket.importe_total += observation.invoice_total_amount
         quarter_field = _M347_QUARTER_ROW_FIELDS[_m347_quarter_of(observation.transaction_date)]
         setattr(bucket, quarter_field, getattr(bucket, quarter_field) + observation.invoice_total_amount)
-        if bucket.party_legal_name is None and observation.party_legal_name is not None:
-            bucket.party_legal_name = observation.party_legal_name
     return _materialize_grouped_invoice_rows(
         (grouped[key] for key in sorted(grouped)),
         values=lambda bucket: {
@@ -415,7 +418,6 @@ class _ArrendamientoInmuebleAccumulator(BaseModel):
 
     country_code: str
     party_tax_id: TaxIdIdentityToken
-    party_legal_name: str | None
     situacion_inmueble: str
     referencia_catastral: str
     importe_total: Decimal
@@ -464,15 +466,12 @@ def _build_arrendamiento_inmueble_rows(
             _ArrendamientoInmuebleAccumulator(
                 country_code=observation.country_code,
                 party_tax_id=observation.party_tax_id,
-                party_legal_name=observation.party_legal_name,
                 situacion_inmueble=situacion,
                 referencia_catastral=referencia,
                 importe_total=Decimal("0"),
             ),
         )
         bucket.importe_total += observation.invoice_total_amount
-        if bucket.party_legal_name is None and observation.party_legal_name is not None:
-            bucket.party_legal_name = observation.party_legal_name
     rows: list[Mapping[str, Decimal | str]] = []
     for key in sorted(grouped):
         bucket = grouped[key]
@@ -484,9 +483,8 @@ def _build_arrendamiento_inmueble_rows(
             "situacion_inmueble": bucket.situacion_inmueble,
             "referencia_catastral": bucket.referencia_catastral,
             "premises_address": "",
+            "party_filing_name": invoice_party_reference(bucket.country_code, bucket.party_tax_id),
         }
-        if bucket.party_legal_name is not None:
-            row["party_legal_name"] = bucket.party_legal_name
         rows.append(row)
     return tuple(rows)
 
@@ -532,7 +530,6 @@ def _build_operator_clave_period_rows(
                 country_code=observation.country_code,
                 party_tax_id=observation.party_tax_id,
                 clave=observation.intracommunity_clave,
-                party_legal_name=observation.party_legal_name,
                 rectified_year=observation.rectified_year,
                 rectified_period=observation.rectified_period,
                 base_total=Decimal("0"),
@@ -546,8 +543,6 @@ def _build_operator_clave_period_rows(
                 f"rectification observation {observation.invoice_id!r} declares no rectified base to compare",
             )
         bucket.base_previous_total += previous
-        if bucket.party_legal_name is None and observation.party_legal_name is not None:
-            bucket.party_legal_name = observation.party_legal_name
     return _materialize_grouped_invoice_rows(
         (grouped[key] for key in sorted(grouped)),
         values=lambda bucket: {
@@ -576,7 +571,6 @@ class _OperatorClaveAccumulator(BaseModel):
     country_code: str
     party_tax_id: TaxIdIdentityToken
     clave: str
-    party_legal_name: str | None
     base_total: Decimal
 
 
@@ -588,7 +582,6 @@ class _OperatorClavePeriodAccumulator(BaseModel):
     country_code: str
     party_tax_id: TaxIdIdentityToken
     clave: str
-    party_legal_name: str | None
     rectified_year: int
     rectified_period: str
     base_total: Decimal

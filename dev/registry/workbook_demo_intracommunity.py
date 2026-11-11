@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,6 +28,7 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             party_tax_id=nif,
             party_legal_name=name,
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
             country_code=country,
             transaction_date=date(year, 12, index),
             base_amount=Decimal(amount),
@@ -48,6 +50,7 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             party_tax_id="IT12345678901",
             party_legal_name="Empresa ficticia C",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="Empresa ficticia C"),
             country_code="IT",
             transaction_date=date(year, 12, 4),
             base_amount=Decimal("900"),
