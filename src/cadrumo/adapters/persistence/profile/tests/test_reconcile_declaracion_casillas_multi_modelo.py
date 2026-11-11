@@ -38,6 +38,11 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
     active_profile_isolated_backend_fixture,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    newest_authored_edition,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit
 
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
@@ -52,7 +57,9 @@ from .reconciliation_persist_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_TAX_ID = "00000000T"
-_CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
+_M100_YEAR = newest_authored_edition("100")
+_HORIZON = filing_year_envelope().horizon
+_CLOCK = datetime(_HORIZON, 4, 20, tzinfo=UTC)
 _persist_filed_revision = partial(persist_filed_revision, clock=_CLOCK)
 _synthetic_declaracion = partial(synthetic_declaracion, tax_id=_PROFILE_TAX_ID)
 
@@ -96,7 +103,7 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
     prints a different 0604 must surface a typed casilla mismatch rather than
     an identity-only reconcile success.
     """
-    work_unit = seed_active_work_unit(modelo="100", filing_year=2024, period="0A", operation=authority_operation)
+    work_unit = seed_active_work_unit(modelo="100", filing_year=_M100_YEAR, period="0A", operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"0604": Decimal("1520.00")})
 
     report = _reconcile(
@@ -115,7 +122,7 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
     assert diff.work_unit_value == "1520.00"
     assert diff.evidence_value == "1140.00"
     assert {"ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110"} <= set(diff.legal_refs)
-    assert "aeat-dr-100-2024-dictionary" in diff.source_refs
+    assert f"aeat-dr-100-{_M100_YEAR}-dictionary" in diff.source_refs
 
 
 # --- Cross-modelo matching declaración reconciles clean (303/390/190) -------
@@ -131,14 +138,14 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
     [
         pytest.param(
             "303",
-            2026,
+            _HORIZON,
             "1T",
             {"27": Decimal("1000.00"), "45": Decimal("400.00"), "iva.resultado": Decimal("600.00")},
             id="303",
         ),
         pytest.param(
             "390",
-            2025,
+            filing_grade_exercises("390")[-1],
             "0A",
             {
                 "iva.anual.cuota-devengada-total": Decimal("88416.00"),
@@ -149,7 +156,7 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
         ),
         pytest.param(
             "190",
-            2025,
+            _HORIZON,
             "0A",
             {
                 "decl.total-percepciones": Decimal("12.00"),
@@ -196,7 +203,7 @@ def test_modelo_303_value_mismatch_is_caught_as_typed_casilla_diff(
     identity ``matches``."""
     work_unit = seed_active_work_unit(
         modelo="303",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
         operation=authority_operation,
     )
@@ -237,7 +244,7 @@ def test_modelo_390_missing_casilla_is_caught_as_typed_casilla_diff(
     is MISSING_IN_FILED, not a silent skip."""
     work_unit = seed_active_work_unit(
         modelo="390",
-        filing_year=2025,
+        filing_year=filing_grade_exercises("390")[-1],
         period="0A",
         operation=authority_operation,
     )
@@ -279,7 +286,7 @@ def test_modelo_111_matching_declaracion_reconciles_clean(
 ) -> None:
     work_unit = seed_active_work_unit(
         modelo="111",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
         operation=authority_operation,
     )
@@ -304,7 +311,7 @@ def test_modelo_111_value_mismatch_is_caught_as_typed_casilla_diff(
 ) -> None:
     work_unit = seed_active_work_unit(
         modelo="111",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
         operation=authority_operation,
     )
@@ -340,7 +347,7 @@ def test_modelo_190_value_mismatch_is_caught_as_typed_casilla_diff(
 ) -> None:
     work_unit = seed_active_work_unit(
         modelo="190",
-        filing_year=2025,
+        filing_year=_HORIZON,
         period="0A",
         operation=authority_operation,
     )

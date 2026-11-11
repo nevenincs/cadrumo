@@ -40,7 +40,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 MODELO_202_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "202" / "2025-1P.pdf"
-_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 25, 0, tzinfo=UTC)
+#: The ejercicio each fixture prints, read off the fixture's own name so a work unit seeded for
+#: it addresses the exercise the document declares.
+_M130_FIXTURE_YEAR = int(MODELO_130_FIXTURE.stem.rpartition("_")[2][:4])
+_M202_FIXTURE_YEAR = int(MODELO_202_DECLARACION_FIXTURE.stem[:4])
+_WORK_UNIT_TIMESTAMP = datetime(1980, 5, 28, 13, 25, 0, tzinfo=UTC)
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
@@ -68,7 +72,7 @@ def test_modelo_reconcile_matches_when_modelo_and_year_align(operation: PinnedAu
     """The modelo_130 fixture is modelo=130, ejercicio=2026, period=1T.
     A work unit with matching modelo+filing_year yields MATCHES."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
 
     report = modelo_reconcile(
         ModeloReconciliationCommand(
@@ -88,7 +92,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs(operation: PinnedAuthor
     """A modelo=303 work unit reconciled against the modelo_130
     fixture produces a MISMATCHES verdict with the modelo diff."""
 
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="303", filing_year=_M130_FIXTURE_YEAR, period="1T")
 
     report = modelo_reconcile(
         ModeloReconciliationCommand(
@@ -107,7 +111,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs(operation: PinnedAuthor
 
 
 def test_modelo_reconcile_mismatches_when_period_differs(operation: PinnedAuthorityOperation) -> None:
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="2T")
 
     report = modelo_reconcile(
         ModeloReconciliationCommand(
@@ -126,7 +130,7 @@ def test_modelo_reconcile_mismatches_when_period_differs(operation: PinnedAuthor
 
 
 def test_modelo_reconcile_mismatches_when_profile_tax_id_differs(operation: PinnedAuthorityOperation) -> None:
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
     parsed = parse_justificante(MODELO_130_FIXTURE)
 
     report = reconcile_parsed_justificante(
@@ -151,7 +155,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event(operation: PinnedAuthori
     verdict so downstream auditors can replay the reconciliation
     timeline without re-parsing the evidence."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
 
     modelo_reconcile(
         ModeloReconciliationCommand(
@@ -176,7 +180,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event(operation: PinnedAuthori
 def test_reconcile_preparation_leaves_the_atomic_write_for_the_commit_boundary(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
     command = ModeloReconciliationCommand(
         work_unit_id=work_unit_id,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
@@ -208,7 +212,7 @@ def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payloa
     complete path, and keep the informative tail (the filename) rather than the
     directory prefix.
     """
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
     parsed = parse_justificante(MODELO_130_FIXTURE)
     long_directory = "/deeply/nested/" + "evidence-archive/" * 40
     over_long_ref = f"{long_directory}modelo_130_2026Q1.pdf"
@@ -252,7 +256,7 @@ def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo(
     cleanly with a typed error rather than silently degrading to a header-only
     compare."""
 
-    work_unit_id = _seed_work_unit(modelo="200", filing_year=2026, period="0A")
+    work_unit_id = _seed_work_unit(modelo="200", filing_year=_M130_FIXTURE_YEAR, period="0A")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
@@ -277,7 +281,7 @@ def test_modelo_reconcile_refuses_modelo_202_declaration_before_parsing(
     observable result and fails the test.
     """
     assert MODELO_202_DECLARACION_FIXTURE.is_file()
-    work_unit_id = _seed_work_unit(modelo="202", filing_year=2025, period="1P")
+    work_unit_id = _seed_work_unit(modelo="202", filing_year=_M202_FIXTURE_YEAR, period="1P")
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
@@ -315,11 +319,11 @@ def test_modelo_reconcile_translates_cross_bucket_address_to_absence(
 
     foreign_bucket_id = "other-bucket-7" * 4
     revision_id = "r" + "1" * 63
-    foreign_period = Period.from_year_and_code(2026, "1T")
+    foreign_period = Period.from_year_and_code(_M130_FIXTURE_YEAR, "1T")
     foreign_unit_id = derive_work_unit_id(
         bucket_id=foreign_bucket_id,
         modelo="130",
-        filing_year=2026,
+        filing_year=_M130_FIXTURE_YEAR,
         period=foreign_period,
         revision_id=revision_id,
     )
@@ -327,7 +331,7 @@ def test_modelo_reconcile_translates_cross_bucket_address_to_absence(
         work_unit_id=foreign_unit_id,
         bucket_id=foreign_bucket_id,
         modelo=ModeloCode("130"),
-        filing_year=2026,
+        filing_year=_M130_FIXTURE_YEAR,
         period=foreign_period,
         revision_id=revision_id,
         name="foreign-130",
@@ -356,7 +360,7 @@ def test_modelo_reconcile_refuses_malformed_evidence(
     ``ReconciliationEvidenceInvalidError``. Locks the contract from
     the complementaria-external-filing-path contract amendment."""
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"
     not_a_justificante.write_bytes(b"%PDF-1.4\n%not a real justificante\n")
 
@@ -386,7 +390,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
     """
     from cadrumo.core.errors.error_codes import build_error_envelope, resolve_error_message
 
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=_M130_FIXTURE_YEAR, period="1T")
     not_a_justificante = tmp_path / "garbage.pdf"
     not_a_justificante.write_bytes(b"%PDF-1.4\nnot a real pdf body at all\n")
 

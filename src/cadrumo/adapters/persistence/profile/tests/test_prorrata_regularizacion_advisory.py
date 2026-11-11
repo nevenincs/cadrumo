@@ -46,6 +46,7 @@ from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -62,8 +63,8 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
-_YEAR = 2026
-_PRIOR_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 _SETTLEMENT_PERIOD_CODE = "4T"
 _FIRST_PERIOD_CODE = "1T"
 

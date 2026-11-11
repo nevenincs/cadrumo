@@ -51,6 +51,7 @@ from cadrumo.adapters.persistence.profile.tests.observation_lookup_support impor
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -61,8 +62,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "184"
 
 #: The two distinct renta ejercicios the fidelity test spans.
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_YEAR_N = open_ended_revision(_MODELO).valid_from.year
+_YEAR_N_PLUS_1 = _YEAR_N + 1
 
 #: Context label for the cross-year observation (non-calculation mode).
 _CONTEXT_LABEL = "184-informativa-member-attribution-year-over-year"
@@ -80,8 +81,8 @@ _CLAVE_RENTA = Decimal("4")
 # Subclave (casillas 78-79). 1 = rentas obtenidas en España.
 _SUBCLAVE_RENTA = Decimal("1")
 
-_CLOCK_N = datetime(2025, 2, 5, 10, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2026, 2, 5, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(_YEAR_N + 1, 2, 5, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 2, 5, 10, 0, 0, tzinfo=UTC)
 
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")

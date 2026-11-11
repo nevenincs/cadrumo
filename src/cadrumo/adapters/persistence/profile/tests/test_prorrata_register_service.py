@@ -30,6 +30,7 @@ from cadrumo.core.prorrata_register import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
 from .....application.prorrata_register.tests.provisional_override import record_aeat_autorizada
@@ -37,9 +38,15 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
+_EJERCICIO = filing_year_envelope().horizon
+
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return published_authority_operation().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
+    return (
+        published_authority_operation()
+        .snapshot(Modelo("303").value, filing_year=_EJERCICIO - 1, period="4T")
+        .snapshot_ref
+    )
 
 
 def test_declare_especial_transition_persists_typed_option(
@@ -50,13 +57,13 @@ def test_declare_especial_transition_persists_typed_option(
         repository = ProrrataRegisterRepository(objects=profile.repository)
         service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         entry = ProrrataRegisterEntry(
-            ejercicio=2026,
+            ejercicio=_EJERCICIO,
             regime=ProrrataRegisterRegime.from_registry("especial"),
             provisional_percentage=Decimal("60"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
             especial_transition=ProrrataEspecialTransitionEvidence(
                 kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
-                evidence_reference="modelo-303-2026-prorrata-opcion",
+                evidence_reference=f"modelo-303-{_EJERCICIO}-prorrata-opcion",
             ),
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         )
@@ -65,11 +72,11 @@ def test_declare_especial_transition_persists_typed_option(
         loaded = repository.load()
 
     assert updated == loaded
-    persisted = loaded.entry_for(2026)
+    persisted = loaded.entry_for(_EJERCICIO)
     assert persisted is not None
     assert persisted.especial_transition is not None
     assert persisted.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
-    assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
+    assert persisted.especial_transition.evidence_reference == f"modelo-303-{_EJERCICIO}-prorrata-opcion"
 
 
 def test_record_aeat_autorizada_persists_authorised_override(
@@ -81,30 +88,30 @@ def test_record_aeat_autorizada_persists_authorised_override(
         service = ProrrataRegisterService(repository=repository, operation=authority_operation)
         service.declare(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_EJERCICIO,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                source_observation_ref="303:2025:4T",
+                source_observation_ref=f"303:{_EJERCICIO - 1}:4T",
                 source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
 
         updated = record_aeat_autorizada(
             service,
-            ejercicio=2026,
+            ejercicio=_EJERCICIO,
             provisional_percentage=Decimal("63.5"),
-            authorisation_reference="AEAT-AUTH-2026-0007",
+            authorisation_reference=f"AEAT-AUTH-{_EJERCICIO}-0007",
         )
         loaded = repository.load()
 
     assert updated == loaded
     assert len(loaded.entries) == 1
-    entry = loaded.entry_for(2026)
+    entry = loaded.entry_for(_EJERCICIO)
     assert entry is not None
     assert entry.regime == ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("63.5")
     assert entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
-    assert entry.authorisation_reference == "AEAT-AUTH-2026-0007"
+    assert entry.authorisation_reference == f"AEAT-AUTH-{_EJERCICIO}-0007"
     assert entry.source_observation_ref is None

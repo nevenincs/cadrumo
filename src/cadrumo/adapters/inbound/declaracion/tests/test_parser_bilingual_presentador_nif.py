@@ -54,13 +54,18 @@ from ..detect import detect_template_revision
 from ..errors import DeclaracionParseError
 from ..parser import extract_tax_id, parse_declaracion
 from ..parsers.pdfplumber_backend import extract_pages_text
+from .parser_boundary_m100_support import corpus_specimens
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: Generated reproduction of the withdrawn real AEAT M390 English receipt.
-_ENGLISH_RENDER = ("390", "2021-0A", 2021, "0A")
+(_ENGLISH_RENDER,) = (
+    ("390", stem, year, period) for stem, year, period in corpus_specimens("390", role="parser_anchor")
+)
 #: Spanish-render M390 receipts covering the same modelo and period.
-_SPANISH_RENDERS = (("390", "2022-0A", 2022, "0A"), ("390", "2023-0A", 2023, "0A"))
+_SPANISH_RENDERS = tuple(
+    ("390", stem, year, period) for stem, year, period in corpus_specimens("390", role="formula_verification")
+)
 
 #: Phrases that appear only on AEAT's English-language render of the receipt.
 _ENGLISH_MARKERS = ("Tax identification number", "Surname(s)", "INFORMATION ON FILING THE TAX RETURN")
