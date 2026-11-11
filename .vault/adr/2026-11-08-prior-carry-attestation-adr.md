@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#prior-carry-attestation'
 date: '2026-11-08'
-modified: '2026-11-08'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:573cc1ee90e3b55c47d5adcc0693bc3afd33ac1a7f19b355ca3fab32f021a0f0'
+body_hash: 'sha256:5e506bcf4587be3bc02227667aea0378dd5b9f4f904d97e5683c5358cd1c54b2'
 related:
   - "[[2026-08-24-modelo-edit-contract-adr]]"
   - "[[2026-06-13-first-filer-attestation-adr]]"
@@ -116,3 +116,7 @@ without a second mechanism.
   and its served words. This record scopes it to the Modelo 100 carries that D33 found.
 - Amended 2026-11-08 on the coordinator's approval of the registry declaration,
   after the plan-close review found the scope inferred from the source kind.
+
+## Amendment 2026-11-11: absence of pending rental expenses
+
+Accepted 2026-11-11 by CADRUMO-PRIME under the operator's delegation, with the decision `2026-11-11-renta-rental-income-source-adr`. One more absence-attestation family is admitted: `renta_capital_inmobiliario_gastos_pendientes`, at row grain keyed by referencia catastral. A first year in the app can then state that a property carries no pending expenses from earlier years into 0103, instead of leaving the box unresolved for want of a return the app does not hold.

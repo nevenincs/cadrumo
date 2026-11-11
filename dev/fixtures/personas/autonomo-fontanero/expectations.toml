@@ -575,11 +575,12 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "0.00", "0604" = "1869.98" }
-concepts = { ingresos_actividad = "30000.00", gastos_actividad = "20158.00", provision_dificil_justificacion = "492.10", rendimiento_neto_actividad = "9349.90", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "30000.00", "irpf_ed_suma_gastos_previos" = "20158.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "492.10", "irpf_ed_rdto_neto" = "9349.90", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Activity income is the 130 4T cumulative figure: 30000.00 - 20158.00 - 492.10 = 9349.90.
 0604 pagos fraccionados = 733.02 + 508.82 + 180.12 + 448.02 = 1869.98. No withheld activity income, so 0599 = 0.
 Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they depend on the state and Madrid scales.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
@@ -590,12 +591,13 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:da-56"
 casillas = { "0599" = "0.00", "0604" = "1830.61" }
-concepts = { ingresos_actividad = "30000.00", gastos_actividad = "20158.00", provision_dificil_justificacion = "688.94", rendimiento_neto_actividad = "9153.06", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "30000.00", "irpf_ed_suma_gastos_previos" = "20158.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "688.94", "irpf_ed_rdto_neto" = "9153.06", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 The same year as the value above where LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2)
 governs: provisión = 7 % of 9842.00 = 688.94, so the activity income is 30000.00 - 20158.00 - 688.94 = 9153.06.
 0604 sums the pagos fraccionados of the year's filed Modelo 130 returns under the same rate:
 717.59 + 498.11 + 176.32 + 438.59 = 1830.61. No withheld activity income, so 0599 = 0.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

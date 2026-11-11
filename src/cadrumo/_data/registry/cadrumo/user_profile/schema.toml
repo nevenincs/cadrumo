@@ -55,10 +55,17 @@ description = "Incremento por gastos de custodia, prorrateado por meses y limita
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
-pattern = "renta_family.deduccion_maternidad_{filing_year}"
+pattern = "renta_family.deduccion_maternidad"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Deduccion por maternidad, calculada por descendiente desde los meses declarados y su elegibilidad."
+legal_refs = ["ley-35-2006:art-81"]
+
+[[derived_selectors]]
+pattern = "renta_family.deduccion_maternidad_cotizaciones"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Deduccion por maternidad calculada por descendiente desde los meses declarados y limitada, ademas, por las cotizaciones de la madre tras su nacimiento (art. 81.1 LIRPF hasta la Ley 31/2022)."
 legal_refs = ["ley-35-2006:art-81"]
 
 [[derived_selectors]]
