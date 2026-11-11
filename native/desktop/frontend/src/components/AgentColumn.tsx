@@ -170,6 +170,7 @@ export function AgentColumn({
     interactionId: null,
     pending: null,
     sendFailure: null,
+    sendFit: null,
     archiveFailure: null,
     historyBusy: false,
     draft: { key: 0, text: "" },
@@ -186,6 +187,7 @@ export function AgentColumn({
       interactionId: null,
       pending: null,
       sendFailure: null,
+      sendFit: null,
       archiveFailure: null,
       historyBusy: false,
       draft: { key: view.draft.key + 1, text: "" },
@@ -924,6 +926,7 @@ export function AgentColumn({
           )}
           <ColumnNotice
             failure={view.sendFailure}
+            fit={view.sendFit}
             notice={notice}
             engines={engineHeld ? engineNotices : undefined}
             onRetry={

@@ -1,3 +1,4 @@
+import type { ContextFit } from "../../errors";
 import type { AgentSession } from "../../shell/agentSession";
 import type { AgentDocumentReference } from "../../shell/agentViews";
 import type { AgentSelection } from "./types";
@@ -28,6 +29,9 @@ export type AgentColumnView = {
   interactionId: string | null;
   pending: PendingSend | null;
   sendFailure: string | null;
+  // The context sizes the last send's refusal stated, read only with its
+  // code: a model too small for the conversation says by how much.
+  sendFit: ContextFit | null;
   // Why the history's last action was refused.
   archiveFailure: string | null;
   historyBusy: boolean;
