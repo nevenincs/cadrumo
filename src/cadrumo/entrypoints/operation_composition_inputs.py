@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from ..application.ledger.participation_read import TransactionParticipationIndexRepositoryFactory
     from ..application.ledger.read_ports import LedgerReadPortsFactory
     from ..application.ledger.rule_repository import LedgerClassificationRuleRepositoryFactory
+    from ..application.live.filed_data_ports import FiledDataCapturePort
     from ..application.live.notification_documents import NotificationDocumentService
     from ..application.live.notification_ports import NotificationsPorts
     from ..application.live.sede_view_ports import SedeViewStreamOpener
@@ -313,6 +314,10 @@ class OperationCompositionInputs:
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None
     execution_caller_reader: OperationExecutionCallerReader | None = None
     connectivity_probe: ConnectivityProbePort | None = None
+    #: The AEAT register the single and bulk filed captures read; ``None`` reads the AEAT Sede.
+    #: A recorded register stands in for the authenticated site, so no provider credential is checked
+    #: before it is read, while every persistence, receipt and reconciliation step stays the production one.
+    filed_data_port: FiledDataCapturePort | None = None
     sede_view_stream_opener: SedeViewStreamOpener | None = None
     #: The capture memory list-shaped reads share for the session's profile; ``None`` shares none.
     #: Its owner closes it when a session ends, which only a composition that hears of that may promise.

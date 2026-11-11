@@ -362,8 +362,12 @@ def compose_live_state(
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
     operation: PinnedAuthorityOperation,
+    filed_data_port: FiledDataCapturePort | None = None,
 ) -> LiveStateComposition:
     """Compose the shared live-state port and filed-observation ports once.
+
+    ``filed_data_port`` is a recorded register that stands in for the AEAT Sede
+    transport :func:`build_filed_data_capture_port` builds when it is omitted.
 
     Core types:
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
@@ -387,11 +391,12 @@ def compose_live_state(
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
-    filed_data_port = build_filed_data_capture_port(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        browser_session_factory=browser_session_factory,
-        operator_scope_ports=operator_scope_ports,
-    )
+    if filed_data_port is None:
+        filed_data_port = build_filed_data_capture_port(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
+            operator_scope_ports=operator_scope_ports,
+        )
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,

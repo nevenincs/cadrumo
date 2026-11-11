@@ -6,10 +6,13 @@ patch, field and repeatable-row mutations, the household replacements, the
 suffered-withholding record, the statement import, single classification,
 invoice recording and linking, evidence intake and attachment, and, in the
 history scope, the local observations of returns the taxpayer holds, the
-withholding capture of every rent payment on leased premises, and the work
-create, calculate, verify and local file of every return the persona has
-already filed (create and calculate only for a calculated return), each
-submitted to the production registry's supervisor and settled. Nothing is
+withholding capture of every rent payment on leased premises, the filed
+capture of every return filed with the AEAT, and the work create, calculate,
+verify and local file of every return the persona has already filed (create
+and calculate only for a calculated return), each submitted to the production
+registry's supervisor and settled. The filed capture reads a recorded AEAT
+register in place of the AEAT Sede; nothing after that read is replaced.
+Nothing is
 written to storage by any other route. A persona block that no operation can
 record is returned in :attr:`MaterialisedPersona.not_loaded` with its reason,
 never written another way.
@@ -105,6 +108,11 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID, LedgerLinkRequest
+from ...application.live.filed_single_capture_operation import (
+    FILED_SINGLE_CAPTURE_DEFINITION_ID,
+    FiledSingleCapturePublicResultV1,
+    FiledSingleCaptureRequest,
+)
 from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
@@ -232,6 +240,7 @@ from ...tests.personas import (
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
+from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -341,7 +350,7 @@ def scenario_instant(persona: Persona, envelope: YearEnvelope) -> datetime:
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return build_production_operation_registry(filed_data_port=PERSONA_AEAT_REGISTER)
 
 
 def persona_profile_id(persona_id: str) -> UUID:
@@ -1290,13 +1299,57 @@ def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
     return ", ".join(names)
 
 
+def _capture_aeat_filings(persona: Persona, world: PersonaWorld) -> None:
+    """Capture each return the taxpayer filed with the AEAT through the registered filed capture.
+
+    The capture reads the persona's filings from the recorded AEAT register
+    and admits each through the production receipt checks. A filing whose
+    justificante those checks do not take as the return's verified receipt is
+    refused with the capture's own notices.
+    """
+    recorded = tuple(
+        recorded_filing(persona, filing, envelope=world.envelope, operation=world.operation)
+        for filing in persona.aeat_filings
+    )
+    with PERSONA_AEAT_REGISTER.serving(world.profile_id, recorded):
+        for filing, held in zip(persona.aeat_filings, recorded, strict=True):
+            declaration = held.declaration
+            where = f"{persona.id} AEAT filing of Modelo {filing.modelo} {declaration.ejercicio} {filing.period}"
+            try:
+                captured = run_operation(
+                    world,
+                    FILED_SINGLE_CAPTURE_DEFINITION_ID,
+                    FiledSingleCaptureRequest(
+                        profile_id=world.profile_id,
+                        output_root=world.workdir / "aeat-filed-capture",
+                        modelo=filing.modelo,
+                        year=declaration.ejercicio,
+                        period=filing.period,
+                        expediente_id=declaration.expediente_id,
+                        limit=1,
+                    ),
+                    FiledSingleCapturePublicResultV1,
+                )
+            except PersonaMaterialisationError as error:
+                raise PersonaMaterialisationError(f"{where}: {error}") from error
+            if (
+                captured.captured_count != 1
+                or captured.justificante_csvs != (filing.csv,)
+                or captured.filing_evidence_stamped_count != 1
+                or captured.calculation_observation_count != 1
+            ):
+                raise PersonaMaterialisationError(
+                    f"{where}: the capture did not admit its justificante: {captured.model_dump_json()}"
+                )
+
+
 def _replay_history(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
 ) -> tuple[dict[str, str], dict[str, str]]:
     """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
 
-    The local observations and the rent and professional withholding are
-    recorded first. Then each
+    The local observations, the rent and professional withholding and the
+    returns filed with the AEAT are recorded first. Then each
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
@@ -1309,6 +1362,7 @@ def _replay_history(
     _record_local_observations(persona, world)
     _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
     _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_aeat_filings(persona, world)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
     for year, period, filed in history_periods(persona, world.envelope):
