@@ -35,6 +35,7 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.first_write_effect import FirstWriteEffectAnnouncement
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
@@ -72,7 +73,6 @@ from .operation_shared import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    FirstWriteEffectAnnouncement,
     ModeloWorkVerifyProfileResolver,
     modelo_workspace_refresh_target_binding,
     resolve_active_workflow_profile,
