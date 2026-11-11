@@ -8,10 +8,11 @@ import { refusalWords } from "./setupWords";
 
 // An item row's removals: a person who no longer wants the browser for the
 // tax agency website, or the local AI, on this computer deletes it here,
-// after saying so twice. The browser has one removal; the local AI has two,
-// all of it with the models on the person's lists, or its program alone with
-// every model kept. The engine refuses while the item sets up, and a later
-// check or setup puts it back.
+// after saying so twice. The engine serves which removals a row offers: the
+// browser's one; the local AI's two, all of it with the models on the
+// person's lists, or its program alone with every model kept; and none where
+// removing would repair nothing. The engine refuses while the item sets up,
+// and a later check or setup puts it back.
 
 const WORDS = {
   browser: {
@@ -28,19 +29,10 @@ const WORDS = {
   },
 } as const;
 
-/** Whether the row has something, or a part of something, a removal deletes. */
-function removable(row: SetupRow): boolean {
-  return (
-    row.state === "ready" ||
-    row.state === "stale" ||
-    row.state === "failed" ||
-    row.state === "unknown"
-  );
-}
-
 type ItemRemovalProps = {
   row: SetupRow;
-  /** The removals this row offers, in the order they are listed. */
+  /** Of the removals the row serves, those this place lists; signed out, the
+   * local AI has no person's model list for a removal to take. */
   removals: readonly SetupRemoval[];
   /** Told once a removal is made, for what else shows what it took away. */
   onRemoved?: () => void;
@@ -53,9 +45,12 @@ type ItemRemovalProps = {
 export function ItemRemoval(props: ItemRemovalProps) {
   const store = useProvisioning();
   const live = store.runOf(props.row.item)?.stage;
-  if (!removable(props.row) || (live !== undefined && live !== "settled"))
+  const removals = props.row.removals.filter((removal) =>
+    props.removals.includes(removal),
+  );
+  if (removals.length === 0 || (live !== undefined && live !== "settled"))
     return null;
-  return <ItemRemovalOffer {...props} />;
+  return <ItemRemovalOffer {...props} removals={removals} />;
 }
 
 function ItemRemovalOffer({ row, removals, onRemoved }: ItemRemovalProps) {
