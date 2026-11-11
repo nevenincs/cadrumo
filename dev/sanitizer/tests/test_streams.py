@@ -26,7 +26,7 @@ from ..streams import apply_token_map_to_pdf
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 _REAL_NIE_CANARY = "Y0001500L"
-_REAL_NIE_CANARY_PREFIX = "Y1234567"
+_REAL_NIE_CANARY_PREFIX = _REAL_NIE_CANARY[:-1]
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
@@ -99,7 +99,7 @@ _SINGLE_REWRITE_CASES: tuple[_RewriteCase, ...] = (
     ("literal-tj", b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
     (
         "ascii-hex-tj",
-        b"BT /F1 12 Tf 100 700 Td <593132333435363758> Tj ET\n",
+        b"BT /F1 12 Tf 100 700 Td <" + _REAL_NIE_CANARY.encode("ascii").hex().upper().encode("ascii") + b"> Tj ET\n",
         _nif_mapping,
         _REAL_NIE_CANARY,
         _SYNTHETIC_NIE,

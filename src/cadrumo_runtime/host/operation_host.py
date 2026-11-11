@@ -15,17 +15,16 @@ Core types: :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
-from contextlib import AbstractContextManager, ExitStack, asynccontextmanager, contextmanager
-from dataclasses import dataclass
+from collections.abc import AsyncGenerator
+from contextlib import AbstractContextManager, ExitStack, asynccontextmanager
 from datetime import timedelta
 from importlib import import_module
 from threading import RLock
 from time import monotonic
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue
 
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.application.operations.drain import OperationDrainResult
@@ -60,7 +59,6 @@ from cadrumo_client.contracts.operation_access import (
     OperationManagementRequest,
 )
 from cadrumo_client.contracts.projection_pages import (
-    EncodedProjectionDocument,
     ProjectionPage,
     ProjectionPageRequest,
     encode_projection_document,
@@ -69,8 +67,10 @@ from cadrumo_client.contracts.projection_pages import (
 
 from .operation_input_admission import submit_financial_input, submit_payload
 from .operation_progress_reporter import OperationProgressReporter
+from .operation_projection_documents import PagedDelivery, projection_document, projection_target
 from .operation_review_management import manage_operation
 from .operation_settlement import settle_lapsed_operations, settlement, verify_inventory
+from .worker_request_activity import grounding_deferred, restart_quiet_window
 
 if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
@@ -97,53 +97,8 @@ if TYPE_CHECKING:
     from .automation_execution import WorkerAutomationAdministration
     from .operation_authority import ProfileWorkerOperationAuthority
 
-_PROJECTION_DOCUMENT = TypeAdapter(dict[str, JsonValue])
-_PAGED_PROJECTION_DOCUMENT = TypeAdapter(dict[str, Any])
 _log = get_logger(__name__)
 _PRIVATE_RESULT_RELEASE_ACTIONS = frozenset({AccessAction.RESULT, AccessAction.REVIEW})
-# How long worker requests must stay quiet before the grounding warm-up
-# decodes its next revision. A frontend's burst of requests after sign-in has
-# short gaps between round trips; the warm-up must not fill them.
-_GROUNDING_WARMUP_QUIET_SECONDS = 0.75
-
-
-class _WorkerRequestActivity:
-    """The worker requests this process is serving, and when the last one ended.
-
-    Process-wide because the contention it avoids is: the grounding warm-up
-    and every request share one interpreter. Written only on the service
-    loop; the warm-up thread only reads it.
-    """
-
-    def __init__(self) -> None:
-        self.serving = 0
-        self.quiet_since = monotonic()
-
-
-_REQUEST_ACTIVITY = _WorkerRequestActivity()
-
-
-@contextmanager
-def worker_request_served() -> Generator[None]:
-    """Mark one worker request as being served, so the grounding warm-up defers to it.
-
-    The warm-up is a registry-wide decode that holds the interpreter. Run
-    beside a person's first operations it slowed each of them several
-    fold, though none of them waits for the index it builds.
-    """
-    _REQUEST_ACTIVITY.serving += 1
-    try:
-        yield
-    finally:
-        _REQUEST_ACTIVITY.serving -= 1
-        _REQUEST_ACTIVITY.quiet_since = monotonic()
-
-
-def _grounding_deferred() -> bool:
-    """Answer whether a request is being served or requests have not yet been quiet long enough."""
-    return (
-        _REQUEST_ACTIVITY.serving > 0 or monotonic() - _REQUEST_ACTIVITY.quiet_since < _GROUNDING_WARMUP_QUIET_SECONDS
-    )
 
 
 # What the first composition imports: its own entry points, the persistence and
@@ -158,42 +113,6 @@ _COMPOSITION_MODULES = (
     "cadrumo.application.operations.composition",
     "cadrumo.application.user_profile.operations",
 )
-
-
-def projection_document(result: BaseModel, *, paged: bool) -> dict[str, JsonValue]:
-    """Keep the full result shape and validate the paged document root once."""
-    serialized = result.model_dump(mode="json", serialize_as_any=True)
-    if paged:
-        # Pydantic already serialized the full model; the page encoder checks
-        # each value's JSON compatibility while producing canonical bytes.
-        return cast("dict[str, JsonValue]", _PAGED_PROJECTION_DOCUMENT.validate_python(serialized))
-    return _PROJECTION_DOCUMENT.validate_python(serialized)
-
-
-def _projection_target(
-    request: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1,
-) -> tuple[OperationId, AccessAction]:
-    """Name the operation a projection reads and the disclosure it asks for."""
-    if isinstance(request, OperationResultProjectionRequestV1):
-        return request.operation_id, AccessAction.RESULT
-    return request.reference.operation_id, AccessAction.REVIEW
-
-
-@dataclass(frozen=True, slots=True)
-class _PagedDelivery:
-    """The one result being delivered in pages, with what its later pages reuse.
-
-    Its invocation and document are immutable once resolved. Reusing them spares
-    no authority check: every page still takes the disclosure guard, and the
-    settled result is still rechecked. Held for as long as the result snapshot.
-    """
-
-    operation_id: OperationId
-    session_id: UUID
-    frontend: OperationFrontendProjection
-    invocation: OperationStoredInvocation
-    result: BaseModel
-    document: EncodedProjectionDocument
 
 
 class ProfileWorkerOperationHost:
@@ -227,7 +146,7 @@ class ProfileWorkerOperationHost:
         self.closed = False
         self._drain_result: OperationDrainResult | None = None
         self._output_tasks: dict[asyncio.Task[object], OperationId] = {}
-        self._paged_delivery: _PagedDelivery | None = None
+        self._paged_delivery: PagedDelivery | None = None
         self.submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
         self.inventory_lock = asyncio.Lock()
         self.inventory_verified = False
@@ -354,7 +273,7 @@ class ProfileWorkerOperationHost:
         if self.closed or self._grounding_warmup is not None:
             return
         # The first view usually follows the sign-in reply at once: give it the quiet window first.
-        _REQUEST_ACTIVITY.quiet_since = monotonic()
+        restart_quiet_window()
         self._grounding_warmup = asyncio.create_task(
             asyncio.to_thread(self._warm_profile_grounding), name="profile-grounding-warmup"
         )
@@ -369,7 +288,7 @@ class ProfileWorkerOperationHost:
         try:
             with self.governed():
                 computed = warm_profile_grounding_index(
-                    self.pinned(), abandoned=lambda: self.closed, deferred=_grounding_deferred
+                    self.pinned(), abandoned=lambda: self.closed, deferred=grounding_deferred
                 )
         except Exception as error:
             # Only the error's type and frame identity are recorded; the read
@@ -868,7 +787,7 @@ class ProfileWorkerOperationHost:
         frontend: OperationFrontendProjection,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Serialize only the canonical registered public projection under consent."""
-        operation_id, action = _projection_target(request)
+        operation_id, action = projection_target(request)
         async with self.release(session_id, operation_id, frontend, action) as authorization:
             result = await self._resolve_projection(request, session_id, frontend, page=None)
             yield projection_document(result, paged=False), authorization
@@ -887,7 +806,7 @@ class ProfileWorkerOperationHost:
         Every page takes the disclosure guard and rechecks the settled result; a
         later page spares the invocation read and the whole-document encoding.
         """
-        operation_id, action = _projection_target(request)
+        operation_id, action = projection_target(request)
         held = self._paged_delivery
         continued = (
             held
@@ -910,7 +829,7 @@ class ProfileWorkerOperationHost:
                 document = continued.document
             else:
                 document = encode_projection_document(projection_document(result, paged=True))
-                self._paged_delivery = _PagedDelivery(operation_id, session_id, frontend, invocation, result, document)
+                self._paged_delivery = PagedDelivery(operation_id, session_id, frontend, invocation, result, document)
             yield project_encoded_page(document, page), authorization
 
     async def _resolve_projection(

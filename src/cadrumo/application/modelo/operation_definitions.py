@@ -827,6 +827,8 @@ class ModeloWorkAmendExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
         from ...core.bucket_pointer import require_active_bucket_id
 
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+
         def amend() -> ModeloRecord:
             # Row hydration and every authority-backed read use the retained
             # operation. The outer guard covers the complete canonical writer.
@@ -842,7 +844,9 @@ class ModeloWorkAmendExecutor:
                     reason=payload.reason,
                     actor=actor,
                     ports=self._amendment_action_ports_factory(
-                        bucket_id=require_active_bucket_id(), operation=context.authority_operation
+                        bucket_id=require_active_bucket_id(),
+                        operation=context.authority_operation,
+                        mutation_writer=writes.write,
                     ),
                     operation=context.authority_operation,
                     binding_overrides={item.key: item.value for item in payload.binding_overrides},
@@ -850,7 +854,8 @@ class ModeloWorkAmendExecutor:
 
         async def publish() -> str:
             async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A baseline or evidence refusal before the first write leaves the
+                # effect at none; the first write journals that records may change.
                 record = await asyncio.to_thread(amend)
                 await context.events.effect(OperationEffect.UPDATED)
                 if record.amends_filing_record_id is None:

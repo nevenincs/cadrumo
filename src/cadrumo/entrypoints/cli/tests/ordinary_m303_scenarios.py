@@ -43,9 +43,10 @@ def admit_ordinary_m303_secure_evidence(
 ) -> OrdinaryM303SecureEvidence:
     """Admit one real last-period non-applicability attestation for the caller's ``filing_year``.
 
-    The attestation is observed at the close of that year, so the caller names the
-    year of the return it calculates: an observation can only be admitted once it
-    has happened, and an attestation for another year answers nothing.
+    The attestation is observed at the close of that year's last settlement period, so
+    the caller names the year of the return it calculates and that period must already
+    have ended: an observation dated in the future is refused, as it is for an operator,
+    and an attestation for another year answers nothing.
     """
     observed_at = datetime(filing_year, 12, 31, 12, tzinfo=UTC).isoformat()
     result = invoke_joined_cli(

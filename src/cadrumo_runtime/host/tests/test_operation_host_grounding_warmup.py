@@ -26,8 +26,9 @@ from cadrumo.domain.calculations.registry.tests.shared_authority_isolation impor
 from cadrumo.tests.log_records import delivered_records
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
-from .. import operation_host
-from ..operation_host import ProfileWorkerOperationHost, worker_request_served
+from .. import operation_host, worker_request_activity
+from ..operation_host import ProfileWorkerOperationHost
+from ..worker_request_activity import worker_request_served
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -124,7 +125,7 @@ async def test_a_failed_walk_leaves_one_value_free_record_and_the_host_closes(
 async def test_the_warm_up_defers_to_a_served_request_and_completes_once_requests_are_quiet(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(operation_host, "_GROUNDING_WARMUP_QUIET_SECONDS", 0.2)
+    monkeypatch.setattr(worker_request_activity, "_GROUNDING_WARMUP_QUIET_SECONDS", 0.2)
     decodes: list[str] = []
     decode = PinnedAuthorityOperation.revision
 
@@ -147,10 +148,10 @@ async def test_the_warm_up_defers_to_a_served_request_and_completes_once_request
             assert list(profile_grounding._grounding_index_flights) == [host.pinned().generation.logical_generation]
             assert profile_grounding._grounding_index_cache == {}
         # Still quiet for less than the window: the walk keeps deferring.
-        assert operation_host._grounding_deferred()
+        assert worker_request_activity.grounding_deferred()
         async with asyncio.timeout(120):
             await warmup
-        assert not operation_host._grounding_deferred()
+        assert not worker_request_activity.grounding_deferred()
         assert len(decodes) == len(host.pinned().revision_ids())
         assert list(profile_grounding._grounding_index_cache) == [host.pinned().generation.logical_generation]
 

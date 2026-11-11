@@ -114,6 +114,7 @@ from .workflow_gate import build_revision_workflow_engine, run_revision_workflow
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
+    from ..calculations.observations_repository import PriorDomiciliationElectionProjection
     from .work_profile import ModeloWorkProfile
 
 _LOGGER = get_logger(__name__)
@@ -433,9 +434,11 @@ def file_modelo_revision(
 ) -> ModeloFilingResult:
     """File a verified revision as the current local answer, without submitting to AEAT.
 
-    Recheck the approved report, profile and cross-period evidence, then run the
-    pinned workflow before deriving the filing disposition and atomically
-    persisting the revision, record, observations and lifecycle event. A retry
+    Recheck the approved report, profile and cross-period evidence and derive the
+    filing disposition, then run the pinned workflow before atomically
+    persisting the revision, record, observations and lifecycle event. The
+    disposition is derived first because an election the period does not allow
+    is refused before the workflow writes anything. A retry
     of an already-filed revision returns its existing record only after the same
     report and prior-domiciliation checks. A clock preceding retained evidence is
     refused before a write. The returned witness says whether this call published.
@@ -472,6 +475,22 @@ def file_modelo_revision(
         cross_period_expected_member_sets,
         profile,
     )
+    result_disposition = _filed_revision_result_disposition(
+        work_unit=work_unit,
+        target=target,
+        workflow_profile=workflow_profile,
+        refund_election=refund_election,
+        payment_election=payment_election,
+        operation=operation,
+    )
+    prior_domiciliation_provenance = resolveprior_domiciliation_election(
+        election=prior_domiciliation_election,
+        work_unit=work_unit,
+        revision=target,
+        filing_repository=ports.filing_repository,
+        observation_repository=ports.observation_repository,
+        operation=operation,
+    )
     _run_filing_workflow(
         workflow_engine,
         certificate_secret_backend_factory,
@@ -490,9 +509,8 @@ def file_modelo_revision(
         work_unit=work_unit,
         target=target,
         workflow_profile=workflow_profile,
-        refund_election=refund_election,
-        payment_election=payment_election,
-        prior_domiciliation_election=prior_domiciliation_election,
+        result_disposition=result_disposition,
+        prior_domiciliation_provenance=prior_domiciliation_provenance,
         ports=ports,
         operation=operation,
         approved_verification_report_id=approved_verification_report_id,
@@ -509,9 +527,8 @@ def _persist_filing_result(
     work_unit: WorkUnit,
     target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-    refund_election: RefundElection,
-    payment_election: PaymentElection,
-    prior_domiciliation_election: PriorDomiciliationElection,
+    result_disposition: ResultDisposition | None,
+    prior_domiciliation_provenance: PriorDomiciliationElectionProjection,
     ports: FilingActionPorts,
     operation: PinnedAuthorityOperation,
     approved_verification_report_id: VerificationReportId,
@@ -521,22 +538,6 @@ def _persist_filing_result(
     actor: str,
     now: datetime,
 ) -> ModeloFilingResult:
-    result_disposition = _filed_revision_result_disposition(
-        work_unit=work_unit,
-        target=target,
-        workflow_profile=workflow_profile,
-        refund_election=refund_election,
-        payment_election=payment_election,
-    )
-    prior_domiciliation_provenance = resolveprior_domiciliation_election(
-        election=prior_domiciliation_election,
-        work_unit=work_unit,
-        revision=target,
-        filing_repository=ports.filing_repository,
-        observation_repository=ports.observation_repository,
-        operation=operation,
-    )
-
     _filing_phase("persistence_begin")
     record = persist_filed_revision(
         target=target,
@@ -577,6 +578,7 @@ def _filed_revision_result_disposition(
     workflow_profile: TaxpayerProfile,
     refund_election: RefundElection,
     payment_election: PaymentElection,
+    operation: PinnedAuthorityOperation,
 ) -> ResultDisposition | None:
     """Resolve once at the filing boundary for both export and carry evidence."""
     return resolve_modelo_result_disposition(
@@ -586,6 +588,7 @@ def _filed_revision_result_disposition(
         period=work_unit.period,
         refund_election=refund_election,
         payment_election=payment_election,
+        operation=operation,
     )
 
 

@@ -2626,8 +2626,6 @@ cli:
           del modelo 100.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           ascendiente(s).
-        invalid_flag: El valor de --ascendiente no es válido. Cada fila debe declarar
-          NACIMIENTO=AAAA-MM-DD; NIF, FALLECIMIENTO y CONVIVIENTES son opcionales.
         invalid_row: No se ha podido leer la fila de --ascendiente. Usa pares CLAVE=VALOR
           con las claves NACIMIENTO, NIF, FALLECIMIENTO y CONVIVIENTES, cada una como
           máximo una vez y con valor; el contexto del error indica la clave cuando

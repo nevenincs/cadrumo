@@ -2594,9 +2594,6 @@ cli:
         help: A adózó felmenőinek megadása a 100-as modell családi szakaszához.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} felmenő van.
-        invalid_flag: Az --ascendiente értéke érvénytelen. Minden sornak tartalmaznia
-          kell a NACIMIENTO=ÉÉÉÉ-HH-NN mezőt; a NIF, a FALLECIMIENTO és a CONVIVIENTES
-          opcionális.
         invalid_row: Az --ascendiente sor nem olvasható. KULCS=ÉRTÉK párokat használj
           a NACIMIENTO, NIF, FALLECIMIENTO és CONVIVIENTES kulcsokkal, mindegyiket
           legfeljebb egyszer és értékkel; a hiba kontextusa megnevezi a kulcsot, ha
