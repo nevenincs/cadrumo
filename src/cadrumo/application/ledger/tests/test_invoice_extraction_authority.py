@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import filing_
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.facts.payloads import MappingFactPayload
 from ....domain.iva import lookup
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....tests.attribute_scope import scoped_attribute
@@ -62,6 +63,7 @@ def _last_quarter_of_the_five_percent_window() -> Period:
         variant.valid_to
         for variant in fact.variants
         if any(selector.name == "member_state" and selector.value == "es" for selector in variant.selectors)
+        and isinstance(variant.payload, MappingFactPayload)
         and any(entry.key == "pct" and entry.value == Decimal(5) for entry in variant.payload.entries)
         and variant.valid_to is not None
     ]

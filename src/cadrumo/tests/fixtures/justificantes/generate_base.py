@@ -83,11 +83,12 @@ def declared_filing_years() -> DeclaredFilingYears:
 def _authored_revisions(modelo: str) -> tuple[dict[str, object], ...]:
     """Every authored revision declaration of ``modelo`` in the bundled registry source."""
     revisions = bundled_path("registry", "aeat", "modelos", modelo, "revisions")
-    return tuple(
-        revision
-        for path in sorted(revisions.glob("*/revision.toml"))
-        for revision in tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))["revisions"].values()
-    )
+    authored: list[dict[str, object]] = []
+    for path in sorted(revisions.glob("*/revision.toml")):
+        for revision in tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))["revisions"].values():
+            assert isinstance(revision, dict)
+            authored.append({str(key): value for key, value in revision.items()})
+    return tuple(authored)
 
 
 def _start(modelo: str, revision: dict[str, object]) -> date:

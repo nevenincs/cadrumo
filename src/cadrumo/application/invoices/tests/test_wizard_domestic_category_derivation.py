@@ -29,6 +29,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.facts.payloads import MappingFactPayload
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -49,11 +50,12 @@ def _published_five_percent_windows() -> tuple[tuple[date, date], ...]:
         (variant.valid_from, variant.valid_to)
         for variant in fact.variants
         if any(selector.name == "member_state" and selector.value == "es" for selector in variant.selectors)
+        and isinstance(variant.payload, MappingFactPayload)
         and any(entry.key == "pct" and entry.value == Decimal(5) for entry in variant.payload.entries)
     ]
     assert windows, "the registry publishes no 5 % Spanish window"
     assert all(start is not None and end is not None for start, end in windows)
-    return tuple(sorted(windows))
+    return tuple(sorted((start, end) for start, end in windows if start is not None and end is not None))
 
 
 @pytest.mark.parametrize(

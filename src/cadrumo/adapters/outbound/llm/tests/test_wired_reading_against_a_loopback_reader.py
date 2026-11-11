@@ -66,7 +66,9 @@ def _printed_issue_date() -> str:
     control_text = "\n".join(_extract_control_pages_text(_CONTROL.read_bytes()))
     printed = re.search(r"Emitida (\d{4}-\d{2}-\d{2})", control_text)
     assert printed is not None
-    return printed.group(1)
+    issue_date = printed.group(1)
+    assert isinstance(issue_date, str)
+    return issue_date
 
 
 #: The reply the stub returns. Authored from the control document's OWN printed
