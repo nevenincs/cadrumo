@@ -42,13 +42,16 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0596" = "2180.00" }
-concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+not_sourced = { "0003" = "21840.00", "0019" = "2000.00", "0022" = "19840.00" }
+roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 Pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00, retención 2180.00; the ledger holds 14 net payments
 totalling 19660.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
+reason = "The application does not source the pension from the payer's certificate: the recorded withholding feeds casilla 0596, but casilla 0003 carries no binding in any Modelo 100 edition and the suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), although the record stores the certificate's importe_integro_dinerario. Casillas 0019 and 0022 follow from 0003 through the registry formulas. The art. 20 reduction stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00. An application gap."
 
 [[values]]
 modelo = "100"
@@ -71,13 +74,16 @@ reason = "Arithmetic and provisions verified (art. 23 text in the bundled corpus
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "23231.00" }
+not_sourced = { "0500" = "23231.00" }
+roles = { "irpf_minimo_contribuyente_estatal" = "6700.00" }
 derivation = """
 Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
 Base liquidable general = 19840.00 + 3391.00 = 23231.00 (no reductions of the base). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
 """
 legal_ref = ["ley-35-2006:art-57"]
 grounding = "verified"
+reason = "Casilla 0500 is not sourced: it adds the work income, which no binding sources (casilla 0003, see the work-income value), and the reduced rental income, whose amortisation and reducción inputs have no located production operation (see the rental value)."
 
 # Art. 23.2 LIRPF as worded on 31 December 2021 governs a replay whose return falls before
 # Ley 12/2023 took effect: one 60 % reduction whatever the contract (Manual Renta 2022 and 2023,
@@ -89,13 +95,16 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
 casillas = { "0596" = "2180.00" }
-concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+not_sourced = { "0003" = "21840.00", "0019" = "2000.00", "0022" = "19840.00" }
+roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 Unchanged by the art. 23.2 wording: pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00,
 retención 2180.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23-2021"]
 grounding = "verified"
+reason = "The application does not source the pension from the payer's certificate: the recorded withholding feeds casilla 0596, but casilla 0003 carries no binding in any Modelo 100 edition and the suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), although the record stores the certificate's importe_integro_dinerario. Casillas 0019 and 0022 follow from 0003 through the registry formulas. The art. 20 reduction stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00. An application gap."
 
 [[values]]
 modelo = "100"
@@ -116,10 +125,13 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
-concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "22552.80" }
+not_sourced = { "0500" = "22552.80" }
+roles = { "irpf_minimo_contribuyente_estatal" = "6700.00" }
 derivation = """
 Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
 Base liquidable general = 19840.00 + 2712.80 = 22552.80 (no reductions of the base). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
 """
 legal_ref = ["ley-35-2006:art-57", "ley-35-2006:art-23-2021"]
 grounding = "verified"
+reason = "Casilla 0500 is not sourced: it adds the work income, which no binding sources (casilla 0003, see the work-income value), and the reduced rental income, whose amortisation and reducción inputs have no located production operation (see the rental value)."

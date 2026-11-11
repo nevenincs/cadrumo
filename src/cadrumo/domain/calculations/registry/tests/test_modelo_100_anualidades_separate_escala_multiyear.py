@@ -138,6 +138,8 @@ def _c(value: str) -> CasillaId:
 
 _LATER_NEUTRAL_BINDINGS: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
+    # The edition-specific Art. 81 maternidad cotizaciones fact; this filer has no descendants.
+    "renta-profile-deduccion-maternidad-cotizaciones": Decimal("0"),
     "renta-maritime-gross-navigation-income": Decimal("0"),
     "renta-maritime-annual-salary": Decimal("0"),
     "renta-maritime-qualifying-days": Decimal("0"),
