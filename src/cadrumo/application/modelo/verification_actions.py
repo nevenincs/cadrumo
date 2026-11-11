@@ -162,7 +162,7 @@ def _existing_verification(
             require_verification_report_coordinates_current(
                 repos.verification.load(operation=operation), operation=operation
             ),
-            calculation_revision_id,
+            target,
         )
         if existing is not None:
             return ModeloVerificationResult(

@@ -56,6 +56,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.verification_report import VerificationReport, VerificationReportCatalogue
+from ...domain.modelos.verification_repository import revision_granting_reports
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
@@ -552,13 +553,13 @@ def require_approved_verification_report(
     catalogue: VerificationReportCatalogue,
     operation: PinnedAuthorityOperation,
 ) -> VerificationReport:
-    """Bind a filing to the current granting report for its :class:`CalculationRevision`."""
+    """Bind a filing to the granting report its locked :class:`CalculationRevision` names.
+
+    A grant left by a verification attempt whose lock never landed does not
+    match the lock, so it neither authorizes nor blocks the filing.
+    """
     report = catalogue.get(approved_verification_report_id)
-    granting_reports = tuple(
-        candidate
-        for candidate in catalogue.reports.values()
-        if candidate.calculation_revision_id == target.calculation_revision_id and candidate.granted_verificado_completo
-    )
+    granting_reports = revision_granting_reports(catalogue, target)
     if report is None or _approved_verification_report_differs(report, granting_reports, target):
         raise VerificationReportNotFoundError(
             translated_message="application.modelo.errors.verification_report_not_found",

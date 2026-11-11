@@ -324,8 +324,9 @@ def _head_and_report(
     if head_id is None:
         return None, None
     head = ports.calculations.load(operation=operation).get(head_id)
-    report = granting_verification_report(ports.verifications.load(operation=operation), head_id)
-    return head, report
+    if head is None:
+        return None, None
+    return head, granting_verification_report(ports.verifications.load(operation=operation), head)
 
 
 def _ledger_hold(
