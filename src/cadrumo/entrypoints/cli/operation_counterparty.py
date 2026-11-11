@@ -21,6 +21,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.operations import profile_operation_subject
 from .counterparty_correlation import (
     counterparty_confirmation_invalid,
+    counterparty_filing_name_invalid,
     counterparty_receipt_invalid,
     counterparty_resolution_invalid,
     counterparty_withdrawal_invalid,
@@ -48,6 +49,8 @@ def run_counterparty(
     invalid = counterparty_receipt_invalid(completed, result, request, client.profile_id)
     if request.action == "confirm":
         invalid = counterparty_confirmation_invalid(invalid, request, result)
+    elif request.action == "filing_name":
+        invalid = counterparty_filing_name_invalid(invalid, request, result)
     elif request.action == "withdraw":
         invalid = counterparty_withdrawal_invalid(invalid, request, result)
     else:

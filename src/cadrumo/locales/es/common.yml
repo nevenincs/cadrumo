@@ -6453,7 +6453,7 @@ sheets:
       operation_date: Fecha de la operación
       operation_kind_code: Clave de operación
       pago: Pago
-      party_legal_name: Razón social
+      party_filing_name: Apellidos y nombre o razón social
       party_tax_id: NIF
       penalizaciones: Penalizaciones
       pendiente_flag: Pendiente

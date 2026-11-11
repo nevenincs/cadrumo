@@ -225,6 +225,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_counterparty_confirm",
         "app_ledger_counterparty_view",
         "app_ledger_counterparty_withdraw",
+        "app_ledger_counterparty_filing_name",
         "app_ledger_account_add",
         "app_ledger_account_list",
         "app_ledger_account_show",

@@ -284,6 +284,13 @@ _M347_RECORD_KEY_FACTS: frozenset[str] = frozenset(
 )
 
 
+#: The filing name the person declared for the counterparty and the handle that
+#: names its stated-facts record in a refusal. Read from the counterparty's
+#: stated facts, never an invoice; reached through the real resolver by the
+#: declared-party-name row and export tests.
+_STATED_PARTY_NAME_FACTS: frozenset[str] = frozenset({"party_filing_name", "party_handle"})
+
+
 def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contribute() -> None:
     """Anti-tautology guard on the contract itself.
 
@@ -304,7 +311,10 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
         "rectified_base_previous",
         "earlier_year_modification",
     }
-    assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS
+    assert (
+        set(InvoiceObservation.model_fields) - non_declarable
+        == _DECLARABLE_FACTS | _M347_RECORD_KEY_FACTS | _STATED_PARTY_NAME_FACTS
+    )
 
 
 def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
