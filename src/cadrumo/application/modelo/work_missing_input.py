@@ -5,7 +5,7 @@ It works with :class:`RegistrySnapshot`.
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from typing import Final, Self
 
 from pydantic import TypeAdapter, ValidationError
@@ -18,12 +18,12 @@ from ...domain.calculations.registry.bindings_previous_filing import previous_fi
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
-from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, first_printed_dependent
-from .projection_next_steps import create_work_step, open_work_step
+from .projection_next_steps import open_work_step
+from .reconciliation_sources import ReconciliationSourceNeed, ReconciliationSourceStanding
 
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _MISSING_BINDING_MESSAGES = frozenset(
@@ -227,32 +227,30 @@ def prior_carry_absence_unstated(
 
 
 class ModeloPriorPeriodUnfiledError(OperationNextStepErrorMixin, ModeloWorkMissingInputError):
-    """An earlier period of the same ejercicio this one carries from has no filed return.
+    """An earlier period of the same ejercicio this one carries from has no return the carry can read.
 
     The carry is read from the filed earlier return, so it is unknown, never
     zero, until that return is filed; the refusal names the earliest such
-    period and opens its declaration, or offers to create it when none exists.
-    It is raised before any revision is published.
+    period and serves the work its standing calls for: create, calculate,
+    verify or file its declaration. It is raised before any revision is
+    published.
     """
 
-    _unfiled_period: Period
-    _unfiled_work_unit_id: str | None
+    _source_needs: tuple[ReconciliationSourceNeed, ...]
 
     def __init__(
         self,
         source: RegistryValidationError,
         *,
         binding_id: BindingId,
-        unfiled_period: Period,
-        unfiled_work_unit_id: str | None,
+        source_needs: tuple[ReconciliationSourceNeed, ...],
         translated_message: str,
         context: Mapping[str, object],
         precondition_verdict: object,
         next_step: OperationNextStepWording | None,
     ) -> None:
-        """Keep the engine refusal as the cause and the unfiled period as a typed fact."""
-        self._unfiled_period = unfiled_period
-        self._unfiled_work_unit_id = unfiled_work_unit_id
+        """Keep the engine refusal as the cause and each unfiled earlier period as a typed fact."""
+        self._source_needs = source_needs
         super().__init__(
             source,
             binding_id=binding_id,
@@ -263,18 +261,26 @@ class ModeloPriorPeriodUnfiledError(OperationNextStepErrorMixin, ModeloWorkMissi
         )
 
     @property
-    def unfiled_period(self) -> Period:
-        """The earliest earlier period whose filed return the carry needs."""
-        return self._unfiled_period
+    def source_needs(self) -> tuple[ReconciliationSourceNeed, ...]:
+        """Each earlier period the carry reads that is not filed, and where it stands, in period order."""
+        return self._source_needs
 
     @property
-    def unfiled_work_unit_id(self) -> str | None:
-        """The declaration that period already has, or ``None`` when it has none yet."""
-        return self._unfiled_work_unit_id
+    def unfiled_period(self) -> Period:
+        """The earliest earlier period whose filed return the carry needs."""
+        return self._source_needs[0].period
 
 
-_PRIOR_PERIOD_SCENARIO_PREFIX: Final[str] = "modelo.work.calculate.prior_period"
+_PRIOR_FILING_SCENARIO_PREFIX: Final[str] = "modelo.work.calculate.prior_filing"
 _PRIOR_PERIOD_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.prior_period_unfiled"
+_STANDING_SCENARIOS: Final[Mapping[ReconciliationSourceStanding, str]] = {
+    ReconciliationSourceStanding.MISSING: "source_uncalculated",
+    ReconciliationSourceStanding.UNVERIFIED: "source_unverified",
+    ReconciliationSourceStanding.UNFILED: "source_unfiled",
+}
+
+type SourcePeriodNeeds = Callable[[tuple[tuple[str, Period], ...]], tuple[ReconciliationSourceNeed, ...]]
+"""Where each (source modelo, period) stands, for the periods that owe a return."""
 
 
 def _same_ejercicio_periods_read(
@@ -282,8 +288,8 @@ def _same_ejercicio_periods_read(
     *,
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
-) -> frozenset[Period]:
-    """Every period the refused carry reads, when all are of this modelo and ejercicio; otherwise none."""
+) -> tuple[tuple[str, Period], ...]:
+    """Every (modelo, period) the refused carry reads, when all are of this modelo and ejercicio; otherwise none."""
     requirements = tuple(
         requirement
         for requirement in previous_filing_observation_requirements(
@@ -297,33 +303,23 @@ def _same_ejercicio_periods_read(
         requirement.source_modelo != str(work_unit.modelo) or requirement.filing_year != work_unit.filing_year
         for requirement in requirements
     ):
-        return frozenset[Period]()
-    return frozenset(
-        Period.from_year_and_code(requirement.filing_year, code)
+        return ()
+    return tuple(
+        (str(requirement.source_modelo), Period.from_year_and_code(requirement.filing_year, code))
         for requirement in requirements
         for code in requirement.periods
     )
 
 
-def _earliest_unfiled_prior_period(
-    missing: ModeloWorkMissingInputError,
-    *,
-    work_unit: WorkUnit,
-    snapshot: RegistrySnapshot,
-    observations: CalculationObservationRepositoryProtocol,
-) -> Period | None:
-    """The earliest same-ejercicio period of this modelo the refused carry reads and no filed return covers.
-
-    ``None`` unless every period the carry reads is an earlier period of the
-    same modelo and ejercicio: a carry from another modelo or ejercicio is
-    filed elsewhere, and its refusal stays the engine's.
-    """
-    read_periods = _same_ejercicio_periods_read(missing, work_unit=work_unit, snapshot=snapshot)
-    unfiled = sorted(
-        (period for period in read_periods if observations.load_observation(str(work_unit.modelo), period) is None),
-        key=lambda period: period.quarter_ordinal or 0,
-    )
-    return unfiled[0] if unfiled else None
+def _prior_filing_door(need: ReconciliationSourceNeed) -> tuple[str, Mapping[str, str | int]]:
+    """The scenario the earliest unfiled period's standing declares, and the facts its action binds."""
+    if need.unit is None:
+        return "source_absent", {
+            "modelo": need.modelo,
+            "period": need.period.registry_token,
+            "year": need.period.filing_year,
+        }
+    return _STANDING_SCENARIOS[need.standing], {"work_unit_id": need.unit.work_unit_id}
 
 
 def prior_period_unfiled(
@@ -331,80 +327,51 @@ def prior_period_unfiled(
     *,
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
-    observations: CalculationObservationRepositoryProtocol,
-    work_units: Iterable[WorkUnit],
+    source_needs: SourcePeriodNeeds,
 ) -> ModeloPriorPeriodUnfiledError | None:
     """The refusal for ``missing`` when its carry waits on an earlier period of this ejercicio that is not filed.
 
-    The door files that period's declaration when it exists and creates it
-    otherwise. ``None`` when the carry reads elsewhere or every period it
-    reads is filed, so the engine refusal stands unchanged.
+    ``source_needs`` says where each period the carry reads stands, as the
+    fold reads it, leaving out periods that owe no return. ``None`` when the
+    carry reads another modelo or ejercicio, or no period it reads needs work,
+    so the engine refusal stands unchanged.
 
     ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
-    unfiled_period = _earliest_unfiled_prior_period(
-        missing, work_unit=work_unit, snapshot=snapshot, observations=observations
-    )
-    if unfiled_period is None:
+    periods = _same_ejercicio_periods_read(missing, work_unit=work_unit, snapshot=snapshot)
+    needs = source_needs(periods) if periods else ()
+    if not needs:
         return None
-    modelo = str(work_unit.modelo)
-    unfiled_unit = next(
-        (
-            unit
-            for unit in work_units
-            if str(unit.modelo) == modelo
-            and unit.period == unfiled_period
-            and unit.state is WorkUnitState.BORRADOR
-            and unit.bucket_id == work_unit.bucket_id
-        ),
-        None,
+    first = needs[0]
+    scenario, action_argument_values = _prior_filing_door(first)
+    scenario_id = f"{_PRIOR_FILING_SCENARIO_PREFIX}.{scenario}"
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
+        scenario_id=scenario_id,
+        evidence_id=f"{_PRIOR_FILING_SCENARIO_PREFIX}.observation",
+        evidence_values={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "work_unit_id": work_unit.work_unit_id,
+            "source_periods": "|".join(f"{need.period.registry_token}:{need.standing.value}" for need in needs),
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values=action_argument_values,
     )
-    evidence_values: dict[str, str | int | bool] = {
-        "modelo": modelo,
-        "filing_year": work_unit.filing_year,
-        "period": work_unit.period.registry_token,
-        "work_unit_id": work_unit.work_unit_id,
-        "unfiled_period": unfiled_period.registry_token,
-        "unfiled_work_unit_present": unfiled_unit is not None,
-    }
-    if unfiled_unit is None:
-        failure = build_modelo_precondition_failure_for_scenario(
-            subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
-            scenario_id=f"{_PRIOR_PERIOD_SCENARIO_PREFIX}.unfiled_without_work",
-            evidence_id=f"{_PRIOR_PERIOD_SCENARIO_PREFIX}.observation",
-            evidence_values=evidence_values,
-            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            action_argument_values={
-                "modelo": modelo,
-                "period": unfiled_period.registry_token,
-                "year": unfiled_period.filing_year,
-            },
-        )
-        next_step = create_work_step(modelo=modelo, period=unfiled_period)
-    else:
-        failure = build_modelo_precondition_failure_for_scenario(
-            subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
-            scenario_id=f"{_PRIOR_PERIOD_SCENARIO_PREFIX}.unfiled",
-            evidence_id=f"{_PRIOR_PERIOD_SCENARIO_PREFIX}.observation",
-            evidence_values=evidence_values,
-            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-            action_argument_values={"work_unit_id": unfiled_unit.work_unit_id},
-        )
-        next_step = open_work_step(unfiled_unit)
     return ModeloPriorPeriodUnfiledError(
         missing,
         binding_id=missing.binding_id,
-        unfiled_period=unfiled_period,
-        unfiled_work_unit_id=None if unfiled_unit is None else unfiled_unit.work_unit_id,
+        source_needs=needs,
         translated_message=_PRIOR_PERIOD_MESSAGE_LOCALE_KEY,
         context={
-            "modelo": modelo,
+            "modelo": str(work_unit.modelo),
             "filing_year": work_unit.filing_year,
             "period": work_unit.period.registry_token,
-            "unfiled_period": unfiled_period.registry_token,
+            "unfiled_period": first.period.registry_token,
         },
         precondition_verdict=failure.verdict,
-        next_step=next_step,
+        next_step=first.next_step(),
     )
 
 

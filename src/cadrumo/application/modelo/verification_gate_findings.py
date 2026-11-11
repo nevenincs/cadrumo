@@ -84,7 +84,6 @@ from .verification_cross_period import (
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
     cross_period_expected_member_sets_from_profile,
-    cross_period_source_work_arguments,
     registry_modality_finding,
     zero_value_previous_filing_binding_ids,
 )
@@ -316,8 +315,6 @@ def _append_cross_period_findings(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-            action_id="operator.modelo.work.create",
-            action_argument_values=cross_period_source_work_arguments(requirement),
         )
 
     findings.extend(

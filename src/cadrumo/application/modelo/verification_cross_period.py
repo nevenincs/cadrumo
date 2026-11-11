@@ -306,19 +306,6 @@ def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[Le
     return tuple(refs)
 
 
-def cross_period_source_work_arguments(requirement: CrossPeriodDependencyRequirement) -> dict[str, str | int]:
-    """The arguments that open the declaration an unclean dependency rests on.
-
-    Creating the source period's declaration reuses one that already exists,
-    so the door lands on it either way and the filer files or captures it there.
-    """
-    return {
-        "modelo": requirement.source_modelo,
-        "period": requirement.period.registry_token,
-        "year": requirement.filing_year,
-    }
-
-
 def _cross_period_requirement_legal_refs(requirement: CrossPeriodDependencyRequirement) -> tuple[LegalRefId, ...]:
     """Return generic cross-period refs plus the registry requirement refs."""
     return tuple(dict.fromkeys((*_cross_period_dependency_legal_refs(requirement.origin_ids), *requirement.legal_refs)))
@@ -692,8 +679,6 @@ def require_cross_period_clean_state(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-            action_id="operator.modelo.work.create",
-            action_argument_values=cross_period_source_work_arguments(requirement),
         )
 
     findings = cross_period_clean_state_findings(
@@ -722,7 +707,6 @@ __all__ = [
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
     "cross_period_expected_member_sets_from_profile",
-    "cross_period_source_work_arguments",
     "registry_modality_finding",
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",

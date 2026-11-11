@@ -124,7 +124,7 @@ from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_rev
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
-from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs
+from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs, source_period_needs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError, prior_carry_absence_unstated, prior_period_unfiled
 from .work_profile import ModeloWorkProfile
@@ -132,6 +132,7 @@ from .work_profile import ModeloWorkProfile
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ...core.period import Period
     from ...core.secure_object_write import SecureObjectWrite
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import CasillaObservation
@@ -730,6 +731,37 @@ def _calculate_prepared_registry_snapshot(
     )
 
 
+def calculation_source_period_needs(
+    work_unit: WorkUnit,
+    periods: Iterable[tuple[str, Period]],
+    *,
+    ports: CalculationActionPorts,
+) -> tuple[ReconciliationSourceNeed, ...]:
+    """Where each earlier (modelo, period) a calculation reads stands, read from the calculation's ports.
+
+    A period that ended before the activity started owes no return, so it is
+    never named as one the calculation waits on.
+    """
+    activity_start = activity_start_date_for_bucket(
+        work_unit.bucket_id, profile_path_values_reader=ports.profile_read_ports.path_values
+    )
+    owed = tuple(
+        (modelo, period)
+        for modelo, period in periods
+        if activity_start is None or not period.has_date_span() or period.end_date >= activity_start
+    )
+    if not owed:
+        return ()
+    return source_period_needs(
+        owed,
+        bucket_id=work_unit.bucket_id,
+        work_catalogue=ports.work_unit_repository.load(),
+        calculation_catalogue=ports.calculation_repository.load(operation=ports.operation),
+        observations=ports.observation_repository,
+        operation=ports.operation,
+    )
+
+
 def calculation_reconciliation_source_needs(
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
@@ -878,8 +910,7 @@ def _evaluate_prepared_calculation(
             missing,
             work_unit=work_unit,
             snapshot=snapshot,
-            observations=ports.observation_repository,
-            work_units=ports.work_unit_repository.load().work_units.values(),
+            source_needs=lambda periods: calculation_source_period_needs(work_unit, periods, ports=ports),
         )
         # This boundary precedes revision publication. Earlier migrations may
         # already have written state; later advisory failures never enter it.

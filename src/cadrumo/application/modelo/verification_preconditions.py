@@ -69,13 +69,8 @@ def build_verification_precondition_failure(
     evidence_values: Mapping[str, str | int | bool | Decimal],
     provenance: ActionEvidenceProvenance,
     action_id: str | None = None,
-    action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
 ) -> ModeloPreconditionFailure:
-    """Build one verify failure with the common persisted addressing facts.
-
-    ``action_argument_values`` are the arguments the declared action takes from
-    the refusal; an action that takes none is offered with none.
-    """
+    """Build one verify failure with the common persisted addressing facts."""
     return build_modelo_precondition_failure(
         subject_leaf_key="modelo.work.verify",
         condition_id=condition_id,
@@ -88,9 +83,7 @@ def build_verification_precondition_failure(
         },
         provenance=provenance,
         action_id=action_id,
-        action_argument_values=(
-            None if action_id is None else {} if action_argument_values is None else action_argument_values
-        ),
+        action_argument_values={} if action_id is not None else None,
     )
 
 

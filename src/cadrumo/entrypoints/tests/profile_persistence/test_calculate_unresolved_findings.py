@@ -11,8 +11,10 @@ from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
+from sqlalchemy import select
 
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 
@@ -22,8 +24,13 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.sql.tables import secure_objects_table
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
+from ....application.calculations.observations_repository import observation_key
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -33,9 +40,14 @@ from ....application.modelo.projection_operation import (
     ProjectUnresolvedCasillaProjection,
     require_unresolved_boxes_carry_no_value,
 )
+from ....application.modelo.reconciliation_sources import ReconciliationSourceNeed, ReconciliationSourceStanding
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.modelo.work_missing_input import ModeloPriorPeriodUnfiledError
+from ....application.modelo.work_missing_input import (
+    ModeloPriorPeriodUnfiledError,
+    ModeloWorkMissingInputError,
+    prior_period_unfiled,
+)
 from ....application.operator_actions.models import PreconditionVerdict
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
@@ -74,7 +86,7 @@ def objects(tmp_path: Path) -> Generator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_profile(year: int, categories: str) -> None:
+def _seed_profile(year: int, categories: str, *, activity_start: date | None = None) -> None:
     seed_test_profile_record(
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
@@ -88,7 +100,10 @@ def _seed_profile(year: int, categories: str) -> None:
                     # A consulting activity, so no urban rental is carried on as an activity.
                     UserProfileFact(path="activities.iae_epigraph", value="844"),
                     UserProfileFact(path=_CATEGORIES, value=categories),
-                    UserProfileFact(path="censo.activity_start_date", value=date(year - 5, 1, 1)),
+                    UserProfileFact(
+                        path="censo.activity_start_date",
+                        value=activity_start if activity_start is not None else date(year - 5, 1, 1),
+                    ),
                     UserProfileFact(path="renta_taxpayer.birth_date", value=date(year - 45, 3, 15)),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
                     UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
@@ -287,92 +302,47 @@ def _create_m130_quarter(
     )
 
 
-def _calculate_m130_second_quarter(
-    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, *, year: int
+def _calculate_m130_quarter(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, *, year: int, period_code: str = "2T"
 ) -> BucketAggregationCalculationResult:
-    revision_id = published_snapshot("130", filing_year=year, period="2T").revision.id
+    revision_id = published_snapshot("130", filing_year=year, period=period_code).revision.id
     return _calculate(
         objects,
         operation,
         modelo="130",
         year=year,
-        period_code="2T",
+        period_code=period_code,
         revision_id=str(revision_id),
         binding_values=_M130_PRIOR_NET_INCOME,
     )
 
 
-def _refused_second_quarter(
-    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, *, year: int
+def _refused_quarter(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation, *, year: int, period_code: str = "2T"
 ) -> ModeloPriorPeriodUnfiledError:
+    revisions_before = dict(CalculationRevisionCatalogueRepository(objects=objects).load().revisions)
     with pytest.raises(ModeloPriorPeriodUnfiledError) as refused:
-        _calculate_m130_second_quarter(objects, operation, year=year)
-    assert CalculationRevisionCatalogueRepository(objects=objects).load().revisions == {}
+        _calculate_m130_quarter(objects, operation, year=year, period_code=period_code)
+    assert CalculationRevisionCatalogueRepository(objects=objects).load().revisions == revisions_before
     return refused.value
 
 
-def test_a_second_quarter_with_no_first_quarter_offers_to_create_it(
-    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
-) -> None:
-    """The pagos anteriores of 2T are read from the filed 1T, so a missing 1T is the way on, not a bare box."""
-    year = operation.supported_filing_years().floor
-    _seed_profile(year, "actividad_economica")
-
-    refused = _refused_second_quarter(objects, operation, year=year)
-
-    assert refused.unfiled_period == Period.from_year_and_code(year, "1T")
-    assert refused.unfiled_work_unit_id is None
-    assert refused.translated_message == "application.modelo.errors.prior_period_unfiled"
-    assert dict(refused.context or {}) == {"modelo": "130", "filing_year": year, "period": "2T", "unfiled_period": "1T"}
+def _door(refused: ModeloPriorPeriodUnfiledError) -> tuple[str, dict[str, object]]:
     verdict = refused.terminal_precondition_verdict
     assert isinstance(verdict, PreconditionVerdict)
     assert verdict.action is not None
-    assert verdict.action.action_id == "operator.modelo.work.create"
-    bound = {item.argument_name: item.value for item in verdict.argument_bindings}
-    assert bound == {"modelo": "130", "period": "1T", "year": year}
-    step = refused.operation_next_step(_WORDS)
-    assert step is not None
-    assert step.model_dump()["period_code"] == "1T"
+    return verdict.action.action_id, {item.argument_name: item.value for item in verdict.argument_bindings}
 
 
-def test_a_second_quarter_whose_first_quarter_is_unfiled_opens_its_filing(
-    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
-) -> None:
-    year = operation.supported_filing_years().floor
-    _seed_profile(year, "actividad_economica")
-    first_quarter = _create_m130_quarter(objects, operation, year=year, period_code="1T")
-
-    refused = _refused_second_quarter(objects, operation, year=year)
-
-    assert refused.unfiled_period == first_quarter.period
-    assert refused.unfiled_work_unit_id == first_quarter.work_unit_id
-    verdict = refused.terminal_precondition_verdict
-    assert isinstance(verdict, PreconditionVerdict)
-    assert verdict.action is not None
-    assert verdict.action.action_id == "operator.modelo.work.file"
-    assert {item.argument_name: item.value for item in verdict.argument_bindings} == {
-        "work_unit_id": first_quarter.work_unit_id
-    }
-    step = refused.operation_next_step(_WORDS)
-    assert step is not None
-    assert step.model_dump()["work_unit_id"] == first_quarter.work_unit_id
-
-
-def test_a_second_quarter_carries_the_filed_first_quarter_payment_into_box_05(
-    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
-) -> None:
-    """Box 05 of 2T holds the positive box 07 the filed 1T return shows, with no value typed by the filer."""
-    year = operation.supported_filing_years().floor
-    _seed_profile(year, "actividad_economica")
-    first_quarter_payment = Decimal("412.35")
+def _save_first_quarter(objects: SecureObjectRepository, *, year: int, payment: Decimal) -> None:
     filed_first_quarter = registry_grounded_modelo_observation(
         modelo="130",
         filing_year=year,
         period="1T",
         casilla_values={
-            validated_casilla_id("07"): first_quarter_payment,
+            validated_casilla_id("07"): payment,
             validated_casilla_id("16"): Decimal("0"),
-            validated_casilla_id("19"): first_quarter_payment,
+            validated_casilla_id("19"): payment,
         },
     )
     observations = CalculationObservationRepository(objects=objects)
@@ -384,6 +354,145 @@ def test_a_second_quarter_carries_the_filed_first_quarter_payment_into_box_05(
         )
     )
 
-    result = _calculate_m130_second_quarter(objects, operation, year=year)
+
+def _restamp_first_quarter(objects: SecureObjectRepository, *, year: int, stamp: str) -> None:
+    """Rewrite the stored 1T stamp in place, as a row saved under another registry revision reads back."""
+
+    def restamp(envelope: dict[str, Any]) -> None:
+        layers = envelope["payload"]
+        (layers["pending_local"] or layers["official"])["stamped_revision_id"] = stamp
+
+    mutate_encrypted_secure_object_json(
+        objects.engine,
+        row_statement=select(secure_objects_table).where(
+            secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+            secure_objects_table.c.object_key == observation_key("130", Period.from_year_and_code(year, "1T")),
+        ),
+        mutate=restamp,
+    )
+
+
+def test_a_second_quarter_with_no_first_quarter_offers_to_create_it(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """The pagos anteriores of 2T are read from the filed 1T, so a missing 1T is the way on, not a bare box."""
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+
+    refused = _refused_quarter(objects, operation, year=year)
+
+    assert refused.unfiled_period == Period.from_year_and_code(year, "1T")
+    assert [(need.period.registry_token, need.unit) for need in refused.source_needs] == [("1T", None)]
+    assert refused.translated_message == "application.modelo.errors.prior_period_unfiled"
+    assert dict(refused.context or {}) == {"modelo": "130", "filing_year": year, "period": "2T", "unfiled_period": "1T"}
+    assert _door(refused) == ("operator.modelo.work.create", {"modelo": "130", "period": "1T", "year": year})
+    step = refused.operation_next_step(_WORDS)
+    assert step is not None
+    assert step.model_dump()["period_code"] == "1T"
+
+
+def test_a_first_quarter_with_no_calculation_is_the_one_to_calculate(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    first_quarter = _create_m130_quarter(objects, operation, year=year, period_code="1T")
+
+    refused = _refused_quarter(objects, operation, year=year)
+
+    assert refused.source_needs[0].standing is ReconciliationSourceStanding.MISSING
+    assert _door(refused) == ("operator.modelo.work.calculate", {"work_unit_id": first_quarter.work_unit_id})
+    step = refused.operation_next_step(_WORDS)
+    assert step is not None
+    assert step.model_dump()["work_unit_id"] == first_quarter.work_unit_id
+
+
+def test_a_calculated_first_quarter_is_the_one_to_verify(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    first_quarter = _calculate_m130_quarter(objects, operation, year=year, period_code="1T")
+
+    refused = _refused_quarter(objects, operation, year=year)
+
+    assert refused.source_needs[0].standing is ReconciliationSourceStanding.UNVERIFIED
+    assert _door(refused) == ("operator.modelo.work.verify", {"work_unit_id": first_quarter.revision.work_unit_id})
+
+
+def test_a_stored_first_quarter_the_fold_drops_as_stale_is_not_filed(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """An observation stamped with a revision the law does not select is one the fold refuses, so 1T is still owed."""
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    _save_first_quarter(objects, year=year, payment=Decimal("412.35"))
+    _restamp_first_quarter(objects, year=year, stamp="not-the-law-selected-revision")
+
+    refused = _refused_quarter(objects, operation, year=year)
+
+    assert refused.unfiled_period == Period.from_year_and_code(year, "1T")
+    assert _door(refused)[0] == "operator.modelo.work.create"
+
+
+def test_a_mid_year_alta_never_names_a_quarter_before_the_activity_started(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """Activity began in 2T, so a 3T calculation waits on 2T alone: 1T owed no return."""
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica", activity_start=date(year, 5, 1))
+
+    refused = _refused_quarter(objects, operation, year=year, period_code="3T")
+
+    assert [need.period.registry_token for need in refused.source_needs] == ["2T"]
+    assert _door(refused) == ("operator.modelo.work.create", {"modelo": "130", "period": "2T", "year": year})
+
+
+@pytest.mark.parametrize(
+    ("standing", "action_id"),
+    [
+        (ReconciliationSourceStanding.MISSING, "operator.modelo.work.calculate"),
+        (ReconciliationSourceStanding.UNVERIFIED, "operator.modelo.work.verify"),
+        (ReconciliationSourceStanding.UNFILED, "operator.modelo.work.file"),
+    ],
+)
+def test_an_existing_earlier_declaration_is_moved_on_by_the_work_its_standing_calls_for(
+    objects: SecureObjectRepository,
+    operation: PinnedAuthorityOperation,
+    standing: ReconciliationSourceStanding,
+    action_id: str,
+) -> None:
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    first_quarter = _create_m130_quarter(objects, operation, year=year, period_code="1T")
+    engine_refusal = _refused_quarter(objects, operation, year=year)
+    missing = ModeloWorkMissingInputError(engine_refusal, binding_id=engine_refusal.binding_id)
+    second_quarter = _create_m130_quarter(objects, operation, year=year, period_code="2T")
+    snapshot = published_snapshot("130", filing_year=year, period="2T")
+    asked: list[tuple[tuple[str, Period], ...]] = []
+
+    def standing_of(periods: tuple[tuple[str, Period], ...]) -> tuple[ReconciliationSourceNeed, ...]:
+        asked.append(periods)
+        return (
+            ReconciliationSourceNeed(modelo="130", period=first_quarter.period, standing=standing, unit=first_quarter),
+        )
+
+    refused = prior_period_unfiled(missing, work_unit=second_quarter, snapshot=snapshot, source_needs=standing_of)
+
+    assert asked == [(("130", first_quarter.period),)]
+    assert refused is not None
+    assert _door(refused) == (action_id, {"work_unit_id": first_quarter.work_unit_id})
+
+
+def test_a_second_quarter_carries_the_filed_first_quarter_payment_into_box_05(
+    objects: SecureObjectRepository, operation: PinnedAuthorityOperation
+) -> None:
+    """Box 05 of 2T holds the positive box 07 the filed 1T return shows, with no value typed by the filer."""
+    year = operation.supported_filing_years().floor
+    _seed_profile(year, "actividad_economica")
+    first_quarter_payment = Decimal("412.35")
+    _save_first_quarter(objects, year=year, payment=first_quarter_payment)
+
+    result = _calculate_m130_quarter(objects, operation, year=year)
 
     assert result.revision.casilla_values["05"] == first_quarter_payment

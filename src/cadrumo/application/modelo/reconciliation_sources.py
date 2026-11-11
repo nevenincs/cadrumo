@@ -139,8 +139,35 @@ def reconciliation_source_needs(
     if not reconciliation:
         return ()
     periods = _source_periods(snapshot, reconciliation, activity_start_date, operation=operation)
+    return source_period_needs(
+        periods,
+        bucket_id=bucket_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        observations=observations,
+        operation=operation,
+    )
+
+
+def source_period_needs(
+    periods: Iterable[tuple[str, Period]],
+    *,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    observations: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ReconciliationSourceNeed, ...]:
+    """Where each (source modelo, period) whose filed values the fold cannot read stands, in source-period order.
+
+    A period whose filed values the fold can read needs nothing; one that is
+    filed and only lacks its values names no step here, as no declaration
+    work puts it right. The caller scopes out periods that owe no declaration.
+    """
     needs: list[ReconciliationSourceNeed] = []
-    for modelo, period in sorted(periods, key=lambda key: (key[0], key[1].filing_year, key[1].quarter_ordinal or 0)):
+    for modelo, period in sorted(
+        dict.fromkeys(periods), key=lambda key: (key[0], key[1].filing_year, key[1].quarter_ordinal or 0)
+    ):
         if _filed_values_stored(modelo, period, observations=observations, operation=operation):
             continue
         unit = _declaration(modelo, period, bucket_id=bucket_id, work_catalogue=work_catalogue)
@@ -214,4 +241,5 @@ __all__ = [
     "ReconciliationSourceStanding",
     "reconciliation_source_needs",
     "reconciliation_source_requirements",
+    "source_period_needs",
 ]

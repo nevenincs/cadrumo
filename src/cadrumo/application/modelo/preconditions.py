@@ -387,18 +387,21 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         action_id="operator.modelo.work.attest_prior_carries",
     ),
     # A carry from an earlier period of the same ejercicio is read from that
-    # period's filed return; filing it, or first creating it, is the way on.
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.prior_period.filed",
-        "modelo.work.calculate.prior_period.unfiled",
-        action_id="operator.modelo.work.file",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.prior_period.filed",
-        "modelo.work.calculate.prior_period.unfiled_without_work",
-        action_id="operator.modelo.work.create",
+    # period's filed return; where that return stands names the work that
+    # moves it on.
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.prior_filing.sources_filed",
+            f"modelo.work.calculate.prior_filing.{scenario}",
+            action_id=action_id,
+        )
+        for scenario, action_id in (
+            ("source_absent", "operator.modelo.work.create"),
+            ("source_uncalculated", "operator.modelo.work.calculate"),
+            ("source_unverified", "operator.modelo.work.verify"),
+            ("source_unfiled", "operator.modelo.work.file"),
+        )
     ),
     _profile(
         "modelo.work.calculate",
@@ -503,7 +506,6 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.file",
         "modelo.work.file.cross_period_dependency.clean",
         "modelo.work.file.cross_period_dependency.unclean",
-        action_id="operator.modelo.work.create",
     ),
     _profile(
         "modelo.work.file",
@@ -689,7 +691,6 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.cross_period_dependency.clean",
         "modelo.work.verify.cross_period_dependency.unclean",
-        action_id="operator.modelo.work.create",
     ),
     _profile(
         "modelo.work.verify",
