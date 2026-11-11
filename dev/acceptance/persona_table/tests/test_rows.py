@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import date, timedelta
+from datetime import date
 from functools import cache
 from pathlib import Path
 
@@ -19,13 +19,14 @@ from ..rows import (
     Stage,
     TableRow,
     Verdict,
+    ended,
     in_force,
     latest_rows,
-    opened,
     planned_rows,
     read_rows,
     replay_horizons,
     select,
+    stage_refusal_codes,
     write_rows,
 )
 
@@ -225,13 +226,24 @@ def test_a_replay_runs_each_quarter_before_the_annual_returns_of_its_year() -> N
     assert [period for (_year, modelo, period) in order if modelo == "111"][:4] == ["1T", "2T", "3T", "4T"]
 
 
-def test_a_return_whose_window_has_not_opened_by_the_scenario_day_is_not_owed_yet() -> None:
-    today = date(_plan().year, 4, 1)
-    first, later, unknown = (
+def test_a_return_whose_period_has_not_ended_by_the_scenario_day_is_not_owed_yet() -> None:
+    year = _plan().year
+    today = date(year, 4, 1)
+    ended_quarter, open_quarter, last_year, this_year = (
         dataclasses.replace(_plan(), period="1T"),
         dataclasses.replace(_plan(), period="2T"),
+        dataclasses.replace(_plan(), year=year - 1, period="0A"),
         dataclasses.replace(_plan(), period="0A"),
     )
-    opening = {"1T": today, "2T": today + timedelta(days=1)}
-    kept = opened([first, later, unknown], lambda _modelo, _year, period: opening.get(period), today)
-    assert kept == [first, unknown]
+    kept = ended([ended_quarter, open_quarter, last_year, this_year], today)
+    assert kept == [ended_quarter, last_year]
+
+
+def test_a_refusal_the_export_or_verify_stage_settled_with_is_read_back_by_its_code() -> None:
+    export = "export: modelo.export refused REFUSED_MODELO_EXPORT_NAME_TOO_WIDE :: detail"
+    verify = "verify: modelo.work.verify failed INTEGRITY_STORAGE_VALIDATION"
+    findings = "verify: blocked; 2 findings; blocking: none"
+    assert stage_refusal_codes(export, verify, findings, "") == {
+        "REFUSED_MODELO_EXPORT_NAME_TOO_WIDE",
+        "INTEGRITY_STORAGE_VALIDATION",
+    }
