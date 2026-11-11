@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:64f2bb79c3982a6f8c44e8d52d0ec77fe6d920d3896f94f2f5e8d789f13dad52'
+body_hash: 'sha256:af280b188bcc0c5546779d59bea4bb0d94bf8a98bb680760b227040e28d4bd18'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -60,9 +60,31 @@ related:
 - `S03` `M` `native/manager/src/windows_lifecycle.rs`
 - `S03` `verify:` `rustfmt --check` -> `pass`
 - `S03` `verify:` `branch_gate_delta` -> `pass`
+- `S04` `M` `dev/locales/desktop_interface_keys.py`
+- `S04` `M` `native/application/src/provisioning/engine.rs`
+- `S04` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S04` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S04` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S04` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S04` `M` `native/application/src/provisioning/local_ai/program.rs`
+- `S04` `M` `native/application/src/provisioning/state.rs`
+- `S04` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S04` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S04` `M` `native/desktop/frontend/tests/setup-words.spec.ts`
+- `S04` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S04` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `verify:` `rustfmt --check` -> `pass`
+- `S04` `verify:` `prettier eslint tsc` -> `pass`
+- `S04` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S04` `verify:` `branch_gate_delta` -> `pass`
 
 ## Notes
 
 - `S01` cargo tests not run here: native builds are root-only; pending DESKTOP
 - `S02` cargo tests not run here: native builds are root-only; pending DESKTOP
 - `S03` cargo not run here (native builds root-only); pending DESKTOP manager.rust: ipc::windows `only_the_agent_service_a_desktop_started_may_demand_the_local_ai_server,` ipc `a_demand_carries_no_identity`
+- `S04` cargo and Playwright setup-words not run here (root-only); pending DESKTOP staged verification with S01-S06
