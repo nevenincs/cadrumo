@@ -97,7 +97,7 @@ _YEAR = filing_year_envelope().horizon
 
 SEEDED_AT = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
-_ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1))
+_ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 2, 1, 1))
 # An activity in estimación directa always runs under one modality; the normal one leaves box 02
 # as the expenses the filer states, with no art. 30.2.ª provision added.
 _ESTIMATION_REGIME_PATH = "irpf.estimation_regime"

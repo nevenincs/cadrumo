@@ -351,7 +351,7 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="file-flow"),
-        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)),
         # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
         # carries the row as filer data, so it must be stated rather than assumed.
         # False is the truthful value for this natural-person filer.
@@ -585,7 +585,7 @@ def _seed_m130_activity(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return plain_workflow_profile(activity_start_date=date(filing_year_envelope().floor, 1, 1))
+    return plain_workflow_profile(activity_start_date=date(filing_year_envelope().floor - 1, 1, 1))
 
 
 def _target_filing_records(
