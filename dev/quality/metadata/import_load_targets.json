@@ -4367,6 +4367,7 @@
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.rows",
         "dev.acceptance.persona_table.sweep",
+        "dev.acceptance.persona_table.unchecked",
         "dev.acceptance.personas",
         "dev.acceptance.personas.__main__",
         "dev.acceptance.personas.assessment",
