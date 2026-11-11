@@ -8351,7 +8351,7 @@ sequence_removals = {source_refs = [0, 1, 2, 3, 4]}
 family = "constructs"
 selector = {revision = "2022", id = "renta-final-settlement"}
 sequence_additions = {formulas = ["renta-deduccion-maternidad-0611"], legal_refs = ["ley-31-2022:art-64"], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd", "boe-modelo-100-2023-form", "aeat-renta-2023-manual-parte1"]}
-sequence_removals = {formulas = [8], source_refs = [0, 1, 2, 3]}
+sequence_removals = {formulas = [8], legal_refs = [14], source_refs = [0, 1, 2, 3]}
 sequence_order = {source_refs = [1, 2, 3, 4, 0]}
 [[revisions."2023".family_overrides]]
 family = "bindings"

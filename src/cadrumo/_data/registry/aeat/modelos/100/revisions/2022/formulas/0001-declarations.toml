@@ -1088,7 +1088,7 @@ target_casilla_id = "0611"
 # after the Ley 31/2022 reform, replaces this formula with the unlimited rule.
 expression = { binding = "renta-profile-deduccion-maternidad-cotizaciones" }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-81"]
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-redaccion-2018"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
 
 [[revisions."2022".formulas.source_citations]]

@@ -1,6 +1,5 @@
 # Year-independence baseline: findings that exist today and may only shrink.
 # Regenerate with: python -m dev.registry.analysis.year_independence_gate --write-baseline
-casilla-member|100|0611|formula|present=2023|absent=2022
 casilla-member|100|1039|formula|present=2025|absent=2024
 casilla-member|200|00670|binding|present=2024|absent=2023
 casilla-member|200|01494|binding|present=2024|absent=2023
@@ -157,16 +156,13 @@ year-in-profile-key|100|2022|renta-profile-anualidades-sin-minimo-descendientes|
 year-in-profile-key|100|2022|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2022
 year-in-profile-key|100|2022|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2022
 year-in-profile-key|100|2023|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2023
-year-in-profile-key|100|2023|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2023
 year-in-profile-key|100|2023|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2023
 year-in-profile-key|100|2023|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2023
 year-in-profile-key|100|2024|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2024
-year-in-profile-key|100|2024|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2024
 year-in-profile-key|100|2024|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2024
 year-in-profile-key|100|2024|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2024
 year-in-profile-key|100|2024|renta-rental-reduccion-art-23-2-tier|renta_rental.reduccion_art_23_2_tier_2024
 year-in-profile-key|100|2025|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2025
-year-in-profile-key|100|2025|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2025
 year-in-profile-key|100|2025|renta-rental-reduccion-art-23-2-tier|renta_rental.reduccion_art_23_2_tier_2024

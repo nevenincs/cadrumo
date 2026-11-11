@@ -1139,7 +1139,7 @@ id = "renta-profile-deduccion-maternidad-cotizaciones"
 provider = { kind = "profile", profile_key = "renta_family.deduccion_maternidad_cotizaciones" }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-81"]
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-redaccion-2018"]
 source_refs = ["aeat-renta-2022-manual-parte1", "aeat-dr-100-2022-dictionary"]
 
 [[revisions."2022".bindings.source_citations]]
