@@ -14,6 +14,7 @@ from typing import ClassVar, Protocol, get_args
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
@@ -22,7 +23,8 @@ from ...domain.calculations.registry.binding_terminal_origin import TerminalOrig
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
@@ -485,15 +487,61 @@ def _row_provenance(content_fingerprint: str) -> CalculationSourceProvenance:
     )
 
 
+def _activity_casillas(
+    revision: ModeloRevision,
+    row_values: Mapping[tuple[str, int], Decimal | str],
+    *,
+    activity_count: int,
+    resolver_id: str,
+) -> tuple[dict[CasillaId, Decimal], tuple[CalculationSourceDiagnostic, ...]]:
+    """Give the return's activity casillas the one activity's Anexo D values, or name them unresolved.
+
+    Casillas 0177, 0181 and 0182 of the estimación directa block are the
+    activity's own, as 0171 and 0183 are, and the gastos total sums them. With
+    one activity its book's row is that activity's figure; with several, no row
+    is the return's one activity, so each casilla stays unresolved rather than
+    reading as a sum or a zero.
+    """
+    row_bindings = {binding_id for binding_id, _row in row_values}
+    bound = tuple(
+        (casilla, casilla.binding)
+        for casilla in revision.casillas
+        if casilla.input_kind == InputKind.BOUND and casilla.binding in row_bindings
+    )
+    if activity_count == 1:
+        return {
+            casilla.id: value for casilla, binding in bound if isinstance(value := row_values[(binding, 1)], Decimal)
+        }, ()
+    return {}, tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=_SOURCE.value,
+            resolver_id=resolver_id,
+            binding_id=binding,
+            casilla_id=casilla.id,
+            message=(
+                f"casilla {casilla.id!r} is the one estimación directa activity's figure, and the profile "
+                f"declares {activity_count} activities with a book each, so no book's row is that figure"
+            ),
+            remedy=(
+                "Each activity's inventory row is kept in the Anexo D rows; the activity casilla needs the "
+                "declaration's per-activity blocks, which this calculation does not yet fill."
+            ),
+        )
+        for casilla, binding in bound
+    )
+
+
 def _resolve_inventory_rows(
     ledgers: tuple[InventoryLedger, ...],
     *,
+    revision: ModeloRevision,
     binding_ids: tuple[str, ...],
     bindings_by_operation: Mapping[str, BindingDefinition],
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
-    """Project each activity into row values, identities, and physical evidence diagnostics."""
+    """Project each activity into row values, identities, its activity casillas, and physical evidence diagnostics."""
     row_values: dict[tuple[str, int], Decimal | str] = {}
     row_identities: dict[tuple[str, int], RowSourceIdentity] = {}
     provenance: list[CalculationSourceProvenance] = []
@@ -530,13 +578,17 @@ def _resolve_inventory_rows(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
+    casillas, unresolved = _activity_casillas(
+        revision, row_values, activity_count=len(ledgers), resolver_id=resolver_id
+    )
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         row_binding_values=row_values,
         row_source_identities=row_identities,
+        bound_inputs_by_casilla_id=casillas,
         provenance=tuple(provenance),
-        diagnostics=tuple(diagnostics),
+        diagnostics=(*diagnostics, *unresolved),
     )
 
 
@@ -664,9 +716,27 @@ class InventorySourceResolver:
         )
         if isinstance(ledgers, CalculationSourceResolution):
             return ledgers
-        # Each row is one book and the activity block of the return is one activity, so a row is
-        # an activity's only when every declared activity keeps its book. One book among several
-        # activities would otherwise read as the return's one activity.
+        refusal = self._books_refusal(context, ledgers, binding_ids=binding_ids)
+        if refusal is not None:
+            return refusal
+        return _resolve_inventory_rows(
+            ledgers,
+            revision=context.revision,
+            binding_ids=binding_ids,
+            bindings_by_operation=template.by_operation,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+
+    def _books_refusal(
+        self, context: CalculationSourceContext, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...]
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back unless every declared activity keeps its book and each purchase's statement stands.
+
+        Each row is one book and the activity block of the return is one activity, so a row is
+        an activity's only when every declared activity keeps its book. One book among several
+        activities would otherwise read as the return's one activity.
+        """
         activities = _direct_estimation_activities(context)
         if activities is None or activities.regime_undeclared or activities.count != len(ledgers):
             return _activity_books_refusal(
@@ -677,16 +747,7 @@ class InventorySourceResolver:
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
             )
-        claim_refusal = self._claim_refusal(ledgers, binding_ids=binding_ids, filing_year=context.filing_year)
-        if claim_refusal is not None:
-            return claim_refusal
-        return _resolve_inventory_rows(
-            ledgers,
-            binding_ids=binding_ids,
-            bindings_by_operation=template.by_operation,
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-        )
+        return self._claim_refusal(ledgers, binding_ids=binding_ids, filing_year=context.filing_year)
 
     def _claim_refusal(
         self, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...], filing_year: int

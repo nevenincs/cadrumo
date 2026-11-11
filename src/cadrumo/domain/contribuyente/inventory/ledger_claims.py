@@ -147,6 +147,16 @@ def _ledger_refusal(
     return None
 
 
+def _claim_owners(document: InventoryLedgerDocument, ledger: InventoryLedger) -> dict[str, frozenset[tuple[str, int]]]:
+    """The books claiming each transaction; the checked book may be a candidate, so its claims replace the stored."""
+    owners: dict[str, set[tuple[str, int]]] = {}
+    coordinate = (ledger.actividad_id, ledger.year)
+    others = tuple(item for item in document.ledgers if (item.actividad_id, item.year) != coordinate)
+    for claim in (*(claim for item in others for claim in purchase_claims(item)), *purchase_claims(ledger)):
+        owners.setdefault(claim.transaction_id, set()).add((claim.actividad_id, claim.year))
+    return {key: frozenset(value) for key, value in owners.items()}
+
+
 def inventory_claim_refusals(
     document: InventoryLedgerDocument,
     ledger: InventoryLedger,
@@ -164,13 +174,7 @@ def inventory_claim_refusals(
     Returns:
         One refusal per claimed transaction that fails, in transaction order.
     """
-    owners: dict[str, set[tuple[str, int]]] = {}
-    # The book checked may be a candidate not yet in the document, so its own claims replace the stored ones.
-    coordinate = (ledger.actividad_id, ledger.year)
-    others = tuple(item for item in document.ledgers if (item.actividad_id, item.year) != coordinate)
-    for claim in (*(claim for item in others for claim in purchase_claims(item)), *purchase_claims(ledger)):
-        owners.setdefault(claim.transaction_id, set()).add((claim.actividad_id, claim.year))
-    frozen_owners = {key: frozenset(value) for key, value in owners.items()}
+    frozen_owners = _claim_owners(document, ledger)
     by_transaction: dict[str, list[MovementRecord]] = {}
     for movement in ledger.period_movements:
         if movement.claimed_transaction_id is not None:

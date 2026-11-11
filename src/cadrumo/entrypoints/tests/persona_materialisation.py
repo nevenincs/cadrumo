@@ -242,6 +242,7 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
+from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 
 PERSONA_ACTOR = "operator:persona"
@@ -944,12 +945,12 @@ def inventory_statement(persona: Persona, book: InventoryBook, *, envelope: Year
     return target
 
 
-def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
-    """Open each inventory book and record its closing on its movements, evidenced by the taxpayer's statement.
+def _replay_inventory(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> None:
+    """Open each inventory book, add its purchases, and record its closing on its movements, evidenced by the statement.
 
-    The book records no movement, so its closing value is the opening stock.
-    The statement also evidences the prior year's closing the opening continues
-    from, since no earlier book holds one.
+    Each purchase claims the ledger row that books it, and rests on the invoice
+    attached to that row. The statement also evidences the prior year's closing
+    the opening continues from, since no earlier book holds one.
     """
     for book in persona.inventory:
         year = book.year.resolve(world.envelope)
@@ -968,6 +969,21 @@ def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
         )
         if created.outcome != "created":
             raise PersonaMaterialisationError(f"{where}: create refused: {created.model_dump_json()}")
+        replay_inventory_purchases(
+            persona,
+            book,
+            year=year,
+            profile_id=world.profile_id,
+            workdir=world.workdir,
+            transactions=transactions,
+            invoice_source=lambda ref: document_path(
+                persona,
+                next(document for document in persona.documents if ref in document.attach_to),
+                envelope=world.envelope,
+                workdir=world.workdir,
+            ),
+            settle=partial(settle_operation, world),
+        )
         source = inventory_statement(persona, book, envelope=world.envelope, workdir=world.workdir)
         stored = run_operation(
             world,
@@ -1565,7 +1581,7 @@ def materialise_persona(
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
             evidence = _replay_documents(persona, world, transactions)
-            _replay_inventory(persona, world)
+            _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.HISTORY) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings

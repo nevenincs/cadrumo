@@ -796,16 +796,18 @@ class InventoryLedgerHistoryEntry(BaseModel):
         }
         supersedes = kind in {InventoryHistoryKind.MOVEMENT_CORRECTED, InventoryHistoryKind.MOVEMENT_REVERSED}
         is_opening = kind is InventoryHistoryKind.OPENING_CORRECTED
-        if (
-            rectifies != (self.correction_reason is not None)
-            or (kind is InventoryHistoryKind.RETIRED) != (self.retirement_reason is not None)
-            or supersedes != (self.superseded_movement is not None)
-            or (kind is InventoryHistoryKind.MOVEMENT_CORRECTED) != (self.replacement_movement_id is not None)
-            or is_opening != (self.prior_opening_stock is not None)
-            or is_opening != (self.prior_valuation_method is not None)
-            or (self.prior_descriptor is not None and kind is not InventoryHistoryKind.DESCRIBED)
-            or (kind is InventoryHistoryKind.LEDGER_ROW_STATED) != (self.ledger_row_change is not None)
-        ):
+        # Each pair is (the kind displaces this fact, the entry carries it).
+        displaced = (
+            (rectifies, self.correction_reason is not None),
+            (kind is InventoryHistoryKind.RETIRED, self.retirement_reason is not None),
+            (supersedes, self.superseded_movement is not None),
+            (kind is InventoryHistoryKind.MOVEMENT_CORRECTED, self.replacement_movement_id is not None),
+            (is_opening, self.prior_opening_stock is not None),
+            (is_opening, self.prior_valuation_method is not None),
+            (kind is InventoryHistoryKind.LEDGER_ROW_STATED, self.ledger_row_change is not None),
+        )
+        stray_descriptor = self.prior_descriptor is not None and kind is not InventoryHistoryKind.DESCRIBED
+        if stray_descriptor or any(expected != carried for expected, carried in displaced):
             raise InventoryValidationError("inventory history entry facts do not match its kind")
         return self
 

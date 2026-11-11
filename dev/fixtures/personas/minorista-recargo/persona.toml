@@ -66,9 +66,12 @@ tipo_actividad = "A03"
 
 # The shop holds clothing for sale at every closing. Her count at the end of
 # the year, valued at acquisition price, equals the previous closing, so the
-# book opens and closes at the same stock and records no movement. The Modelo
-# 100 rows of the stock variation (casillas 0177 and 0182) read no variation on
-# her statement, never by default.
+# Modelo 100 rows of the stock variation (casillas 0177 and 0182) read no
+# variation on her statement, never by default. The book records her four
+# purchases of garments, each claiming the ledger row that pays it, so they
+# reach casilla 0181 at their cost with IVA and recargo (LIVA art. 154.Dos
+# denies her their deduction) and leave the ledger expenses. What she sold
+# during the year is what takes the book back to her counted closing.
 [[inventory]]
 activity = "comercio-prendas-vestir"
 year = "horizon-1"
@@ -76,6 +79,7 @@ valuation_method = "fifo"
 opening_stock = "7400.00"
 closing_stock = "7400.00"
 statement = "Las existencias de prendas de vestir de la tienda, valoradas a precio de adquisición, sumaban 7400,00 euros al cierre del ejercicio anterior y 7400,00 euros al cierre de este."
+purchases = ["MIN-COM-1", "MIN-COM-2", "MIN-COM-3", "MIN-COM-4"]
 
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"

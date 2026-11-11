@@ -418,10 +418,12 @@ class LeasedPremises:
 class InventoryBook:
     """The existencias book of one activity for one year, which the Modelo 100 Anexo D rows read.
 
-    The book records no movement: it opens at ``opening_stock`` and closes on
-    its movements, so ``closing_stock`` equals it. ``statement`` is the text of
-    the taxpayer's statement that evidences both the closing and the prior
-    year's closing it continues from.
+    The book opens at ``opening_stock`` and closes on its movements at
+    ``closing_stock``. ``purchases`` names the ledger rows that book its
+    purchases; each becomes a purchase claiming its row, and the stock sold
+    is what leaves ``closing_stock``. A book with no purchase closes at its
+    opening. ``statement`` is the text of the taxpayer's statement that
+    evidences both the closing and the prior year's closing it continues from.
     """
 
     activity: str
@@ -430,6 +432,7 @@ class InventoryBook:
     opening_stock: Decimal
     closing_stock: Decimal
     statement: str
+    purchases: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1198,12 +1201,14 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         table,
         where,
         required=frozenset({"activity", "year", "valuation_method", "opening_stock", "closing_stock", "statement"}),
+        optional=frozenset({"purchases"}),
     )
     opening = _amount(table["opening_stock"], f"{where}.opening_stock")
     closing = _amount(table["closing_stock"], f"{where}.closing_stock")
+    purchases = _strings(table, "purchases", where) if "purchases" in table else ()
     if opening < 0 or closing < 0:
         raise _fail(where, "existencias are valued at a nonnegative amount")
-    if closing != opening:
+    if closing != opening and not purchases:
         raise _fail(where, "a book with no movement closes at its opening stock")
     return InventoryBook(
         activity=_string(table, "activity", where),
@@ -1212,6 +1217,7 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         opening_stock=opening,
         closing_stock=closing,
         statement=_string(table, "statement", where),
+        purchases=purchases,
     )
 
 

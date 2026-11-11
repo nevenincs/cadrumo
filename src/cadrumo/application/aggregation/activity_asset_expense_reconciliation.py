@@ -227,22 +227,34 @@ def classify_ledger_expenses_against_asset_register(
             for treatment in treatments
             if treatment.amortization_labelled and treatment.transaction_id not in owned
         ),
-        book_claimed=tuple(
-            BookClaimedPurchase(
-                actividad_id=claim.actividad_id,
-                book_year=claim.year,
-                movement_id=claim.movement_id,
-                transaction_id=treatment.transaction_id,
-                category=treatment.category,
-                tax_year=treatment.tax_year,
-                booked_on=treatment.booked_on,
-                purchase_amount=treatment.deductible_amount,
-            )
-            for claim in inventory_claims
-            for treatment in treatments
-            if treatment.transaction_id == claim.transaction_id
-            and treatment.transaction_id not in {asset_owned for _asset_id, asset_owned in owners}
+        book_claimed=_book_claimed(
+            inventory_claims, treatments, asset_owned=frozenset(transaction_id for _asset_id, transaction_id in owners)
         ),
+    )
+
+
+def _book_claimed(
+    inventory_claims: tuple[InventoryPurchaseClaim, ...],
+    treatments: tuple[LedgerRentaExpenseTreatment, ...],
+    *,
+    asset_owned: frozenset[str],
+) -> tuple[BookClaimedPurchase, ...]:
+    """The rows the books claim, in book order; a row an asset also owns stays with the asset register."""
+    return tuple(
+        BookClaimedPurchase(
+            actividad_id=claim.actividad_id,
+            book_year=claim.year,
+            movement_id=claim.movement_id,
+            transaction_id=treatment.transaction_id,
+            category=treatment.category,
+            tax_year=treatment.tax_year,
+            booked_on=treatment.booked_on,
+            purchase_amount=treatment.deductible_amount,
+        )
+        for claim in inventory_claims
+        if claim.transaction_id not in asset_owned
+        for treatment in treatments
+        if treatment.transaction_id == claim.transaction_id
     )
 
 

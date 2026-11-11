@@ -402,10 +402,17 @@ def test_an_inventory_book_with_no_movement_is_admitted() -> None:
     )
 
 
+def test_a_book_with_purchases_may_close_away_from_its_opening() -> None:
+    (book,) = _parse(_with_inventory({**_BOOK, "closing_stock": "10.00", "purchases": ["ROW-1", "ROW-2"]})).inventory
+
+    assert (book.closing_stock, book.purchases) == (Decimal("10.00"), ("ROW-1", "ROW-2"))
+
+
 @pytest.mark.parametrize(
     ("books", "message"),
     [
         (({**_BOOK, "closing_stock": "10.00"},), "closes at its opening stock"),
+        (({**_BOOK, "purchases": "ROW-1"},), "purchases must be an array of strings"),
         (({**_BOOK, "opening_stock": "-1.00", "closing_stock": "-1.00"},), "nonnegative"),
         (({**_BOOK, "opening_stock": "0,00"},), "canonical decimal"),
         (({**_BOOK, "year": "horizon+1"},), "outside the supported envelope"),
