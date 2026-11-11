@@ -731,10 +731,10 @@ test("a carry refusal's opening-balance door opens the entry at the period it se
       name: label("workspace.modelo.next_button.calculate"),
     })
     .click();
-  const alert = page.getByRole("alert").filter({
+  const refusal = page.getByRole("status").filter({
     hasText: "The carry has no opening balance to read.",
   });
-  await alert.getByRole("button", { name: door, exact: true }).click();
+  await refusal.getByRole("button", { name: door, exact: true }).click();
 
   const dialog = page.getByRole("dialog", { name: words("title") });
   await expect(dialog).toBeVisible();
