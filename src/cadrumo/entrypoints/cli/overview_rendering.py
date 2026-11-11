@@ -200,17 +200,38 @@ def _warning_payloads(warnings: Sequence[CalendarWarning]) -> list[dict[str, obj
     ]
 
 
-def _typed_with_warning_actions[ResultT: BaseModel](
+def _entry_payload(entry: OverviewCalendarEntry) -> dict[str, object]:
+    """Project one entry with its resolved recovery door, as the calendar summary row does."""
+    resolved = _resolved_action(entry.recovery_action)
+    return {
+        **entry.model_dump(mode="json"),
+        "recovery_action": resolved.model_dump(mode="json") if resolved is not None else None,
+    }
+
+
+def _typed_with_resolved_actions[ResultT: BaseModel](
     result_type: type[ResultT], source: OverviewAgenda | OverviewBacklog
 ) -> ResultT:
-    """Project an agenda or backlog into ``result_type`` keeping each warning's resolved door.
+    """Project an agenda or backlog into ``result_type`` keeping each resolved door.
 
-    ``CalendarWarning.fix_action`` is excluded from plain serialization, so a
-    bare round trip would hand JSON consumers warnings with no action; the
-    calendar payload names the action, and these projections must too.
+    ``CalendarWarning.fix_action`` and ``OverviewCalendarEntry.recovery_action``
+    are excluded from plain serialization, so a bare round trip would hand JSON
+    consumers warnings and overdue entries with no action; the calendar payload
+    names them, and these projections must too.
     """
     document = json.loads(source.model_dump_json())
     document["warnings"] = _warning_payloads(source.warnings)
+    if isinstance(source, OverviewAgenda):
+        cohorts: dict[str, tuple[OverviewCalendarEntry, ...]] = {
+            "due_today": source.due_today,
+            "due_soon": source.due_soon,
+            "overdue": source.overdue,
+        }
+        document["next_due"] = _entry_payload(source.next_due) if source.next_due is not None else None
+    else:
+        cohorts = {"items": source.items}
+    for key, entries in cohorts.items():
+        document[key] = [_entry_payload(entry) for entry in entries]
     return result_type.model_validate_json(json.dumps(document))
 
 
@@ -652,7 +673,7 @@ def _next_due_entry(cal: OverviewCalendar) -> OverviewCalendarEntry | None:
 
 def overview_agenda_output(agenda: OverviewAgenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:
     """Project an overview agenda into payload, text lines, and notices."""
-    typed_agenda = _typed_with_warning_actions(OverviewAgendaResult, agenda)
+    typed_agenda = _typed_with_resolved_actions(OverviewAgendaResult, agenda)
     lines: list[str] = [
         f"as_of\t{agenda.as_of.isoformat()}",
         f"horizon_days\t{agenda.horizon_days}",
@@ -688,7 +709,7 @@ def overview_backlog_output(
     work_units_notice: Notice | None,
 ) -> tuple[OverviewBacklogResult, list[str], list[Notice]]:
     """Project an overview backlog into payload, text lines, and notices."""
-    typed_backlog = _typed_with_warning_actions(OverviewBacklogResult, backlog)
+    typed_backlog = _typed_with_resolved_actions(OverviewBacklogResult, backlog)
     lines: list[str] = [
         f"from\t{backlog.range.from_date.isoformat()}",
         f"to\t{backlog.range.to_date.isoformat()}",
