@@ -15,11 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
 import type { AgentEngineHealth } from "../../shell/agentSession";
+import type { SetupRow } from "../../ipc/componentSetup";
 import { engineNotRunningWords } from "../../shell/engineHealth";
 import { connectionWords } from "../../shell/providerConnection";
+import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
 import { EngineDoor } from "../setup/EngineDoor";
+import {
+  connectionStatus,
+  localLaneDetail,
+  type ConnectionStatus,
+} from "./connectionStatus";
 import { ProviderSignInDialog } from "./ProviderSignInDialog";
 import { SignInAdvice } from "./SignInAdvice";
 import type {
@@ -27,63 +34,6 @@ import type {
   ProviderSignInMethod,
 } from "../../shell/providerSettings";
 import type { ProviderOutcome, ProviderSecret, ProviderStatus } from "./types";
-
-/** One status for a connection, in the same words wherever it is shown. */
-type ConnectionStatus =
-  | "ready"
-  | "saved"
-  | "not_checked"
-  | "setup_needed"
-  | "sign_in_needed"
-  | "unconfirmed"
-  | "engine_not_running"
-  | "off";
-
-/** Describe what is set, without claiming more than the reading says. A
- * keyless lane says what the service measured of its local engine, once it
- * is otherwise usable. */
-function connectionStatus(
-  provider: ProviderStatus,
-  engine: AgentEngineHealth | null = null,
-): ConnectionStatus {
-  if (provider.reason === "record_unreadable") return "setup_needed";
-  if (provider.mode === "disabled") return "off";
-  if (provider.readiness === "unusable") return "setup_needed";
-  // An app connection needs its app, whatever it signs in with.
-  if (provider.cliState === "not_installed") return "setup_needed";
-  // A connection with no key and no sign-in has nothing to set up. Where the
-  // service measured its engine, that measurement is its status.
-  if (provider.authKind === "none") {
-    if (engine?.state === "not_running") return "engine_not_running";
-    if (engine?.state === "running") return "ready";
-    return provider.readiness === "ready" ? "ready" : "not_checked";
-  }
-  if (provider.authKind === "provider_sign_in_only") {
-    if (
-      provider.cliState === "installed_signed_in" ||
-      provider.readiness === "ready"
-    )
-      return "ready";
-    // The probe could not say, and said why: that is not "signed out".
-    if (provider.cliState === "unknown" && provider.cliStateCause)
-      return "unconfirmed";
-    if (
-      provider.cliState === "installed_signed_out" ||
-      provider.readiness === "sign_in_required"
-    )
-      return "sign_in_needed";
-    return "not_checked";
-  }
-  if (provider.readiness === "ready") return "ready";
-  if (provider.readiness === "sign_in_required") return "sign_in_needed";
-  if (
-    provider.mode === "key" ||
-    provider.mode === "oauth_token" ||
-    provider.source !== "none"
-  )
-    return "saved";
-  return "setup_needed";
-}
 
 const STATUS_WORDS = {
   ready: "desktop.providers.status_ready",
@@ -166,8 +116,9 @@ function detailWords(
   t: Translate,
   provider: ProviderStatus,
   engine: AgentEngineHealth | null,
+  setup: SetupRow | null,
 ): string | null {
-  const status = connectionStatus(provider, engine);
+  const status = connectionStatus(provider, engine, setup);
   if (status === "off")
     return provider.credentialSaved
       ? t("desktop.providers.detail_off_kept")
@@ -181,7 +132,7 @@ function detailWords(
   if (provider.authKind === "none")
     return status === "engine_not_running" && engine
       ? engineNotRunningWords(t, engine)
-      : null;
+      : localLaneDetail(t, status, setup);
   if (status === "unconfirmed") return statusWords(t, status);
   if (provider.authKind === "provider_sign_in_only") {
     if (status === "setup_needed")
@@ -329,6 +280,7 @@ function WayRow({
   consoleSignInCommand,
   models,
   engine,
+  setup,
 }: {
   provider: ProviderStatus;
   hidden?: boolean;
@@ -347,6 +299,8 @@ function WayRow({
   models?: ReactNode;
   /** What the service measured of the lane's local engine, where it did. */
   engine: AgentEngineHealth | null;
+  /** The setup row of the local AI that runs this lane's engine, where it has one. */
+  setup: SetupRow | null;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -355,8 +309,8 @@ function WayRow({
   const keyless = provider.authKind === "none";
   const hasKey = provider.mode === "key" || provider.mode === "oauth_token";
   const off = provider.mode === "disabled";
-  const state = connectionStatus(provider, engine);
-  const detail = detailWords(t, provider, engine);
+  const state = connectionStatus(provider, engine, setup);
+  const detail = detailWords(t, provider, engine, setup);
   const connection = connectionWords(t, provider);
   // A keyless lane runs against the server on this computer that Cadrumo
   // launches the agent with, not the address the agent declares by default,
@@ -517,6 +471,7 @@ function ProviderGroupRow({
   group,
   shownLanes,
   engineOf,
+  setupOf,
   t,
   renderLane,
   searchMatch = true,
@@ -525,6 +480,7 @@ function ProviderGroupRow({
   group: ProviderGroup;
   shownLanes: readonly ProviderStatus[];
   engineOf: (lane: ProviderStatus) => AgentEngineHealth | null;
+  setupOf: (lane: ProviderStatus) => SetupRow | null;
   t: Translate;
   renderLane: (lane: ProviderStatus) => ReactNode;
   searchMatch?: boolean;
@@ -555,7 +511,11 @@ function ProviderGroupRow({
           />
           <span className="flex w-full basis-full flex-wrap gap-x-3 gap-y-1">
             {shownLanes.map((lane) => {
-              const state = connectionStatus(lane, engineOf(lane));
+              const state = connectionStatus(
+                lane,
+                engineOf(lane),
+                setupOf(lane),
+              );
               return (
                 <span
                   key={lane.id}
@@ -686,13 +646,17 @@ export function ProviderSettings({
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const engineOf = (lane: ProviderStatus) =>
     lane.authKind === "none" ? (engines[lane.id] ?? null) : null;
+  // A lane whose engine runs on this computer is as ready as the local AI set up to run
+  // it, which the setup row serves.
+  const localAi = useProvisioning().localAiRow;
+  const setupOf = (lane: ProviderStatus) => (engineOf(lane) ? localAi : null);
   const groups = providerGroups(providers);
   const laneMatches = (group: ProviderGroup, lane: ProviderStatus) =>
     !normalizedQuery ||
     [
       group.name,
       connectionWords(t, lane),
-      statusWords(t, connectionStatus(lane, engineOf(lane))),
+      statusWords(t, connectionStatus(lane, engineOf(lane), setupOf(lane))),
     ]
       .join(" ")
       .toLocaleLowerCase()
@@ -721,6 +685,7 @@ export function ProviderSettings({
             group={group}
             shownLanes={group.lanes.filter((lane) => laneMatches(group, lane))}
             engineOf={engineOf}
+            setupOf={setupOf}
             searchMatch={groupMatches(group)}
             searching={searching || Boolean(normalizedQuery)}
             t={t}
@@ -729,6 +694,7 @@ export function ProviderSettings({
                 key={lane.id}
                 provider={lane}
                 engine={engineOf(lane)}
+                setup={setupOf(lane)}
                 hidden={!laneMatches(group, lane)}
                 busy={busyId === lane.id}
                 outcome={outcomes[lane.id]}
