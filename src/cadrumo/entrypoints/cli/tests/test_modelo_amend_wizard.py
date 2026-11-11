@@ -72,6 +72,7 @@ from cadrumo.domain.calculations.registry.amendment_regime_policy import permitt
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.query_reports import ModeloCasillaRow
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -116,6 +117,7 @@ def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None
 
 
 _TAX_ID = "12345678Z"
+_YEAR = filing_year_envelope().horizon
 
 # M130 1T has no required-manual casillas (casilla 02 is `required = true` but
 # `input_kind = "bound"`); a baseline carrying only casillas 01 (ingresos) and
@@ -283,7 +285,7 @@ def _profile_amend_catalogue_state(
 
 
 def _seed_justificante(
-    *, bucket_id: str, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025
+    *, bucket_id: str, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = _YEAR
 ) -> None:
     """Persist the stored receipt metadata a justificante-bound evidence import requires."""
     body = f"{csv}-pdf".encode()
@@ -294,14 +296,14 @@ def _seed_justificante(
         period=Period.from_year_and_code(filing_year, period),
         ejercicio=str(filing_year),
         presentation_id="1234567890123",
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        presented_at=datetime(1980, 4, 15, 9, 30, tzinfo=UTC),
         tax_id=_TAX_ID,
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
         source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
         source_pdf_sha256=source_pdf_sha256,
-        parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        parsed_at=datetime(1980, 4, 16, 12, 0, tzinfo=UTC),
     )
     JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
@@ -721,9 +723,9 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        revision=_m303_revision_id(filing_year=2025, period="1T"),
+        revision=_m303_revision_id(filing_year=_YEAR, period="1T"),
     )
     baseline_filing_id = _import_external_m303_baseline(work_unit_id, runtime_profile=_operator_profile)
     bucket_id = resolve_active_bucket_id()
@@ -818,9 +820,9 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     )
     hand_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
-        revision=_m303_revision_id(filing_year=2025, period="2T"),
+        revision=_m303_revision_id(filing_year=_YEAR, period="2T"),
     )
     hand_baseline_filing_id = _import_external_m303_baseline(
         hand_unit_id,
