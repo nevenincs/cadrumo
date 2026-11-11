@@ -21,15 +21,18 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.models import Transaction
 from ..actions_split_merge import build_merged_transaction
 from .transaction_row_support import outgoing_manual_row
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CONVERTED = Decimal("920.00")
 _RATE = Decimal("0.92")
-_OCCURRED = datetime(2026, 3, 5, 10, 0, tzinfo=UTC)
+_OCCURRED = datetime(_YEAR, 3, 5, 10, 0, tzinfo=UTC)
 #: Split group ids are content-addressed; the model enforces the full width.
 _GROUP = "9" * 64
 

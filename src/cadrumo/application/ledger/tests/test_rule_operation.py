@@ -46,6 +46,7 @@ from ....core.operations import (
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification
@@ -76,11 +77,13 @@ from ..rule_operation import (
 from ..rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
 from .registration_access_context_support import registration_access_context
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_NOW = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _executor_context(

@@ -20,6 +20,7 @@ from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 from ....domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
@@ -34,10 +35,12 @@ from ..borrador_100_operation_ports import (
 )
 from .test_borrador_100 import BUCKET_ID, InMemoryBorradorRepository
 
+_YEAR = filing_year_envelope().horizon
+
 PROFILE_ID = UUID(BUCKET_ID)
 PROFILE_TAX_ID = "12345678Z"
 OTHER_TAX_ID = "00001005Q"
-CAPTURED_AT = datetime(2026, 10, 1, 12, tzinfo=UTC)
+CAPTURED_AT = datetime(_YEAR, 10, 1, 12, tzinfo=UTC)
 
 
 class SnapshotFence:

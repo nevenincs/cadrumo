@@ -21,6 +21,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_effects import fields_refused_by_classification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -38,12 +39,13 @@ from .action_port_fakes import (
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 from .iva_transaction_support import iva_transaction
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "fx0f0f0f-0000-4000-8000-00000000fx01"
 _IVA_RATE = Decimal("0.21")
-_YEAR = 2026
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _eur_income(label: str, *, base: Decimal) -> Transaction:

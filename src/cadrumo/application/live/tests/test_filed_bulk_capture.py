@@ -22,6 +22,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
@@ -68,6 +69,10 @@ from ..remote_state_models import (
 from ..session import SessionWriteReporter
 from .filed_observation_test_support import in_memory_filed_observation_test_bundle
 
+_YEAR = filing_year_envelope().horizon
+_FILED_YEAR = _YEAR - 1
+_EARLIER_YEAR = _FILED_YEAR - 1
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -76,8 +81,8 @@ class _Declaration:
     """Minimal inward register-row fake for application tests."""
 
     modelo: str = "303"
-    ejercicio: int = 2025
-    period: Period = field(default_factory=lambda: Period.from_year_and_code(2025, "1T"))
+    ejercicio: int = _FILED_YEAR
+    period: Period = field(default_factory=lambda: Period.from_year_and_code(_FILED_YEAR, "1T"))
     expediente_id: str = "12345678901234567890"
     estado: str = "ALTA"
     tipo_solicitud: str | None = None
@@ -88,7 +93,7 @@ class _Declaration:
     justificante_cell_index: int = 7
     archive_cell_index: int | None = 8
     declaration_copy_cell_index: int | None = None
-    presented_at: datetime = datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
+    presented_at: datetime = datetime(_FILED_YEAR, 4, 15, 9, 30, tzinfo=UTC)
 
 
 def _declaration() -> FiledRegisterDeclarationProtocol:
@@ -96,13 +101,13 @@ def _declaration() -> FiledRegisterDeclarationProtocol:
 
 
 def _assert_unsupported_surface_failures(report: BulkFiledDataCaptureReport | BulkFiledDataListingReport) -> None:
-    """Both modelos without an authenticated filed-declarations read surface fail for 2024."""
+    """Both modelos without an authenticated filed-declarations read surface fail for the earlier year."""
     failures = {failure.modelo: failure for failure in report.failures}
     assert set(failures) == {"151", "721"}
-    assert failures["151"].year == 2024
+    assert failures["151"].year == _EARLIER_YEAR
     assert failures["151"].error_type == "LiveApplicationInputError"
     assert "declares no authenticated filed-declarations read surface" in failures["151"].message
-    assert failures["721"].year == 2024
+    assert failures["721"].year == _EARLIER_YEAR
     assert failures["721"].error_type == "LiveApplicationInputError"
     assert "declares no authenticated filed-declarations read surface" in failures["721"].message
 
@@ -163,7 +168,7 @@ def test_revoked_filed_capture_discards_staged_bytes_before_any_local_write(tmp_
                     output_root=tmp_path,
                     dry_run=False,
                     modelo="303",
-                    year=2025,
+                    year=_FILED_YEAR,
                     failures=failures,
                     effect_guard=DeniedGuard,
                 )
@@ -193,7 +198,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
         walk_timeout_ms = 1000
 
         async def walk(self, *, modelo: str, ejercicio: int):
-            assert (modelo, ejercicio) == ("303", 2025)
+            assert (modelo, ejercicio) == ("303", _FILED_YEAR)
             return (_declaration(),)
 
         async def capture_observation_deferred(self, declaration):
@@ -224,7 +229,7 @@ def test_single_capture_revocation_after_remote_fetch_discards_bytes(
             capture_filed_data(
                 filed_data_port=cast(FiledDataCapturePort, Port()),
                 modelo="303",
-                year=2025,
+                year=_FILED_YEAR,
                 output_root=tmp_path,
                 ports=bundle.ports,
                 effect_guard=denied_guard,
@@ -262,7 +267,11 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
             on_session_write: SessionWriteReporter | None = None,
         ):
             del revision
-            assert (filing_year, period, operation) == (2025, Period.from_year_and_code(2025, "1T"), "live-filed-read")
+            assert (filing_year, period, operation) == (
+                _FILED_YEAR,
+                Period.from_year_and_code(_FILED_YEAR, "1T"),
+                "live-filed-read",
+            )
             assert effect_guard is denied_guard
             assert on_session_write is None
             events.append("remote")
@@ -276,8 +285,8 @@ def test_source_capture_revocation_after_remote_fetch_discards_batch(
             capture_source_filed_data(
                 filed_data_port=cast(FiledDataCapturePort, Port()),
                 modelo="303",
-                year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                year=_FILED_YEAR,
+                period=Period.from_year_and_code(_FILED_YEAR, "1T"),
                 output_root=tmp_path,
                 ports=bundle.ports,
                 effect_guard=denied_guard,
@@ -341,8 +350,8 @@ def test_source_capture_revocation_before_finalization_preserves_first_fence(
             capture_source_filed_data(
                 filed_data_port=cast(FiledDataCapturePort, Port()),
                 modelo="303",
-                year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                year=_FILED_YEAR,
+                period=Period.from_year_and_code(_FILED_YEAR, "1T"),
                 output_root=tmp_path,
                 ports=bundle.ports,
                 effect_guard=Guard,
@@ -374,7 +383,7 @@ def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: 
             walk_or_failure_row(
                 revoked(),
                 modelo="303",
-                year=2025,
+                year=_FILED_YEAR,
                 timeout_ms=1000,
                 failures=failures,
             )
@@ -398,22 +407,24 @@ def test_ended_aeat_session_stops_pair_walk_without_a_failure_row() -> None:
 
     failures: list[FiledDataCaptureFailureRow] = []
     with pytest.raises(LiveAeatSessionEndedError):
-        asyncio.run(walk_or_failure_row(login_wall(), modelo="303", year=2025, timeout_ms=1000, failures=failures))
+        asyncio.run(
+            walk_or_failure_row(login_wall(), modelo="303", year=_FILED_YEAR, timeout_ms=1000, failures=failures)
+        )
     assert failures == []
 
 
 def test_bulk_failure_row_preserves_declaration_coordinates() -> None:
     row = filed_data_capture_failure_row(
         modelo="303",
-        year=2025,
+        year=_FILED_YEAR,
         declaration=_declaration(),
         error=ValueError("AEAT row did not expose a justificante link"),
     )
 
     assert row == FiledDataCaptureFailureRow(
         modelo="303",
-        year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        year=_FILED_YEAR,
+        period=Period.from_year_and_code(_FILED_YEAR, "1T"),
         expediente_id="12345678901234567890",
         error_type="ValueError",
         message="AEAT row did not expose a justificante link",
@@ -426,7 +437,7 @@ def test_filed_register_walk_timeout_reports_modelo_year_context() -> None:
             await_filed_register_walk(
                 _slow_empty_declarations(),
                 modelo="303",
-                year=2026,
+                year=_YEAR,
                 timeout_ms=1,
             ),
         )
@@ -434,27 +445,27 @@ def test_filed_register_walk_timeout_reports_modelo_year_context() -> None:
     assert raised.value.surface == "filed_declarations_register_walk"
     assert raised.value.timeout_ms == 1
     assert raised.value.context is not None
-    assert raised.value.context["progress"] == {"modelo": "303", "year": 2026}
+    assert raised.value.context["progress"] == {"modelo": "303", "year": _YEAR}
 
 
 def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
     failure = filed_data_capture_failure_row(
         modelo="130",
-        year=2025,
+        year=_FILED_YEAR,
         error=RuntimeError("modelo not offered by AEAT form"),
     )
 
     report = BulkFiledDataCaptureReport(
         output_root="var/aeat/filed-declarations",
         modelos=("130", "303"),
-        year_from=2025,
-        year_to=2025,
+        year_from=_FILED_YEAR,
+        year_to=_FILED_YEAR,
         captured_count=1,
         reached_count=1,
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="130",
-                year=2025,
+                year=_FILED_YEAR,
                 walk_attempted=True,
                 walk_completed=False,
                 row_count=0,
@@ -463,7 +474,7 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
             ),
             FiledCapturePairOutcome(
                 modelo="303",
-                year=2025,
+                year=_FILED_YEAR,
                 walk_attempted=True,
                 walk_completed=True,
                 row_count=1,
@@ -472,11 +483,11 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
             ),
         ),
         failed_count=1,
-        observation_paths=("303/2025/1T/manifest.json",),
+        observation_paths=(f"303/{_FILED_YEAR}/1T/manifest.json",),
         artefact_refs=("sha256:abc123",),
         casilla_count=12,
         calculation_observation_count=1,
-        calculation_observation_keys=("303:2025:1T",),
+        calculation_observation_keys=(f"303:{_FILED_YEAR}:1T",),
         failures=(failure,),
     )
 
@@ -491,8 +502,8 @@ def test_bulk_report_counts_successes_and_failures_explicitly() -> None:
 def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(tmp_path: Path, dry_run: bool) -> None:
     report = asyncio.run(
         capture_filed_data_bulk(
-            year_from=2024,
-            year_to=2024,
+            year_from=_EARLIER_YEAR,
+            year_to=_EARLIER_YEAR,
             output_root=tmp_path,
             ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
             filed_data_port=bundle.filed_data_port,
@@ -524,8 +535,8 @@ def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path
     """
     report = asyncio.run(
         capture_filed_data_bulk(
-            year_from=2024,
-            year_to=2024,
+            year_from=_EARLIER_YEAR,
+            year_to=_EARLIER_YEAR,
             output_root=tmp_path,
             ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
             filed_data_port=bundle.filed_data_port,
@@ -539,8 +550,8 @@ def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path
 def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_path: Path) -> None:
     report = asyncio.run(
         capture_filed_data_bulk(
-            year_from=2024,
-            year_to=2024,
+            year_from=_EARLIER_YEAR,
+            year_to=_EARLIER_YEAR,
             output_root=tmp_path,
             ports=(bundle := in_memory_filed_observation_test_bundle()).ports,
             filed_data_port=bundle.filed_data_port,
@@ -560,8 +571,8 @@ def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries()
     report = asyncio.run(
         list_filed_data_bulk(
             filed_data_port=in_memory_filed_observation_test_bundle().filed_data_port,
-            year_from=2024,
-            year_to=2024,
+            year_from=_EARLIER_YEAR,
+            year_to=_EARLIER_YEAR,
             modelos=("151", "721"),
         ),
     )
@@ -591,15 +602,15 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
     )
 
     refusal = LiveApplicationError(
-        "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
+        f"declaraciones register modelo 100 ejercicio {_YEAR} rendered 3 row(s) but its pager "
         "declares 8 in total; refusing an under-reported filing history",
-        context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
+        context={"modelo": "100", "ejercicio": _YEAR, "rendered_count": 3, "declared_total": 8},
     )
 
-    row = filed_data_capture_failure_row(modelo="100", year=2026, error=refusal)
+    row = filed_data_capture_failure_row(modelo="100", year=_YEAR, error=refusal)
 
     assert row.modelo == "100"
-    assert row.year == 2026
+    assert row.year == _YEAR
     assert row.period is None
     assert row.expediente_id is None
     assert row.error_type == "LiveApplicationError"
@@ -612,9 +623,9 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
 async def _refusing_walk() -> tuple[FiledRegisterDeclarationProtocol, ...]:
     """A real walk coroutine that refuses the way a truncated register read does."""
     raise LiveApplicationError(
-        "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
+        f"declaraciones register modelo 100 ejercicio {_YEAR} rendered 3 row(s) but its pager "
         "declares 8 in total; refusing an under-reported filing history",
-        context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
+        context={"modelo": "100", "ejercicio": _YEAR, "rendered_count": 3, "declared_total": 8},
     )
 
 
@@ -641,7 +652,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
         walk_or_failure_row(
             _refusing_walk(),
             modelo="100",
-            year=2026,
+            year=_YEAR,
             timeout_ms=5_000,
             failures=failures,
         ),
@@ -656,7 +667,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
         walk_or_failure_row(
             _one_declaration_walk(),
             modelo="303",
-            year=2025,
+            year=_FILED_YEAR,
             timeout_ms=5_000,
             failures=failures,
         ),
@@ -773,15 +784,17 @@ def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
     from .. import filed_data_capture as capture_module
 
     monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
-    register = _AccountingRegister({("100", 2025): (_annual_declaration(2025, "1"), _annual_declaration(2025, "2"))})
+    register = _AccountingRegister(
+        {("100", _FILED_YEAR): (_annual_declaration(_FILED_YEAR, "1"), _annual_declaration(_FILED_YEAR, "2"))}
+    )
     repository = _AccountingRunRepository()
     bundle = in_memory_filed_observation_test_bundle()
     report = asyncio.run(
         capture_filed_data_bulk(
             filed_data_port=cast(FiledDataCapturePort, register),
             ports=bundle.ports,
-            year_from=2024,
-            year_to=2025,
+            year_from=_EARLIER_YEAR,
+            year_to=_FILED_YEAR,
             modelos=("100",),
             output_root=tmp_path,
             limit=1,
@@ -790,9 +803,9 @@ def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
         )
     )
     report.require_consistent()
-    assert register.walks == [("100", 2025)]
+    assert register.walks == [("100", _FILED_YEAR)]
     assert register.captures == ["12345678901234567891"]
-    assert [(pair.modelo, pair.year) for pair in report.pair_outcomes] == [("100", 2025), ("100", 2024)]
+    assert [(pair.modelo, pair.year) for pair in report.pair_outcomes] == [("100", _FILED_YEAR), ("100", _EARLIER_YEAR)]
     first, capped = report.pair_outcomes
     assert first.walk_attempted and first.walk_completed
     assert (first.row_count, first.reached_count, first.captured_count) == (2, 1, 0 if dry_run else 1)
@@ -805,10 +818,10 @@ def test_bulk_pair_accounting_distinguishes_preview_rows_and_unattempted_cap(
     discovery = FiledHistoryDiscoveryReport(
         pairs=(
             FiledHistoryDiscoveryPair(
-                modelo="100", ejercicio=2025, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+                modelo="100", ejercicio=_FILED_YEAR, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
             ),
             FiledHistoryDiscoveryPair(
-                modelo="100", ejercicio=2024, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+                modelo="100", ejercicio=_EARLIER_YEAR, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
             ),
         )
     )
@@ -831,7 +844,7 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
 
     monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: "11111111-1111-4111-8111-111111111111")
     register = _AccountingRegister(
-        {("100", 2025): (_annual_declaration(2025, "1"), _annual_declaration(2025, "2"))},
+        {("100", _FILED_YEAR): (_annual_declaration(_FILED_YEAR, "1"), _annual_declaration(_FILED_YEAR, "2"))},
         fail_capture="12345678901234567892" if failed_capture else None,
     )
     repository = _AccountingRunRepository()
@@ -840,8 +853,8 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
         capture_filed_data_bulk(
             filed_data_port=cast(FiledDataCapturePort, register),
             ports=bundle.ports,
-            year_from=2025,
-            year_to=2025,
+            year_from=_FILED_YEAR,
+            year_to=_FILED_YEAR,
             modelos=("100",),
             output_root=tmp_path,
             sync_run_repository=repository,
@@ -852,7 +865,7 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
     assert pair.walk_attempted and pair.walk_completed
     assert pair.row_count == 2
     assert pair.reached_count == pair.captured_count == (1 if failed_capture else 2)
-    assert report.calculation_observation_keys == ("100:2025:0A",)
+    assert report.calculation_observation_keys == (f"100:{_FILED_YEAR}:0A",)
     assert report.calculation_observation_count == 1
     assert len(report.observation_paths) == (1 if failed_capture else 2)
     assert len(register.captures) == 2
@@ -864,7 +877,7 @@ def test_bulk_pair_accounting_preserves_same_period_and_failed_capture_counts(
     discovery = FiledHistoryDiscoveryReport(
         pairs=(
             FiledHistoryDiscoveryPair(
-                modelo="100", ejercicio=2025, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+                modelo="100", ejercicio=_FILED_YEAR, signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
             ),
         )
     )
@@ -887,8 +900,8 @@ def test_bulk_pair_accounting_keeps_planning_refusals_and_failed_walks_distinct(
         capture_filed_data_bulk(
             filed_data_port=cast(FiledDataCapturePort, register),
             ports=in_memory_filed_observation_test_bundle().ports,
-            year_from=2025,
-            year_to=2025,
+            year_from=_FILED_YEAR,
+            year_to=_FILED_YEAR,
             modelos=("151", "100"),
             output_root=tmp_path,
             dry_run=True,
@@ -902,7 +915,7 @@ def test_bulk_pair_accounting_keeps_planning_refusals_and_failed_walks_distinct(
     assert [(pair.row_count, pair.reached_count, pair.captured_count) for pair in report.pair_outcomes] == [
         (0, 0, 0)
     ] * 2
-    assert register.walks == [("100", 2025)]
+    assert register.walks == [("100", _FILED_YEAR)]
     assert report.failed_count == 2
 
 
@@ -914,8 +927,8 @@ def test_bulk_capture_refuses_duplicate_coordinates_before_register_contact(tmp_
             capture_filed_data_bulk(
                 filed_data_port=cast(FiledDataCapturePort, register),
                 ports=in_memory_filed_observation_test_bundle().ports,
-                year_from=2025,
-                year_to=2025,
+                year_from=_FILED_YEAR,
+                year_to=_FILED_YEAR,
                 modelos=("100", "100"),
                 output_root=tmp_path,
                 dry_run=True,
@@ -939,8 +952,8 @@ def test_bulk_capture_effect_is_an_update_only_when_a_sync_run_was_recorded(
     report = BulkFiledDataCaptureReport(
         output_root="var/aeat/filed-declarations",
         modelos=("303",),
-        year_from=2025,
-        year_to=2025,
+        year_from=_FILED_YEAR,
+        year_to=_FILED_YEAR,
         captured_count=0,
         reached_count=0,
         failed_count=0,

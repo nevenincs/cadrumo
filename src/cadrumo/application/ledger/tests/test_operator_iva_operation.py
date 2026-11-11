@@ -21,6 +21,7 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef
@@ -41,6 +42,8 @@ from ..llm_classification_ports import OperatorIvaDerivationResult
 from ..models import ManualLedgerTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
 from .ledger_input_rule_support import current_transaction
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -333,7 +336,7 @@ def test_refusal_projection_correlates_normalized_request_profile_category_and_r
         revision=1,
         condition=OperationTerminalCondition.REFUSED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(2026, 4, 15, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
         refusal_ref=LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE,
         refusal_detail_ref="e" * 64,
     )

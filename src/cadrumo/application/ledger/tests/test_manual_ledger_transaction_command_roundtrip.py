@@ -38,9 +38,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.prorrata_exclusions import Art104TresExclusion
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.prorrata import InputClassification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..models import ManualLedgerTransactionCommand
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -50,8 +53,8 @@ def _populated_command() -> ManualLedgerTransactionCommand:
 
     return ManualLedgerTransactionCommand(
         bucket_id="bucket-fixture-001",
-        booked_date=date(2025, 4, 15),
-        value_date=date(2025, 4, 16),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 16),
         amount=Decimal("1234.56"),  # non-negative magnitude; flow is OUTGOING via direction
         currency="EUR",
         direction=TransactionDirection.OUTGOING,
@@ -82,7 +85,7 @@ def _populated_internal_transfer_command() -> ManualLedgerTransactionCommand:
 
     return ManualLedgerTransactionCommand(
         bucket_id="bucket-fixture-001",
-        booked_date=date(2025, 4, 20),
+        booked_date=date(_YEAR, 4, 20),
         amount=Decimal("5000.00"),
         direction=TransactionDirection.INTERNAL_TRANSFER,
         counterparty="Personal savings account",

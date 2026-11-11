@@ -6,9 +6,12 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_YEAR = filing_year_envelope().horizon
 
 
 def outgoing_manual_row(
@@ -22,7 +25,7 @@ def outgoing_manual_row(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id,
-        booked_date=date(2026, 3, 1),
+        booked_date=date(_YEAR, 3, 1),
         value_date=None,
         amount=amount,
         currency=currency,
@@ -33,7 +36,7 @@ def outgoing_manual_row(
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 3, 1, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 3, 1, tzinfo=UTC),
             provider_name="t",
         ),
         raw_fields={},
@@ -45,7 +48,7 @@ def outgoing_manual_row(
             "business_classification": classification,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": datetime(2026, 3, 1, tzinfo=UTC),
-            "modified_at": datetime(2026, 3, 1, tzinfo=UTC),
+            "created_at": datetime(_YEAR, 3, 1, tzinfo=UTC),
+            "modified_at": datetime(_YEAR, 3, 1, tzinfo=UTC),
         },
     )

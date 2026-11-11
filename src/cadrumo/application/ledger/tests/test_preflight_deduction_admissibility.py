@@ -23,11 +23,14 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory, IvaExemptionArticle
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +45,7 @@ def _classified_purchase(provider_id: str, **updates: object) -> Transaction:
     """An invoice-backed domestic purchase carrying an explicit deduction kind."""
     taxable_base = updates.pop("taxable_base", Decimal("100.00"))
     iva_amount = updates.pop("iva_amount", Decimal("21.00"))
-    booked_date = updates.pop("booked_date", date(2026, 4, 5))
+    booked_date = updates.pop("booked_date", date(_YEAR, 4, 5))
     assert isinstance(taxable_base, Decimal)
     assert isinstance(iva_amount, Decimal)
     assert isinstance(booked_date, date)
@@ -184,7 +187,7 @@ def test_readiness_ignores_a_row_outside_the_checked_period(*, operation: Pinned
         iva_rate=Decimal("0"),
         iva_category=IvaCategory("domestic_exempt"),
         exemption_article=IvaExemptionArticle("art_20_other"),
-        booked_date=date(2026, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
     )
 
     assert _reasons(exempt, operation=operation) == []

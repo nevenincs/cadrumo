@@ -24,6 +24,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.hashing import content_hash_hex
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -32,10 +33,12 @@ from ..actions_common import command_matches_current
 from ..actions_manual import SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, source_sha256, transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "29292929-2929-4929-8929-292929292929"
-_OCCURRED_AT = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+_OCCURRED_AT = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
 
 _PINNED_KEYLESS_SOURCE_SHA256 = "dedf4604c4542ee0a9a217d0a98051379ea06a9a9b41630c3e8831e7c1db04d4"
 _PINNED_KEYLESS_TRANSACTION_ID = "86e6744ebe5d8e82f4215fa0da243d77cb31b25af457dd6e569eff88783d87d5"
@@ -48,7 +51,7 @@ def _keyless_command(**overrides: object) -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand.model_validate(
         {
             "bucket_id": _BUCKET_ID,
-            "booked_date": date(2026, 5, 2),
+            "booked_date": date(_YEAR, 5, 2),
             "amount": Decimal("121.00"),
             "direction": TransactionDirection.OUTGOING,
             "description": "material oficina",
@@ -62,8 +65,8 @@ def _keyed_command(**overrides: object) -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand.model_validate(
         {
             "bucket_id": _BUCKET_ID,
-            "booked_date": date(2026, 5, 2),
-            "value_date": date(2026, 5, 3),
+            "booked_date": date(_YEAR, 5, 2),
+            "value_date": date(_YEAR, 5, 3),
             "amount": Decimal("121.00"),
             "currency": "EUR",
             "direction": TransactionDirection.OUTGOING,

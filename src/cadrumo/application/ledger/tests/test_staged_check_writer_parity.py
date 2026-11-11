@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.iva_deduction_fact import IvaDeductionFactKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.classification_effects import lifecycle_actions_taken
 from ....domain.transactions.classification_rule import require_new_rule_decision
@@ -33,9 +34,11 @@ from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatc
 from ..staged_check import TRANSFER_LOCKED_FIELDS, check_draft, check_stored_row
 from ..staged_check_contracts import LedgerStagedCell, LedgerStagedDraft, LedgerStagedDraftField, LedgerStagedRow
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(2026, 3, 2, 10, tzinfo=UTC)
+_NOW = datetime(_YEAR, 3, 2, 10, tzinfo=UTC)
 _BUCKET = str(uuid4())
 
 
@@ -48,7 +51,7 @@ def _stored(
     built = transaction_from_command(
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET,
-            booked_date=date(2026, 3, 2),
+            booked_date=date(_YEAR, 3, 2),
             amount=Decimal("36.30"),
             currency="EUR",
             direction=direction,
@@ -246,7 +249,7 @@ def test_a_set_for_all_skips_personal_for_what_its_write_drops_and_no_longer_ski
 def test_a_draft_transfer_is_held_for_what_the_writer_refuses_and_not_for_the_counterparty_state() -> None:
     def blockers(**fields: str) -> list[tuple[str, tuple[str, ...]]]:
         base = {
-            "booked_date": "2026-03-02",
+            "booked_date": date(_YEAR, 3, 2).isoformat(),
             "amount": "10",
             "currency": "EUR",
             "direction": _TRANSFER.value,

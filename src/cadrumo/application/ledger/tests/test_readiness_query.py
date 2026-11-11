@@ -23,6 +23,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -32,10 +33,12 @@ from ..readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 from .action_port_fakes import EmptyInvoiceRepository, empty_usage_ratio_profile
 from .in_memory_transaction_repository import InMemoryTransactionRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "77777777-7777-4777-8777-777777777777"
-_PERIOD = Period.from_year_and_code(2026, "0A")
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _transaction(
@@ -45,7 +48,7 @@ def _transaction(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
         value_date=None,
         amount=Decimal("121.00"),
         currency="EUR",
@@ -56,7 +59,7 @@ def _transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 2, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 2, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -68,8 +71,8 @@ def _transaction(
             "business_classification": classification,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": datetime(2026, 5, 2, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(2026, 5, 2, 9, 30, tzinfo=UTC),
+            "created_at": datetime(_YEAR, 5, 2, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(_YEAR, 5, 2, 9, 30, tzinfo=UTC),
         }
     )
 
