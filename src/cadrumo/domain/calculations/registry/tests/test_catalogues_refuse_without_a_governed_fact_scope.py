@@ -54,7 +54,6 @@ from ..entity_type import resolve_entity_vocabulary
 from ..eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..foreign_asset_obligation_catalogue import resolve_foreign_asset_obligation_catalogue
 from ..governed_fact_scope import GovernedFactSource, validating_governed_facts
-from ..inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ..invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ..irpf_income_categories import resolve_irpf_income_category_catalogue
@@ -347,10 +346,6 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         ),
     ),
     ("development_mock_software_identity", lambda authority: development_mock_software_identity(authority=authority)),
-    (
-        "inventory_anexo_d_filing_year",
-        lambda authority: inventory_anexo_d_applies(filing_year=_YEAR, authority=authority),
-    ),
     (
         "invoice_legal_mention_catalogue",
         lambda authority: invoice_legal_mention_declarations(_EFFECTIVE, authority=authority),

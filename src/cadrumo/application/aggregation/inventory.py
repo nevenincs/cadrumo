@@ -20,8 +20,6 @@ from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
@@ -67,6 +65,23 @@ class InventoryLedgerRepositoryProtocol(Protocol):
 
 def _inventory_bindings(context: CalculationSourceContext) -> tuple[BindingDefinition, ...]:
     return tuple(binding for binding in context.revision.bindings if binding.source is _SOURCE)
+
+
+def revision_carries_inventory_purchases(revision: ModeloRevision) -> bool:
+    """Whether the revision gives an inventory book's purchases a casilla of their own.
+
+    Only then may a ledger row a purchase claims leave the ledger expenses: the
+    book's acquisition-cost row reaches the casilla bound to it. An edition that
+    binds no such casilla declares the purchase through the ledger row.
+    """
+    acquisition = {
+        binding.id
+        for binding in revision.bindings
+        if isinstance(binding.provider, InventoryProvider) and binding.provider.row_field == "complete_acquisition_cost"
+    }
+    return any(
+        casilla.input_kind == InputKind.BOUND and casilla.binding in acquisition for casilla in revision.casillas
+    )
 
 
 def _profile_declares_no_activity_income(context: CalculationSourceContext) -> bool:
@@ -264,7 +279,6 @@ def _resolve_inventory_binding_template(
     coordinate_refusal = _inventory_coordinate_refusal(
         typed_bindings,
         binding_ids=binding_ids,
-        filing_year=filing_year,
         resolver_id=resolver_id,
         owned_sources=owned_sources,
     )
@@ -311,14 +325,14 @@ def _inventory_coordinate_refusal(
     typed_bindings: list[tuple[BindingDefinition, InventoryProvider]],
     *,
     binding_ids: tuple[str, ...],
-    filing_year: int,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution | None:
     # The declaration carries no authored year: it states timeless intent and the
-    # filing context supplies the coordinate. The year guard is therefore a guard
-    # on the temporal selector -- an inventory row template must rest on the
-    # target's own filing coordinate rather than shifting off it.
+    # filing context supplies the coordinate. An inventory row template must rest
+    # on the target's own filing coordinate rather than shifting off it. Whether
+    # the rows apply at all is the selected edition's: it declares these bindings
+    # only where its design carries the Anexo D casillas.
     if any(not isinstance(selector.temporal, SameTargetContext) for _binding, selector in typed_bindings):
         return _template_refusal_resolution(
             binding_ids,
@@ -326,21 +340,7 @@ def _inventory_coordinate_refusal(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )
-
-    # Refuse an inapplicable filing year here, before the encrypted ledger is
-    # read: the projection would refuse it anyway, but only after a load.
-    try:
-        applies = inventory_anexo_d_applies(filing_year=filing_year)
-    except RegistryValidationError:
-        applies = False
-    if applies:
-        return None
-    return _template_refusal_resolution(
-        binding_ids,
-        "inventory row template is not applicable for the filing year",
-        resolver_id=resolver_id,
-        owned_sources=owned_sources,
-    )
+    return None
 
 
 def _inventory_bindings_by_operation(
@@ -794,4 +794,4 @@ class InventorySourceResolver:
         )
 
 
-__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver"]
+__all__ = ["InventoryLedgerRepositoryProtocol", "InventorySourceResolver", "revision_carries_inventory_purchases"]

@@ -18,8 +18,6 @@ from ....core.decimal.constants import MONEY_ZERO
 from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.money.rounding import round_to_cents
-from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
 from ...identifiers import canonical_decimal_string
 from .anexo_d_records import InventoryAnexoDResult, resolve_inventory_authoritative_closing
 from .closing_authority_records import (
@@ -132,18 +130,6 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
 
 def _validate_anexo_d_ledger(ledger: InventoryLedger) -> InventoryLedger:
     """Validate the grounded year/source envelope and canonicalize movement order."""
-    try:
-        applies = inventory_anexo_d_applies(filing_year=ledger.year)
-    except RegistryValidationError as exc:
-        raise InventoryLedgerError(
-            "inventory Anexo D applicability is not declared for the filing year",
-            context={"actividad_id": ledger.actividad_id, "filing_year": ledger.year},
-        ) from exc
-    if not applies:
-        raise InventoryLedgerError(
-            "inventory Anexo D projection is not applicable for the filing year",
-            context={"actividad_id": ledger.actividad_id, "filing_year": ledger.year},
-        )
     out_of_period_movements = tuple(
         movement.movement_id for movement in ledger.period_movements if movement.movement_date.year != ledger.year
     )
