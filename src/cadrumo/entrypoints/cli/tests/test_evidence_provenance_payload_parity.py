@@ -18,6 +18,7 @@ JSON document rather than a re-validated model.
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -26,6 +27,7 @@ from ....application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ....application.ledger.invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..command_schema import command_schema_types
 from ..ledger_business_payloads import EvidenceConfirmResult
 
@@ -99,7 +101,7 @@ def test_the_confirm_envelope_body_carries_the_drafts_provenance() -> None:
         "invoice_id": "a" * 64,
         "kind": "received",
         "invoice_number": "0042",
-        "issued_at": "2026-03-14",
+        "issued_at": date(filing_year_envelope().horizon, 3, 14).isoformat(),
         "counterparty_name": "Proveedor Ejemplo SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
