@@ -728,6 +728,12 @@ errors:
     filing_export_boolean_in_text_slot: A(z) %{field} exportmező nem írhat logikai
       előállítói tényt egy %{length} bájtos szövegmezőbe. Az alkalmazás ezt a saját
       exportálási tervéből származtatja, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_schema_mismatch: Az exportálás olyan tervezetet kapott, amely
+      más modelldefiníciókból készült, mint amelyekkel kiírja. A tervezetet az alkalmazás
+      maga készíti és hagyja jóvá, ezért az adataid módosítása nem javítja ki.
+    filing_export_draft_unapproved: Az exportálás jóvá nem hagyott tervezetet kapott.
+      A tervezetet az alkalmazás maga készíti és hagyja jóvá, ezért az adataid módosítása
+      nem javítja ki.
     filing_export_envelope_closer_extent: A beadási boríték záró eleme nem a megadott
       %{extent} bájt hosszúságú. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
@@ -1496,6 +1502,9 @@ errors:
     refused_export_format: A kért exportálási sorosítási formátum nem támogatott.
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
+    refused_filing_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_filing_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{export_field_id}
       mező olyan partnert nevez meg, akinek nincs olyan bevallási neve, amelyet az
       AEAT nyilvántartási mintája ott elfogad. Add meg a partner bevallási nevét,
@@ -1688,6 +1697,9 @@ errors:
       időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
       meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
+    refused_modelo_export_casilla_value: 'Semmi sem íródott ki: egy általad megadott
+      mező olyan értéket tartalmaz, amelyet az exportálás nem tud a hivatalos terv
+      szerinti helyre írni. Add meg újra a mezőt, és exportálj újra.'
     refused_modelo_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{field_length}
       pozíció hosszú %{export_field_id} mező olyan partnert nevez meg, akinek nincs
       olyan bevallási neve, amelyet az AEAT nyilvántartási mintája elfogad. Add meg

@@ -36,7 +36,7 @@ from ...domain.filing.errors import (
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
-from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
+from .errors import FilingPreconditionCondition, casilla_value_refusal, filing_no_recovery_verdict
 from .m190_context_validation import require_m190_signed_reintegro_context
 from .m193_context_validation import require_m193_perceptor_devengo_context
 from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
@@ -387,9 +387,12 @@ def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[Casi
         )
     value = casilla_values.get(field.casilla_id)
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)) and not _is_blank(value):
-        # An empty block has no occurrence to carry this campo.
-        raise FilingExportValidationError(
-            f"export field {field.id!r} has a value but its block anchor {field.required_with!r} has none",
+        # An empty block has no occurrence to carry this campo; stating its
+        # anchor opens the block.
+        raise casilla_value_refusal(
+            field.required_with,
+            translated_message="application.filing.export.errors.block_anchor_unstated",
+            context={"field_id": field.id, "field_casilla_id": field.casilla_id},
         )
     return value
 

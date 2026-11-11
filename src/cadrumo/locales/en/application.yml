@@ -484,9 +484,12 @@ application:
       persistence: Filing history storage failed during %{operation} (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: Export requires an approved draft.
-        draft_snapshot_stale: Export requires a draft built from the modelo definitions
-          currently in use.
+        block_anchor_unstated: 'Nothing was written: box %{field_casilla_id} has a
+          value, but box %{casilla_id}, which opens its block, has none. Enter box
+          %{casilla_id}, or clear box %{field_casilla_id}, and export again.'
+        box_not_stated_by_rows: 'Nothing was written: box %{casilla_id} holds a value
+          the rows of %{element_path} do not add up to. Correct the box or the rows
+          so that each row states its own figures, and export again.'
         layout_not_renderable: This modelo cannot produce a local declaration export
           file.
         post_write_verification_refused: The check after writing rejected the exported

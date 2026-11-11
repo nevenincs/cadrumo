@@ -514,9 +514,14 @@ application:
         során (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.
-        draft_snapshot_stale: Az exportáláshoz a jelenleg használt nyomtatványdefiníciókból
-          készült piszkozat szükséges.
+        block_anchor_unstated: 'Semmi sem íródott ki: a(z) %{field_casilla_id} mezőnek
+          van értéke, de a blokkját megnyitó %{casilla_id} mezőnek nincs. Töltsd ki
+          a(z) %{casilla_id} mezőt, vagy ürítsd ki a(z) %{field_casilla_id} mezőt,
+          és exportálj újra.'
+        box_not_stated_by_rows: 'Semmi sem íródott ki: a(z) %{casilla_id} mező értéke
+          nem egyezik a(z) %{element_path} sorainak összegével. Javítsd a mezőt vagy
+          a sorokat úgy, hogy minden sor a saját összegeit adja meg, és exportálj
+          újra.'
         layout_not_renderable: Ez a nyomtatvány nem tud helyi bevallás-exportfájlt
           előállítani.
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.filing.errors import (
+    FilingExportCasillaValueRefusedError,
     FilingExportError,
     FilingExportFieldUnrenderableError,
     FilingExportIntegrityError,
@@ -15,6 +16,7 @@ from ..filing.producer_profile_facts import profile_facts_for_producer_key
 from ..operator_actions.models import PreconditionVerdict
 from .action_errors import ModeloProfileReadinessError
 from .export_contracts import (
+    ModeloExportCasillaValueRefusedError,
     ModeloExportCommand,
     ModeloExportDesignIntegrityError,
     ModeloExportFieldUnrenderableError,
@@ -146,6 +148,35 @@ def export_unrepresentable_character_refusal(
     )
 
 
+def export_casilla_value_refusal(
+    command: ModeloExportCommand, exc: FilingExportCasillaValueRefusedError
+) -> ModeloExportCasillaValueRefusedError:
+    """Refuse a box value the design cannot write, with the door that states that box again.
+
+    The served words say why the value cannot be written. The door binds the
+    box; the export knows its calculation revision, not the work unit, so the
+    operator names the work unit and the value.
+    """
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.casilla_value.refused",
+        evidence_id="modelo.export.casilla_value",
+        evidence_values={
+            "calculation_revision_id": command.calculation_revision_id,
+            "casilla_id": exc.casilla_id,
+            "writable": False,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values={"casilla_id": exc.casilla_id},
+        missing_action_arguments=("work_unit_id", "value"),
+    )
+    return ModeloExportCasillaValueRefusedError(
+        translated_message=exc.translated_message,
+        context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        precondition_failure=failure,
+    )
+
+
 def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportError) -> ModeloError | None:
     """Return the refusal for a value the record design cannot write, or ``None`` for any other failure."""
     if isinstance(exc, FilingExportUnrepresentableCharacterError):
@@ -156,4 +187,6 @@ def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportEr
         return export_design_integrity_refusal(command, exc)
     if isinstance(exc, FilingExportProfileFactMissingError):
         return export_profile_fact_missing_refusal(command, exc)
+    if isinstance(exc, FilingExportCasillaValueRefusedError):
+        return export_casilla_value_refusal(command, exc)
     return None

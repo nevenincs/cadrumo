@@ -508,6 +508,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportCasillaValueRefusedError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_CASILLA_VALUE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_casilla_value",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.filing.errors.FilingExportProfileFactMissingError",
         ErrorCode(
             code="REFUSED_FILING_EXPORT_PROFILE_FACT_MISSING",

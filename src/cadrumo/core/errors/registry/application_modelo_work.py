@@ -254,6 +254,16 @@ MODELO_WORK_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.export_contracts.ModeloExportCasillaValueRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_CASILLA_VALUE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_casilla_value",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export_contracts.ModeloExportUnrepresentableCharacterError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNREPRESENTABLE_CHARACTER",

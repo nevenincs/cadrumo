@@ -344,6 +344,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.declared_party_name.unstated",
         action_id="operator.ledger.counterparty.filing_name",
     ),
+    # A box the filer states holds a value the design cannot place; stating
+    # that box again on the work unit puts it right.
+    _profile(
+        "modelo.export",
+        "modelo.export.casilla_value.writable",
+        "modelo.export.casilla_value.refused",
+        action_id="operator.modelo.work.set_value",
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",

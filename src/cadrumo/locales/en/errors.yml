@@ -718,6 +718,12 @@ errors:
     filing_export_boolean_in_text_slot: The export field %{field} cannot write a boolean
       producer fact into a %{length}-byte text slot. The application derives this
       from its own export design, so no change to your data repairs it.
+    filing_export_draft_schema_mismatch: The export was handed a draft built from
+      other Modelo definitions than the ones it renders with. The application builds
+      and approves this draft itself, so no change to your data repairs it.
+    filing_export_draft_unapproved: The export was handed a draft that is not approved.
+      The application builds and approves this draft itself, so no change to your
+      data repairs it.
     filing_export_envelope_closer_extent: The filing-envelope closer does not render
       to the declared %{extent}-byte extent. The application derives this from its
       own export design, so no change to your data repairs it.
@@ -1461,6 +1467,9 @@ errors:
       export.
     refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
+    refused_filing_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_filing_export_declared_party_name: 'Nothing was written: field %{export_field_id}
       names a party with no filing name the AEAT record design can take there. State
       the party''s filing name and export again.'
@@ -1648,6 +1657,9 @@ errors:
       {payment_cutoff_legal_refs}) because the filing window sets none; on {export_on}
       the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
+    refused_modelo_export_casilla_value: 'Nothing was written: a box you state holds
+      a value the export cannot write as the official design places it. State that
+      box again and export again.'
     refused_modelo_export_declared_party_name: 'Nothing was written: field %{export_field_id},
       %{field_length} positions long, names a party with no filing name the AEAT record
       design can take. State or restate the party''s filing name and export again.'

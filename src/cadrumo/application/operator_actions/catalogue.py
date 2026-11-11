@@ -808,6 +808,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.set_value",
+            target_command_key="modelo.work.set_value",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="casilla_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="casilla_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.attest_prior_value",
             target_command_key="modelo.work.attest_prior_value",
             argument_specifications=(

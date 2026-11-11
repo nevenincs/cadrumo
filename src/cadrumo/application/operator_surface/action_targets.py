@@ -291,6 +291,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         required_inputs=("work_unit_id", "binding_id", "value"),
         profile_bound_write=True,
     ),
+    ActionTarget(
+        "modelo.work.set_value",
+        ("app", "modelo", "work", "set-value"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "casilla_id", "value"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
     ActionTarget("modelo.work.status", ("app", "modelo", "work", "status"), "WorkStatusResult"),
     ActionTarget(

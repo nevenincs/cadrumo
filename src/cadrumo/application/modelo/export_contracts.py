@@ -235,6 +235,14 @@ class ModeloExportUnrepresentableCharacterError(ModeloPreconditionErrorMixin, Mo
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
+class ModeloExportCasillaValueRefusedError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: the value of one box the filer states cannot be written as the official design places it.
+
+    Nothing is written. The served words say why, and the door states that
+    box's value again on the declaration's work unit.
+    """
+
+
 class ModeloExportFieldUnrenderableError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Integrity: the official record design and a value disagree, so a field cannot be written.
 

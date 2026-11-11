@@ -519,9 +519,14 @@ application:
         %{operation} (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: L'exportació requereix un esborrany aprovat.
-        draft_snapshot_stale: L'exportació requereix un esborrany construït amb les
-          definicions del model en ús.
+        block_anchor_unstated: 'No s''ha escrit res: la casella %{field_casilla_id}
+          té un valor, però la casella %{casilla_id}, que obre el seu bloc, no en
+          té cap. Omple la casella %{casilla_id}, o buida la casella %{field_casilla_id},
+          i torna a exportar.'
+        box_not_stated_by_rows: 'No s''ha escrit res: la casella %{casilla_id} té
+          un valor que les files de %{element_path} no sumen. Corregeix la casella
+          o les files perquè cada fila indiqui les seves pròpies xifres, i torna a
+          exportar.'
         layout_not_renderable: Aquest model no pot produir un fitxer local d'exportació
           de la declaració.
         post_write_verification_refused: La comprovació posterior a l'escriptura ha

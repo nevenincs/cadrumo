@@ -521,9 +521,13 @@ application:
         %{operation} (%{adapter_error}).
     export:
       errors:
-        draft_not_approved: La exportación requiere un borrador aprobado.
-        draft_snapshot_stale: La exportación requiere un borrador construido con las
-          definiciones del modelo en uso.
+        block_anchor_unstated: 'No se ha escrito nada: la casilla %{field_casilla_id}
+          tiene un valor, pero la casilla %{casilla_id}, que abre su bloque, no tiene
+          ninguno. Rellena la casilla %{casilla_id}, o vacía la casilla %{field_casilla_id},
+          y vuelve a exportar.'
+        box_not_stated_by_rows: 'No se ha escrito nada: la casilla %{casilla_id} tiene
+          un valor que las filas de %{element_path} no suman. Corrige la casilla o
+          las filas para que cada fila indique sus propias cifras, y vuelve a exportar.'
         layout_not_renderable: Este modelo no puede producir un fichero local de exportación
           de la declaración.
         post_write_verification_refused: La comprobación posterior a la escritura
