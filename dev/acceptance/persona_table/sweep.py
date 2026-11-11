@@ -76,6 +76,7 @@ from .rows import (
     PlannedRow,
     Stage,
     TableRow,
+    in_force,
     is_unsupported,
     not_run,
     planned_rows,
@@ -148,18 +149,15 @@ def _short(error: BaseException) -> str:
 
 
 def _values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
-    """The persona's counterparty-free stated values for the planned return, read under the replay's envelope."""
-    found = []
-    for value in persona.expectations.values:
-        if value.counterparty is not None or value.modelo != plan.modelo or value.period != plan.period:
-            continue
-        try:
-            year = value.year.resolve(envelope)
-        except PersonaCatalogueError:
-            continue
-        if year == plan.year:
-            found.append(value)
-    return found
+    """The persona's counterparty-free stated values in force for the planned return, under the replay's envelope."""
+    return [
+        value
+        for year, value in in_force(persona.expectations.values, envelope)
+        if value.counterparty is None
+        and value.modelo == plan.modelo
+        and value.period == plan.period
+        and year == plan.year
+    ]
 
 
 def _m303_evidence(

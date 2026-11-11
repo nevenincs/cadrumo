@@ -16,7 +16,14 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope, YearToken
+from cadrumo.tests.personas import (
+    ExpectedValue,
+    Persona,
+    PersonaCatalogueError,
+    YearEnvelope,
+    YearToken,
+    values_in_force,
+)
 
 
 class Stage(StrEnum):
@@ -240,10 +247,10 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
-    for value in persona.expectations.values:
+    for year, value in in_force(persona.expectations.values, shifted):
         if value.counterparty is not None:
             continue
-        key = (value.modelo, _year(value.year, shifted), value.period)
+        key = (value.modelo, year, value.period)
         found = stated.setdefault(key, [])
         if value.casillas or value.not_sourced or value.refusal is not None:
             found.append(value)
@@ -271,6 +278,12 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
             )
         )
     return rows
+
+
+def in_force(values: Sequence[ExpectedValue], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
+    """The stated values whose year lies in ``envelope``, as the law of that year holds them, with that year."""
+    inside = tuple(value for value in values if _year(value.year, envelope) is not None)
+    return values_in_force(inside, envelope)
 
 
 def _grounding(values: Sequence[ExpectedValue]) -> str:
@@ -339,6 +352,7 @@ __all__ = [
     "TableRow",
     "Verdict",
     "classify",
+    "in_force",
     "is_unsupported",
     "latest_rows",
     "not_run",
