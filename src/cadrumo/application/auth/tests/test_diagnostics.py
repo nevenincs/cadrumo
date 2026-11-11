@@ -58,11 +58,11 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
         "diagnostic_id": "diag-rt-001",
         "reason": "push-wait-state-not-reached",
         "url": aeat_url("www2", configured_path("sede_paths", "clave_movil_login")),
-        "captured_at": "2026-05-28T10:00:00+00:00",
+        "captured_at": "1980-05-28T10:00:00+00:00",
         "html": "<html><body>page</body></html>",
         "screenshot_png_base64": "aW1hZ2U=",
         "auth_attempt": {"auth_mode": "non_qr", "headless": True, "timeout_ms": 120000},
-        "operator_report": {"phone_state": "app_did_not_prompt", "reported_at": "2026-05-28T11:00:00+00:00"},
+        "operator_report": {"phone_state": "app_did_not_prompt", "reported_at": "1980-05-28T11:00:00+00:00"},
         "phone_state": "",
     }
 
@@ -122,7 +122,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
             id="captured_at_not_iso",
         ),
         pytest.param(
-            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "2026-08-13T09:00:00"},
+            lambda: {"diagnostic_id": "diag-1", "reason": "r", "captured_at": "1980-08-13T09:00:00"},
             {"validation_rule": "utc_aware_instant", "field": "captured_at"},
             id="captured_at_naive",
         ),
@@ -130,7 +130,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
             lambda: {
                 "diagnostic_id": "diag-1",
                 "reason": "r",
-                "captured_at": "2026-08-13T09:00:00+00:00",
+                "captured_at": "1980-08-13T09:00:00+00:00",
                 "phone_state": "not_a_known_state",
             },
             {
@@ -144,7 +144,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
             lambda: {
                 "diagnostic_id": "diag-1",
                 "reason": "r",
-                "captured_at": "2026-08-13T09:00:00+00:00",
+                "captured_at": "1980-08-13T09:00:00+00:00",
                 "phone_state": "app_did_not_prompt",
             },
             {"validation_rule": "browser_proven_state_requires_landing_source", "phone_state_source": ""},
@@ -154,7 +154,7 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
             lambda: {
                 "diagnostic_id": "diag-1",
                 "reason": "r",
-                "captured_at": "2026-08-13T09:00:00+00:00",
+                "captured_at": "1980-08-13T09:00:00+00:00",
                 "phone_state": "app_did_not_prompt",
                 "phone_state_source": "aeat_authenticated_landing",
             },

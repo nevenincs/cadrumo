@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_SETTLED_AT = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_SETTLED_AT = datetime(1980, 9, 29, 12, tzinfo=UTC)
 
 
 async def _unopened_browser_session(settings: Settings) -> BrowserSessionPort:

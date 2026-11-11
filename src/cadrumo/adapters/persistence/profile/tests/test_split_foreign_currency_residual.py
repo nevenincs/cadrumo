@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.currency.models import EurRateLookup, EurRateLookupStatus
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -32,6 +33,8 @@ from cadrumo.domain.transactions.models import Transaction
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....application.ledger.tests.transaction_row_support import outgoing_manual_row
 from .split_test_support import BUCKET_ID, repositories
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -48,7 +51,7 @@ class _Rate:
             rate_date=rate_date,
             source=self.rate_source_id,
             rate=self._rate,
-            observation_date=date(2026, 5, 1),
+            observation_date=date(_YEAR, 5, 1),
         )
 
 
@@ -62,7 +65,7 @@ def _split_usd_parent(
     transaction_repository, event_repository = repositories(secure_objects)
     command = ManualLedgerTransactionCommand(
         bucket_id=BUCKET_ID,
-        booked_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
         amount=Decimal(parent_amount),
         currency="USD",
         direction=TransactionDirection.OUTGOING,
@@ -79,7 +82,7 @@ def _split_usd_parent(
         parent = create_manual_transaction(
             command,
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(1980, 5, 4, 9, 30, tzinfo=UTC),
             currency_normalizer=CurrencyNormalizationService(rate_provider=_Rate(rate)),
         )
         return (
@@ -92,7 +95,7 @@ def _split_usd_parent(
                 ),
                 actor="operator-A",
                 ports=ports,
-                occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+                occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
             ),
             parent,
         )

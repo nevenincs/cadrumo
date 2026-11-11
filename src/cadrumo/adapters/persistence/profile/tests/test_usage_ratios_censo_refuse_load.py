@@ -18,6 +18,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.usage_ratios.errors import CensoRatioMismatchError
 from .....domain.usage_ratios.model import UsageRatioProfile
@@ -28,6 +29,8 @@ from ..usage_ratios import (
     load_usage_ratios_with_censo_guard,
     save_usage_ratios_with_secure_object_writes,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -51,7 +54,7 @@ def test_load_returns_profile_when_no_home_office_overrides(
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=None,
-        year=2025,
+        year=_YEAR,
         operation=authority_operation,
     )
 
@@ -71,7 +74,7 @@ def test_refuses_when_censo_unset_but_home_office_override_persisted(
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
-            year=2025,
+            year=_YEAR,
             operation=authority_operation,
         )
 
@@ -99,7 +102,7 @@ def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted(
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
-            year=2025,
+            year=_YEAR,
             operation=authority_operation,
         )
 
@@ -120,7 +123,7 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value(
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
-        year=2025,
+        year=_YEAR,
         operation=authority_operation,
     )
 
@@ -148,7 +151,7 @@ def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_per
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
-            year=2025,
+            year=_YEAR,
             operation=authority_operation,
         )
 
@@ -169,7 +172,7 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
-        year=2025,
+        year=_YEAR,
         operation=authority_operation,
     )
 
@@ -189,7 +192,7 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived(
         load_usage_ratios_with_censo_guard(
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=Decimal("0.20"),
-            year=2025,
+            year=_YEAR,
             operation=authority_operation,
         )
 
@@ -216,7 +219,7 @@ def test_accepts_when_persisted_matches_censo_derived_value(
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
-        year=2025,
+        year=_YEAR,
         operation=authority_operation,
     )
 

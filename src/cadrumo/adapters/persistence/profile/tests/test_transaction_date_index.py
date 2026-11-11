@@ -29,6 +29,7 @@ import pytest
 from sqlalchemy import delete, event, select
 from sqlalchemy import inspect as sa_inspect
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -37,6 +38,9 @@ from ...storage.sql.session import session_scope
 from ...storage.sql.tables import metadata, transaction_date_index_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
+
+_YEAR = filing_year_envelope().horizon
+_PRIOR = _YEAR - 1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
@@ -73,7 +77,7 @@ def _raw(provider_id: str, filing_date: date, amount: Decimal, description: str)
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 1, 1, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 1, 1, 9, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
@@ -121,7 +125,7 @@ def _cash_accounting_transaction(
                     recargo_amount=Decimal("0.00"),
                 ),
             ),
-            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -159,22 +163,22 @@ def test_load_for_date_range_returns_exactly_the_in_window_transactions(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         inside_q1 = dated_transaction(
-            provider_id="row-q1", filing_date=date(2024, 2, 10), amount=Decimal("10.00"), description="Q1 expense"
+            provider_id="row-q1", filing_date=date(_YEAR, 2, 10), amount=Decimal("10.00"), description="Q1 expense"
         )
         inside_q1_edge = dated_transaction(
             provider_id="row-q1-edge",
-            filing_date=date(2024, 3, 31),
+            filing_date=date(_YEAR, 3, 31),
             amount=Decimal("20.00"),
             description="Q1 last day",
         )
         outside_q2 = dated_transaction(
-            provider_id="row-q2", filing_date=date(2024, 4, 1), amount=Decimal("30.00"), description="Q2 expense"
+            provider_id="row-q2", filing_date=date(_YEAR, 4, 1), amount=Decimal("30.00"), description="Q2 expense"
         )
         catalogue = TransactionCatalogue.from_transactions([inside_q1, inside_q1_edge, outside_q2])
         repo.save(catalogue)
 
         filtered = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
-            date(2024, 1, 1), date(2024, 3, 31)
+            date(_YEAR, 1, 1), date(_YEAR, 3, 31)
         )
 
     assert set(filtered.transactions) == {inside_q1.transaction_id, inside_q1_edge.transaction_id}
@@ -209,7 +213,7 @@ def test_load_for_date_range_matches_full_load_filtered_in_memory(
         ]
         repo.save(TransactionCatalogue.from_transactions(rows))
 
-        start, end = date(2023, 1, 1), date(2024, 12, 31)
+        start, end = date(_PRIOR, 1, 1), date(_YEAR, 12, 31)
         via_index = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(start, end)
         full = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
@@ -231,7 +235,7 @@ def test_load_by_ids_matches_exact_full_catalogue_subset_and_omits_missing(
         rows = [
             dated_transaction(
                 provider_id=f"targeted-{index}",
-                filing_date=date(2024, index + 1, 15),
+                filing_date=date(_YEAR, index + 1, 15),
                 amount=Decimal(index + 1),
                 description=f"targeted row {index}",
             )
@@ -258,7 +262,7 @@ def test_date_index_is_co_written_atomically_with_save(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = dated_transaction(
-            provider_id="row-atomic", filing_date=date(2024, 5, 20), amount=Decimal("15.00"), description="expense"
+            provider_id="row-atomic", filing_date=date(_YEAR, 5, 20), amount=Decimal("15.00"), description="expense"
         )
         repo.save(TransactionCatalogue.from_transactions([txn]))
 
@@ -273,8 +277,8 @@ def test_date_index_is_co_written_atomically_with_save(
     assert len(rows) == 1
     (row,) = rows
     assert row.transaction_id == txn.transaction_id
-    assert row.filing_date == date(2024, 5, 20)
-    assert row.filing_year == 2024
+    assert row.filing_date == date(_YEAR, 5, 20)
+    assert row.filing_year == _YEAR
 
 
 def test_load_for_date_range_falls_back_to_full_scan_when_index_is_missing(
@@ -293,10 +297,10 @@ def test_load_for_date_range_falls_back_to_full_scan_when_index_is_missing(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         inside = dated_transaction(
-            provider_id="row-fallback-in", filing_date=date(2024, 2, 1), amount=Decimal("9.00"), description="in"
+            provider_id="row-fallback-in", filing_date=date(_YEAR, 2, 1), amount=Decimal("9.00"), description="in"
         )
         outside = dated_transaction(
-            provider_id="row-fallback-out", filing_date=date(2024, 6, 1), amount=Decimal("11.00"), description="out"
+            provider_id="row-fallback-out", filing_date=date(_YEAR, 6, 1), amount=Decimal("11.00"), description="out"
         )
         repo.save(TransactionCatalogue.from_transactions([inside, outside]))
 
@@ -316,7 +320,7 @@ def test_load_for_date_range_falls_back_to_full_scan_when_index_is_missing(
         assert remaining == [], "fixture must actually drop the index for this proof to be meaningful"
 
         via_fallback = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
-            date(2024, 1, 1), date(2024, 3, 31)
+            date(_YEAR, 1, 1), date(_YEAR, 3, 31)
         )
 
     assert set(via_fallback.transactions) == {inside.transaction_id}
@@ -336,7 +340,7 @@ def test_date_index_unchanged_transaction_row_is_not_rewritten(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         txn = dated_transaction(
-            provider_id="row-stable", filing_date=date(2024, 3, 3), amount=Decimal("42.00"), description="stable"
+            provider_id="row-stable", filing_date=date(_YEAR, 3, 3), amount=Decimal("42.00"), description="stable"
         )
         catalogue = TransactionCatalogue.from_transactions([txn])
         repo.save(catalogue)
@@ -370,12 +374,12 @@ def test_date_index_updates_when_filing_date_changes(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         original_txn = dated_transaction(
-            provider_id="row-moved", filing_date=date(2024, 1, 5), amount=Decimal("60.00"), description="moved"
+            provider_id="row-moved", filing_date=date(_YEAR, 1, 5), amount=Decimal("60.00"), description="moved"
         )
         repo.save(TransactionCatalogue.from_transactions([original_txn]))
 
         moved_raw = original_txn.raw.model_copy(
-            update={"booked_date": date(2024, 8, 20), "value_date": date(2024, 8, 20)}
+            update={"booked_date": date(_YEAR, 8, 20), "value_date": date(_YEAR, 8, 20)}
         )
         moved_payload = original_txn.model_dump(mode="python")
         moved_payload["raw"] = moved_raw
@@ -394,7 +398,7 @@ def test_date_index_updates_when_filing_date_changes(
     assert len(index_rows) == 1
     (transaction_id, filing_date) = index_rows[0]
     assert transaction_id == moved_txn.transaction_id
-    assert filing_date == date(2024, 8, 20)
+    assert filing_date == date(_YEAR, 8, 20)
 
 
 def test_partition_by_date_range_splits_in_window_and_out_of_window(
@@ -410,15 +414,15 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         inside_q1 = dated_transaction(
-            provider_id="row-q1", filing_date=date(2024, 2, 10), amount=Decimal("10.00"), description="Q1 expense"
+            provider_id="row-q1", filing_date=date(_YEAR, 2, 10), amount=Decimal("10.00"), description="Q1 expense"
         )
         outside_q2 = dated_transaction(
-            provider_id="row-q2", filing_date=date(2024, 4, 1), amount=Decimal("30.00"), description="Q2 expense"
+            provider_id="row-q2", filing_date=date(_YEAR, 4, 1), amount=Decimal("30.00"), description="Q2 expense"
         )
         repo.save(TransactionCatalogue.from_transactions([inside_q1, outside_q2]))
 
         partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
-            date(2024, 1, 1), date(2024, 3, 31)
+            date(_YEAR, 1, 1), date(_YEAR, 3, 31)
         )
 
     assert partition.index_complete is True
@@ -427,11 +431,11 @@ def test_partition_by_date_range_splits_in_window_and_out_of_window(
     assert len(partition.out_of_window) == 1
     out_of_window_projection = partition.out_of_window[0]
     assert out_of_window_projection.transaction_id == outside_q2.transaction_id
-    assert out_of_window_projection.filing_date == date(2024, 4, 1)
+    assert out_of_window_projection.filing_date == date(_YEAR, 4, 1)
     assert partition.out_of_window_summary is not None
     assert partition.out_of_window_summary.count == 1
-    assert partition.out_of_window_summary.min_filing_date == date(2024, 4, 1)
-    assert partition.out_of_window_summary.max_filing_date == date(2024, 4, 1)
+    assert partition.out_of_window_summary.min_filing_date == date(_YEAR, 4, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(_YEAR, 4, 1)
 
 
 def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
@@ -443,25 +447,25 @@ def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         inside_jan = dated_transaction(
             provider_id="row-batch-jan",
-            filing_date=date(2024, 1, 10),
+            filing_date=date(_YEAR, 1, 10),
             amount=Decimal("10.00"),
             description="batch jan",
         )
         inside_mar = dated_transaction(
             provider_id="row-batch-mar",
-            filing_date=date(2024, 3, 31),
+            filing_date=date(_YEAR, 3, 31),
             amount=Decimal("20.00"),
             description="batch mar",
         )
         outside_apr = dated_transaction(
             provider_id="row-batch-apr",
-            filing_date=date(2024, 4, 1),
+            filing_date=date(_YEAR, 4, 1),
             amount=Decimal("30.00"),
             description="batch apr",
         )
         outside_dec = dated_transaction(
             provider_id="row-batch-dec",
-            filing_date=date(2024, 12, 20),
+            filing_date=date(_YEAR, 12, 20),
             amount=Decimal("40.00"),
             description="batch dec",
         )
@@ -476,7 +480,7 @@ def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
         event.listen(engine, "before_cursor_execute", collect_statement)
         try:
             partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
-                date(2024, 1, 1), date(2024, 3, 31)
+                date(_YEAR, 1, 1), date(_YEAR, 3, 31)
             )
         finally:
             event.remove(engine, "before_cursor_execute", collect_statement)
@@ -488,11 +492,11 @@ def test_partition_by_date_range_uses_one_targeted_secure_object_batch(
     assert partition.in_window.transactions[inside_jan.transaction_id] == inside_jan
     assert partition.in_window.transactions[inside_mar.transaction_id] == inside_mar
     assert {row.transaction_id for row in partition.out_of_window} == expected_out_of_window
-    assert {row.filing_date for row in partition.out_of_window} == {date(2024, 4, 1), date(2024, 12, 20)}
+    assert {row.filing_date for row in partition.out_of_window} == {date(_YEAR, 4, 1), date(_YEAR, 12, 20)}
     assert partition.out_of_window_summary is not None
     assert partition.out_of_window_summary.count == 2
-    assert partition.out_of_window_summary.min_filing_date == date(2024, 4, 1)
-    assert partition.out_of_window_summary.max_filing_date == date(2024, 12, 20)
+    assert partition.out_of_window_summary.min_filing_date == date(_YEAR, 4, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(_YEAR, 12, 20)
 
     secure_object_selects = [
         statement for statement in statements if "from secure_objects" in statement and statement.startswith("select")
@@ -526,7 +530,7 @@ def test_partition_by_date_range_matches_full_load_filtered_in_memory(
         ]
         repo.save(TransactionCatalogue.from_transactions(rows))
 
-        start, end = date(2023, 1, 1), date(2024, 12, 31)
+        start, end = date(_PRIOR, 1, 1), date(_YEAR, 12, 31)
         partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(start, end)
         full = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
@@ -569,10 +573,10 @@ def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         inside = dated_transaction(
-            provider_id="row-stale-in", filing_date=date(2024, 2, 1), amount=Decimal("9.00"), description="in"
+            provider_id="row-stale-in", filing_date=date(_YEAR, 2, 1), amount=Decimal("9.00"), description="in"
         )
         outside = dated_transaction(
-            provider_id="row-stale-out", filing_date=date(2024, 6, 1), amount=Decimal("11.00"), description="out"
+            provider_id="row-stale-out", filing_date=date(_YEAR, 6, 1), amount=Decimal("11.00"), description="out"
         )
         repo.save(TransactionCatalogue.from_transactions([inside, outside]))
 
@@ -603,7 +607,7 @@ def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
         )
 
         partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
-            date(2024, 1, 1), date(2024, 3, 31)
+            date(_YEAR, 1, 1), date(_YEAR, 3, 31)
         )
 
     assert partition.index_complete is False
@@ -611,11 +615,11 @@ def test_partition_by_date_range_falls_back_to_full_scan_on_stale_index(
     assert partition.in_window.transactions[inside.transaction_id] == inside
     assert len(partition.out_of_window) == 1
     assert partition.out_of_window[0].transaction_id == outside.transaction_id
-    assert partition.out_of_window[0].filing_date == date(2024, 6, 1)
+    assert partition.out_of_window[0].filing_date == date(_YEAR, 6, 1)
     assert partition.out_of_window_summary is not None
     assert partition.out_of_window_summary.count == 1
-    assert partition.out_of_window_summary.min_filing_date == date(2024, 6, 1)
-    assert partition.out_of_window_summary.max_filing_date == date(2024, 6, 1)
+    assert partition.out_of_window_summary.min_filing_date == date(_YEAR, 6, 1)
+    assert partition.out_of_window_summary.max_filing_date == date(_YEAR, 6, 1)
 
 
 def test_date_index_removes_row_for_deleted_transaction(
@@ -626,10 +630,10 @@ def test_date_index_removes_row_for_deleted_transaction(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         keep = dated_transaction(
-            provider_id="row-keep", filing_date=date(2024, 3, 1), amount=Decimal("1.00"), description="keep"
+            provider_id="row-keep", filing_date=date(_YEAR, 3, 1), amount=Decimal("1.00"), description="keep"
         )
         drop = dated_transaction(
-            provider_id="row-drop", filing_date=date(2024, 3, 2), amount=Decimal("2.00"), description="drop"
+            provider_id="row-drop", filing_date=date(_YEAR, 3, 2), amount=Decimal("2.00"), description="drop"
         )
         repo.save(TransactionCatalogue.from_transactions([keep, drop]))
         repo.save(TransactionCatalogue.from_transactions([keep]))
@@ -663,7 +667,7 @@ def test_eligible_span_equals_filing_date_for_a_row_without_a_timing_override(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         plain = dated_transaction(
             provider_id="row-plain",
-            filing_date=date(2026, 4, 15),
+            filing_date=date(_YEAR, 4, 15),
             amount=Decimal("100.00"),
             description="plain expense",
         )
@@ -680,9 +684,9 @@ def test_eligible_span_equals_filing_date_for_a_row_without_a_timing_override(
             ).one()
 
     filing_date, eligible_from, eligible_to = row
-    assert filing_date == date(2026, 4, 15)
-    assert eligible_from == date(2026, 4, 15)
-    assert eligible_to == date(2026, 4, 15)
+    assert filing_date == date(_YEAR, 4, 15)
+    assert eligible_from == date(_YEAR, 4, 15)
+    assert eligible_to == date(_YEAR, 4, 15)
 
 
 def test_partition_keeps_a_cash_accounting_row_whose_devengo_precedes_its_filing_date(
@@ -698,15 +702,15 @@ def test_partition_keeps_a_cash_accounting_row_whose_devengo_precedes_its_filing
     full-scan fallback -- because the fallback carried the identical defect.
     """
 
-    q1_start, q1_end = date(2026, 1, 1), date(2026, 3, 31)
+    q1_start, q1_end = date(_YEAR, 1, 1), date(_YEAR, 3, 31)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         cash_sale = _cash_accounting_transaction(
             provider_id="row-cash",
-            filing_date=date(2026, 4, 15),
-            operation_date=date(2026, 3, 20),
-            payment_date=date(2026, 4, 15),
+            filing_date=date(_YEAR, 4, 15),
+            operation_date=date(_YEAR, 3, 20),
+            payment_date=date(_YEAR, 4, 15),
         )
         repo.save(TransactionCatalogue.from_transactions([cash_sale]))
 
@@ -745,14 +749,14 @@ def test_partition_excludes_a_cash_accounting_row_with_no_date_in_the_window(
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         cash_sale = _cash_accounting_transaction(
             provider_id="row-cash-late",
-            filing_date=date(2026, 4, 15),
-            operation_date=date(2026, 3, 20),
-            payment_date=date(2026, 4, 15),
+            filing_date=date(_YEAR, 4, 15),
+            operation_date=date(_YEAR, 3, 20),
+            payment_date=date(_YEAR, 4, 15),
         )
         repo.save(TransactionCatalogue.from_transactions([cash_sale]))
 
         partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
-            date(2025, 1, 1), date(2025, 12, 31)
+            date(_PRIOR, 1, 1), date(_PRIOR, 12, 31)
         )
 
     assert partition.index_complete is True

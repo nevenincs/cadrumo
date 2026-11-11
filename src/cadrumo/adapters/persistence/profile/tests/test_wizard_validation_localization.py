@@ -77,7 +77,7 @@ def test_bad_date_answer_maps_to_localized_invalid_date_key(
 ) -> None:
     """A malformed ISO date surfaces the ``wizard.errors.invalid_date`` rendering."""
     message = _refusal_message(
-        (*_BASE_EDIT_ARGS, "--taxpayer-marriage-date", "31/12/2020"),
+        (*_BASE_EDIT_ARGS, "--taxpayer-marriage-date", "31/12/1980"),
         tmp_path,
         registry_setup_flow=registry_setup_flow,
         operation=operation,
@@ -85,7 +85,7 @@ def test_bad_date_answer_maps_to_localized_invalid_date_key(
     expected = tr(
         "wizard.errors.invalid_date",
         flag="--taxpayer-marriage-date",
-        got="31/12/2020",
+        got="31/12/1980",
         locale=_LOCALE,
     )
     assert expected in message
