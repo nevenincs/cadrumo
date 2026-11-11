@@ -35,6 +35,7 @@ from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormCellKind
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import (
@@ -77,6 +78,10 @@ from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_YEAR_100 = newest_authored_edition("100")
+"""The exercise of the newest authored Modelo 100 edition."""
+
 _ACTION = "application.modelo.work_form.finding_action."
 _LEGAL_REF = "rd-439-2007:art-110"
 
@@ -87,7 +92,7 @@ def _casilla_ids(fields: tuple[ModeloFormField, ...] | list[ModeloFormField]) ->
 
 def _optional_money_box(operation: PinnedAuthorityOperation) -> str:
     """A Modelo 210 amount the filer types and verification does not require, beside the gross income it does."""
-    revision = form_snapshot(operation, "210", 2025, "0A").revision
+    revision = form_snapshot(operation, "210", _YEAR, "0A").revision
     required = {str(item) for item in filer_required_casilla_ids(revision)}
     assert "rendimientos_integros" in required
     return next(
@@ -110,12 +115,12 @@ def test_a_held_value_is_assumed_only_where_it_could_under_declare(operation: Pi
     """
     optional = _optional_money_box(operation)
 
-    empty = built_form(operation, "210", 2025, "0A")
+    empty = built_form(operation, "210", _YEAR, "0A")
     zeros = built_form(
-        operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("0"), optional: Decimal("0")}
+        operation, "210", _YEAR, "0A", held={"rendimientos_integros": Decimal("0"), optional: Decimal("0")}
     )
     amounts = built_form(
-        operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1200.00"), optional: Decimal("35.00")}
+        operation, "210", _YEAR, "0A", held={"rendimientos_integros": Decimal("1200.00"), optional: Decimal("35.00")}
     )
 
     assert form_casilla(empty, "rendimientos_integros").origin is ModeloFormOrigin.NEEDS_INPUT
@@ -141,7 +146,7 @@ def test_a_value_the_filer_entered_is_never_assumed_whatever_it_holds(operation:
     form = built_form(
         operation,
         "210",
-        2025,
+        _YEAR,
         "0A",
         held={"rendimientos_integros": Decimal("0")},
         entered=frozenset({"rendimientos_integros"}),
@@ -163,7 +168,7 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     any box verification requires, and nothing else, while every held box stays
     unattributed.
     """
-    snapshot = form_snapshot(operation, "100", 2025, "0A")
+    snapshot = form_snapshot(operation, "100", _YEAR_100, "0A")
     rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
     typed = {
         str(row.casilla_id) for row in rows if row.declared_input_kind is InputKind.MANUAL and not row.absent_by_design
@@ -171,7 +176,7 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
     held = {casilla_id: Decimal("0") for casilla_id in typed} | {"0003": Decimal("24000")}
     required = {str(item) for item in filer_required_casilla_ids(snapshot.revision)}
 
-    form = built_form(operation, "100", 2025, "0A", held=held, entered=None)
+    form = built_form(operation, "100", _YEAR_100, "0A", held=held, entered=None)
 
     assumed = [field for field in form.fields() if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM]
     unattributed = [field for field in form.fields() if field.unattributed]
@@ -189,8 +194,8 @@ def test_modelo_100_calculated_elsewhere_asks_only_for_the_income_it_holds(
 def test_a_declaration_recorded_as_filed_counts_nothing_to_do(operation: PinnedAuthorityOperation) -> None:
     """A draft with a missing required box and an assumed amount counts both; the same declaration filed counts none."""
     held = {_optional_money_box(operation): Decimal("35.00")}
-    draft = built_form(operation, "210", 2025, "0A", held=held)
-    filed = built_form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
+    draft = built_form(operation, "210", _YEAR, "0A", held=held)
+    filed = built_form(operation, "210", _YEAR, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert draft.counts.needs_input > 0
     assert draft.counts.default_to_confirm > 0
@@ -236,7 +241,7 @@ def _page_fields(form: ModeloWorkForm) -> Iterator[tuple[ModeloFormField, bool]]
 
 def test_every_box_stands_where_its_origin_and_page_put_it(operation: PinnedAuthorityOperation) -> None:
     """A draft Modelo 210 with a required box empty and an optional amount nobody entered."""
-    form = built_form(operation, "210", 2025, "0A", held={_optional_money_box(operation): Decimal("35.00")})
+    form = built_form(operation, "210", _YEAR, "0A", held={_optional_money_box(operation): Decimal("35.00")})
 
     standings = [(field.standing, _expected_standing(field, applies=applies)) for field, applies in _page_fields(form)]
     assert standings
@@ -252,7 +257,7 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
     The same typed box, holding an amount nobody entered, is assumed in both
     quarters; it asks the filer only where its page applies.
     """
-    annual = next(page for page in built_form(operation, "303", 2026, "4T").pages if page.id == "dp30304")
+    annual = next(page for page in built_form(operation, "303", _YEAR, "4T").pages if page.id == "dp30304")
     page_box = next(
         str(field.address.casilla_id)
         for section in annual.sections
@@ -262,8 +267,8 @@ def test_a_page_that_does_not_apply_asks_for_no_value(operation: PinnedAuthority
         and field.data_type == "money"
     )
     held = {page_box: Decimal("125.00")}
-    first = built_form(operation, "303", 2026, "1T", held=held)
-    fourth = built_form(operation, "303", 2026, "4T", held=held)
+    first = built_form(operation, "303", _YEAR, "1T", held=held)
+    fourth = built_form(operation, "303", _YEAR, "4T", held=held)
 
     assert next(page for page in first.pages if page.id == "dp30304").applies is False
     assert next(page for page in fourth.pages if page.id == "dp30304").applies is True
@@ -280,8 +285,8 @@ def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: Pi
     recorded as having entered: as typed boxes they would be assumed and ask
     the filer, so this proves the printed rate replaces that reading.
     """
-    rates = _rate_cells(built_form(operation, "303", 2026, "1T"))
-    form = built_form(operation, "303", 2026, "1T", held=dict.fromkeys(rates, Decimal("21.00")))
+    rates = _rate_cells(built_form(operation, "303", _YEAR, "1T"))
+    form = built_form(operation, "303", _YEAR, "1T", held=dict.fromkeys(rates, Decimal("21.00")))
     fixed = [
         cell.field
         for page in form.pages
@@ -299,7 +304,7 @@ def test_a_box_the_design_fixes_stands_done_and_is_never_confirmed(operation: Pi
 
 def test_on_a_declaration_recorded_as_filed_every_box_is_done(operation: PinnedAuthorityOperation) -> None:
     held = {_optional_money_box(operation): Decimal("35.00")}
-    filed = built_form(operation, "210", 2025, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(operation, "210", _YEAR, "0A", held=held, lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert {field.standing for field, _ in _page_fields(filed)} == {ModeloFormStanding.DONE}
 
@@ -319,7 +324,7 @@ def test_every_box_carries_its_origin_and_editability_in_the_forms_language(
 ) -> None:
     """A draft Modelo 210: the required box that is empty, and an optional box left at zero."""
     optional = _optional_money_box(operation)
-    form = built_form(operation, "210", 2025, "0A", held={optional: Decimal("0")}, language=language)
+    form = built_form(operation, "210", _YEAR, "0A", held={optional: Decimal("0")}, language=language)
 
     assert all(field.origin_words and field.editability_words for field in form.fields())
     assert form_casilla(form, "rendimientos_integros").origin_words == _catalogue(
@@ -336,7 +341,7 @@ def test_every_box_carries_its_origin_and_editability_in_the_forms_language(
 def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    filed = built_form(operation, "210", 2025, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(operation, "210", _YEAR, "0A", lifecycle=CalculationRevisionState.PRESENTADO)
 
     assert form_casilla(filed, "rendimientos_integros").origin_words == _catalogue(
         "workspace.modelo.origin_filed.needs_input", OutputLanguage.EN
@@ -345,7 +350,7 @@ def test_on_a_declaration_recorded_as_filed_an_empty_box_says_what_it_holds(
 
 def test_the_carried_words_are_the_ones_the_rule_gives_for_the_box(operation: PinnedAuthorityOperation) -> None:
     """Every frontend shows the carried words; the rule a terminal applies live gives the same ones."""
-    form = built_form(operation, "130", 2026, "1T", held={"05": Decimal("0")})
+    form = built_form(operation, "130", _YEAR, "1T", held={"05": Decimal("0")})
     calculated = form.calculation_revision_id is not None
     for field in form.fields():
         assert field.origin_words == origin_words(
@@ -369,7 +374,7 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
     form = built_form(
         operation,
         "210",
-        2025,
+        _YEAR,
         "0A",
         held={"rendimientos_integros": Decimal("1234.56"), optional: Decimal("0")},
         language=language,
@@ -379,7 +384,7 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
     # A held zero is a figure, never shown as missing.
     assert form_casilla(form, optional).value_text == zero
     assert (
-        form_casilla(built_form(operation, "210", 2025, "0A", language=language), "rendimientos_integros").value_text
+        form_casilla(built_form(operation, "210", _YEAR, "0A", language=language), "rendimientos_integros").value_text
         is None
     )
 
@@ -387,14 +392,14 @@ def test_every_box_carries_the_figure_it_shows_in_the_forms_language(
 @pytest.mark.parametrize(
     ("language", "title", "period"),
     [
-        (OutputLanguage.EN, "Modelo 130 · IRPF instalment payment, direct assessment", "1st quarter 2026"),
-        (OutputLanguage.ES, "Modelo 130 · IRPF pago fraccionado estimación directa", "1.er trimestre 2026"),
+        (OutputLanguage.EN, "Modelo 130 · IRPF instalment payment, direct assessment", f"1st quarter {_YEAR}"),
+        (OutputLanguage.ES, "Modelo 130 · IRPF pago fraccionado estimación directa", f"1.er trimestre {_YEAR}"),
     ],
 )
 def test_the_form_names_its_modelo_and_period_in_its_own_language(
     operation: PinnedAuthorityOperation, language: OutputLanguage, title: str, period: str
 ) -> None:
-    form = built_form(operation, "130", 2026, "1T", language=language)
+    form = built_form(operation, "130", _YEAR, "1T", language=language)
 
     assert (form.modelo_title, form.modelo_number, form.period_words) == (title, "Modelo 130", period)
 
@@ -402,7 +407,7 @@ def test_the_form_names_its_modelo_and_period_in_its_own_language(
 def test_a_printed_rate_shows_as_the_form_prints_it_and_a_waiting_box_shows_no_figure(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
     printed = [cell.field for cell in _rate_cells(form).values() if cell.field is not None and cell.field.printed_rate]
     assert printed
     for field in printed:
@@ -410,7 +415,7 @@ def test_a_printed_rate_shows_as_the_form_prints_it_and_a_waiting_box_shows_no_f
         assert field.value_text.endswith("%")
     # A box whose calculation waits or failed shows no figure, whatever it still holds.
     held = form_casilla(
-        built_form(operation, "210", 2025, "0A", held={"rendimientos_integros": Decimal("1234.56")}),
+        built_form(operation, "210", _YEAR, "0A", held={"rendimientos_integros": Decimal("1234.56")}),
         "rendimientos_integros",
     )
     assert field_value_text(held, OutputLanguage.EN) is not None
@@ -425,8 +430,8 @@ def _requirement(operation: PinnedAuthorityOperation) -> CrossPeriodDependencyRe
     assert _LEGAL_REF in legal_reference_ids(operation)
     return CrossPeriodDependencyRequirement(
         source_modelo="100",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_YEAR - 1,
+        period=Period.from_year_and_code(_YEAR - 1, "0A"),
         source_casilla_ids=(validated_casilla_id("0670"),),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("modelo-130-pagos-fraccionados-anteriores",),
@@ -436,16 +441,16 @@ def _requirement(operation: PinnedAuthorityOperation) -> CrossPeriodDependencyRe
 
 
 def _suppressed_by_the_declared_start(operation: PinnedAuthorityOperation) -> ModeloVerificationFinding:
-    """The finding the real verification raises when the filer's declared activity start scopes out the 2025 Renta."""
+    """The finding the real verification raises when the filer's declared activity start scopes out the previous year's Renta."""
     evidence = CrossPeriodDependencyEvidence(
         requirement=_requirement(operation),
-        no_prior_obligation=NoPriorObligationProvenance(activity_start_date=date(2026, 1, 1)),
+        no_prior_obligation=NoPriorObligationProvenance(activity_start_date=date(_YEAR, 1, 1)),
     )
     verdict = CrossPeriodCleanStateVerdict(
         bucket_id="13000000-0000-4000-8000-000000000456",
         target_modelo="130",
-        target_filing_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
+        target_filing_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
         dependencies=(evidence,),
     )
     (finding,) = cross_period_clean_state_findings(verdict)
@@ -473,7 +478,7 @@ def test_each_finding_says_how_loud_it_is_and_what_to_do(operation: PinnedAuthor
         legal_refs=(_LEGAL_REF,),
     )
 
-    form = built_form(operation, "130", 2026, "1T", findings=(suppressed, output, deductible, unmapped))
+    form = built_form(operation, "130", _YEAR, "1T", findings=(suppressed, output, deductible, unmapped))
     issues = {issue.finding.message_locale_key: issue for issue in form.issues}
 
     assert suppressed.message_locale_key == "application.modelo.findings.cross_period_operator_declared_suppression"
@@ -547,10 +552,10 @@ def test_a_303_rate_box_prints_the_one_rate_its_base_binding_declares(operation:
     two transitional rates and row [150]-[151] has no binding, so none of their
     rate boxes claims one.
     """
-    snapshot = form_snapshot(operation, "303", 2026, "1T")
+    snapshot = form_snapshot(operation, "303", _YEAR, "1T")
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
-    cells = _rate_cells(built_form(operation, "303", 2026, "1T"))
+    cells = _rate_cells(built_form(operation, "303", _YEAR, "1T"))
 
     field = cells["166"].field
     assert field is not None
@@ -593,7 +598,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
     rate-specific ledger binding that fills the ledger's base each formula adds;
     the filer's autoconsumo base, which no binding fills, declares none.
     """
-    snapshot = form_snapshot(operation, "303", 2026, "1T")
+    snapshot = form_snapshot(operation, "303", _YEAR, "1T")
     bindings = {str(item.id): item for item in snapshot.revision.bindings}
     casillas = {str(item.id): item for item in snapshot.revision.casillas}
     formulas = {str(item.id): item for item in snapshot.revision.formulas}
@@ -620,7 +625,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
         return rates
 
     compared: set[str] = set()
-    for cells in _grid_rows(built_form(operation, "303", 2026, "1T")):
+    for cells in _grid_rows(built_form(operation, "303", _YEAR, "1T")):
         base = cells[0].field
         for cell in cells:
             if cell.kind is not FormCellKind.DESIGN_CONSTANT or cell.field is None or cell.literal is None:
@@ -640,7 +645,7 @@ def test_a_grounded_rate_agrees_with_the_rate_the_official_design_prints(operati
 
 
 def test_no_field_but_a_rate_box_carries_a_rate(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
 
     carrying = [
         field

@@ -27,6 +27,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import (
@@ -95,8 +96,9 @@ from .work_form_fixture import built_form, form_snapshot, read_before_calculatio
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EN = OutputLanguage.EN
-_FILED_AT = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
-_VERIFIED_AT = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILED_AT = datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC)
+_VERIFIED_AT = datetime(_YEAR, 4, 20, 10, 0, tzinfo=UTC)
 
 
 def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: str):
@@ -114,8 +116,8 @@ def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
     The split is a dated registry fact that holds for every ejercicio the registry supports, so a Modelo
     100 asks its settlement elections in each of them.
     """
-    renta_2025 = Period.from_year_and_code(2025, "0A")
-    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo, renta_2025)}
+    renta_return = Period.from_year_and_code(_YEAR, "0A")
+    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo, renta_return)}
     support = operation.supported_filing_years()
 
     assert asked == {"100", "303"}
@@ -126,9 +128,9 @@ def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    offer = _offer(operation, "303", 2026, "1T")
-    payable = _calculated(operation, "303", 2026, "1T", Decimal("120.00"))
-    other = _offer(operation, "130", 2026, "1T")
+    offer = _offer(operation, "303", _YEAR, "1T")
+    payable = _calculated(operation, "303", _YEAR, "1T", Decimal("120.00"))
+    other = _offer(operation, "130", _YEAR, "1T")
 
     questions = {question.election: question for question in offer.elections}
     assert offer.asks_elections and set(questions) == {
@@ -150,7 +152,7 @@ def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     assert not other.asks_elections and other.elections == ()
 
 
-_TODAY = date(2026, 5, 4)
+_TODAY = date(_YEAR, 5, 4)
 _SPANISH_IBAN = "ES9121000418450200051332"
 _GERMAN_IBAN = "DE89370400440532013000"
 
@@ -228,7 +230,7 @@ def _questions(
 def test_a_modelo_100_to_pay_within_its_period_offers_the_split_and_the_debit_account(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=_deadline(30))
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("1000.00"), deadline=_deadline(30))
     register = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN), designate="acc-01")
 
     questions = _questions(operation, form, own_accounts=register)
@@ -268,7 +270,7 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
     advisory and say why.
     """
     form = _calculated(
-        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+        operation, "100", _YEAR, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
     )
 
     instalment = _questions(operation, form)[ModeloFormElection.INSTALMENT]
@@ -287,7 +289,7 @@ def test_the_instalment_words_state_the_amount_in_the_marks_of_their_language(
 ) -> None:
     """The figure's ``amount`` stays decimal text; only its words take the language's marks."""
     form = _calculated(
-        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+        operation, "100", _YEAR, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
     )
 
     first, second = _questions(operation, form, language=OutputLanguage.ES)[ModeloFormElection.INSTALMENT].figures
@@ -320,9 +322,9 @@ def test_public_workbench_schema_and_instalment_amounts_survive_strict_transport
     operation: PinnedAuthorityOperation,
 ) -> None:
     strict_model_json_schema(ModeloWorkbenchFormProjectionV1)
-    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.01"), deadline=_deadline(30))
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("1000.01"), deadline=_deadline(30))
     offer = form_export_offer(
-        "100", form_snapshot(operation, "100", 2025, "0A"), _EN, form=form, verified=False, filed=False
+        "100", form_snapshot(operation, "100", _YEAR, "0A"), _EN, form=form, verified=False, filed=False
     )
     public = project_public_mirror(offer, ModeloFormExportOffer, PublicModeloFormExportOffer)
     assert isinstance(public, PublicModeloFormExportOffer)
@@ -344,10 +346,10 @@ def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A waived refund leaves 0700 unresolved: the refund is not offered from the result 0670 instead."""
-    blank = built_form(operation, "100", 2025, "0A", entered=frozenset())
+    blank = built_form(operation, "100", _YEAR, "0A", entered=frozenset())
     assert blank.result is not None
     form = built_form(
-        operation, "100", 2025, "0A", held={str(blank.result.casilla_id): Decimal("-310.40")}, entered=frozenset()
+        operation, "100", _YEAR, "0A", held={str(blank.result.casilla_id): Decimal("-310.40")}, entered=frozenset()
     ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
 
     refund = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))[
@@ -360,7 +362,7 @@ def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
 
 def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation: PinnedAuthorityOperation) -> None:
     """The whole result suspended against the spouse's refund leaves 0700 at zero, which no design block settles."""
-    form = _calculated(operation, "100", 2025, "0A", Decimal("500.00"), deadline=_deadline(30), settled=Decimal("0"))
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("500.00"), deadline=_deadline(30), settled=Decimal("0"))
 
     questions = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))
 
@@ -374,8 +376,8 @@ def test_the_least_amount_whose_second_instalment_is_a_cent_is_split_and_one_cen
     operation: PinnedAuthorityOperation,
 ) -> None:
     """60 per cent of 0,01 rounds to 0,01 and leaves nothing for the second; 0,02 leaves the least second, 0,01."""
-    split = _calculated(operation, "100", 2025, "0A", Decimal("0.02"), deadline=_deadline(30))
-    single = _calculated(operation, "100", 2025, "0A", Decimal("0.01"), deadline=_deadline(30))
+    split = _calculated(operation, "100", _YEAR, "0A", Decimal("0.02"), deadline=_deadline(30))
+    single = _calculated(operation, "100", _YEAR, "0A", Decimal("0.01"), deadline=_deadline(30))
 
     least = _questions(operation, split)
     only = _questions(operation, single)
@@ -402,8 +404,8 @@ _NOTHING_LEFT_FOR_THE_SECOND = {
 def test_the_reason_a_cent_cannot_be_split_is_worded_in_every_language(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    form = _calculated(operation, "100", 2025, "0A", Decimal("0.01"), deadline=_deadline(30))
-    snapshot = form_snapshot(operation, "100", 2025, "0A")
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("0.01"), deadline=_deadline(30))
+    snapshot = form_snapshot(operation, "100", _YEAR, "0A")
 
     offer = form_export_offer("100", snapshot, language, form=form, verified=False, filed=False)
 
@@ -450,7 +452,7 @@ def test_every_supported_year_without_a_settled_box_offers_the_split_of_its_resu
 
 
 def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:
-    form = _calculated(operation, "100", 2025, "0A", Decimal("-310.40"), deadline=_deadline(30))
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("-310.40"), deadline=_deadline(30))
     register = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN))
 
     questions = _questions(operation, form, own_accounts=register)
@@ -481,7 +483,7 @@ def test_the_split_is_withheld_with_its_reason_where_the_law_refuses_it(
     amended: bool,
     reason: ModeloFormElectionReason,
 ) -> None:
-    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=deadline)
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("1000.00"), deadline=deadline)
 
     questions = _questions(operation, form, amended=amended)
 
@@ -492,8 +494,8 @@ def test_the_split_is_withheld_with_its_reason_where_the_law_refuses_it(
 
 
 def test_a_nil_or_uncalculated_modelo_100_offers_no_settlement(operation: PinnedAuthorityOperation) -> None:
-    nil = _questions(operation, _calculated(operation, "100", 2025, "0A", Decimal("0.00"), deadline=_deadline(30)))
-    unknown = _questions(operation, built_form(operation, "100", 2025, "0A", entered=frozenset()))
+    nil = _questions(operation, _calculated(operation, "100", _YEAR, "0A", Decimal("0.00"), deadline=_deadline(30)))
+    unknown = _questions(operation, built_form(operation, "100", _YEAR, "0A", entered=frozenset()))
 
     assert {question.reason for question in nil.values()} == {ModeloFormElectionReason.NOTHING_TO_PAY}
     assert {question.state for question in nil.values()} == {ModeloFormElectionState.NOT_APPLICABLE}
@@ -504,15 +506,15 @@ def test_a_nil_or_uncalculated_modelo_100_offers_no_settlement(operation: Pinned
 def test_without_an_open_spanish_account_the_debit_account_cannot_be_chosen(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=_deadline(30))
+    form = _calculated(operation, "100", _YEAR, "0A", Decimal("1000.00"), deadline=_deadline(30))
     closed = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN)).with_closed_account(
-        "acc-01", date(2020, 1, 31)
+        "acc-01", date(_YEAR, 1, 31)
     )
 
     charge = _questions(operation, form, own_accounts=closed)[ModeloFormElection.CHARGE_ACCOUNT]
     refund = _questions(
         operation,
-        _calculated(operation, "100", 2025, "0A", Decimal("-5.00"), deadline=_deadline(30)),
+        _calculated(operation, "100", _YEAR, "0A", Decimal("-5.00"), deadline=_deadline(30)),
         own_accounts=_register(),
     )[ModeloFormElection.REFUND_ACCOUNT]
 
@@ -523,7 +525,7 @@ def test_without_an_open_spanish_account_the_debit_account_cannot_be_chosen(
 
 
 def test_every_export_artefact_is_offered_in_order(operation: PinnedAuthorityOperation) -> None:
-    offer = _offer(operation, "130", 2026, "1T")
+    offer = _offer(operation, "130", _YEAR, "1T")
 
     artefacts = tuple(option.artefact for option in offer.artefacts)
     assert artefacts[0] is ModeloExportArtefact.FICHERO_BOE
@@ -533,9 +535,9 @@ def test_every_export_artefact_is_offered_in_order(operation: PinnedAuthorityOpe
 @pytest.mark.parametrize(
     ("modelo", "year", "code", "expected"),
     [
-        ("303", 2026, "1T", ExportLayoutFormat.FIXED_WIDTH),
-        ("130", 2026, "1T", ExportLayoutFormat.FIXED_WIDTH),
-        ("100", 2024, "0A", ExportLayoutFormat.XML_DICTIONARY),
+        ("303", _YEAR, "1T", ExportLayoutFormat.FIXED_WIDTH),
+        ("130", _YEAR, "1T", ExportLayoutFormat.FIXED_WIDTH),
+        ("100", _YEAR, "0A", ExportLayoutFormat.XML_DICTIONARY),
     ],
 )
 def test_the_file_format_is_the_one_the_revisions_export_layout_declares(
@@ -557,8 +559,8 @@ def _record(**update: object) -> ModeloRecord:
         "calculation_revision_id": "a" * 64,
         "bucket_id": "13000000-0000-4000-8000-000000000455",
         "modelo": "130",
-        "filing_year": 2026,
-        "period": Period.from_year_and_code(2026, "1T"),
+        "filing_year": _YEAR,
+        "period": Period.from_year_and_code(_YEAR, "1T"),
         "filed_at": _FILED_AT,
         "filed_by": "x",
         "origin": FilingOrigin.LOCAL,
@@ -594,7 +596,7 @@ def test_a_receipt_is_verified_only_by_an_in_force_filing_the_aeat_holds() -> No
 
 def test_typing_over_a_box_is_worded_as_the_review_words_its_change(operation: PinnedAuthorityOperation) -> None:
     """Only a box the filer types on is worded, once, and a calculated box says its figure is replaced."""
-    built = built_form(operation, "130", 2026, "1T", held={"01": Decimal("1200.00")}, entered=frozenset({"01"}))
+    built = built_form(operation, "130", _YEAR, "1T", held={"01": Decimal("1200.00")}, entered=frozenset({"01"}))
     form = map_form_fields(
         built,
         lambda field: (
@@ -623,14 +625,14 @@ def test_typing_over_a_box_is_worded_as_the_review_words_its_change(operation: P
 
 
 def test_the_public_read_carries_the_offer_receipt_and_typing_words(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
+    form = built_form(operation, "303", _YEAR, "1T", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
     read = read_before_calculation(
         form,
         operation,
         verified=True,
         filed=True,
         export_offer=form_export_offer(
-            "303", form_snapshot(operation, "303", 2026, "1T"), _EN, form=form, verified=True, filed=True
+            "303", form_snapshot(operation, "303", _YEAR, "1T"), _EN, form=form, verified=True, filed=True
         ),
         receipt=form_receipt(_record(), recorded_at=_FILED_AT, language=_EN),
     )
@@ -649,7 +651,7 @@ def test_instalment_figures_cross_the_public_boundary_as_exact_decimal_text(
     operation: PinnedAuthorityOperation,
 ) -> None:
     form = _calculated(
-        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+        operation, "100", _YEAR, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
     )
     read = read_before_calculation(
         form,
@@ -657,7 +659,7 @@ def test_instalment_figures_cross_the_public_boundary_as_exact_decimal_text(
         verified=False,
         filed=False,
         export_offer=form_export_offer(
-            "100", form_snapshot(operation, "100", 2025, "0A"), _EN, form=form, verified=False, filed=False
+            "100", form_snapshot(operation, "100", _YEAR, "0A"), _EN, form=form, verified=False, filed=False
         ),
     )
     read = replace(read, calculation_revision_id=form.calculation_revision_id)
@@ -698,21 +700,21 @@ _HELD_210: dict[str, Decimal | str] = {"rendimientos_integros": Decimal("1200.00
 
 def _availability(form: ModeloWorkForm, operation: PinnedAuthorityOperation, *, verified: bool, filed: bool = False):
     offer = form_export_offer(
-        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=verified, filed=filed
+        "210", form_snapshot(operation, "210", _YEAR, "0A"), _EN, form=form, verified=verified, filed=filed
     )
     return {option.artefact: option.availability for option in offer.artefacts}, offer.record
 
 
 def _package(form: ModeloWorkForm, operation: PinnedAuthorityOperation, *, verified: bool):
     offer = form_export_offer(
-        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=verified, filed=False
+        "210", form_snapshot(operation, "210", _YEAR, "0A"), _EN, form=form, verified=verified, filed=False
     )
     assert offer.review_package.words
     return offer.review_package.availability
 
 
 def _entered_210(operation: PinnedAuthorityOperation, **update: object) -> ModeloWorkForm:
-    form = built_form(operation, "210", 2025, "0A", held=_HELD_210, entered=frozenset(_HELD_210))
+    form = built_form(operation, "210", _YEAR, "0A", held=_HELD_210, entered=frozenset(_HELD_210))
     return form.model_copy(update=update)
 
 
@@ -799,7 +801,7 @@ def test_each_artefact_is_offered_with_the_kind_of_file_it_is_saved_as(operation
     )
 
     offer = form_export_offer(
-        "210", form_snapshot(operation, "210", 2025, "0A"), _EN, form=form, verified=True, filed=False
+        "210", form_snapshot(operation, "210", _YEAR, "0A"), _EN, form=form, verified=True, filed=False
     )
 
     saved = {option.artefact: option.save_format for option in offer.artefacts}
