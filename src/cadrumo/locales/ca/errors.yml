@@ -1393,6 +1393,9 @@ errors:
       dades que el fitxer declara sobre tu o sobre aquesta declaració (identificació,
       compte bancari o dades pròpies del model). Completa-les al teu perfil o a les
       opcions de l''exportació i torna a exportar.'
+    refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
+      un registre %{export_record_id}, però aquesta declaració no en té cap, així que
+      no hi ha res a escriure en aquest format i no s'ha escrit res.
     refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import

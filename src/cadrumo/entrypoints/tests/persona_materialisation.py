@@ -123,6 +123,10 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
 )
+from ...application.modelo.iva_wallet_override_operation import (
+    MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+    ModeloIvaWalletOverrideRequest,
+)
 from ...application.modelo.iva_wallet_seed_operation import (
     MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
     ModeloIvaWalletSeedRequest,
@@ -1117,17 +1121,33 @@ def _m303_evidence(
 
 
 def _seed_compensation_carried_in(persona: Persona, world: PersonaWorld) -> None:
-    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one."""
+    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one.
+
+    A balance carried into the first supported quarter comes from a quarter below the registry's support floor,
+    which has no Modelo 303 edition to seed; it is stated as the taxpayer's override on the consuming period.
+    """
     for filed in persona.filed_returns:
         if filed.iva_compensation_carried_in is None:
             continue
+        year = filed.year.resolve(world.envelope)
+        amount = _decimal_text(filed.iva_compensation_carried_in.normalize())
+        preceding = preceding_quarter(year, filed.periods[0])
+        if preceding.filing_year >= world.envelope.floor:
+            settle_operation(
+                world,
+                MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletSeedRequest(profile_id=world.profile_id, period=preceding, amount=amount),
+            )
+            continue
         settle_operation(
             world,
-            MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
-            ModeloIvaWalletSeedRequest(
+            MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+            ModeloIvaWalletOverrideRequest(
                 profile_id=world.profile_id,
-                period=preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
-                amount=_decimal_text(filed.iva_compensation_carried_in.normalize()),
+                period=PublicPeriod(filing_year=year, code=filed.periods[0]),
+                amount=amount,
+                reason="Compensation balance carried in from before the first supported period, as the taxpayer states it",
+                evidence_locator=f"synthetic:persona:{persona.id}:iva-compensation-carried-in",
             ),
         )
 

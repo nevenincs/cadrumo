@@ -809,6 +809,8 @@ modelo:
             heading: Payment, refund and bank account
           pais-banco:
             heading: Country code
+          prorrata-especial-no:
+            heading: No / not asked in this period
           reagp:
             heading: Agriculture, livestock and fishing scheme compensation
           rectificacion-devolucion:

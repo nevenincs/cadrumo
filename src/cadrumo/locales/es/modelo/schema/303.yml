@@ -805,6 +805,8 @@ modelo:
             heading: Ingreso, devolución y cuenta bancaria
           pais-banco:
             heading: Código del país
+          prorrata-especial-no:
+            heading: No / no se pregunta en este periodo
           reagp:
             heading: Compensaciones en régimen especial de agricultura, ganadería
               y pesca
