@@ -2121,6 +2121,7 @@ application:
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: cognoms i nom
+        birth_date: data de naixement
         nif: NIF
       income_class:
         actividad_economica: activitats econòmiques

@@ -307,6 +307,7 @@ _HOUSEHOLD_LEAF_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "nif": "application.modelo.calc_diagnostic_words.household_leaf.nif",
         "apellidos_nombre": "application.modelo.calc_diagnostic_words.household_leaf.apellidos_nombre",
+        "birth_date": "application.modelo.calc_diagnostic_words.household_leaf.birth_date",
     }
 )
 """The words of each household row fact the design requires, by the leaf token the profile stores."""

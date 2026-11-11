@@ -2018,6 +2018,7 @@ application:
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: surnames and name
+        birth_date: date of birth
         nif: tax ID (NIF)
       income_class:
         actividad_economica: economic activities

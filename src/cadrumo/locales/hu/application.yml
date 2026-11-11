@@ -2085,6 +2085,7 @@ application:
     calc_diagnostic_words:
       household_leaf:
         apellidos_nombre: vezetéknév és keresztnév
+        birth_date: születési dátum
         nif: NIF
       income_class:
         actividad_economica: Gazdasági tevékenységből származó

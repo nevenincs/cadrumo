@@ -472,7 +472,7 @@ source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
 id = "renta-family-descendant-birth-date"
-provider = { kind = "profile", rows = { object_path = "renta_family.descendiente", leaf = "birth_date", count_path = "renta_family.descendientes_count" }, xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true }
+provider = { kind = "profile", rows = { object_path = "renta_family.descendiente", leaf = "birth_date", count_path = "renta_family.descendientes_count", required = true }, xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true }
 value = { data_type = "date", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-58", "orden-hfp-310-2023:art-3"]
@@ -527,7 +527,7 @@ source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
 id = "renta-family-ascendant-birth-date"
-provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "birth_date", count_path = "renta_family.ascendientes_count" }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG", dictionary_field = "ANOASDLG", repeating = true }
+provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "birth_date", count_path = "renta_family.ascendientes_count", required = true }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG", dictionary_field = "ANOASDLG", repeating = true }
 value = { data_type = "date", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
