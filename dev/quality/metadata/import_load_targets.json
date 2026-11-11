@@ -2426,7 +2426,6 @@
         "cadrumo.domain.calculations.registry.identifier_evolutions",
         "cadrumo.domain.calculations.registry.ids",
         "cadrumo.domain.calculations.registry.ine_provincia_catalogue",
-        "cadrumo.domain.calculations.registry.inventory_anexo_d_applicability",
         "cadrumo.domain.calculations.registry.inventory_bindings",
         "cadrumo.domain.calculations.registry.invoice_bindings",
         "cadrumo.domain.calculations.registry.invoice_legal_classification",

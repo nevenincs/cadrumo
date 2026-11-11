@@ -1833,6 +1833,16 @@ model_selectors = ["family.cotizaciones_ss_madre_2024", "modelo_100"]
 legal_refs = ["ley-35-2006:art-81"]
 
 [[sections.fields]]
+key = "cotizaciones_ss_madre_2022"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Cotizaciones y cuotas totales a la Seguridad Social y Mutualidades devengadas en 2022 con posterioridad al nacimiento, importes íntegros (límite del incremento por gastos de custodia, art. 81.2 LIRPF en su redacción vigente hasta 2022)."
+model_selectors = ["family.cotizaciones_ss_madre_2022", "modelo_100"]
+legal_refs = ["ley-35-2006:art-81"]
+
+[[sections.fields]]
 key = "descendants"
 type = "array"
 required = false

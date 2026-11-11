@@ -6,14 +6,22 @@ ledger expense casillas; a claim that does not stand, or a purchase that states
 nothing about its ledger row while the year holds ledger expense rows, could
 deduct the purchase twice or not at all. Either leaves the inventory rows
 unresolved, which blocks verification, and never falls back to casilla 0183.
+
+Every ledger expense row of the year counts for every book, whatever activity the
+row declares. A book names its activity by the operator's free text, which nothing
+ties to an activity of the profile, so no book can be told apart by the activity of
+the rows. Scoping the finding to a book's own activity waits on a typed link from a
+book to its activity.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 
 from ...domain.contribuyente.inventory.ledger_claims import InventoryClaimRefusal, unstated_purchases
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..inventory.movement_claim_checks import (
@@ -42,7 +50,7 @@ def _row_date(row: Transaction) -> date:
 
 
 def year_has_ledger_expense_rows(transactions: TransactionCatalogue, year: int) -> bool:
-    """Whether the ledger holds an active business expense row dated in ``year``."""
+    """Whether the ledger holds an active business expense row dated in ``year``, of any activity."""
     return any(
         row.lifecycle_state is TransactionLifecycleState.ACTIVE
         and row.direction is TransactionDirection.OUTGOING
@@ -72,25 +80,45 @@ UNSTATED_PURCHASE_REMEDY = (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class InventoryClaimFinding:
+    """One reason the book's purchases hold its rows back: its state, its words and the fact it states."""
+
+    state: str
+    message: str
+    remedy: str
+    fact: CalculationNoteFact
+
+
 def inventory_claim_findings(
     document: InventoryLedgerDocument,
     ledgers: tuple[InventoryLedger, ...],
     *,
     filing_year: int,
     reads: InventoryClaimLedgerReads,
-) -> tuple[tuple[str, str, str], ...]:
-    """Every reason the book's purchases hold its rows back, as ``(state, message, remedy)``.
+) -> tuple[InventoryClaimFinding, ...]:
+    """Every reason the book's purchases hold its rows back.
 
     Returns:
-        One entry per refused claim, then one entry per book whose purchases state
-        nothing while the year holds ledger expense rows; empty when every
-        purchase's statement stands.
+        One finding per refused claim, then one for the purchases that state
+        nothing about the ledger row that books them while the year holds ledger
+        expense rows; empty when every purchase's statement
+        stands.
     """
     transactions = reads.transactions()
     facts = claimable_transaction_facts(transactions)
     assets = reads.asset_revisions()
     refused = tuple(
-        ("purchase_ledger_claim_refused", claim_refusal_message(refusal), CLAIM_REFUSAL_REMEDY)
+        InventoryClaimFinding(
+            state="purchase_ledger_claim_refused",
+            message=claim_refusal_message(refusal),
+            remedy=CLAIM_REFUSAL_REMEDY,
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.INVENTORY_PURCHASE_CLAIM_REFUSED,
+                year=refusal.year,
+                count=len(refusal.movement_ids),
+            ),
+        )
         for ledger in ledgers
         for refusal in ledger_claim_refusals(document, ledger, transactions=facts, assets=assets)
     )
@@ -100,11 +128,18 @@ def inventory_claim_findings(
     listed = ", ".join(repr(movement_id) for movement_id in unstated)
     return (
         *refused,
-        (
-            "purchase_ledger_row_unstated",
-            f"the {filing_year} inventory purchases {listed} state nothing about the ledger row that books them, "
-            "and the ledger holds expense rows for the year",
-            UNSTATED_PURCHASE_REMEDY,
+        InventoryClaimFinding(
+            state="purchase_ledger_row_unstated",
+            message=(
+                f"the {filing_year} inventory purchases {listed} state nothing about the ledger row that books them, "
+                "and the ledger holds expense rows for the year"
+            ),
+            remedy=UNSTATED_PURCHASE_REMEDY,
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.INVENTORY_PURCHASE_LEDGER_ROW_UNSTATED,
+                year=filing_year,
+                count=len(unstated),
+            ),
         ),
     )
 
@@ -112,6 +147,7 @@ def inventory_claim_findings(
 __all__ = [
     "CLAIM_REFUSAL_REMEDY",
     "UNSTATED_PURCHASE_REMEDY",
+    "InventoryClaimFinding",
     "claim_refusal_message",
     "inventory_claim_findings",
     "year_has_ledger_expense_rows",

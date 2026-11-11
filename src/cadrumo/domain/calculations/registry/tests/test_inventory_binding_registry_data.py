@@ -12,12 +12,15 @@ from .published_authority import PublishedGovernedFactSource, published_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The newest Modelo 100 edition the registry authors; the horizon carries its
-# inventory templates forward, so every later supported exercise must load them.
+# The newest Modelo 100 edition the registry authors.
 _REVIEWED_EDITION = newest_authored_edition("100")
+# Every supported edition's design carries 0177, 0181 and 0182 and its manual the
+# same three operations, so the templates are authored at the floor edition and
+# every later supported exercise inherits them.
+_AUTHORING_EDITION = _SUPPORT.floor
 
 
-@pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_m100_loads_exact_grounded_inventory_operation_templates(filing_year: int) -> None:
     revision = published_snapshot("100", filing_year=filing_year, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
@@ -40,7 +43,7 @@ def test_m100_loads_exact_grounded_inventory_operation_templates(filing_year: in
         binding.provider.target_casilla_id for binding in bindings if isinstance(binding.provider, InventoryProvider)
     } == {"0177", "0181", "0182"}
     assert all(binding.legal_refs == ("ley-35-2006:art-30",) for binding in bindings)
-    assert all(binding.source_refs == (f"aeat-renta-{_REVIEWED_EDITION}-manual-parte1",) for binding in bindings)
+    assert all(binding.source_refs == (f"aeat-renta-{_AUTHORING_EDITION}-manual-parte1",) for binding in bindings)
 
 
 def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape() -> None:
@@ -54,9 +57,3 @@ def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape
         assert "operation" not in document
         assert "wildcard" not in repr(document).casefold()
         assert "0155" not in repr(document)
-
-
-def test_inventory_templates_are_absent_from_other_m100_revisions() -> None:
-    revision = published_snapshot("100", filing_year=_REVIEWED_EDITION - 1, period="0A").revision
-
-    assert not tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)

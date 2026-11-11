@@ -438,6 +438,8 @@ profile:
           label: Ascendant count
         convive_con_otro_progenitor:
           label: Lives with the other parent of a child in the household
+        cotizaciones_ss_madre_2022:
+          label: Mother's Social Security contributions after the birth (2022)
         cotizaciones_ss_madre_2024:
           label: Mother's Social Security contributions (2024)
         descendants:

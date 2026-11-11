@@ -28,7 +28,7 @@ Local filing records a PRESENTADO revision and submits nothing.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import cache
@@ -97,6 +97,7 @@ from .persona_materialisation import (
     settle_operation,
     year_envelope,
 )
+from .persona_prior_carries import attest_prior_carries
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -490,3 +491,66 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
                 if casilla in calculated and _decimal(calculated[casilla]) == amount
             )
     assert not problems, "\n".join(problems)
+
+
+#: The persona whose inventory book claims the ledger rows of its purchases.
+_BOOK_CLAIMING_RETAILER = "minorista-recargo"
+#: The Anexo D operations, the purchase and consumption casillas around them and the gastos total.
+_INVENTORY_CASILLAS = ("0177", "0181", "0182", "0183", "0218")
+
+
+def _supported_horizons() -> list[int]:
+    """Every horizon of the envelope whose previous year is still supported, the registry's own included."""
+    envelope = _envelope()
+    return list(range(envelope.floor + 1, envelope.horizon + 1))
+
+
+@pytest.mark.parametrize("horizon", _supported_horizons())
+def test_a_book_claimed_purchase_reaches_0181_and_leaves_0183_in_every_supported_year(
+    tmp_path: Path, horizon: int
+) -> None:
+    """The retailer's purchases reach 0181 through its book, out of 0183, whichever edition the year reads.
+
+    The persona's own year is read one below each horizon, so every supported
+    year from the floor up calculates the same book against its own edition.
+    """
+    envelope = replace(_envelope(), horizon=horizon)
+    persona = read_persona(_BOOK_CLAIMING_RETAILER, envelope=envelope, omit_below_floor=horizon != _envelope().horizon)
+    year = horizon - 1
+    expected = {
+        casilla: _decimal(amount)
+        for stated_year, value in values_in_force(persona.expectations.values, envelope)
+        if stated_year == year and value.modelo == "100" and value.period == "0A"
+        for casilla, amount in value.casillas
+        if casilla in _INVENTORY_CASILLAS
+    }
+    assert set(expected) == set(_INVENTORY_CASILLAS), f"{_BOOK_CLAIMING_RETAILER} states {sorted(expected)} for {year}"
+
+    with materialised_persona(_BOOK_CLAIMING_RETAILER, tmp_path, _scope(persona), horizon=horizon) as materialised:
+        world = materialised.world
+        created = settle_operation(
+            world,
+            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCreateRequest(
+                profile_id=world.profile_id,
+                modelo="100",
+                period=PublicPeriod(filing_year=year, code="0A"),
+                actor=PERSONA_ACTOR,
+            ),
+        )
+        outcome = getattr(created, "outcome", None)
+        assert isinstance(outcome, ModeloWorkCreateSuccess), outcome
+        work_unit_id = outcome.unit.work_unit_id
+        # At the floor no earlier return supplies the carries of negative bases, so
+        # the persona states them as the refusal asks before the return calculates.
+        attest_prior_carries(materialised.persona, world, work_unit_id, year)
+        calculated = run_operation(
+            world,
+            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+            ModeloWorkCalculateRequest(work_unit_id=work_unit_id, actor=PERSONA_ACTOR),
+            ModeloWorkCalculatePublicResultV3,
+            subject=work_unit_id,
+        )
+
+    values = {str(item.key): restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    assert {casilla: _decimal(values.get(casilla)) for casilla in _INVENTORY_CASILLAS} == expected

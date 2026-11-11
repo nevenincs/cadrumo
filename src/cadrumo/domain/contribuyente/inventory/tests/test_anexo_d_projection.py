@@ -9,9 +9,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_first_filing_year
 from ....calculations.registry.tests.authored_editions import filing_year_envelope
-from ....calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....filing_evidence import FilingEvidenceReference
 from ..anexo_d_records import InventoryAnexoDResult
 from ..closing_authority_records import (
@@ -48,10 +46,6 @@ from ..valuation import compute_inventory_anexo_d_projection
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 EXERCISE = filing_year_envelope().horizon
-#: The last supported exercise the registry's governed first-filing-year fact leaves outside Anexo D.
-_YEAR_BEFORE_ANEXO_D = (
-    resolve_inventory_anexo_d_first_filing_year(filing_year=EXERCISE, authority=PublishedGovernedFactSource()) - 1
-)
 
 
 def _ref(value: str) -> FilingEvidenceReference:
@@ -250,7 +244,7 @@ def test_both_authorities_retain_conflict() -> None:
     assert physical.issues == movement.issues == ("physical_closing_conflict",)
 
 
-def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
+def test_missing_unreadable_and_out_of_period_refuse() -> None:
     with pytest.raises(InventoryLedgerError, match="requires a complete closing-authority"):
         compute_inventory_anexo_d_projection(_ledger().model_copy(update={"closing_authority_record": None}))
     tampered_purchase = _purchase().model_copy(update={"acquisition_cost": None})
@@ -258,8 +252,6 @@ def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
         compute_inventory_anexo_d_projection(
             _ledger(movements=(_purchase(),)).model_copy(update={"period_movements": (tampered_purchase,)})
         )
-    with pytest.raises(InventoryLedgerError, match="not applicable for the filing year"):
-        compute_inventory_anexo_d_projection(_ledger().model_copy(update={"year": _YEAR_BEFORE_ANEXO_D}))
     out_of_period = _purchase().model_copy(update={"movement_date": date(EXERCISE - 1, 12, 31)})
     with pytest.raises(InventoryLedgerError, match="outside its filing year"):
         compute_inventory_anexo_d_projection(_ledger(movements=(out_of_period,)))
@@ -412,18 +404,3 @@ def test_reminted_substituted_sources_refuse_but_distinct_projection_succeeds() 
         )
         with pytest.raises(ValidationError, match="retained source authority"):
             type(baseline).model_validate(_projection_validation_payload(reminted))
-
-
-def test_a_missing_authority_scope_is_an_invariant_failure_not_an_inapplicable_year() -> None:
-    # Deferred: importing the registry before the inventory records re-enters their import cycle.
-    from cadrumo.core.errors.hierarchy import InternalInvariantError
-
-    from ....calculations.registry.tests.fact_scope import outside_governed_fact_validation
-
-    ledger = _ledger()
-
-    with (
-        outside_governed_fact_validation(),
-        pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
-    ):
-        compute_inventory_anexo_d_projection(ledger)

@@ -1394,8 +1394,8 @@ errors:
       compte bancari o dades pròpies del model). Completa-les al teu perfil o a les
       opcions de l''exportació i torna a exportar.'
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
-      un registre %{export_record_id}, però aquesta declaració no en té cap, així que
-      no hi ha res a escriure en aquest format i no s'ha escrit res.
+      un registre %{export_record_id}, però aquesta declaració no en té cap, així
+      que no hi ha res a escriure en aquest format i no s'ha escrit res.
     refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import
@@ -1407,6 +1407,10 @@ errors:
       terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
       un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies
       el segon termini, un compte espanyol teu.'
+    refused_modelo_inventory_purchase_ledger_row: 'La declaració continua rebutjada:
+      una compra del teu inventari no indica quin moviment la registra, o n''indica
+      un que no hi coincideix. Indica quin moviment registra cada compra, o que cap
+      no la registra, i torna a calcular.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'El Model 303 no es pot calcular
       fins que la compensació de períodes anteriors tingui suport: registra-la al
       Saldo d''IVA.'
