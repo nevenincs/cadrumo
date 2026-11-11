@@ -51,6 +51,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -66,7 +67,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000303"
 _BUCKET_LABEL = "operator"
-_SEED_YEAR = 2024
+_SEED_YEAR = filing_year_envelope().horizon - 1
+_SEALED_YEAR = _SEED_YEAR + 1
 _SEED_PERIOD = "4T"
 _SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
 
@@ -140,7 +142,7 @@ def _persist_sealed_303(
 ) -> None:
     from datetime import UTC, datetime
 
-    when = datetime(2026, 1, 2, tzinfo=UTC)
+    when = datetime(filing_year + 1, 1, 2, tzinfo=UTC)
     typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_revision_marker = f"sealed-{filing_year}-{period.lower()}"
     work_unit_id = derive_work_unit_id(
@@ -280,13 +282,13 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
 ) -> None:
     """A sealed Modelo 303 at or after the seeded period blocks the correction.
 
-    The seed for (2024, 4T) feeds the carry-forward of every later Modelo 303
-    period. A sealed revision for a 2025 1T Modelo 303 has consumed that basis,
-    so correcting the 2024 4T seed would silently change an already-filed
+    The seed for the seeded 4T feeds the carry-forward of every later Modelo 303
+    period. A sealed revision for the next exercise's 1T Modelo 303 has consumed that basis,
+    so correcting the 4T seed would silently change an already-filed
     return — refused, with the offending revision named.
     """
     _seed(Decimal("500.00"), operation=operation)
-    _persist_sealed_303(filing_year=2025, period="1T", state=sealed_state, operation=operation)
+    _persist_sealed_303(filing_year=_SEALED_YEAR, period="1T", state=sealed_state, operation=operation)
 
     with pytest.raises(ModeloIvaWalletCorrectionSealedError) as excinfo:
         correct_iva_compensation_period_for_bucket(
@@ -299,7 +301,7 @@ def test_correction_refused_when_sealed_303_consumed_the_seed(
         )
 
     context = excinfo.value.context or {}
-    assert context["blocking_filing_year"] == 2025
+    assert context["blocking_filing_year"] == _SEALED_YEAR
     assert context["blocking_period"] == "1T"
     # The stored balance is unchanged: the guard fired before any write.
     persisted = _history_repository().load_period(Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD))
@@ -350,7 +352,9 @@ def test_correction_allowed_when_only_a_draft_303_exists(*, operation: PinnedAut
     corrections.
     """
     _seed(Decimal("500.00"), operation=operation)
-    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
+    _persist_sealed_303(
+        filing_year=_SEALED_YEAR, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation
+    )
 
     state = correct_iva_compensation_period_for_bucket(
         bucket_id=_BUCKET_ID,
@@ -368,10 +372,12 @@ def test_corrected_seed_refreshes_previously_accepted_zero(*, operation: PinnedA
     from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
 
     _seed(Decimal("0"), operation=operation)
-    _persist_sealed_303(filing_year=2025, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation)
+    _persist_sealed_303(
+        filing_year=_SEALED_YEAR, period="1T", state=CalculationRevisionState.BORRADOR, operation=operation
+    )
     ports = _seed_ports()
     unit = next(iter(ports.work_unit_repository.load().work_units.values()))
-    snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_SEALED_YEAR, period="1T")
     taxpayer = taxpayer_nif_for_bucket(_BUCKET_ID)
     assert taxpayer is not None
 
