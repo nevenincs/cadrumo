@@ -428,12 +428,12 @@ def _verify_and_export(
 
 
 def run_employee(cli: InstalledCli, *, year: int, directory: Path, edition: JourneyEdition) -> PersonaEvidence:
-    """The employee: certified work withholding, an attested movable-capital class, verified and exported."""
+    """The employee: certified work withholding, verified and exported."""
     oracle = build_employee_oracle()
     _create_profile(
         cli,
         year=year,
-        categories="trabajo,capital_mobiliario",
+        categories="trabajo",
         regime="directa_normal",
         activity_start=f"{year - 2}-01-01",
         criterion=False,
@@ -441,7 +441,6 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path, edition: Jour
     _carry_prior_year(cli, directory=directory, year=year, edition=edition)
     for certificate in oracle.certificates:
         _record_certificate(cli, directory=directory, year=year, certificate=certificate, income_class="trabajo")
-    attest_no_withholding(cli, year=year, income_class="capital_mobiliario")
     annual = _calculate_annual(
         cli,
         year=year,

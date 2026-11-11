@@ -9,7 +9,7 @@ import pytest
 
 from ..__main__ import main
 from ..diff import diff_tables, render_diff, row_id
-from ..render import counts, render_table, summary_line
+from ..render import counts, render_table, summary_line, unchecked_causes
 from ..rows import PlannedRow, Stage, TableRow, Verdict, write_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -63,6 +63,16 @@ def test_each_lane_carries_its_unchecked_rows_beside_green_and_total() -> None:
     text = render_table([_GREEN, _HISTORY, unchecked], head="abc", lanes={"303": "IVA"})
     assert "IVA 1/3 (unchecked 1)" in text
     assert "Summary: green 1 / 3," in text
+
+
+def test_unchecked_rows_are_counted_per_cause_and_a_row_with_two_causes_under_each() -> None:
+    gap = dataclasses.replace(_GREEN, period="2T", unchecked=("not-sourced:0003", "not-sourced:0017"))
+    both = dataclasses.replace(_GREEN, period="3T", unchecked=("concept:cuota", "not-sourced:0003"))
+    concept = dataclasses.replace(_GREEN, period="4T", unchecked=("concept:base",))
+    rows = [_GREEN, gap, both, concept]
+    assert unchecked_causes(rows) == {"concept": 2, "not-sourced": 2}
+    text = render_table(rows, head="abc")
+    assert "Unchecked rows by cause (a row with several causes counts under each): concept 2, not-sourced 2." in text
 
 
 def test_the_diff_separates_green_regression_and_stage_moves() -> None:
