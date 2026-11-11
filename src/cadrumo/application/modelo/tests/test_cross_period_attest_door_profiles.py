@@ -26,7 +26,7 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ...operator_actions.catalogue import lookup_action
-from ..preconditions import build_modelo_precondition_failure_for_scenario
+from ..preconditions import MODELO_PRECONDITION_PROFILES, build_modelo_precondition_failure_for_scenario
 from ..verification_cross_period import cross_period_door, cross_period_door_operator_arguments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -135,3 +135,20 @@ def test_a_source_the_envelope_admits_keeps_its_own_door_and_names_no_statement(
     scenario, _ = _door(_evidence(floor, outside_envelope=False), _target(floor + 1))
 
     assert scenario != "attest_prior_value"
+
+
+def _cross_period_outcomes(leaf: str) -> dict[str, tuple[str | None, object]]:
+    outcomes: dict[str, tuple[str | None, object]] = {}
+    for profile in MODELO_PRECONDITION_PROFILES:
+        suffix = profile.scenario_id.removeprefix(f"{leaf}.")
+        if profile.subject_leaf_key == leaf and suffix.startswith(("cross_period_dependency.", "activity_start_date.")):
+            outcomes[suffix] = (
+                profile.action.action_id if profile.action is not None else None,
+                profile.no_recovery_outcome,
+            )
+    return outcomes
+
+
+def test_an_export_refused_on_an_earlier_return_opens_the_same_door_filing_does() -> None:
+    assert _cross_period_outcomes("modelo.export") == _cross_period_outcomes("modelo.work.file")
+    assert "cross_period_dependency.attest_prior_value" in _cross_period_outcomes("modelo.export")

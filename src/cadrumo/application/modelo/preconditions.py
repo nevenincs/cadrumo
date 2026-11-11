@@ -898,8 +898,17 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.cross_period_dependency.unclean",
     ),
     *_cross_period_door_profiles("modelo.work.verify"),
-    # An export refused on a source no return can prove names the same statement.
-    _attest_prior_value_profile("modelo.export"),
+    _profile(
+        "modelo.export",
+        "modelo.export.cross_period_dependency.clean",
+        "modelo.export.cross_period_dependency.unclean",
+    ),
+    *_cross_period_door_profiles("modelo.export"),
+    _profile(
+        "modelo.export",
+        "modelo.export.activity_start_date.present",
+        "modelo.export.activity_start_date.missing_for_first_filer_adjudication",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",

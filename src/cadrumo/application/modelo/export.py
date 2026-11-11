@@ -965,6 +965,7 @@ def _require_modelo_export_clean_state(
     iva_wallet_decision: IvaCompensationReconciliationDecision | None,
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     require_cross_period_clean_state(
         work_unit,
@@ -988,6 +989,8 @@ def _require_modelo_export_clean_state(
         workflow_profile=workflow_profile,
         target_revision=revision,
         work_unit_repository=export_ports.work_unit,
+        subject_leaf_key="modelo.export",
+        operation=operation,
     )
 
 
@@ -1101,6 +1104,7 @@ def _prepare_modelo_export(
         iva_wallet_decision=iva_wallet_decision,
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
     prior_domiciliation_election = _resolve_modelo_exportprior_domiciliation(
         command,
