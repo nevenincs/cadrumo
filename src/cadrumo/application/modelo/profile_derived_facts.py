@@ -1087,13 +1087,8 @@ def inject_derived_incremento_guarderia_facts(
     consumers = tuple(
         (key, limited)
         for key, limited in (
-            (derived_selector_for_snapshot(snapshot, "renta_family.incremento_guarderia", declared_selectors), False),
-            (
-                derived_selector_for_snapshot(
-                    snapshot, "renta_family.incremento_guarderia_cotizaciones", declared_selectors
-                ),
-                True,
-            ),
+            ("renta_family.incremento_guarderia", False),
+            ("renta_family.incremento_guarderia_cotizaciones", True),
         )
         if key in declared_selectors
     )
