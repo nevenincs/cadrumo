@@ -247,7 +247,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     - The Art. 81.1 maternidad binding (casilla 0611): its fact is derived only by
       the calculate-path maternity injector, which this manual-injection pin does
       not run; its resolution is covered by test_maternidad_alta_posterior_resolution
-      and test_maternidad_cotizaciones_ceiling.
+      and test_maternidad_cotizaciones_limit.
     - The cash election binding (casilla 0169): its fact is derived per ejercicio by
       the calculate path; test_e2e_imputation_calculate_to_export covers it.
     """
