@@ -8,7 +8,7 @@ from ...core.filing_producer_key import FilingProducerKey
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.deadlines.models import ModeloIVAProfile
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportDesignIntegrityError
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from . import producer_ownership
 from .export_producer_m200_account import m200_account_values
@@ -947,7 +947,10 @@ def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) ->
         if owner == "shared_snapshot"
     }
     if set(values) != shared_owned:
-        raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
+        raise FilingExportDesignIntegrityError(
+            "shared filing producer resolver is not exhaustive over its owned keys",
+            translated_message="errors.integrity.filing_export_shared_resolver_not_exhaustive",
+        )
 
 
 def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:

@@ -64,9 +64,7 @@ from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerPro
 from ...domain.filing.errors import (
     FilingExportDeclaredPartyNameError,
     FilingExportError,
-    FilingExportFieldUnrenderableError,
     FilingExportRequiredRecordAbsentError,
-    FilingExportUnrepresentableCharacterError,
     FilingExportValueOverflowError,
 )
 from ...domain.filing.schema import ModeloDraft
@@ -140,7 +138,7 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
-from .export_field_refusal import export_field_unrenderable_refusal, export_unrepresentable_character_refusal
+from .export_field_refusal import export_field_level_refusal
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -644,10 +642,9 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     }
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
         return ModeloExportRequiredRecordAbsentError(context=refusal_context)
-    if isinstance(exc, FilingExportUnrepresentableCharacterError):
-        return export_unrepresentable_character_refusal(command, exc)
-    if isinstance(exc, FilingExportFieldUnrenderableError):
-        return export_field_unrenderable_refusal(command, exc)
+    field_refusal = export_field_level_refusal(command, exc)
+    if field_refusal is not None:
+        return field_refusal
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(

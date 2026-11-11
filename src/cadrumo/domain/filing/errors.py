@@ -56,6 +56,23 @@ class FilingExportValidationError(FilingExportError):
     """
 
 
+class FilingExportIntegrityError(FilingExportError):
+    """Raised when the export design the application carries contradicts itself or the code that renders it.
+
+    Every check behind it compares the application's own record design, registry
+    layout or computed result, never a value the filer supplied, so no change to
+    the filer's data repairs it.
+    """
+
+
+class FilingExportDesignIntegrityError(FilingExportIntegrityError, FilingExportValidationError):
+    """Raised on an invalid export field value or layout that is the application's own fault.
+
+    It is both an export integrity defect and an export validation failure, so a
+    handler that catches :class:`FilingExportValidationError` still catches it.
+    """
+
+
 class FilingExportValueOverflowError(FilingExportValidationError):
     """Raised when a value is wider than its slot in the official record design.
 

@@ -14,7 +14,10 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportDesignIntegrityError,
+    FilingExportIntegrityError,
+)
 from .export_xml_value_limits import XSD_NS, xsd_declared_children
 
 XML_DICTIONARY_ROOT_TAG = "Declaracion"
@@ -29,7 +32,11 @@ def xml_dictionary_xsd_source(
     for source in sources.values():
         if source.id in refs and source.kind == "xsd":
             return source
-    raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
+    raise FilingExportIntegrityError(
+        f"XML dictionary export layout {layout.id!r} has no resolved XSD source",
+        translated_message="errors.integrity.filing_export_xsd_source_unresolved",
+        context={"layout": layout.id},
+    )
 
 
 def xml_dictionary_xsd_root(
@@ -39,7 +46,11 @@ def xml_dictionary_xsd_root(
     try:
         root = DefusedElementTree.fromstring(source_payloads[source.id])
     except (DefusedElementTree.ParseError, KeyError) as exc:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary XSD source {source.id!r} could not be parsed",
+            translated_message="errors.integrity.filing_export_xsd_unparseable",
+            context={"source": source.id},
+        ) from exc
     return root
 
 
@@ -55,7 +66,11 @@ def latest_xml_dictionary_xsd_version(source: SourceReference, *, source_payload
             if value is not None and value:
                 versions.append(value)
     if not versions:
-        raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
+        raise FilingExportDesignIntegrityError(
+            f"XML dictionary XSD source {source.id!r} declares no versionxsd values",
+            translated_message="errors.integrity.filing_export_xsd_version_absent",
+            context={"source": source.id},
+        )
     return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
 
 
@@ -102,8 +117,10 @@ def xml_dictionary_element_order(
         None,
     )
     if declaration is None:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"XML dictionary XSD source {source.id!r} declares no {XML_DICTIONARY_ROOT_TAG!r} root element",
+            translated_message="errors.integrity.filing_export_xsd_root_absent",
+            context={"source": source.id, "root": XML_DICTIONARY_ROOT_TAG},
         )
     _record_xsd_child_order(
         "",
@@ -128,8 +145,10 @@ def xml_dictionary_repeating_element_paths(
         None,
     )
     if declaration is None:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"XML dictionary XSD source {source.id!r} declares no {XML_DICTIONARY_ROOT_TAG!r} root element",
+            translated_message="errors.integrity.filing_export_xsd_root_absent",
+            context={"source": source.id, "root": XML_DICTIONARY_ROOT_TAG},
         )
     repeating_paths: dict[str, int | None] = {}
     _record_xsd_child_order(
@@ -156,8 +175,10 @@ def xml_dictionary_optional_element_paths(
         None,
     )
     if declaration is None:
-        raise FilingExportValidationError(
+        raise FilingExportDesignIntegrityError(
             f"XML dictionary XSD source {source.id!r} declares no {XML_DICTIONARY_ROOT_TAG!r} root element",
+            translated_message="errors.integrity.filing_export_xsd_root_absent",
+            context={"source": source.id, "root": XML_DICTIONARY_ROOT_TAG},
         )
     optional_paths: set[str] = set()
     _record_xsd_child_order(
