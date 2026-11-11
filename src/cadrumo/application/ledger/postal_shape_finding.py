@@ -50,7 +50,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...domain.iva.establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
@@ -108,7 +108,7 @@ def postal_shape_findings(
     # the draft module reaches the parsers and the reading package, so binding it
     # at module scope would make this leaf pay for all of it. Read exactly as if
     # it were written at module scope.
-    from .invoice_draft_records import DraftDiscrepancyFinding
+    from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 
     findings: list[DraftDiscrepancyFinding] = []
     for party in party_addresses():
@@ -132,10 +132,11 @@ def postal_shape_findings(
                 # one shown the printed text beside what was expected can see at
                 # a glance that an address line landed in the wrong slot, and
                 # can read the correct code straight out of it.
-                detail=(
-                    f"the {party.operator_role} party's postal code field holds {printed.strip()!r}, which is not a "
-                    f"five-digit postal code, and its printed country did not settle where the party is "
-                    f"established; the Spanish IVA territory therefore stays undetermined"
+                words=FindingWords.of(
+                    DraftFindingWording.SUPPLIER_POSTAL_CODE_UNREADABLE
+                    if party.role == "supplier"
+                    else DraftFindingWording.CUSTOMER_POSTAL_CODE_UNREADABLE,
+                    printed=printed.strip(),
                 ),
             ),
         )

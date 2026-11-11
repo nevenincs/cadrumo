@@ -109,7 +109,8 @@ def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding(
     # established, so naming it would send the operator to a value that does not
     # exist on the record.
     assert finding.field == "regime_legend"
-    assert finding.detail
+    assert finding.words is not None
+    assert dict(finding.words.params)["mention"]
 
 
 def test_a_stated_rate_alone_contradicts_even_with_no_legible_cuota(

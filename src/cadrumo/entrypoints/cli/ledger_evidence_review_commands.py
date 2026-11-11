@@ -75,6 +75,11 @@ def _blocker_payload(blocker: ConfirmationBlockerProjectionV1) -> EvidenceReview
             "reason": blocker.reason.value,
             "field": blocker.field,
             "detail": blocker.detail,
+            "words": None if blocker.words is None else blocker.words.model_dump(mode="json"),
+            "detail_words": blocker.detail_words,
+            "detail_words_language": None
+            if blocker.detail_words_language is None
+            else blocker.detail_words_language.value,
             "candidates": _candidate_payloads(blocker),
         },
     )
@@ -403,6 +408,11 @@ def _review_view_payload(
                     "kind": finding.kind.value,
                     "field": finding.field,
                     "detail": finding.detail,
+                    "words": None if finding.words is None else finding.words.model_dump(mode="json"),
+                    "detail_words": finding.detail_words,
+                    "detail_words_language": (
+                        None if finding.detail_words_language is None else finding.detail_words_language.value
+                    ),
                     "expected": None if finding.expected is None else finding.expected.decimal,
                     "observed": None if finding.observed is None else finding.observed.decimal,
                 }

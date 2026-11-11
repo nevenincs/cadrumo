@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["DraftDiscrepancyKind"]
+__all__ = ["DraftDiscrepancyKind", "DraftFindingWording"]
 
 
 class DraftDiscrepancyKind(StrEnum):
@@ -194,3 +194,50 @@ class DraftDiscrepancyKind(StrEnum):
     be any invoice's number, and the record it would otherwise create names no
     invoice the operator or a counterparty could find again.
     """
+
+
+class DraftFindingWording(StrEnum):
+    """Which sentence explains one finding to the operator.
+
+    Each member names one catalogue sentence under
+    ``application.ledger.draft_finding.<value>``. The finding carries the member and
+    the figures and printed text the sentence quotes, so every surface renders the
+    explanation in the operator's language rather than in the producer's.
+    """
+
+    TOTAL_NOT_CLOSED = "total_not_closed"
+    RETENTION_NOT_RATE_OF_BASE = "retention_not_rate_of_base"
+    FLAT_CUOTA_NOT_RATE_OF_BASE = "flat_cuota_not_rate_of_base"
+    TIER_CUOTA_NOT_RATE_OF_BASE = "tier_cuota_not_rate_of_base"
+    BREAKDOWN_BASES_DISAGREE = "breakdown_bases_disagree"
+    BREAKDOWN_CUOTAS_DISAGREE = "breakdown_cuotas_disagree"
+    WITHHELD_UNNAMED_TAX = "withheld_unnamed_tax"
+    WITHHELD_NAMED_TAX = "withheld_named_tax"
+    WITHHELD_TOTAL_DISAGREES = "withheld_total_disagrees"
+    WITHHELD_NOT_RATE_OF_BASE = "withheld_not_rate_of_base"
+    MENTION_EXPECTS_REPERCUTIDO_LINE = "mention_expects_repercutido_line"
+    MENTION_EXPECTS_NO_REPERCUTIDO_LINE = "mention_expects_no_repercutido_line"
+    SUPPLIER_POSTAL_CODE_UNREADABLE = "supplier_postal_code_unreadable"
+    CUSTOMER_POSTAL_CODE_UNREADABLE = "customer_postal_code_unreadable"
+    VALUE_IN_OTHER_PARTY_BLOCK = "value_in_other_party_block"
+    TAX_ID_FAILS_CHECK = "tax_id_fails_check"
+    INVOICE_NUMBER_WITHOUT_DIGIT = "invoice_number_without_digit"
+    PRINTED_IVA_NOT_RATE_OF_BASE = "printed_iva_not_rate_of_base"
+    PRINTED_RECARGO_NOT_RATE_OF_BASE = "printed_recargo_not_rate_of_base"
+    PRINTED_BREAKDOWN_DISAGREES = "printed_breakdown_disagrees"
+    PRINTED_TOTAL_NOT_CLOSED = "printed_total_not_closed"
+    PRINTED_RETENTION_NOT_RATE_OF_BASE = "printed_retention_not_rate_of_base"
+    PRINTED_PAYABLE_NOT_CLOSED = "printed_payable_not_closed"
+    FACTURAE_SUMMARY_UNMODELLED = "facturae_summary_unmodelled"
+    FACTURAE_CORRECTIVE_WITHOUT_REFERENCE = "facturae_corrective_without_reference"
+    FACTURAE_REFERENCE_WITHOUT_CORRECTIVE = "facturae_reference_without_corrective"
+    LONE_IDENTIFIER_WITHOUT_ROLE = "lone_identifier_without_role"
+    SEVERAL_IDENTIFIERS_COMPETE = "several_identifiers_compete"
+    EVERY_IDENTIFIER_FAILED = "every_identifier_failed"
+    EVERY_IDENTIFIER_FAILED_OWN_UNAVAILABLE = "every_identifier_failed_own_unavailable"
+    DOCUMENT_ISSUED_CONFIRMED_RECEIVED = "document_issued_confirmed_received"
+    DOCUMENT_RECEIVED_CONFIRMED_ISSUED = "document_received_confirmed_issued"
+    IDENTITY_READINGS_COMPETE = "identity_readings_compete"
+    FILER_PROFILE_UNRESOLVABLE = "filer_profile_unresolvable"
+    COUNTERPARTY_TERRITORY_UNKNOWN = "counterparty_territory_unknown"
+    UNIDENTIFIED_COUNTERPARTY_TERRITORY_UNKNOWN = "unidentified_counterparty_territory_unknown"

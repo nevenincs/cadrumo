@@ -1,8 +1,9 @@
 """Record the sentences the Ledger operations serve, for the browser fixtures that answer for them.
 
 The prorrata register, capital-goods and inventory operations serve a finished sentence with every
-refusal, the evidence review serves one for each reason a read draft cannot be confirmed, and an
-off-host evidence read the consent gate refuses settles with the gate's own sentence, and a listed row
+refusal, the evidence review serves one for each reason a read draft cannot be confirmed and one
+explaining each finding, an off-host evidence read the consent gate refuses settles with the gate's
+own sentence, and a listed row
 whose classification a command wrote serves a word for the command in place of its name. This
 words each through the same functions the operations call, for every reason in every language, so
 the browser fixtures show what the backend serves and hold no text of their own. A sentence the
@@ -140,6 +141,33 @@ def _confirmation_block() -> dict[str, dict[str, str]]:
     return _worded(tuple(reason.value for reason in ConfirmationBlockReason), word)
 
 
+def _draft_finding() -> dict[str, dict[str, str]]:
+    from cadrumo.application.ledger.confirmation_block_words import served_finding_words
+    from cadrumo.application.ledger.invoice_draft_records import FindingWords
+    from cadrumo.core.draft_discrepancy import DraftFindingWording
+    from cadrumo.core.i18n.render import lookup_translation
+
+    def word(wording: str) -> tuple[str, str]:
+        names = tuple(
+            sorted(
+                {
+                    name
+                    for language in LANGUAGES
+                    for name in _PLACEHOLDER.findall(
+                        lookup_translation(f"application.ledger.draft_finding.{wording}", locale=language) or ""
+                    )
+                }
+            )
+        )
+        words = FindingWords.of(DraftFindingWording(wording), **{name: _sentinel(name) for name in names})
+        sentence, language = served_finding_words(words)
+        if sentence is None or language is None:
+            raise SystemExit(f"{wording} served no sentence")
+        return _served((sentence, language), names)
+
+    return _worded(tuple(wording.value for wording in DraftFindingWording), word)
+
+
 def _off_host_consent() -> dict[str, dict[str, str]]:
     """The sentence an off-host read refused by the consent gate settles with, as its error detail words it."""
     from cadrumo.adapters.outbound.llm.consent import mint_evidence_consent_token
@@ -214,6 +242,7 @@ def render_fixture() -> str:
         "capital_goods": _capital_goods(),
         "inventory": _inventory(),
         "confirmation_block": _confirmation_block(),
+        "draft_finding": _draft_finding(),
         "off_host_consent": _off_host_consent(),
         "reading_model": _reading_model(),
         "classification_reason": _classification_reason(),

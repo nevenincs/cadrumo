@@ -14,11 +14,18 @@ const SERVED_WORDS = JSON.parse(
   ),
 ) as {
   confirmation_block: Record<string, Record<string, string>>;
+  draft_finding: Record<string, Record<string, string>>;
   off_host_consent: Record<string, Record<string, string>>;
 };
 /** The sentences the backend serves for a confirmation block, by reason and
  * language. */
 const SERVED_REASONS = SERVED_WORDS.confirmation_block;
+/** The sentence the backend serves explaining a finding, its values filled. */
+const servedFinding = (wording: string, values: Record<string, string>) =>
+  SERVED_WORDS.draft_finding[wording]!.en!.replace(
+    /\{(\w+)\}/g,
+    (_, name: string) => values[name]!,
+  );
 
 // The Documents section over the scenario's `documents` ledger: readings
 // waiting for review, their findings, the confirmation bound to the reading
@@ -289,9 +296,20 @@ test("a flagged field's glyph goes to the question about it", async ({
 }) => {
   await openDocuments(target);
   await choose(target, PLENOIL);
-  for (const [field, reason] of [
-    ["supplier_tax_id", "ambiguous_identity"],
-    ["grand_total", "closure_discrepancy"],
+  for (const [field, reason, explained] of [
+    [
+      "supplier_tax_id",
+      "ambiguous_identity",
+      servedFinding("identity_readings_compete", {
+        count: "2",
+        field: "supplier_tax_id",
+      }),
+    ],
+    [
+      "grand_total",
+      "closure_discrepancy",
+      servedFinding("total_not_closed", { computed: "58.39", total: "58.40" }),
+    ],
   ] as const) {
     const glyph = draft(target).locator(
       `[data-field=${field}] .ledger-provenance-question`,
@@ -306,6 +324,8 @@ test("a flagged field's glyph goes to the question about it", async ({
     await glyph.click();
     const finding = draft(target).locator(".ledger-finding:focus");
     await expect(finding).toContainText(SERVED_REASONS[reason]!.en!);
+    // The explanation is the sentence the backend serves, not one of its own.
+    await expect(finding).toContainText(explained);
     await expect(finding).toBeInViewport();
   }
   // A field no finding asks about keeps its plain glyph.

@@ -14,8 +14,9 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.confirmation_gate import ConfirmationBlockReason
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....domain.iva.regime_legend import resolve_regime_legends
+from ..confirmation_block_words import served_finding_words
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
 from ..deterministic_findings import deterministic_check_names, deterministic_findings
 from ..invoice_draft_records import InvoiceDraft
@@ -52,7 +53,8 @@ class TestItFiresWhereTheCodeWasNeeded:
             assert len(findings) == 1
             assert findings[0].kind is DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE
             assert findings[0].field == "supplier_postal_code"
-            assert "issuing party" in findings[0].detail
+            assert findings[0].words is not None
+            assert findings[0].words.wording is DraftFindingWording.SUPPLIER_POSTAL_CODE_UNREADABLE
 
     def test_an_unreadable_code_with_no_country_printed_is_reported(
         self, *, operation: PinnedAuthorityOperation
@@ -67,7 +69,9 @@ class TestItFiresWhereTheCodeWasNeeded:
         with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = InvoiceDraft(supplier_postal_code=_ADDRESS_BLOB, supplier_country="España")
 
-            assert _ADDRESS_BLOB in postal_shape_findings(draft, operation=_authority_operation_for_test)[0].detail
+            (finding,) = postal_shape_findings(draft, operation=_authority_operation_for_test)
+
+            assert _ADDRESS_BLOB in (served_finding_words(finding.words)[0] or "")
 
 
 class TestItStaysSilentWhereTheCodeCostNothing:
@@ -115,7 +119,8 @@ class TestBothPartiesAreAskedIndependently:
             findings = postal_shape_findings(draft, operation=_authority_operation_for_test)
 
             assert _kinds(draft, operation=operation) == ["customer_postal_code"]
-            assert "billed party" in findings[0].detail
+            assert findings[0].words is not None
+            assert findings[0].words.wording is DraftFindingWording.CUSTOMER_POSTAL_CODE_UNREADABLE
 
     def test_one_party_settled_does_not_silence_the_other(self, *, operation: PinnedAuthorityOperation) -> None:
         draft = InvoiceDraft(

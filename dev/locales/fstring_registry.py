@@ -283,6 +283,7 @@ def _runtime_registrations(
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.confirmation_gate import ConfirmationBlockReason
+    from cadrumo.core.draft_discrepancy import DraftFindingWording
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
@@ -299,6 +300,11 @@ def _runtime_registrations(
             description="application.ledger.confirmation_block.served.* (ConfirmationBlockReason)",
             key_factory=lambda value: f"application.ledger.confirmation_block.served.{value}",
             values=_enum_values(ConfirmationBlockReason),
+        ),
+        FStringKeyRegistration(
+            description="application.ledger.draft_finding.* (DraftFindingWording)",
+            key_factory=lambda value: f"application.ledger.draft_finding.{value}",
+            values=_enum_values(DraftFindingWording),
         ),
         FStringKeyRegistration(
             # The operations modal renders tr(terminal_copy_key), a key the

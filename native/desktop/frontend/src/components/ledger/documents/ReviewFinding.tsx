@@ -46,6 +46,9 @@ export function Finding({
   const answered = resolutionOf(blocker, answer) !== null;
   const candidates = blocker.candidates ?? [];
   const current = answer ?? { action: "attest", value: "", note: "" };
+  // The sentence the backend serves explaining the finding; a reading stored
+  // before findings carried their words keeps its recorded explanation.
+  const explanation = blocker.detail_words || blocker.detail;
   // A figure the catalogue works out is saved as worked out whatever is
   // answered: the finding says so, and only takes the reason it is accepted.
   const worked =
@@ -71,6 +74,7 @@ export function Finding({
           </span>
           {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
         </div>
+        {explanation && <p className="text-sm">{explanation}</p>}
         <p className="ledger-finding-worked text-sm">
           {t("desktop.ledger.documents.worked_out", {
             field: fieldLabel(t, blocker.field!),
@@ -109,7 +113,7 @@ export function Finding({
         </span>
         {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
       </div>
-      {blocker.detail && <p className="text-sm">{blocker.detail}</p>}
+      {explanation && <p className="text-sm">{explanation}</p>}
       <SegmentedControl
         aria-label={t("desktop.ledger.documents.answer")}
         value={answer?.action ?? ""}
