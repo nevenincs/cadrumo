@@ -127,7 +127,7 @@ def test_post_tui_cli_calendar_uses_fresh_proof_for_both_formats(refused: bool) 
         def run(self, arguments, *, command: str, authenticated: bool):
             calls.append(("json", authenticated))
             assert command == "overview.calendar"
-            assert "--allow-incomplete" in arguments
+            assert not any(argument.startswith("--allow") for argument in arguments)
             if refused:
                 raise InstalledCliError("synthetic fresh-proof refusal")
             return {"result": {"entries": [_entry()]}}

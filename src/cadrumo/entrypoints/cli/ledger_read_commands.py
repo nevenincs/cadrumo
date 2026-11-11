@@ -486,12 +486,16 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
     Emits a :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerViewResult`.
     """
     from ...core.i18n.render import tr
+    from ...core.terminal_encoding import encode_terminal_field
     from .common import emit_envelope
     from .operation_ledger_view import read_ledger_view_for_cli
 
     projection = read_ledger_view_for_cli(ctx, transaction_id=transaction_id)
     transaction_payload = projection.transaction
     review_status = projection.review_status
+    # The printed reference is imported text: escape it so it cannot forge a line.
+    statement_reference = transaction_payload.statement_reference
+    printed_reference = encode_terminal_field(statement_reference) if statement_reference is not None else None
 
     def _field(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
@@ -507,6 +511,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
         f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",
         f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
         f"{tr('cli.ledger.labels.counterparty')}\t{_field(transaction_payload.counterparty)}",
+        f"{tr('cli.ledger.labels.statement_reference')}\t{_field(printed_reference)}",
         f"{tr('cli.ledger.labels.business_classification')}\t{_field(transaction_payload.business_classification)}",
         f"{tr('cli.ledger.labels.business_pct')}\t{_field(transaction_payload.business_pct)}",
         f"{tr('cli.ledger.labels.category_id')}\t{_field(transaction_payload.category_id)}",

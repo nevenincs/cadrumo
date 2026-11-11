@@ -359,6 +359,9 @@ fn run(
                 if !closing {
                     server.poll(|request| match request {
                         Request::Status { .. } => ipc::status(background.status()),
+                        Request::DemandLocalAi { .. } => {
+                            ipc::demanded(background.demand_local_ai())
+                        }
                         other => ipc::respond(other, || background.retry()),
                     })?;
                 }

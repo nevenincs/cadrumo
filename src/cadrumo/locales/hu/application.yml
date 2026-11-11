@@ -1023,6 +1023,115 @@ application:
         unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
         unnumbered_invoice: A beolvasott számlaszám nem szám
         unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
+    draft_finding:
+      breakdown_bases_disagree: A kulcsonkénti alapok összege {summed}, a dokumentum
+        viszont {base} adóalapot tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
+        és legalább az egyik hibás.
+      breakdown_cuotas_disagree: A kulcsonkénti adók összege {summed}, a dokumentum
+        viszont {cuota} adót tüntet fel. Ez ugyanannak a dokumentumnak két olvasata,
+        és legalább az egyik hibás.
+      counterparty_territory_unknown: 'Ez a dokumentum nem határoz meg IVA-területet
+        a következőhöz: {tax_id}. Az ország és az irányítószám semmit sem döntött
+        el, és nincs megerősített adat, így a terület ismeretlen, nem pedig a félsziget.'
+      customer_postal_code_unreadable: A címzett irányítószám-mezője „{printed}” értéket
+        tartalmaz, ami nem ötjegyű irányítószám, és a feltüntetett ország sem dönti
+        el, hol telepedett le a címzett. Spanyol IVA-területe meghatározatlan marad.
+      document_issued_confirmed_received: Ez a dokumentum téged tüntet fel kibocsátóként,
+        de bejövő számlaként hagyod jóvá. Az irány dönti el, melyik adatszolgáltatásba
+        és melyik oldalon kerül a tétel, és az AEAT a két fél adatszolgáltatását egymással
+        veti össze.
+      document_received_confirmed_issued: Ez a dokumentum téged tüntet fel címzettként,
+        de kimenő számlaként hagyod jóvá. Az irány dönti el, melyik adatszolgáltatásba
+        és melyik oldalon kerül a tétel, és az AEAT a két fél adatszolgáltatását egymással
+        veti össze.
+      every_identifier_failed: A dokumentumon a másik félhez feltüntetett összes azonosító
+        megbukott az ellenőrzésen, így a másik fél ebből a dokumentumból nem azonosítható.
+      every_identifier_failed_own_unavailable: A dokumentumon a másik félhez feltüntetett
+        összes azonosító megbukott az ellenőrzésen, így a másik fél ebből a dokumentumból
+        nem azonosítható. A saját azonosítód nem volt elérhető a kizáráshoz.
+      facturae_corrective_without_reference: A(z) „{code}” Facturae-számlaosztály
+        helyesbítő számlát jelöl, de a dokumentum nem nevezi meg a helyesbített számlát.
+      facturae_reference_without_corrective: A dokumentum megnevez egy helyesbített
+        számlát, de a(z) „{code}” Facturae-számlaosztálya nem helyesbítő.
+      facturae_summary_unmodelled: A(z) „{code}” Facturae-számlaosztály gyűjtőszámlát
+        jelöl, amelyet ez az alkalmazás nem támogat.
+      filer_profile_unresolvable: Nem olvasható be adózói profil, így a saját IVA-területed
+        ismeretlen. Ez a profilodból származik ({fact}), és sosem számláról olvassuk
+        be.
+      flat_cuota_not_rate_of_base: A megadott adó ({cuota}) nem a megadott alap ({base})
+        {rate}%-a ({expected}). Vagy egy szám hibásan lett beolvasva, vagy a számla
+        több adókulcsot alkalmaz, és hiányzik a kulcsonkénti bontás. A 303-as nyomtatvány
+        kulcsonként vallja be az alapot és az adót, így a jóváhagyás a teljes alapot
+        rossz kulcs alatt vallaná be.
+      identity_readings_compete: A(z) {field} {count} olvasata verseng, és egyik sem
+        dönthető el. A jóváhagyás az egyik valós adózó azonosítóját választaná a másiké
+        helyett.
+      invoice_number_without_digit: A beolvasott számlaszám („{number}”) nem tartalmaz
+        számjegyet, így nem lehet a számla sorszáma. Valószínűleg egy fejléc vagy
+        címke lett a helyén beolvasva.
+      lone_identifier_without_role: A(z) „{printed}” azonosító érvényes, de a dokumentumon
+        semmi sem köti a másik félhez. Ha csak azért fogadnád el, mert ez maradt egyedül,
+        egy oldalon véletlenül szereplő, nem érintett szervezetet nevezhetne meg.
+      mention_expects_no_repercutido_line: A dokumentumon szerepel a(z) „{mention}”
+        megjegyzés ({provision}), amely szerint nincs felszámított IVA, mégis szerepel
+        kulcs és adóösszeg. A dokumentum ellentmond önmagának, így az IVA-kategória
+        egyik oldalból sem vehető át.
+      mention_expects_repercutido_line: A dokumentumon szerepel a(z) „{mention}” megjegyzés
+        ({provision}), amely felszámított IVA-kulcsot és -összeget feltételez, de
+        egyik sincs feltüntetve. A dokumentum ellentmond önmagának, így az IVA-kategória
+        egyik oldalból sem vehető át.
+      printed_breakdown_disagrees: A kulcsonkénti összegek összege {summed}, a dokumentumon
+        viszont {printed} szerepel.
+      printed_iva_not_rate_of_base: A nyomtatott IVA ({amount}) nem a nyomtatott alap
+        ({base}) {rate} része. A számok üresen maradtak ahelyett, hogy valamelyik
+        ki lett volna választva.
+      printed_payable_not_closed: A nyomtatott fizetendő összeg ({payable}) nem a
+        végösszeg és a levonás különbsége ({expected}). A levonás üresen maradt.
+      printed_recargo_not_rate_of_base: A nyomtatott kiegyenlítő felár ({amount})
+        nem a nyomtatott alap ({base}) {rate} része. A számok üresen maradtak ahelyett,
+        hogy valamelyik ki lett volna választva.
+      printed_retention_not_rate_of_base: A nyomtatott levonás ({retention}) nem az
+        adóalap {rate} része ({expected}). A kulcs üresen maradt.
+      printed_total_not_closed: A nyomtatott végösszeg ({total}) nem egyezik az alap,
+        az adó, a kiegyenlítő felár és a továbbszámlázott tételek összegével ({computed}).
+        A számok üresen maradtak ahelyett, hogy valamelyik ki lett volna választva.
+      retention_not_rate_of_base: A megadott levonás ({retention}) nem az adóalap
+        {rate}%-a ({expected}). Egymásnak ellentmondó számokból nem állapítható meg
+        a ténylegesen kifizetett összeg.
+      several_identifiers_compete: '{count} azonosító közül bármelyik lehet a másik
+        fél. Ha a helye alapján választanál, az csak találgatás lenne.'
+      supplier_postal_code_unreadable: A kibocsátó irányítószám-mezője „{printed}”
+        értéket tartalmaz, ami nem ötjegyű irányítószám, és a feltüntetett ország
+        sem dönti el, hol telepedett le a kibocsátó. Spanyol IVA-területe meghatározatlan
+        marad.
+      tax_id_fails_check: A dokumentum „{printed}” értéket tüntet fel adóazonosítóként,
+        de az nem felel meg az ellenőrző karakterének, ezért nem lett ellenőrzött
+        azonosítóként elfogadva.
+      tier_cuota_not_rate_of_base: A(z) {rate}%-os kulcs {base} alapra {cuota} adót
+        tüntet fel, holott {expected} kellene. A 303-as nyomtatvány kulcsonként vallja
+        be az adót, így ez a kulcs rossz összeget vallana be.
+      total_not_closed: A nyomtatott végösszeg ({total}) nem egyezik az alap, az adó,
+        a kiegyenlítő felár és a továbbszámlázott tételek összegével ({computed}).
+        Valamelyik összetevő hibásan lett beolvasva, vagy a dokumentum olyat is tartalmaz,
+        amelyet ez a tervezet nem tud megjeleníteni.
+      unidentified_counterparty_territory_unknown: Ez a dokumentum nem határoz meg
+        IVA-területet a másik félhez, és azonosítót sem tüntet fel hozzá. Az ország
+        és az irányítószám semmit sem döntött el, és nincs megerősített adat, így
+        a terület ismeretlen, nem pedig a félsziget.
+      value_in_other_party_block: A(z) {field} értéke ezen a dokumentumon a másik
+        fél blokkjában szerepel, nem abban, amelyhez hozzá lett rendelve. Lehet, hogy
+        a címblokkok fordítva lettek beolvasva, ami mindkét felet rossz IVA-területre
+        helyezné.
+      withheld_named_tax: A dokumentum {amount} levonást tüntet fel a(z) „{tax}” adóra,
+        amelyet a formátuma nem azonosít IRPF-ként, ezért nem lett levonásként beolvasva.
+        Add meg a levonást, ha az.
+      withheld_not_rate_of_base: A levont {amount} nem a megadott alap ({base}) {rate}%-a
+        ({expected}).
+      withheld_total_disagrees: A dokumentum összesen {stated} levonást tüntet fel,
+        a levont adók összege viszont {summed}.
+      withheld_unnamed_tax: A dokumentum {amount} levonást tüntet fel az adó megnevezése
+        nélkül, ezért nem lett IRPF-levonásként beolvasva. Add meg a levonást, ha
+        az.
     entry_options:
       deduction_fact_kind:
         domestic_current: Belföldi beszerzés, forgóeszköz
@@ -2576,6 +2685,8 @@ application:
         származik; töröld, vagy javítsd a forrásbejegyzést.
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
+      work_create_not_applicable: 'A Modelo %{modelo} a profilod szerint nem vonatkozik
+        rád: %{reason} A bevallás nem jött létre.'
       work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token
         a Modelo %{modelo} bevalláshoz. Add meg külön: --year %{year}, és használd
         ezek egyikét: %{tokens}.'

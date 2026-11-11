@@ -65,6 +65,7 @@ from cadrumo.application.modelo.work_unit_repository import work_unit_catalogue_
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.flows import FlowMode
+from cadrumo.core.operator_action_enums import ActionArgumentStatus
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -105,7 +106,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 
 
 def test_amend_wizard_missing_evidence_offers_the_justificante_import() -> None:
-    """An unattested amendment baseline is opened by importing its AEAT evidence for the same work unit."""
+    """An unattested amendment baseline is opened by importing its AEAT evidence for the same work unit.
+
+    The evidence kind and its reference are on the operator's justificante, so the door asks for them.
+    """
     failure = amendment_evidence_missing_precondition(
         subject_leaf_key="modelo.work.amend_wizard", work_unit_id="a" * 64, filing_record_id="b" * 64
     )
@@ -113,7 +117,12 @@ def test_amend_wizard_missing_evidence_offers_the_justificante_import() -> None:
     verdict = failure.verdict
     assert verdict.action is not None
     assert verdict.action.action_id == "operator.modelo.filing_record.import"
-    assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {"work_unit_id": "a" * 64}
+    bound = {binding.argument_name: (binding.status, binding.value) for binding in verdict.argument_bindings}
+    assert bound == {
+        "evidence_kind": (ActionArgumentStatus.MISSING, None),
+        "evidence_reference_id": (ActionArgumentStatus.MISSING, None),
+        "work_unit_id": (ActionArgumentStatus.RESOLVED, "a" * 64),
+    }
     assert verdict.no_recovery_outcome is None
 
 

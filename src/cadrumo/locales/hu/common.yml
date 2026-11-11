@@ -3213,6 +3213,7 @@ desktop:
         unclassified: Besorolás később
         under: A részekből {amount} hiányzik a tételhez.
       stage: Hozzáadás a változtatásokhoz
+      statement_reference: Kivonat hivatkozása
       unread: Nem olvasható
       unsaved: 'Változások: {count} · nincs mentve'
       unsaved_classification: → {classification} · nincs mentve
@@ -4917,6 +4918,7 @@ desktop:
     progress_label: 'Haladás: {name}'
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
+    ready_dormant: Kész. Akkor indul el, amikor egy dokumentumot kell beolvasni.
     refused_browser_not_removed: A Cadrumo nem tudta eltávolítani a böngészőt. Ellenőrizd
       újra, majd próbáld meg még egyszer.
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.

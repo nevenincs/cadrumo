@@ -49,7 +49,8 @@ from ...aggregation.m303_arrivals import (
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
-from ..export_producer import filing_producer_values, m303_filing_lexicals, m303_profile_lexicals
+from ..export_producer import filing_producer_values
+from ..export_producer_m303 import m303_filing_lexicals, m303_profile_lexicals
 from ..producer_snapshot import (
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
@@ -261,7 +262,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
     # instance keeps the proof at the producer boundary instead of requiring a
     # whole bundled-registry load unrelated to this source-stated wire rule.
     facts = M303FilingFacts.model_construct(period=Period.from_year_and_code(_YEAR, period_code))
-    lexical = m303_profile_lexicals(profile, facts)
+    lexical = m303_profile_lexicals(profile, facts.period)
 
     assert lexical.hydrocarbon_deposit_advance_payment_deduction_entitled == expected
 
@@ -399,7 +400,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     }
 
 
-def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_period() -> None:
+def test_modelo_303_foral_note_5_prints_two_in_prorrata_slots_before_final_period() -> None:
     period = Period.from_year_and_code(_YEAR, "1T")
     snapshot = _m303_foral_snapshot(
         prorrata_transition=M303ProrrataTransitionArrival(
@@ -409,8 +410,10 @@ def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_perio
 
     values = filing_producer_values(snapshot)
 
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] is None
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] is None
+    # DP30301 Nota 5 gives a foral filer "2" in both election slots, and Nota 6 gives every filer "2" outside
+    # the last period. "0" is Nota 3's code for other fields, a value these slots do not admit.
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] == "2"
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] == "2"
 
 
 @pytest.mark.parametrize(

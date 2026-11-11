@@ -352,6 +352,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.classify",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.classify.movement",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.classify.irpf_category",
             target_command_key="ledger.classify",
             argument_specifications=(
@@ -423,6 +434,16 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             action_id="operator.modelo.filing_record.import",
             target_command_key="modelo.filing_record.import",
             argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_reference_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_reference_id",
+                ),
                 ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,

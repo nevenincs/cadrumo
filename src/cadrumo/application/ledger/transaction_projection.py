@@ -96,12 +96,14 @@ class LedgerTransactionProjection(BaseModel):
     direction: str
     counterparty: str
     description: str
+    statement_reference: str | None = None
     business_classification: str
     business_pct: str | None
     category_id: str | None
     taxable_base: str | None
     iva_rate: str | None
     iva_amount: str | None
+    recargo_amount: str | None = None
     iva_category: str | None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None

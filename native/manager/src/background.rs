@@ -20,7 +20,7 @@ use crate::{
     },
     startup::{self, Running, Start},
     supervision::{
-        local_ai::{LocalAiHost, server_address},
+        local_ai::{DemandAnswer, LocalAiHost, server_address},
         stop::PlatformStopSignal,
         supervisor::{
             Collaborators, EVENT_QUEUE, Event, Outcome, Request, SessionActivity, SupervisorConfig,
@@ -298,6 +298,7 @@ impl Background {
     }
 
     pub fn poll(&mut self) -> io::Result<()> {
+        self.local_ai.report(&self.diagnostics);
         // Re-armed only if this poll's uninstall is refused again.
         self.stop_retry = None;
         if let Some(result) = self.reporter.as_ref().and_then(|reporter| reporter.poll()) {
@@ -449,6 +450,13 @@ impl Background {
             }
         }
         Ok(())
+    }
+
+    /// The agent service demands the local AI server before it reads a document, or
+    /// renews its demand while the read lasts. `None` while no server can run here: the
+    /// package carries no program of the selected engine, or the selection cannot be read.
+    pub fn demand_local_ai(&self) -> Option<DemandAnswer> {
+        self.local_ai.demand()
     }
 
     /// A client asks only for reassessment; no running process is interrupted.
@@ -777,6 +785,26 @@ impl LocalAi {
     fn retry(&self) {
         if let Some(host) = &self.host {
             host.retry();
+        }
+    }
+
+    fn demand(&self) -> Option<DemandAnswer> {
+        self.host.as_ref().map(LocalAiHost::demand)
+    }
+
+    /// Logs the starts and stops of the server since the last call, with their causes.
+    fn report(&self, diagnostics: &Diagnostics) {
+        let (Some(host), Some(package)) = (&self.host, self.package.as_deref()) else {
+            return;
+        };
+        let changes = host.take_changes();
+        if changes.is_empty() {
+            return;
+        }
+        if let Some(selection) = self.applied.selection(package) {
+            for change in changes {
+                diagnostics::local_ai_server(diagnostics, selection.engine, change);
+            }
         }
     }
 }

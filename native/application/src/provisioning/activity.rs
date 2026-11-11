@@ -84,8 +84,10 @@ struct ActivityRecord {
     progress: Option<Bytes>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     retry: Option<Retry>,
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    waiting_for_server: bool,
+    /// Read and never written: a record an earlier build left while its setup waited for
+    /// the local AI server still reads. No setup waits for a server any more.
+    #[serde(rename = "waiting_for_server", default, skip_serializing)]
+    _waiting_for_server: bool,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -143,7 +145,6 @@ pub struct Published {
     pub steps: Vec<SetupStep>,
     pub progress: Option<Bytes>,
     pub retry: Option<Retry>,
-    pub waiting_for_server: bool,
 }
 
 /// What a follower finds when it looks at an item.
@@ -404,7 +405,6 @@ impl ActivityRecord {
             steps: self.steps,
             progress: self.progress,
             retry: self.retry,
-            waiting_for_server: self.waiting_for_server,
         })
     }
 }
@@ -443,7 +443,7 @@ impl<'a> ItemWriter<'a> {
                 steps: Vec::new(),
                 progress: None,
                 retry: None,
-                waiting_for_server: false,
+                _waiting_for_server: false,
             }),
         }
     }
@@ -470,7 +470,6 @@ impl ItemWriter<'_> {
                 record.steps.push(step);
             }
             record.retry = None;
-            record.waiting_for_server = false;
         }
         self.publish()?;
         (self.observer)(step);
@@ -493,12 +492,6 @@ impl ItemWriter<'_> {
             attempt,
             delay_ms: u64::try_from(delay.as_millis()).unwrap_or(u64::MAX),
         });
-        self.publish()
-    }
-
-    /// Publishes that the setup waits for the local AI server.
-    pub fn waiting_for_server(&self) -> Result<(), Error> {
-        self.record.borrow_mut().waiting_for_server = true;
         self.publish()
     }
 

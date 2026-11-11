@@ -36,6 +36,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
     OsLockState,
+    ProfileAccessBinding,
     ProfileAccessState,
     SessionKind,
 )
@@ -612,6 +613,25 @@ class RuntimeProfileHost:
         )
         return min((instant for instant in instants if instant is not None), default=None)
 
+    def _fence_successor_sign_in(self, current: ProfileAccessBinding | None) -> bool:
+        """Fence and clean the obsolete receipt against proven successor custody.
+
+        The mutation's commit guard has been released. An unreadable binding
+        never authorizes destructive cleanup, so ``None`` fences nothing.
+        ``False`` means custody was replaced again after ``current`` was read:
+        fencing a superseded successor proves nothing, so retirement looks
+        again against the newer one.
+        """
+        if current is None:
+            return True
+        sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
+        try:
+            revoke_profile_sign_in(sign_in)
+        except AutomationCustodyError:
+            return False
+        self._sign_in_generation = sign_in.observe().current
+        return True
+
     def retire_replaced_binding(self, *, deadline: float) -> bool | None:
         """Drain an obsolete incarnation before permitting a fresh profile owner.
 
@@ -620,9 +640,10 @@ class RuntimeProfileHost:
         Once the body releases its guard, remove live admission first and let
         the canonical supervisor settle before containing the worker. Neither
         this retirement nor a drain receipt establishes a domain outcome.
-        ``None`` means a held fence prevented this observation; polling must
-        leave that invocation alone. An unreadable binding also retires access
-        without claiming that a successor was committed.
+        ``None`` means a held fence prevented this observation, or custody was
+        replaced again while it was being observed; polling must leave that
+        invocation alone and look again. An unreadable binding also retires
+        access without claiming that a successor was committed.
         """
         # Only one caller may prove retirement. Another admission must not
         # mistake the denial fence for completed process containment.
@@ -639,13 +660,8 @@ class RuntimeProfileHost:
                     current = None
                 if current == binding:
                     return False
-                if current is not None:
-                    # The mutation's commit guard has been released. Fence and
-                    # clean the obsolete receipt against proven successor custody;
-                    # an unreadable binding never authorizes destructive cleanup.
-                    sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
-                    revoke_profile_sign_in(sign_in)
-                    self._sign_in_generation = sign_in.observe().current
+                if not self._fence_successor_sign_in(current):
+                    return None
                 worker = self.owner.begin_drain()
             finally:
                 self.guard.release()

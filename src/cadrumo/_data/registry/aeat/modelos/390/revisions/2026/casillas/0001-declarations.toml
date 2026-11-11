@@ -3,8 +3,8 @@
 # the form Orden HAC/27/2026 approves as anexo IV for ejercicio 2026, printed
 # under one number in apartado 7 (Resultado liquidacion anual) and apartado 8
 # (Tributacion por razon de territorio), and subtracted from [86] and [94].
-# Manual: no binding reads the modelo 319 pago a cuenta it restates, and this
-# edition claims applicability only.
+# Manual: no binding reads the modelo 319 pago a cuenta it restates, so the
+# operator enters it.
 [[revisions."2026".casillas]]
 id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"
 number = "112"

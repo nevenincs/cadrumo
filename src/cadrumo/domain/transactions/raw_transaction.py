@@ -149,6 +149,13 @@ class RawTransaction(BaseModel):
         provenance: Per-row :class:`RawProvenance` metadata.
         raw_fields: Frozen mapping of original source columns to
             stringified values, preserved verbatim for audit.
+        statement_reference: The reference the bank statement printed for the
+            movement, trimmed; ``None`` when the statement printed none, for a
+            hand-entered row, or for a row stored before the reference was
+            recorded. It is never a synthesized, manual, split or merged
+            identifier, and it takes no part in the transaction id, duplicate
+            detection or any tax figure. Left out of the stored payload when
+            ``None``, so a row stored without it keeps its bytes and revision.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -162,6 +169,7 @@ class RawTransaction(BaseModel):
     description: str = Field(min_length=1)
     provenance: RawProvenance
     raw_fields: Mapping[str, str]
+    statement_reference: str | None = Field(default=None, min_length=1, exclude_if=lambda value: value is None)
 
     @field_validator("provider_transaction_id", "description")
     @classmethod
@@ -219,6 +227,15 @@ class RawTransaction(BaseModel):
             return None
         trimmed = value.strip()
         return trimmed or None
+
+    @field_validator("statement_reference", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _trim_statement_reference(cls, value: object) -> object:
+        """Trim the printed reference; a blank cell means the statement printed none."""
+        if not isinstance(value, str):
+            return value
+        return value.strip() or None
 
     @field_validator("raw_fields")
     @classmethod

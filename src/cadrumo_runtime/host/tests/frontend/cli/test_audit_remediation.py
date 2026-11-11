@@ -133,7 +133,6 @@ class TestOverviewCalendarRequiresProfileCreate:
                 date(filing_year_envelope().horizon, 1, 1).isoformat(),
                 "--to",
                 date(filing_year_envelope().horizon, 12, 31).isoformat(),
-                "--allow-incomplete",
             ],
         )
 

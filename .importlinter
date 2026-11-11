@@ -57,7 +57,7 @@ type = layers
 name = Every agent service source package has a declared lane
 containers = cadrumo_agent_service
 layers =
-    bootstrap : adapters : host : installed_client : main : providers : service : gateway_credentials : service_administration : service_attachment_admin : service_scheduling : service_startup : service_support : admin : contracts : (locales)
+    bootstrap : adapters : host : installed_client : local_ai_relay : main : providers : service : gateway_credentials : service_administration : service_attachment_admin : service_scheduling : service_startup : service_support : admin : contracts : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-dev-classification]

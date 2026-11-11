@@ -38,7 +38,16 @@ impl Containment for Counting {
     }
 }
 
+/// A supervisor whose server is demanded from now on, for the tests of what a demanded
+/// server does.
 fn supervisor(program: Program, address: SocketAddr, containment: Counting) -> ServerSupervisor {
+    let mut supervisor = idle(program, address, containment);
+    supervisor.demand(Instant::now());
+    supervisor
+}
+
+/// A supervisor no demand has reached yet.
+fn idle(program: Program, address: SocketAddr, containment: Counting) -> ServerSupervisor {
     ServerSupervisor::new(program, address, Box::new(containment), Box::new(ambient))
         .unwrap()
         .with_policy(RestartPolicy {
@@ -179,6 +188,130 @@ fn a_set_up_program_runs_contained_on_its_address_and_restarts_after_a_crash() {
 }
 
 #[test]
+fn no_server_runs_until_a_demand_and_none_after_the_idle_stop() {
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let (program, _) = installed(&locations, "9.8.7");
+    let address = free_address();
+    let contained = Counting::default();
+    let mut supervisor = idle(program, address, contained.clone());
+    let start = Instant::now();
+
+    // Set up but not demanded: launch, a status look and every later look run nothing.
+    assert_eq!(supervisor.poll(start), ServerState::Dormant);
+    assert_eq!(
+        supervisor.poll(start + Duration::from_secs(3600)),
+        ServerState::Dormant
+    );
+    assert_eq!(supervisor.next_due(), None);
+    assert!(!answers(address));
+    assert_eq!(contained.0.load(Ordering::SeqCst), 0);
+
+    // A demand starts it, and its idle stop is the next look due.
+    supervisor.demand(start);
+    assert_running(&mut supervisor, start);
+    assert_eq!(version_at(address).as_deref(), Some("9.8.7"));
+    assert_eq!(supervisor.next_due(), Some(start + IDLE_STOP));
+
+    // A renewal before the idle stop keeps it running past the first demand's end.
+    let renewed = start + IDLE_STOP - Duration::from_secs(1);
+    supervisor.demand(renewed);
+    assert_running(&mut supervisor, start + IDLE_STOP);
+    assert_eq!(contained.0.load(Ordering::SeqCst), 1, "one server, kept");
+
+    // The idle stop after the last demand stops it, and nothing starts it again.
+    assert_eq!(supervisor.poll(renewed + IDLE_STOP), ServerState::Dormant);
+    assert!(!answers(address));
+    assert!(ServerRecord::read(&locations.programs).is_none());
+    assert_eq!(
+        supervisor.poll(renewed + IDLE_STOP + Duration::from_secs(60)),
+        ServerState::Dormant
+    );
+    assert!(!answers(address));
+
+    // An earlier demand arriving late never shortens a live one.
+    supervisor.demand(renewed + IDLE_STOP);
+    supervisor.demand(renewed);
+    assert_eq!(
+        supervisor.next_due(),
+        None,
+        "dormant until the next look starts it"
+    );
+    assert_running(&mut supervisor, renewed + IDLE_STOP);
+    assert_eq!(supervisor.next_due(), Some(renewed + IDLE_STOP + IDLE_STOP));
+}
+
+#[test]
+fn a_server_stopped_by_its_process_id_after_its_demand_lapsed_is_never_restarted() {
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let (program, _) = installed(&locations, "9.8.7");
+    let address = free_address();
+    let contained = Counting::default();
+    let mut supervisor = idle(program, address, contained.clone());
+    let start = Instant::now();
+    supervisor.demand(start);
+    assert_running(&mut supervisor, start);
+
+    // Its demand has lapsed when the supervisor next looks, and in between the server was
+    // ended from outside: it stays down instead of being restarted.
+    crash(&mut supervisor);
+    let lapsed = start + IDLE_STOP;
+    assert_eq!(supervisor.poll(lapsed), ServerState::Dormant);
+    assert_eq!(supervisor.next_due(), None);
+    for later in [1, 2, 60, 600] {
+        assert_eq!(
+            supervisor.poll(lapsed + Duration::from_secs(later)),
+            ServerState::Dormant
+        );
+    }
+    assert!(!answers(address));
+    assert_eq!(contained.0.load(Ordering::SeqCst), 1, "never started again");
+
+    // An idle-stopped server has no process to end, and stays down the same way.
+    supervisor.demand(lapsed);
+    assert_running(&mut supervisor, lapsed);
+    let stopped = lapsed + IDLE_STOP;
+    assert_eq!(supervisor.poll(stopped), ServerState::Dormant);
+    assert_eq!(
+        supervisor.poll(stopped + Duration::from_secs(1)),
+        ServerState::Dormant
+    );
+    assert!(!answers(address));
+    assert_eq!(contained.0.load(Ordering::SeqCst), 2);
+
+    // A restart already scheduled while demanded is dropped once the demand lapses.
+    supervisor.demand(stopped);
+    assert_running(&mut supervisor, stopped);
+    crash(&mut supervisor);
+    let due = stopped + Duration::from_secs(1);
+    assert_eq!(
+        supervisor.poll(stopped),
+        ServerState::Restarting { at: due }
+    );
+    assert_eq!(
+        supervisor.poll(stopped + IDLE_STOP),
+        ServerState::Dormant,
+        "nobody needs the restart"
+    );
+    assert!(!answers(address));
+    assert_eq!(contained.0.load(Ordering::SeqCst), 3);
+
+    // Each start and stop is told to the owner with its cause, once.
+    assert_eq!(
+        supervisor.take_changes(),
+        [
+            ServerChange::StartedOnDemand,
+            ServerChange::EndedWithoutDemand,
+            ServerChange::StartedOnDemand,
+            ServerChange::IdleStopped,
+            ServerChange::StartedOnDemand,
+        ]
+    );
+    assert_eq!(supervisor.take_changes(), []);
+}
+
+#[test]
 fn a_program_change_stops_the_server_and_holds_every_start_until_it_is_over() {
     let root = tempfile::tempdir().unwrap();
     let locations = Locations::under(root.path());
@@ -305,6 +438,7 @@ fn the_setting_the_owner_started_with_runs_the_server_and_one_it_cannot_use_runs
         Box::new(with_proxy("http://user:secret@proxy.example:3128")),
     )
     .unwrap();
+    supervisor.demand(now);
     assert_running(&mut supervisor, now);
     let record = ServerRecord::read(&locations.programs).unwrap();
     let corrected = ProxySettings::from_settings(|name| {
@@ -398,7 +532,7 @@ fn selected(engine: LocalEngine, both: BothEngines) -> Selected {
     )
     .unwrap();
     assert_eq!(program.engine(), engine);
-    let supervisor = ServerSupervisor::new(
+    let mut supervisor = ServerSupervisor::new(
         program,
         free_address(),
         Box::new(Counting::default()),
@@ -411,6 +545,7 @@ fn selected(engine: LocalEngine, both: BothEngines) -> Selected {
         crash_loop_limit: 3,
         crash_loop_window: Duration::from_secs(60),
     });
+    supervisor.demand(Instant::now());
     Selected {
         supervisor,
         root,

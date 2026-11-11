@@ -412,6 +412,7 @@ export function entryOperations(
       classification_reason: "",
       classification_confidence: null,
       source_jurisdiction: text(request.source_jurisdiction),
+      statement_reference: null,
       value_in_eur: null,
       fx_rate: null,
       created_at: "",

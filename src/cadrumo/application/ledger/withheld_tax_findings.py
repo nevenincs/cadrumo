@@ -10,24 +10,25 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.percentage import fraction_of_percentage
 from .closure_findings import retention_figures_disagree, within_rounding_allowance
-from .invoice_draft_records import DraftDiscrepancyFinding
+from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 from .structured_invoice_ports import StructuredInvoiceRecord, StructuredWithheldTax
 
 __all__ = ["withheld_tax_findings"]
 
 
 def _unread_finding(stated_type: str | None, amount: Decimal | None) -> DraftDiscrepancyFinding:
-    named = "no named tax" if stated_type is None else f"tax {stated_type!r}"
+    words = (
+        FindingWords.of(DraftFindingWording.WITHHELD_UNNAMED_TAX, amount=amount)
+        if stated_type is None
+        else FindingWords.of(DraftFindingWording.WITHHELD_NAMED_TAX, amount=amount, tax=stated_type)
+    )
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
         field="retencion_amount",
-        detail=(
-            f"the document states {amount} withheld for {named}, which its format does not identify as an "
-            "IRPF retention, so it was not read as one; state the retention if it is"
-        ),
+        words=words,
         observed=amount,
     )
 
@@ -42,7 +43,7 @@ def _total_finding(taxes: tuple[StructuredWithheldTax, ...], stated: Decimal) ->
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
         field="retencion_amount",
-        detail=f"the document totals {stated} withheld while its withheld taxes sum to {summed}",
+        words=FindingWords.of(DraftFindingWording.WITHHELD_TOTAL_DISAGREES, stated=stated, summed=summed),
         expected=summed,
         observed=stated,
     )
@@ -57,7 +58,13 @@ def _band_finding(row: StructuredWithheldTax) -> DraftDiscrepancyFinding | None:
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
         field="retencion_amount",
-        detail=f"the withheld {row.amount} is not {row.rate}% of its stated base {row.base} ({expected})",
+        words=FindingWords.of(
+            DraftFindingWording.WITHHELD_NOT_RATE_OF_BASE,
+            amount=row.amount,
+            rate=row.rate,
+            base=row.base,
+            expected=expected,
+        ),
         expected=expected,
         observed=row.amount,
     )

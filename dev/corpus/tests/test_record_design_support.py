@@ -19,12 +19,12 @@ from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..record_design_acquisition import store_acquired_payload
 from ..record_design_inventory import (
     PAGES,
-    REQUIRED,
     STATIC,
     RequiredArtifact,
 )
 from ..record_design_manifests import DESIGN_CORPUS, Artifact, Manifest, root_aggregate
 from ..record_design_policy import EXTRACTION_SIDECAR_DERIVATIONS, UNATTESTED_CORPUS_FILES
+from ..record_design_required import REQUIRED
 from ..sync_aeat_record_design_corpus import (
     HISTORICAL_EXCLUSIONS_PATH,
     authority_failures,

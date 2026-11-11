@@ -9,6 +9,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operator_action_enums import (
@@ -189,6 +190,7 @@ class ModeloVerificationReportSnapshot(BaseModel):
     run_at: datetime
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
+    source_transactions_digest: Hex64Str | None = None
 
     @classmethod
     def from_report(cls, report: VerificationReport) -> Self:

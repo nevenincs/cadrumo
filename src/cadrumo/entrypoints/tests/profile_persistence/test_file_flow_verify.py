@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
-from typing import cast
+from typing import NamedTuple, cast
 from uuid import UUID
 
 import pytest
@@ -57,6 +58,8 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
 )
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
@@ -824,15 +827,17 @@ def _select_revision_to_file(
     return projection
 
 
-def test_a_grant_saved_before_its_revision_was_locked_is_settled_by_verifying_again(repos: Repos) -> None:
-    """Verification saves its report, then locks the revision in a separate write.
+class _GrantWithoutLock(NamedTuple):
+    """A Modelo 130 revision whose verification granted but whose lock never landed."""
 
-    When the second write never lands, the profile holds a granted report beside
-    a revision still in BORRADOR. Filing refuses that pair as an incomplete
-    verification rather than trusting the report, and verifying again settles
-    it: the identical outcome collapses onto the one saved report and the
-    revision is locked.
-    """
+    work_unit_bucket_id: str
+    revision_id: str
+    first: VerificationReport
+    verify: Callable[[datetime, str], VerificationReport]
+
+
+def _grant_without_lock(repos: Repos) -> _GrantWithoutLock:
+    """Grant a revision, then put back its unlocked record, as a lost lock write leaves it."""
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
@@ -847,44 +852,107 @@ def test_a_grant_saved_before_its_revision_was_locked_is_settled_by_verifying_ag
         ).revision
     assert revision.state is CalculationRevisionState.BORRADOR
 
-    def verify(clock: datetime):
-        return verify_revision(
+    def verify(clock: datetime, actor: str) -> VerificationReport:
+        report = verify_revision(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
-            actor="operator-A",
+            actor=actor,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
             bucket_event_repository=bv_repo,
             clock=clock,
         )
+        assert isinstance(report, VerificationReport)
+        return report
 
-    first = verify(T2)
+    first = verify(T2, "operator-A")
     assert first.granted_verificado_completo is True
-    # The lock never landed: the stored revision is the calculation's own BORRADOR record.
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     assert cr_repo.load().revisions[revision.calculation_revision_id].state is CalculationRevisionState.BORRADOR
+    return _GrantWithoutLock(work_unit.bucket_id, revision.calculation_revision_id, first, verify)
 
-    with bundled_indexed_authority().operation() as operation, pytest.raises(VerificationOutcomeIncompleteError):
-        _select_revision_to_file(
-            build_test_verification_repository_bundle(), revision.calculation_revision_id, operation
-        )
 
-    second = verify(T3)
-
-    assert second.granted_verificado_completo is True
-    assert second.verification_report_id == first.verification_report_id
+def _stored_grant_ids(bucket_id: str, calculation_revision_id: str) -> list[str]:
     with bundled_indexed_authority().operation() as operation:
         stored = persisted_verification_reports(
-            calculation_revision_id=revision.calculation_revision_id,
-            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            calculation_revision_id=calculation_revision_id,
+            ports=build_filing_action_ports(bucket_id=bucket_id, operation=operation),
             operation=operation,
         )
-        selected = _select_revision_to_file(
-            build_test_verification_repository_bundle(), revision.calculation_revision_id, operation
-        )
-    assert [report.verification_report_id for report in stored] == [first.verification_report_id]
+    return [report.verification_report_id for report in stored if report.granted_verificado_completo]
+
+
+def _select_to_file(calculation_revision_id: str) -> ModeloWorkRevisionProjection:
+    with bundled_indexed_authority().operation() as operation:
+        return _select_revision_to_file(build_test_verification_repository_bundle(), calculation_revision_id, operation)
+
+
+def test_a_grant_saved_before_its_revision_was_locked_is_settled_by_verifying_again(repos: Repos) -> None:
+    """Verification saves its report, then locks the revision in a separate write.
+
+    When the second write never lands, the profile holds a granted report beside
+    a revision still in BORRADOR. Filing refuses that pair as an incomplete
+    verification rather than trusting the report, and verifying again settles
+    it: the identical outcome collapses onto the one saved report and the
+    revision is locked.
+    """
+    lost = _grant_without_lock(repos)
+    with pytest.raises(VerificationOutcomeIncompleteError):
+        _select_to_file(lost.revision_id)
+
+    second = lost.verify(T3, "operator-A")
+
+    assert second.granted_verificado_completo is True
+    assert second.verification_report_id == lost.first.verification_report_id
+    assert _stored_grant_ids(lost.work_unit_bucket_id, lost.revision_id) == [lost.first.verification_report_id]
+    selected = _select_to_file(lost.revision_id)
     assert selected.calculation_state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert selected.granted_verificado_completo is True
-    assert selected.verification_report_id == first.verification_report_id
+    assert selected.verification_report_id == lost.first.verification_report_id
+
+
+def test_verifying_again_from_another_surface_after_a_lost_lock_keeps_one_grant(repos: Repos) -> None:
+    """The window verified, its lock was lost, and the command line verified again under its own actor.
+
+    The second actor's outcome is a distinct report, and it supersedes the
+    first actor's grant rather than standing beside it, so the revision is
+    locked with exactly the one grant that its lock names and can be filed.
+    """
+    lost = _grant_without_lock(repos)
+
+    second = lost.verify(T3, "operator-B")
+
+    assert second.granted_verificado_completo is True
+    assert second.verification_report_id != lost.first.verification_report_id
+    assert _stored_grant_ids(lost.work_unit_bucket_id, lost.revision_id) == [second.verification_report_id]
+    selected = _select_to_file(lost.revision_id)
+    assert selected.calculation_state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert selected.granted_verificado_completo is True
+    assert selected.verification_report_id == second.verification_report_id
+
+
+def test_a_revision_already_locked_beside_a_stray_grant_can_be_filed_on_its_own_grant(repos: Repos) -> None:
+    """A profile whose earlier verifications left two grants on a locked revision is not stuck.
+
+    The stray grant comes from the attempt whose lock never landed; it does not
+    match the revision's lock, so selection for filing takes the grant the lock
+    names instead of refusing the revision forever.
+    """
+    _wu_repo, _cr_repo, _, vr_repo, _bv_repo = repos
+    lost = _grant_without_lock(repos)
+    second = lost.verify(T3, "operator-B")
+    # The catalogue as an earlier verification left it, with the first actor's grant beside the lock's.
+    vr_repo.save(
+        VerificationReportCatalogue(reports={**vr_repo.load().reports, lost.first.verification_report_id: lost.first})
+    )
+    assert sorted(_stored_grant_ids(lost.work_unit_bucket_id, lost.revision_id)) == sorted(
+        [lost.first.verification_report_id, second.verification_report_id]
+    )
+
+    selected = _select_to_file(lost.revision_id)
+
+    assert selected.calculation_state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert selected.granted_verificado_completo is True
+    assert selected.verification_report_id == second.verification_report_id

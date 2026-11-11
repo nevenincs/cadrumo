@@ -2501,6 +2501,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:476 (sha256 0164fbea6f50) prints box [99] (30 361 17 N 10. Volumen de operaciones - Operaciones en régimen gen...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-volumen-regimen-general-base"
 legal_refs = ["ley-37-1992:art-121", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [653] - "10. Volumen de operaciones - Operaciones regimen especial del criterio de caja [653]" (offset 378, length 17).

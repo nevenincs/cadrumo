@@ -33,7 +33,7 @@ from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, Invoi
 from ..ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts, MissingClassifierInput
 from ..ledger.classification_category_resolution import IvaCategoryResolution
 from ..ledger.confirm_establishment import ConfirmedEstablishment
-from ..ledger.confirmation_block_words import served_block_reason_words
+from ..ledger.confirmation_block_words import served_block_reason_words, served_finding_words
 from ..ledger.confirmation_gate import ConfirmationBlocker
 from ..ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
 from ..ledger.establishment_ladder import (
@@ -42,6 +42,7 @@ from ..ledger.establishment_ladder import (
     RegistrationEstablishmentConflict,
 )
 from ..ledger.evidence_draft import PrintedTotalDiscrepancy, RetentionReadingDiscrepancy
+from ..ledger.finding_words_projection import FindingWordsProjectionV1, require_served_words
 from ..ledger.invoice_confirmation import InvoiceConfirmationResult
 from ..ledger.invoice_draft_records import (
     DraftDiscrepancyFinding,
@@ -143,16 +144,29 @@ class DraftDiscrepancyProjectionV1(BaseModel):
     detail: _ShortText = ""
     expected: PublicDecimal | None = None
     observed: PublicDecimal | None = None
+    #: Which sentence explains the finding, the sentence a frontend shows and its language.
+    words: FindingWordsProjectionV1 | None = None
+    detail_words: _ShortText | None = None
+    detail_words_language: OutputLanguage | None = None
+
+    @model_validator(mode="after")
+    def _words_name_their_language(self) -> DraftDiscrepancyProjectionV1:
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
+        return self
 
     @classmethod
     def from_finding(cls, value: DraftDiscrepancyFinding) -> Self:
-        """Copy a finding while tagging its arithmetic values as decimals."""
+        """Copy a finding while tagging its arithmetic values as decimals, with its sentence served."""
+        words, language = served_finding_words(value.words)
         return cls(
             kind=value.kind,
             field=value.field,
             detail=value.detail,
             expected=_decimal(value.expected),
             observed=_decimal(value.observed),
+            words=FindingWordsProjectionV1.from_words(value.words),
+            detail_words=words,
+            detail_words_language=language,
         )
 
 
@@ -577,17 +591,23 @@ class ConfirmationBlockerProjectionV1(BaseModel):
     #: The sentence a frontend shows for the reason and the language it is in.
     reason_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
     reason_words_language: OutputLanguage | None = None
+    #: Which sentence explains this blocker, the sentence a frontend shows and its language.
+    words: FindingWordsProjectionV1 | None = None
+    detail_words: _ShortText | None = None
+    detail_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     def _words_name_their_language(self) -> ConfirmationBlockerProjectionV1:
         if (self.reason_words is None) != (self.reason_words_language is None):
             raise ValueError("served words name the language they are in")
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
         return self
 
     @classmethod
     def from_blocker(cls, value: ConfirmationBlocker) -> Self:
         """Copy the blocking question and its candidate evidence, with the sentence served for its reason."""
         words, language = served_block_reason_words(value.reason)
+        detail_words, detail_language = served_finding_words(value.words)
         return cls(
             blocker_id=value.blocker_id,
             reason=value.reason,
@@ -595,6 +615,9 @@ class ConfirmationBlockerProjectionV1(BaseModel):
             detail=value.detail,
             reason_words=words,
             reason_words_language=language,
+            words=FindingWordsProjectionV1.from_words(value.words),
+            detail_words=detail_words,
+            detail_words_language=detail_language,
             candidates=tuple(FieldAmbiguityCandidateProjectionV1.from_candidate(row) for row in value.candidates),
         )
 

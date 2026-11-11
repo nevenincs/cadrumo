@@ -610,6 +610,47 @@ test("a program the system refused offers the served reinstall, which starts a r
   await noInternalWords(target);
 });
 
+test("a local AI whose server sleeps until a document is read reads ready and starts nothing", async ({
+  page: target,
+}) => {
+  await open(target, "dormant");
+  await openLocalAi(target);
+  const sentence = label("desktop.setup.ready_dormant");
+  await expect(programRow(target)).toContainText(sentence);
+  await once(localAi(target), sentence);
+  await expect(programRow(target)).not.toContainText(
+    label("desktop.setup.failure.program_not_running"),
+  );
+  await expect(
+    programRow(target).getByRole("button", {
+      name: label("desktop.setup.action.try_again"),
+    }),
+  ).toHaveCount(0);
+  expect(
+    (await hostCalls(target)).filter((call) => call.startsWith("setup.start")),
+  ).toEqual([]);
+  await noInternalWords(target);
+});
+
+test("a local AI whose demanded start failed reads not running and offers to try again", async ({
+  page: target,
+}) => {
+  await open(target, "start_failed");
+  await openLocalAi(target);
+  const sentence = label("desktop.setup.failure.program_not_running");
+  await expect(programRow(target)).toContainText(sentence);
+  await once(localAi(target), sentence);
+  await expect(programRow(target)).not.toContainText(
+    label("desktop.setup.ready_dormant"),
+  );
+  await expect(
+    programRow(target).getByRole("button", {
+      name: label("desktop.setup.action.try_again"),
+    }),
+  ).toHaveCount(1);
+  await noInternalWords(target);
+});
+
 test("a damaged program that came with Cadrumo says so and offers no action", async ({
   page: target,
 }) => {

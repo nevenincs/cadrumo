@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....domain.iva.schema import InvoiceKind
@@ -35,6 +35,7 @@ from ..invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    FindingWords,
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
@@ -156,7 +157,9 @@ def fully_populated_draft() -> InvoiceDraft:
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
                 field="grand_total",
-                detail="base plus cuota plus recargo does not reach the printed total",
+                words=FindingWords.of(
+                    DraftFindingWording.TOTAL_NOT_CLOSED, total=Decimal("1232.00"), computed=Decimal("1262.00")
+                ),
                 expected=Decimal("1262.00"),
                 observed=Decimal("1232.00"),
             ),

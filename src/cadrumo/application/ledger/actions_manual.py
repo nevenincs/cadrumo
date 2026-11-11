@@ -437,6 +437,7 @@ def transaction_from_command(
     *,
     occurred_at: datetime,
     provider_transaction_id: str | None = None,
+    statement_reference: str | None = None,
     bucket_event_id: str | None = None,
     created_by: str | None = None,
     created_source_command: str | None = None,
@@ -455,7 +456,11 @@ def transaction_from_command(
     classification_predecessor: Transaction | None = None,
     classification_decided: bool = False,
 ) -> Transaction:
-    """Build a transaction from a manual command and its provenance."""
+    """Build a transaction from a manual command and its provenance.
+
+    ``statement_reference`` is the reference an edited row's statement printed,
+    kept through the edit; a hand-entered row has none.
+    """
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
         booked_date=command.booked_date,
@@ -473,6 +478,7 @@ def transaction_from_command(
             provider_name=_MANUAL_PROVIDER_NAME,
         ),
         raw_fields=_raw_fields(command),
+        statement_reference=statement_reference,
     )
     payload: dict[str, object] = {
         "raw": raw,

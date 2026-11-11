@@ -19,6 +19,7 @@ reaches them because it does not call ``main``.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import IO, Any
 
 from ...core.i18n.render import tr
@@ -128,6 +129,54 @@ def _localised_invalid_value(rendered: str) -> str:
     )
 
 
+#: The refusal words a Pydantic conversion error is served with, by its error type's
+#: prefix. Typer converts each value through a Pydantic adapter and reports the first
+#: error's English ``msg``; the type code is the stable fact, and the words are the
+#: locale's. A type no prefix names is refused in the generic words.
+_VALUE_REFUSAL_WORDS: tuple[tuple[str, Callable[[], str]], ...] = (
+    ("int_", lambda: tr("cli.help.not_valid_integer")),
+    ("float_", lambda: tr("cli.help.not_valid_number")),
+    ("decimal_", lambda: tr("cli.help.not_valid_number")),
+)
+
+#: The error type a declared parser refuses with, whose sentence is Cadrumo's own.
+_DECLARED_PARSER_REFUSAL = "cli_value"
+
+#: The error type a declared parser's plain ``ValueError`` becomes; its sentence is
+#: the declaration's own, and only Pydantic's ``Value error,`` prefix is dropped.
+_DECLARED_PARSER_VALUE_ERROR = "value_error"
+
+
+def _served_value_refusal(cause: BaseException | None) -> str | None:
+    """The locale's words for the value a Pydantic conversion refused; ``None`` for any other refusal."""
+    from pydantic import ValidationError
+
+    if not isinstance(cause, ValidationError):
+        return None
+    errors = cause.errors()
+    if not errors or errors[0]["type"] == _DECLARED_PARSER_REFUSAL:
+        return None
+    error_type = errors[0]["type"]
+    if error_type == _DECLARED_PARSER_VALUE_ERROR:
+        raised = errors[0].get("ctx", {}).get("error")
+        return str(raised) if raised is not None else None
+    words = next((words for prefix, words in _VALUE_REFUSAL_WORDS if error_type.startswith(prefix)), None)
+    refusal = words() if words is not None else tr("cli.help.value_not_accepted")
+    return f"{errors[0]['input']!r} {refusal}"
+
+
+def localised_bad_parameter_message(error: Any, format_message: Callable[[Any], str]) -> str:
+    """``error``'s refusal as Typer's ``format_message`` renders it, in the selected locale.
+
+    Pydantic's English sentence never reaches the operator: a conversion it
+    refused is worded from its error type.
+    """
+    served = _served_value_refusal(error.__cause__)
+    if served is not None:
+        error.message = served
+    return _localised_invalid_value(format_message(error))
+
+
 def _error_stream_color(exception: object) -> bool | None:
     """Resolve error-output colour through the project rule, not Click's default.
 
@@ -175,7 +224,7 @@ def localise_typer_parse_error_messages() -> None:
         return _localised_missing_prefix(missing_parameter_format_message(self))
 
     def localised_bad_parameter_format_message(self: _typer_exceptions.BadParameter) -> str:
-        return _localised_invalid_value(bad_parameter_format_message(self))
+        return localised_bad_parameter_message(self, bad_parameter_format_message)
 
     def localised_write_usage(
         self: _typer_formatting.HelpFormatter, prog: str, args: str = "", prefix: str | None = None

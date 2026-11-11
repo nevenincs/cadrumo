@@ -924,7 +924,7 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
     );
-    // The setup's check keeps which request failed, so a server that went away reads
+    // The check keeps which request failed, so a server that went away reads
     // apart from one too busy to answer within a budget.
     let gone = fixture
         .models
@@ -959,8 +959,8 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
     assert_eq!(read(PRESENT, &[PRESENT, PRESENT]), PRESENT);
     assert_eq!(
         read(PRESENT, &[]),
-        PRESENT,
-        "no selection is the program alone"
+        Observation::Absent,
+        "with no model selected the program has nothing to run"
     );
     assert_eq!(read(older, &[PRESENT]), older);
     assert_eq!(read(older, &[Observation::Absent]), Observation::Absent);
@@ -1400,8 +1400,8 @@ fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_f
         Observation::Absent
     );
 
-    // A stored model with a recorded context but none stated still goes on to the router,
-    // which is not recorded here.
+    // A stored model with a recorded context but none stated still goes on to the router.
+    // None is recorded here: the server is dormant, and its next start presents the model.
     let name = ModelName::parse(TEXT).unwrap();
     Stored::new(5).write(&root, TEXT);
     record_context(&root, &name, NonZeroU32::new(2048).unwrap()).unwrap();
@@ -1410,7 +1410,7 @@ fn a_model_with_no_llamacpp_context_reads_not_in_this_build_before_anything_is_f
     assert!(models.presentable(model));
     assert_eq!(
         models.observe_presented(model, &hardware, &router),
-        Observation::Failed(FailureCategory::ProgramNotRunning)
+        Observation::Present
     );
 }
 

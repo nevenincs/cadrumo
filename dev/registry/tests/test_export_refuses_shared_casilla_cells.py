@@ -48,7 +48,8 @@ _REFUSAL = "application.filing.export.errors.shared_casilla_cells_unadjudicated"
 _TRIBUTOS_SHEETS = {"DP200007", "DP200022", "DP200031", "DP200038", "DP200047", "DP200053"}
 
 # Repeats in revisions declaring no segment, each read against the official
-# design: Modelo 390's section 8 reprints section 7's boxes [658], [84] and [659]
+# design: Modelo 390's section 8 reprints section 7's boxes [658], [84] and [659],
+# and from the ejercicio-2026 design also [112],
 # under the same captions, Modelo 349's operator and rectification records carry
 # one substitute party, and Modelo 309's devengo period is its header period.
 _SINGLE_SEGMENT_REPEATS: frozenset[tuple[str, str]] = frozenset(
@@ -57,6 +58,7 @@ _SINGLE_SEGMENT_REPEATS: frozenset[tuple[str, str]] = frozenset(
         ("349", "sustituto.apellidos-razon-social"),
         ("349", "sustituto.nif"),
         ("390", "iva.anual.iva-importacion-diferimiento"),
+        ("390", "iva.anual.pago-cuenta-carburantes-deposito-fiscal"),
         ("390", "iva.anual.regularizacion-cuotas-art-80-cinco-5"),
         ("390", "iva.anual.suma-resultados"),
     }

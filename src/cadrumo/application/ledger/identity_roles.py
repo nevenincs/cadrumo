@@ -74,7 +74,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.identity.documents import IdentityError
@@ -85,7 +85,7 @@ from ...domain.calculations.registry.nif_iva_catalogue import nif_iva_format_for
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.iva.establishment import country_code_for_printed_tax_identifier
 from .grounding_anchor import ground_ambiguous_candidates
-from .invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
+from .invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance, FindingWords
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -251,10 +251,7 @@ def _verified_identity_candidates(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
                     field=field,
-                    detail=(
-                        f"the identifier {candidate.value!r} is printed on the document but fails its "
-                        f"control-character check, so it cannot be accepted as a verified identity"
-                    ),
+                    words=FindingWords.of(DraftFindingWording.TAX_ID_FAILS_CHECK, printed=candidate.value),
                 ),
             )
             continue
@@ -317,10 +314,8 @@ def _unanchored_verified_identity_resolution(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
                     field=field,
-                    detail=(
-                        f"the identifier {candidate.printed_anchor!r} verified, but no role evidence "
-                        f"ties it to the counterparty; accepting it because it is the only one left "
-                        f"would name whichever unrelated entity happens to appear on the page"
+                    words=FindingWords.of(
+                        DraftFindingWording.LONE_IDENTIFIER_WITHOUT_ROLE, printed=candidate.printed_anchor
                     ),
                 ),
             ),
@@ -349,10 +344,7 @@ def _unanchored_verified_identity_resolution(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
                 field=field,
-                detail=(
-                    f"{len(competing)} identifiers could each be the counterparty; "
-                    f"selecting one by position would be a guess"
-                ),
+                words=FindingWords.of(DraftFindingWording.SEVERAL_IDENTIFIERS_COMPETE, count=len(competing)),
             ),
         ),
     )
@@ -472,10 +464,10 @@ def _unanchored_identity_resolution(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
                 field=field,
-                detail=(
-                    "every identifier the document prints for the counterparty failed verification, "
-                    "so the true counterparty is invisible to a validating read"
-                    + (", and the filer's own identifier was not available to exclude" if not own_excludable else "")
+                words=FindingWords.of(
+                    DraftFindingWording.EVERY_IDENTIFIER_FAILED
+                    if own_excludable
+                    else DraftFindingWording.EVERY_IDENTIFIER_FAILED_OWN_UNAVAILABLE
                 ),
             ),
         ),

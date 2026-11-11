@@ -107,7 +107,13 @@ pub fn reading(
         .iter()
         .map(|observation| Reading::new(mode, *observation))
         .collect();
-    Reading::worst_of_parts(mode, &program, &models)
+    let mut reading = Reading::worst_of_parts(mode, &program, &models);
+    // With no model selected the program has nothing to run, so the local AI is not
+    // ready whatever its program reads.
+    if models.is_empty() && reading.observation == Observation::Present {
+        reading.observation = Observation::Absent;
+    }
+    reading
 }
 
 /// A local AI act that did not complete: one closed failure category, or an engine error
@@ -123,21 +129,13 @@ pub enum LocalAiError {
     Engine(Error),
 }
 
-/// Why the local AI reads `program_not_running`: which start, wait or request ran out or
+/// Why the local AI reads `program_not_running`: which start or request ran out or
 /// broke. Locale-neutral facts for a diagnostic report or a test, so a host too busy to
 /// answer within a budget is not read as a program that is missing.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NotRunningCause {
     /// A start of the server failed.
     Start(ServerStartFailure),
-    /// No server was running by the end of the setup's wait for the manager to start it.
-    /// `latest_start` is the kind of the manager's latest start when that start failed,
-    /// as its start-failure record keeps it; absent when no start has failed since the
-    /// last one that succeeded.
-    NoServerWithin {
-        budget: Duration,
-        latest_start: Option<StartFailureKind>,
-    },
     /// A request to the running server failed before it answered.
     Request {
         call: ServerCall,
@@ -237,10 +235,13 @@ impl StartFailureKind {
         }
     }
 
-    /// The category a program with no running server reads as, given the kind of its
-    /// latest failed start when that start failed.
-    pub fn category_after(latest_start: Option<Self>) -> FailureCategory {
-        latest_start.map_or(FailureCategory::ProgramNotRunning, Self::category)
+    /// What a set-up program reads while no server of it runs: the server is dormant
+    /// until a document is read, so the program is present, until a demanded start of it
+    /// fails; then it reads as that start's failure.
+    pub fn observation_without_server(latest_start: Option<Self>) -> Observation {
+        latest_start.map_or(Observation::Present, |kind| {
+            Observation::Failed(kind.category())
+        })
     }
 
     /// The category a program that could not start for this kind of failure reads as:
@@ -392,14 +393,11 @@ impl fmt::Display for ServerStartFailure {
 
 impl NotRunningCause {
     /// The category this cause fails with: `engine_program_unusable` for a program the
-    /// operating system refused, in this start or in the latest one a wait found, and
-    /// `program_not_running` for every other cause.
+    /// operating system refused in this start, and `program_not_running` for every other
+    /// cause.
     pub fn category(&self) -> FailureCategory {
         match self {
             Self::Start(failure) => failure.kind().category(),
-            Self::NoServerWithin { latest_start, .. } => {
-                StartFailureKind::category_after(*latest_start)
-            }
             Self::Request { .. } | Self::ListStatus { .. } => FailureCategory::ProgramNotRunning,
         }
     }
@@ -408,7 +406,6 @@ impl NotRunningCause {
     pub fn reason(&self) -> &'static str {
         match self {
             Self::Start(failure) => failure.kind().reason(),
-            Self::NoServerWithin { .. } => "server_wait_expired",
             Self::Request { call, failure } => match (call, failure.phase) {
                 (ServerCall::ListModels, ExchangePhase::Connect) => "model_list_connect_failed",
                 (ServerCall::ListModels, ExchangePhase::Exchange) => "model_list_request_failed",
@@ -427,34 +424,12 @@ impl NotRunningCause {
             _ => None,
         }
     }
-
-    /// The kind of the failed start behind a wait that expired, when one was recorded.
-    pub fn latest_start(&self) -> Option<StartFailureKind> {
-        match self {
-            Self::NoServerWithin { latest_start, .. } => *latest_start,
-            _ => None,
-        }
-    }
 }
 
 impl fmt::Display for NotRunningCause {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Start(failure) => failure.fmt(f),
-            Self::NoServerWithin {
-                budget,
-                latest_start,
-            } => {
-                write!(
-                    f,
-                    "no server was running within the {}s wait",
-                    budget.as_secs()
-                )?;
-                match latest_start {
-                    Some(kind) => write!(f, "; the latest start failed: {}", kind.reason()),
-                    None => Ok(()),
-                }
-            }
             Self::Request { call, failure } => write!(
                 f,
                 "the {call} request failed while {}: {} (bound {}s)",

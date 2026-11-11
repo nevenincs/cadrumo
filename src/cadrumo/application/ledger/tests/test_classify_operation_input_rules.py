@@ -16,7 +16,7 @@ from .ledger_input_rule_support import PROFILE, current_transaction
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("field", ["taxable_base", "iva_amount"])
+@pytest.mark.parametrize("field", ["taxable_base", "iva_amount", "recargo_amount"])
 @pytest.mark.parametrize("amount", ["10.1234", "0.123", "1234.567"])
 def test_amounts_carry_at_most_euro_cent_precision(field: str, amount: str) -> None:
     with pytest.raises(ValidationError, match="canonical decimal text"):

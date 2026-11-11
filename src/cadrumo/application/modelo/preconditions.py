@@ -402,10 +402,19 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.file", "modelo.export")
     ),
+    # A ledger row that holds the calculation is reclassified, the row named;
+    # an issue about the whole period is re-checked over that period.
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.ledger_preflight.ready",
         "modelo.work.calculate.ledger_preflight.blocked",
+        action_id="operator.ledger.classify.movement",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.ledger_preflight.ready",
+        "modelo.work.calculate.ledger_preflight.period_blocked",
+        action_id="operator.ledger.preflight",
     ),
     # The statement that no earlier-ejercicio carry is pending is the edit the
     # declaration's form serves; the command line stages the same edit.

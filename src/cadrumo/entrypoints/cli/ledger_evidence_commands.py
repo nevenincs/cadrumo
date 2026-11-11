@@ -755,7 +755,8 @@ def confirm_resolution_lines(establishment: ConfirmedEstablishmentProjectionV1 |
         f"iva_category\t{category.category or '-'}\t{category.outcome.value}",
     ]
     lines.extend(
-        f"review_item\t{item.reason.value}\t{item.field or '-'}\t{item.detail}" for item in establishment.review_items
+        f"review_item\t{item.reason.value}\t{item.field or '-'}\t{item.detail_words or item.detail}"
+        for item in establishment.review_items
     )
     return lines
 
@@ -813,7 +814,7 @@ def resolution_notices(
                     "finding_id": item.blocker_id,
                     "reason": item.reason.value,
                     "field": item.field or "",
-                    "detail": item.detail,
+                    "detail": item.detail_words or item.detail,
                 },
             ),
         )

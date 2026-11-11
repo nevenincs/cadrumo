@@ -3206,6 +3206,7 @@ cli:
     missing_option: Hiányzó kapcsoló
     missing_parameter: Hiányzó paraméter
     not_valid_integer: nem érvényes egész szám.
+    not_valid_number: nem érvényes szám.
     panel:
       arguments: Argumentumok
       commands: Parancsok
@@ -3214,6 +3215,7 @@ cli:
     path_not_found: a(z) '{path}' elérési út nem létezik, vagy nem olvasható fájl.
     try_for_help: 'Súgóért futtasd: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
+    value_not_accepted: nem elfogadott érték.
   ledger:
     account:
       errors:
@@ -3466,6 +3468,9 @@ cli:
       reason_help: Szabadszöveges indok, amelyet kézi besoroláskor a tranzakció jegyzeteibe
         és a besorolási döntés indokaként (az `aeat app ledger view` parancsban látható)
         is rögzít, vagy egy `--reject` döntéssel együtt rögzít.
+      recargo_amount_help: Az ezen a mozgáson felszámított recargo de equivalencia (LIVA
+        161. cikk). Vásárlásnál csak akkor fogadható el, ha a profil IVA-rendszere a recargo
+        de equivalencia; az alappal és az IVA-összeggel együtt ki kell adnia a mozgás összegét
       reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval:
         a `reject` elutasított javaslatot, az `apply` elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként
@@ -3649,6 +3654,7 @@ cli:
       source: Forrás
       split_group_id: Felosztási csoportazonosító
       stashed: Elrejtett
+      statement_reference: Kivonat hivatkozása
       taxable_base: Adóköteles alap
       usage_ratio_id: Használati arány azonosítója
       valid: Érvényes
@@ -4004,8 +4010,6 @@ cli:
       no_active_profile_message: Nincs aktív profil beállítva.
   overview:
     agenda:
-      allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
-        hiányosak.
       date_help: 'A napirend referencia-dátuma (ISO ÉÉÉÉ-HH-NN); alapértelmezés: ma.'
       errors:
         invalid_horizon: A --horizon értékének pozitív egésznek kell lennie (napok).
@@ -4016,8 +4020,6 @@ cli:
         figyelembe vesz.
     app_help: Az aktív adómunkaterület áttekintése.
     backlog:
-      allow_incomplete_help: A hátralék megjelenítése akkor is, ha a profiladatok
-        hiányosak.
       from_help: 'A kezdő dátum (ISO ÉÉÉÉ-HH-NN, beleszámítva); alapértelmezés: 365
         nappal ezelőtt.'
       help: Azon lejárt kötelezettségek listázása, amelyeket még nem rögzítettél benyújtottként.
@@ -4027,7 +4029,6 @@ cli:
     calendar:
       all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív
         helyett. Minden blokk egy profilfejléc-sorral kezdődik.
-      allow_incomplete_help: A naptár megjelenítése akkor is, ha a profiladatok hiányosak.
       from_help: A naptárablak kezdő dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül, az ünnepnapok és a munkanapok figyelembevételével. Csak helyi; soha
@@ -4098,13 +4099,8 @@ cli:
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). Kombináld a --year kapcsolóval az év kiválasztásához.'
       year_help: Bevallási év (pl. 2026).
-    refused_incomplete_profile: 'Az aktív profil nem adta meg azokat az adatokat,
-      amelyekre ez a kimutatás épül: %{requirements}. Pótold őket az ''aeat config
-      profile edit'' paranccsal, vagy használd a --allow-incomplete kapcsolót az ideiglenes
-      eredmény megtekintéséhez.'
     refused_undeclared_taxpayer_model: 'Az aktív profil nem ad meg adózói modellt,
-      ezért a bevallási kötelezettségek nem vezethetők le. Add meg: %{requirements}.
-      Vagy futtasd újra a --allow-incomplete kapcsolóval az ideiglenes eredmény megtekintéséhez.'
+      ezért a bevallási kötelezettségek nem vezethetők le. Add meg: %{requirements}.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet; ez normális, és

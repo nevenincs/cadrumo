@@ -25,6 +25,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from ..confirmation_block_words import served_finding_words
 from ..identity_roles import (
     IdentityCandidate,
     canonical_identity_token,
@@ -127,7 +128,7 @@ def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role(
     assert DraftDiscrepancyKind.IDENTITY_UNVERIFIED in kinds
     assert DraftDiscrepancyKind.ROLE_UNRESOLVED in kinds
     unverified = next(f for f in resolution.findings if f.kind is DraftDiscrepancyKind.IDENTITY_UNVERIFIED)
-    assert _SUPPLIER_CIF_FAILING_CHECKSUM in unverified.detail
+    assert _SUPPLIER_CIF_FAILING_CHECKSUM in (served_finding_words(unverified.words)[0] or "")
 
 
 def test_a_lone_surviving_identifier_without_role_evidence_does_not_resolve(

@@ -33,11 +33,9 @@ from .commands import (
     ProfileValidationReport,
 )
 from .completeness import (
-    IVA_REGIME_PATH,
     atribucion_socio_forbidden_country_paths,
     atribucion_socio_missing_country_paths,
     conditional_profile_missing_required,
-    iva_regime_required,
     missing_required_field_paths,
 )
 from .projections import in_window_order
@@ -511,7 +509,6 @@ class ProfileValidationService:
                 message=f"required field {path} is missing",
             )
             for path in missing_required_field_paths(self._schema, values)
-            if not (path == IVA_REGIME_PATH and not iva_regime_required(values))
         )
 
     def _conditional_completeness_issues(

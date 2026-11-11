@@ -652,6 +652,52 @@ required_text = ["modelo 390"]
 
 [revisions."2022".bindings.aggregation]
 op = "sum"
+
+# Box [99] "Operaciones en regimen general" draws the taxpayer's own domestic
+# regimen-general supplies, excluding the IVA itself. The Modelo 390
+# instructions (aeat-modelo-390-2025-instructions, apartado 10, box 99; bundled
+# for the 2025 exercise only, so it is not cited from this edition) define it as
+# "el importe total, excluido el propio IVA y, en su caso, el recargo de
+# equivalencia, de las entregas de bienes y prestaciones de servicios efectuadas
+# por el sujeto pasivo durante el ano natural en regimen general de IVA". They
+# add "tampoco se incluiran las operaciones exentas incluidas en las casillas
+# 103, 104 y 105 ni las operaciones incluidas en las casillas 110 y 125" and
+# "se incluiran en esta casilla las operaciones a tipo cero". The Modelo 303
+# instructions word the annual casilla 80 of the last period the same way, so
+# that page grounds this binding for every edition.
+#
+# The selector is the union of this revision's rate-blind repercutido base
+# selectors (general, reducido, superreducido and zero), which mirror the M303
+# base rungs. It takes no applied_rates, so every rate of a tier counts,
+# transitional rates included. Base only: the fact is base_amount_sum, so
+# neither cuota nor recargo enters. The exempt populations of [103], [104] and
+# [105], the not-subject [110] and the inversion-del-sujeto-pasivo [125] each
+# carry their own category, so none of them can reach this box.
+#
+# The one departure from the M303 rungs is the criterio de caja. Supplies under
+# that regime are box [653], "operaciones a las que habiendoles aplicado el
+# regimen especial del criterio de caja hubieran resultado devengadas conforme
+# a la regla general", and [108] adds [99] and [653]. Box [99] counts only the
+# regimen general, so the taxpayer's own criterio-de-caja supplies
+# (taxpayer_regime) stay out of it rather than being counted twice in [108].
+
+[[revisions."2022".bindings]]
+id = "modelo-390-volumen-regimen-general-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced", "domestic_zero"], rate_kinds = ["general", "reduced", "super_reduced", "zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "de las entregas de bienes y prestaciones de servicios efectuadas por el sujeto pasivo durante el año natural en",
+    "Operaciones en régimen general: se hará constar el importe total, excluido el propio",
+    "Tampoco se incluirán las operaciones exentas incluidas en las casillas 93, 94 y 83 ni las operaciones incluidas en las casillas 84 y 85",
+]
+
+[revisions."2022".bindings.aggregation]
+op = "sum"
 # Rate-specific bindings for the adquisiciones intracomunitarias (AIC) box
 # layer. See the sibling casillas file
 # (civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml)

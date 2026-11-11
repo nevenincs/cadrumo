@@ -6,7 +6,6 @@ import json
 
 from cadrumo.entrypoints.tests.persona_materialisation import (
     bank_statement,
-    carries_iva_amount,
     document_path,
     inventory_statement,
     patch_answers,
@@ -128,12 +127,6 @@ def classify_rows(journey: Journey) -> None:
         transaction_id = _transaction(journey, step, row.ref)
         if transaction_id is not None:
             journey.run(step, commands.classify_arguments(persona, row, transaction_id, ACTOR))
-    recargo = [row.ref for row in persona.ledger if not carries_iva_amount(row)]
-    if recargo:
-        journey.note(
-            "ledger.recargo_amount: single classification takes no recargo de equivalencia, so these rows are "
-            f"classified without cuota or recargo, as in the in-process replay: {', '.join(recargo)}"
-        )
 
 
 def _record_invoice(journey: Journey, row: LedgerRow) -> None:

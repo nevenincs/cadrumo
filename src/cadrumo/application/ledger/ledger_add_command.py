@@ -36,6 +36,7 @@ from ..prorrata_register.service import ProrrataRegisterService
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ledger_add_contracts import LedgerAddRequest, LedgerAddSourceJurisdictionCode
 from .models import ManualLedgerTransactionCommand
+from .recargo_regime import require_recargo_regime_for_purchase
 from .source_jurisdiction import SourceJurisdictionOutcome, resolve_source_jurisdiction
 
 
@@ -81,6 +82,14 @@ def prepare_ledger_add_command(
     )
     source_jurisdiction = _resolve_ledger_add_jurisdiction(payload, operation=operation)
     registry_facts = _resolve_ledger_add_registry_facts(payload, booked_date=booked_date, operation=operation)
+    recargo_amount = parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount")
+    require_recargo_regime_for_purchase(
+        bucket_id=str(payload.profile_id),
+        direction=direction,
+        recargo_amount=recargo_amount,
+        effective_date=booked_date,
+        operation=operation,
+    )
     return ManualLedgerTransactionCommand(
         bucket_id=str(payload.profile_id),
         booked_date=booked_date,
@@ -106,7 +115,7 @@ def prepare_ledger_add_command(
         ),
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
-        recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),
+        recargo_amount=recargo_amount,
         irpf_category=resolve_ledger_add_irpf_category(payload, operation=operation),
         usage_ratio_id=payload.usage_ratio_id,
         prorrata_reference=payload.prorrata_reference,

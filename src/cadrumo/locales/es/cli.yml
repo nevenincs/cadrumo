@@ -3258,6 +3258,7 @@ cli:
     missing_option: Falta la opción
     missing_parameter: Falta el parámetro
     not_valid_integer: no es un entero válido.
+    not_valid_number: no es un número válido.
     panel:
       arguments: Argumentos
       commands: Comandos
@@ -3266,6 +3267,7 @@ cli:
     path_not_found: la ruta '{path}' no existe o no es un archivo legible.
     try_for_help: Prueba [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
+    value_not_accepted: no es un valor aceptado.
   ledger:
     account:
       errors:
@@ -3525,6 +3527,9 @@ cli:
       reason_help: Motivo en texto libre que se registra como notas del movimiento
         y como motivo de la decisión de clasificación (visible en `aeat app ledger
         view`), o con una decisión `--reject`.
+      recargo_amount_help: Recargo de equivalencia repercutido en este movimiento (art. 161
+        LIVA). En una compra solo se admite si el régimen de IVA del perfil es el recargo de
+        equivalencia; con la base y la cuota de IVA debe sumar el importe del movimiento
       reject_apply_exclusive: '--reject no se puede combinar con --apply: `reject`
         registra una sugerencia rechazada, `apply` una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
@@ -3710,6 +3715,7 @@ cli:
       source: Origen
       split_group_id: id_grupo_división
       stashed: Apartadas
+      statement_reference: Referencia del extracto
       taxable_base: Base imponible
       usage_ratio_id: Id de proporción de uso
       valid: Válido
@@ -4068,7 +4074,6 @@ cli:
       no_active_profile_message: No hay ningún perfil activo.
   overview:
     agenda:
-      allow_incomplete_help: Generar la agenda aunque los datos del perfil estén incompletos.
       date_help: Fecha de referencia para la agenda (ISO YYYY-MM-DD); por defecto,
         hoy.
       errors:
@@ -4079,8 +4084,6 @@ cli:
       horizon_help: Ventana hacia adelante (en días) que considera la cohorte `due_soon`.
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     backlog:
-      allow_incomplete_help: Generar la lista de tareas pendientes aunque los datos
-        del perfil estén incompletos.
       from_help: Fecha de inicio inclusiva (ISO YYYY-MM-DD); por defecto 365 días
         antes de hoy.
       help: Lista las obligaciones vencidas que aún no has registrado como presentadas.
@@ -4091,8 +4094,6 @@ cli:
       all_profiles_help: Mostrar el calendario de todos los perfiles registrados en
         lugar del activo. Cada bloque va precedido de una línea de cabecera con el
         nombre del perfil.
-      allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
-        incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
@@ -4165,12 +4166,8 @@ cli:
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2026).
-    refused_incomplete_profile: 'El perfil activo no ha respondido a datos de los
-      que depende esta proyección: %{requirements}. Complétalos con ''aeat config
-      profile edit'', o usa --allow-incomplete para consultar el resultado provisional.'
     refused_undeclared_taxpayer_model: 'El perfil activo no declara un modelo de contribuyente,
-      por lo que no se pueden derivar las obligaciones de presentación. Indica: %{requirements}.
-      O vuelve a ejecutar con --allow-incomplete para consultar el resultado provisional.'
+      por lo que no se pueden derivar las obligaciones de presentación. Indica: %{requirements}.'
     status:
       drafts_empty: No se encontraron borradores de declaraciones guardados.
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;

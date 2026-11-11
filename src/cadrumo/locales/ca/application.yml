@@ -1038,6 +1038,115 @@ application:
           aquí
         unnumbered_invoice: El número de factura llegit no és un número
         unresolved_direction: No està clar quina part va emetre el document
+    draft_finding:
+      breakdown_bases_disagree: Les bases per tipus sumen {summed}, però el document
+        indica una base imposable de {base}. Són dues lectures del mateix document
+        i almenys una és errònia.
+      breakdown_cuotas_disagree: Les quotes per tipus sumen {summed}, però el document
+        indica una quota de {cuota}. Són dues lectures del mateix document i almenys
+        una és errònia.
+      counterparty_territory_unknown: Aquest document no estableix cap territori d'IVA
+        per a {tax_id}. El país i el codi postal no van aclarir res i no consta cap
+        dada confirmada, així que el territori és desconegut, no la península.
+      customer_postal_code_unreadable: El camp de codi postal del destinatari conté
+        «{printed}», que no és un codi postal de cinc xifres, i el país imprès no
+        aclareix on està establert el destinatari. El seu territori d'IVA espanyol
+        queda sense determinar.
+      document_issued_confirmed_received: Aquest document et situa com a emissor,
+        però s'està confirmant com a factura rebuda. El sentit decideix a quina declaració
+        informativa va el registre i en quin costat, i l'AEAT confronta entre si les
+        declaracions de les dues parts.
+      document_received_confirmed_issued: Aquest document et situa com a destinatari,
+        però s'està confirmant com a factura emesa. El sentit decideix a quina declaració
+        informativa va el registre i en quin costat, i l'AEAT confronta entre si les
+        declaracions de les dues parts.
+      every_identifier_failed: Tots els identificadors que el document imprimeix per
+        a la contrapart fallen la seva comprovació, així que la contrapart no es pot
+        identificar amb aquest document.
+      every_identifier_failed_own_unavailable: Tots els identificadors que el document
+        imprimeix per a la contrapart fallen la seva comprovació, així que la contrapart
+        no es pot identificar amb aquest document. El teu propi identificador no estava
+        disponible per excloure'l.
+      facturae_corrective_without_reference: La classe de factura Facturae «{code}»
+        declara una factura rectificativa, però el document no indica quina factura
+        rectifica.
+      facturae_reference_without_corrective: El document indica una factura que rectifica,
+        però la seva classe de factura Facturae «{code}» no és rectificativa.
+      facturae_summary_unmodelled: La classe de factura Facturae «{code}» declara
+        una factura recapitulativa, que aquí no s'admet.
+      filer_profile_unresolvable: No s'ha pogut llegir cap perfil de contribuent,
+        així que el teu propi territori d'IVA és desconegut. Surt del teu perfil ({fact})
+        i mai no es llegeix d'una factura.
+      flat_cuota_not_rate_of_base: La quota indicada {cuota} no és el {rate} % de
+        la base indicada {base} ({expected}). O es va llegir malament una xifra, o
+        la factura aplica més d'un tipus i falta el desglossament per tipus. El model
+        303 declara base i quota per tipus, així que confirmar-la declararia tota
+        la base en el tipus equivocat.
+      identity_readings_compete: Competeixen {count} lectures de {field} i cap no
+        es pot decidir. Confirmar triaria l'identificador d'un contribuent real en
+        lloc del d'un altre.
+      invoice_number_without_digit: El número de factura llegit, «{number}», no conté
+        cap xifra, així que no pot ser el número de la factura. Segurament es va llegir
+        en el seu lloc un encapçalament o una etiqueta.
+      lone_identifier_without_role: L'identificador «{printed}» és vàlid, però res
+        del document el vincula a la contrapart. Acceptar-lo només perquè és l'únic
+        que queda podria anomenar una entitat aliena que apareix a la pàgina.
+      mention_expects_no_repercutido_line: El document imprimeix la menció «{mention}»
+        ({provision}), que suposa que no es repercuteix IVA, però hi figuren un tipus
+        i una quota. El document es contradiu, així que la categoria d'IVA no es pot
+        prendre de cap de les dues parts.
+      mention_expects_repercutido_line: El document imprimeix la menció «{mention}»
+        ({provision}), que suposa un tipus i una quota d'IVA repercutits, però no
+        n'hi figura cap. El document es contradiu, així que la categoria d'IVA no
+        es pot prendre de cap de les dues parts.
+      printed_breakdown_disagrees: Les xifres per tipus sumen {summed}, però el document
+        imprimeix {printed}.
+      printed_iva_not_rate_of_base: L'IVA imprès {amount} no és el {rate} de la base
+        impresa {base}. Les xifres es van deixar buides en lloc de triar-ne una.
+      printed_payable_not_closed: L'import a pagar imprès {payable} no és el total
+        menys la retenció ({expected}). La retenció es va deixar buida.
+      printed_recargo_not_rate_of_base: El recàrrec imprès {amount} no és el {rate}
+        de la base impresa {base}. Les xifres es van deixar buides en lloc de triar-ne
+        una.
+      printed_retention_not_rate_of_base: La retenció impresa {retention} no és el
+        {rate} de la base imposable ({expected}). El tipus es va deixar buit.
+      printed_total_not_closed: El total imprès {total} no és base més quota més recàrrec
+        més suplerts ({computed}). Les xifres es van deixar buides en lloc de triar-ne
+        una.
+      retention_not_rate_of_base: La retenció indicada {retention} no és el {rate}
+        % de la base imposable ({expected}). Amb xifres que no quadren no es pot deduir
+        l'import realment pagat.
+      several_identifiers_compete: '{count} identificadors podrien ser cadascun la
+        contrapart. Triar-ne un per la seva posició seria endevinar.'
+      supplier_postal_code_unreadable: El camp de codi postal de l'emissor conté «{printed}»,
+        que no és un codi postal de cinc xifres, i el país imprès no aclareix on està
+        establert l'emissor. El seu territori d'IVA espanyol queda sense determinar.
+      tax_id_fails_check: El document imprimeix «{printed}» com a identificador fiscal,
+        però no supera el seu caràcter de control, així que no es va acceptar com
+        a identitat verificada.
+      tier_cuota_not_rate_of_base: El tipus del {rate} % indica una quota de {cuota}
+        sobre una base de {base}, i hauria de ser {expected}. El model 303 declara
+        la quota per tipus, així que aquest tipus declararia una xifra equivocada.
+      total_not_closed: El total imprès {total} no és igual a base més quota més recàrrec
+        més suplerts ({computed}). Es va llegir malament algun component, o el document
+        n'inclou un que aquest esborrany no pot representar.
+      unidentified_counterparty_territory_unknown: Aquest document no estableix cap
+        territori d'IVA per a la contrapart ni n'imprimeix l'identificador. El país
+        i el codi postal no van aclarir res i no consta cap dada confirmada, així
+        que el territori és desconegut, no la península.
+      value_in_other_party_block: El valor de {field} està imprès dins del bloc de
+        l'altra part en aquest document, no en el bloc al qual es va assignar. Potser
+        els blocs d'adreça es van llegir al revés, cosa que situaria ambdues parts
+        en el territori d'IVA equivocat.
+      withheld_named_tax: El document indica {amount} retinguts per l'impost «{tax}»,
+        que el seu format no identifica com a IRPF, així que no es va llegir com a
+        retenció. Indica la retenció si ho és.
+      withheld_not_rate_of_base: La retenció de {amount} no és el {rate} % de la seva
+        base indicada {base} ({expected}).
+      withheld_total_disagrees: El document totalitza {stated} retinguts, però els
+        seus impostos retinguts sumen {summed}.
+      withheld_unnamed_tax: El document indica {amount} retinguts sense anomenar l'impost,
+        així que no es va llegir com a retenció d'IRPF. Indica la retenció si ho és.
     entry_options:
       deduction_fact_kind:
         domestic_current: Operacions interiors corrents
@@ -2619,6 +2728,8 @@ application:
         dels teus registres; treu-lo o corregeix el registre del qual prové.
       verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
+      work_create_not_applicable: 'El model %{modelo} no et correspon segons el teu
+        perfil: %{reason} No s''ha creat la declaració.'
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
         vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
         %{tokens}.'

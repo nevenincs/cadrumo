@@ -455,12 +455,14 @@ class TransactionPayload(OutputSchema):
     direction: NonEmptyStr
     counterparty: str = ""
     description: NonEmptyStr
+    statement_reference: str | None = None
     business_classification: NonEmptyStr
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None
@@ -799,12 +801,14 @@ class LedgerListRowPayload(OutputSchema):
     direction: str
     counterparty: str = ""
     description: str
+    statement_reference: str | None = None
     business_classification: str
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None

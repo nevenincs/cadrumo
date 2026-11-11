@@ -276,6 +276,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.split.unclassified",
         "desktop.ledger.inspector.split.under",
         "desktop.ledger.inspector.stage",
+        "desktop.ledger.inspector.statement_reference",
         "desktop.ledger.inspector.unread",
         "desktop.ledger.inspector.unsaved",
         "desktop.ledger.inspector.unsaved_classification",

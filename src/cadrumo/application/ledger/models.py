@@ -436,12 +436,15 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
+    # The reference the bank statement printed for the movement; None when it printed none.
+    statement_reference: str | None = None
     business_classification: str = Field(min_length=1)
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None

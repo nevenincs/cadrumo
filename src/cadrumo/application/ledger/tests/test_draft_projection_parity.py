@@ -30,11 +30,13 @@ from ..invoice_draft_payloads import (
     EvidenceExtractResult,
     EvidenceFieldAmbiguityCandidatePayload,
     EvidenceFieldProvenancePayload,
+    EvidenceFindingWordsPayload,
 )
 from ..invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    FindingWords,
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
@@ -64,7 +66,18 @@ _NESTED_PAIRS: tuple[tuple[str, type[BaseModel], type[BaseModel]], ...] = (
     ("ambiguity candidate", FieldAmbiguityCandidate, EvidenceFieldAmbiguityCandidatePayload),
     ("field provenance", FieldProvenance, EvidenceFieldProvenancePayload),
     ("discrepancy finding", DraftDiscrepancyFinding, EvidenceDraftDiscrepancyPayload),
+    ("finding words", FindingWords, EvidenceFindingWordsPayload),
 )
+
+#: Payload fields a nested model carries that its draft model does not, by pair.
+#:
+#: A finding's payload carries the sentence the backend served for its stored
+#: words and the language it is in. Both are renderings of ``words``, which the
+#: payload mirrors, so they add no fact the draft does not hold. Named so any
+#: other payload-only field stays a defect.
+_SERVED_RENDERINGS: dict[str, frozenset[str]] = {
+    "discrepancy finding": frozenset({"detail_words", "detail_words_language"}),
+}
 
 #: Fields the extract payload carries that the draft does not: facts about the
 #: CALL rather than about the document. Named explicitly so a NEW unexplained
@@ -152,6 +165,10 @@ def test_every_populated_draft_value_survives_into_the_payload() -> None:
 
     result = EvidenceExtractResult.model_validate_json(json.dumps(payload))
     emitted = result.model_dump(mode="json")
+    served = _SERVED_RENDERINGS["discrepancy finding"]
+    emitted["discrepancies"] = [
+        {name: value for name, value in finding.items() if name not in served} for finding in emitted["discrepancies"]
+    ]
 
     dropped = [name for name, value in dumped.items() if emitted.get(name) != value]
     assert not dropped, f"these draft values did not survive the projection: {sorted(dropped)}"
@@ -190,19 +207,24 @@ def test_the_provenance_envelopes_arrive_whole() -> None:
 # -- the same property, one level down, on every nested model pair ----------
 
 
-def nested_parity_defects(draft_model: type[BaseModel], payload_model: type[BaseModel]) -> list[str]:
+def nested_parity_defects(
+    draft_model: type[BaseModel],
+    payload_model: type[BaseModel],
+    served: frozenset[str] = frozenset(),
+) -> list[str]:
     """Return the field-set divergences between a draft sub-model and its payload.
 
     Both directions, for the same reasons the top-level pair checks both: a
     field missing from the payload is a value the operator never sees, and a
-    payload field with no draft origin is a claim nothing produces.
+    payload field with no draft origin is a claim nothing produces. ``served``
+    names the payload fields that render a mirrored field rather than add one.
     """
     draft_fields = set(draft_model.model_fields)
     payload_fields = set(payload_model.model_fields)
     defects = []
     if missing := sorted(draft_fields - payload_fields):
         defects.append(f"payload lacks {missing}")
-    if extra := sorted(payload_fields - draft_fields):
+    if extra := sorted(payload_fields - draft_fields - served):
         defects.append(f"payload invents {extra}")
     return defects
 
@@ -218,7 +240,9 @@ def test_every_nested_draft_model_is_mirrored_by_its_payload() -> None:
     defects = [
         f"{label}: {'; '.join(divergences)}"
         for label, draft_model, payload_model in _NESTED_PAIRS
-        if (divergences := nested_parity_defects(draft_model, payload_model))
+        if (
+            divergences := nested_parity_defects(draft_model, payload_model, _SERVED_RENDERINGS.get(label, frozenset()))
+        )
     ]
     assert not defects, "these nested draft models and their payload counterparts have diverged: " + "; ".join(defects)
 
@@ -233,6 +257,17 @@ def test_the_nested_pair_table_still_covers_the_sub_models() -> None:
     for label, draft_model, payload_model in _NESTED_PAIRS:
         assert draft_model.model_fields, f"{label}: the draft model reports no fields"
         assert payload_model.model_fields, f"{label}: the payload model reports no fields"
+
+
+def test_every_served_rendering_is_a_payload_field_beside_mirrored_words() -> None:
+    """An allowance naming a field the payload no longer has, or one with nothing to render, excuses nothing real."""
+    pairs = {label: (draft_model, payload_model) for label, draft_model, payload_model in _NESTED_PAIRS}
+    for label, served in _SERVED_RENDERINGS.items():
+        draft_model, payload_model = pairs[label]
+        assert served <= set(payload_model.model_fields), f"{label}: {sorted(served)}"
+        assert not served & set(draft_model.model_fields), f"{label}: a served rendering is also a draft field"
+        assert "words" in draft_model.model_fields
+        assert "words" in payload_model.model_fields
 
 
 def test_the_nested_check_catches_a_field_with_no_payload_counterpart() -> None:

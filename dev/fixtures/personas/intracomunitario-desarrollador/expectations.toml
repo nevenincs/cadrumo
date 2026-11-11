@@ -291,8 +291,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 9300.00 + 2200 + 2400 + 7500; gastos = 2334.00; provisión = 953.30; 06 = 270.00 + 330.00 cumulative; 07 = 3622.54 - 1275.27 - 600.00."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -303,8 +303,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 21400.00 + 1200 + 6000; gastos = 3501.00; provisión = 1254.95; 05 = 1275.27 + 1747.27; 06 = 780.00 cumulative."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -315,8 +315,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 28600.00 + 3100 + 1500 + 8000; gastos = 5118.00 (incl. curso 450.00); provisión = 5 % of 36082.00 = 1804.10 (under the cap); 05 = 3022.54 + 966.27; 06 = 1005.00."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "100"

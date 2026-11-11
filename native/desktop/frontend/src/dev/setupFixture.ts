@@ -80,6 +80,12 @@ export const SETUP_SHAPES = [
   /** The browser is ready, and the system refused the local AI's program
    * that came with Cadrumo: it offers no action here. */
   "package_damaged",
+  /** Everything is set up, and the local AI's server sleeps until a document
+   * is read: the local AI reads ready, starting when it is needed. */
+  "dormant",
+  /** The browser is ready, and the local AI's server failed a start a read
+   * demanded: it reads not running and offers to try again. */
+  "start_failed",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -305,6 +311,14 @@ function shaped(shape: SetupShape): Seed[] {
       set("browser", readied);
       set("local_ai", (held) => failed(held, "engine_package_damaged"));
       break;
+    case "dormant":
+      all.forEach((seed) => (seed.row = readied(seed.row)));
+      set("local_ai", (held) => ({ ...held, server: "dormant" }));
+      break;
+    case "start_failed":
+      set("browser", readied);
+      set("local_ai", (held) => failed(readied(held), "program_not_running"));
+      break;
     case "hardware":
       set("browser", readied);
       set("local_ai", (held) => ({
@@ -356,6 +370,7 @@ export function setupFixture({
   // set up, not yet on one where setup has only begun.
   const signedIn =
     shape === "ready" ||
+    shape === "dormant" ||
     shape === "start_held" ||
     shape === "start_unreported" ||
     shape === "partial" ||
@@ -403,6 +418,8 @@ export function setupFixture({
   // local AI was set up once has it, whatever became of its models.
   let programReady =
     shape === "ready" ||
+    shape === "dormant" ||
+    shape === "start_failed" ||
     shape === "start_held" ||
     shape === "start_unreported" ||
     shape === "google_signed_out" ||

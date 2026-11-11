@@ -320,6 +320,12 @@ impl SetupHost {
         }
     }
 
+    /// The selected local engine's facts for the agent service's catalogue read; see
+    /// `Components::local_ai_facts`.
+    pub(crate) fn local_ai_facts(&self) -> Option<serde_json::Value> {
+        self.components.local_ai_facts()
+    }
+
     /// The secure browser's row as the engine last read it, reading every
     /// item's quick state once when nothing has; none when no read settles
     /// within `limit`. It reaches no network.

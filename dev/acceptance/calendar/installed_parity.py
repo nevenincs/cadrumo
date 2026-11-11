@@ -431,7 +431,6 @@ def _cli_calendar(cli: InstalledCli, window: CalendarWindow, *, authenticated: b
         window.from_date.isoformat(),
         "--to",
         window.to_date.isoformat(),
-        "--allow-incomplete",
     )
     try:
         document = cli.run(arguments, command="overview.calendar", authenticated=authenticated)

@@ -127,6 +127,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         self._requester_factory = requester_factory
         self._cleared = False
         self._locking = False
+        self._expiry_deferred = False
         self._reading = False
         self._lapse_timer: Timer | None = None
         self._disclosure_digest: ContentDigest | None = None
@@ -322,7 +323,20 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         if self._cleared:
             return
         self._clear_presentation()
+        if any(
+            isinstance(screen, RuntimeAutomationRequesterScreen) and screen.holds_request
+            for screen in self.screen_stack
+        ):
+            # A request this lease submitted, often the one whose approval
+            # retired it, settles on its own delivery. The person sees that
+            # settled result before the shell leaves; closing it leaves.
+            self._expiry_deferred = True
+            return
         self.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
+
+    def _requester_closed(self, _outcome: object) -> None:
+        if self._expiry_deferred and self.is_running:
+            self.exit(AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED))
 
     def _begin_lock(self, action: _LockAction) -> None:
         if self._cleared or self._locking:
@@ -386,7 +400,7 @@ class RuntimeRestrictedSessionApp(QuietApp[AccountRecomposeRequiredV1 | None]):
         factory = self._requester_factory
         if not self._cleared and not self._locking and self._binding_is_current() and factory is not None:
             try:
-                self.push_screen(factory(self._client))
+                self.push_screen(factory(self._client), callback=self._requester_closed)
             except Exception:
                 self._shell().query_one("#restricted-availability", Static).update(tr("tui.automation_request.invalid"))
 

@@ -239,7 +239,6 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "2026-01-01",
             "--to",
             "2026-03-31",
-            "--allow-incomplete",
         ],
     )
     assert calendar_result.exit_code == 0, calendar_result.output

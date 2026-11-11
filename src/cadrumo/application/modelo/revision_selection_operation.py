@@ -30,6 +30,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecord
 from ...domain.modelos.verification_report import VerificationReport
+from ...domain.modelos.verification_repository import revision_granting_reports
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..operations.access_resolution import (
@@ -246,7 +247,7 @@ def _filed_amendment_without_grant(revision: CalculationRevision, granting: tupl
 
 def _verification_left_incomplete(revision: CalculationRevision, granting: tuple[VerificationReport, ...]) -> bool:
     """Recognize a verification that saved its grant and stopped before locking the revision."""
-    return len(granting) == 1 and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
+    return bool(granting) and revision.state is CalculationRevisionState.BORRADOR and revision.verified_at is None
 
 
 def _require_selected_revision_grant_evidence(
@@ -330,10 +331,12 @@ def _capture(
         )
     if bundle.verification.bucket_id != str(payload.profile_id):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    reports = require_verification_report_coordinates_current(
-        bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
-    ).for_calculation_revision(revision.calculation_revision_id)
-    granting = tuple(report for report in reports if report.granted_verificado_completo)
+    granting = revision_granting_reports(
+        require_verification_report_coordinates_current(
+            bundle.verification.load(operation=operation.authority_operation), operation=operation.authority_operation
+        ),
+        revision,
+    )
     if _verification_left_incomplete(revision, granting):
         # The revision is the caller's own and its outcome is not known to have
         # completed, so this is not an access denial. Verification settles it by

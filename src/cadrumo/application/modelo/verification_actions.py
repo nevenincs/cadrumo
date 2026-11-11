@@ -88,6 +88,7 @@ from .verification_report_facts import (
     build_verification_report,
     classify_verification_outcome,
     granting_verification_report,
+    verification_sources_digest,
 )
 from .verification_repository_ports import VerificationRepositoryBundle
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
@@ -162,7 +163,7 @@ def _existing_verification(
             require_verification_report_coordinates_current(
                 repos.verification.load(operation=operation), operation=operation
             ),
-            calculation_revision_id,
+            target,
         )
         if existing is not None:
             return ModeloVerificationResult(
@@ -328,6 +329,7 @@ def verify_modelo_revision_with_preconditions(
         granted=granted,
         actor=actor,
         run_at=now,
+        source_transactions_digest=verification_sources_digest(target, repos.transaction.load()),
     )
 
     return _finish_verification(

@@ -78,7 +78,7 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
     work_unit_ordering_instants,
 )
-from .preconditions import build_modelo_precondition_failure
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 from .registry_helpers import validate_casilla_input_ids
 from .required_binding_gate import (
     require_modelo_required_bindings_resolved,
@@ -570,21 +570,57 @@ def raise_if_ledger_preflight_blocks_calculation(
         ),
         context={**hold.context, "reason": hold.reason},
         next_step=None if movement is None else open_movement_step(movement.transaction_id),
-        precondition_failure=build_modelo_precondition_failure(
-            subject_leaf_key="modelo.work.calculate",
-            condition_id="modelo.work.calculate.ledger_preflight.ready",
-            scenario_id="modelo.work.calculate.ledger_preflight.blocked",
-            evidence_id="modelo.work.calculate.ledger_preflight",
-            evidence_values={
-                "work_unit_id": work_unit.work_unit_id,
-                "modelo": str(work_unit.modelo),
-                "year": work_unit.period.filing_year,
-                "period": work_unit.period.registry_token,
-                "transaction_id": hold.issue_transaction_id,
-                "reason_code": hold.reason,
-            },
-            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        precondition_failure=ledger_preflight_precondition(
+            work_unit_id=work_unit.work_unit_id,
+            modelo=str(work_unit.modelo),
+            period=work_unit.period,
+            transaction_id=hold.issue_transaction_id,
+            reason=hold.reason,
+            names_movement=movement is not None,
         ),
+    )
+
+
+def ledger_preflight_precondition(
+    *,
+    work_unit_id: str,
+    modelo: str,
+    period: Period,
+    transaction_id: str,
+    reason: str,
+    names_movement: bool,
+) -> ModeloPreconditionFailure:
+    """The precondition a ledger hold refuses with, and the door it serves.
+
+    A hold that names a movement opens that movement's reclassification with
+    the movement named, so the door runs as served; a hold about the whole
+    period re-checks the period's ledger readiness instead, because there is
+    no movement to name.
+    """
+    if names_movement:
+        scenario_id = "modelo.work.calculate.ledger_preflight.blocked"
+        action_id = "operator.ledger.classify.movement"
+        action_argument_values: dict[str, str | int] = {"transaction_id": transaction_id}
+    else:
+        scenario_id = "modelo.work.calculate.ledger_preflight.period_blocked"
+        action_id = "operator.ledger.preflight"
+        action_argument_values = {"period": period.registry_token, "year": period.filing_year}
+    return build_modelo_precondition_failure(
+        subject_leaf_key="modelo.work.calculate",
+        condition_id="modelo.work.calculate.ledger_preflight.ready",
+        scenario_id=scenario_id,
+        evidence_id="modelo.work.calculate.ledger_preflight",
+        evidence_values={
+            "work_unit_id": work_unit_id,
+            "modelo": modelo,
+            "year": period.filing_year,
+            "period": period.registry_token,
+            "transaction_id": transaction_id,
+            "reason_code": reason,
+        },
+        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        action_id=action_id,
+        action_argument_values=action_argument_values,
     )
 
 
