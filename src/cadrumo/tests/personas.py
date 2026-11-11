@@ -596,6 +596,10 @@ class ExpectedValue:
     #: stated without it for the same modelo, period, year and counterparty in each year the
     #: provision governs, and states nothing in the other years.
     governed_by: str | None = None
+    #: Amounts keyed by a registry identity of a casilla (its ``continuidad_id`` or
+    #: ``semantic_role``) instead of a casilla id; the casilla is the one that identity
+    #: names in the edition the law selects for the return.
+    roles: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -781,6 +785,14 @@ def _string_map(table: _Table, key: str, where: str) -> tuple[tuple[str, str], .
     if not all(isinstance(value, str) for value in mapping.values()):
         raise _fail(where, f"{key} values must be strings")
     return tuple((name, cast(str, value)) for name, value in mapping.items())
+
+
+def _amount_map(table: _Table, key: str, where: str) -> tuple[tuple[str, str], ...]:
+    """A string map whose every value is a canonical decimal amount."""
+    mapping = _string_map(table, key, where)
+    for name, amount in mapping:
+        _amount(amount, f"{where}.{key}.{name}")
+    return mapping
 
 
 def _date(value: object, where: str, *, biographical: bool) -> PersonaDate:
@@ -1597,6 +1609,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "refusal_stage",
                     "not_sourced",
                     "governed_by",
+                    "roles",
                 }
             ),
         )
@@ -1643,6 +1656,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 refusal_stage=refusal_stage,
                 not_sourced=not_sourced,
                 governed_by=governed_by,
+                roles=_amount_map(table, "roles", here),
             )
         )
     return Expectations(obligations=tuple(obligations), deadlines=tuple(deadlines), values=tuple(values))
