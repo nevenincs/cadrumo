@@ -120,8 +120,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 14300.00 + 4680 + 5210 + 4390; gastos = 9717.70 + MIN-COM-2 6814.80 + 882.00 + MIN-LUZ-2 254.10 = 17668.60; provisión = 5 % of 10911.40 = 545.57; 04 = 20 % of 10365.83 = 2073.17 (half-up from 2073.166); 07 = 2073.17 - 870.64."
 legal_ref = ["ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "cited"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -132,8 +132,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 28580.00 + 3870 + 3150 + 4460; gastos = 17668.60 + MIN-COM-3 6183.80 + 882.00 + MIN-IBI-1 640.00 + MIN-LUZ-3 254.10 = 25628.50; provisión = 5 % of 14431.50 = 721.58; 04 = 2741.98; 05 = 870.64 + 1202.53."
 legal_ref = ["ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "cited"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -144,8 +144,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 40060.00 + 4920 + 5640 + 7380; gastos = 25628.50 + MIN-COM-4 9591.20 + 882.00 + MIN-LUZ-4 254.10 = 36355.80; provisión = 5 % of 21644.20 = 1082.21; 04 = 4112.40 (half-up from 4112.398); 05 = 2073.17 + 668.81."
 legal_ref = ["ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "cited"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
+refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "347"
