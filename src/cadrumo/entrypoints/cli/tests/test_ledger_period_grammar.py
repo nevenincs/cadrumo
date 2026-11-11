@@ -20,6 +20,7 @@ encrypted bucket and the real ledger backend.
 
 from __future__ import annotations
 
+import calendar
 import json
 from datetime import date
 from pathlib import Path
@@ -28,12 +29,19 @@ import pytest
 import typer
 
 from cadrumo.core.period import Period, StandardPeriodCode
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.period_parsing import LedgerPeriodRefusal, period_parsing_canonical_period
 
 from .cli_fixture_worlds import invoke_joined_cli
 from .profile_world_fixtures import profile_backend_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_ENVELOPE = filing_year_envelope()
+YEAR = _ENVELOPE.horizon
+"""The filing year the end-to-end and refusal cases run in."""
+OTHER_YEAR = _ENVELOPE.floor
+"""A second supported year, used where a case needs a year other than ``YEAR``."""
 
 
 def _expected_span_shaped_tokens() -> frozenset[str]:
@@ -49,7 +57,7 @@ def _expected_span_shaped_tokens() -> frozenset[str]:
     ``{1T, 0A}`` prose — fails the comparison rather than passing silently.
     """
     return frozenset(
-        member.value for member in StandardPeriodCode if Period.from_year_and_code(2024, member.value).has_date_span()
+        member.value for member in StandardPeriodCode if Period.from_year_and_code(YEAR, member.value).has_date_span()
     )
 
 
@@ -61,34 +69,34 @@ def _expected_span_shaped_tokens() -> frozenset[str]:
 # typed :class:`Period` date span the ledger filters by — there is no
 # intermediate calendar string.
 #
-# The table exercises EVERY span-shaped token, not a sample: 2024 is a leap year,
-# so the February span ends on the 29th. ``test_token_year_span_table_exercises
-# _every_span_shaped_token`` asserts this covers exactly the derived span-shaped
-# set, so a newly-added span-shaped enum member cannot go unexercised.
-_TOKEN_YEAR_SPAN = (
-    ("1T", 2024, "1T", date(2024, 1, 1), date(2024, 3, 31)),
-    ("2T", 2024, "2T", date(2024, 4, 1), date(2024, 6, 30)),
-    ("3T", 2024, "3T", date(2024, 7, 1), date(2024, 9, 30)),
-    ("4T", 2024, "4T", date(2024, 10, 1), date(2024, 12, 31)),
-    ("0A", 2024, "0A", date(2024, 1, 1), date(2024, 12, 31)),
-    ("01", 2024, "01", date(2024, 1, 1), date(2024, 1, 31)),
-    ("02", 2024, "02", date(2024, 2, 1), date(2024, 2, 29)),
-    ("03", 2024, "03", date(2024, 3, 1), date(2024, 3, 31)),
-    ("04", 2024, "04", date(2024, 4, 1), date(2024, 4, 30)),
-    ("05", 2024, "05", date(2024, 5, 1), date(2024, 5, 31)),
-    ("06", 2024, "06", date(2024, 6, 1), date(2024, 6, 30)),
-    ("07", 2024, "07", date(2024, 7, 1), date(2024, 7, 31)),
-    ("08", 2024, "08", date(2024, 8, 1), date(2024, 8, 31)),
-    ("09", 2024, "09", date(2024, 9, 1), date(2024, 9, 30)),
-    ("10", 2024, "10", date(2024, 10, 1), date(2024, 10, 31)),
-    ("11", 2024, "11", date(2024, 11, 1), date(2024, 11, 30)),
-    ("12", 2024, "12", date(2024, 12, 1), date(2024, 12, 31)),
-)
-_CALENDAR_SHAPES = ("2024Q1", "2024-03", "2024", "2026Q4", "2025-12")
-_YEAR_QUALIFIED_HYBRIDS = ("2024-1T", "2024-0A", "2026-1T")
+# The table exercises EVERY span-shaped token, not a sample, in EVERY supported
+# year, so a leap year's February ends on the 29th and the others on the 28th.
+# ``test_token_year_span_table_exercises_every_span_shaped_token`` asserts this
+# covers exactly the derived span-shaped set, so a newly-added span-shaped enum
+# member cannot go unexercised. The expected spans are computed here from the
+# calendar, independently of the production normaliser.
+def _token_year_span(year: int) -> tuple[tuple[str, int, str, date, date], ...]:
+    quarters = tuple(
+        (f"{quarter}T", year, f"{quarter}T", date(year, 3 * quarter - 2, 1), _month_end(year, 3 * quarter))
+        for quarter in range(1, 5)
+    )
+    annual = ("0A", year, "0A", date(year, 1, 1), date(year, 12, 31))
+    months = tuple(
+        (f"{month:02d}", year, f"{month:02d}", date(year, month, 1), _month_end(year, month)) for month in range(1, 13)
+    )
+    return (*quarters, annual, *months)
+
+
+def _month_end(year: int, month: int) -> date:
+    return date(year, month, calendar.monthrange(year, month)[1])
+
+
+_TOKEN_YEAR_SPAN = _token_year_span(YEAR)
+_CALENDAR_SHAPES = (f"{YEAR}Q1", f"{YEAR}-03", f"{YEAR}", f"{OTHER_YEAR}Q4", f"{OTHER_YEAR}-12")
+_YEAR_QUALIFIED_HYBRIDS = (f"{YEAR}-1T", f"{YEAR}-0A", f"{OTHER_YEAR}-1T")
 _INVALID_TOKENS = ("not-a-period", "ZZ", "99", "13T", "Q5")
-_FILTER_REJECTED_PERIODS = ("2024Q1", "2024", "2024-1T", "not-a-period", "1P")
-_HISTORIC_IMPORT_PERIODS = ("2024-1T", "2024/1T", "2024Q1")
+_FILTER_REJECTED_PERIODS = (f"{YEAR}Q1", f"{YEAR}", f"{YEAR}-1T", "not-a-period", "1P")
+_HISTORIC_IMPORT_PERIODS = (f"{YEAR}-1T", f"{YEAR}/1T", f"{YEAR}Q1")
 
 
 def test_aeat_token_plus_year_resolves_to_period() -> None:
@@ -99,13 +107,14 @@ def test_aeat_token_plus_year_resolves_to_period() -> None:
     the period back to the operator.
     """
 
-    for token, year, registry_token, start, end in _TOKEN_YEAR_SPAN:
-        resolved = period_parsing_canonical_period(token, year=year)
-        assert isinstance(resolved, Period)
-        assert resolved.filing_year == year
-        assert resolved.registry_token == registry_token
-        assert resolved.start_date == start
-        assert resolved.end_date == end
+    for supported_year in _ENVELOPE.years:
+        for token, year, registry_token, start, end in _token_year_span(supported_year):
+            resolved = period_parsing_canonical_period(token, year=year)
+            assert isinstance(resolved, Period)
+            assert resolved.filing_year == year
+            assert resolved.registry_token == registry_token
+            assert resolved.start_date == start
+            assert resolved.end_date == end
 
 
 def test_registry_union_validator_is_the_token_authority() -> None:
@@ -119,13 +128,13 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 
     # Span-shaped tokens resolve.
     tokens = ("1T", "0A", "06")
-    assert tuple(period_parsing_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
+    assert tuple(period_parsing_canonical_period(token, year=YEAR).registry_token for token in tokens) == tokens
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
     for non_ledger in ("1P", "EXT-1T", "EVENT-3"):
         with pytest.raises(typer.BadParameter):
-            period_parsing_canonical_period(non_ledger, year=2024)
+            period_parsing_canonical_period(non_ledger, year=YEAR)
 
 
 # --- Calendar shapes now REFUSE -----------------------------------------------
@@ -160,7 +169,7 @@ def test_calendar_shape_refuses_advertising_accepted_tokens_as_data() -> None:
     assert len(expected) == 17  # 1T-4T, 0A, 01-12; instalment claves 1P-4P carry no span
     for calendar_shape in _CALENDAR_SHAPES:
         with pytest.raises(typer.BadParameter) as excinfo:
-            period_parsing_canonical_period(calendar_shape, year=2024)
+            period_parsing_canonical_period(calendar_shape, year=YEAR)
         refusal = excinfo.value
         assert isinstance(refusal, LedgerPeriodRefusal), calendar_shape
         assert frozenset(refusal.accepted_period_tokens) == expected, calendar_shape
@@ -179,7 +188,7 @@ def test_year_qualified_hybrid_refuses() -> None:
 
     for hybrid in _YEAR_QUALIFIED_HYBRIDS:
         with pytest.raises(typer.BadParameter):
-            period_parsing_canonical_period(hybrid, year=2024)
+            period_parsing_canonical_period(hybrid, year=YEAR)
 
 
 def test_invalid_token_refuses_advertising_accepted_tokens_as_data() -> None:
@@ -193,7 +202,7 @@ def test_invalid_token_refuses_advertising_accepted_tokens_as_data() -> None:
     expected = _expected_span_shaped_tokens()
     for invalid_token in _INVALID_TOKENS:
         with pytest.raises(typer.BadParameter) as excinfo:
-            period_parsing_canonical_period(invalid_token, year=2024)
+            period_parsing_canonical_period(invalid_token, year=YEAR)
         refusal = excinfo.value
         assert isinstance(refusal, LedgerPeriodRefusal), invalid_token
         assert frozenset(refusal.accepted_period_tokens) == expected, invalid_token
@@ -205,7 +214,7 @@ def test_empty_period_refuses() -> None:
     """An empty period refuses with the dedicated empty-period message."""
 
     with pytest.raises(typer.BadParameter):
-        period_parsing_canonical_period("   ", year=2024)
+        period_parsing_canonical_period("   ", year=YEAR)
 
 
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
@@ -221,7 +230,7 @@ def _add_business_row_missing_facts() -> None:
             "ledger",
             "add",
             "--date",
-            "2026-02-10",
+            date(YEAR, 2, 10).isoformat(),
             "--amount",
             "242.00",
             "--direction",
@@ -246,14 +255,14 @@ def test_preflight_accepts_aeat_token_with_year(isolated_backend: None) -> None:
 
     _add_business_row_missing_facts()
 
-    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", str(YEAR)])
 
     assert result.exit_code == 0, result.output
     # The period echoes back through Period.__str__, never as a combined
     # calendar string or reversed ``<token> <year>`` pair.
-    assert "period\t2026 1T" in result.output
+    assert f"period\t{YEAR} 1T" in result.output
     assert "1T 2026" not in result.output
-    assert "2026Q1" not in result.output
+    assert f"{YEAR}Q1" not in result.output
     assert "checked\t1" in result.output
     assert "ready\tfalse" in result.output
 
@@ -262,11 +271,11 @@ def test_ledger_read_period_display_matches_typed_period_across_text_and_json(is
     """Real ledger reads use ``Period.__str__`, while JSON retains raw period fields."""
 
     _add_business_row_missing_facts()
-    period = Period.from_year_and_code(2026, "1T")
-    preflight = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
-    status = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
+    period = Period.from_year_and_code(YEAR, "1T")
+    preflight = invoke_joined_cli(["app", "ledger", "preflight", "--period", "1T", "--year", str(YEAR)])
+    status = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", str(YEAR)])
     preflight_json = invoke_joined_cli(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2026"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(YEAR)],
     )
 
     assert preflight.exit_code == 0, preflight.output
@@ -277,7 +286,7 @@ def test_ledger_read_period_display_matches_typed_period_across_text_and_json(is
     assert "1T 2026" not in preflight.output
     assert "1T 2026" not in status.output
     assert json.loads(preflight_json.output)["result"]["period"] == {
-        "filing_year": 2026,
+        "filing_year": YEAR,
         "code": "1T",
     }
 
@@ -287,19 +296,19 @@ def test_status_accepts_aeat_token_with_year(isolated_backend: None) -> None:
 
     _add_business_row_missing_facts()
 
-    result = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "status", "--period", "1T", "--year", str(YEAR)])
 
     assert result.exit_code == 0, result.output
-    for marker in ("business_expense_total\t242", "business_net_total\t-242", "2026 1T"):
+    for marker in ("business_expense_total\t242", "business_net_total\t-242", f"{YEAR} 1T"):
         assert marker in result.output, result.output
     assert "1T 2026" not in result.output
-    assert "2026Q1" not in result.output
+    assert f"{YEAR}Q1" not in result.output
 
 
 def test_preflight_calendar_shape_refuses(isolated_backend: None) -> None:
     """``ledger preflight --period 2026Q1 --year 2026`` refuses, naming the AEAT tokens."""
 
-    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
+    result = invoke_joined_cli(["app", "ledger", "preflight", "--period", f"{YEAR}Q1", "--year", str(YEAR)])
     assert result.exit_code != 0, result.output
     assert "1T" in result.output
 
@@ -332,7 +341,7 @@ def test_period_refusal_advertises_accepted_tokens_on_error_envelope(isolated_ba
     """
 
     result = invoke_joined_cli(
-        ["--format", "json", "app", "ledger", "status", "--period", "2024Q1", "--year", "2024"],
+        ["--format", "json", "app", "ledger", "status", "--period", f"{YEAR}Q1", "--year", str(YEAR)],
     )
     assert result.exit_code != 0, result.output
     context = _error_context(result.output)
@@ -344,7 +353,7 @@ def test_period_refusal_advertises_accepted_tokens_on_error_envelope(isolated_ba
 def _write_import_statement(path: Path) -> None:
     path.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2024-02-10,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        f"{date(YEAR, 2, 10).isoformat()},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
 
@@ -373,15 +382,15 @@ def test_import_accepts_aeat_token_with_year(
             "--period",
             "1T",
             "--year",
-            "2024",
+            str(YEAR),
         ],
     )
 
     assert result.exit_code == 0, result.output
     assert "Rows\t1" in result.output
     assert "DRY RUN MODE\tYes" in result.output
-    assert "2024Q1" not in result.output
-    assert "2024-1T" not in result.output
+    assert f"{YEAR}Q1" not in result.output
+    assert f"{YEAR}-1T" not in result.output
 
 
 def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
@@ -407,7 +416,7 @@ def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
                 "--period",
                 historic_period,
                 "--year",
-                "2024",
+                str(YEAR),
             ],
         )
 
@@ -467,17 +476,17 @@ def test_import_period_year_prefixed_token_refuses_with_current_canonical_gramma
             "csv",
             "--dry-run",
             "--period",
-            "2026T1",
+            f"{YEAR}T1",
             "--year",
-            "2026",
+            str(YEAR),
         ],
     )
 
     assert result.exit_code != 0, result.output
-    assert "2026T1" in result.output
+    assert f"{YEAR}T1" in result.output
     assert "1T" in result.output
     assert "--year" in result.output
-    assert "2026-Q1" not in result.output
+    assert f"{YEAR}-Q1" not in result.output
 
 
 def test_status_period_without_year_refuses(isolated_backend: None) -> None:
@@ -504,4 +513,4 @@ def test_preflight_help_documents_aeat_tokens_and_year() -> None:
     assert "0A" in output
     assert "--year" in output
     # No calendar shape is advertised on the operator surface.
-    assert "2026Q1" not in output
+    assert f"{YEAR}Q1" not in output
