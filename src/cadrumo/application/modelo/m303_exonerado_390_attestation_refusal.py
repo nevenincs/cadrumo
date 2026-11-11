@@ -21,7 +21,7 @@ from .preconditions import build_modelo_precondition_failure_for_scenario
 
 _LEAF: Final[str] = "modelo.work.attest_m303_exonerado_390"
 _SCENARIO_ROOT: Final[str] = f"{_LEAF}.evidence"
-_WORDS: Final[Mapping[str, str]] = {
+_REFUSAL_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "observation_timing": "application.modelo.errors.exonerado_390_attestation_observation_timing",
     "stored_observation_timing": "application.modelo.errors.exonerado_390_attestation_stored_observation_timing",
     "coordinate_unsupported": "application.modelo.errors.exonerado_390_attestation_coordinate_unsupported",
@@ -116,7 +116,7 @@ def _refusal(
         missing_action_arguments=missing_action_arguments,
     )
     return M303Exonerado390AttestationUnadmissibleError(
-        translated_message=_WORDS[reason],
+        translated_message=_REFUSAL_LOCALE_KEYS[reason],
         context={"reason": reason, **context},
         precondition_failure=failure,
     )
