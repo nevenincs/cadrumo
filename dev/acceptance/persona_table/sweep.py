@@ -405,9 +405,14 @@ def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
 
 
 def _scope(persona: Persona) -> ReplayScope:
-    """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
-    if persona.filed_returns or persona.calculated_returns or persona.local_observations:
-        return ReplayScope.HISTORY
+    """The records scope when the persona holds a return history, else the full ledger.
+
+    The table takes every return of the history through calculate, verify,
+    export and local filing itself, in chain order, so the replay records only
+    what those returns read.
+    """
+    if persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings:
+        return ReplayScope.RECORDS
     return ReplayScope.FULL
 
 

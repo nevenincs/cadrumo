@@ -135,6 +135,19 @@ def test_every_applicable_obligation_period_is_a_row_at_the_real_horizon() -> No
         assert owed <= planned, persona_id
 
 
+def test_every_return_of_a_persona_history_is_a_row_the_table_runs_live() -> None:
+    envelope = _envelope()
+    for persona_id in persona_ids():
+        persona = _persona(persona_id)
+        planned = {(row.modelo, row.year, row.period) for row in planned_rows(persona, envelope.horizon, envelope)}
+        history = {
+            (block.modelo, block.year.resolve(envelope), period)
+            for block in (*persona.filed_returns, *persona.calculated_returns)
+            for period in block.periods
+        }
+        assert history <= planned, persona_id
+
+
 def test_a_shifted_horizon_moves_every_row_down_by_the_shift() -> None:
     envelope = _envelope()
     persona = _persona("autonomo-fontanero")

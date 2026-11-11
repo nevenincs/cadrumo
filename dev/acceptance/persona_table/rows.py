@@ -245,15 +245,16 @@ def replay_horizons(envelope: YearEnvelope) -> tuple[int, ...]:
 def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list[PlannedRow]:
     """The returns ``persona`` owes when replayed under ``horizon``, one per modelo, year and period.
 
-    A return is owed when an obligation states it applicable or a value is
-    stated for it. Values stated per counterparty (informative returns) are
-    not compared yet, so they do not make a row's oracle. ``persona`` is read under any envelope; its year tokens are
-    resolved here against ``horizon``, and a return whose year falls outside
-    ``envelope.floor..horizon`` is not a row of this replay.
+    A return is owed when an obligation states it applicable, the persona's
+    history files or calculates it, or a value is stated for it. Values stated
+    per counterparty (informative returns) are not compared yet, so they do not
+    make a row's oracle. ``persona`` is read under any envelope; its year
+    tokens are resolved here against ``horizon``, and a return whose year falls
+    outside ``envelope.floor..horizon`` is not a row of this replay.
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
-    keys = _owed_keys(persona, shifted) | set(stated)
+    keys = _owed_keys(persona, shifted) | _history_keys(persona, shifted) | set(stated)
     return [
         _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
         for modelo, year, period in sorted(keys, key=chain_order)
@@ -280,6 +281,15 @@ def _owed_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int |
         for item in persona.expectations.obligations
         if item.applicable is True
         for period in item.periods
+    }
+
+
+def _history_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
+    """The returns the persona's history files or calculates, which the table runs live in chain order."""
+    return {
+        (block.modelo, _year(block.year, envelope), period)
+        for block in (*persona.filed_returns, *persona.calculated_returns)
+        for period in block.periods
     }
 
 

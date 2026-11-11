@@ -265,6 +265,14 @@ class ReplayScope(StrEnum):
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
     """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    RECORDS = "records"
+    """The full scope, then the records the persona's returns read, without the returns.
+
+    The local observations, the Modelo 303 compensation carried in, the rent
+    and professional withholding and the returns filed with the AEAT are
+    recorded; no return is created. A consumer that takes the persona's
+    returns through their own operations, in order, replays this scope.
+    """
     HISTORY = "history"
     """The full scope, then the persona's return history.
 
@@ -1343,13 +1351,21 @@ def _capture_aeat_filings(persona: Persona, world: PersonaWorld) -> None:
                 )
 
 
-def _replay_history(
+def _replay_records(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
+) -> None:
+    """Record what the persona's returns read: observations, compensation carried in, withholding and AEAT filings."""
+    _seed_compensation_carried_in(persona, world)
+    _record_local_observations(persona, world)
+    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_aeat_filings(persona, world)
 
-    The local observations, the rent and professional withholding and the
-    returns filed with the AEAT are recorded first. Then each
+
+def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, str], dict[str, str]]:
+    """Replay the persona's returns; returns the filed and the calculated returns, key to revision id.
+
+    The records of :func:`_replay_records` come first. Then each
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
@@ -1358,11 +1374,6 @@ def _replay_history(
     reason, never overridden. Local filing records a PRESENTADO revision whose
     AEAT status stays pending; no receipt is made.
     """
-    _seed_compensation_carried_in(persona, world)
-    _record_local_observations(persona, world)
-    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_aeat_filings(persona, world)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
     for year, period, filed in history_periods(persona, world.envelope):
@@ -1534,12 +1545,14 @@ def materialise_persona(
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world)
         setup_complete = _complete_setup(world) if complete_setup else None
-        if scope.includes(ReplayScope.HISTORY) and (
+        if scope.includes(ReplayScope.RECORDS) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
-            filings, calculations = _replay_history(persona, world, transactions=transactions, invoices=invoices)
+            _replay_records(persona, world, transactions=transactions, invoices=invoices)
+            if scope.includes(ReplayScope.HISTORY):
+                filings, calculations = _replay_history(persona, world)
     return MaterialisedPersona(
         persona=persona,
         world=world,
