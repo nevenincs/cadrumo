@@ -32,6 +32,7 @@ from cadrumo.application.invoices.transaction_linking import (
 )
 from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.errors import InvoiceLinkError
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -43,9 +44,11 @@ from .issued_invoice_support import paid_servicios_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET_ID = "41414141-4141-4141-8141-414141414141"
 _STALE_REVISION_ID = "0" * 64
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+_NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
 
 
 def test_link_appends_exactly_one_invoice_linked_event(tmp_path: Path) -> None:
@@ -183,14 +186,14 @@ def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
 
 
 def _invoice() -> Invoice:
-    return paid_servicios_invoice("INV-EVENT-1", issued_at=date(2026, 5, 1))
+    return paid_servicios_invoice("INV-EVENT-1", issued_at=date(_YEAR, 5, 1))
 
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="bank-row-event-1",
-        booked_date=date(2026, 5, 2),
-        value_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
+        value_date=date(_YEAR, 5, 2),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Cliente SL",
@@ -200,7 +203,7 @@ def _transaction() -> Transaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 5, 2, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 2, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"amount": "121.00"},

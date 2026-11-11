@@ -29,12 +29,15 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET_ID = "76767676-7676-4767-8676-767676767676"
-_OCCURRED_AT = datetime(2026, 9, 22, 11, 0, tzinfo=UTC)
+_OCCURRED_AT = datetime(_YEAR, 9, 22, 11, 0, tzinfo=UTC)
 _STALE_REVISION_ID = "0" * 64
 
 
@@ -199,8 +202,8 @@ def _invoice():
         counterparty_name="Papeleria Sol SL",
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
-        invoice_number="ATOMIC-2026-001",
-        issued_at=date(2026, 9, 22),
+        invoice_number=f"ATOMIC-{_YEAR}-001",
+        issued_at=date(_YEAR, 9, 22),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
