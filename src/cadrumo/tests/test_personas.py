@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import tomllib
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
@@ -615,3 +616,41 @@ def test_a_provision_the_envelope_does_not_carry_is_refused_rather_than_ignored(
     expectations = _parse_expectations(_governed_expectations())
     with pytest.raises(PersonaCatalogueError, match="does not carry the governed periods"):
         values_in_force(expectations.values, _ENVELOPE)
+
+
+_ACCRUING = "minorista-recargo"
+
+
+def _accruing_ledger(ibi_accrual: str) -> Any:
+    """The minorista persona with its IBI row's accrual cells replaced by ``ibi_accrual``."""
+    text = (PERSONAS_ROOT / _ACCRUING / "ledger.csv").read_text(encoding="utf-8")
+    lines = [
+        line.rsplit(",", 3)[0] + "," + ibi_accrual if line.startswith("MIN-IBI-1,") else line
+        for line in text.splitlines()
+    ]
+    return parse_persona(
+        _ACCRUING,
+        persona_document=tomllib.loads((PERSONAS_ROOT / _ACCRUING / "persona.toml").read_text(encoding="utf-8")),
+        ledger_text="\n".join(lines) + "\n",
+        documents_document=tomllib.loads((PERSONAS_ROOT / _ACCRUING / "documents.toml").read_text(encoding="utf-8")),
+        expectations_document=tomllib.loads(
+            (PERSONAS_ROOT / _ACCRUING / "expectations.toml").read_text(encoding="utf-8")
+        ),
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+    )
+
+
+def test_a_ledger_row_states_its_accrual_date_apart_from_the_movement() -> None:
+    persona = _accruing_ledger("horizon-1,1,1")
+    rows = {row.ref: row for row in persona.ledger}
+    ibi = rows["MIN-IBI-1"]
+    assert ibi.accrual_date(_ENVELOPE) == date(_ENVELOPE.horizon - 1, 1, 1)
+    assert ibi.operation_date(_ENVELOPE) != ibi.accrual_date(_ENVELOPE)
+    assert all(row.accrual_date(_ENVELOPE) is None for ref, row in rows.items() if ref != "MIN-IBI-1")
+
+
+@pytest.mark.parametrize("cells", ["horizon-1,1,", "horizon-1,13,1", ",1,1"])
+def test_an_incomplete_or_impossible_accrual_date_is_refused(cells: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="accrual"):
+        _accruing_ledger(cells)

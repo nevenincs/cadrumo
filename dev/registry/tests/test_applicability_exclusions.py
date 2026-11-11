@@ -372,7 +372,7 @@ def test_every_modelo_347_edition_carries_the_same_exclusions() -> None:
 
 
 # ---------------------------------------------------------------------
-# Modelo 130: RIRPF art. 109.1 withholding exception
+# Modelo 130: RIRPF art. 109.2 to 109.4 withholding exception
 # ---------------------------------------------------------------------
 
 _ART_109 = "rd-439-2007:art-109"
@@ -405,7 +405,7 @@ def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_13
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert _ART_109 in result.legal_refs
-    assert "artículo 109.1" in result.reason
+    assert "apartados 2 a 4 del artículo 109" in result.reason
 
 
 def test_an_activity_below_the_art109_coverage_files_modelo_130() -> None:
@@ -444,3 +444,47 @@ def test_modelo_130_carries_only_the_art109_exclusion() -> None:
     rule = resolve_applicability_rule_from_authority(compiled_bundled_authority(), Modelo("130"))
 
     assert [exclusion.id for exclusion in rule.exclusions] == ["m130-art109-retencion-70"]
+
+
+# ---------------------------------------------------------------------
+# Retenedor returns: RIRPF art. 76.1.b requires an economic activity of a natural person
+# ---------------------------------------------------------------------
+
+_ART_76 = "rd-439-2007:art-76"
+_RETENEDOR_PAYER_FACTS: dict[str, dict[str, object]] = {
+    "111": {"has_employees": True},
+    "115": {"pays_rent_with_retencion": True},
+    "123": {"pays_capital_income_with_retencion": True},
+    "180": {"pays_rent_with_retencion": True},
+    "190": {"has_employees": True},
+    "193": {"pays_capital_income_with_retencion": True},
+}
+
+
+@pytest.mark.parametrize("modelo", sorted(_RETENEDOR_PAYER_FACTS))
+def test_a_natural_person_without_activity_is_not_a_retenedor(modelo: str) -> None:
+    profile = _persona(("capital_inmobiliario",), "NO_APLICA", **_RETENEDOR_PAYER_FACTS[modelo])
+
+    result = derive_modelo_applicability(profile, modelo, today=_TODAY, authority=compiled_bundled_authority())
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert _ART_76 in result.legal_refs
+    assert "artículo 76.1.b del Reglamento del IRPF" in result.reason
+
+
+@pytest.mark.parametrize("modelo", sorted(_RETENEDOR_PAYER_FACTS))
+def test_a_natural_person_with_activity_that_pays_withheld_income_is_a_retenedor(modelo: str) -> None:
+    profile = _persona(("actividad_economica",), "GENERAL", iva=_iva(), **_RETENEDOR_PAYER_FACTS[modelo])
+
+    result = derive_modelo_applicability(profile, modelo, today=_TODAY, authority=compiled_bundled_authority())
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
+
+
+@pytest.mark.parametrize("modelo", sorted(_RETENEDOR_PAYER_FACTS))
+def test_a_legal_entity_that_pays_withheld_income_stays_a_retenedor(modelo: str) -> None:
+    result = derive_modelo_applicability(
+        _sociedad(**_RETENEDOR_PAYER_FACTS[modelo]), modelo, today=_TODAY, authority=compiled_bundled_authority()
+    )
+
+    assert result.verdict is ApplicabilityVerdict.APPLICABLE
