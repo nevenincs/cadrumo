@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d27e990c59f3d5d824f5286ef765292503f32136004a6808cf4e998e1fa3c3d'
+body_hash: 'sha256:c4ed4dfa1978c6f97cbb3fdf2456482b75da71eab5f236ad257c60adb62125e5'
 related:
   - "[[2026-08-13-cli-action-envelope-successor-adr]]"
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
