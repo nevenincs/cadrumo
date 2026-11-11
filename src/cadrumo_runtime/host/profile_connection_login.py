@@ -193,9 +193,7 @@ class ProfileConnectionLoginMixin:
     def _run_login(self: RuntimeProfileConnections, pending: PendingProfileLogin) -> None:
         request, context = pending.request, pending.context
         try:
-            result = self._login_proof(
-                pending.connection, pending.host, context, request, pending.secret, pending.control, pending.deadline
-            )
+            result = self._password_or_receipt_proof(pending)
             if isinstance(result, AccessDenied):
                 result = AccessRefusal(
                     request_id=request.request_id,
@@ -246,6 +244,71 @@ class ProfileConnectionLoginMixin:
         )
         self._sign_in_changed()
         self.lifecycle_changed()
+
+    def _password_or_receipt_proof(
+        self: RuntimeProfileConnections, pending: PendingProfileLogin
+    ) -> ProfileStatus | AccessDenied:
+        """Prove a retained login, following a password attempt onto custody it replaced itself.
+
+        A password proof of a profile whose envelope holds the fixed fallback
+        may re-wrap that envelope at a stronger point and then refuse as custody
+        changed, without a sign-in reason, because it opened the generation it
+        just replaced. Only that refusal is followed, once: the replaced
+        incarnation is retired, the connection moves to the host bound to the
+        committed generation, and the same password is proved there within the
+        attempt's own deadline. Any other refusal, a cancelled attempt or a
+        generation that is not the attempt's own successor ends the attempt as
+        before. The proof path wipes the secret it is given, so a copy is held
+        for this attempt only and wiped with it.
+        """
+        request, context = pending.request, pending.context
+        if request.method != "password":
+            return self._login_proof(
+                pending.connection, pending.host, context, request, pending.secret, pending.control, pending.deadline
+            )
+        retained = bytearray(pending.secret)
+        try:
+            replaced = pending.host
+            try:
+                return self._login_proof(
+                    pending.connection, replaced, context, request, pending.secret, pending.control, pending.deadline
+                )
+            except ProfileAccessRefusedError as error:
+                if error.reason is not AccessDenialCode.CUSTODY_CHANGED or error.sign_in is not None:
+                    raise
+            successor = self._follow_own_custody_replacement(pending, replaced)
+            if isinstance(successor, AccessDenied):
+                return successor
+            pending.secret[:] = retained
+            return self._login_proof(
+                pending.connection, successor, context, request, pending.secret, pending.control, pending.deadline
+            )
+        finally:
+            retained[:] = bytes(len(retained))
+
+    def _follow_own_custody_replacement(
+        self: RuntimeProfileConnections, pending: PendingProfileLogin, replaced: RuntimeProfileHost
+    ) -> RuntimeProfileHost | AccessDenied:
+        """Move a live attempt to the host of the generation it committed, or deny it as custody changed."""
+        changed = AccessDenied(code=AccessDenialCode.CUSTODY_CHANGED)
+        if pending.control.cancelled or time.monotonic() >= pending.deadline.instant:
+            return changed
+        context, request, connection = pending.context, pending.request, pending.connection
+        successor = self._host(request.profile_id, context)
+        before = replaced.store.binding.custody_generation
+        if successor.store.binding.custody_generation not in {before, before + 1}:
+            return changed
+        with successor.guard:
+            with self._guard:
+                if (
+                    self._closed
+                    or self._connections.get(context.connection_id) is not connection
+                    or connection.disconnecting
+                ):
+                    return changed
+                pending.host = successor
+            self._prepare_profile_login(connection, successor, context, request)
+        return successor
 
     def _login_pending(
         self: RuntimeProfileConnections, pending: PendingProfileLogin, request_id: UUID

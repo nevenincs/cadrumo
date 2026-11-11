@@ -66,28 +66,37 @@ def retire_profile_automation(
 
 
 def profile_automation_enrolled(*, root: Path, profile_id: UUID) -> bool:
-    """Return whether any local installation holds a custody directory for ``profile_id``.
+    """Return whether any local installation holds automation custody records for ``profile_id``.
 
-    A directory still being retired counts: only its absence under every
-    installation shows that a custody transition would retire nothing. A
-    malformed installation entry counts as well, so a caller that must not
-    retire custody declines rather than guesses.
+    A hosted profile's directory exists, empty, before anything is enrolled,
+    and completed retirement clears it again; any record in it means custody
+    is enrolled or still being retired, which a custody transition would
+    retire. A malformed installation entry counts as well, so a caller that
+    must not retire custody declines rather than guesses.
     """
     with profile_custody_root_lock(root):
         base = root / ".automation-v1"
         if not os.path.lexists(base):
             return False
         return any(
-            not _canonical_installation(installation) or os.path.lexists(installation / str(profile_id))
+            not _canonical_installation(installation) or _holds_records(installation / str(profile_id))
             for installation in base.iterdir()
         )
 
 
 def _canonical_installation(installation: Path) -> bool:
     try:
-        return str(UUID(installation.name)) == installation.name
+        return str(UUID(installation.name)) == installation.name and installation.is_dir()
     except ValueError:
         return False
+
+
+def _holds_records(directory: Path) -> bool:
+    if not os.path.lexists(directory):
+        return False
+    if not directory.is_dir() or directory.is_symlink():
+        return True
+    return any(directory.iterdir())
 
 
 def _retire_profile_directories(

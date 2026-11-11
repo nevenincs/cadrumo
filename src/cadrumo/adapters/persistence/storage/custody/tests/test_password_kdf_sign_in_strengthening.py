@@ -159,9 +159,20 @@ def test_automation_custody_holds_strengthening_off(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_id = _register()
         before = load_committed_profile_password_material(profile_id).envelope
-        (storage_root / ".automation-v1" / str(uuid4()) / str(profile_id)).mkdir(parents=True)
+        directory = storage_root / ".automation-v1" / str(uuid4()) / str(profile_id)
+        directory.mkdir(parents=True)
+        (directory / "retirement.json").write_bytes(b"{}")
         assert not _strengthen(profile_id)
         assert load_committed_profile_password_material(profile_id).envelope == before
+
+
+def test_an_empty_automation_directory_does_not_hold_strengthening_off(tmp_path: Path) -> None:
+    """Hosting a profile creates its automation directory, empty, before anything is enrolled."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        profile_id = _register()
+        (storage_root / ".automation-v1" / str(uuid4()) / str(profile_id)).mkdir(parents=True)
+        assert _strengthen(profile_id)
+        assert _point(profile_id) == (64, 4, 1)
 
 
 def _crash_instead(monkeypatch: pytest.MonkeyPatch, step: str) -> None:
