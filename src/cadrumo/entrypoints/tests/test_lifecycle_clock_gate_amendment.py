@@ -27,6 +27,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventHistoryCatalogue
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -60,6 +61,17 @@ _T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 _INCOME: CasillaId = validated_casilla_id("01")
 _EXPENSE: CasillaId = validated_casilla_id("02")
+# The baseline records casilla values only. Correcting casilla 01 reaches formulas whose
+# box sources the filing never recorded, and a historical correction never reads them
+# from today's profile or ledger, so the amendment states each one. The normal modality
+# keeps casilla 02 at the filed accumulated expenses.
+_UNRECORDED_BINDINGS: dict[BindingId, str] = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": "250",
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+    "irpf.previous_year_economic_activity_net_income": "20000.00",
+}
 _FACTS = persona_facts_beneath(
     (
         UserProfileFact(path="identity.tax_id", value="X0001500M"),
@@ -204,6 +216,7 @@ def _amend(baseline: _Baseline, *, clock: datetime) -> ModeloRecord:
             amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="synthetic under-reported turnover",
             actor="operator-A",
+            binding_overrides=_UNRECORDED_BINDINGS,
             clock=clock,
         )
 

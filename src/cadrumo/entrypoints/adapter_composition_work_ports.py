@@ -348,8 +348,13 @@ def build_amendment_action_ports(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> AmendmentActionPorts:
-    """Compose every persisted authority required by one Modelo amendment."""
+    """Compose every persisted authority required by one Modelo amendment.
+
+    ``mutation_writer`` admits each actual secure-object commit, so every
+    repository in the bundle shares the one fenced secure-object repository.
+    """
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -363,6 +368,8 @@ def build_amendment_action_ports(
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    if mutation_writer is not None:
+        objects = objects.with_mutation_writer(mutation_writer)
     calculation_binding = bind_calculation_revision_persistence_from_profile(
         bucket_id=normalized_bucket_id,
         objects=objects,

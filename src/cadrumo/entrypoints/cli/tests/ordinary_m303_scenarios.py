@@ -10,17 +10,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import invoke_joined_cli
-
-_YEAR = filing_year_envelope().horizon
-_YEAR_END_OBSERVATION = datetime(_YEAR, 12, 31, 12, tzinfo=UTC).isoformat()
-_OBSERVED_AT_BY_LAST_PERIOD = {
-    "4T": _YEAR_END_OBSERVATION,
-    "12": _YEAR_END_OBSERVATION,
-}
 
 
 def joint_return_options(*, joint_return_elected: bool = True) -> tuple[str, ...]:
@@ -46,8 +38,17 @@ class OrdinaryM303SecureEvidence:
         )
 
 
-def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
-    """Admit one real last-period non-applicability attestation."""
+def admit_ordinary_m303_secure_evidence(
+    *, filing_year: int, period: Literal["4T", "12"] = "4T"
+) -> OrdinaryM303SecureEvidence:
+    """Admit one real last-period non-applicability attestation for the caller's ``filing_year``.
+
+    The attestation is observed at the close of that year's last settlement period, so
+    the caller names the year of the return it calculates and that period must already
+    have ended: an observation dated in the future is refused, as it is for an operator,
+    and an attestation for another year answers nothing.
+    """
+    observed_at = datetime(filing_year, 12, 31, 12, tzinfo=UTC).isoformat()
     result = invoke_joined_cli(
         [
             "--format",
@@ -57,11 +58,11 @@ def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -
             "work",
             "attest-m303-exonerado-390",
             "--year",
-            str(_YEAR),
+            str(filing_year),
             "--period",
             period,
             "--observed-at",
-            _OBSERVED_AT_BY_LAST_PERIOD[period],
+            observed_at,
         ]
     )
     assert result.exit_code == 0, result.output

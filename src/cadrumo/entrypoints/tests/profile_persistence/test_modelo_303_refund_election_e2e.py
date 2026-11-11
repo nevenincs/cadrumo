@@ -30,7 +30,7 @@ engine-produced saldo. Legal basis: Ley 37/1992 (LIVA) art. 116.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -168,14 +168,19 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         ).report
 
 
-def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
+def _file_modelo_revision(
+    calculation_revision_id: str,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    **kwargs: Any,
+) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation, mutation_writer=mutation_writer),
             operation=operation,
             **kwargs,
         ).record
@@ -380,6 +385,7 @@ def _file_period(
     calculation_revision_id: str,
     redeme_enrolled: bool,
     refund_election: RefundElection,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ResultDisposition:
     """File the verified revision under ``refund_election`` and return its resolved disposition.
 
@@ -413,6 +419,7 @@ def _file_period(
             activity_start_date=_activity_start_date_for_period(work_unit.period.code),
         ),
         refund_election=refund_election,
+        mutation_writer=mutation_writer,
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -518,8 +525,15 @@ def test_non_redeme_mid_period_refund_election_is_refused(
     2T is not the year's last filing period, so a non-REDEME refund is not lawful
     (LIVA art. 116). Electing ``devolver`` raises the instructive refusal rather than
     silently downgrading to compensación (which would discard the operator's request)
-    or silently filing an unlawful refund.
+    or silently filing an unlawful refund. The refusal comes before the filing
+    writes anything, so the operation settles with no effect.
     """
+    admitted_writes: list[Callable[[], None]] = []
+
+    def admit(write: Callable[[], None]) -> None:
+        admitted_writes.append(write)
+        write()
+
     with _secure_backend(tmp_path):
         revision_id, saldo = _calculate_negative_period(
             period_token=_MID_PERIOD, redeme_enrolled=False, operation=operation
@@ -530,8 +544,10 @@ def test_non_redeme_mid_period_refund_election_is_refused(
                 calculation_revision_id=revision_id,
                 redeme_enrolled=False,
                 refund_election=RefundElection.DEVOLVER,
+                mutation_writer=admit,
             )
 
+    assert admitted_writes == []
     assert excinfo.value.context is not None
     assert excinfo.value.context["period"] == _MID_PERIOD
     assert excinfo.value.context["modelo"] == "303"
