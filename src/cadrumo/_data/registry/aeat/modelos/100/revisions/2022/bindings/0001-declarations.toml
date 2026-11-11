@@ -472,7 +472,7 @@ source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
 id = "renta-family-descendant-birth-date"
-provider = { kind = "profile", rows = { object_path = "renta_family.descendiente", leaf = "birth_date", count_path = "renta_family.descendientes_count" }, xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true }
+provider = { kind = "profile", rows = { object_path = "renta_family.descendiente", leaf = "birth_date", count_path = "renta_family.descendientes_count", required = true }, xsd_path = "/DatosIdentificativos/Hijos/Hijo/FNACDLG", dictionary_field = "FNACDLG", repeating = true }
 value = { data_type = "date", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-58", "orden-hfp-310-2023:art-3"]
@@ -527,7 +527,7 @@ source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2022"]
 [[revisions."2022".bindings]]
 id = "renta-family-ascendant-birth-date"
-provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "birth_date", count_path = "renta_family.ascendientes_count" }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG", dictionary_field = "ANOASDLG", repeating = true }
+provider = { kind = "profile", rows = { object_path = "renta_family.ascendiente", leaf = "birth_date", count_path = "renta_family.ascendientes_count", required = true }, xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/ANOASDLG", dictionary_field = "ANOASDLG", repeating = true }
 value = { data_type = "date", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
@@ -1119,3 +1119,56 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1", "
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]
+[[revisions."2022".bindings]]
+id = "renta-profile-incremento-guarderia"
+provider = { kind = "profile", profile_key = "renta_family.incremento_guarderia_cotizaciones_2022" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+source_refs = ["aeat-renta-2022-manual-parte1", "aeat-dr-100-2022-dictionary"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses",
+    "Límite del incremento",
+    "con posterioridad al nacimiento, adopción",
+]
+# Per-activity inventory projections for Anexo D. Runtime expansion supplies one
+# aligned row per complete encrypted activity ledger; the registry declares only
+# the three legal operations and never a taxpayer activity identity.
+[[revisions."2022".bindings]]
+id = "renta-inventory-activity-closing-increase-0177"
+provider = { kind = "inventory", modelo = "100", projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "closing_minus_opening_positive", target_casilla_id = "0177" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Variación de existencias"]
+
+[[revisions."2022".bindings]]
+id = "renta-inventory-activity-acquisition-cost-0181"
+provider = { kind = "inventory", modelo = "100", projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "complete_acquisition_cost", target_casilla_id = "0181" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Compra de mercaderías"]
+
+[[revisions."2022".bindings]]
+id = "renta-inventory-activity-closing-decrease-0182"
+provider = { kind = "inventory", modelo = "100", projection_grain = "taxpayer_year_activity", fact = "row_field", record = "inventory_activity", grouping = "per_inventory_activity", row_field = "opening_minus_closing_positive", target_casilla_id = "0182" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Variación de existencias"]

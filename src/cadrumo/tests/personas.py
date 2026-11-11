@@ -927,6 +927,7 @@ _DESCENDANT_LEAVES = frozenset(
         "segundo_ciclo_infantil_inicio_mes",
         "gastos_guarderia",
         "gastos_guarderia_mensuales",
+        "cotizaciones_ss_madre",
     }
 )
 _ASCENDANT_LEAVES = frozenset({"birth_date", "fallecimiento", "convivientes"})

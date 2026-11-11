@@ -1074,3 +1074,34 @@ source_refs = ["lirpf-cuota-chain-authority"]
 [[revisions."2022".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["sin que pueda resultar negativa como consecuencia de dichas disminuciones", "Si la base liquidable general resultase negativa, su importe podrá ser compensado"]
+[[revisions."2022".formulas]]
+id = "renta-incremento-guarderia-0613"
+target_casilla_id = "0613"
+# Art. 81.2 LIRPF in force until 2022: incremento de la deducción por maternidad
+# por gastos de custodia en guardería o centro de educación infantil autorizado.
+#
+# The manual states that the increment may not exceed, for each child, either
+# 1.000 euros a year or the lesser of (a) the cotizaciones y cuotas totales a la
+# Seguridad Social y Mutualidades devengadas in the period after the birth and
+# (b) the unsubsidised spend paid for that child. Every one of those bounds,
+# with the month proration, is per child, and this schema has no per-descendant
+# fold, so the fold happens where the descendant records live and the registry
+# consumes one resolved value. Each child's cotizaciones are stated on its own row.
+# This edition binds the fold that limits each child by them; the 2023 edition,
+# after the Ley 31/2022 reform, binds the fold that does not. A child with an
+# increment but no stated figure leaves the value unresolved, so the box is
+# never computed from an assumed zero.
+expression = { binding = "renta-profile-incremento-guarderia" }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+    "incremento",
+    "guarder",
+    "cotizaciones",
+    "gasto efectivo no subvencionado",
+    "se calculará proporcionalmente al número de meses",
+]

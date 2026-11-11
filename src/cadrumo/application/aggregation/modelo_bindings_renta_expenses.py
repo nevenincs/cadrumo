@@ -79,7 +79,7 @@ from .activity_asset_ledger_reconciliation import (
     capital_good_transaction_ids,
     possibly_durable_expense_findings,
 )
-from .inventory import InventoryLedgerRepositoryProtocol
+from .inventory import InventoryLedgerRepositoryProtocol, revision_carries_inventory_purchases
 from .modelo_bindings import aggregation_period_for_modelo
 from .modelo_bindings_actividad_assets import (
     ActivityAssetExpenseObservation,
@@ -225,9 +225,14 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         self._inventory_repository = inventory_repository
         self._imputation_filings = imputation_filings
 
-    def _inventory_claims(self) -> tuple[InventoryPurchaseClaim, ...]:
-        """Every purchase claim of every book; a claim on a row of another year still owns that row."""
-        if self._inventory_repository is None:
+    def _inventory_claims(self, context: CalculationSourceContext) -> tuple[InventoryPurchaseClaim, ...]:
+        """Every purchase claim of every book, when this edition gives the books' purchases a casilla.
+
+        A claim on a row of another year still owns that row. An edition without
+        that casilla keeps every claimed row among the expenses, since withholding
+        it there would declare the purchase nowhere.
+        """
+        if self._inventory_repository is None or not revision_carries_inventory_purchases(context.revision):
             return ()
         return document_purchase_claims(self._inventory_repository.load())
 
@@ -432,7 +437,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
 
         try:
             asset_history = self._activity_asset_history_repository.load()
-            inventory_claims = self._inventory_claims()
+            inventory_claims = self._inventory_claims(context)
         except (InventoryLedgerError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,

@@ -40,10 +40,6 @@ from ....core.aggregation import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ....domain.calculations.registry.inventory_anexo_d_applicability import (
-    inventory_anexo_d_applies,
-    resolve_inventory_anexo_d_first_filing_year,
-)
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -686,8 +682,6 @@ def _published_inventory_years(operation: PinnedAuthorityOperation) -> tuple[tup
     """Every supported Modelo 100 exercise, projected one included, whose published revision holds the rows."""
     years = []
     for year in supported_exercises_with_projection("100"):
-        if not inventory_anexo_d_applies(filing_year=year, authority=operation):
-            continue
         revision = published_snapshot("100", filing_year=year, period="0A").revision
         if any(binding.source is BindingSourceKind.INVENTORY for binding in revision.bindings):
             years.append((year, revision))
@@ -770,23 +764,6 @@ def test_a_projected_year_expands_the_rows_the_registry_authors_for_the_edition_
     assert {binding_id for binding_id, _row in result.row_binding_values} == {
         binding.id for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY
     }
-
-
-def test_inventory_row_template_rejects_a_year_before_the_registry_authors_the_rows_without_repository_read(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    repository = _InventoryLedgerRepositoryScenario()
-    first = resolve_inventory_anexo_d_first_filing_year(filing_year=newest_authored_edition("100"), authority=operation)
-
-    result = InventorySourceResolver(inventory_repository=repository).resolve(
-        _context(_revision(inventory=True), year=first - 1),
-    )
-
-    assert repository.loads == 0
-    assert result.unresolved_binding_ids == ("inventory-0177", "inventory-0181", "inventory-0182")
-    assert len(result.diagnostics) == 1
-    assert result.diagnostics[0].reason == "unresolved_derived_binding"
-    assert "invalid_row_template_cohort" in result.diagnostics[0].message
 
 
 @pytest.mark.parametrize("shape", ["missing", "duplicate"])

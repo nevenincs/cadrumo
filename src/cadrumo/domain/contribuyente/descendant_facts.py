@@ -30,6 +30,7 @@ Stored fact paths per descendant (n = 0-based index)::
   renta_family.descendiente.{n}.gastos_guarderia        non-negative integer euros (absent means 0)
   renta_family.descendiente.{n}.gastos_guarderia_mensuales
                                                         canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
+  renta_family.descendiente.{n}.cotizaciones_ss_madre   decimal euros or absent (absent means never stated)
   renta_family.descendiente.{n}.nif                     NIF string or absent
   renta_family.descendiente.{n}.apellidos_nombre        surnames and name, whitespace collapsed, or absent
 
@@ -110,6 +111,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "SEGUNDO_CICLO_INFANTIL_INICIO_MES",
         "GASTOS_GUARDERIA",
         "GASTOS_GUARDERIA_MENSUAL",
+        "COTIZACIONES_SS_MADRE",
         "NIF",
         "APELLIDOS_NOMBRE",
     },
@@ -247,6 +249,10 @@ def _maternity_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str |
             if not descendant.gastos_guarderia_mensuales
             else serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales),
         ),
+        (
+            "cotizaciones_ss_madre",
+            None if descendant.cotizaciones_ss_madre_euros is None else str(descendant.cotizaciones_ss_madre_euros),
+        ),
         ("nif", descendant.nif),
     )
 
@@ -262,7 +268,7 @@ _N_RE = re.compile(
     # `$` anchor, and be DROPPED from the row -- a declared map silently absent
     # on every reload.
     r"meses_madre_trabajo|alta_posterior_nacimiento_mes|segundo_ciclo_infantil_inicio_mes|"
-    r"gastos_guarderia_mensuales|gastos_guarderia|nif|apellidos_nombre)$",
+    r"gastos_guarderia_mensuales|gastos_guarderia|cotizaciones_ss_madre|nif|apellidos_nombre)$",
 )
 
 
@@ -299,6 +305,7 @@ class _MaternityFields(TypedDict):
     segundo_ciclo_infantil_inicio_mes: int | None
     gastos_guarderia_euros: int
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...]
+    cotizaciones_ss_madre_euros: Decimal | None
 
 
 def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
@@ -524,6 +531,10 @@ def _stored_maternity_fields(row: dict[str, str], *, index: int) -> _MaternityFi
             row.get("gastos_guarderia_mensuales") or "",
             field=f"renta_family.descendiente.{index}.gastos_guarderia_mensuales",
         ),
+        "cotizaciones_ss_madre_euros": _stored_cotizaciones_ss_madre(
+            row.get("cotizaciones_ss_madre"),
+            key=f"renta_family.descendiente.{index}.cotizaciones_ss_madre",
+        ),
     }
 
 
@@ -652,6 +663,26 @@ def _stored_rentas_anuales(raw: str | None, *, index: int, key: str) -> Decimal 
             f"renta_family.descendiente.{index}.rentas_anuales must be a non-negative amount; got {raw!r}.",
             context={"key": key},
             translated_message=_RENTAS_GRAMMAR_LOCALE_KEY,
+        )
+    return value
+
+
+def _stored_cotizaciones_ss_madre(raw: str | None, *, key: str) -> Decimal | None:
+    """Read the mother's stated post-birth cotizaciones, refusing a value that is not a non-negative euro amount.
+
+    ``None`` is "never stated" and stays ``None``: the limit that reads this figure
+    is refused while it is unstated, so a typo must refuse here rather than fall back
+    to that state or to zero. The canonical grammar refuses the Spanish thousands
+    shape for the reason :func:`_stored_rentas_anuales` gives.
+    """
+    if raw is None:
+        return None
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None or value < 0:
+        raise ProfileAnswerTypeError(
+            f"{key} must be a non-negative euro amount with a dot decimal separator and no thousands grouping "
+            f"(for example 2332.80); got {raw!r}.",
+            context={"key": key},
         )
     return value
 
@@ -817,6 +848,11 @@ def parse_descendiente_flag(
                              child turns three, whose post-birthday months an
                              annual total cannot be apportioned across. Mutually
                              exclusive with GASTOS_GUARDERIA for one child.
+      COTIZACIONES_SS_MADRE=N
+                             (optional) the mother's cotizaciones y cuotas a la Seguridad Social
+                             y Mutualidades devengadas after this child's birth, in euros. Limits
+                             this child's guardería increment (Art. 81.2 LIRPF) for the filing
+                             years before the Ley 31/2022 reform, which removed that limit.
       NIF=XXXXXXXXX          (optional) NIF/NIE
       APELLIDOS_NOMBRE=TEXT  (optional) surnames then name, as the declaration lists
                              the descendant; it cannot contain ','
@@ -934,6 +970,9 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
         "segundo_ciclo_infantil_inicio_mes": segundo_ciclo_infantil_inicio_mes,
         "gastos_guarderia_euros": gastos_guarderia_euros,
         "gastos_guarderia_mensuales": gastos_guarderia_mensuales,
+        "cotizaciones_ss_madre_euros": _stored_cotizaciones_ss_madre(
+            parts.get("COTIZACIONES_SS_MADRE") or None, key="COTIZACIONES_SS_MADRE"
+        ),
     }
 
 

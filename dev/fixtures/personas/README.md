@@ -190,7 +190,7 @@ Descendant keys are the canonical descendant leaves: `birth_date`, `relacion`,
 `rentas_anuales`, `declaracion_propia`, `prorrata_minimo`,
 `meses_madre_trabajo`, `alta_posterior_nacimiento_mes`,
 `segundo_ciclo_infantil_inicio_mes`, `gastos_guarderia`,
-`gastos_guarderia_mensuales`. `identity` supplies the `nif` leaf. Ascendant keys
+`gastos_guarderia_mensuales`, `cotizaciones_ss_madre`. `identity` supplies the `nif` leaf. Ascendant keys
 are `birth_date`, `fallecimiento`, `convivientes`, with `identity` for `nif`.
 Values are written in the leaf's canonical string form (dates as date tables),
 because the descendant and ascendant operations refuse a row whose canonical

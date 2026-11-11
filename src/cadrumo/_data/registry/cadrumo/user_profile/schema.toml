@@ -48,6 +48,13 @@ description = "Incremento por gastos de custodia, prorrateado por meses y limita
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
+pattern = "renta_family.incremento_guarderia_cotizaciones_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente, además, por las cotizaciones de la madre tras su nacimiento (art. 81.2 LIRPF hasta la Ley 31/2022)."
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+
+[[derived_selectors]]
 pattern = "renta_family.deduccion_maternidad_{filing_year}"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
@@ -1740,6 +1747,7 @@ model_selectors = [
   "DescendantInfo.alta_posterior_nacimiento_mes",
   "DescendantInfo.gastos_guarderia_euros",
   "DescendantInfo.gastos_guarderia_mensuales",
+  "DescendantInfo.cotizaciones_ss_madre_euros",
   "DescendantInfo.nif",
   "DescendantInfo.apellidos_nombre",
 ]

@@ -189,7 +189,8 @@ class RentaFamilyProfile(BaseModel):
         thresholds: MinimoDescendientesThresholds,
         cap_anual: Decimal,
         context: FamilyFactResolutionContext,
-    ) -> Decimal:
+        cotizaciones_limit_applies: bool = False,
+    ) -> Decimal | None:
         """Art. 81.2 guardería increment (casilla 0613), prorated and capped PER CHILD.
 
         The manual states the increment "puede alcanzar hasta 1.000 euros
@@ -236,13 +237,43 @@ class RentaFamilyProfile(BaseModel):
         filing year; this method performs no euro-figure lookup of its own
         (`aeat-registry-authority-flow`).
 
+        *cotizaciones_limit_applies* is the redaction of art. 81.2 in force until the
+        Ley 31/2022 reform, which also bounded each child's increment by the
+        mother's cotizaciones devengadas after that child's birth (Manual práctico de
+        Renta 2022, cap. 18, "Límites de la deducción", a)). The edition's binding picks
+        which fold it consumes; this method holds no year. The figure is the child's own stated
+        ``cotizaciones_ss_madre_euros``, applied to that child's prorated, spend-bound
+        amount before the sum. A child whose increment is positive and whose figure was
+        never stated leaves the whole result ``None`` (unresolved), never a zero and
+        never the unlimited amount; a child with no increment needs no figure.
+
         Returns ``Decimal("0")`` when no descendant qualifies, which is the
         legally correct zero rather than an under-declaration.
         """
+        total = Decimal("0")
+        for descendant, increment in self._guarderia_child_increments(
+            filing_year, thresholds=thresholds, cap_anual=cap_anual, context=context
+        ):
+            if cotizaciones_limit_applies and increment > 0:
+                if descendant.cotizaciones_ss_madre_euros is None:
+                    return None
+                increment = min(increment, descendant.cotizaciones_ss_madre_euros)
+            total += increment
+        return total
+
+    def _guarderia_child_increments(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        cap_anual: Decimal,
+        context: FamilyFactResolutionContext,
+    ) -> tuple[tuple[DescendantInfo, Decimal], ...]:
+        """Each qualifying child with its prorated, spend-bound increment, before any cotizaciones limit."""
         from ...core.money.rounding import round_to_cents
 
         available = self.dependencia_assimilation_available
-        total = Decimal("0")
+        increments: list[tuple[DescendantInfo, Decimal]] = []
         for descendant in self.descendientes:
             meses = descendant.guarderia_simultaneous_meses(
                 filing_year,
@@ -254,8 +285,8 @@ class RentaFamilyProfile(BaseModel):
                 continue
             prorated_cap = round_to_cents(cap_anual / Decimal(CALENDAR_MONTH_MAX) * Decimal(meses))
             spend = Decimal(descendant.guarderia_contributing_spend(filing_year, context=context))
-            total += min(prorated_cap, spend)
-        return total
+            increments.append((descendant, min(prorated_cap, spend)))
+        return tuple(increments)
 
     def meses_maternidad_por_descendiente(
         self,

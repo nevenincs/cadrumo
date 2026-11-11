@@ -52,6 +52,7 @@ class DescendantRecordFields(BaseModel):
     segundo_ciclo_infantil_inicio_mes: CalendarMonth | None = None
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
+    cotizaciones_ss_madre_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     nif: str | None = None
     apellidos_nombre: str | None = None
 
@@ -203,6 +204,14 @@ class DescendantRecordBase(DescendantRecordFields):
         ``gastos_guarderia_euros`` for one child — declaring both is refused
         rather than reconciled, so a descendant always has exactly one spend
         authority.
+    cotizaciones_ss_madre_euros
+        The mother's cotizaciones y cuotas totales a la Seguridad Social y
+        Mutualidades devengadas in the period after this child's birth, as the
+        statement of the filing year the other maternity leaves describe
+        (Art. 81.2 LIRPF as in force until the Ley 31/2022 reform, which bounded
+        the guardería increment of each child by it). ``None`` is "never stated",
+        which is not zero: the limit it feeds is refused rather than applied to a
+        figure nobody gave. Only the editions whose binding names the limited increment read it.
     death_date
         The date this descendant died, or ``None`` (the default) for a
         descendant who did not die. Art. 61 norma 4ª LIRPF turns on this fact
