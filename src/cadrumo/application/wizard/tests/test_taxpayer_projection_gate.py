@@ -18,12 +18,14 @@ backend, never by asserting shipped prose.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 
 import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.flows import FlowMode
 from ....core.i18n.render import tr
@@ -146,7 +148,12 @@ def test_legally_complete_profiles_still_reach_submit(*, registry_setup_flow: Wi
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         valid_sets = (
             _canonical(),
-            _canonical(**{"irpf-special-regime": "impatriado", "irpf-special-regime-start-date": "2024-01-15"}),
+            _canonical(
+                **{
+                    "irpf-special-regime": "impatriado",
+                    "irpf-special-regime-start-date": date(filing_year_envelope().floor, 1, 15).isoformat(),
+                }
+            ),
             _canonical(
                 **{
                     "fiscal-residency": "non_resident_irnr",

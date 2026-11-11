@@ -26,12 +26,12 @@ class _Line(BaseModel):
 def _payload() -> dict[str, object]:
     return {
         "exponent_amount": Decimal("1E+2"),
-        "booked": date(2025, 12, 31),
-        "stamped": datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
+        "booked": date(1985, 12, 31),
+        "stamped": datetime(1986, 1, 2, 3, 4, 5, tzinfo=UTC),
         "export": Path("exports") / "ledger.csv",
         "pair": ("B00015016", Decimal("0.10")),
         "tags": frozenset({"mixed"}),
-        "lines": [_Line(amount=Decimal("12.50"), booked=date(2025, 3, 1))],
+        "lines": [_Line(amount=Decimal("12.50"), booked=date(1985, 3, 1))],
         "note": "invoice for B00015016 at https://example.org/private/path",
     }
 
@@ -58,7 +58,7 @@ def test_the_emitted_envelope_equals_a_twice_converted_one() -> None:
 
     assert emitted["result"] == expected["result"]
     assert emitted["result"]["exponent_amount"] == "100"
-    assert emitted["result"]["lines"] == [{"amount": "12.50", "booked": "2025-03-01"}]
+    assert emitted["result"]["lines"] == [{"amount": "12.50", "booked": "1985-03-01"}]
     assert "B00015016" not in stream.getvalue()
 
 

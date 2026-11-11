@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Final
 
@@ -26,7 +26,15 @@ from ...iva.schema import InvoiceKind
 from ..catalogue import InvoiceCatalogue, StoredInvoiceCatalogue, decode_authenticated_invoice_catalogue
 from ..errors import InvoiceValidationError
 from ..models import Invoice
-from .invoice_catalogue_seed import SeedCase, fields_set, seed_payload, seed_payloads
+from .invoice_catalogue_seed import (
+    STANDING_DEVENGO,
+    TRANSITIONAL_WINDOWS,
+    SeedCase,
+    fields_set,
+    seed_payload,
+    seed_payloads,
+    window_middle,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +55,7 @@ def _rich_payloads() -> list[dict[str, object]]:
     exempt_supply = seed_payload(
         SeedCase(
             900,
-            date(2025, 5, 5),
+            STANDING_DEVENGO,
             ("EXEMPT",),
             counterparty=("DE123456789", "DE"),
             extra={
@@ -65,7 +73,7 @@ def _rich_payloads() -> list[dict[str, object]]:
         seed_payload(
             SeedCase(
                 901,
-                date(2025, 6, 6),
+                STANDING_DEVENGO,
                 ("RATE_21",),
                 kind="received",
                 extra={
@@ -74,7 +82,7 @@ def _rich_payloads() -> list[dict[str, object]]:
                         "source_sha256": "c" * 64,
                         "source_row_index": 4,
                         "source_format": "csv",
-                        "ingested_at": "2025-06-07T08:09:10+00:00",
+                        "ingested_at": "1980-06-07T08:09:10+00:00",
                         "provider_name": "bulk-invoice-import",
                     },
                     "payment_id": "D" * 64,
@@ -90,7 +98,7 @@ def _rich_payloads() -> list[dict[str, object]]:
         seed_payload(
             SeedCase(
                 902,
-                date(2025, 8, 8),
+                STANDING_DEVENGO,
                 ("RATE_21",),
                 extra={
                     "collected_on_behalf_of_tax_id": "B00015016",
@@ -168,7 +176,7 @@ def _one_stored_record(case: SeedCase) -> tuple[str, dict[str, object]]:
 
 def test_the_stored_id_is_not_re_derived_but_every_other_path_derives_it() -> None:
     """The one skipped check: an id no longer derived from its fields reads only through the entry point."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     record["invoice_number"] = "PASS-9999"
 
     read = decode_authenticated_invoice_catalogue({invoice_id: record}).require(invoice_id)
@@ -201,16 +209,17 @@ def _refusal_of(invoice_id: str, record: dict[str, object]) -> str:
 
 
 def test_a_rate_not_in_force_on_the_devengo_date_is_still_refused() -> None:
-    """Dated registry rules are kept: a 2 % line on a 2025 devengo date refuses."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2024, 11, 15), ("RATE_2",)))
-    record["issued_at"] = "2025-02-03"
+    """Dated registry rules are kept: a 2 % line on a devengo date after its window refuses."""
+    invoice_id, record = _one_stored_record(SeedCase(1, window_middle("RATE_2"), ("RATE_2",)))
+    after_window = TRANSITIONAL_WINDOWS["RATE_2"][1] + timedelta(days=1)
+    record["issued_at"] = after_window.isoformat()
 
-    assert "line rate RATE_2 was not in force on 2025-02-03" in _refusal_of(invoice_id, record)
+    assert f"line rate RATE_2 was not in force on {after_window.isoformat()}" in _refusal_of(invoice_id, record)
 
 
 def test_totals_that_do_not_reconstitute_are_still_refused() -> None:
     """The totals reconstitution is kept."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     record["grand_total"] = str(Decimal(str(record["grand_total"])) + Decimal("1.00"))
 
     assert "grand_total must equal base_total + iva_total" in _refusal_of(invoice_id, record)
@@ -218,7 +227,7 @@ def test_totals_that_do_not_reconstitute_are_still_refused() -> None:
 
 def test_registry_vocabulary_and_identifier_rules_are_still_refused() -> None:
     """An undeclared category and a failed NIF checksum refuse on the authenticated read too."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     unknown_category = {**record, "iva_category": "not_a_registry_category"}
     assert "iva_category must be an IvaCategory" in _refusal_of(invoice_id, unknown_category)
 
@@ -240,7 +249,7 @@ def test_registry_vocabulary_and_identifier_rules_are_still_refused() -> None:
 )
 def test_structural_refusals_still_fire_on_an_authenticated_read(field: str, value: object, expected: str) -> None:
     """Types, enum membership and field constraints are unaffected by the skipped re-derivation."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     record[field] = value
 
     assert expected in _refusal_of(invoice_id, record)
@@ -248,7 +257,7 @@ def test_structural_refusals_still_fire_on_an_authenticated_read(field: str, val
 
 def test_a_missing_required_field_and_a_missing_id_are_refused() -> None:
     """A record the store returns incomplete is refused rather than completed by derivation."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     without_name = {key: value for key, value in record.items() if key != "counterparty_name"}
     assert "counterparty_name" in _refusal_of(invoice_id, without_name)
 
@@ -258,7 +267,7 @@ def test_a_missing_required_field_and_a_missing_id_are_refused() -> None:
 
 def test_a_record_keyed_by_another_id_is_refused() -> None:
     """The catalogue key must be the invoice's own id."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     wrong_key = "0" * 64
 
     with pytest.raises(InvoiceValidationError, match=f"does not match invoice_id '{invoice_id}'"):
@@ -270,8 +279,8 @@ def test_a_read_validates_only_the_invoices_it_returns() -> None:
     stored = _stored_records(
         _stored_json(
             [
-                seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",))),
-                seed_payload(SeedCase(2, date(2025, 7, 7), ("RATE_21",), kind="received")),
+                seed_payload(SeedCase(1, STANDING_DEVENGO, ("RATE_21",))),
+                seed_payload(SeedCase(2, STANDING_DEVENGO, ("RATE_21",), kind="received")),
             ]
         )
     )
@@ -292,7 +301,7 @@ def test_a_read_validates_only_the_invoices_it_returns() -> None:
 
 def test_a_malformed_kind_refuses_a_filtered_list_instead_of_dropping_out() -> None:
     """Only a record of another valid kind is passed over unvalidated."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     record["kind"] = "ISSUED"
     catalogue = decode_authenticated_invoice_catalogue({invoice_id: record})
 
@@ -302,8 +311,8 @@ def test_a_malformed_kind_refuses_a_filtered_list_instead_of_dropping_out() -> N
 
 def test_attributed_buckets_are_read_from_every_record_without_validation() -> None:
     """The ownership guard sees a record no read returns, and refuses a non-text bucket id."""
-    invoice_id, record = _one_stored_record(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
-    other_id, other = _one_stored_record(SeedCase(2, date(2025, 7, 7), ("RATE_21",)))
+    invoice_id, record = _one_stored_record(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
+    other_id, other = _one_stored_record(SeedCase(2, STANDING_DEVENGO, ("RATE_21",)))
     record["bucket_id"] = f"  {_BUCKET} "
     other["lines"] = []
     catalogue = decode_authenticated_invoice_catalogue({invoice_id: record, other_id: other})
@@ -317,10 +326,10 @@ def test_attributed_buckets_are_read_from_every_record_without_validation() -> N
 def test_lifecycle_stamps_keep_their_utc_typing() -> None:
     """A naive stamp is refused; an aware one reads back as the same instant."""
     invoice_id, record = _one_stored_record(
-        SeedCase(1, date(2025, 7, 7), ("RATE_21",), extra={"created_at": "2025-07-07T10:00:00+00:00"})
+        SeedCase(1, STANDING_DEVENGO, ("RATE_21",), extra={"created_at": "1980-07-07T10:00:00+00:00"})
     )
     assert decode_authenticated_invoice_catalogue({invoice_id: record}).require(invoice_id).created_at == datetime(
-        2025, 7, 7, 10, tzinfo=UTC
+        1980, 7, 7, 10, tzinfo=UTC
     )
-    record["created_at"] = "2025-07-07T10:00:00"
+    record["created_at"] = "1980-07-07T10:00:00"
     assert "created_at" in _refusal_of(invoice_id, record)

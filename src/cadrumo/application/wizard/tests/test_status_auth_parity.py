@@ -31,7 +31,7 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AUTHENTICATED_AT = datetime(2026, 8, 1, 12, 0, tzinfo=UTC)
+_AUTHENTICATED_AT = datetime(1980, 8, 1, 12, 0, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 

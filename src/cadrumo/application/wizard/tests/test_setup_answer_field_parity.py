@@ -16,10 +16,13 @@ only — fails loudly.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.deadlines.setup_answer_projection import project_setup_answers, setup_answer_fields
 from ....domain.user_profile.setup_answers import (
@@ -114,7 +117,7 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
     values["renta_filing.declaration_type"] = ""
     values["taxpayer_type.fiscal_residency"] = ""
     values["tax_residence.ccaa"] = "madrid"
-    values["obligations.premio_loteria_gravamen_especial_trimestres"] = "2025-1T"
+    values["obligations.premio_loteria_gravamen_especial_trimestres"] = f"{filing_year_envelope().horizon}-1T"
     values["taxpayer_type.irpf_income_categories"] = ""
     values["irpf.estimation_regime"] = ""
     values["irpf.special_regime"] = ""
@@ -132,7 +135,7 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
         "renta_taxpayer.marriage_date",
         "renta_spouse.birth_date",
     ):
-        values[date_path] = "2024-03-01"
+        values[date_path] = date(filing_year_envelope().floor, 3, 1).isoformat()
     values["taxpayer_type.incn_prior_12_months"] = "12.5"
 
     from_table = project_setup_answers(values)
