@@ -43,6 +43,16 @@ class ModeloOperatorLayerIntegrityError(ModeloValidationError):
     """
 
 
+class CalculationRevisionIntegrityError(ModeloValidationError):
+    """Raised when a saved calculation revision contradicts itself.
+
+    Every check behind it compares fields the application computed and stored
+    together, never a value the operator typed, so a revision that fails one
+    was altered, damaged or assembled wrongly; the operator has no entry that
+    repairs it.
+    """
+
+
 class ModeloExportError(ModeloError):
     """Base error for modelo-revision export failures (manifest, archive build)."""
 
@@ -143,6 +153,7 @@ def raise_catalogue_integrity_error(
 
 
 __all__ = [
+    "CalculationRevisionIntegrityError",
     "Modelo036LifecycleError",
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",
