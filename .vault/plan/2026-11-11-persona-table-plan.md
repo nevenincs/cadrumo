@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:4aea9f4992977af56a67af56cf20fd0b9a8bdf77302fe1f8ff1affcc61d03309'
+body_hash: 'sha256:4e97d080e2a352257084700cfd5d5b98e29b25f3149410dd68a3f59c47220e22'
 ---
 
 # `persona-table` plan
@@ -70,6 +70,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S23` - Import datos fiscales and reconcile Modelo 100 credits against them, once the operator supplies a specimen; `src/cadrumo/adapters/inbound, src/cadrumo/application/live`.
 - [ ] `P02.S24` - Finish moving login, session, access and custody authority from the tax package into the runtime package; `src/cadrumo/application/user_profile, src/cadrumo_runtime`.
 - [ ] `P02.S32` - Re-land the test year-literal clean-up with test years derived from a closed year, proving the runtime-host tests in root (reverted 2026-11-11 as 25d6f78646; batch 0ca3be17c7 is in history); `src, dev/quality`.
+- [ ] `P02.S34` - Clear the year-independence baseline for modelos outside the persona table (036, 216, 222, 296, 322, 345), the IRNR convenio fact gaps and Sociedades 200/202, each item settled from the official text; `src/cadrumo/_data/registry`.
 
 ### Phase `P03` - Desktop re-entry
 
