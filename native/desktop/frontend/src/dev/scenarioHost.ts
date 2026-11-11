@@ -137,6 +137,9 @@ export type ScenarioHostOptions = {
   /** The local engine the made-up agent's stored record names at the start;
    * where left out, the bundled llama.cpp. */
   localEngine?: AgentLocalEngineToken;
+  /** The installed model the made-up service serves as the one documents
+   * are read with while no choice is stored; where left out, none. */
+  readingDefault?: { lane: string; model: string };
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
@@ -624,6 +627,9 @@ export function scenarioHost(
     ...(options.engineHealth ? { engineHealth: options.engineHealth } : {}),
     ...(options.engineChoices ? { engineChoices: options.engineChoices } : {}),
     ...(options.localEngine ? { localEngine: options.localEngine } : {}),
+    ...(options.readingDefault
+      ? { readingDefault: options.readingDefault }
+      : {}),
   });
   // Every host this page made publishes, as one service would for each.
   const publishedBefore = window.__scenarioAgentPublishStatus;

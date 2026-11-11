@@ -16,6 +16,7 @@ import type {
   AgentSelectionRecord,
 } from "./agentSession";
 import { parseAuthKind, parseEngineHealth } from "./agentSession";
+import type { AgentListedModel } from "../ipc/contract";
 import type { AgentRanWith } from "./agentViews";
 import { engineNotRunningWords } from "./engineHealth";
 import type { Translate } from "./strings";
@@ -562,6 +563,25 @@ export function selectionRecord(
   if (!entry || entry.installed === false) return null;
   const effort = entry.efforts?.find((held) => held === selection.effort);
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
+}
+
+/** The model the service reads documents with, as the column holds a choice:
+ * null where the catalog does not serve its lane or no longer lists it. */
+export function readingSelection(
+  catalog: AgentCatalogAnswer,
+  reading: AgentListedModel,
+): AgentSelection | null {
+  const lane = servedLanes(catalog).find(
+    (held) =>
+      understood(held) &&
+      `${held.provider_id}_${held.transport}` === reading.lane,
+  );
+  if (!lane) return null;
+  return ranSelection(catalog, {
+    provider: lane.provider_id,
+    transport: lane.transport,
+    model: reading.model,
+  });
 }
 
 /** The choice a run was made with, as the column holds it: the inverse of

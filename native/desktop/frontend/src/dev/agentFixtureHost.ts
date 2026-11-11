@@ -254,6 +254,7 @@ export function fixtureAgent({
   engineHealth,
   engineChoices,
   localEngine,
+  readingDefault,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -286,6 +287,9 @@ export function fixtureAgent({
   /** The engine the stored record names at the start; where left out, the
    * bundled llama.cpp. */
   localEngine?: AgentLocalEngineToken;
+  /** The installed model the service serves as the one documents are read
+   * with while no choice is stored; where left out, none stands in. */
+  readingDefault?: { lane: string; model: string };
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -336,7 +340,11 @@ export function fixtureAgent({
   const listSnapshot = (): AgentLocalModels => ({
     state: "readable",
     models: added.map((entry) => ({ ...entry })),
-    reading: reading ? { ...reading } : null,
+    ...(reading
+      ? { reading: { ...reading }, reading_source: "chosen" as const }
+      : readingDefault
+        ? { reading: { ...readingDefault }, reading_source: "default" as const }
+        : { reading: null, reading_source: "none" as const }),
     local_lanes: [...FIXTURE_LISTED_LANES],
     revision: revisionOf(committed),
   });

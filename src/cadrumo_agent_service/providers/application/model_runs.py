@@ -1,20 +1,26 @@
 """Which lane and model answer a tax model run, and the run itself, for one admitted profile.
 
 A tax worker's model run names its role and never a lane or a model. Every
-role runs with the one model the person selected in the agent's model picker,
-which the desktop stores in the person's model record: on any lane, local or
-not. A role needs a capability: the vision role reads images, so it needs a
+role runs with the one model documents are read with: the model the person
+selected in the agent's model picker, which the desktop stores in the person's
+model record, on any lane, local or not, while it is still usable; otherwise
+the first installed local model. That choice is made by
+:func:`effective_reading`, the same rule that answers the window which model is
+selected. A role needs a capability: the vision role reads images, so it needs a
 lane whose background runs take images and a model the lane's current entries
 mark vision; every other role reads text, which every model does. Current
 entries are the lane's declared ones and, while the agent runs, its live ones.
 
-No other lane, no other model and no default stands in. No selected model
-refuses ``no_selection``, and so does a local model the person has since taken
-off its lane's list. A selected model the role cannot use because it is not
-stated to read images refuses ``model_cannot_read_images``; one a local server
-does not hold is refused by the agent when the run starts, and that refusal
-passes through unchanged; a lane that is not reported, turned on, signed in
-or runnable refuses with its answer or ``lane_unavailable``. An unreadable
+No model but that one stands in. No selected model and no installed local
+model refuses ``no_selection``. A stored local choice the person has since
+taken off its lane's list, or the live catalogue says the server lacks, is no
+longer a choice, so the installed default stands in, else ``no_selection``.
+A selected model the role cannot use because it is not stated to read images
+refuses ``model_cannot_read_images``; one a local server does not hold, though
+the live catalogue does not say so, is refused by the agent when the run
+starts, and that refusal passes through unchanged; a lane that is not
+reported, turned on, signed in or runnable refuses with its answer or
+``lane_unavailable``. An unreadable
 record says nothing about any model, so every role refuses
 ``lane_unavailable``. Whether a lane takes an attachment,
 and which reply options it honours, is what the ready agent's live catalog
@@ -31,7 +37,7 @@ The run goes to cadrumo-agent as a background request through
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import Final, Protocol
 
@@ -52,14 +58,13 @@ from ..domain.catalog import (
     BackgroundOption,
     CatalogModelFacts,
     ModelCapability,
-    ProviderAuthKind,
     ProviderCatalog,
     ProviderCatalogEntry,
     ProviderConsumer,
 )
-from ..domain.record import ListedModel
+from ..domain.record import ListedModel, LocalEngine, LocalModelListRecord
 from .lane_entries import current_lane_entries
-from .local_model_list import listed_models
+from .local_model_list import effective_reading
 from .ports import (
     LiveCatalogModels,
     LocalModelListRead,
@@ -118,10 +123,16 @@ class ModelRunService:
         resolver: ProviderCredentialResolver,
         catalog_source: ProviderCatalogSource,
         live_models: LiveCatalogModels,
+        selected_engine: Callable[[], LocalEngine | None],
         gateway: BackgroundRunGateway,
     ) -> None:
-        """Bind the service to the profile's model list, resolver, the agent's catalogs and the run gateway."""
+        """Bind the service to the profile's model list, resolver, the agent's catalogs and the run gateway.
+
+        ``selected_engine`` answers which local engine the profile runs, which
+        decides the local lanes a default reading model may come from.
+        """
         self._model_list = model_list
+        self._selected_engine = selected_engine
         self._resolver = resolver
         self._catalog_source = catalog_source
         self._live_models = live_models
@@ -140,7 +151,7 @@ class ModelRunService:
         read = self._read_list()
         if isinstance(read, ModelRunRefusal):
             return read
-        return self._resolve(model_role, read, lanes)
+        return self._resolve(model_role, read, lanes, self._selected_engine())
 
     def _read_list(self) -> LocalModelListRead | ModelRunRefusal:
         read = self._model_list.read()
@@ -157,15 +168,14 @@ class ModelRunService:
 
     @staticmethod
     def _resolve(
-        model_role: ModelRole, read: LocalModelListRead, lanes: _LaneAnswers
+        model_role: ModelRole, read: LocalModelListRead, lanes: _LaneAnswers, engine: LocalEngine | None
     ) -> ModelRunLane | ModelRunRefusal:
         """Return the lane the role runs on or the refusal."""
         if isinstance(read, UnreadableLocalModelList):
             # An unreadable record says nothing about any model, so no role reads as served or unserved.
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        if not isinstance(read, StoredLocalModelList) or read.record.reading is None:
-            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-        return lanes.resolve(ROLE_CAPABILITIES[model_role], read.record.reading, read.record.models)
+        record = read.record if isinstance(read, StoredLocalModelList) else None
+        return lanes.resolve(ROLE_CAPABILITIES[model_role], record, engine)
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one request on the lane its role resolves to now.
@@ -223,20 +233,21 @@ class _LaneAnswers:
         self._lanes: dict[str, _DecidedLane | ModelRunRefusal] = {}
 
     def resolve(
-        self, capability: ModelCapability, reading: ListedModel, added: tuple[ListedModel, ...]
+        self, capability: ModelCapability, record: LocalModelListRecord | None, engine: LocalEngine | None
     ) -> ModelRunLane | ModelRunRefusal:
-        """Return the selected model's lane when it can serve ``capability``, or the refusal."""
+        """Return the lane of the model documents are read with when it can serve ``capability``, or the refusal."""
         catalog = self._read_catalog()
         if isinstance(catalog, ModelRunRefusal):
             return catalog
+        selected = effective_reading(
+            record=record, catalog=catalog, engine=engine, live_models=self._live_models, capability=capability
+        ).model
+        if selected is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        reading = selected
         entry = next((held for held in catalog.providers if held.id == reading.lane), None)
         if entry is None:
             return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        if entry.auth_kind is ProviderAuthKind.NONE and reading.model not in listed_models(
-            entry, (held.model for held in added if held.lane == entry.id)
-        ):
-            # A local model the person took off its lane's list is no longer one they read with.
-            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         decided = self._decided(entry)
         if isinstance(decided, ModelRunRefusal):
             return decided
