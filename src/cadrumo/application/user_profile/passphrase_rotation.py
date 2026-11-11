@@ -24,7 +24,10 @@ Rotation is also the strengthening path. Every re-mint calibrates the
 key-derivation parameters afresh on the current host, so a profile enrolled at
 the fixed fallback point gains strength from one rotation. The new password may
 equal the current one: re-entering the same password re-calibrates on purpose,
-and it is accepted rather than refused.
+and it is accepted rather than refused. A password sign-in does the same without
+asking: :func:`strengthen_profile_password_kdf` re-wraps a fallback envelope
+under the same password at a point measured earlier, through the same journaled
+replacement.
 
 See Also:
     :func:`~cadrumo.application.user_profile.registration.register_profile_with_credentials`
@@ -50,6 +53,7 @@ from ...domain.buckets.event import BucketEventType
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from .custody_ports import (
+    ProfileKdfStrength,
     clear_profile_custody_password_replacement,
     create_profile_custody_registration_material,
     default_profile_record_crypto_port,
@@ -87,6 +91,7 @@ class ProfilePassphraseReplacementProof(StrEnum):
 
     CURRENT_CREDENTIAL = "current_passphrase"
     RECOVERY_CODE = "recovery_code"
+    SIGN_IN_STRENGTHENING = "sign_in_strengthening"
 
 
 class ProfilePassphraseRotationError(CadrumoError):
@@ -227,6 +232,7 @@ def rewrap_profile_passphrase_under_lock(
     proof: ProfilePassphraseReplacementProof,
     storage_root: Path,
     profile_decode_context: ProfileDecodeContext,
+    strength: ProfileKdfStrength | None = None,
 ) -> ProfileCustodyEnvelopePort:
     """Re-head the record and swap the password envelope over an already-proven DEK.
 
@@ -243,7 +249,9 @@ def rewrap_profile_passphrase_under_lock(
 
     The replacement is minted as ``current``'s successor: the next password
     generation, naming ``current``'s self-digest as its predecessor. The
-    custody write refuses anything else.
+    custody write refuses anything else. ``strength`` replaces calibration with
+    a point measured earlier; the mint refuses it, before anything is written,
+    unless it strictly strengthens ``current``.
 
     Returns:
         The committed replacement envelope.
@@ -258,6 +266,7 @@ def rewrap_profile_passphrase_under_lock(
         dek_epoch=current.dek_epoch,
         salt=token_bytes(default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes),
         predecessor=current,
+        strength=strength,
     ).envelope
 
     # Re-head FIRST, then swap, with a durable intent spanning both. The
@@ -313,10 +322,59 @@ def rewrap_profile_passphrase_under_lock(
     return rotated
 
 
+def strengthen_profile_password_kdf(
+    *,
+    profile_id: UUID,
+    password: str,
+    dek: bytes,
+    proven_envelope_digest: str,
+    strength: ProfileKdfStrength,
+    profile_decode_context: ProfileDecodeContext,
+    root: Path | None = None,
+) -> bool:
+    """Re-wrap a fallback password envelope under the same password at a stronger measured point.
+
+    The caller has just proven ``password`` and ``dek`` against the envelope
+    whose self-digest is ``proven_envelope_digest``, inside one sign-in
+    attempt. Under the custody transaction lock the committed envelope must
+    still be that envelope and still hold the fixed fallback point, and the
+    profile must have no automation custody, which the replacement would
+    retire. Otherwise nothing is written and ``False`` is returned.
+
+    The replacement is an ordinary journaled passphrase replacement: same data
+    key and epoch, successor generation, record re-headed, existing sign-ins
+    fenced, and a lifecycle event naming this proof. ``True`` means it
+    committed and the profile's custody is now the successor generation.
+    """
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        resolve_profile_custody_password_replacement(profile_id, root=storage_root)
+        current = load_profile_custody_password_material(profile_id, root=storage_root).envelope
+        port = profile_custody_port()
+        if (
+            current.self_digest != proven_envelope_digest
+            or not port.password_kdf_at_fallback(profile_id, root=storage_root)
+            or port.automation_enrolled(profile_id=profile_id, root=storage_root)
+        ):
+            return False
+        rewrap_profile_passphrase_under_lock(
+            profile_id=profile_id,
+            dek=dek,
+            current=current,
+            new_passphrase=password,
+            proof=ProfilePassphraseReplacementProof.SIGN_IN_STRENGTHENING,
+            storage_root=storage_root,
+            profile_decode_context=profile_decode_context,
+            strength=strength,
+        )
+    return True
+
+
 __all__ = [
     "ProfilePassphraseReplacementProof",
     "ProfilePassphraseRotationError",
     "ProfilePassphraseRotationOutcome",
     "rewrap_profile_passphrase_under_lock",
     "rotate_profile_passphrase",
+    "strengthen_profile_password_kdf",
 ]

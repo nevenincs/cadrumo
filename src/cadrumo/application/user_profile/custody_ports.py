@@ -755,6 +755,10 @@ class ProfileCustodyPort(Protocol):
         """Durably deny delegated custody; return whether optional cleanup finished."""
         ...
 
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        """Whether any local installation holds automation custody for ``profile_id``, retired or not."""
+        ...
+
     def replace_password_envelope(
         self,
         *,

@@ -76,7 +76,7 @@ from .bucket.output_language_hint import (
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
-from .custody.automation_retirement import retire_profile_automation
+from .custody.automation_retirement import profile_automation_enrolled, retire_profile_automation
 from .custody.capsule import (
     ProfileCustodyRecoveryMaterial,
     install_committed_profile_custody_recovery_envelope,
@@ -852,6 +852,9 @@ class _PersistenceProfileCustody:
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         return retire_profile_automation(root=root, profile_id=profile_id, secrets_store=self.automation_secrets_store)
+
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        return profile_automation_enrolled(root=root, profile_id=profile_id)
 
     def replace_password_envelope(
         self,
