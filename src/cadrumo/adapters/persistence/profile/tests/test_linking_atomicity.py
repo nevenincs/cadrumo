@@ -31,6 +31,7 @@ from cadrumo.application.invoices.transaction_linking import (
     link_invoice_transaction_repositories,
 )
 from cadrumo.core.invoice_link import LinkInconsistencyDirection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.service import verify_link_consistency
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -43,6 +44,7 @@ from .issued_invoice_support import paid_servicios_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "31313131-3131-4131-8131-313131313131"
 _STALE_REVISION_ID = "0" * 64
 
@@ -236,14 +238,14 @@ def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:
 
 
 def _invoice() -> Invoice:
-    return paid_servicios_invoice("INV-ATOMIC-1", issued_at=date(2026, 4, 1), notes="atomicity fixture")
+    return paid_servicios_invoice("INV-ATOMIC-1", issued_at=date(_YEAR, 4, 1), notes="atomicity fixture")
 
 
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="bank-row-atomic-1",
-        booked_date=date(2026, 4, 2),
-        value_date=date(2026, 4, 2),
+        booked_date=date(_YEAR, 4, 2),
+        value_date=date(_YEAR, 4, 2),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Cliente SL",
@@ -253,7 +255,7 @@ def _transaction() -> Transaction:
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 2, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 2, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"amount": "121.00"},

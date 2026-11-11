@@ -53,6 +53,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -63,8 +64,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "13a00000-0000-4000-8000-0000000000a1"
 _TAX_ID = identity_catalogue().role("fontanero.titular").value
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_T0 = datetime(_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
 _STALE_REVISION_ID = "0" * 64
 #: Doubles as the justificante CSV, which AEAT prints as an unbroken
 #: alphanumeric run -- the model enforces ^[A-Z0-9]{8,32}$, so the
@@ -105,9 +108,9 @@ def _seed_work_unit(fixture: _Fixture, *, operation: PinnedAuthorityOperation) -
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=_REVISION_ID,
         ports=WorkLifecyclePorts(
             work_unit_repository=fixture.work_units,
             bucket_event_repository=fixture.events,
@@ -280,9 +283,9 @@ def test_work_unit_creation_commits_state_and_event_in_one_transaction(
         create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=_REVISION_ID,
             ports=WorkLifecyclePorts(
                 work_unit_repository=fixture.work_units,
                 bucket_event_repository=fixture.events,
