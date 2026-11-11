@@ -10,7 +10,7 @@ subclasses.
 from __future__ import annotations
 
 from logging import Logger
-from typing import NoReturn
+from typing import ClassVar, NoReturn
 
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
@@ -58,6 +58,10 @@ class ModeloExportValueOverflowError(ModeloExportError):
     something else, so nothing is written. The value is put right where it was
     recorded.
     """
+
+    # The text that did not fit is the filer's own content (a counterparty's
+    # name); only the in-process envelope may show it, never a kept record.
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
 class ModeloExportProducerFactsRefusedError(ModeloExportError):

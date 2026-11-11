@@ -160,7 +160,10 @@ def test_a_counterparty_name_wider_than_its_record_slot_is_refused_naming_it(loc
     assert detail is not None
     assert detail.error_code == "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
     assert detail.refusal_words is not None
-    assert name in detail.refusal_words
+    assert name not in detail.refusal_words
+    assert "field_value" not in {entry.key for entry in detail.context}
+    for shown in (field.id, "40"):
+        assert shown in detail.refusal_words
 
 
 def test_an_amount_wider_than_its_record_slot_is_refused_by_its_slot_alone() -> None:

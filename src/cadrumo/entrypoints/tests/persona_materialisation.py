@@ -245,7 +245,7 @@ from ...tests.personas import (
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
-from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
+from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -363,7 +363,7 @@ def scenario_instant(persona: Persona, envelope: YearEnvelope) -> datetime:
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry(filed_data_port=PERSONA_AEAT_REGISTER)
+    return build_production_operation_registry(filed_register=PERSONA_FILED_REGISTER)
 
 
 def persona_profile_id(persona_id: str) -> UUID:
