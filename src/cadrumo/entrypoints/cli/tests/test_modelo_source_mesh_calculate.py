@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -39,6 +40,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import filing_
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedgerDocument
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -53,6 +55,7 @@ from .source_mesh_calculate_transactions import (
     ledger_transaction,
     m100_activity_expense_transaction,
     m100_activity_income_transaction,
+    zero_stock_inventory_ledger,
 )
 
 __all__ = ["isolated_cli_backend"]
@@ -100,6 +103,9 @@ _OPERATOR_FACTS: dict[str, str] = {
 _M100_FACTS: dict[str, str] = {
     "tax_residence.ccaa": "madrid",
     "irpf.estimation_regime": "directa_normal",
+    # An epigraph outside the urban-rental group (RIRPF art. 75), so the rental-activity
+    # withholding is a proven absence rather than an unknown.
+    "activities.iae_epigraph": "844",
     # The activity began before any supported year, so no exercise is its first.
     "censo.activity_start_date": date(filing_year_envelope().floor - 1, 1, 1).isoformat(),
     "renta_taxpayer.birth_date": "1980-03-15",
@@ -445,6 +451,9 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
                 TransactionCatalogue.from_transactions((m100_activity_income_transaction(), *expense_rows)),
             )
             InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue())
+            InventoryLedgerRepository().save(
+                InventoryLedgerDocument(ledgers=(zero_stock_inventory_ledger("actividad", year=exercise),))
+            )
 
         # The profile is in estimacion directa normal without Codigo de Comercio
         # accounting, so RIRPF art. 7.2 imputes activity income on cobros y pagos.
