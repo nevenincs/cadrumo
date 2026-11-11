@@ -295,15 +295,19 @@ def _compare(
 ) -> tuple[Stage, list[str]]:
     """The calculate stage against the stated values, and the reasons it is not a plain pass."""
     mismatches = _mismatches(values, calculated)
+    reasons: list[str] = []
     if stated_refusal is not None:
-        calculate, reasons = Stage.REFUSAL_NOT_RAISED, [f"stated refusal {stated_refusal} not raised"]
+        calculate = Stage.REFUSAL_NOT_RAISED
+        reasons.append(f"stated refusal {stated_refusal} not raised")
     elif not values:
-        calculate, reasons = Stage.CALCULATED, []
+        calculate = Stage.CALCULATED
     else:
         calculate = Stage.MISMATCH if mismatches else Stage.PASSED
-        reasons = ["; ".join(mismatches)] if mismatches else []
+        reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
-    return calculate, reasons + ([f"unresolved: {unresolved}"] if unresolved else [])
+    if unresolved:
+        reasons.append(f"unresolved: {unresolved}")
+    return calculate, reasons
 
 
 def _mismatches(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> list[str]:
@@ -377,7 +381,7 @@ def _with_counterparties(
     if not any(is_compared(value) for value in values) or plan.modelo not in DESIGNS:
         return calculate, reasons
     if export is not Stage.PASSED:
-        return Stage.MISMATCH, [*reasons, "counterparties not compared: no fichero written"]
+        return calculate, [*reasons, "counterparties not compared: no fichero written"]
     mismatches = _counterparty_mismatches(persona, plan, values, _export_path(plan, exports))
     if not mismatches:
         return calculate, reasons
