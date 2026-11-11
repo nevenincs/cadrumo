@@ -38,14 +38,17 @@ class OrdinaryM303SecureEvidence:
         )
 
 
-def admit_ordinary_m303_secure_evidence(*, year: int, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
-    """Admit one real last-period non-applicability attestation for ``year``.
+def admit_ordinary_m303_secure_evidence(
+    *, filing_year: int, period: Literal["4T", "12"] = "4T"
+) -> OrdinaryM303SecureEvidence:
+    """Admit one real last-period non-applicability attestation for the caller's ``filing_year``.
 
-    The attestation is observed at the close of the year's last settlement period,
-    so the caller names a year whose last period has already ended: an observation
-    dated in the future is refused, as it is for an operator.
+    The attestation is observed at the close of that year's last settlement period, so
+    the caller names the year of the return it calculates and that period must already
+    have ended: an observation dated in the future is refused, as it is for an operator,
+    and an attestation for another year answers nothing.
     """
-    observed_at = datetime(year, 12, 31, 12, tzinfo=UTC).isoformat()
+    observed_at = datetime(filing_year, 12, 31, 12, tzinfo=UTC).isoformat()
     result = invoke_joined_cli(
         [
             "--format",
@@ -55,7 +58,7 @@ def admit_ordinary_m303_secure_evidence(*, year: int, period: Literal["4T", "12"
             "work",
             "attest-m303-exonerado-390",
             "--year",
-            str(year),
+            str(filing_year),
             "--period",
             period,
             "--observed-at",

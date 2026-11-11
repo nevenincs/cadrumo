@@ -38,7 +38,7 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 from ..m296_projection import build_m296_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
@@ -58,8 +58,11 @@ from ..producer_snapshot_m296 import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "296"
-_REVISION = str(open_ended_revision(_MODELO).id)
-_EXERCISE = newest_authored_edition(_MODELO)
+# The detail-record layout exists only on an edition authored at filing grade: a newer
+# edition whose diseño de registro AEAT has not published is applicability grade and
+# ships no export layout, so the newest filing-grade exercise is the one that carries it.
+_EXERCISE = filing_grade_exercises(_MODELO)[-1]
+_REVISION = str(revision_covering(_MODELO, _EXERCISE).id)
 
 type _M296ProfileFactory = Callable[[tuple[str, ...]], Modelo296ProfileFacts]
 

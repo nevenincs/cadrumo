@@ -17,7 +17,9 @@ from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     create_m130_work_unit,
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
@@ -32,6 +34,8 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
 _LOCALES = ("en", "es", "ca", "hu")
+#: The revision the shared Modelo 130 scenario creates its work unit under.
+_M130_REVISION = str(open_ended_revision("130").id)
 
 
 def _seed_discarded_work(work_unit_id: str) -> None:
@@ -59,9 +63,9 @@ def _discarded_work_evidence(work_unit_id: str) -> dict[str, str | int]:
         "work_unit_id": work_unit_id,
         "work_unit_state": "descartado",
         "modelo": "130",
-        "filing_year": 2025,
+        "filing_year": SCENARIO_FILING_YEAR,
         "period": "1T",
-        "revision_id": "2019-y-siguientes",
+        "revision_id": _M130_REVISION,
     }
 
 
@@ -109,11 +113,11 @@ def _discarded_natural_target() -> list[str]:
         "--modelo",
         "130",
         "--year",
-        "2025",
+        str(SCENARIO_FILING_YEAR),
         "--period",
         "1T",
         "--revision",
-        "2019-y-siguientes",
+        _M130_REVISION,
     ]
 
 
