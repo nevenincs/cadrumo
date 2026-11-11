@@ -144,7 +144,7 @@ def _rule_not_applicable_reason(modelo: str) -> str:
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_unanswered_payer_fact_is_incomplete(case: _Case) -> None:
-    result = derive_modelo_applicability(_natural_person(), case.modelo, today=_TODAY)
+    result = derive_modelo_applicability(_natural_person(), case.modelo, reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Hecho requerido para este modelo" in result.reason
@@ -153,7 +153,7 @@ def test_unanswered_payer_fact_is_incomplete(case: _Case) -> None:
 @pytest.mark.usefixtures("governed_fact_scope")
 @pytest.mark.parametrize("case", _THREE_STATE_CASES, ids=lambda case: case.modelo)
 def test_declared_no_is_not_applicable_with_the_rule_reason(case: _Case) -> None:
-    result = derive_modelo_applicability(_natural_person(**{case.field: False}), case.modelo, today=_TODAY)
+    result = derive_modelo_applicability(_natural_person(**{case.field: False}), case.modelo, reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.reason == _rule_not_applicable_reason(case.modelo)
@@ -165,7 +165,10 @@ def test_declared_yes_is_applicable(case: _Case) -> None:
     sii_answers = {"iva": _iva_block(), "enrollment": _NOT_A_LARGE_COMPANY} if case.answers_the_sii_exclusion else {}
     profile = _natural_person(**{case.field: True, **dict(case.yes_extras), **sii_answers})
 
-    assert derive_modelo_applicability(profile, case.modelo, today=_TODAY).verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, case.modelo, reference_date=_TODAY).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -178,7 +181,7 @@ def test_modelo_136_yes_without_quarters_is_incomplete_and_names_the_quarters(
         premio_loteria_gravamen_especial_trimestres=quarters,
     )
 
-    result = derive_modelo_applicability(profile, "136", today=_TODAY)
+    result = derive_modelo_applicability(profile, "136", reference_date=_TODAY)
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Periodos sin declarar: trimestres naturales en que se cobraron esos premios." in result.reason
@@ -196,13 +199,16 @@ def test_modelo_136_is_not_applicable_to_a_legal_entity_whatever_the_fact_says()
         },
     )
 
-    assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, "136", reference_date=_TODAY).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
 def test_modelo_136_undeclared_is_incomplete_across_its_revisions() -> None:
     for today in _M136_EXERCISE_DATES:
-        result = derive_modelo_applicability(_natural_person(), "136", today=today)
+        result = derive_modelo_applicability(_natural_person(), "136", reference_date=today)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, today
         assert "orden-hap-70-2013:art-6" in result.legal_refs, today
 
@@ -234,7 +240,7 @@ def test_the_capital_income_fact_reads_three_states_from_its_optional_profile_fi
     profile = _natural_person(pays_capital_income_with_retencion=answer)
 
     assert payer_fact_declaration(profile, fact) is declaration
-    assert derive_modelo_applicability(profile, "193", today=_TODAY).verdict is verdict
+    assert derive_modelo_applicability(profile, "193", reference_date=_TODAY).verdict is verdict
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -513,7 +519,9 @@ def test_resident_withholding_alone_does_not_open_the_irnr_modelos(
     """
     profile = _natural_person(has_employees=True, pays_professionals_with_retencion=True)
 
-    result = derive_modelo_applicability(profile, modelo, today=date(int(year), 6, 30), authority=registry_authority)
+    result = derive_modelo_applicability(
+        profile, modelo, reference_date=date(int(year), 6, 30), authority=registry_authority
+    )
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "trlirnr-rdleg-5-2004:art-31" in result.legal_refs
@@ -541,7 +549,7 @@ def test_the_new_payer_facts_decide_their_modelos_in_every_supported_year(
 
     def verdict(**facts: object) -> ApplicabilityVerdict:
         return derive_modelo_applicability(
-            _natural_person(**facts), modelo, today=today, authority=registry_authority
+            _natural_person(**facts), modelo, reference_date=today, authority=registry_authority
         ).verdict
 
     assert verdict() is ApplicabilityVerdict.INCOMPLETE
