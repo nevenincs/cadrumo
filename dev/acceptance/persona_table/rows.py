@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import dataclasses
 import json
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
@@ -248,15 +249,17 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """The returns ``persona`` owes when replayed under ``horizon``, one per modelo, year and period.
 
     A return is owed when an obligation states it applicable, the persona's
-    history files or calculates it, or a value is stated for it. Values stated
-    per counterparty are an oracle only for the informative returns whose
-    type-2 record the table compares (``counterparties.DESIGNS``). ``persona`` is read under any envelope; its year
+    history files or calculates it, or a value is stated for it and no
+    obligation states it not applicable. Values stated per counterparty are an
+    oracle only for the informative returns whose type-2 record the table
+    compares (``counterparties.DESIGNS``). ``persona`` is read under any envelope; its year
     tokens are resolved here against ``horizon``, and a return whose year falls
     outside ``envelope.floor..horizon`` is not a row of this replay.
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
-    keys = _owed_keys(persona, shifted) | _history_keys(persona, shifted) | set(stated)
+    stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
+    keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
     return [
         _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
         for modelo, year, period in sorted(keys, key=chain_order)
@@ -279,12 +282,16 @@ def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, 
     return stated
 
 
-def _owed_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
-    """The returns an obligation states applicable, with years resolved on ``envelope``."""
+def _obligation_keys(persona: Persona, envelope: YearEnvelope, *, applicable: bool) -> set[tuple[str, int | None, str]]:
+    """The returns an obligation states applicable (or not), with years resolved on ``envelope``.
+
+    A return stated not applicable does not exist, so a value stated for it is
+    a cross-check rather than a filing and makes no row.
+    """
     return {
         (item.modelo, _year(item.year, envelope), period)
         for item in persona.expectations.obligations
-        if item.applicable is True
+        if item.applicable is applicable
         for period in item.periods
     }
 
@@ -310,6 +317,19 @@ def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: l
         grounding=_grounding(values),
         sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
     )
+
+
+def opened(
+    rows: Sequence[PlannedRow], opens_on: Callable[[str, int, str], date | None], today: date
+) -> list[PlannedRow]:
+    """The rows whose filing window has opened by ``today``, the persona's scenario day.
+
+    A return whose period has not ended at the scenario clock is not owed yet:
+    no honest figures, attestation or filing exist for it, so it is not a row
+    of that replay. ``opens_on`` gives the registry's window opening day, or
+    ``None`` when the registry serves no window for the return.
+    """
+    return [row for row in rows if (opens := opens_on(row.modelo, row.year, row.period)) is None or opens <= today]
 
 
 def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
