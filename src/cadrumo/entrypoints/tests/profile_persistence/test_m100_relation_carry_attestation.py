@@ -12,13 +12,17 @@ edit executor and verification, with every year taken from the published support
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ....application.aggregation.tests.test_inventory_source import inventory_ledger
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditBindingAddressV1,
@@ -31,6 +35,7 @@ from ....application.modelo.edit_services import validate_binding_intent
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -72,6 +77,19 @@ def _year() -> int:
     support = published_supported_filing_years()
     assert support is not None
     return support.floor
+
+
+@contextmanager
+def _annual_work(tmp_path: Path) -> Generator[SeededOperatorWork]:
+    """Seed the support floor's Modelo 100 for a filer whose activity keeps a complete inventory book.
+
+    The economic activity's Anexo D inventory rows feed the general base, so without the
+    year's book they stay unresolved and the calculation refuses before any carry is read.
+    """
+    year = _year()
+    with seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work:
+        InventoryLedgerRepository().save(InventoryLedgerDocument(ledgers=(inventory_ledger("actividad", year=year),)))
+        yield work
 
 
 def _intent(binding_id: str, kind: ModeloEditBindingIntentKind, value: Decimal | None) -> ModeloBindingEditIntentV1:
@@ -139,7 +157,7 @@ def _hold_a_quarter(period: str, *, value: Decimal = Decimal("100")) -> None:
 def test_the_statement_is_offered_while_none_of_the_quarters_is_held(tmp_path: Path) -> None:
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=_year(), period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         offered = _offered_intents(work)
 
@@ -151,7 +169,7 @@ def test_the_statement_is_offered_while_none_of_the_quarters_is_held(tmp_path: P
 def test_the_statement_is_refused_once_any_one_quarter_is_held(tmp_path: Path, held: str) -> None:
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=_year(), period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         _hold_a_quarter(held)
         offered = _offered_intents(work)
@@ -174,7 +192,7 @@ def test_a_statement_names_every_quarter_and_clears_each_as_stated(tmp_path: Pat
     year = _year()
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         assert work.apply(binding=(*_PENDING_CARRIES_STATED, _attest())).refusal is None
         layer = work.require_head().operator_layer
@@ -208,7 +226,7 @@ def test_a_statement_names_every_quarter_and_clears_each_as_stated(tmp_path: Pat
 def test_a_figure_merely_typed_over_the_relation_does_not_clear_the_quarters(tmp_path: Path) -> None:
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=_year(), period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         typed = _intent(_BINDING, ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE, _STATED)
         assert work.apply(binding=(*_PENDING_CARRIES_STATED, typed)).refusal is None
@@ -225,7 +243,7 @@ def test_a_figure_merely_typed_over_the_relation_does_not_clear_the_quarters(tmp
 def test_a_statement_for_one_relation_leaves_the_sibling_relation_to_its_own_sources(tmp_path: Path) -> None:
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=_year(), period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         assert work.apply(binding=(*_PENDING_CARRIES_STATED, _attest(_BINDING))).refusal is None
         layer = work.require_head().operator_layer
@@ -241,7 +259,7 @@ def test_a_statement_for_one_relation_leaves_the_sibling_relation_to_its_own_sou
 def test_a_quarter_that_appears_after_the_statement_is_a_blocking_conflict(tmp_path: Path) -> None:
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp_path, modelo="100", filing_year=_year(), period_code="0A", extra_facts=_FACTS) as work,
+        _annual_work(tmp_path) as work,
     ):
         assert work.apply(binding=(*_PENDING_CARRIES_STATED, _attest())).refusal is None
         _hold_a_quarter("2T")
