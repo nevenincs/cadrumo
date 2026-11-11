@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:668ea933ebe4c98d7efc521708bf36b53a13226dbfbf07dd9bbf3f31100db385'
+body_hash: 'sha256:b1fc461c124a73f152f08f1f34214e3cd838c68cbbf1c9548353f5ab67df7871'
 ---
 
 # `persona-table` plan
@@ -79,6 +79,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S40` - Compute the pension-plan contribution reduction and its excess carry (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
 - [ ] `P02.S41` - Compute the donations deduction with Ley 49/2002 recurrence (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
 - [ ] `P02.S42` - Compute imputed property income for days a property is not let, on the rental property record (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
+- [ ] `P02.S43` - Record the Modelo 202 obligation facts under 2026-11-11-modelo-202-obligation-adr: the art. 40.3 election as a dated three-state profile fact, the art. 40.2 base through binding modelo-202-cuota-base-ejercicio-anterior or else an attested prior value, the elected branch decided only by a current verified Modelo 202 calculation, and the first-year amendment to 2026-06-19-m202-first-period-attestation-adr (lane LIFECYCLE); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/_data/registry/aeat/modelos/202, src/cadrumo/application/modelo`.
 
 ### Phase `P03` - Desktop re-entry
 
