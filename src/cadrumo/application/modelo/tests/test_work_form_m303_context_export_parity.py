@@ -95,6 +95,8 @@ _BUCKET = "13000000-0000-4000-8000-000000000456"
 _TAX_ID = "12345678Z"
 _FIRST_PERIOD = "1T"
 _LAST_PERIOD = "4T"
+#: Every quarter before the last, where DP30301 Nota 6 prints "2" in both prorrata election slots.
+_NON_FINAL_QUARTERS = ("1T", "2T", "3T")
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None
 _YEARS = _SUPPORT.years
@@ -247,16 +249,20 @@ class _Scenario:
     name: str
     period_code: str
     arrivals: Callable[[int, Period], M303ArrivalPorts]
-    #: destinatario-caja, opcion-prorrata, revocacion-prorrata; 0 is the code of a question the period does not ask.
+    #: destinatario-caja, opcion-prorrata, revocacion-prorrata. Nota 6 prints the election slots' "2" outside the
+    #: last period: blank there, and NO in the last period.
     expected: dict[str, str]
 
 
 _SCENARIOS = (
-    _Scenario(
-        "quarter-with-no-supplier-operations",
-        _FIRST_PERIOD,
-        lambda year, period: _ports(ProrrataRegister(entries=(_entry(year, "ninguna"),))),
-        {"destinatario-caja": "2", "opcion-prorrata": "0", "revocacion-prorrata": "0"},
+    *(
+        _Scenario(
+            f"non-final-quarter-{quarter}-with-no-supplier-operations",
+            quarter,
+            lambda year, period: _ports(ProrrataRegister(entries=(_entry(year, "ninguna"),))),
+            {"destinatario-caja": "2", "opcion-prorrata": "2", "revocacion-prorrata": "2"},
+        )
+        for quarter in _NON_FINAL_QUARTERS
     ),
     _Scenario(
         "quarter-with-a-supplier-regime-purchase",
@@ -264,7 +270,7 @@ _SCENARIOS = (
         lambda year, period: _ports(
             ProrrataRegister(entries=(_entry(year, "ninguna"),)), (_cash_supplier_purchase(period),)
         ),
-        {"destinatario-caja": "1", "opcion-prorrata": "0", "revocacion-prorrata": "0"},
+        {"destinatario-caja": "1", "opcion-prorrata": "2", "revocacion-prorrata": "2"},
     ),
     _Scenario(
         "last-period-without-a-transition",

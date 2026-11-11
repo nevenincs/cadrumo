@@ -11,7 +11,7 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-303-2026"
-required_text = ["declarado en concurso de acreedores", "Preconcursal", "Postconcursal", "Autoliquidación conjunta", "exclusivamente en régimen simplificado", "Para los periodos 1T, 2T, 3T, 4T y 01", "Marca SEPA"]
+required_text = ["declarado en concurso de acreedores", "Preconcursal", "Postconcursal", "Autoliquidación conjunta", "exclusivamente en régimen simplificado", "Para los periodos 1T, 2T, 3T, 4T y 01", "Blanco para periodos distintos del último (12 y 4T), y NO para el último periodo (12 y 4T)", "Marca SEPA"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -22,6 +22,7 @@ entries = [
   { key = "insolvency_subtype.post_order", value = "2" },
   { key = "regime_composition.general_only", value = "3" },
   { key = "answer.outside_period", value = "0" },
+  { key = "answer.blank_outside_final_period", value = "2" },
   { key = "hydrocarbon_entitlement.applicable_periods", value = "02,03,04,05,06,07,08,09,10,11,12" },
   { key = "sepa_marca.espana", value = "1" },
   { key = "sepa_marca.ue_sepa", value = "2" },
