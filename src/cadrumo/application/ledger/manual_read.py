@@ -204,6 +204,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         taxable_base=_display_optional_decimal(transaction.taxable_base),
         iva_rate=_display_optional_decimal(transaction.iva_rate),
         iva_amount=_display_optional_decimal(transaction.iva_amount),
+        recargo_amount=_display_optional_decimal(transaction.recargo_amount),
         iva_category=_optional_ledger_enum_value(transaction.iva_category),
         deduction_fact_kind=(
             transaction.deduction_fact_kind.value if transaction.deduction_fact_kind is not None else None

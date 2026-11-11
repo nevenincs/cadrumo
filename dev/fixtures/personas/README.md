@@ -279,8 +279,9 @@ UTF-8, comma-separated, header row, one row per bank movement. The columns are
 a superset of what the bank-statement import accepts; the materialiser imports
 the statement columns, then classifies, records invoices and links through the
 ledger operations.
-Classification takes no recargo, so a row with a `recargo_amount` is classified
-without its cuota and recargo and reported as not materialised.
+A row with a `recargo_amount` is classified with its cuota and recargo; a
+purchase bearing recargo is admitted only for a profile whose IVA regime is the
+recargo de equivalencia.
 
 | column | meaning |
 | --- | --- |

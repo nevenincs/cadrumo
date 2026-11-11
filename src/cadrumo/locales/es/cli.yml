@@ -3524,6 +3524,9 @@ cli:
       reason_help: Motivo en texto libre que se registra como notas del movimiento
         y como motivo de la decisión de clasificación (visible en `aeat app ledger
         view`), o con una decisión `--reject`.
+      recargo_amount_help: Recargo de equivalencia repercutido en este movimiento (art. 161
+        LIVA). En una compra solo se admite si el régimen de IVA del perfil es el recargo de
+        equivalencia; con la base y la cuota de IVA debe sumar el importe del movimiento
       reject_apply_exclusive: '--reject no se puede combinar con --apply: `reject`
         registra una sugerencia rechazada, `apply` una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como

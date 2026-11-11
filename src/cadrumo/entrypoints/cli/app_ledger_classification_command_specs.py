@@ -95,6 +95,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.classify.taxable_base_help"),
             optional_text_option("iva_rate", ("--iva-rate",), "cli.ledger.classify.iva_rate_help"),
             optional_text_option("iva_amount", ("--iva-amount",), "cli.ledger.classify.iva_amount_help"),
+            optional_text_option("recargo_amount", ("--recargo-amount",), "cli.ledger.classify.recargo_amount_help"),
             irpf_category_option("cli.ledger.classify.irpf_category_help"),
             optional_text_option(
                 "m210_tipo_renta_code", ("--m210-tipo-renta-code",), "cli.ledger.classify.m210_tipo_renta_code_help"

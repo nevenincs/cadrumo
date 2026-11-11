@@ -3466,6 +3466,9 @@ cli:
       reason_help: Szabadszöveges indok, amelyet kézi besoroláskor a tranzakció jegyzeteibe
         és a besorolási döntés indokaként (az `aeat app ledger view` parancsban látható)
         is rögzít, vagy egy `--reject` döntéssel együtt rögzít.
+      recargo_amount_help: Az ezen a mozgáson felszámított recargo de equivalencia (LIVA
+        161. cikk). Vásárlásnál csak akkor fogadható el, ha a profil IVA-rendszere a recargo
+        de equivalencia; az alappal és az IVA-összeggel együtt ki kell adnia a mozgás összegét
       reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval:
         a `reject` elutasított javaslatot, az `apply` elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként

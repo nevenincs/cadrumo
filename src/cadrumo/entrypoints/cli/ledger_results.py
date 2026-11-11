@@ -462,6 +462,7 @@ class TransactionPayload(OutputSchema):
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None
@@ -807,6 +808,7 @@ class LedgerListRowPayload(OutputSchema):
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    recargo_amount: str | None = None
     iva_category: str | None = None
     deduction_fact_kind: str | None = None
     investment_asset_id: str | None = None

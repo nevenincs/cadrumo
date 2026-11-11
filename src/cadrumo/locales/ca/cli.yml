@@ -3501,6 +3501,9 @@ cli:
       reason_help: Motiu en text lliure que es registra com a notes del moviment i
         com a motiu de la decisió de classificació (visible a `aeat app ledger view`),
         o amb una decisió `--reject`.
+      recargo_amount_help: Recàrrec d'equivalència repercutit en aquest moviment (art. 161
+        LIVA). En una compra només s'admet si el règim d'IVA del perfil és el recàrrec
+        d'equivalència; amb la base i la quota d'IVA ha de sumar l'import del moviment
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: `reject` registra
         un suggeriment rebutjat, `apply` un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment

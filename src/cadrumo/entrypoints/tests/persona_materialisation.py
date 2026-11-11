@@ -559,18 +559,6 @@ def _decimal_text(value: Decimal) -> str:
     return format(value, "f")
 
 
-def carries_iva_amount(row: LedgerRow) -> bool:
-    """Whether single classification can carry the row's IVA cuota.
-
-    Classification takes no recargo de equivalencia amount and checks base,
-    cuota and recargo against the cash movement, so a purchase bearing recargo
-    is refused with its cuota and is classified without it. The manual ledger
-    entry, which does take recargo, refuses a recargo retailer's profile: it
-    resolves the Modelo 303 regime composition, which such a retailer has none of.
-    """
-    return row.recargo_amount is None
-
-
 def bank_statement(rows: Sequence[LedgerRow], envelope: YearEnvelope) -> str:
     """Bank movements in the statement columns ``app ledger import --file`` reads."""
     lines = [_STATEMENT_HEADER]
@@ -607,7 +595,8 @@ def classify_patch(
         ("iva_category", row.iva_category),
         ("taxable_base", row.taxable_base),
         ("iva_rate", row.iva_rate),
-        ("iva_amount", row.iva_amount if carries_iva_amount(row) else None),
+        ("iva_amount", row.iva_amount),
+        ("recargo_amount", row.recargo_amount),
         ("deduction_fact_kind", row.deduction_kind),
     )
     for field, value in optional:
@@ -1435,18 +1424,6 @@ def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | 
                 reason=(
                     "no operation records an employee's Seguridad Social contributions and no Modelo 100 binding "
                     "sources the work-income deductible expense they enter"
-                ),
-            )
-        )
-    recargo = [row.ref for row in persona.ledger if not carries_iva_amount(row)]
-    if recargo:
-        found.append(
-            NotLoaded(
-                block="ledger.recargo_amount",
-                reason=(
-                    "single classification takes no recargo de equivalencia and refuses the cuota without it, and "
-                    "the manual ledger entry that takes recargo refuses a profile with no Modelo 303 regime "
-                    f"composition, so these rows are classified without cuota or recargo: {', '.join(recargo)}"
                 ),
             )
         )
