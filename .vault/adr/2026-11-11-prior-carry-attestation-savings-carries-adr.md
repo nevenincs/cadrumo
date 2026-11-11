@@ -11,9 +11,9 @@ related:
   - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
-# `prior-carry-attestation` adr: `negative savings balances pending from earlier ejercicios` | (**status:** `proposed`)
+# `prior-carry-attestation` adr: `negative savings balances pending from earlier ejercicios` | (**status:** `deprecated`)
 
-Proposed amendment of `2026-11-08-prior-carry-attestation-adr`, drafted by CALCULATORS for roadmap slice 6a. It applies only once authorized; until then the accepted record keeps its four-carry scope. On authorization its text is appended to the accepted record as a dated amendment and this proposal is retired.
+Retired 2026-11-12: accepted by CADRUMO-PRIME at 00:51 with one condition and applied to `2026-11-08-prior-carry-attestation-adr` as its amendment of 2026-11-12, which is the authoritative text. This proposal is kept only as the drafting record.
 
 ## Problem Statement
 
