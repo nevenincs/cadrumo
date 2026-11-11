@@ -15,6 +15,8 @@ Every refusal names the row by its position and never echoes what was typed;
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Final, NoReturn
@@ -85,6 +87,31 @@ class ProfileAscendantRow(BaseModel):
         if len({fact.field_key for fact in facts}) != len(facts):
             raise ValueError("ascendant row must not repeat a field")
         return facts
+
+
+_STORED_LEAF_PATTERN: Final = re.compile(rf"^{re.escape(ASCENDANT_OBJECT_PATH)}\.(\d+)\.([a-z0-9_]+)$")
+
+
+def ascendant_rows_from_facts(facts: Mapping[str, str]) -> tuple[ProfileAscendantRow, ...]:
+    """Read the stored ascendant rows back, in stored order, as the rows a replacement takes.
+
+    Only the leaves a row can state are read, so a stale foreign leaf never rides into a
+    replacement; a row that states no leaf is not a row. The values are the canonical stored
+    ones, and the replacement validates them again.
+    """
+    stored: dict[int, dict[str, str]] = {}
+    for path, value in facts.items():
+        match = _STORED_LEAF_PATTERN.match(path)
+        if match is not None and match.group(2) in _LEAF_ORDER and value.strip():
+            stored.setdefault(int(match.group(1)), {})[match.group(2)] = value
+    return tuple(
+        ProfileAscendantRow(
+            facts=tuple(
+                ProfileAscendantFact(field_key=leaf, value=leaves[leaf]) for leaf in _LEAF_ORDER if leaf in leaves
+            )
+        )
+        for _, leaves in sorted(stored.items())
+    )
 
 
 def _refuse(message_key: str, **context: object) -> NoReturn:
@@ -239,5 +266,6 @@ __all__ = [
     "AscendantFamilyMutation",
     "ProfileAscendantFact",
     "ProfileAscendantRow",
+    "ascendant_rows_from_facts",
     "replace_profile_ascendants",
 ]
