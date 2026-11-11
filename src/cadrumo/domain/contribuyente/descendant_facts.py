@@ -31,6 +31,7 @@ Stored fact paths per descendant (n = 0-based index)::
   renta_family.descendiente.{n}.gastos_guarderia_mensuales
                                                         canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
   renta_family.descendiente.{n}.nif                     NIF string or absent
+  renta_family.descendiente.{n}.apellidos_nombre        surnames and name, whitespace collapsed, or absent
 
 Aggregate facts stored::
 
@@ -110,6 +111,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "GASTOS_GUARDERIA",
         "GASTOS_GUARDERIA_MENSUAL",
         "NIF",
+        "APELLIDOS_NOMBRE",
     },
 )
 """Every key ``--descendiente`` accepts, so an unrecognised one is refused rather than ignored.
@@ -196,6 +198,7 @@ def _identity_fact_values(
         ),
         ("fallecimiento", None if descendant.death_date is None else descendant.death_date.isoformat()),
         ("discapacidad", None if descendant.discapacidad_grado is None else str(descendant.discapacidad_grado)),
+        ("apellidos_nombre", descendant.apellidos_nombre),
     )
 
 
@@ -259,7 +262,7 @@ _N_RE = re.compile(
     # `$` anchor, and be DROPPED from the row -- a declared map silently absent
     # on every reload.
     r"meses_madre_trabajo|alta_posterior_nacimiento_mes|segundo_ciclo_infantil_inicio_mes|"
-    r"gastos_guarderia_mensuales|gastos_guarderia|nif)$",
+    r"gastos_guarderia_mensuales|gastos_guarderia|nif|apellidos_nombre)$",
 )
 
 
@@ -413,6 +416,7 @@ def _descendant_from_stored_row(
         **_stored_family_fields(row, index=index),
         **_stored_maternity_fields(row, index=index),
         nif=row.get("nif"),
+        apellidos_nombre=row.get("apellidos_nombre"),
     )
 
 
@@ -814,6 +818,8 @@ def parse_descendiente_flag(
                              annual total cannot be apportioned across. Mutually
                              exclusive with GASTOS_GUARDERIA for one child.
       NIF=XXXXXXXXX          (optional) NIF/NIE
+      APELLIDOS_NOMBRE=TEXT  (optional) surnames then name, as the declaration lists
+                             the descendant; it cannot contain ','
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
     on missing required keys or invalid values.
@@ -843,6 +849,7 @@ def parse_descendiente_flag(
         **family_fields,
         **maternity_fields,
         nif=_flag_nif(parts.get("NIF"), authority=authority),
+        apellidos_nombre=parts.get("APELLIDOS_NOMBRE") or None,
     )
 
 

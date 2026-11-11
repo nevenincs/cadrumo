@@ -30,6 +30,7 @@ from ....domain.calculations.registry.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
 )
+from ....domain.contribuyente.household_person_name import household_person_name_limit
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
@@ -45,6 +46,7 @@ from ..descendant_group import (
     GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
     GASTOS_MENSUALES_INVALID_LOCALE_KEY,
     MESES_INVALID_RANGE_LOCALE_KEY,
+    NAME_TOO_LONG_LOCALE_KEY,
     RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
     attach_descendant_group,
@@ -384,6 +386,24 @@ def _one_descendant_state(definition: FlowDefinition):
     state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "1")
     return answer(definition, state, "descendientes#0.birth-date", "2022-01-01")
+
+
+def test_the_name_page_stores_the_collapsed_name_and_refuses_one_past_the_design_length() -> None:
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+    with bundled_indexed_authority().operation() as operation:
+        limit = household_person_name_limit(authority=operation)
+
+    rejected = answer(definition, state, "descendientes#0.apellidos-nombre", "O" * (limit + 1))
+    verdicts = rejected.verdicts["descendientes#0.apellidos-nombre"]
+    assert [v.message_key for v in verdicts] == [NAME_TOO_LONG_LOCALE_KEY]
+    assert "O" * limit not in repr(verdicts)
+    assert "descendientes#0.apellidos-nombre" not in rejected.answers
+
+    committed = answer(definition, state, "descendientes#0.apellidos-nombre", " Ortega  Navarro   Pablo ")
+    assert "descendientes#0.apellidos-nombre" not in committed.verdicts
+    projected = dict(_descendant_facts(committed.answers))
+    assert projected["renta_family.descendiente.0.apellidos_nombre"] == "Ortega Navarro Pablo"
 
 
 def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:

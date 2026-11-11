@@ -26,6 +26,12 @@ required_text = ["Transporte por autotaxis", "Transporte de mercancías por carr
 source_ref = "aeat-dr-100-2025-xsd"
 required_text = ["(E|G|C|V){1}", "E5AI8"]
 
+# The surnames-and-name type of a Modelo 100 child or ascendant row (Hijo/APENOMDLG,
+# Ascendiente/APENOMDLG_ASC): "tipo_ApeNom", a string of at most 80 characters.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ['<xs:element name="APENOMDLG" type="tipo_ApeNom" minOccurs="1" maxOccurs="1"/>', '<xs:simpleType name="tipo_ApeNom">', '<xs:maxLength value="80"/>']
+
 # The Modelo 720 position-102 clave and the five letters its row lists.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-720"
@@ -167,6 +173,7 @@ entries = [
   { key = "m180.address.complement", value = "40" },
   { key = "m303.prorrata.cnae_digits", value = "3,4" },
   { key = "m100.ascendant_cohabiting_descendants_max", value = "10" },
+  { key = "m100.household_person_name_max", value = "80" },
   { key = "m222.numero_grupo_max", value = "7" },
   { key = "m222.dominant_territory_max", value = "2" },
   { key = "m353.numero_grupo_max", value = "10" },

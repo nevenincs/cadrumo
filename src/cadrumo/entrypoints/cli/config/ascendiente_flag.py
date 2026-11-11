@@ -2,8 +2,8 @@
 
 Each key names exactly one stored leaf. The values stay text: the ascendants operation
 the window also uses reads them, requires the birth date, checks the NIF or NIE, the
-dates and the cohabiting bound against the pinned authority, and refuses a row by its
-position.
+name's length, the dates and the cohabiting bound against the pinned authority, and
+refuses a row by its position. A value cannot contain ``,``, which separates the keys.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from ....application.user_profile.ascendant_rows import ProfileAscendantFact, Pr
 
 _KEY_TO_LEAF: Final = {
     "NIF": "nif",
+    "APELLIDOS_NOMBRE": "apellidos_nombre",
     "NACIMIENTO": "birth_date",
     "FALLECIMIENTO": "fallecimiento",
     "CONVIVIENTES": "convivientes",

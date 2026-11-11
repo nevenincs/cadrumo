@@ -3637,6 +3637,8 @@ application:
         a profil nem tárol felmenőnél.
       ascendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
         felmenőkre, ezért a lista nem ellenőrizhető és nem menthető.
+      ascendant_name_invalid: A(z) %{row}. felmenő vezeték- és utóneve nem lehet üres,
+        és legfeljebb %{limit} karakter lehet.
       ascendant_nif_invalid: A(z) %{row}. felmenő NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
       ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
@@ -3669,6 +3671,8 @@ application:
         a profil nem tárolja.
       descendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
         leszármazottakra, ezért a lista nem ellenőrizhető és nem menthető.
+      descendant_name_invalid: A(z) %{row}. leszármazott vezeték- és utóneve nem lehet
+        üres, és legfeljebb %{limit} karakter lehet.
       descendant_nif_invalid: A(z) %{row}. leszármazott NIF- vagy NIE-száma nem érvényes;
         ellenőrizd a betűit és számjegyeit.
       descendant_rows_over_limit: Egy bevallás legfeljebb %{limit} leszármazottat
@@ -3722,6 +3726,8 @@ application:
         %{unknown}. Elérhető mezők: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: A felmenő vezeték- és utóneve (elöl a vezetéknév)
         birth_date:
           label: Születési dátum
         convivientes:

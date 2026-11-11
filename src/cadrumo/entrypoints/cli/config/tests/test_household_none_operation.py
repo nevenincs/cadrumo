@@ -185,7 +185,7 @@ def test_a_field_an_ascendant_row_cannot_state_is_refused(world: _World) -> None
     row = ProfileAscendantRow(
         facts=(
             ProfileAscendantFact(field_key="birth_date", value="1948-03-04"),
-            ProfileAscendantFact(field_key="apellidos_nombre", value="Ana"),
+            ProfileAscendantFact(field_key="discapacidad_clave", value="1"),
         )
     )
 
