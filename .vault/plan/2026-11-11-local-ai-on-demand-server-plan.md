@@ -10,7 +10,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:eee3cb34c2a1925b203e35073f7e0683e733d06bb7551b15da4fd39a7f9df990'
+body_hash: 'sha256:a4e5728e2cfbf464422b4927ff09a7cfcbf32c371bd0b3a2efc3c8e4cd595a0d'
 ---
 
 <!-- LINK RULES:
@@ -129,7 +129,7 @@ The demand is a lease. Each demand keeps the server for 5 minutes, and the agent
 - [x] `S04` - Serve dormant as its own local AI state in the quick check instead of program_not_running, with backend words in every locale; `native/application/src/provisioning/local_ai/models.rs`.
 - [x] `S05` - Make setup verify the program and models from files without leaving a server running, serve the local engine as ready only when a model file it can run exists (build 15 showed 'Listo' on the lane and the setup dialog with zero models), and re-scope program_not_running and server_wait_expired to a failed demanded start; `native/application/src/provisioning/engine.rs`.
 - [x] `S06` - Add the agent service's manager-pipe client, demand the server before a local-lane run and renew it while the run lasts, and refuse with a served reason when the manager cannot be reached; make a local engine's provider lane read as its served local AI setup row, so no runnable model file reads not set up and a dormant server reads ready (COORD 2026-11-11); `src/cadrumo_agent_service/host`.
-- [ ] `S07` - Relay a manager-supervised local engine lane in the agent service's catalog from the manager's served local AI facts, not the agent's probe: installed from the model files, a dormant server selectable and ready, not running only after a failed demand, unknown only when the served row is unavailable; service tests for asleep, running, failed demand and row unavailable; no cadrumo-agent change, the window only renders (COORD 2026-11-11). Update the desktop setup fixture and scenarios for the dormant state and hand the native build and Playwright to DESKTOP; `native/desktop/frontend/src/dev/setupFixture.ts`.
+- [x] `S07` - Relay a manager-supervised local engine lane in the agent service's catalog from the manager's served local AI facts, not the agent's probe: installed from the model files, a dormant server selectable and ready, not running only after a failed demand, unknown only when the served row is unavailable; service tests for asleep, running, failed demand and row unavailable; no cadrumo-agent change, the window only renders (COORD 2026-11-11). Update the desktop setup fixture and scenarios for the dormant state and hand the native build and Playwright to DESKTOP; `native/desktop/frontend/src/dev/setupFixture.ts`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

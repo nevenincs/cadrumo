@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed648160b04fb308584174e1df664d39affd12313f1f2dd660b7025f7800a1fd'
+body_hash: 'sha256:378c7e39e3bb5ea2ca4750c1273a27948c374074626ef942695c2c6f27e56552'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -108,6 +108,27 @@ related:
 - `S06` `M` `src/cadrumo_agent_service/adapters/served_catalog_models.py`
 - `S06` `M` `src/cadrumo_agent_service/adapters/tests/test_served_catalog_models.py`
 - `S06` `verify:` `pytest src/cadrumo_agent_service (938)` -> `pass`
+- `S07` `M` `.importlinter`
+- `S07` `M` `dev/quality/metadata/import_load_targets.cadrumo_agent_service.json`
+- `S07` `M` `dev/quality/metadata/import_load_targets.json`
+- `S07` `M` `native/application/src/provisioning/engine.rs`
+- `S07` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S07` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S07` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/setup/admission.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S07` `M` `src/cadrumo_agent_service/admin.py`
+- `S07` `A` `src/cadrumo_agent_service/host/tests/test_local_ai_relay.py`
+- `S07` `A` `src/cadrumo_agent_service/local_ai_relay.py`
+- `S07` `verify:` `cargo test --lib cadrumo-application` -> `pass`
+- `S07` `verify:` `cargo test --test package_inspection` -> `fail`
+- `S07` `verify:` `cargo clippy --tests -D warnings cadrumo-application` -> `pass`
+- `S07` `verify:` `pytest src/cadrumo_agent_service` -> `pass`
+- `S07` `verify:` `branch_gate_delta` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
 
 ## Notes
 
@@ -119,3 +140,4 @@ related:
 - `S05` cargo, clippy and ctest pending: DESKTOP verifies staged in root; `llama_server::presentation` is left with only test callers `(live_package.rs,` `llama_server/tests.rs),` flagged for S06 reuse or removal
 - `S06` Rust (manager `local_ai_demand_route,` desktop agent launch env) is rustfmt-clean but uncompiled here: DESKTOP verifies staged. Worktree-env failures (uv build wheel/sdist, preflight collection, pyrefly spawn) are environmental and unrelated.
 - `S06` Found while scoping S07: a dormant server made the agent catalogue say not installed, so every local read refused `no_selection` before the demand.
+- `S07` `package_inspection` fails only at its cmd mklink junction fixture in this session's environment; the file is untouched by the branch and passes in root. Relay sits in the admin request handler, since `service_administration's` maintainability was already B. The desktop crate compiles only under CMake, so DESKTOP's desktop-host-unit-test is its first compile; the dormant and `start_failed` Playwright scenarios run in root by DESKTOP
