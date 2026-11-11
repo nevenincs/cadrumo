@@ -956,13 +956,13 @@ errors:
     filing_export_xml_entry_path_empty: Egy XML-szótárbejegyzés útvonala üres. Az
       alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása
       nem javítja ki.
-    filing_export_xml_row_column_occurrence: A(z) %{binding} sooszlopnak egy ismétlődő
-      szótársort kell találnia a(z) %{column} oszlophoz, de %{found} van. Az alkalmazás
-      ezt a saját exportálási tervéből származtatja, ezért az adataid módosítása nem
-      javítja ki.
+    filing_export_xml_row_column_occurrence: A(z) %{binding} sorok oszlopának egy
+      ismétlődő szótársort kell találnia a(z) %{column} oszlophoz, de %{found} van.
+      Az alkalmazás ezt a saját exportálási tervéből származtatja, ezért az adataid
+      módosítása nem javítja ki.
     filing_export_xml_row_column_undeclared: A(z) %{binding} kötés sorokat hordoz,
-      de nem ad meg sooszlopot. Az alkalmazás ezt a saját exportálási tervéből származtatja,
-      ezért az adataid módosítása nem javítja ki.
+      de nem ad meg oszlopot a sorokhoz. Az alkalmazás ezt a saját exportálási tervéből
+      származtatja, ezért az adataid módosítása nem javítja ki.
     filing_export_xml_serialiser_not_bytes: Az XML-szerializáló %{type} értéket adott
       vissza bájtok helyett. Az alkalmazás ezt a saját exportálási tervéből származtatja,
       ezért az adataid módosítása nem javítja ki.
