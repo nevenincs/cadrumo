@@ -13,7 +13,7 @@ use crate::{
                 Uncontained, announcement, announces, latest_start_failure,
                 tests::{ambient, answers, free_address},
             },
-            supervision::{RestartPolicy, ServerState, ServerSupervisor},
+            supervision::{IDLE_STOP, RestartPolicy, ServerState, ServerSupervisor},
         },
         proxy::PROXY_URL,
     },
@@ -620,6 +620,18 @@ fn assert_running(supervisor: &mut ServerSupervisor<LlamaServer>, now: Instant) 
     );
 }
 
+/// A start for a changed program is no crash: no restart is scheduled, and the only
+/// point due is the demand's lapse, when the idle router stops.
+fn assert_fresh_start(supervisor: &ServerSupervisor<LlamaServer>, now: Instant) {
+    let due = supervisor
+        .next_due()
+        .expect("a demanded router stops at its lapse");
+    assert!(
+        due > now + Duration::from_secs(4) && due <= now + IDLE_STOP,
+        "a fresh start schedules no restart, only the idle stop"
+    );
+}
+
 fn process_id(supervisor: &ServerSupervisor<LlamaServer>) -> Option<u32> {
     supervisor.program().server().and_then(Server::process_id)
 }
@@ -708,11 +720,7 @@ fn a_model_new_in_the_store_restarts_an_idle_router_and_waits_for_a_held_one_to_
                 router_id("text-reader:small")
             ))
     );
-    assert_eq!(
-        supervisor.next_due(),
-        None,
-        "a fresh start is no crash and schedules nothing"
-    );
+    assert_fresh_start(&supervisor, now);
     assert_eq!(presentation(&folder, &small), Presentation::Presented);
     assert_eq!(load(&folder, &small), Ok(()));
 
@@ -802,11 +810,7 @@ fn a_changed_placement_or_context_restarts_an_idle_router_and_waits_for_a_held_m
     let processor = process_id(&supervisor);
     assert_ne!(processor, first);
     assert!(served().contains("ctx-size = 4096\nn-gpu-layers = 0\n"));
-    assert_eq!(
-        supervisor.next_due(),
-        None,
-        "a fresh start is no crash and schedules nothing"
-    );
+    assert_fresh_start(&supervisor, now);
 
     // The placement changes back while the router holds the model: the model in use is
     // never unloaded for it, and the router drains as for a changed store.

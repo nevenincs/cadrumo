@@ -1250,7 +1250,8 @@ fn removing_the_program_alone_keeps_every_model_and_records_the_removal() {
     let world = World::local_ai(&text, &vision);
     let installed = world.set_up_local_ai();
     assert_eq!(installed.report.outcome, Outcome::Completed);
-    world.stop_local_ai();
+    // The server sleeps until a document is read, so the setup leaves none running to stop.
+    assert!(!world.programs().join(SERVER_RECORD).exists());
     let mut engine = world.engine();
     assert_eq!(
         engine
@@ -1808,6 +1809,8 @@ impl World {
     /// reads the program damaged. The program's files are the fake's, which no system
     /// runs as a program, and they still match their receipt.
     fn refuse_program(&self, folder: &Path) {
+        // The demanded start makes the program's folder before the system refuses it.
+        fs::create_dir_all(folder).unwrap();
         let _ = fs::remove_file(folder.join(SERVER_RECORD));
         fs::write(folder.join(START_FAILURE_RECORD), PROGRAM_REFUSED).unwrap();
     }
