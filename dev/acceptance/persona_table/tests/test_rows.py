@@ -18,6 +18,7 @@ from ..rows import (
     Stage,
     TableRow,
     Verdict,
+    in_force,
     latest_rows,
     planned_rows,
     read_rows,
@@ -170,9 +171,9 @@ def test_every_return_with_stated_casillas_has_an_oracle_even_beside_concept_onl
     for persona_id in persona_ids():
         persona = _persona(persona_id)
         planned = {row.key: row for row in planned_rows(persona, envelope.horizon, envelope)}
-        for value in persona.expectations.values:
+        for year, value in in_force(persona.expectations.values, envelope):
             if value.casillas and value.counterparty is None:
-                key = (persona_id, value.modelo, value.year.resolve(envelope), value.period)
+                key = (persona_id, value.modelo, year, value.period)
                 assert planned[key].has_values, key
                 assert set(value.legal_ref) <= set(planned[key].sources), key
 

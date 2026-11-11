@@ -23,6 +23,7 @@ from cadrumo.tests.personas import (
     YearEnvelope,
     YearToken,
     filed_period_order,
+    values_in_force,
 )
 
 
@@ -248,10 +249,10 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
-    for value in persona.expectations.values:
+    for year, value in in_force(persona.expectations.values, shifted):
         if value.counterparty is not None:
             continue
-        key = (value.modelo, _year(value.year, shifted), value.period)
+        key = (value.modelo, year, value.period)
         found = stated.setdefault(key, [])
         if value.casillas or value.not_sourced or value.refusal is not None:
             found.append(value)
@@ -294,6 +295,12 @@ def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
     except ValueError:
         position = filed_period_order(_ANNUAL) + 1
     return (year or 0, position, modelo)
+
+
+def in_force(values: Sequence[ExpectedValue], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
+    """The stated values whose year lies in ``envelope``, as the law of that year holds them, with that year."""
+    inside = tuple(value for value in values if _year(value.year, envelope) is not None)
+    return values_in_force(inside, envelope)
 
 
 def _grounding(values: Sequence[ExpectedValue]) -> str:
@@ -363,6 +370,7 @@ __all__ = [
     "Verdict",
     "chain_order",
     "classify",
+    "in_force",
     "is_unsupported",
     "latest_rows",
     "not_run",
