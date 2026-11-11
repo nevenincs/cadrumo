@@ -1,3 +1,4 @@
+import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
@@ -99,7 +100,10 @@ export function ContextSummary({
 }) {
   const t = useStrings();
   return (
-    <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-6 gap-y-1 rounded-lg bg-muted px-4 py-3 text-sm @3xl:grid-cols-[minmax(0,auto)_minmax(0,1fr)_minmax(0,auto)_minmax(0,1fr)]">
+    // A value keeps the width it needs, up to a bound, and its label wraps
+    // instead: a long label must not squeeze an unbreakable value, such as a
+    // tax ID, out over the next fact.
+    <dl className="grid grid-cols-[minmax(0,1fr)_fit-content(18rem)] gap-x-6 gap-y-1 rounded-lg bg-muted px-4 py-3 text-sm @3xl:grid-cols-[minmax(0,1fr)_fit-content(18rem)_minmax(0,1fr)_fit-content(18rem)]">
       {items.map((item) => {
         const text = item.value_text;
         return (
@@ -110,7 +114,12 @@ export function ContextSummary({
                 <Label text={item.label} />
               </span>
             </dt>
-            <dd className={text ? "text-foreground" : "text-faint"}>
+            <dd
+              className={cn(
+                "min-w-0 break-words",
+                text ? "text-foreground" : "text-faint",
+              )}
+            >
               {text ?? t("workspace.modelo.value.not_known_yet")}
             </dd>
           </div>

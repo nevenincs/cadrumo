@@ -79,6 +79,13 @@ for (const language of LANGUAGES) {
             item.value_text ??
               label("workspace.modelo.value.not_known_yet", {}, language),
           );
+          // The value stays inside its own cell rather than running over the
+          // fact beside it.
+          expect(
+            await term
+              .locator("xpath=following-sibling::dd[1]")
+              .evaluate((value) => value.scrollWidth <= value.clientWidth),
+          ).toBe(true);
         }
         // Opening the form shows those facts as served: the window never
         // calculates to fill them.
