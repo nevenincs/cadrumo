@@ -16,6 +16,7 @@ exports it, so the note alone is what refuses.
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
@@ -49,7 +51,8 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = "2025"
+_HORIZON = filing_year_envelope().horizon
+_YEAR = str(_HORIZON)
 _PERIOD = "4T"
 _REASON = "unrouted_declarable_quantity"
 _BLOCKED_CODE = "REFUSED_MODELO_CALCULATION_BLOCKED"
@@ -90,7 +93,7 @@ def _calculate_and_verify() -> tuple[str, str]:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", _YEAR, "--period", _PERIOD,
-            "--revision", "2019-y-siguientes",
+            "--revision", str(revision_covering("130", _HORIZON).id),
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -215,7 +218,7 @@ def _assert_unverified(exit_code: int, output: str, *, revision_id: str, code: s
 def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_it(
     seed_profile: ProfileSeeder, tmp_path: Path
 ) -> None:
-    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date="2025-10-01"))
+    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date=date(_HORIZON, 10, 1).isoformat()))
     work_unit_id, clean_revision_id = _calculate_and_verify()
     blocked_revision_id = _plant_current(work_unit_id, clean_revision_id, (_BLOCKING_ISSUE,))
     assert blocked_revision_id != clean_revision_id
@@ -284,7 +287,7 @@ def test_a_blocking_note_refuses_export_and_filing_until_a_recalculation_clears_
 
 def test_the_identical_calculation_without_the_note_exports(seed_profile: ProfileSeeder, tmp_path: Path) -> None:
     """Teeth for the refusal above: the same planted calculation minus only its note is exported."""
-    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date="2025-10-01"))
+    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date=date(_HORIZON, 10, 1).isoformat()))
     work_unit_id, clean_revision_id = _calculate_and_verify()
     planted_revision_id = _plant_current(work_unit_id, clean_revision_id, ())
     assert planted_revision_id == clean_revision_id

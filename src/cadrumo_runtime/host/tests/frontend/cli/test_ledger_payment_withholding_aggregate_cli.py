@@ -39,6 +39,7 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -57,11 +58,12 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_PAID_ON = date(2025, 2, 28)
+_YEAR = filing_year_envelope().horizon
+_PAID_ON = date(_YEAR, 2, 28)
 _EMPLOYEE_NIF = "00001500M"
 _EMPLOYEE_NAME = "Empleada Sintetica"
 
-# One February 2025 payslip: 2400.00 gross, 15% IRPF (360.00), and the
+# One February payslip: 2400.00 gross, 15% IRPF (360.00), and the
 # employee's 6.35% Social Security share (152.40), which the payer also
 # withholds, so the bank paid 2400.00 - 360.00 - 152.40 = 1887.60.
 _GROSS = Decimal("2400.00")
@@ -76,7 +78,7 @@ _M111_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Employer"),
         UserProfileFact(path="activities.description", value="withholding employer activity"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
     )
 )
@@ -156,7 +158,7 @@ def _aggregate(session: NativeApiCliSession[Transaction], modelo: str, *capture_
         "--modelo",
         modelo,
         "--year",
-        "2025",
+        str(_YEAR),
         "--period",
         "1T",
         *capture_options,
@@ -169,13 +171,13 @@ def _stored_q1_retenciones(
 ) -> tuple[RetencionObservation, ...]:
     with password_profile_session(session.profile_id, authority_operation):
         return build_retencion_observation_ports(bucket_id=str(session.profile_id)).repository.load_observations(
-            "111", Period.from_year_and_code(2025, "1T")
+            "111", Period.from_year_and_code(_YEAR, "1T")
         )
 
 
 def _calculate_m111_q1_via_cli(session: NativeApiCliSession[Transaction]) -> dict[str, str]:
     created = session.invoke_password(
-        "app", "modelo", "work", "create", "--modelo", "111", "--year", "2025", "--period", "1T"
+        "app", "modelo", "work", "create", "--modelo", "111", "--year", str(_YEAR), "--period", "1T"
     )
     assert created.exit_code == 0, created.output
     calculated = session.invoke_password(
@@ -186,7 +188,7 @@ def _calculate_m111_q1_via_cli(session: NativeApiCliSession[Transaction]) -> dic
         "--modelo",
         "111",
         "--year",
-        "2025",
+        str(_YEAR),
         "--period",
         "1T",
         "--by",

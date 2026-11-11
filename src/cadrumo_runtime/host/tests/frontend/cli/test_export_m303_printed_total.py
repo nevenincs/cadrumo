@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
+    M303_YEAR,
     calculate_and_verify_modelo_303_revision,
 )
 from cadrumo.tests.cli_envelope import require_error_document
@@ -50,7 +51,7 @@ def test_an_autoconsumo_base_refuses_verification_and_export(tmp_path: Path) -> 
     # Replay the May fixture at its own as-of date; wallet freshness remains
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
-        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
+        frozen_clock(datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC)),
         runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):
@@ -91,7 +92,7 @@ def test_the_same_declaration_without_autoconsumo_verifies_and_exports(tmp_path:
     # Replay the May fixture at its own as-of date; wallet freshness remains
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
-        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
+        frozen_clock(datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC)),
         runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):

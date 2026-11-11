@@ -19,6 +19,7 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
@@ -40,7 +41,8 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _BASELINE_INCOME = Decimal("1000.00")
 _CORRECTED_INCOME = Decimal("1100.00")
 _BASELINE_GASTOS = Decimal("250.00")
@@ -130,7 +132,7 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
                 validated_casilla_id("02", surface="native amend synthetic baseline"): _BASELINE_GASTOS,
             },
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
-            evidence_reference_id="SYNTHETIC-NATIVE-AMEND-M130-2025-1T",
+            evidence_reference_id=f"SYNTHETIC-NATIVE-AMEND-M130-{_YEAR}-1T",
             expected_tax_id=SEEDED_SOURCE_TAX_ID,
             work_unit_repository=ports.work_unit_repository,
             calculation_repository=ports.calculation_repository,

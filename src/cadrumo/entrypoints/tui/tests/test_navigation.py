@@ -23,6 +23,7 @@ from ....application.search.workbench import (
 )
 from ....core.identifier_grammar import NamespacedId
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -45,6 +46,8 @@ from ..navigation import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class MarkerScreen(Screen[None]):
@@ -94,8 +97,8 @@ def search_result(
         label_key=WorkbenchSearchLabelKey.DECLARATION,
         address=WorkbenchModeloAddress(
             modelo=ModeloCode("303"),
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
         ),
         admission=admission,
         action_candidate_id=action_candidate_id,

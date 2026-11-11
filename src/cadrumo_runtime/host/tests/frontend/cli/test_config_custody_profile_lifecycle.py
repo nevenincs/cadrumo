@@ -24,7 +24,7 @@ import subprocess
 import sys
 import sysconfig
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -40,6 +40,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from cadrumo.tests.inventory import REPO_ROOT
@@ -553,9 +554,9 @@ def test_keychain_free_root_login_notice_survives_callback_bad_parameter(tmp_pat
                 "history",
                 "custody",
                 "--since",
-                "2026-02-01",
+                date(filing_year_envelope().horizon, 2, 1).isoformat(),
                 "--until",
-                "2026-01-01",
+                date(filing_year_envelope().horizon, 1, 1).isoformat(),
             ),
             extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
             stdin_payload=json.dumps({"profile_passphrase": passphrase}),
@@ -603,7 +604,7 @@ def test_terminal_executable_group_preserves_root_secret_source_for_parsed_gate(
             "--modelo",
             "303",
             "--year",
-            "2025",
+            str(filing_year_envelope().horizon),
             "--period",
             "1T",
         ),

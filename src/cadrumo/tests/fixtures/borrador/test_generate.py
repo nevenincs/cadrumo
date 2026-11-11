@@ -15,6 +15,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from .generate import (
+    corpus_years,
     format_spanish_decimal,
     render_borrador_pdf,
 )
@@ -54,7 +55,7 @@ def testrender_borrador_pdf_emits_valid_pdf_bytes() -> None:
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
         _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3450.00"),
     }
-    pdf_bytes = render_borrador_pdf(year=2024, casilla_values=casilla_values, tax_id="12345678Z")
+    pdf_bytes = render_borrador_pdf(year=corpus_years()[-1], casilla_values=casilla_values, tax_id="12345678Z")
 
     assert pdf_bytes.startswith(b"%PDF"), "rendered bytes are not a PDF"
     assert len(pdf_bytes) > 500, "rendered PDF suspiciously small"

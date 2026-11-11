@@ -129,7 +129,7 @@ def test_pair_render_contract_distinguishes_exact_and_measured_similarity(compar
     [
         ("current_authored_revision", None),
         ("historical_authored_revision", None),
-        ("historical_layout_without_authored_revision", "2025"),
+        ("historical_layout_without_authored_revision", "unregistered-historical-layout"),
     ],
 )
 def test_registry_applicability_requires_a_revision_exactly_for_authored_verdicts(

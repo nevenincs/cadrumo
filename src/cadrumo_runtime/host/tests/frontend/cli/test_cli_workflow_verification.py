@@ -7,6 +7,7 @@ import sys
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,7 @@ from cadrumo.application.operator_surface.contract import get_operator_surface_c
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 
@@ -35,6 +37,8 @@ from .cli_runner import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _assert_is_command_group(value: object) -> None:
@@ -240,7 +244,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     statement = backend / "bank.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Payment F-001,121.00,EUR,bank-001\n",
+        f"{date(_YEAR, 4, 15).isoformat()},Client SL,Payment F-001,121.00,EUR,bank-001\n",
         encoding="utf-8",
     )
     imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
@@ -386,7 +390,7 @@ def test_config_app_round_trip_review_queue_lists_imported_row(workflow_round_tr
 
 _REVIEW_ROW_EXPECTATIONS = (
     ("source_kind", "ledger_transaction"),
-    ("period", "2026-04"),
+    ("period", f"{_YEAR}-04"),
 )
 
 

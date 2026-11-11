@@ -27,6 +27,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_support import renta_single_taxpayer_facts
 from cadrumo.tests.cli_envelope import require_error_document, require_schema_envelope
@@ -82,7 +83,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "activities.description": "economic activity",
-                "censo.activity_start_date": "2015-01-01",
+                "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
                 "tax_residence.ccaa": "madrid",
                 "provenance.source": "manual_cli",
                 # A complete single filer with no dependants, so once the carries are stated
