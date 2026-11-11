@@ -40,18 +40,18 @@
 //! install or record: the package carries the llama-server, and the local AI is set up
 //! exactly when the package carries it. Either setup then fetches each selected model
 //! into the store itself, through this engine's own network and only from the hosts the
-//! approved plan names, with no server running for it. Only the check that follows needs
-//! the selected engine's server: the setup waits, within [`SERVER_WAIT`], for the manager
-//! to start it, and for llama-server also to present every selected model, and checks
-//! each selected model on it. Without a manager the server never comes, and the check
-//! fails as `program_not_running`. With llama.cpp selected nothing asks, waits for or
+//! approved plan names, with no server running for it. The check that follows reads the
+//! files alone: each selected model stored whole, and with llama.cpp selected one the
+//! router can present. It neither starts, waits for nor asks a server, which runs only
+//! while the agent service reads a document; a demanded start that failed is what reads
+//! the program as `program_not_running`. With llama.cpp selected nothing asks for or
 //! records the Ollama program or its server.
 //!
 //! The owner hands the engine the person's local model selection with
 //! [`Engine::select_local_models`]: role, model artefact and download size, as the
 //! selected catalogue entries state them. The engine names no model itself, so with an
-//! empty selection the local AI is its program alone, and with llama.cpp selected it has
-//! nothing to set up.
+//! empty selection the local AI has no model to run and is not ready: with Ollama selected
+//! its program alone can be set up, and with llama.cpp selected nothing can.
 
 use super::{
     activity::{
@@ -66,9 +66,9 @@ use super::{
     local_ai::{
         self, LocalAiError, LocalEngine, NotRunningCause, Placement, StartFailureKind,
         hardware::Hardware,
-        llama_server::{self, LlamaServer, LlamaServerUnavailable, Presentation},
+        llama_server::{LlamaServer, LlamaServerUnavailable},
         models::{LocalModels, ModelName, Models},
-        program::{Program, START_BUDGET, Server},
+        program::Program,
         supervision::EngineProgram,
     },
     network::{self, HOST_TIMEOUT, Reachability},
@@ -79,7 +79,7 @@ use super::{
         self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, SetupStep,
         StatusRow,
     },
-    transfer::{Pacing, RetryPolicy, SystemPacing, Transfer, TransferEvent},
+    transfer::{RetryPolicy, SystemPacing, Transfer, TransferEvent},
 };
 use crate::{
     component::Cancellation,
@@ -106,14 +106,6 @@ use std::{
 /// The shortest interval between two progress reports of one item.
 pub const PROGRESS_INTERVAL: Duration = Duration::from_millis(500);
 
-/// The longest a local AI setup waits for the manager to start the server: the manager
-/// looks every second, and a start may take [`START_BUDGET`].
-pub const SERVER_WAIT: Duration = START_BUDGET.saturating_add(Duration::from_secs(5));
-
-/// The first and the longest interval between two looks for the server while waiting.
-const SERVER_LOOK_FIRST: Duration = Duration::from_millis(250);
-const SERVER_LOOK_LONGEST: Duration = Duration::from_secs(2);
-
 /// What the engine reports while it works.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Event {
@@ -137,9 +129,6 @@ pub enum Event {
         attempt: u32,
         delay: Duration,
     },
-    /// The local AI program is set up and the setup waits for the manager to start its
-    /// server; reported once, before the first wait.
-    WaitingForServer { item: ItemId },
     /// A part of `item`'s plan reached `step`: its program, or the part pulling `model`.
     /// A part whose model an earlier part already pulled reports nothing.
     Part {
@@ -364,9 +353,6 @@ enum Stop {
     NotRunning(NotRunningCause),
     /// A download failed, as its category, for the facts it keeps.
     Download(TransferFailure),
-    /// The system refused the program that came with Cadrumo, which only a repair of
-    /// Cadrumo replaces: `engine_package_damaged`, for the cause it keeps.
-    PackageDamaged(NotRunningCause),
 }
 
 impl Stop {
@@ -376,9 +362,6 @@ impl Stop {
             Self::Busy => None,
             Self::Failed(category) => Some((category, None)),
             Self::NotRunning(cause) => Some((cause.category(), Some(cause))),
-            Self::PackageDamaged(cause) => {
-                Some((FailureCategory::EnginePackageDamaged, Some(cause)))
-            }
             Self::Download(failure) => Some((failure.category, None)),
         }
     }
@@ -584,12 +567,11 @@ struct Relayed {
     steps: usize,
     progress: Option<Bytes>,
     retry: Option<Retry>,
-    waiting_for_server: bool,
 }
 
 impl Relayed {
     /// Reports what `published` holds that was not reported yet: each step reached since,
-    /// then a changed byte figure, a new retry and the start of a server wait.
+    /// then a changed byte figure and a new retry.
     fn relay(&mut self, item: ItemId, published: &Published, sink: &Sink<'_>) {
         for step in published.steps.iter().skip(self.steps) {
             sink.emit(Event::Phase { item, step: *step });
@@ -617,10 +599,6 @@ impl Relayed {
                 });
             }
         }
-        if published.waiting_for_server && !self.waiting_for_server {
-            sink.emit(Event::WaitingForServer { item });
-        }
-        self.waiting_for_server = published.waiting_for_server;
     }
 }
 
@@ -1146,6 +1124,11 @@ impl Engine {
         };
         if item == ItemId::LocalAi && row.state == ItemState::Ready {
             row.dormant = self.local_ai_dormant();
+        }
+        // A local AI absent with nothing to plan has no model selected: nothing here sets
+        // it up, and the person's model list beside it offers the download.
+        if item == ItemId::LocalAi && row.state == ItemState::Absent && survey.entry.is_none() {
+            row.recovery = None;
         }
         // An unknown item is checked again, not set up, so it states no download.
         if !matches!(row.state, ItemState::Ready | ItemState::Unknown) {
@@ -1917,35 +1900,17 @@ impl Engine {
             }
             reporter.part = None;
             writer.step(SetupStep::Verify)?;
-            let selected = models.selection().as_slice();
-            match &program {
-                EngineProgram::Ollama(program) => {
-                    let server =
-                        wait_for_server(program, &mut pacing, cancellation, sink, &writer)?;
-                    for model in selected {
-                        let observation = models.check_full(&server, model, &hardware)?;
-                        if !observation.usable() {
-                            return Err(Stop::Failed(failure_of(observation)));
-                        }
-                    }
+            // From the files alone: no server is started, waited for or asked. The server
+            // runs only while a document is read, and a demanded start that fails is what
+            // reads the program as not running.
+            let llama_cpp = matches!(program, EngineProgram::LlamaCpp(_));
+            for model in models.selection().as_slice() {
+                if llama_cpp && !models.presentable(model) {
+                    return Err(Stop::Failed(FailureCategory::NotInThisBuild));
                 }
-                EngineProgram::LlamaCpp(router) => {
-                    wait_for_router(router, &models, &mut pacing, cancellation, sink, &writer)
-                        .map_err(|stop| match stop {
-                            Stop::NotRunning(cause)
-                                if cause.category() == FailureCategory::EngineProgramUnusable =>
-                            {
-                                Stop::PackageDamaged(cause)
-                            }
-                            stop => stop,
-                        })?;
-                    for model in selected {
-                        let observation =
-                            models.check_full_on_router(router.folder(), model, &hardware)?;
-                        if !observation.usable() {
-                            return Err(Stop::Failed(failure_of(observation)));
-                        }
-                    }
+                let observation = models.observe_quick(model, &hardware);
+                if !observation.usable() {
+                    return Err(Stop::Failed(failure_of(observation)));
                 }
             }
             writer.step(SetupStep::Cleanup)?;
@@ -2002,117 +1967,6 @@ impl Engine {
     }
 }
 
-/// Looks with `look` at once, then at growing intervals within [`SERVER_WAIT`], reporting
-/// the wait once, until it finds what it looks for; `None` once the wait has run out.
-fn wait_until<T>(
-    mut look: impl FnMut() -> Option<T>,
-    pacing: &mut dyn Pacing,
-    cancellation: &Cancellation,
-    sink: &Sink<'_>,
-    writer: &ItemWriter<'_>,
-) -> Result<Option<T>, Stop> {
-    let item = writer.item();
-    let started = Instant::now();
-    let mut delay = SERVER_LOOK_FIRST;
-    loop {
-        if let Some(found) = look() {
-            return Ok(Some(found));
-        }
-        if started.elapsed() >= SERVER_WAIT {
-            return Ok(None);
-        }
-        if delay == SERVER_LOOK_FIRST {
-            // Best effort, as the progress figure.
-            let _ = writer.waiting_for_server();
-            sink.emit(Event::WaitingForServer { item });
-        }
-        pacing.wait(delay, cancellation)?;
-        delay = delay.saturating_mul(2).min(SERVER_LOOK_LONGEST);
-    }
-}
-
-/// The manager's Ollama server, once it answers, for the check of the fetched models.
-///
-/// Looks as [`wait_until`] does; without a server by the end of the wait the local AI is
-/// `program_not_running`, which carries the local AI's setup action. The server fetches
-/// nothing, so the proxy setting it was started under does not matter here.
-fn wait_for_server(
-    program: &Program,
-    pacing: &mut dyn Pacing,
-    cancellation: &Cancellation,
-    sink: &Sink<'_>,
-    writer: &ItemWriter<'_>,
-) -> Result<Server, Stop> {
-    wait_until(
-        || program.running_server(),
-        pacing,
-        cancellation,
-        sink,
-        writer,
-    )?
-    .ok_or_else(|| no_server_within(program.latest_start_failure()))
-}
-
-/// The manager's llama-server router, once it answers ready as the packaged build and
-/// presents every selected model, for the check of the fetched models.
-///
-/// Looks as [`wait_until`] does. A router started before a model arrived in the store
-/// presents it once the manager has started it again, which it does as soon as the router
-/// holds no model. By the end of the wait, a router that runs and takes loads yet does not
-/// present a selected model stops the setup: as not in this build when the model has no
-/// llama.cpp context to be presented with, and as unexpected when it has one, since its bytes
-/// were verified and are not damaged; otherwise the local AI is `program_not_running`.
-fn wait_for_router(
-    router: &LlamaServer,
-    models: &Models,
-    pacing: &mut dyn Pacing,
-    cancellation: &Cancellation,
-    sink: &Sink<'_>,
-    writer: &ItemWriter<'_>,
-) -> Result<(), Stop> {
-    let presentations = || -> Vec<Presentation> {
-        models
-            .selection()
-            .as_slice()
-            .iter()
-            .map(|model| llama_server::presentation(router.folder(), model.name()))
-            .collect()
-    };
-    let ready = || {
-        (router.running_server().is_some()
-            && presentations()
-                .iter()
-                .all(|presentation| *presentation == Presentation::Presented))
-        .then_some(())
-    };
-    if wait_until(ready, pacing, cancellation, sink, writer)?.is_some() {
-        return Ok(());
-    }
-    if router.running_server().is_some() && presentations().contains(&Presentation::NotPresented) {
-        let unpresentable = models
-            .selection()
-            .as_slice()
-            .iter()
-            .any(|model| !models.presentable(model));
-        return Err(Stop::Failed(if unpresentable {
-            FailureCategory::NotInThisBuild
-        } else {
-            FailureCategory::Unexpected
-        }));
-    }
-    Err(no_server_within(router.latest_start_failure()))
-}
-
-/// The stop of a wait that ran out with no server: with the kind of the manager's latest
-/// start when that start failed, so a missing or broken program reads apart from one that
-/// is slow to start.
-fn no_server_within(latest_start: Option<StartFailureKind>) -> Stop {
-    Stop::NotRunning(NotRunningCause::NoServerWithin {
-        budget: SERVER_WAIT,
-        latest_start,
-    })
-}
-
 /// Re-observes one activity access failure only after its known run has published an end
 /// and released the writer lock. An enduring access failure remains unfollowable.
 fn recover_activity_after_release(
@@ -2166,10 +2020,6 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
         Err(Stop::NotRunning(cause)) => {
             writer.failed(cause.category())?;
             Err(Stop::NotRunning(cause))
-        }
-        Err(Stop::PackageDamaged(cause)) => {
-            writer.failed(FailureCategory::EnginePackageDamaged)?;
-            Err(Stop::PackageDamaged(cause))
         }
         Err(Stop::Download(failure)) => {
             writer.failed(failure.category)?;

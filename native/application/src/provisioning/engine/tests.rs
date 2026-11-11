@@ -10,13 +10,10 @@ use crate::provisioning::{
         Archives, BROWSER_VERSION, HOST, driver_package, fake_environment, fake_leading,
         launchable_archives,
     },
-    items::FULL_CHECK_BUDGET,
     local_ai::{
-        ServerCall, StartFailureKind,
         fake_llamacpp::{FakeLlamaCpp, ModelStatus, Scripted},
         fake_ollama::FakeOllama,
         llama_server::{PRESET, server_folder},
-        loopback::{ExchangeFailure, ExchangePhase},
         models::{SelectedModel, record_context},
         program::{
             Program, SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord,
@@ -485,10 +482,8 @@ impl World {
         )
     }
 
-    /// A setup of the local AI the person approves as reviewed, whose server the manager
-    /// starts, under the proxy setting whose digest is `proxy`, once the program waits
-    /// for it.
-    fn set_up_local_ai_serving(&self, proxy: Option<&str>) -> Run {
+    /// A setup of the local AI the person approves as reviewed. No server runs for it.
+    fn set_up_local_ai(&self) -> Run {
         let request = SetupRequest {
             items: Some(vec![ItemId::LocalAi]),
             approved: None,
@@ -497,11 +492,7 @@ impl World {
         self.run_setup(
             &request,
             &mut |plan| Answer::Approve(plan.digest()),
-            &mut |event| {
-                if matches!(event, Event::WaitingForServer { .. }) {
-                    self.serve_local_ai_under(proxy);
-                }
-            },
+            &mut |_| {},
             &Cancellation::default(),
         )
     }
@@ -516,12 +507,6 @@ impl World {
     /// Plays the manager starting its server: records the test's server as the running
     /// one, as the supervisor does once it answers.
     fn serve_local_ai(&self) {
-        self.serve_local_ai_under(None);
-    }
-
-    /// The same, for a server the supervisor started under the proxy setting whose
-    /// digest is `proxy`.
-    fn serve_local_ai_under(&self, proxy: Option<&str>) {
         let ollama = self.ollama.as_ref().unwrap();
         let record = ServerRecord {
             schema: SERVER_RECORD_SCHEMA,
@@ -530,7 +515,7 @@ impl World {
             executable: self.programs().join(EXECUTABLE),
             models: self.models(),
             process_id: std::process::id(),
-            proxy: proxy.map(str::to_owned),
+            proxy: None,
         };
         fs::write(
             self.programs().join(SERVER_RECORD),
@@ -643,9 +628,9 @@ impl World {
             .load_fails = fails;
     }
 
-    /// A setup of the local AI the person approves as reviewed, whose router the manager
-    /// starts once the setup waits for it; with the plan the person reviewed.
-    fn set_up_local_ai_routed(&self) -> (Run, SetupPlan) {
+    /// A setup of the local AI the person approves as reviewed, with the plan the person
+    /// reviewed. No router runs for it.
+    fn set_up_local_ai_reviewed(&self) -> (Run, SetupPlan) {
         let request = SetupRequest {
             items: Some(vec![ItemId::LocalAi]),
             approved: None,
@@ -658,11 +643,7 @@ impl World {
                 reviewed = Some(plan.clone());
                 Answer::Approve(plan.digest())
             },
-            &mut |event| {
-                if matches!(event, Event::WaitingForServer { .. }) {
-                    self.serve_router();
-                }
-            },
+            &mut |_| {},
             &Cancellation::default(),
         );
         (run, reviewed.expect("the setup asked for a review"))
@@ -972,28 +953,6 @@ fn a_cancel_stops_a_setup_at_its_next_chunk_from_its_owner_or_another_engine() {
 }
 
 #[test]
-fn a_server_started_under_another_proxy_setting_checks_the_models_the_engine_fetched() {
-    let text = StoredModel::new(1);
-    let vision = StoredModel::new(9);
-    let world = World::local_ai(&text, &vision);
-
-    // The supervisor's server is recorded as started under a setting that is not this
-    // engine's. It fetches nothing: the engine fetches every model through its own
-    // network, so the server's setting does not hold the setup back.
-    let done =
-        world.set_up_local_ai_serving(Some(&Sha256Digest::of(b"another setting").to_string()));
-
-    assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
-    assert!(
-        !world.pulled_through_the_server(),
-        "no model is pulled through it: {:?}",
-        world.ollama_requests()
-    );
-    assert_eq!(text.stored(&world.models(), TEXT), 3);
-    assert_eq!(vision.stored(&world.models(), VISION), 3);
-}
-
-#[test]
 fn a_tag_the_registry_moved_is_the_model_the_engine_verified() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
@@ -1009,7 +968,7 @@ fn a_tag_the_registry_moved_is_the_model_the_engine_verified() {
         .collect();
     world.server = publisher(&world.certificate, served, world.gates.clone());
 
-    let done = world.set_up_local_ai_serving(None);
+    let done = world.set_up_local_ai();
 
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     assert_eq!(row(&done.report, ItemId::LocalAi).state, ItemState::Ready);
@@ -1033,126 +992,7 @@ fn a_tag_the_registry_moved_is_the_model_the_engine_verified() {
 }
 
 #[test]
-fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
-    let text = StoredModel::new(1);
-    let vision = StoredModel::new(9);
-    let world = World::local_ai(&text, &vision);
-    let pins = ComponentPins::load(&world.directory.path().join("pins")).unwrap();
-    let program = Program::new(
-        pins.program(ProgramIdentity::Ollama).unwrap(),
-        Platform::current().unwrap(),
-        Locations::under(&world.root()),
-    )
-    .unwrap()
-    .unwrap();
-    let cause = |program: &Program| {
-        let Stop::NotRunning(cause) = no_server_within(program.latest_start_failure()) else {
-            panic!("a wait that runs out stops as not running");
-        };
-        cause
-    };
-
-    // A host too slow to start the server within the wait: no start has failed.
-    assert_eq!(
-        cause(&program),
-        NotRunningCause::NoServerWithin {
-            budget: SERVER_WAIT,
-            latest_start: None,
-        }
-    );
-
-    // The manager, in its own process, recorded that its latest start failed.
-    fs::create_dir_all(world.programs()).unwrap();
-    fs::write(
-        world.programs().join(START_FAILURE_RECORD),
-        br#"{"schema":1,"reason":"server_launch_failed"}"#,
-    )
-    .unwrap();
-    assert_eq!(
-        cause(&program),
-        NotRunningCause::NoServerWithin {
-            budget: SERVER_WAIT,
-            latest_start: Some(StartFailureKind::Launch),
-        },
-        "a program that could not be launched reads apart from a slow start"
-    );
-
-    // The program itself was refused by the system: the setup fails as an unusable engine program,
-    // keeping the cause, where a program that only could not be launched stays not running.
-    fs::write(
-        world.programs().join(START_FAILURE_RECORD),
-        br#"{"schema":1,"reason":"server_program_damaged"}"#,
-    )
-    .unwrap();
-    let (category, kept) = no_server_within(program.latest_start_failure())
-        .failure()
-        .expect("a wait that runs out is a failure");
-    assert_eq!(category, FailureCategory::EngineProgramUnusable);
-    assert_eq!(
-        kept.and_then(|cause| cause.latest_start()),
-        Some(StartFailureKind::ProgramDamaged)
-    );
-    let launch = no_server_within(Some(StartFailureKind::Launch))
-        .failure()
-        .unwrap();
-    assert_eq!(launch.0, FailureCategory::ProgramNotRunning);
-
-    // A record this build cannot read names no start.
-    fs::write(
-        world.programs().join(START_FAILURE_RECORD),
-        br#"{"schema":1,"reason":"server_on_fire"}"#,
-    )
-    .unwrap();
-    assert_eq!(cause(&program).latest_start(), None);
-}
-
-#[test]
-fn a_setup_whose_check_the_server_drops_reports_the_request_that_failed() {
-    let text = StoredModel::new(1);
-    let vision = StoredModel::new(9);
-    let world = World::local_ai(&text, &vision);
-    world
-        .ollama
-        .as_ref()
-        .unwrap()
-        .state
-        .lock()
-        .unwrap()
-        .generation_hangs_up = true;
-
-    let done = world.set_up_local_ai_serving(None);
-
-    assert_eq!(done.report.outcome, Outcome::Failed, "{:?}", done.report);
-    assert_eq!(done.report.item, Some(ItemId::LocalAi));
-    assert_eq!(
-        done.report.failure,
-        Some(FailureCategory::ProgramNotRunning),
-        "the window still words the one category"
-    );
-    assert!(
-        matches!(
-            done.report.failure_cause.as_deref(),
-            Some(NotRunningCause::Request {
-                call: ServerCall::Generate,
-                failure: ExchangeFailure {
-                    phase: ExchangePhase::Exchange,
-                    bound,
-                    ..
-                },
-            }) if *bound == FULL_CHECK_BUDGET
-        ),
-        "the report keeps which request failed: {:?}",
-        done.report.failure_cause
-    );
-    assert!(
-        !world.registry_requests().is_empty() && !world.pulled_through_the_server(),
-        "the engine fetched the models itself before the check failed"
-    );
-    assert_eq!(text.stored(&world.models(), TEXT), 3);
-}
-
-#[test]
-fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_role() {
+fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_from_files() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let kept = StoredModel::new(5);
@@ -1178,21 +1018,7 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_ro
             reviewed = Some(plan.clone());
             Answer::Approve(plan.digest())
         },
-        &mut |event| {
-            if let Event::WaitingForServer { item } = event {
-                assert_eq!(*item, ItemId::LocalAi);
-                // The program is in place and recorded; the manager starts the server only
-                // now.
-                let receipt: Value =
-                    serde_json::from_slice(&fs::read(world.receipt("local_ai.json")).unwrap())
-                        .unwrap();
-                assert_eq!(
-                    receipt["location"]["facts"]["address"],
-                    world.ollama.as_ref().unwrap().address().to_string()
-                );
-                world.serve_local_ai();
-            }
-        },
+        &mut |_| {},
         &Cancellation::default(),
     );
     let plan = reviewed.expect("the setup asked for a review");
@@ -1306,16 +1132,21 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_ro
         ]
     );
     assert_eq!(last_progress(&done.events), (total, total));
-    assert_eq!(row(&done.report, ItemId::LocalAi).state, ItemState::Ready);
+    let ready = row(&done.report, ItemId::LocalAi);
+    assert_eq!(ready.state, ItemState::Ready);
+    assert!(ready.dormant, "the setup leaves no server running");
+    // The program is in place and recorded with the address its server will answer at.
+    let receipt: Value =
+        serde_json::from_slice(&fs::read(world.receipt("local_ai.json")).unwrap()).unwrap();
+    assert_eq!(
+        receipt["location"]["facts"]["address"],
+        world.ollama.as_ref().unwrap().address().to_string()
+    );
     let requests = world.ollama_requests();
-    let count = |prefix: &str| {
-        requests
-            .iter()
-            .filter(|line| line.starts_with(prefix))
-            .count()
-    };
-    assert!(!world.pulled_through_the_server(), "{requests:?}");
-    assert_eq!(count("POST /api/generate"), 4, "one token for each role");
+    assert!(
+        requests.is_empty(),
+        "the setup checks the files and asks no server: {requests:?}"
+    );
     let fetched = world.registry_requests();
     assert_eq!(
         fetched
@@ -1350,9 +1181,17 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_every_ro
     assert_eq!(world.registry_requests(), fetched);
     world.measure_hardware = false;
 
+    // While a document is read the manager runs the server, and a full check then asks
+    // it for one token with each role's model.
+    world.serve_local_ai();
     let verified = world.verify(&[ItemId::LocalAi]);
     assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
     assert!(!row(&verified, ItemId::LocalAi).dormant, "its server runs");
+    assert_eq!(
+        count(&world.ollama_requests(), "POST /api/generate"),
+        4,
+        "one token for each role"
+    );
     world.stop_local_ai();
     // With no server running and no failed start, the server is dormant: the local AI is
     // ready and starts its server when a document is read. Neither check starts it.
@@ -1411,7 +1250,7 @@ fn removing_the_program_alone_keeps_every_model_and_records_the_removal() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::local_ai(&text, &vision);
-    let installed = world.set_up_local_ai_serving(None);
+    let installed = world.set_up_local_ai();
     assert_eq!(installed.report.outcome, Outcome::Completed);
     world.stop_local_ai();
     let mut engine = world.engine();
@@ -1561,7 +1400,7 @@ fn count(requests: &[String], prefix: &str) -> usize {
 }
 
 #[test]
-fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on_the_router() {
+fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_from_files() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::llama_cpp(&text, &vision);
@@ -1574,7 +1413,7 @@ fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on
         "the packaged build, never the Ollama program's version"
     );
 
-    let (done, plan) = world.set_up_local_ai_routed();
+    let (done, plan) = world.set_up_local_ai_reviewed();
 
     assert_eq!(
         parts(&plan),
@@ -1632,7 +1471,26 @@ fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on
     assert!(!world.receipt("local_ai.json").exists());
     assert!(!world.programs().exists());
 
-    // Each role's model was listed, loaded, asked for one token and unloaded on the router.
+    // The setup read the files and asked no router.
+    assert!(
+        world.router_requests().is_empty(),
+        "{:?}",
+        world.router_requests()
+    );
+    assert!(row(&done.report, ItemId::LocalAi).dormant);
+
+    // The quick check reads the store and the router's preset, and asks nothing.
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Ready
+    );
+    assert!(world.router_requests().is_empty());
+
+    // While a document is read the manager runs the router, and a full check then lists,
+    // loads, asks for one token and unloads each role's model on it.
+    world.serve_router();
+    let verified = world.verify(&[ItemId::LocalAi]);
+    assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
     let requests = world.router_requests();
     assert_eq!(count(&requests, "POST /v1/completions"), 4, "{requests:?}");
     assert_eq!(count(&requests, "POST /models/load"), 4, "{requests:?}");
@@ -1643,21 +1501,6 @@ fn with_llama_cpp_selected_the_local_ai_plans_no_program_and_checks_each_role_on
             .values()
             .all(|status| *status == ModelStatus::Unloaded),
         "the check leaves no model loaded"
-    );
-
-    // The quick check reads the store and the router's preset, and asks nothing.
-    assert_eq!(
-        row(&world.status(), ItemId::LocalAi).state,
-        ItemState::Ready
-    );
-    assert_eq!(world.router_requests().len(), requests.len());
-
-    let verified = world.verify(&[ItemId::LocalAi]);
-    assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
-    assert_eq!(
-        count(&world.router_requests(), "POST /v1/completions"),
-        8,
-        "the full check generates on the router again"
     );
 
     assert!(!row(&verified, ItemId::LocalAi).dormant, "its router runs");
@@ -1686,7 +1529,7 @@ fn the_overall_progress_never_goes_back_when_a_catalogue_understates_a_model() {
         *size = 10;
     }
 
-    let (done, _) = world.set_up_local_ai_routed();
+    let (done, _) = world.set_up_local_ai_reviewed();
 
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     let whole = text.size() + vision.size();
@@ -1694,18 +1537,21 @@ fn the_overall_progress_never_goes_back_when_a_catalogue_understates_a_model() {
 }
 
 #[test]
-fn with_llama_cpp_selected_and_no_model_selected_nothing_is_set_up() {
+fn with_llama_cpp_selected_and_no_model_selected_nothing_is_ready_or_set_up() {
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let mut world = World::llama_cpp(&text, &vision);
     world.selection.clear();
 
-    let status = world.status();
-    assert_eq!(
-        row(&status, ItemId::LocalAi).state,
-        ItemState::Ready,
-        "the packaged llama-server is the local AI"
-    );
+    // The packaged llama-server has no model to run: the local AI is not ready, and its
+    // row offers nothing, since the person's model list offers the download.
+    for report in [world.status(), world.verify(&[ItemId::LocalAi])] {
+        let local_ai = row(&report, ItemId::LocalAi);
+        assert_eq!(local_ai.state, ItemState::Absent, "{:?}", report.mode);
+        assert_eq!(local_ai.recovery, None, "{:?}", report.mode);
+        assert!(!local_ai.dormant);
+        assert!(state::items_to_set_up(&report.rows).is_empty());
+    }
     let planned = world.plan(Some(vec![ItemId::LocalAi]));
     assert_eq!(planned.outcome, Outcome::NothingToDo, "{planned:?}");
     assert!(planned.plan.is_none());
@@ -1743,12 +1589,12 @@ fn the_selected_engine_alone_decides_the_program_part_and_the_server_checked() {
     let ollama = world.plan(Some(vec![ItemId::LocalAi]));
     assert_eq!(parts(ollama.plan.as_ref().unwrap())[0], PROGRAM_PART);
     assert_ne!(ollama.plan_digest(), llama.plan_digest());
-    let done = world.set_up_local_ai_serving(None);
+    let done = world.set_up_local_ai();
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
-    assert_eq!(
-        count(&world.ollama_requests(), "POST /api/generate"),
-        4,
-        "one token for each role on the Ollama server"
+    assert!(
+        world.ollama_requests().is_empty(),
+        "the setup asks no server: {:?}",
+        world.ollama_requests()
     );
     assert!(world.receipt("local_ai.json").is_file());
     assert!(
@@ -1791,11 +1637,18 @@ fn a_model_the_router_does_not_present_reads_absent_and_its_setup_downloads_noth
     );
     assert!(!parts(plan).contains(&PROGRAM_PART));
 
-    // The setup waits for the router to present them, and checks them on it.
-    let (done, _) = world.set_up_local_ai_routed();
+    // The setup finds them whole in the store and asks the router nothing. The running
+    // router presents them once the manager has started it again, which it does as soon
+    // as it holds no model.
+    let (done, _) = world.set_up_local_ai_reviewed();
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     assert!(world.registry_requests().is_empty(), "nothing was fetched");
-    assert_eq!(count(&world.router_requests(), "POST /v1/completions"), 4);
+    assert_eq!(count(&world.router_requests(), "POST /v1/completions"), 0);
+    world.serve_router();
+    assert_eq!(
+        row(&world.status(), ItemId::LocalAi).state,
+        ItemState::Ready
+    );
     assert!(world.ollama_requests().is_empty());
 }
 
@@ -1951,8 +1804,8 @@ impl World {
         fs::write(folder.join(START_FAILURE_RECORD), PROGRAM_REFUSED).unwrap();
     }
 
-    /// A reinstall of the local AI the person approves as reviewed, whose server the
-    /// manager starts once the reinstall waits for it; with the plan the person reviewed.
+    /// A reinstall of the local AI the person approves as reviewed, with the plan the
+    /// person reviewed. No server runs for it.
     fn reinstall_local_ai(
         &self,
         observe: &mut dyn FnMut(&Event),
@@ -1970,12 +1823,7 @@ impl World {
                 reviewed = Some(plan.clone());
                 Answer::Approve(plan.digest())
             },
-            &mut |event| {
-                observe(event);
-                if matches!(event, Event::WaitingForServer { .. }) {
-                    self.serve_local_ai();
-                }
-            },
+            &mut |event| observe(event),
             cancellation,
         );
         (run, reviewed)
@@ -1997,10 +1845,7 @@ fn a_program_the_system_refused_is_reinstalled_from_its_download_and_the_models_
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::local_ai(&text, &vision);
-    assert_eq!(
-        world.set_up_local_ai_serving(None).report.outcome,
-        Outcome::Completed
-    );
+    assert_eq!(world.set_up_local_ai().report.outcome, Outcome::Completed);
     let models = files_under(&world.models());
     let fetched = world.registry_requests();
     assert_eq!(world.archive_requests(), 1);
@@ -2077,10 +1922,7 @@ fn a_reinstall_cut_off_at_any_step_leaves_the_program_unusable_and_a_rerun_conve
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::local_ai(&text, &vision);
-    assert_eq!(
-        world.set_up_local_ai_serving(None).report.outcome,
-        Outcome::Completed
-    );
+    assert_eq!(world.set_up_local_ai().report.outcome, Outcome::Completed);
     let models = files_under(&world.models());
     let unusable = |report: &Report| {
         let local_ai = row(report, ItemId::LocalAi);
@@ -2186,11 +2028,7 @@ fn a_reinstall_cut_off_at_any_step_leaves_the_program_unusable_and_a_rerun_conve
             reviewed = Some(plan.clone());
             Answer::Approve(plan.digest())
         },
-        &mut |event| {
-            if matches!(event, Event::WaitingForServer { .. }) {
-                world.serve_local_ai();
-            }
-        },
+        &mut |_| {},
         &Cancellation::default(),
     );
     let plan = reviewed.expect("the setup asked for a review");
@@ -2214,7 +2052,7 @@ fn a_packaged_program_the_system_refused_reads_a_damaged_package_with_no_button(
     let text = StoredModel::new(1);
     let vision = StoredModel::new(9);
     let world = World::llama_cpp(&text, &vision);
-    let (done, _) = world.set_up_local_ai_routed();
+    let (done, _) = world.set_up_local_ai_reviewed();
     assert_eq!(done.report.outcome, Outcome::Completed, "{:?}", done.report);
     let package = files_under(&world.llama_package);
     let models = files_under(&world.models());

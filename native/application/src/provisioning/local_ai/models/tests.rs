@@ -924,7 +924,7 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
     );
-    // The setup's check keeps which request failed, so a server that went away reads
+    // The check keeps which request failed, so a server that went away reads
     // apart from one too busy to answer within a budget.
     let gone = fixture
         .models
@@ -959,8 +959,8 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
     assert_eq!(read(PRESENT, &[PRESENT, PRESENT]), PRESENT);
     assert_eq!(
         read(PRESENT, &[]),
-        PRESENT,
-        "no selection is the program alone"
+        Observation::Absent,
+        "with no model selected the program has nothing to run"
     );
     assert_eq!(read(older, &[PRESENT]), older);
     assert_eq!(read(older, &[Observation::Absent]), Observation::Absent);
