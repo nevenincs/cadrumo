@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.filing.errors import (
+    FilingExportError,
     FilingExportFieldUnrenderableError,
     FilingExportIntegrityError,
     FilingExportUnrepresentableCharacterError,
@@ -11,6 +12,7 @@ from ...domain.filing.errors import (
 from .export_contracts import (
     ModeloExportCommand,
     ModeloExportDesignIntegrityError,
+    ModeloExportError,
     ModeloExportFieldUnrenderableError,
     ModeloExportUnrepresentableCharacterError,
 )
@@ -116,3 +118,14 @@ def export_unrepresentable_character_refusal(
         },
         precondition_failure=failure,
     )
+
+
+def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError | None:
+    """Return the refusal for a value the record design cannot write, or ``None`` for any other failure."""
+    if isinstance(exc, FilingExportUnrepresentableCharacterError):
+        return export_unrepresentable_character_refusal(command, exc)
+    if isinstance(exc, FilingExportFieldUnrenderableError):
+        return export_field_unrenderable_refusal(command, exc)
+    if isinstance(exc, FilingExportIntegrityError) and exc.translated_message is not None:
+        return export_design_integrity_refusal(command, exc)
+    return None
