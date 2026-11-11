@@ -16,7 +16,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_selected_for
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...calculations.cross_period_models import (
@@ -38,15 +38,16 @@ _BINDING = "irpf.previous_year_economic_activity_net_income"
 
 def _target(year: int) -> WorkUnit:
     period = Period.from_year_and_code(year, "1T")
+    revision_id = str(revision_selected_for("130", year, "1T").id)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET_ID, modelo="130", filing_year=year, period=period, revision_id="2019-y-siguientes"
+            bucket_id=_BUCKET_ID, modelo="130", filing_year=year, period=period, revision_id=revision_id
         ),
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=year,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=revision_id,
         name="Pagos fraccionados",
         created_at=_NOW,
         updated_at=_NOW,

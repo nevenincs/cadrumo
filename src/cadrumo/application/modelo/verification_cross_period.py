@@ -426,26 +426,7 @@ def _cross_period_evidence_findings(
         iva_compensation_decision,
     ):
         blocks_first_filer = bool(set(evidence.blockers) & _FIRST_FILER_CANDIDATE_BLOCKERS)
-        requirement = evidence.requirement
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key=(
-                "application.modelo.findings.cross_period_dependency_unclean_attestable"
-                if evidence.attestation_admitted
-                else "application.modelo.findings.cross_period_dependency_unclean"
-            ),
-            message_facts={
-                "source_modelo": requirement.source_modelo,
-                "source_filing_year": requirement.filing_year,
-                "source_period": requirement.period.registry_token,
-                "origin_code": requirement.origin.value,
-                "origin_ids": _join_cross_period_ids(requirement.origin_ids),
-                "blocker_codes": _join_cross_period_ids(blocker.value for blocker in evidence.blockers),
-            },
-            legal_refs=_cross_period_requirement_legal_refs(requirement),
-            source_refs=_cross_period_requirement_source_refs(requirement),
-        )
+        finding = _cross_period_unclean_finding(evidence)
         findings.append(finding)
         if blocking_finding_observer is not None:
             blocking_finding_observer(finding, evidence)
@@ -454,6 +435,38 @@ def _cross_period_evidence_findings(
         findings.append(finding)
         if blocking_finding_observer is not None:
             blocking_finding_observer(finding, evidence)
+    findings.extend(_cross_period_evidence_advisories(verdict, evidence))
+    return tuple(findings), blocks_first_filer
+
+
+def _cross_period_unclean_finding(evidence: CrossPeriodDependencyEvidence) -> ModeloVerificationFinding:
+    requirement = evidence.requirement
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key=(
+            "application.modelo.findings.cross_period_dependency_unclean_attestable"
+            if evidence.attestation_admitted
+            else "application.modelo.findings.cross_period_dependency_unclean"
+        ),
+        message_facts={
+            "source_modelo": requirement.source_modelo,
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement.period.registry_token,
+            "origin_code": requirement.origin.value,
+            "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+            "blocker_codes": _join_cross_period_ids(blocker.value for blocker in evidence.blockers),
+        },
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
+    )
+
+
+def _cross_period_evidence_advisories(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> tuple[ModeloVerificationFinding, ...]:
+    findings: list[ModeloVerificationFinding] = []
     if evidence.operator_declared_suppression_advisory:
         findings.append(_cross_period_operator_declared_suppression_advisory_finding(evidence))
     if evidence.non_official_local_chain_advisory:
@@ -470,7 +483,7 @@ def _cross_period_evidence_findings(
         )
     if evidence.operator_attested_absent_upstream_advisory:
         findings.append(_cross_period_operator_attested_advisory_finding(verdict, evidence))
-    return tuple(findings), blocks_first_filer
+    return tuple(findings)
 
 
 def _declared_activity_start(evidence: CrossPeriodDependencyEvidence) -> str:
