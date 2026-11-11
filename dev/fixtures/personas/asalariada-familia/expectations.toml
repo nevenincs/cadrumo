@@ -84,3 +84,67 @@ Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla
 """
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"
+
+# The Madrid scale and mínimos and the Madrid deductions this return takes are identical in the 2023, 2024
+# and 2025 editions (Ley 13/2023, with effect 1 January 2023), and the state side is the same in every year
+# from the floor. The 2022 return differs: Ley 8/2022 set a lower Madrid scale and mínimos and the art. 7 bis
+# deduction did not exist, giving -2525.66. It is not stated here because the legal register holds no
+# provision limited to that wording to govern it.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+roles = { "resultado-ingresar-o-devolver-irpf" = "-3095.05" }
+parameters = { madrid_minimo_contribuyente = "5956.65", madrid_minimo_descendiente_primero = "2575.85", madrid_minimo_descendiente_segundo = "2897.83", madrid_minimo_descendiente_menor_tres = "3005.16", madrid_minimo_ascendiente = "1234.26", madrid_minimo_ascendiente_mayor_75 = "1502.58", madrid_deduccion_cuidado_ascendientes = "515.50", madrid_limite_base_nacimiento_individual = "30930.00" }
+derivation = """
+Base liquidable general = 31667.20 (the work-income value above; no other income, no reduction of the base).
+Cuota íntegra estatal (art. 63, scale unchanged since 2021): 2112.75 + (31667.20 - 20200.00) x 15 % = 3832.83, less the
+scale on the state mínimo 12050.00 (value above) at 9.5 % = 1144.75: 2688.08.
+Madrid mínimo (DL 1/2010 arts. 2 to 2 quater; Manual práctico de Renta 2023 lines 42678 to 42695, 2024 lines 47061 to 47078,
+2025 lines 42898 to 42915): 5956.65 + (2575.85 + 2897.83 + 3005.16) / 2 + (1234.26 + 1502.58) = 12932.91.
+Cuota íntegra autonómica (art. 74; Madrid scale, DL 1/2010 art. 1, 2023 manual lines 44081 to 44089, 2024 lines 48473 to 48481,
+2025 lines 44324 to 44330): 1739.53 + (31667.20 - 19004.63) x 12.80 % = 3360.34, less 12932.91 x 8.50 % = 1099.30: 2261.04.
+Madrid deductions (art. 77): por cuidado de ascendientes, DL 1/2010 art. 7 bis, 515.50 for the mother, over 65 and giving the
+mínimo por ascendientes to the taxpayer alone, with no base limit (2023 manual lines 64096 to 64104, 2024 parte 2 page 370,
+2025 parte 2 lines 15955 to 15964). Por nacimiento (arts. 4 and 18.1) is barred: the base imponible 31667.20 exceeds
+30930.00 (2023 line 63963, 2024 parte 2 page 367, 2025 parte 2 line 15801); para familias con dos o más descendientes
+(art. 14) likewise, above 24744.00 (2025 parte 2 line 16980). Por gastos educativos (art. 11) is not taken: for the primer
+ciclo de Educación Infantil its base excludes fees paid as public or administration-authorised prices and its limit counts
+the spouse's base (2025 parte 2 lines 16486 and 16510); the persona states neither fact.
+Cuota líquida = 2688.08 + 2261.04 - 515.50 = 4433.62. Cuota diferencial (art. 79) = 4433.62 - 5412.00 = -978.38.
+Deducción por maternidad (art. 81, value above) 1200.00 + 916.67 = 2116.67 reduces it: -3095.05, a devolver. No advance
+payment of the maternity deduction, spouse compensation or refund waiver is stated, so casilla 0700 equals 0670.
+Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV of the 2024 edition (LIRPF art. 97).
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18"]
+grounding = "verified"
+
+# The same result for the edition before: the scales, mínimos and deductions above are unchanged there.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-2"
+roles = { "resultado-ingresar-o-devolver-irpf" = "-3095.05" }
+parameters = { madrid_minimo_contribuyente = "5956.65", madrid_minimo_descendiente_primero = "2575.85", madrid_minimo_descendiente_segundo = "2897.83", madrid_minimo_descendiente_menor_tres = "3005.16", madrid_minimo_ascendiente = "1234.26", madrid_minimo_ascendiente_mayor_75 = "1502.58", madrid_deduccion_cuidado_ascendientes = "515.50", madrid_limite_base_nacimiento_individual = "30930.00" }
+derivation = """
+Base liquidable general = 31667.20 (the work-income value above; no other income, no reduction of the base).
+Cuota íntegra estatal (art. 63, scale unchanged since 2021): 2112.75 + (31667.20 - 20200.00) x 15 % = 3832.83, less the
+scale on the state mínimo 12050.00 (value above) at 9.5 % = 1144.75: 2688.08.
+Madrid mínimo (DL 1/2010 arts. 2 to 2 quater; Manual práctico de Renta 2023 lines 42678 to 42695, 2024 lines 47061 to 47078,
+2025 lines 42898 to 42915): 5956.65 + (2575.85 + 2897.83 + 3005.16) / 2 + (1234.26 + 1502.58) = 12932.91.
+Cuota íntegra autonómica (art. 74; Madrid scale, DL 1/2010 art. 1, 2023 manual lines 44081 to 44089, 2024 lines 48473 to 48481,
+2025 lines 44324 to 44330): 1739.53 + (31667.20 - 19004.63) x 12.80 % = 3360.34, less 12932.91 x 8.50 % = 1099.30: 2261.04.
+Madrid deductions (art. 77): por cuidado de ascendientes, DL 1/2010 art. 7 bis, 515.50 for the mother, over 65 and giving the
+mínimo por ascendientes to the taxpayer alone, with no base limit (2023 manual lines 64096 to 64104, 2024 parte 2 page 370,
+2025 parte 2 lines 15955 to 15964). Por nacimiento (arts. 4 and 18.1) is barred: the base imponible 31667.20 exceeds
+30930.00 (2023 line 63963, 2024 parte 2 page 367, 2025 parte 2 line 15801); para familias con dos o más descendientes
+(art. 14) likewise, above 24744.00 (2025 parte 2 line 16980). Por gastos educativos (art. 11) is not taken: for the primer
+ciclo de Educación Infantil its base excludes fees paid as public or administration-authorised prices and its limit counts
+the spouse's base (2025 parte 2 lines 16486 and 16510); the persona states neither fact.
+Cuota líquida = 2688.08 + 2261.04 - 515.50 = 4433.62. Cuota diferencial (art. 79) = 4433.62 - 5412.00 = -978.38.
+Deducción por maternidad (art. 81, value above) 1200.00 + 916.67 = 2116.67 reduces it: -3095.05, a devolver. No advance
+payment of the maternity deduction, spouse compensation or refund waiver is stated, so casilla 0700 equals 0670.
+Role: continuidad_id resultado-ingresar-o-devolver-irpf, casilla 0700 RESINGDEV of the 2024 edition (LIRPF art. 97).
+"""
+legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-63", "ley-35-2006:art-74", "ley-35-2006:art-77", "ley-35-2006:art-79", "ley-35-2006:art-81", "ley-35-2006:art-97", "madrid-dl-1-2010:art-2", "madrid-dl-1-2010:art-18"]
+grounding = "verified"
