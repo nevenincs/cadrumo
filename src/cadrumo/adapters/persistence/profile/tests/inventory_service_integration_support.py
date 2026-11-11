@@ -6,11 +6,14 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from cadrumo.adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.inventory.movement_claim_checks import InventoryClaimLedgerReads
 from cadrumo.application.inventory.ports import InventoryServicePorts
 from cadrumo.application.inventory.service import InventoryService
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -60,7 +63,17 @@ def make_svc(profile: TestRuntimeProfile) -> InventoryService:
             ),
             document_file_name=lambda _digest: None,
             bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+            claim_reads_factory=lambda bucket_id: claim_reads(profile, bucket_id),
         ),
+    )
+
+
+def claim_reads(profile: TestRuntimeProfile, bucket_id: str) -> InventoryClaimLedgerReads:
+    """The real ledger and asset register of one bucket, as the composition root binds them."""
+    objects = secure_object_repository_for_bucket(bucket_id, profile.settings)
+    return InventoryClaimLedgerReads(
+        transactions=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
+        asset_revisions=lambda: ActividadAssetHistoryRepository(bucket_id=bucket_id, objects=objects).load().revisions,
     )
 
 

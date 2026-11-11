@@ -118,6 +118,7 @@ from ...application.live.filed_single_capture_operation import (
     FiledSingleCapturePublicResultV1,
     FiledSingleCaptureRequest,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
@@ -255,6 +256,7 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
+from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 
 PERSONA_ACTOR = "operator:persona"
@@ -490,18 +492,38 @@ def settle_operation(
     """Submit one registered operation, settle it, refuse anything but success, and return its public result.
 
     The operation addresses the profile unless ``subject`` names another subject, such as a work unit.
+    A declaration edit travels as the window's volatile operator input: the
+    operation is admitted on its amount-free request, then receives the staged
+    intents as its financial operand.
     """
+    subject_ref = subject or profile_operation_subject(str(world.profile_id))
 
     async def settle() -> OperationPublicProjectionV1:
         services = world.services
-        submitted = await services.submission.submit(
-            OperationRequest(
+        if not isinstance(payload, ModeloEditOperatorInputV2):
+            submitted = await services.submission.submit(
+                OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload),
+                actor_ref=PERSONA_ACTOR,
+            )
+        else:
+            prepared = prepare_modelo_edit_operand(
                 definition_id=definition_id,
-                subject_ref=subject or profile_operation_subject(str(world.profile_id)),
-                payload=payload,
-            ),
-            actor_ref=PERSONA_ACTOR,
-        )
+                profile_id=world.profile_id,
+                subject_ref=subject_ref,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                submitted = await services.submission.submit(
+                    OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=prepared.request),
+                    actor_ref=PERSONA_ACTOR,
+                )
+                if prepared.operand is None:
+                    raise PersonaMaterialisationError(f"{definition_id} prepared no edit operand")
+                await services.submission.supervisor.bind_typed_financial_operand(
+                    submitted.receipt.operation_id, prepared.operand
+                )
+            finally:
+                prepared.release()
         operation_id = submitted.receipt.operation_id
         await services.submission.start(operation_id)
         await services.submission.settled(operation_id)
@@ -1008,12 +1030,12 @@ def inventory_statement(persona: Persona, book: InventoryBook, *, envelope: Year
     return target
 
 
-def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
-    """Open each inventory book and record its closing on its movements, evidenced by the taxpayer's statement.
+def _replay_inventory(persona: Persona, world: PersonaWorld, transactions: Mapping[str, str]) -> None:
+    """Open each inventory book, add its purchases, and record its closing on its movements, evidenced by the statement.
 
-    The book records no movement, so its closing value is the opening stock.
-    The statement also evidences the prior year's closing the opening continues
-    from, since no earlier book holds one.
+    Each purchase claims the ledger row that books it, and rests on the invoice
+    attached to that row. The statement also evidences the prior year's closing
+    the opening continues from, since no earlier book holds one.
     """
     for book in persona.inventory:
         year = book.year.resolve(world.envelope)
@@ -1032,6 +1054,21 @@ def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
         )
         if created.outcome != "created":
             raise PersonaMaterialisationError(f"{where}: create refused: {created.model_dump_json()}")
+        replay_inventory_purchases(
+            persona,
+            book,
+            year=year,
+            profile_id=world.profile_id,
+            workdir=world.workdir,
+            transactions=transactions,
+            invoice_source=lambda ref: document_path(
+                persona,
+                next(document for document in persona.documents if ref in document.attach_to),
+                envelope=world.envelope,
+                workdir=world.workdir,
+            ),
+            settle=partial(settle_operation, world),
+        )
         source = inventory_statement(persona, book, envelope=world.envelope, workdir=world.workdir)
         stored = run_operation(
             world,
@@ -1658,7 +1695,7 @@ def materialise_persona(
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
             evidence = _replay_documents(persona, world, transactions)
-            _replay_inventory(persona, world)
+            _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.RECORDS) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings

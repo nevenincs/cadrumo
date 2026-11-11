@@ -332,6 +332,10 @@ cli:
           a file.
         authority_invalid: The closing-authority object is invalid for this inventory
           record book.
+        claim_transaction_mismatch: Give the 64-character ledger transaction id with
+          `--ledger-row claimed`, and only then.
+        claimed_transaction_id_help: Ledger transaction the purchase books; give it
+          with `claimed` and only then.
         closing_authority_record_help: Atomically record evidenced inventory closing
           authority
         closing_value_file_help: JSON file with the facts of the closing value.
@@ -356,9 +360,14 @@ cli:
         inspect_help: Show one inventory with its effective movements and retained
           history.
         label_help: Name of the inventory.
+        ledger_row_help: 'What the purchase states about the ledger: `claimed` (names
+          a transaction), `none` (no ledger transaction books it) or `unstated`.'
         list_help: List inventory record books in the active profile
         movement_add_help: Add a purchase, sale, or adjustment movement to the inventory
           record book
+        movement_claim_help: State which ledger transaction books a purchase, state
+          that none does, or clear the statement; a claimed transaction leaves the
+          ledger expense casillas.
         movement_correct_help: Replace one movement with a corrected one; the original
           stays in the history.
         movement_date_help: Movement date (YYYY-MM-DD)

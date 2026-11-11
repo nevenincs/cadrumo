@@ -54,6 +54,7 @@ from ..aggregation.ledger_membership import (
     LedgerSourceMembership,
     consumed_inventory_rows,
     ledger_transaction_ref_identity,
+    recorded_book_claimed_transaction_ids,
 )
 
 if TYPE_CHECKING:
@@ -163,6 +164,9 @@ def ledger_drift_findings(
     inventory_finding = _inventory_drift_finding(target, work_unit, current_membership, source_refs=source_refs)
     if inventory_finding is not None:
         findings = [*findings, inventory_finding]
+    claim_finding = _book_claim_drift_finding(target, work_unit, current_membership, source_refs=source_refs)
+    if claim_finding is not None:
+        findings = [*findings, claim_finding]
     recorded = target.activity_asset_consumption
     current = current_membership.activity_asset_consumption
     if recorded == current:
@@ -363,6 +367,39 @@ def _inventory_drift_finding(
     recorded = consumed_inventory_rows(target)
     current = current_membership.inventory_row_identities
     if not recorded or recorded == current:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.inventory_register_drift",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "rows_recorded": len(recorded),
+            "rows_current": len(current),
+            "rows_changed": len(recorded ^ current),
+        },
+        legal_refs=INVENTORY_REGISTER_DRIFT_LEGAL_REFS,
+        source_refs=source_refs,
+    )
+
+
+def _book_claim_drift_finding(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    current_membership: LedgerSourceMembership,
+    *,
+    source_refs: tuple[str, ...],
+) -> ModeloVerificationFinding | None:
+    """Refuse a draft whose inventory purchases now claim other ledger rows than it withheld.
+
+    A claim moves a purchase between the ledger expenses and the book's
+    acquisition cost, so the draft's casillas no longer follow from the records.
+    """
+    recorded = recorded_book_claimed_transaction_ids(target)
+    current = current_membership.book_claimed_transaction_ids
+    if recorded == current:
         return None
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.STALE_CALCULATION,

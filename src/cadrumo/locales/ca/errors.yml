@@ -1400,6 +1400,9 @@ errors:
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import
       i torna a exportar.'
+    refused_modelo_household_row_fact_unstated: 'La declaració continua rebutjada:
+      el teu perfil no indica una dada de la llar que el disseny oficial exigeix.
+      Afegeix-la al perfil i torna a calcular.'
     refused_modelo_instalment_election: 'Aquesta declaració no es pot pagar en dos
       terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
       un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies

@@ -46,6 +46,7 @@ from ...application.inventory.registered_requests import (
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
     INVENTORY_RESTORE_OPERATION_DEFINITION_ID,
@@ -60,6 +61,7 @@ from ...application.inventory.registered_requests import (
     InventoryLedgerChangeRequest,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryRestoreRequest,
@@ -105,6 +107,7 @@ _REFUSAL_LOCALE_KEYS = {
 _LEDGER_CHANGE_DEFINITION_IDS: dict[type[InventoryLedgerChangeRequest], str] = {
     InventoryDescribeRequest: INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID,
     InventoryCorrectRequest: INVENTORY_CORRECT_OPERATION_DEFINITION_ID,
+    InventoryMovementClaimRequest: INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID,
     InventoryMovementCorrectRequest: INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
     InventoryMovementReverseRequest: INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
     InventoryRetireRequest: INVENTORY_RETIRE_OPERATION_DEFINITION_ID,

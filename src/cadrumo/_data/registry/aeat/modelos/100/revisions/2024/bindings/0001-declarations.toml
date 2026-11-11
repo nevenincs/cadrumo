@@ -13,17 +13,3 @@ required_text = ["90 por 100", "70 por 100", "60 por 100", "50 por 100"]
 [[revisions."2024".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["En un 90 por ciento", "En un 70 por ciento", "En un 60 por ciento", "En un 50 por ciento"]
-[[revisions."2024".bindings]]
-id = "renta-profile-incremento-guarderia"
-provider = { kind = "profile", profile_key = "renta_family.incremento_guarderia_2024" }
-value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
-source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]
-
-[[revisions."2024".bindings.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = [
-    "puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses",
-    "Límite del incremento",
-]

@@ -74,6 +74,21 @@ class LedgerSourceMembership:
     ledger_sources_declared: bool = False
     activity_asset_consumption: ActivityAssetConsumption = field(default_factory=ActivityAssetConsumption)
     inventory_row_identities: frozenset[tuple[str, str]] = frozenset()
+    book_claimed_transaction_ids: frozenset[str] = frozenset()
+    """The ledger rows an inventory book's purchases claim, so the Modelo 100 expenses withhold them."""
+
+
+BOOK_CLAIMED_REASON = "inventory_book_claimed_purchase"
+
+
+def recorded_book_claimed_transaction_ids(target: CalculationRevision) -> frozenset[str]:
+    """Read the claimed ledger rows a :class:`CalculationRevision` withheld, from its persisted notes."""
+    return frozenset(
+        identity
+        for issue in target.source_issues
+        if issue.reason == BOOK_CLAIMED_REASON
+        and (identity := ledger_transaction_ref_identity(issue.source_ref)) is not None
+    )
 
 
 def ledger_transaction_ref_identity(source_ref: str | None) -> str | None:
@@ -206,6 +221,7 @@ def collect_ledger_membership(
             prorrata_register_repository=ports.prorrata_register_repository,
             usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
             activity_asset_history_repository=ports.activity_asset_history_repository,
+            inventory_repository=ports.inventory_repository,
         ),
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
             transaction_repository=ports.transaction_repository,
@@ -220,6 +236,7 @@ def collect_ledger_membership(
     )
     observed: set[str] = set()
     asset_refs: set[str] = set()
+    book_claimed: set[str] = set()
     handled: set[BindingSourceKind] = set()
     for resolver in resolvers:
         owned = frozenset(resolver.owned_sources) & selected
@@ -232,11 +249,16 @@ def collect_ledger_membership(
         for diagnostic in resolution.diagnostics:
             if not _record_membership_diagnostic(diagnostic, observed):
                 return LedgerSourceMembership(available=False, ledger_sources_declared=True)
+            if diagnostic.reason == BOOK_CLAIMED_REASON:
+                identity = ledger_transaction_ref_identity(diagnostic.source_ref)
+                if identity is not None:
+                    book_claimed.add(identity)
     return LedgerSourceMembership(
         observed_transaction_ids=tuple(sorted(observed)),
         available=frozenset(handled) == selected,
         ledger_sources_declared=True,
         activity_asset_consumption=ActivityAssetConsumption.from_source_refs(asset_refs),
+        book_claimed_transaction_ids=frozenset(book_claimed),
     )
 
 
@@ -267,4 +289,5 @@ __all__ = [
     "consumed_inventory_rows",
     "ledger_transaction_ref_identity",
     "query_ledger_membership",
+    "recorded_book_claimed_transaction_ids",
 ]

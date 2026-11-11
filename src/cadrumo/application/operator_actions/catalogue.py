@@ -219,6 +219,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.ascendiente",
+            target_command_key="config.profile.ascendiente.list",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.descendiente",
             target_command_key="config.profile.descendiente.list",
         ),

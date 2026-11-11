@@ -269,7 +269,7 @@ def resolve_calculation_binding_channels(
         profile_diagnostics=tuple(
             diagnostic
             for diagnostic in profile_resolution.diagnostics
-            if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id not in answered_binding_ids
+            if diagnostic.reason in _PROFILE_NOTE_REASONS and diagnostic.binding_id not in answered_binding_ids
         ),
         profile_source_provenance=calculation_source_provenance_refs(
             tuple(
@@ -390,6 +390,10 @@ OPERATOR_INPUT_SOURCE_FAMILY: Final[str] = "operator_input"
 _BACKEND_SOURCE_FAMILY: Final[str] = "source_mesh"
 _BINDING_REF_MARKER: Final[str] = ":binding:"
 _ROWS_REF_MARKER: Final[str] = ":rows:"
+_PROFILE_NOTE_REASONS: Final[frozenset[str]] = frozenset(
+    {"unresolved_binding", "household_rows_incomplete", "household_row_fact_unstated"}
+)
+"""The profile diagnostics a calculation carries onward: an unanswered fact and the household rows still owed."""
 _PRECEDENCE_TIERS_RESOLVER_ID: Final[str] = "calculate_precedence_tiers"
 _BACKEND_ROWS_RESOLVER_ID: Final[str] = "calculate_backend_rows"
 PRECEDENCE_TIER_DIVERGENCE_REASON: Final = "precedence_tier_divergence"

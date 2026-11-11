@@ -1291,6 +1291,9 @@ errors:
       field %{field_id}, which the AEAT record design gives %{field_length} positions.
       Cutting it would declare something else. Check that value or amount and export
       again.'
+    refused_modelo_household_row_fact_unstated: 'The declaration stays refused: your
+      profile does not state a household fact that the official design requires. Add
+      it in your profile, then calculate again.'
     refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,

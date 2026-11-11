@@ -66,9 +66,12 @@ tipo_actividad = "A03"
 
 # The shop holds clothing for sale at every closing. Her count at the end of
 # the year, valued at acquisition price, equals the previous closing, so the
-# book opens and closes at the same stock and records no movement. The Modelo
-# 100 rows of the stock variation (casillas 0177 and 0182) read no variation on
-# her statement, never by default.
+# Modelo 100 rows of the stock variation (casillas 0177 and 0182) read no
+# variation on her statement, never by default. The book records her four
+# purchases of garments, each claiming the ledger row that pays it, so they
+# reach casilla 0181 at their cost with IVA and recargo (LIVA art. 154.Dos
+# denies her their deduction) and leave the ledger expenses. What she sold
+# during the year is what takes the book back to her counted closing.
 [[inventory]]
 activity = "comercio-prendas-vestir"
 year = "horizon-1"
@@ -76,6 +79,7 @@ valuation_method = "fifo"
 opening_stock = "7400.00"
 closing_stock = "7400.00"
 statement = "Las existencias de prendas de vestir de la tienda, valoradas a precio de adquisición, sumaban 7400,00 euros al cierre del ejercicio anterior y 7400,00 euros al cierre de este."
+purchases = ["MIN-COM-1", "MIN-COM-2", "MIN-COM-3", "MIN-COM-4"]
 
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"
@@ -98,3 +102,21 @@ csv = "M8XD4QH7W2KP9FZC"
 justificante = "1004348706139"
 casillas = { "0224" = "19000.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
 reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+nothing_pending = true
+
+# A synthetic titular account (checksum-valid, not a real bank) designated for a
+# Modelo 100 refund: AEAT pays a refund by transfer to the account the taxpayer
+# states as held in the return (Manual Renta, devolución; art. 132.1 RGAT).
+[[own_accounts]]
+label = "Cuenta principal"
+holding = "titular"
+iban = "ES6000000000000000000008"
+designations = [{ role = "refund", modelo = "100" }]

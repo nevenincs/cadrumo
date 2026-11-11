@@ -68,6 +68,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.household_row_fact_gate.ModeloHouseholdRowFactUnstatedError",
+        ErrorCode(
+            code="REFUSED_MODELO_HOUSEHOLD_ROW_FACT_UNSTATED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_household_row_fact_unstated",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.lifecycle_clock_gate.ModeloLifecycleClockPrecedesError",
         ErrorCode(
             code="REFUSED_MODELO_LIFECYCLE_CLOCK_PRECEDES",

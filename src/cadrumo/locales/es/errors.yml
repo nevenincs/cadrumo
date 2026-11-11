@@ -1391,6 +1391,9 @@ errors:
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve
       a exportar.'
+    refused_modelo_household_row_fact_unstated: 'La declaración sigue rechazada: tu
+      perfil no indica un dato del hogar que el diseño oficial exige. Añádelo en tu
+      perfil y vuelve a calcular.'
     refused_modelo_instalment_election: 'Esta declaración no se puede pagar en dos
       plazos: hace falta un resultado a ingresar que deje un segundo plazo de al menos
       un céntimo, que no sea rectificativa y se presente dentro de plazo y, si domicilias
