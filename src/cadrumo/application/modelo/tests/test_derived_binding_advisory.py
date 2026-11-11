@@ -54,7 +54,11 @@ _T0 = datetime(1980, 8, 4, 10, 0, tzinfo=UTC)
 _YEAR = next(
     revision.valid_from.year
     for revision in authored_revisions_where(
-        "100", lambda revision: any(item.id == "renta-profile-incremento-guarderia" for item in revision.bindings)
+        "100",
+        lambda revision: (
+            {"renta-profile-incremento-guarderia", "renta-profile-deduccion-maternidad"}
+            <= {item.id for item in revision.bindings}
+        ),
     )
 )
 _ADVISORY_REASON = "unresolved_derived_binding"
