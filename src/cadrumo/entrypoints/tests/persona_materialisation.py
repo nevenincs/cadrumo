@@ -1471,7 +1471,7 @@ def materialise_persona(
             _replay_inventory(persona, world)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.HISTORY) and (
-            persona.filed_returns or persona.calculated_returns or persona.local_observations
+            persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")

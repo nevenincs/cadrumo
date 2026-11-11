@@ -333,6 +333,27 @@ class LocalObservation:
 
 
 @dataclass(frozen=True, slots=True)
+class AeatFiling:
+    """A return the taxpayer filed with the AEAT, as its receipt and the filed declaration show it.
+
+    The replay brings it in as the AEAT's own record: a justificante carrying
+    ``csv`` and ``justificante`` presented on ``presented``, and the declaration's
+    ``casillas``, admitted through the same receipt checks a captured filing
+    passes. Unlike a :class:`LocalObservation` it reaches filing grade, so a later
+    period's cross-period check can rely on it.
+    """
+
+    modelo: str
+    year: YearToken
+    period: str
+    presented: PersonaDate
+    csv: str
+    justificante: str
+    casillas: tuple[tuple[str, str], ...]
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
 class LeasedPremises:
     """Premises the taxpayer rents for the activity from a landlord on whose rent he withholds.
 
@@ -521,6 +542,7 @@ class Persona:
     filed_returns: tuple[FiledReturns, ...]
     calculated_returns: tuple[CalculatedReturns, ...]
     local_observations: tuple[LocalObservation, ...]
+    aeat_filings: tuple[AeatFiling, ...]
     leased_premises: tuple[LeasedPremises, ...]
     inventory: tuple[InventoryBook, ...]
     ledger: tuple[LedgerRow, ...]
@@ -723,6 +745,7 @@ _PERSONA_TABLES = frozenset(
         "filed_returns",
         "calculated_returns",
         "local_observations",
+        "aeat_filings",
         "leased_premises",
         "inventory",
     }
@@ -947,6 +970,41 @@ _ADDRESS_OPTIONAL: Final = frozenset(
 _CADASTRAL_WEIGHTS: Final = (13, 15, 12, 5, 4, 17, 9, 21, 3, 7, 1)
 _CADASTRAL_CONTROL_LETTERS: Final = "MQWERTYUIOPASDFGHJKLBZX"
 _CADASTRAL_REFERENCE: Final = re.compile(r"[0-9A-Z]{14}[0-9]{4}[A-Z]{2}")
+
+
+_AEAT_CSV: Final = re.compile(r"[A-Z0-9]{16}")
+_JUSTIFICANTE_NUMBER: Final = re.compile(r"[0-9]{13}")
+
+
+def _aeat_filing(table: _Table, where: str) -> AeatFiling:
+    _keys(
+        table,
+        where,
+        required=frozenset({"modelo", "year", "period", "presented", "csv", "justificante", "casillas", "reason"}),
+    )
+    casillas = _table(table["casillas"], f"{where}.casillas")
+    if not casillas:
+        raise _fail(where, "casillas must name at least one casilla")
+    values: list[tuple[str, str]] = []
+    for casilla, value in sorted(casillas.items()):
+        _amount(value, f"{where}.casillas.{casilla}")
+        values.append((casilla, cast(str, value)))
+    csv_code = _string(table, "csv", where)
+    if _AEAT_CSV.fullmatch(csv_code) is None:
+        raise _fail(where, "csv is the 16-character Código Seguro de Verificación, uppercase letters and digits")
+    number = _string(table, "justificante", where)
+    if _JUSTIFICANTE_NUMBER.fullmatch(number) is None:
+        raise _fail(where, "justificante is the 13-digit número de justificante")
+    return AeatFiling(
+        modelo=_string(table, "modelo", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        presented=_date(table["presented"], f"{where}.presented", biographical=False),
+        csv=csv_code,
+        justificante=number,
+        casillas=tuple(values),
+        reason=_string(table, "reason", where),
+    )
 
 
 def _cadastral_character_value(character: str) -> int:
@@ -1465,6 +1523,10 @@ def parse_persona(
             _local_observation(table, f"{where} local_observations[{index}]")
             for index, table in enumerate(_tables(persona_document.get("local_observations"), where))
         ),
+        aeat_filings=tuple(
+            _aeat_filing(table, f"{where} aeat_filings[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("aeat_filings"), where))
+        ),
         leased_premises=tuple(
             _leased_premises(table, f"{where} leased_premises[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("leased_premises"), where))
@@ -1490,18 +1552,43 @@ def parse_persona(
     _check_returns(persona)
     _check_inventory(persona)
     _check_years(persona, envelope)
+    _check_aeat_filings(persona, envelope)
     return persona
 
 
 def _check_returns(persona: Persona) -> None:
-    """Refuse a modelo period listed twice across the filed and calculated blocks."""
+    """Refuse a modelo period listed twice across the filed, calculated, observed and AEAT-filed blocks."""
     seen: set[tuple[str, str, str]] = set()
-    for block in (*persona.filed_returns, *persona.calculated_returns):
-        for period in block.periods:
-            key = (block.modelo, str(block.year), period)
-            if key in seen:
-                raise _fail(persona.id, f"Modelo {block.modelo} {block.year} {period} is listed twice")
-            seen.add(key)
+    keys = [
+        *((block.modelo, str(block.year), period) for block in persona.filed_returns for period in block.periods),
+        *((block.modelo, str(block.year), period) for block in persona.calculated_returns for period in block.periods),
+        *((item.modelo, str(item.year), item.period) for item in persona.local_observations),
+        *((item.modelo, str(item.year), item.period) for item in persona.aeat_filings),
+    ]
+    for key in keys:
+        if key in seen:
+            modelo, year, period = key
+            raise _fail(persona.id, f"Modelo {modelo} {year} {period} is listed twice")
+        seen.add(key)
+
+
+def _period_closes(year: int, period: str) -> date:
+    """The last day of a filed period of ``year``."""
+    if period == "0A":
+        return date(year, 12, 31)
+    month = 3 * filed_period_order(period) + 3
+    return date(year, month, calendar.monthrange(year, month)[1])
+
+
+def _check_aeat_filings(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse a return presented before its period closed."""
+    for filing in persona.aeat_filings:
+        closes = _period_closes(filing.year.resolve(envelope), filing.period)
+        if filing.presented.resolve(envelope) <= closes:
+            raise _fail(
+                persona.id,
+                f"Modelo {filing.modelo} {filing.year} {filing.period} is presented before its period closes",
+            )
 
 
 def _check_inventory(persona: Persona) -> None:
@@ -1517,6 +1604,7 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     for member in (*persona.descendants, *persona.ascendants):
         found.extend(value for _key, value in member.leaves if isinstance(value, PersonaDate))
     found.extend(rental.contract_start for rental in persona.rental_properties)
+    found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)
     return found
 
@@ -1530,6 +1618,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
+        *(filing.year for filing in persona.aeat_filings),
         *(book.year for book in persona.inventory),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
@@ -1578,6 +1667,7 @@ __all__ = [
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
     "ActivityRow",
+    "AeatFiling",
     "CalculatedReturns",
     "Election",
     "Expectations",

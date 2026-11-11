@@ -369,7 +369,7 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
     assert persona.filed_returns
     assert persona.calculated_returns
     assert persona.leased_premises
-    assert persona.local_observations
+    assert persona.aeat_filings
     assert materialised.scope is ReplayScope.HISTORY
     assert set(materialised.filings) == declared_filed
     assert set(materialised.calculations) == declared_calculated

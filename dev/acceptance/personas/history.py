@@ -193,7 +193,7 @@ def replay_returns(journey: Journey) -> None:
 def replay_history(journey: Journey) -> None:
     """Replay the persona's return history after its setup, as the in-process replay does."""
     persona = journey.persona
-    if not (persona.filed_returns or persona.calculated_returns or persona.local_observations):
+    if not (persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings):
         return
     if not journey.setup_complete:
         journey.note("history: the setup did not complete, so the returns are replayed against an incomplete profile")

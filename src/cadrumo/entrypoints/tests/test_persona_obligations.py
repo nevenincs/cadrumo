@@ -137,7 +137,7 @@ def _scope(persona: Persona) -> ReplayScope:
     """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
     return (
         ReplayScope.HISTORY
-        if persona.filed_returns or persona.calculated_returns or persona.local_observations
+        if persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
         else ReplayScope.FULL
     )
 

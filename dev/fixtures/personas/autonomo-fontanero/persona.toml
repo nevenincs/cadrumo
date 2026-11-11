@@ -124,19 +124,22 @@ opening_stock = "0.00"
 closing_stock = "0.00"
 statement = "La actividad de instalaciones de fontanería no mantuvo existencias en ningún momento del ejercicio ni al cierre del anterior."
 
-# His own copy of the prior year's Renta: rendimiento neto of his activity in
+# The previous year's Renta as the AEAT holds it: his justificante and the filed
+# declaration, which the product admits through its receipt checks, so a later
+# return's cross-period check can rely on it: rendimiento neto of his activity in
 # estimación directa (casilla 0224) of 12846.30, a better year than the fiscal
 # year's 9349.90. Modelo 130 casilla 13 reads it (RIRPF art. 110.3.c): above
 # 12000.00, so no minoración applies. His results have always been positive, so
 # that return carried no negative general base pending for later years: the
 # Anexo C remainders (casillas 1384, 1387, 1390 and 1391) are zero, and this
 # year's opening rows (casillas 1380 to 1388) read them (Ley 35/2006 art. 50.3).
-# The product keeps a figure the taxpayer types from his copy at calculation
-# grade.
-[[local_observations]]
+[[aeat_filings]]
 modelo = "100"
 year = "horizon-2"
 period = "0A"
+presented = { year = "horizon-1", month = 6, day = 9 }
+csv = "T5LW2N8RJ6DQ3VYB"
+justificante = "1004459817240"
 casillas = { "0224" = "12846.30", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
 reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
 
@@ -161,13 +164,10 @@ year = "horizon-1"
 periods = ["0A"]
 
 # His first Modelo 130 return is calculated but not filed by the replay.
-# Casilla 13 depends on the prior year's Renta, which he knows only from his
-# own copy: a local observation that the product keeps at calculation grade,
-# so the cross-period check refuses to verify a return that reads it. Only
-# AEAT evidence of that Renta would clear it, and the persona holds none. The
-# later quarters are not calculated either: their casilla 05 reads casilla 07
-# of the earlier quarters' filed returns, and with 1T unfiled the calculation
-# refuses for that missing input.
+# Casilla 13 depends on the prior year's Renta, which the replay brings in from
+# his AEAT filing above. The later quarters are not calculated: their casilla 05
+# reads casilla 07 of the earlier quarters' filed returns, and with 1T unfiled
+# the calculation refuses for that missing input.
 [[calculated_returns]]
 modelo = "130"
 year = "horizon-1"
