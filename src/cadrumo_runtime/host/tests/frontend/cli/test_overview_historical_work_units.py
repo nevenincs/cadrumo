@@ -163,7 +163,6 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
             "2022-01-01",
             "--to",
             "2023-12-31",
-            "--allow-incomplete",
         ],
     )
 
@@ -184,7 +183,6 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
@@ -220,7 +218,6 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
@@ -239,7 +236,6 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "2022-01-01",
             "--to",
             "2022-12-31",
-            "--allow-incomplete",
         ],
     )
 

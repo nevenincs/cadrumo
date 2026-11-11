@@ -4038,8 +4038,6 @@ cli:
       no_active_profile_message: No hi ha cap perfil actiu.
   overview:
     agenda:
-      allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
-        incompletes.
       date_help: Data de referència per a l'agenda (ISO YYYY-MM-DD); per defecte,
         avui.
       errors:
@@ -4050,8 +4048,6 @@ cli:
       horizon_help: Finestra cap endavant (en dies) que considera la cohort `due_soon`.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     backlog:
-      allow_incomplete_help: Generar la llista de pendents encara que les dades del
-        perfil siguin incompletes.
       from_help: Data d'inici inclusiva (ISO YYYY-MM-DD); per defecte 365 dies abans
         d'avui.
       help: Llista les obligacions vençudes que encara no has registrat com a presentades.
@@ -4062,8 +4058,6 @@ cli:
       all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc
         de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del
         perfil.
-      allow_incomplete_help: Generar el calendari encara que les dades del perfil
-        siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
@@ -4134,12 +4128,8 @@ cli:
       period_help: 'Període de declaració com a token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2026).
-    refused_incomplete_profile: 'El perfil actiu no ha respost dades de les quals
-      depèn aquesta projecció: %{requirements}. Completa-les amb ''aeat config profile
-      edit'', o fes servir --allow-incomplete per consultar el resultat provisional.'
     refused_undeclared_taxpayer_model: 'El perfil actiu no declara un model de contribuent,
-      de manera que no es poden derivar les obligacions de presentació. Indica: %{requirements}.
-      O torna a executar amb --allow-incomplete per consultar el resultat provisional.'
+      de manera que no es poden derivar les obligacions de presentació. Indica: %{requirements}.'
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
       drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; és

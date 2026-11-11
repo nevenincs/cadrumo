@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-05 18:59+0100\n"
+"POT-Creation-Date: 2026-11-11 04:56+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -99,18 +99,22 @@ msgstr ""
 
 #: ../../how-to/filing-calendar.md:30
 msgid ""
-"If a profile is still incomplete, a command may stop and name the missing"
-" facts. Fix the profile first. To see partial results before the profile "
-"is complete, add `--allow-incomplete` where the command accepts it "
-"(`agenda`, `backlog`, and `calendar`)."
+"If a profile has not answered a fact an obligation depends on, `agenda`, "
+"`backlog` and `calendar` still run. They list each unanswered fact as a "
+"warning that names the profile edit answering it, and report the "
+"obligations that fact decides as undetermined instead of listing them as "
+"due. A command stops only when the profile does not yet say what kind of "
+"taxpayer it is, and then names the missing facts."
 msgstr ""
-"Si un perfil encara és incomplet, una ordre pot aturar-se i anomenar les "
-"dades que falten. Corregeix primer el perfil. Per veure resultats "
-"parcials abans que el perfil estigui complet, afegeix `--allow-"
-"incomplete` allà on l'ordre ho accepti (`agenda`, `backlog` i "
-"`calendar`)."
+"Si un perfil no ha respost una dada de la qual depèn una obligació, "
+"`agenda`, `backlog` i `calendar` s'executen igualment. Mostren cada dada "
+"sense resposta com un avís que anomena l'edició del perfil que la respon,"
+" i informen de les obligacions que aquesta dada decideix com a "
+"indeterminades en lloc de mostrar-les com a pendents. Una ordre només "
+"s'atura quan el perfil encara no declara quin tipus de contribuent ets, i"
+" aleshores anomena les dades que falten."
 
-#: ../../how-to/filing-calendar.md:35
+#: ../../how-to/filing-calendar.md:37
 msgid ""
 "The examples in this documentation are recorded in English. `aeat` prints"
 " its messages in Spanish unless you [choose another language](profile-"
@@ -120,43 +124,40 @@ msgstr ""
 "mostra els seus missatges en espanyol tret que [triïs un altre idioma"
 "](profile-setup.md#choose-the-output-language)."
 
-#: ../../how-to/filing-calendar.md:38
+#: ../../how-to/filing-calendar.md:40
 msgid "What are my filing obligations?"
 msgstr "Quines són les meves obligacions de presentació?"
 
-#: ../../how-to/filing-calendar.md:40
+#: ../../how-to/filing-calendar.md:42
 msgid ""
 "Start with the agenda. It ranks obligations around a reference date, "
 "showing what is due today, what is coming up in the next two weeks, and "
-"what is already overdue. Pass `--allow-incomplete` on a profile whose "
-"census facts are not yet fully filled in, change the reference date with "
-"`--date`, and widen the upcoming window with `--horizon` (the default is "
-"14 days). The example profile is a self-employed taxpayer whose income "
-"comes from an economic activity. On 1 April the next deadline is the "
-"first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 "
-"and Modelo 303 for that quarter both fall inside the two-week window. "
-"Profile facts that are still unset appear as warnings that name the "
-"modelos they affect:"
+"what is already overdue. Change the reference date with `--date`, and "
+"widen the upcoming window with `--horizon` (the default is 14 days). The "
+"example profile is a self-employed taxpayer whose income comes from an "
+"economic activity. On 1 April the next deadline is the first-quarter "
+"Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303"
+" for that quarter both fall inside the two-week window. Profile facts "
+"that are still unset appear as warnings that name the modelos they "
+"affect:"
 msgstr ""
 "Comença amb l'agenda. Ordena les obligacions al voltant d'una data de "
 "referència i mostra què venç avui, què vindrà en les dues setmanes "
-"següents i què ja està vençut. Passa `--allow-incomplete` en un perfil "
-"les dades censals del qual encara no estiguin del tot emplenades, canvia "
-"la data de referència amb `--date` i amplia la finestra de properes "
-"obligacions amb `--horizon` (el valor per defecte és de 14 dies). El "
-"perfil d'exemple és una persona autònoma els ingressos de la qual "
-"provenen d'una activitat econòmica. L'1 d'abril el proper termini és el "
-"Modelo 130 del primer trimestre, que venç el 20 d'abril. A partir del 15 "
-"d'abril, el Modelo 130 i el Modelo 303 d'aquell trimestre cauen tots dos "
-"dins de la finestra de dues setmanes. Les dades del perfil que encara no "
-"s'han establert apareixen com a avisos que anomenen els models als quals "
-"afecten:"
+"següents i què ja està vençut. Canvia la data de referència amb `--date` "
+"i amplia la finestra de properes obligacions amb `--horizon` (el valor "
+"per defecte és de 14 dies). El perfil d'exemple és una persona autònoma "
+"els ingressos de la qual provenen d'una activitat econòmica. L'1 d'abril "
+"el proper termini és el Modelo 130 del primer trimestre, que venç el 20 "
+"d'abril. A partir del 15 d'abril, el Modelo 130 i el Modelo 303 d'aquell "
+"trimestre cauen tots dos dins de la finestra de dues setmanes. Les dades "
+"del perfil que encara no s'han establert apareixen com a avisos que "
+"anomenen els models als quals afecten:"
 
-#: ../../how-to/filing-calendar.md:46
+#: ../../how-to/filing-calendar.md:48
 msgid "To understand why one modelo appears or does not appear, use:"
 msgstr "Per entendre per què un model apareix o no apareix, utilitza:"
 
-#: ../../how-to/filing-calendar.md:52
+#: ../../how-to/filing-calendar.md:54
 msgid ""
 "`explain` reports whether that modelo applies, the reason from the tax "
 "rules, and the profile facts used for the decision. For the example "
@@ -173,11 +174,11 @@ msgstr ""
 "`incomplete` i la justificació anomena les dades que falten. El text de "
 "la justificació continua en espanyol."
 
-#: ../../how-to/filing-calendar.md:54
+#: ../../how-to/filing-calendar.md:56
 msgid "What messages have I received?"
 msgstr "Quins missatges he rebut?"
 
-#: ../../how-to/filing-calendar.md:56
+#: ../../how-to/filing-calendar.md:58
 msgid ""
 "Calendar commands do not read AEAT mailboxes. For DEHú (Dirección "
 "Electrónica Habilitada única) notification snapshots, use the live "
@@ -187,7 +188,7 @@ msgstr ""
 "instantànies de notificacions de la DEHú (Dirección Electrónica "
 "Habilitada única), utilitza el flux de notificacions en directe:"
 
-#: ../../how-to/filing-calendar.md:62
+#: ../../how-to/filing-calendar.md:64
 msgid ""
 "If you have not pulled notifications yet, use [Check AEAT notifications"
 "](check-aeat-notifications.md). Reading notifications live requires AEAT "
@@ -198,11 +199,11 @@ msgstr ""
 "notificacions en directe requereix autenticació amb l'AEAT i és de només "
 "lectura."
 
-#: ../../how-to/filing-calendar.md:66
+#: ../../how-to/filing-calendar.md:68
 msgid "What missed modelos did I forget to file?"
 msgstr "Quins models vençuts he oblidat de presentar?"
 
-#: ../../how-to/filing-calendar.md:68
+#: ../../how-to/filing-calendar.md:70
 msgid ""
 "Use `backlog` for past-due obligations that you have not recorded as "
 "filed. The default window starts 365 days before today and ends today; "
@@ -218,7 +219,7 @@ msgstr ""
 "econòmica fa anys, de manera que les declaracions trimestrals i anuals de"
 " l'últim any cauen dins la finestra:"
 
-#: ../../how-to/filing-calendar.md:74
+#: ../../how-to/filing-calendar.md:76
 msgid ""
 "`backlog` is a local planning tool. It does not prove what AEAT has or "
 "has not received. It depends on the [active profile](profile-setup.md"
@@ -233,15 +234,15 @@ msgstr ""
 "presentació local, consulta [El flux de treball de presentació](filing-"
 "spine.md)."
 
-#: ../../how-to/filing-calendar.md:80
+#: ../../how-to/filing-calendar.md:82
 msgid "What upcoming modelos will I have to file?"
 msgstr "Quins models pròxims hauré de presentar?"
 
-#: ../../how-to/filing-calendar.md:82
+#: ../../how-to/filing-calendar.md:84
 msgid "Generate a calendar window:"
 msgstr "Genera una finestra de calendari:"
 
-#: ../../how-to/filing-calendar.md:87
+#: ../../how-to/filing-calendar.md:89
 msgid ""
 "Both dates are required in `YYYY-MM-DD` format. The calendar applies "
 "national public holidays and business-day shifts before printing "
@@ -253,34 +254,30 @@ msgstr ""
 "d'imprimir els terminis. No comprova els festius regionals ni locals, "
 "així que confirma un termini que caigui prop d'un."
 
-#: ../../how-to/filing-calendar.md:91
+#: ../../how-to/filing-calendar.md:93
 msgid ""
-"The calendar is stricter than `agenda` and `backlog`: it also refuses "
-"while a profile check is unresolved, such as "
+"The calendar also warns while a profile check is unresolved, such as "
 "`censo.enrolment_unverified`. That check reports that your census-backed "
 "enrollment facts are declared by you, not confirmed by AEAT; AEAT "
 "publishes no read-only census view the tool could confirm them against. "
 "Review the profile facts (see [Maintain Modelo 036 census facts in your "
-"profile](censo-update.md)) and add `--allow-incomplete` to print a "
-"provisional calendar. Provisional entries are marked "
+"profile](censo-update.md)). Entries that rest on those facts are marked "
 "`censo_enrolment=unverified`. Add `--all-profiles` to include every "
 "registered profile instead of only the [active profile](profile-setup.md"
 "#what-the-active-profile-means), or `--show-suppressed` to inspect "
 "obligations Cadrumo normally filters out:"
 msgstr ""
-"El calendari és més estricte que `agenda` i `backlog`: també es nega "
-"mentre una comprovació del perfil està sense resoldre, com ara "
-"`censo.enrolment_unverified`. Aquesta comprovació informa que les teves "
-"dades d'alta basades en el cens són declarades per tu, no confirmades per"
-" l'AEAT; l'AEAT no publica cap vista censal de només lectura contra la "
-"qual l'eina les pogués confirmar. Revisa les dades del perfil (consulta "
-"[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md))"
-" i afegeix `--allow-incomplete` per imprimir un calendari provisional. "
-"Les entrades provisionals es marquen `censo_enrolment=unverified`. "
-"Afegeix `--all-profiles` per incloure tots els perfils registrats en lloc"
-" de només el [perfil actiu](profile-setup.md#what-the-active-profile-"
-"means), o `--show-suppressed` per inspeccionar obligacions que Cadrumo "
-"normalment filtra:"
+"El calendari també avisa mentre una comprovació del perfil està sense "
+"resoldre, com ara `censo.enrolment_unverified`. Aquesta comprovació "
+"informa que les teves dades d'alta basades en el cens són declarades per "
+"tu, no confirmades per l'AEAT; l'AEAT no publica cap vista censal de "
+"només lectura contra la qual l'eina les pogués confirmar. Revisa les "
+"dades del perfil (consulta [Mantén les dades censals del Modelo 036 al "
+"teu perfil](censo-update.md)). Les entrades que es basen en aquestes "
+"dades es marquen `censo_enrolment=unverified`. Afegeix `--all-profiles` "
+"per incloure tots els perfils registrats en lloc de només el [perfil "
+"actiu](profile-setup.md#what-the-active-profile-means), o `--show-"
+"suppressed` per inspeccionar obligacions que Cadrumo normalment filtra:"
 
 #: ../../how-to/filing-calendar.md:107
 msgid ""

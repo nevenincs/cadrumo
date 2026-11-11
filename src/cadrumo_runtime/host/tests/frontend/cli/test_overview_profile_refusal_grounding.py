@@ -1,10 +1,11 @@
 """The overview projections name missing profile facts, not selector tokens.
 
 When ``overview calendar``, ``agenda`` or ``backlog`` refuse because the active
-profile has not answered a fact the projection depends on, the refusal must
-name the field the way the operator sees it in the profile editor, with the
-legal grounding the registry carries, rather than the internal selector token
-the deadline engine gates on.
+profile declares no taxpayer model, the refusal must name the field the way the
+operator sees it in the profile editor, with the legal grounding the registry
+carries, rather than the internal selector token the deadline engine gates on.
+A fact the profile has merely left unanswered does not refuse: it arrives as a
+warning naming the profile edit that answers it.
 
 The same warning stream also carries codes that are not profile fields at all
 (censo enrolment, unverified justificante, AEAT evidence conflict). Those have
@@ -121,67 +122,39 @@ def test_a_mixed_stream_enriches_only_the_profile_fields_and_preserves_order() -
 
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
-def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input(
+def test_an_unanswered_fact_renders_as_a_warning_naming_its_profile_edit(
     native_overview_profile: NativeCliProfileFixture,
 ) -> None:
-    """A missing profile fact is workflow state, not a bad command line.
+    """An unanswered fact is reported beside the rows, with the edit that answers it.
 
-    Guards the channel as well as the wording: routed as a Click parameter
-    error, the same text would reach the operator under an invalid-value
-    header, telling them to correct an argument that is not wrong.
+    Asserted on the envelope, not the prose, so a Spanish-rendered run decides
+    it the same way: the calendar succeeds, and each profile-fact warning
+    carries the profile edit action rather than a refusal.
     """
-    # Asserted on the envelope, not the prose: both the refusal word and
-    # Click's "Invalid value" header are translated, so an English token cannot
-    # decide the question in a Spanish-rendered run. The category IS the
-    # channel -- a parameter error never carries REFUSED.
     result = _invoke(
         native_overview_profile,
         ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"],
     )
 
-    assert result.exit_code != 0, result.output
-    envelope = json.loads(result.output)
-    error = envelope["error"]
-
-    # Neither the category nor the code settles this: a Click parameter error
-    # on this same verb is published as REFUSED with the identical
-    # `REFUSED_CLI_BOUNDARY` code -- both were checked against the live CLI.
-    # What separates the channels is the FAILED CONDITION: workflow state names
-    # the condition it could not satisfy, and a bad command line names none.
-    assert (error["action"] or {})["failed_condition_id"] == "cli.overview.profile.complete", result.output
+    assert result.exit_code == 0, result.output
+    calendar = json.loads(result.output)["result"]
+    assert calendar["taxpayer_model_declared"] is True, result.output
+    assert any(
+        warning["fix_action"]["action"]["action"]["action_id"] == "operator.profile.edit"
+        for warning in calendar["warnings"]
+    ), result.output
 
 
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
-def test_calendar_refusal_carries_the_remediation_command(native_overview_profile: NativeCliProfileFixture) -> None:
-    """The operator is told what to run, not only what is missing."""
+def test_an_unanswered_fact_renders_as_a_text_warning_beside_the_rows(
+    native_overview_profile: NativeCliProfileFixture,
+) -> None:
+    """The text rendering keeps the rows and states each unanswered fact on its warning line."""
     result = _invoke(
         native_overview_profile, ["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
     )
 
-    assert result.exit_code != 0, result.output
-    assert "aeat config profile edit" in result.output, result.output
-
-
-@pytest.mark.windows_only
-@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
-def test_calendar_allow_incomplete_still_renders_rather_than_refusing(
-    native_overview_profile: NativeCliProfileFixture,
-) -> None:
-    """The refusal CONDITION is unchanged; only its message was rewritten."""
-    result = _invoke(
-        native_overview_profile,
-        [
-            "app",
-            "overview",
-            "calendar",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-03-31",
-            "--allow-incomplete",
-        ],
-    )
-
     assert result.exit_code == 0, result.output
     assert "entries\t" in result.output
+    assert any(line.startswith("warning\t") for line in result.output.splitlines()), result.output

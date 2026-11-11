@@ -20,9 +20,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
     with bundled_indexed_authority().operation() as operation:
-        requirements = refusal_requirements(
-            operation=operation, taxpayer=_profile(), taxpayer_model_declared=False, warning_codes=()
-        )
+        requirements = refusal_requirements(operation=operation, taxpayer=_profile(), taxpayer_model_declared=False)
     assert any(_label_for(_ENTITY_TYPE_SELECTOR) in requirement for requirement in requirements)
     assert _ENTITY_TYPE_SELECTOR not in ", ".join(requirements)
 
@@ -40,7 +38,6 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
             operation=operation,
             taxpayer=_profile(entity_type=EntityType.from_registry("natural_person")),
             taxpayer_model_declared=False,
-            warning_codes=(),
         )
     assert any(_label_for(_IRPF_INCOME_CATEGORIES_SELECTOR) in requirement for requirement in requirements)
     assert _label_for(_ENTITY_TYPE_SELECTOR) not in ", ".join(requirements)

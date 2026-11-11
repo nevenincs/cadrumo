@@ -250,6 +250,19 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
         return irpf_income_category_actividad_economica_token().value in categories
 
 
+def schema_requirement_applies(path: str, values: Mapping[str, object]) -> bool:
+    """Return whether a field the schema marks required is owed by this profile.
+
+    The schema grammar has one unconditional ``required`` axis, and the IVA
+    regime is the schema-required field whose obligation is conditional: a
+    natural person without economic activity has no regime to declare. Every
+    surface that reads the schema's requirement reads it through here, so the
+    overview a frontend renders, the setup promotion and the modelo readiness
+    gate cannot disagree about whether that blank is missing.
+    """
+    return path != IVA_REGIME_PATH or iva_regime_required(values)
+
+
 def profile_value_is_present(value: object) -> bool:
     """Report whether ``value`` counts as a filled profile field.
 
@@ -278,6 +291,8 @@ def missing_required_field_paths(
 
     Presence is value-bearing, never fact-bearing, and is decided by the one
     shared :func:`profile_value_is_present` rule rather than restated here.
+    A required field this profile does not owe is never missing, by
+    :func:`schema_requirement_applies`.
     """
     present = {path for path, value in values.items() if profile_value_is_present(value)}
     missing: list[str] = []
@@ -285,7 +300,11 @@ def missing_required_field_paths(
         required = tuple(field.key for field in section.fields if field.required)
         if not required:
             continue
-        missing.extend(_missing_in_section(section, required=required, present=present))
+        missing.extend(
+            path
+            for path in _missing_in_section(section, required=required, present=present)
+            if schema_requirement_applies(path, values)
+        )
     return tuple(missing)
 
 
@@ -392,4 +411,5 @@ __all__ = [
     "pinned_registry_scope",
     "profile_section_rows",
     "profile_value_is_present",
+    "schema_requirement_applies",
 ]

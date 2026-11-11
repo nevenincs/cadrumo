@@ -4005,8 +4005,6 @@ cli:
       no_active_profile_message: Nincs aktív profil beállítva.
   overview:
     agenda:
-      allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
-        hiányosak.
       date_help: 'A napirend referencia-dátuma (ISO ÉÉÉÉ-HH-NN); alapértelmezés: ma.'
       errors:
         invalid_horizon: A --horizon értékének pozitív egésznek kell lennie (napok).
@@ -4017,8 +4015,6 @@ cli:
         figyelembe vesz.
     app_help: Az aktív adómunkaterület áttekintése.
     backlog:
-      allow_incomplete_help: A hátralék megjelenítése akkor is, ha a profiladatok
-        hiányosak.
       from_help: 'A kezdő dátum (ISO ÉÉÉÉ-HH-NN, beleszámítva); alapértelmezés: 365
         nappal ezelőtt.'
       help: Azon lejárt kötelezettségek listázása, amelyeket még nem rögzítettél benyújtottként.
@@ -4028,7 +4024,6 @@ cli:
     calendar:
       all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív
         helyett. Minden blokk egy profilfejléc-sorral kezdődik.
-      allow_incomplete_help: A naptár megjelenítése akkor is, ha a profiladatok hiányosak.
       from_help: A naptárablak kezdő dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül, az ünnepnapok és a munkanapok figyelembevételével. Csak helyi; soha
@@ -4099,13 +4094,8 @@ cli:
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). Kombináld a --year kapcsolóval az év kiválasztásához.'
       year_help: Bevallási év (pl. 2026).
-    refused_incomplete_profile: 'Az aktív profil nem adta meg azokat az adatokat,
-      amelyekre ez a kimutatás épül: %{requirements}. Pótold őket az ''aeat config
-      profile edit'' paranccsal, vagy használd a --allow-incomplete kapcsolót az ideiglenes
-      eredmény megtekintéséhez.'
     refused_undeclared_taxpayer_model: 'Az aktív profil nem ad meg adózói modellt,
-      ezért a bevallási kötelezettségek nem vezethetők le. Add meg: %{requirements}.
-      Vagy futtasd újra a --allow-incomplete kapcsolóval az ideiglenes eredmény megtekintéséhez.'
+      ezért a bevallási kötelezettségek nem vezethetők le. Add meg: %{requirements}.'
     status:
       drafts_empty: Nincs mentett bevallástervezet.
       drafts_empty_with_work_units: Nincs mentett bevallástervezet; ez normális, és
