@@ -70,7 +70,7 @@ _REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _PROFILE_LABEL = "operator"
 _DRAFT_STORAGE_WRITTEN_AT = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
-_SESSION_PROBE_NOW = datetime(1980, 5, 26, 12, 0, 0, tzinfo=UTC)
+_SESSION_PROBE_NOW = datetime(_EXERCISE, 5, 26, 12, 0, 0, tzinfo=UTC)
 _EXPIRED_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=30)
 _LIVE_SESSION_AUTHENTICATED_AT = _SESSION_PROBE_NOW - timedelta(minutes=5)
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()

@@ -144,7 +144,9 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
 
     mutation = world.replace(
         _row(nif="12345678z", birth_date="1948-03-04", convivientes="2"),
-        _row(nif=_NIE, apellidos_nombre=" Ibáñez  Roca Carmen ", birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)),
+        _row(
+            nif=_NIE, apellidos_nombre=" Ibáñez  Roca Carmen ", birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)
+        ),
         _row(birth_date="1940-01-01"),
     )
 
