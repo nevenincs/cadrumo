@@ -21,6 +21,7 @@ from cadrumo.application.user_profile.profile_pointer import (
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.core.config import load_settings
+from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.errors.failure_report import log_boundary_failure
 from cadrumo.core.errors.hierarchy import ActiveProfilePointerError
 from cadrumo.core.locks_errors import LockAcquisitionError
@@ -82,6 +83,21 @@ def _human_admission_cancelled(
 ) -> bool:
     with host.guard:
         return control.cancelled or connection.disconnecting
+
+
+def _log_person_activity(outcome: AccessSession | AccessDenied) -> None:
+    """Record whether the person's input report renewed their session, and how long it now has."""
+    if isinstance(outcome, AccessDenied):
+        diagnostic_event(
+            _LOGGER, "person_activity_denied", fields={"denial_code": outcome.code.value}, level=logging.DEBUG
+        )
+        return
+    diagnostic_event(
+        _LOGGER,
+        "person_activity_noted",
+        fields={"idle_seconds_left": round((outcome.expires_at - now()).total_seconds())},
+        level=logging.DEBUG,
+    )
 
 
 def _without_handover(request: ProfileLogin) -> bool:
@@ -350,6 +366,7 @@ class ProfileConnectionSessionMixin:
                 return self._refresh_session(connection, host, context, request)
             if request.action == "session_activity":
                 renewed = self._note_person_activity(host, context.connection_id, request.session_id)
+                _log_person_activity(renewed)
                 if isinstance(renewed, AccessDenied):
                     return renewed
                 # The accepted report attends this connection, so the changes it saves are the person's input too.
