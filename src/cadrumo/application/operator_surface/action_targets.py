@@ -197,6 +197,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("modelo.bindings.list", ("app", "modelo", "bindings", "list"), "ModeloBindingsListResult"),
     ActionTarget("modelo.casillas", ("app", "modelo", "casillas"), "ModeloCasillasResult", required_inputs=("modelo",)),
     ActionTarget("modelo.describe", ("app", "modelo", "describe"), "ModeloDescribeResult", required_inputs=("modelo",)),
+    ActionTarget(
+        "modelo.filing_record.import",
+        ("app", "modelo", "filing-record", "import"),
+        "FilingRecordImportResult",
+        required_inputs=("work_unit_id", "evidence_kind", "evidence_reference_id"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.filing_record.list", ("app", "modelo", "filing-record", "list"), "ModeloRecordListResult"),
     ActionTarget(
         "modelo.iva_wallet.seed",

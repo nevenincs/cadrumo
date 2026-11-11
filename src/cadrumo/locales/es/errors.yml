@@ -317,9 +317,6 @@ errors:
     error_llm: Se produjo un error en el modelo de lenguaje.
     error_modelo_aggregation_binding: Las vinculaciones de agregación derivadas del
       bucket entran en conflicto con los datos indicados.
-    error_modelo_amendment_evidence_missing: No se puede complementar una declaración
-      que no tiene evidencia oficial importada. Importa primero el justificante de
-      la declaración original.
     error_modelo_amendment_target_state: No se puede complementar una declaración
       que no está en estado vigente; ya ha sido sustituida por otra posterior.
     error_modelo_calculation_registry_unavailable: No se pudo resolver el snapshot
@@ -1350,6 +1347,9 @@ errors:
       Aporta los registros que declara la rectificación (solo los añadidos en una
       complementaria, el conjunto corregido completo en una sustitutiva) o un conjunto
       vacío para declarar que no hay ninguno.
+    refused_modelo_amendment_evidence_missing: No se puede complementar una declaración
+      que no tiene evidencia oficial importada. Importa primero el justificante de
+      la declaración original.
     refused_modelo_amendment_kind_not_permitted: El tipo de rectificación solicitado
       no está legalmente disponible para el período de declaración resuelto. El conjunto
       de tipos aceptados figura en el contexto del error.
