@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#debug-startup-reliability'
 date: '2026-10-28'
-modified: '2026-10-28'
+modified: '2026-11-10'
 body_schema: 'body-v2'
-body_hash: 'sha256:846b43b66373b93b767fbd73e82e845cdd174f025b1889e199a7deb9b235d151'
+body_hash: 'sha256:f7d7b212ed1e16d95ad8621264e17b4240411419d6e7badaa8d7e2896be5c0bf'
 related:
   - "[[2026-10-28-debug-startup-reliability-audit]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -65,3 +65,7 @@ The accepted2026-10-16-idle-churn-adr is refined to make startup/login/service w
 ## First-login KDF clarification2026-10-28
 
 The preserved cryptographic/resource ceilings in Constraint6 mean the Argon2 parameter grid and strength floor, calibration sampling bounds and child OS CPU/memory/process limits. They do not impose a normal15-second orchestration timeout while an exact runtime first-login attempt waits for the single permit, attestation or proof. That path propagates its retained absolute timeout deadline to the canonical custody APIs without launch/phase reset and reports a distinct timeout. Callers without an orchestration deadline retain the established default. The scoped amendment in2026-08-13-profile-password-custody-rollup-adr preserves the existing secret and cleanup boundary. Same-domain signal-driven permit acquisition is sequenced separately as S08; safe proof deadline propagation is S07.
+
+## Amendment 2026-11-11: an attempt that commits its own custody replacement
+
+Accepted under operator approval relayed by CADRUMO-COORDINATOR on 2026-11-10 for automatic KDF strengthening at login, decided in `2026-08-13-profile-password-custody-rollup-adr` (amendment 2026-11-11). Constraint 3 still invalidates a pending attempt on any generation replacement, with one scoped exception: a password sign-in attempt that itself commits a strengthening replacement of its profile's password envelope. That attempt continues on the successor worker bound to the generation it committed, and proves the same password again there before anything binds. A stale completion still cannot publish anything: the predecessor worker's binding is retired before the successor is launched, and admission rechecks the successor's exact generation. A replacement committed by any other actor, and every cancellation, disconnect, lock, sign-out or profile switch, still invalidates the attempt as before.

@@ -41,6 +41,7 @@ from .kdf_codec import (
     windows_available_memory_bytes,
 )
 from .kdf_file_lease import acquire_kdf_file_lease, open_kdf_file_lease, release_kdf_file_lease
+from .kdf_lease_waiters import announced_kdf_waiter, kdf_waiter_present
 from .kdf_records import (
     PROFILE_CUSTODY_KDF_ITERATIONS,
     PROFILE_CUSTODY_KDF_MEMORY_MIB,
@@ -59,6 +60,8 @@ from .recovery_secret_codec import encode_recovery_secret
 from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from .....core.config import Settings
 
 PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
@@ -136,6 +139,10 @@ class ProfileCustodyUnlock:
 
 class CalibrationDeadlineElapsedError(CadrumoError):
     """Signal that a calibration grid cannot continue within its total deadline."""
+
+
+class ProfileKdfYieldedError(CadrumoError):
+    """Signal that background KDF work gave the permit way to a waiting or running unlock."""
 
 
 type _CalibrationStop = Literal["total_deadline_exhausted", "launch_budget_exhausted", "launch_retry_failed"]
@@ -360,15 +367,49 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
         for parameters in profile_kdf_grid(salt=salt)
         if profile_kdf_is_eligible(parameters, resources=resources) and profile_kdf_meets_fallback_floor(parameters)
     )
-    return _measured_calibration(candidates, fallback=fallback, settings=settings)
+    measured = _measured_calibration(candidates, fallback=fallback, settings=settings)
+    return _fallback_profile_kdf_calibration(fallback) if measured is None else measured
+
+
+def calibrate_profile_kdf_in_background(
+    *, salt: bytes, settings: Settings | None = None
+) -> ProfileCustodyKdfParameters | None:
+    """Measure a point for strengthening an existing envelope, or ``None`` when none is confirmed.
+
+    Unlike enrolment, which adopts the fixed fallback when it cannot confirm a
+    point, background work has a committed envelope already and nothing to
+    gain from the fallback, so every failure to confirm a point, including
+    giving the permit way to a waiting unlock before a sample, abandons the
+    measurement. The search reads only the public salt and grid. A host that
+    declines to measure at enrolment declines here as well, so the fallback
+    stays until an operator's own host measures.
+    """
+    if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
+        return None
+    resources = profile_kdf_resources()
+    candidates = tuple(
+        parameters
+        for parameters in profile_kdf_grid(salt=salt)
+        if profile_kdf_is_eligible(parameters, resources=resources) and profile_kdf_meets_fallback_floor(parameters)
+    )
+    if not candidates:
+        return None
+    started = time.monotonic()
+    try:
+        calibration = _measured_calibration(candidates, fallback=None, settings=settings, background=True)
+    except ProfileKdfYieldedError:
+        _log_calibration_fallback("yielded_to_unlock", started=started, outcome="abandoned")
+        return None
+    return None if calibration is None else calibration.parameters
 
 
 def _measured_calibration(
     candidates: tuple[ProfileCustodyKdfParameters, ...],
     *,
-    fallback: ProfileCustodyKdfParameters,
+    fallback: ProfileCustodyKdfParameters | None,
     settings: Settings | None,
-) -> ProfileCustodyKdfCalibration:
+    background: bool = False,
+) -> ProfileCustodyKdfCalibration | None:
     """Search the eligible grid under the total deadline and launch budget, else adopt the fallback."""
     started = time.monotonic()
     clock = _CalibrationClock(
@@ -382,7 +423,7 @@ def _measured_calibration(
         try:
             choice = search_profile_kdf_grid(
                 candidates,
-                probe=_calibration_probe(prewarm=prewarm, clock=clock, settings=settings),
+                probe=_calibration_probe(prewarm=prewarm, clock=clock, settings=settings, background=background),
                 target_min_seconds=PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS,
                 target_max_seconds=PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS,
                 confirmation_samples=PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
@@ -390,6 +431,9 @@ def _measured_calibration(
         except CalibrationDeadlineElapsedError:
             choice = None
     if choice is None:
+        if fallback is None:
+            _log_calibration_fallback(clock.stop or "no_in_band_point", started=started, outcome="abandoned")
+            return None
         _log_calibration_fallback(clock.stop or "no_in_band_point", started=started)
         return _fallback_profile_kdf_calibration(fallback)
     return ProfileCustodyKdfCalibration(
@@ -401,13 +445,15 @@ def _measured_calibration(
 
 
 def _calibration_probe(
-    *, prewarm: ProfileKdfPrewarm, clock: _CalibrationClock, settings: Settings | None
+    *, prewarm: ProfileKdfPrewarm, clock: _CalibrationClock, settings: Settings | None, background: bool
 ) -> Callable[[ProfileCustodyKdfParameters], float]:
     """Score one grid point by a supervised sample; only a timed derivation's overrun reads as over the band."""
 
     def probe(parameters: ProfileCustodyKdfParameters) -> float:
         try:
-            return _measure_profile_kdf(parameters, prewarm=prewarm, clock=clock, settings=settings)
+            return _measure_profile_kdf(
+                parameters, prewarm=prewarm, clock=clock, settings=settings, background=background
+            )
         except TimeoutError:
             if time.monotonic() >= clock.deadline:
                 clock.abandon("total_deadline_exhausted")
@@ -421,13 +467,15 @@ def _calibration_probe(
     return probe
 
 
-def _log_calibration_fallback(reason: str, *, started: float) -> None:
-    """Name, at WARNING, why calibration adopted the fixed fallback instead of a measured point."""
+def _log_calibration_fallback(
+    reason: str, *, started: float, outcome: Literal["fallback", "abandoned"] = "fallback"
+) -> None:
+    """Name why calibration confirmed no measured point: WARNING at enrolment, INFO for background work."""
     diagnostic_event(
         _log,
         "profile_kdf_calibration_fallback",
-        fields={"reason": reason, "elapsed_seconds": round(time.monotonic() - started, 3), "outcome": "fallback"},
-        level=logging.WARNING,
+        fields={"reason": reason, "elapsed_seconds": round(time.monotonic() - started, 3), "outcome": outcome},
+        level=logging.WARNING if outcome == "fallback" else logging.INFO,
     )
 
 
@@ -873,6 +921,7 @@ def _measure_profile_kdf(
     prewarm: ProfileKdfPrewarm,
     clock: _CalibrationClock,
     settings: Settings | None,
+    background: bool = False,
 ) -> float:
     """Return the worker-timed derivation seconds of one supervised sample.
 
@@ -892,7 +941,7 @@ def _measure_profile_kdf(
     for _attempt in range(2):
         _settle_spare(prewarm, clock)
         with ExitStack() as sample:
-            sample.enter_context(profile_kdf_lease(settings=settings, deadline=clock.deadline))
+            sample.enter_context(profile_kdf_lease(settings=settings, deadline=clock.deadline, background=background))
             remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, clock.deadline - time.monotonic())
             if remaining <= 0:
                 raise TimeoutError("profile KDF calibration total deadline elapsed")
@@ -924,14 +973,72 @@ def _settle_spare(prewarm: ProfileKdfPrewarm, clock: _CalibrationClock) -> None:
 
 @contextmanager
 def profile_kdf_lease(
-    *, deadline: float, settings: Settings | None = None, cancellation: ProfileProofCancellation | None = None
+    *,
+    deadline: float,
+    settings: Settings | None = None,
+    cancellation: ProfileProofCancellation | None = None,
+    background: bool = False,
 ) -> Generator[None]:
     """Acquire the one OS-released KDF permit for a canonical installation root.
 
     The descriptor stays open for the operation, so an abnormal owner death
     releases its permit at the operating-system boundary instead of leaving a
     process-local or persistent ownership record behind.
+
+    A foreground acquirer announces itself while it waits. A ``background``
+    acquirer never waits: it raises :class:`ProfileKdfYieldedError` when an
+    unlock is announced or either permit is already held, so measuring a
+    stronger point never stands between a person and their sign-in.
     """
+    root = _kdf_lease_root(settings)
+    with ExitStack() as waiting:
+        if background:
+            if kdf_waiter_present(root) or not KDF_THREAD_LEASE.acquire(blocking=False):
+                raise ProfileKdfYieldedError
+        else:
+            waiting.enter_context(announced_kdf_waiter(root))
+            _acquire_kdf_thread_lease(deadline=deadline, cancellation=cancellation)
+        try:
+            try:
+                descriptor = open_kdf_file_lease(root / _KDF_LEASE_FILENAME)
+            except OSError:
+                raise supervision_refusal() from None
+            try:
+                _acquire_kdf_file_permit(
+                    descriptor, deadline=deadline, settings=settings, cancellation=cancellation, background=background
+                )
+                waiting.close()
+                try:
+                    yield
+                finally:
+                    release_kdf_file_lease(descriptor)
+            finally:
+                close_fd(descriptor)
+        finally:
+            with KDF_THREAD_CAPACITY:
+                KDF_THREAD_LEASE.release()
+                KDF_THREAD_CAPACITY.notify_all()
+
+
+def _kdf_lease_root(settings: Settings | None) -> Path:
+    """Resolve the installation root that holds the KDF lease, creating only its configured parent."""
+    try:
+        root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
+        # The first credential enrollment occurs before a capsule exists,
+        # so the storage root has no prior lifecycle owner to materialise
+        # it.  The KDF lease owns this one non-capsule coordination file;
+        # create only its configured parent before resolving it.
+        root.mkdir(parents=True, exist_ok=True)
+        root = root.resolve(strict=True)
+        if not root.is_dir():
+            raise NotADirectoryError(root)
+    except OSError:
+        raise supervision_refusal() from None
+    return root
+
+
+def _acquire_kdf_thread_lease(*, deadline: float, cancellation: ProfileProofCancellation | None) -> None:
+    """Wait for this process's one KDF thread permit until ``deadline``."""
 
     def capacity_changed() -> None:
         with KDF_THREAD_CAPACITY:
@@ -945,35 +1052,26 @@ def profile_kdf_lease(
             if remaining <= 0:
                 raise resource_refusal()
             if KDF_THREAD_LEASE.acquire(blocking=False):
-                break
+                return
             KDF_THREAD_CAPACITY.wait(timeout=remaining)
+
+
+def _acquire_kdf_file_permit(
+    descriptor: int,
+    *,
+    deadline: float,
+    settings: Settings | None,
+    cancellation: ProfileProofCancellation | None,
+    background: bool,
+) -> None:
+    """Take the installation's file permit, waiting in the foreground and yielding at once in the background."""
+    if not background:
+        acquire_kdf_file_lease(descriptor, deadline=deadline, settings=settings, cancellation=cancellation)
+        return
     try:
-        try:
-            root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
-            # The first credential enrollment occurs before a capsule exists,
-            # so the storage root has no prior lifecycle owner to materialise
-            # it.  The KDF lease owns this one non-capsule coordination file;
-            # create only its configured parent before resolving it.
-            root.mkdir(parents=True, exist_ok=True)
-            root = root.resolve(strict=True)
-            if not root.is_dir():
-                raise NotADirectoryError(root)
-            lock_path = root / _KDF_LEASE_FILENAME
-            descriptor = open_kdf_file_lease(lock_path)
-        except OSError:
-            raise supervision_refusal() from None
-        try:
-            acquire_kdf_file_lease(descriptor, deadline=deadline, settings=settings, cancellation=cancellation)
-            try:
-                yield
-            finally:
-                release_kdf_file_lease(descriptor)
-        finally:
-            close_fd(descriptor)
-    finally:
-        with KDF_THREAD_CAPACITY:
-            KDF_THREAD_LEASE.release()
-            KDF_THREAD_CAPACITY.notify_all()
+        acquire_kdf_file_lease(descriptor, deadline=time.monotonic(), settings=settings)
+    except ProfileCustodyRefusedError:
+        raise ProfileKdfYieldedError from None
 
 
 __all__ = [
@@ -989,7 +1087,9 @@ __all__ = [
     "ProfileCustodyKdfResources",
     "ProfileCustodyUnlock",
     "ProfileKdfPrewarm",
+    "ProfileKdfYieldedError",
     "calibrate_profile_kdf",
+    "calibrate_profile_kdf_in_background",
     "fixed_profile_kdf_fallback",
     "profile_kdf_at_fallback",
     "profile_kdf_grid",

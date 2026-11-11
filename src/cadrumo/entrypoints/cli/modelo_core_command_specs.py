@@ -31,11 +31,11 @@ _CALCULATION_WRITE = ExecutionPolicySpec(
 )
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
+    parser=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
 )
 _AMENDMENT_KIND = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget(".common", "AMENDMENT_DECLARATION_KIND_CHOICE", __package__),
+    parser=DeferredTarget(".common", "AMENDMENT_DECLARATION_KIND_CHOICE", __package__),
 )
 _M303_MOTIVE = ValueContract(
     DeferredTarget("...domain.modelos.calculation_revision_amendment", "M303RectificativaMotive", __package__)

@@ -40,7 +40,6 @@ _INSTALLED_FRAMEWORK_MODULES: Final = (
     "textual.widget",
     "textual.widgets",
     "typer",
-    "typer._click.types",
     "typer.core",
 )
 

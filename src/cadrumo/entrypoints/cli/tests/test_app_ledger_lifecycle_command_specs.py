@@ -312,7 +312,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[ExpectedCommand, ...]] = (
                 "irpf_category",
                 "--irpf-category",
                 "cli.ledger.update.irpf_category_help",
-                value_hooks=("cadrumo.entrypoints.cli.common:IRPF_CATEGORY_CHOICE", None, None, None),
+                value_hooks=("cadrumo.entrypoints.cli.common:parse_published_irpf_category", None, None),
             ),
             expected_option("notes", "--notes", "cli.ledger.update.notes_help"),
             expected_option("group", "--group", "cli.ledger.update.group_help"),

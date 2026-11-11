@@ -79,16 +79,6 @@ def resolve_confidence_threshold(value: float | None) -> Decimal | None:
     return threshold
 
 
-def parse_review_state(value: str) -> ReviewState:
-    """Parse a review-state token case-insensitively."""
-    normalized = value.casefold()
-    try:
-        return next(state for state in ReviewState if state.value.casefold() == normalized)
-    except StopIteration as error:
-        choices = ", ".join(state.value for state in ReviewState)
-        raise typer.BadParameter(f"expected one of: {choices}") from error
-
-
 def review_queue(
     ctx: typer.Context,
     kinds: list[str],
@@ -184,4 +174,4 @@ def queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = F
     return lines
 
 
-__all__ = ["parse_review_state", "review_queue", "review_view"]
+__all__ = ["review_queue", "review_view"]

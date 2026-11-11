@@ -28,7 +28,7 @@ _CALCULATION_READ = ExecutionPolicySpec(
 )
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
+    parser=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
 )
 
 

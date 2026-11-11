@@ -254,8 +254,10 @@ for (const engine of ENGINES) {
     await openSettings(target);
     const row = laneRow(target, engine);
     await expect(
+      // Exact: the lane's model list is headed "Models on this computer".
       row.getByRole("heading", {
         name: label("desktop.providers.connection_local"),
+        exact: true,
       }),
     ).toBeVisible();
     await expect(

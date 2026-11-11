@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import inspect
-import typing
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -11,10 +10,9 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
-import click
 import typer
-import typer._click.types
 
+from ...core.cli_value_parsers import CliChoice
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n.render import tr
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
@@ -22,24 +20,13 @@ from .models import WizardFlow, WizardQuestion, WizardWidget
 from .persistence import WizardPersistMode
 
 
-def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
-    """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
+def _choice(values: list[str], *, case_sensitive: bool = True) -> CliChoice:
+    """Admit one of ``values``, read when the flag is parsed.
 
-    ``click.Choice`` is generic (``Choice[T]``), but the ``typer.Option``
-    overload that accepts ``click_type`` declares it as
-    ``typer._click.types.ParamType | None``.  Typer vendors its own copy of
-    click; the static type hierarchies are unrelated even though at runtime
-    ``click.Choice`` is exactly the object typer passes through to click.
-
-    CAST-RATIONALE-CHOICE-PARAM-TYPE: ``typing.cast`` is used here for the
-    same reason as in ``build_wizard_command`` — the runtime object is always a
-    real ``click.Choice`` instance.  Only the static view is narrowed to the
-    typer-internal ``ParamType`` so the ``typer.Option`` overload resolver
-    accepts it without an ``Any`` escape.
+    The lists are filled from the operation-scoped flow after the options are
+    declared, so the parser reads the list itself rather than a snapshot.
     """
-    # CAST-RATIONALE-CHOICE-PARAM-TYPE: runtime object is a real click.Choice;
-    # only the static view is narrowed to typer's vendored ParamType (see docstring).
-    return typing.cast("typer._click.types.ParamType", click.Choice(values, case_sensitive=case_sensitive))
+    return CliChoice.of(values, case_sensitive=case_sensitive)
 
 
 def _choice_metavar(values: list[str]) -> str:
@@ -92,25 +79,25 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "taxation-type": typer.Option(
         "--taxation-type",
-        click_type=_choice(_DECLARATION_TYPE_CHOICE_VALUES),
+        parser=_choice(_DECLARATION_TYPE_CHOICE_VALUES),
         metavar=_choice_metavar(_DECLARATION_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
     "output-language": typer.Option(
         "--output-language",
-        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
+        parser=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
         metavar=_choice_metavar(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(
         "--taxpayer-sex",
-        click_type=_choice(_SEX_CHOICE_VALUES),
+        parser=_choice(_SEX_CHOICE_VALUES),
         metavar=_choice_metavar(_SEX_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-sex.help"),
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
-        click_type=_choice(_MARITAL_STATUS_CHOICE_VALUES),
+        parser=_choice(_MARITAL_STATUS_CHOICE_VALUES),
         metavar=_choice_metavar(_MARITAL_STATUS_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
@@ -124,7 +111,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "taxpayer-disability-grade": typer.Option(
         "--taxpayer-disability-grade",
-        click_type=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
+        parser=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
         metavar=_choice_metavar(_DISABILITY_GRADE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
     ),
@@ -141,13 +128,13 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "spouse-sex": typer.Option(
         "--spouse-sex",
-        click_type=_choice(_SEX_CHOICE_VALUES),
+        parser=_choice(_SEX_CHOICE_VALUES),
         metavar=_choice_metavar(_SEX_CHOICE_VALUES),
         help=tr("wizard.setup.flags.spouse-sex.help"),
     ),
     "spouse-disability-grade": typer.Option(
         "--spouse-disability-grade",
-        click_type=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
+        parser=_choice(_DISABILITY_GRADE_CHOICE_VALUES),
         metavar=_choice_metavar(_DISABILITY_GRADE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.spouse-disability-grade.help"),
     ),
@@ -177,13 +164,13 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "iva-regime": typer.Option(
         "--iva-regime",
-        click_type=_choice(IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
+        parser=_choice(IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
         metavar=_choice_metavar(IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-m303-regime-composition": typer.Option(
         "--iva-m303-regime-composition",
-        click_type=_choice(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
+        parser=_choice(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
         metavar=_choice_metavar(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-m303-regime-composition.help"),
     ),
@@ -278,7 +265,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
-        click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        parser=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
         metavar=_choice_metavar(_FISCAL_RESIDENCY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.fiscal-residency.help"),
     ),
@@ -296,7 +283,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",
-        click_type=_choice(_CCAA_CHOICE_VALUES),
+        parser=_choice(_CCAA_CHOICE_VALUES),
         # The 15 CCAA choices form one ~150-char metavar that Rich
         # wraps mid-token (`com` / `unidad_valenciana`). A short
         # explicit metavar plus `show_choices=False` keeps the metavar
@@ -308,7 +295,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "tax-residence-jurisdiction-scope": typer.Option(
         "--tax-residence-jurisdiction-scope",
-        click_type=_choice(_M303_TAX_TERRITORY_CHOICE_VALUES),
+        parser=_choice(_M303_TAX_TERRITORY_CHOICE_VALUES),
         metavar=_choice_metavar(_M303_TAX_TERRITORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.tax-residence-jurisdiction-scope.help"),
     ),
@@ -326,25 +313,25 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "entity-type": typer.Option(
         "--entity-type",
-        click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
+        parser=_choice(_ENTITY_TYPE_CHOICE_VALUES),
         metavar=_choice_metavar(_ENTITY_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.entity-type.help"),
     ),
     "legal-entity-form": typer.Option(
         "--legal-entity-form",
-        click_type=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        parser=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
         metavar=_choice_metavar(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
         help=tr("wizard.setup.flags.legal-entity-form.help"),
     ),
     "irpf-income-categories": typer.Option(
         "--irpf-income-categories",
-        click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        parser=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
     ),
     "declaration-roles": typer.Option(
         "--declaration-roles",
-        click_type=_choice(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
+        parser=_choice(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
         metavar=_choice_metavar(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.declaration-roles.help"),
     ),
@@ -358,13 +345,13 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
-        click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        parser=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
     "irpf-activity-income-imputation-criterion": typer.Option(
         "--irpf-activity-income-imputation-criterion",
-        click_type=_choice(_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES),
+        parser=_choice(_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-activity-income-imputation-criterion.help"),
     ),
@@ -378,7 +365,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
-        click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        parser=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-special-regime.help"),
     ),
@@ -388,7 +375,7 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
     ),
     "situacion-familiar": typer.Option(
         "--situacion-familiar",
-        click_type=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        parser=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
         metavar=_choice_metavar(_SITUACION_FAMILIAR_CHOICE_VALUES),
         help=tr("wizard.setup.flags.situacion-familiar.help"),
     ),
@@ -468,7 +455,7 @@ def _configure_select_option(
         from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 
         values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
-    option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
+    option.parser = _choice(values, case_sensitive=question.id != "iva-regime")
     option.metavar = _choice_metavar(values)
     if question.id == "situacion-familiar":
         # Keep the closed input protocol visible at the boundary while using

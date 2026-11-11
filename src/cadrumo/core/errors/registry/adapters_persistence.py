@@ -521,6 +521,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody.kdf_supervision.ProfileKdfYieldedError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_KDF_BACKGROUND_YIELDED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_profile_kdf_background_yielded",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.persistence.storage.custody.kdf_strengthening.ProfileKdfPointRefusedError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_KDF_STRENGTHENING_POINT_REFUSED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.canonical_profile_kdf_strengthening_point_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         ("cadrumo.adapters.persistence.profile.calculation_revision_override_migration.OrphanedRelationOverrideError"),
         ErrorCode(
             code="REFUSED_MODELO_CALCULATION_OVERRIDE_UNRESOLVABLE",

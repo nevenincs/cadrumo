@@ -87,9 +87,29 @@ mod fixture {
 
     pub fn retry_probe() -> ! {
         fs::write("retry-probe-pid", process::id().to_string()).expect("record metadata child");
+        // One line per launch, so a test can count the probe's attempts.
+        let mut attempts = fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("retry-probe-attempts")
+            .expect("record metadata attempt");
+        writeln!(attempts, "{}", process::id()).expect("record metadata attempt");
+        drop(attempts);
         let mode = fs::read_to_string("retry-probe-mode").expect("metadata fixture mode");
         match mode.as_str() {
             "capable" => exit(0),
+            // A capable image whose first answer is late, as on a loaded machine.
+            "late-once" => {
+                if fs::read_to_string("retry-probe-attempts")
+                    .expect("metadata attempts")
+                    .lines()
+                    .count()
+                    == 1
+                {
+                    thread::sleep(LIFETIME);
+                }
+                exit(0)
+            }
             "legacy" => exit(USAGE),
             "failed" => exit(UNEXPECTED_FAILURE),
             "timeout" => {

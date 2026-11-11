@@ -516,10 +516,14 @@ class LedgerIvaAggregationSourceResolver:
         aggregation_period: Period,
         aggregation: IvaLedgerAggregation,
     ) -> tuple[CalculationSourceProvenance, ...]:
-        """Name each observation, prorrata reference and apportionment the resolution rests on."""
+        """Name each record, prorrata reference and apportionment the resolution rests on.
+
+        An invoice yields one observation per line, yet it is one record, so it
+        is named once however many rates its lines bear.
+        """
         return (
             source_provenance_for(
-                aggregation.observations,
+                _observations_by_record(aggregation.observations),
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
                     resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
@@ -550,6 +554,14 @@ class LedgerIvaAggregationSourceResolver:
                 aggregation.prorrata_apportionment,
             )
         )
+
+
+def _observations_by_record(observations: Iterable[IvaLedgerObservation]) -> tuple[IvaLedgerObservation, ...]:
+    """The first observation of each record, in observation order."""
+    first: dict[str, IvaLedgerObservation] = {}
+    for observation in observations:
+        first.setdefault(_observation_source_ref(observation), observation)
+    return tuple(first.values())
 
 
 def _is_invoice_observation(observation: IvaLedgerObservation) -> bool:
