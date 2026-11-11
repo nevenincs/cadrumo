@@ -25,6 +25,7 @@ from ....core.errors.error_codes import get_registered_error_code_by_code
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_quickfile_commands import stage_notice
 from ..app_quickfile_results import (
     QuickfileReadinessSummaryPayload,
@@ -35,6 +36,8 @@ from ..app_quickfile_results import (
 __all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _stopped_projection() -> QuickfileProjection:
     """Build a complete safe refusal projection with all five ordered stages."""
@@ -42,8 +45,8 @@ def _stopped_projection() -> QuickfileProjection:
     return QuickfileProjection(
         profile_id=UUID("11111111-1111-4111-8111-111111111111"),
         modelo="130",
-        filing_year=2026,
-        period=PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
+        filing_year=_YEAR,
+        period=PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T")),
         registry_revision_id="revision-1",
         completed=False,
         stopped_at_stage=QuickfileStage.CREATE,
@@ -101,8 +104,8 @@ def test_quickfile_result_payload_refuses_unknown_stopped_stage() -> None:
     with pytest.raises(ValidationError):
         QuickfileResultPayload(
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             registry_revision_id="revision-1",
             completed=False,
             stopped_at_stage="bogus",
