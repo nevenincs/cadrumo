@@ -12,7 +12,6 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.i18n.render import tr
-from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -61,7 +60,7 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
-from .iva_cuota_disagreement import cuota_disagreement
+from .iva_cuota_disagreement import cuota_disagreement, eur_figure, percent_figure
 from .iva_ledger import (
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
@@ -78,6 +77,7 @@ from .iva_ledger_classification import (
     missing_tax_fact_reason,
     validate_iva_ledger_counterparty_category,
 )
+from .iva_recargo_screen import charged_recargo_issue
 from .iva_transaction_projection import (
     cash_accounting_observations,
     inadmissible_deduction_issue,
@@ -958,17 +958,6 @@ def iva_transaction_gate_issue(
     return None
 
 
-def _eur_figure(amount: Decimal) -> str:
-    """An amount as the operator reads it: two decimals and the currency, whatever scale it was stored at."""
-    return f"{round_to_cents(amount):.2f} EUR"
-
-
-def _percent_figure(rate: Decimal) -> str:
-    """A fractional tipo as a percentage without trailing zeros, ``0.21`` as ``21%`` and ``0.055`` as ``5.5%``."""
-    percent = (rate * 100).normalize()
-    return f"{percent:f}%"
-
-
 def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
     """Refuse a row whose declared cuota is not its base at its declared tipo.
 
@@ -984,10 +973,10 @@ def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggre
         reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
         detail=tr(
             "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
-            base=_eur_figure(disagreement.base),
-            rate=_percent_figure(disagreement.rate),
-            declared=_eur_figure(disagreement.declared),
-            expected=_eur_figure(disagreement.expected),
+            base=eur_figure(disagreement.base),
+            rate=percent_figure(disagreement.rate),
+            declared=eur_figure(disagreement.declared),
+            expected=eur_figure(disagreement.expected),
         ),
     )
 
@@ -1020,7 +1009,12 @@ def _admit_iva_transaction(
     )
     if isinstance(classification, _IvaTransactionOutcome):
         return classification
-    cuota_issue = _cuota_disagrees_with_rate_issue(transaction)
+    cuota_issue = _cuota_disagrees_with_rate_issue(transaction) or charged_recargo_issue(
+        transaction,
+        operation_date=context.operation_date,
+        flow_direction=classification.flow_direction,
+        operation=operation,
+    )
     if cuota_issue is not None:
         return _IvaTransactionOutcome(gate_issue=cuota_issue)
     return _IvaTransactionAdmission(context=context, amounts=amounts, classification=classification)

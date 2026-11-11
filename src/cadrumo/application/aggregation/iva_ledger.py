@@ -144,6 +144,20 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # proven in force on the operation date, so the amount is what disagrees;
     # routing the row would file a cuota its own base and tipo contradict.
     CUOTA_DISAGREES_WITH_RATE = "cuota_disagrees_with_rate"
+    # The recargo de equivalencia a charged row records is more than a cent
+    # from its base at the recargo rate LIVA art. 161 pairs with the row's IVA
+    # rate on its date. The law fixes that figure, so the remedy is correcting
+    # the row or a factura rectificativa; the recorded figure never reaches the
+    # recargo casilla.
+    RECARGO_DEPARTS_FROM_PUBLISHED_RATE = "recargo_departs_from_published_rate"
+    # A charged row records a recargo on an IVA rate and date the registry
+    # publishes no recargo rate for. Unresolved rather than refused: the gap is
+    # the registry's, and a rate is never guessed for it.
+    RECARGO_RATE_UNMODELLED = "recargo_rate_unmodelled"
+    # A charged row's recargo is the labores del tabaco rate (art. 161 4.o),
+    # declared on its own 303 rung that no casilla is bound for here. Never
+    # refused as a mismatch and never folded into the general recargo casilla.
+    RECARGO_TOBACCO_RUNG_UNSUPPORTED = "recargo_tobacco_rung_unsupported"
     # The mirror of the above, one field over. The operator declared a category
     # whose cuota is zero BY LAW for the side of the operation this row is on --
     # an issued inversión del sujeto pasivo supply, an exempt or not-subject

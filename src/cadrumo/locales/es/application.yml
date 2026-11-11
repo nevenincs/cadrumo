@@ -2451,6 +2451,9 @@ application:
         invoice_deduction_family_unresolved: 'la factura recibida que paga no indica
           qué deducción corresponde: clasifica el movimiento, por ejemplo como gasto
           corriente o como bien de inversión'
+        invoice_recargo_not_declarable: 'una factura emitida lleva un recargo de equivalencia
+          que no es su base por el tipo del art. 161 para su tipo de IVA y fecha:
+          corrige la factura o emite una factura rectificativa'
         invoice_recargo_split_unresolved: 'una factura emitida lleva un único recargo
           de equivalencia sobre varios tipos de IVA que no coincide con la suma del
           recargo de cada tipo: corrige el recargo de la factura'

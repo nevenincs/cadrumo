@@ -45,6 +45,7 @@ from .invoice_devengo import (
 )
 from .iva_ledger import IvaLedgerAggregation
 from .iva_ledger_classification import bien_inversion_threshold, validate_intracom_export_counterparty
+from .iva_recargo_screen import charged_recargo_finding
 from .source_mesh import (
     CalculationSourceDiagnostic,
     out_of_window_summary_source_diagnostic,
@@ -580,11 +581,12 @@ def modelo_bindings_invoice_iva_recargo_rate_divergence(
     devengo_date: date,
     operation: PinnedAuthorityOperation,
 ) -> _RecargoRateDivergence | None:
-    """Compare the recorded recargo against the rate art. 161 publishes for that slot.
+    """Compare a received invoice's recorded recargo against the rate art. 161 publishes for that slot.
 
-    The invoice stays authoritative: this reads the recorded figure and never
-    replaces it. What it adds is the other half of that posture -- when the
-    supplier's figure departs from the published pairing, say so.
+    A recargo borne on a purchase reaches no IVA casilla and the buyer's cost is
+    what the supplier charged, so the figure stands and a departure is only
+    said. An issued invoice's recargo is screened by
+    :func:`_issued_recargo_not_declarable` instead, which refuses it.
 
     Silent in three cases, each for its own reason and none of them a pass:
 
@@ -596,6 +598,8 @@ def modelo_bindings_invoice_iva_recargo_rate_divergence(
       An unmodelled window must NOT read as a mismatch -- that would turn a
       gap in our own data into an accusation about the supplier's invoice.
     """
+    if invoice.kind is InvoiceKind.ISSUED:
+        return None
     recargo_inputs = _recargo_comparison_inputs(invoice, devengo_date=devengo_date)
     if recargo_inputs is None:
         return None
@@ -717,6 +721,10 @@ class ScreenedInvoiceIva:
             spans several IVA rates and differs from the sum of each rate's
             art. 161 share. No figure says how it divides, so it is declared
             under no rate and the period is blocked until it is corrected.
+        recargo_not_declarable: issued invoices whose recargo, at one IVA rate,
+            is more than a cent from base times the art. 161 rate, is the
+            tobacco rate, or has no published rate on the date. The period is
+            blocked until the invoice is corrected.
     """
 
     observations: tuple[IvaLedgerObservation, ...] = ()
@@ -727,6 +735,7 @@ class ScreenedInvoiceIva:
     deduction_authority_missing: tuple[Invoice, ...] = ()
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
     recargo_split_unresolved: tuple[Invoice, ...] = ()
+    recargo_not_declarable: tuple[Invoice, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -737,6 +746,7 @@ class _ScreenedInvoiceIvaResult:
     reverse_charge_underivable: bool
     recargo_rate_divergence: _RecargoRateDivergence | None
     recargo_split_unresolved: bool
+    recargo_not_declarable: bool
     deduction_authority_missing: bool
     category_counterparty_mismatch: bool
 
@@ -795,6 +805,7 @@ def _collect_screened_invoice_results(
     deduction_authority_missing: list[Invoice] = []
     recargo_rate_divergences: list[_RecargoRateDivergence] = []
     recargo_split_unresolved: list[Invoice] = []
+    recargo_not_declarable: list[Invoice] = []
     for stored in invoices:
         paying = tuple(
             movement
@@ -811,6 +822,8 @@ def _collect_screened_invoice_results(
             recargo_rate_divergences.append(screened.recargo_rate_divergence)
         if screened.recargo_split_unresolved:
             recargo_split_unresolved.append(invoice)
+        if screened.recargo_not_declarable:
+            recargo_not_declarable.append(invoice)
         if screened.deduction_authority_missing:
             deduction_authority_missing.append(invoice)
             continue
@@ -829,6 +842,7 @@ def _collect_screened_invoice_results(
         deduction_authority_missing=tuple(deduction_authority_missing),
         recargo_rate_divergences=tuple(recargo_rate_divergences),
         recargo_split_unresolved=tuple(recargo_split_unresolved),
+        recargo_not_declarable=tuple(recargo_not_declarable),
     )
 
 
@@ -913,6 +927,9 @@ def screened_invoice_iva_result(
         recargo_split_unresolved=(
             invoice.kind is InvoiceKind.ISSUED
             and recargo_eur_by_line_index(invoice, devengo_date=devengo.devengo_date, operation=operation) is None
+        ),
+        recargo_not_declarable=_issued_recargo_not_declarable(
+            invoice, devengo_date=devengo.devengo_date, operation=operation
         ),
         deduction_authority_missing=deduction_authority_missing,
         category_counterparty_mismatch=category_counterparty_mismatch,
@@ -1082,6 +1099,37 @@ def _sole_recargo_line_index(invoice: Invoice) -> int | None:
         return None
     (indices,) = groups.values()
     return indices[0]
+
+
+def _issued_recargo_not_declarable(
+    invoice: Invoice,
+    *,
+    devengo_date: date,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether an issued invoice's one-rate recargo cannot reach its casilla as recorded.
+
+    The recargo base is the IVA base of the lines at that rate (LIVA art. 160),
+    weighed at invoice level the way the invoice states it. A recargo over
+    several rates is screened by the split instead.
+    """
+    recorded = invoice.recargo_amount
+    sole_index = _sole_recargo_line_index(invoice)
+    if invoice.kind is not InvoiceKind.ISSUED or recorded is None or sole_index is None:
+        return False
+    rate = invoice.lines[sole_index].iva_rate
+    applied_rate = iva_rate_percentage(rate, devengo_date)
+    if applied_rate is None:
+        return False
+    base = sum((invoice.lines[index].subtotal for index in _cuota_lines_by_rate(invoice)[rate]), Decimal("0"))
+    finding = charged_recargo_finding(
+        base=base,
+        applied_rate=applied_rate,
+        declared=recorded,
+        devengo_date=devengo_date,
+        operation=operation,
+    )
+    return finding is not None
 
 
 def _recargo_parts_by_rate(
