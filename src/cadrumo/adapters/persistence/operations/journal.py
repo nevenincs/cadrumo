@@ -120,9 +120,6 @@ class _OperationInventoryRequest(BaseModel):
 # Records are captured a bounded batch at a time, so an inventory never holds
 # every record's text at once.
 _INVENTORY_CAPTURE_BATCH: Final = 128
-# A first read of a record is dominated by per-file open latency (cold cache,
-# on-access scanning), which overlaps across threads; validation does not.
-_INVENTORY_CAPTURE_THREADS: Final = 4
 
 
 def replay_page_from_record(
@@ -367,8 +364,11 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
         if len(operation_ids) < 2:
             return [capture(operation_id) for operation_id in operation_ids]
+        # A first read of a record is dominated by per-file open latency (cold
+        # cache, on-access scanning), which overlaps across threads; validation
+        # does not. The process's processor allowance bounds the overlap.
         with ThreadPoolExecutor(
-            max_workers=min(_INVENTORY_CAPTURE_THREADS, len(operation_ids)),
+            max_workers=min(os.process_cpu_count() or 1, len(operation_ids)),
             thread_name_prefix="operation-journal-inventory",
         ) as pool:
             return list(pool.map(capture, operation_ids))

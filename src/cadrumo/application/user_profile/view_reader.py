@@ -269,13 +269,16 @@ def _build_overview_source(
             ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority_operation))),
         },
     )
+    notices = overview.notices
     custody_notice = profile_kdf_floor_notice(UUID(str(record.profile_id)))
-    notices = (*overview.notices, *(() if custody_notice is None else (custody_notice,)))
     # A page item carries only a success action; a precondition action has no wire shape here.
     if any(notice.action is not None and not isinstance(notice.action, ResolvedNoticeAction) for notice in notices):
         return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
     missing_items = tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
-    notice_items = tuple(_overview_notice_item(notice) for notice in notices)
+    notice_items = (
+        *(_overview_notice_item(notice) for notice in notices),
+        *(() if custody_notice is None else (custody_notice,)),
+    )
     return (*_overview_section_items(overview), *missing_items, *notice_items)
 
 
