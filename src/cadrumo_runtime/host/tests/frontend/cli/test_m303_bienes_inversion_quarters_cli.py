@@ -234,7 +234,7 @@ def _calculate(quarter: str) -> Result:
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
     answers = (
-        admit_ordinary_m303_secure_evidence(period="4T").calculate_options()
+        admit_ordinary_m303_secure_evidence(year=_YEAR, period="4T").calculate_options()
         if quarter == "4T"
         else joint_return_options()
     )
