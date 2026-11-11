@@ -710,6 +710,17 @@ def test_a_not_sourced_casilla_states_the_law_figure_and_the_missing_source() ->
     assert expectations.values[0].not_sourced == (("0013", "2332.80"),)
 
 
+def test_a_role_states_an_amount_keyed_by_a_casillas_registry_identity() -> None:
+    expectations = _expectations_with(value={"roles": {"iva-resultado-regimen-general": "1377.60"}})
+    assert expectations.values[0].roles == (("iva-resultado-regimen-general", "1377.60"),)
+
+
+@pytest.mark.parametrize("amount", ["1377,60", "mil", "01.5", 1377])
+def test_a_role_amount_that_is_not_a_canonical_decimal_is_refused(amount: object) -> None:
+    with pytest.raises(PersonaCatalogueError, match="roles"):
+        _expectations_with(value={"roles": {"iva-resultado-regimen-general": amount}})
+
+
 @pytest.mark.parametrize(
     ("value", "message"),
     [

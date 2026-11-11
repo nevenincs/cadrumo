@@ -15,7 +15,6 @@ import dataclasses
 import os
 import re
 from datetime import UTC, datetime
-from decimal import Decimal, InvalidOperation
 from functools import cache
 from pathlib import Path
 
@@ -83,6 +82,7 @@ from cadrumo.tests.personas import (
 
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .export_text import check_export_text, violation_reason
+from .roles import StatedCasilla, compared, differing, mismatch_text, revision_identities
 from .rows import (
     PlannedRow,
     Stage,
@@ -97,6 +97,7 @@ from .rows import (
     stage_refusal_codes,
     write_rows,
 )
+from .unchecked import persona_at
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -127,16 +128,8 @@ def _persona(persona_id: str) -> Persona:
 
 @cache
 def _persona_at(persona_id: str, horizon: int) -> Persona:
-    """The persona as the replay under ``horizon`` reads it: records below the floor left out and listed.
-
-    A persona that cannot be read at that horizon is not replayed there (the replay records it as not run), so
-    its rows are planned from the persona as read at the registry's own horizon.
-    """
-    envelope = dataclasses.replace(_envelope(), horizon=horizon)
-    try:
-        return read_persona(persona_id, envelope=envelope, omit_below_floor=horizon != _envelope().horizon)
-    except PersonaCatalogueError:
-        return _persona(persona_id)
+    """The persona as the replay under ``horizon`` reads it; see :func:`.unchecked.persona_at`."""
+    return persona_at(persona_id, horizon, _envelope())
 
 
 def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:
@@ -155,13 +148,6 @@ def _cases() -> list[pytest.ParameterSet]:
         for horizon in replay_horizons(_envelope())
         if _plan(persona_id, horizon)
     ]
-
-
-def _decimal(value: object) -> Decimal | None:
-    try:
-        return Decimal(str(value))
-    except InvalidOperation:
-        return None
 
 
 def _code(error: BaseException) -> str:
@@ -244,7 +230,7 @@ def _run_return(
         calculated = _calculate(materialised, plan, work_unit_id)
     except PersonaMaterialisationError as error:
         return _refused(plan, at_calculate, error)
-    calculate, reasons = _compare(values, at_calculate, calculated)
+    calculate, reasons = _compare(plan, values, at_calculate, calculated)
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
@@ -347,10 +333,13 @@ def _calculate(
 
 
 def _compare(
-    values: list[ExpectedValue], stated_refusal: str | None, calculated: ModeloWorkCalculatePublicResultV3
+    plan: PlannedRow,
+    values: list[ExpectedValue],
+    stated_refusal: str | None,
+    calculated: ModeloWorkCalculatePublicResultV3,
 ) -> tuple[Stage, list[str]]:
     """The calculate stage against the stated values, and the reasons it is not a plain pass."""
-    mismatches = _mismatches(values, calculated)
+    mismatches = _mismatches(values, calculated, plan.unchecked)
     reasons: list[str] = []
     if stated_refusal is not None:
         calculate = Stage.REFUSAL_NOT_RAISED
@@ -358,7 +347,7 @@ def _compare(
     elif not values:
         calculate = Stage.CALCULATED
     else:
-        calculate = _value_stage(values, calculated) if mismatches else Stage.PASSED
+        calculate = _value_stage(values, calculated, plan.unchecked) if mismatches else Stage.PASSED
         reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
     if unresolved:
@@ -366,27 +355,29 @@ def _compare(
     return calculate, reasons
 
 
-def _mismatches(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> list[str]:
-    """Each stated casilla the calculation does not equal."""
+def _differing(
+    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+) -> list[tuple[StatedCasilla, object]]:
+    """Each stated casilla, and each role resolved in the edition the calculation used, that it does not equal."""
     got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
-    return [
-        f"c{casilla} exp {amount} got {got.get(casilla)}"
-        for value in values
-        for casilla, amount in value.casillas
-        if _decimal(got.get(casilla)) != _decimal(amount)
-    ]
+    unit = calculated.unit
+    casillas = revision_identities(unit.modelo, unit.revision_id) if any(value.roles for value in values) else ()
+    return differing(compared(values, casillas, unchecked), got)
 
 
-def _value_stage(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> Stage:
+def _mismatches(
+    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+) -> list[str]:
+    """Each stated casilla or role the calculation does not equal."""
+    return [mismatch_text(item, found) for item, found in _differing(values, calculated, unchecked)]
+
+
+def _value_stage(
+    values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3, unchecked: tuple[str, ...]
+) -> Stage:
     """Mismatch when a stated casilla has another value; unresolved when every differing casilla has none."""
-    got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
-    differing = [
-        casilla
-        for value in values
-        for casilla, amount in value.casillas
-        if _decimal(got.get(casilla)) != _decimal(amount)
-    ]
-    return Stage.UNRESOLVED if all(got.get(casilla) is None for casilla in differing) else Stage.MISMATCH
+    found = _differing(values, calculated, unchecked)
+    return Stage.UNRESOLVED if all(value is None for _, value in found) else Stage.MISMATCH
 
 
 def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:

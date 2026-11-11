@@ -84,7 +84,7 @@ def _fichero(modelo: str, period: str, rows: Sequence[Row]) -> tuple[ExportLayou
 
 def _identities() -> IdentityCatalogue:
     def identity(role: str, kind: IdentityKind, value: str, country: str | None = None) -> Identity:
-        return Identity(role=role, persona="p", kind=kind, value=value, legal_name=role, country=country)
+        return Identity(role=role, persona="p", kind=kind, value=value, razon_social=role, country=country)
 
     return IdentityCatalogue(
         identities=(
@@ -167,7 +167,7 @@ def test_a_349_operator_is_matched_by_country_and_nif_iva_and_its_base_by_value(
 
 
 def test_values_of_other_modelos_are_not_compared() -> None:
-    other = _stated("180", "p.proveedor", clave="G")
+    other = _stated("115", "p.proveedor", clave="G")
     assert not is_compared(other)
     layout, payload = _fichero("347", "0A", [_B347])
     assert counterparty_mismatches([other], _identities(), layout, payload) == []

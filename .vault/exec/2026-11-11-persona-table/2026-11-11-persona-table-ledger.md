@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:17a5283e4c395dafaaf7953fe794da2589e68372ef7bafabb182fd2ed7e9a50b'
+body_hash: 'sha256:0084e9cc9657447c4c0d8e4c97885884746329961d7d1aed495cf56b270b4b3a'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -71,6 +71,12 @@ related:
 - `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347`
 - `S13` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
 - `S13` `by:` `ACCEPTANCE`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/modelos/100`
+- `S09` `verify:` `persona table at feature/tui 90910e5cc5 (train t14), minorista 100 2023-2025` -> `pass`
+- `S09` `by:` `ACCEPTANCE`
+- `S11` `M` `dev/fixtures/personas`
+- `S11` `verify:` `persona table at feature/tui 90910e5cc5 (train t14), minorista 100 2023-2025 export` -> `pass`
+- `S11` `by:` `ACCEPTANCE`
 
 ## Notes
 
