@@ -126,7 +126,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[clock].as_of` | date | the scenario instant |
 | `[profile]` | table | wizard question id → answer |
 | `[fields]` | table | profile schema path → value, for facts no wizard question asks |
-| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph` |
+| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph`, `tipo_actividad` |
 | `[[elections]]` | array | dated elections: `question` (wizard id), `value`, `year` (token) |
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |

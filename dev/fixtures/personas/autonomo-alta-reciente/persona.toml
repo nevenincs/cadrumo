@@ -60,9 +60,13 @@ as_of = { year = "horizon", month = 4, day = 1 }
 "irpf-codigo-comercio-accounting" = false
 "does-intracomunitario" = false
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección primera, epígrafe 922.1: actividad empresarial, so A03.
 [[activities]]
 description = "Servicios de limpieza de interiores de oficinas"
 iae_epigraph = "922.1"
+tipo_actividad = "A03"
 
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"

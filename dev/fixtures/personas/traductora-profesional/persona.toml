@@ -63,9 +63,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 # asks whether the withholder is a colegio concertado; a translator is not one.
 "withholding.colegio_concertado" = "false"
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección segunda, grupo 774 "Traductores e Intérpretes": actividad profesional, so A05.
 [[activities]]
 description = "Traducción e interpretación"
 iae_epigraph = "774"
+tipo_actividad = "A05"
 
 # She sells her own translation work and holds no mercaderías or materias
 # primas, so her activity holds no existencias: the book opens at zero, records

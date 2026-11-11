@@ -744,6 +744,7 @@ def _bucket_aggregation_source_diagnostics(
             operation=ports.operation,
         ),
         supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
+        derived_selectors=preparation.profile.profile_decode_context.schema.derived_selectors,
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics

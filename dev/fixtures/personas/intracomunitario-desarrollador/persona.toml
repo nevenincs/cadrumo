@@ -61,9 +61,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 [fields]
 "irpf.activity_kind" = "profesional"
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección segunda, grupo 763 "Programadores y Analistas de Informática": actividad profesional, so A05.
 [[activities]]
 description = "Programación y análisis informático"
 iae_epigraph = "763"
+tipo_actividad = "A05"
 
 # He sells his own programming and analysis work and holds no mercaderías or
 # materias primas, so his activity holds no existencias: the book opens at

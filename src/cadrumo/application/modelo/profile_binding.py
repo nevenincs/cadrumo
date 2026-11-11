@@ -81,6 +81,7 @@ from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
     family_fact_context,
+    inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
@@ -440,6 +441,7 @@ def _load_profile_facts(
         (
             *inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation),
             *inject_derived_estimation_modality_fact(fact_index, operation=operation),
+            *inject_derived_activity_tipo_clave_fact(fact_index),
         )
     )
     declared_selectors = declared_profile_selectors(snapshot.revision)

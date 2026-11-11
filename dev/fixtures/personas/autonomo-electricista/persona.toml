@@ -71,9 +71,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 [fields]
 "renta_family.cotizaciones_ss_madre_2024" = "0"
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección primera, epígrafe 504.1: actividad empresarial, so A03.
 [[activities]]
 description = "Instalaciones eléctricas en general"
 iae_epigraph = "504.1"
+tipo_actividad = "A03"
 
 # He buys cable, mechanisms and panels for each job and installs them on it,
 # so his activity holds no existencias: the book opens at zero, records no
