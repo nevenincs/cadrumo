@@ -102,8 +102,8 @@ cli:
         razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
           sosem kereskedelmi név.
         rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
-          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak úgy
-          rövidül, ahogy megadod.
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak
+          úgy rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
           --no-second-surname kapcsolóval együtt hagyd el.
@@ -4239,6 +4239,10 @@ cli:
       bienes_extranjero_unset: A profilodban még nem szerepel, hogy a külföldön lévő
         vagyonod és jogaid meghaladják-e a bejelentési értékhatárt.
       censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
+      deadline_windows_unavailable: A nyilvántartásban ennek a tartománynak egy részére
+        nincsenek határidők, ezért nem tudni semmit az ide eső kötelezettségekről.
+        Nézd meg az áttekintés állapotát; az itt látható üres lista nem jelenti azt,
+        hogy semmi sem esedékes.
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyi jövedelemadózási rendszer vonatkozik.
       gran_empresa_unset: A profilodban még nem szerepel, hogy az előző naptári évi

@@ -106,8 +106,8 @@ cli:
         razon_social_help: La razón social o denominación completa de una entidad,
           nunca un nombre comercial.
         rendering_help: Una forma más corta que indicas para un campo más estrecho,
-          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta sin
-          que lo indiques.
+          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta
+          sin que lo indiques.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
         segundo_apellido_help: El segundo apellido de una persona física. Omítelo
           solo junto con --no-second-surname.
@@ -4314,6 +4314,10 @@ cli:
       bienes_extranjero_unset: En tu perfil aún no consta si tus bienes y derechos
         situados en el extranjero superan el umbral de declaración.
       censo_enrolment_unverified: No se ha verificado el alta en el censo
+      deadline_windows_unavailable: El registro no tiene plazos para una parte de
+        este intervalo, así que no se sabe nada de las obligaciones que caen en ella.
+        Revisa el estado del resumen; una lista vacía aquí no significa que no venza
+        nada.
       estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
         del IRPF se aplica a tu actividad.
       gran_empresa_unset: En tu perfil aún no consta si tu volumen de operaciones
