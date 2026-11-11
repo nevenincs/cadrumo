@@ -53,7 +53,6 @@ from ...domain.buckets.event import BucketEventType
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from .custody_ports import (
-    ProfileKdfStrength,
     clear_profile_custody_password_replacement,
     create_profile_custody_registration_material,
     default_profile_record_crypto_port,
@@ -68,6 +67,7 @@ from .custody_ports import (
     unlock_profile_custody_password,
 )
 from .custody_repository import profile_custody_transaction_lock
+from .kdf_strength import ProfileKdfStrength
 from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 
 if TYPE_CHECKING:
@@ -370,10 +370,18 @@ def strengthen_profile_password_kdf(
     return True
 
 
+def measure_profile_custody_stronger_password_kdf(
+    profile_id: UUID, *, root: Path | None = None
+) -> ProfileKdfStrength | None:
+    """Measure a stronger point for a profile whose password envelope holds the fixed fallback, else ``None``."""
+    return profile_custody_port().measure_stronger_password_kdf(profile_id, root=root)
+
+
 __all__ = [
     "ProfilePassphraseReplacementProof",
     "ProfilePassphraseRotationError",
     "ProfilePassphraseRotationOutcome",
+    "measure_profile_custody_stronger_password_kdf",
     "rewrap_profile_passphrase_under_lock",
     "rotate_profile_passphrase",
     "strengthen_profile_password_kdf",

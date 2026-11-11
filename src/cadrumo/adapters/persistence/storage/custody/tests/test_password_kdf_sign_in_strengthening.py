@@ -33,10 +33,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.user_profile import passphrase_rotation
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import (
-    ProfileKdfStrength,
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )
+from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import (
     ProfilePassphraseReplacementProof,

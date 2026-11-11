@@ -44,7 +44,6 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyRegistrationMaterial,
     ProfileCustodySecureObjectNamespace,
     ProfileCustodyUnlockPort,
-    ProfileKdfStrength,
 )
 from ....application.user_profile.custody_record_ports import (
     ProfileCustodyCapsuleLabelPort,
@@ -58,6 +57,7 @@ from ....application.user_profile.custody_record_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
 )
+from ....application.user_profile.kdf_strength import ProfileKdfStrength
 from ....application.user_profile.proof_cancellation import ProfileProofCancellation
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
@@ -118,13 +118,12 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
+from .custody.kdf_strengthening import profile_kdf_strengthening_point, profile_kdf_strictly_stronger
 from .custody.kdf_supervision import (
     ProfileKdfPrewarm,
     calibrate_profile_kdf,
     calibrate_profile_kdf_in_background,
     profile_kdf_at_fallback,
-    profile_kdf_strengthening_point,
-    profile_kdf_strictly_stronger,
     unlock_profile_custody,
 )
 from .custody.label_head_repository import ProfileLabelHeadRepository

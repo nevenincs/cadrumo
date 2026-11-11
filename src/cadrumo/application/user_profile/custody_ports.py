@@ -53,6 +53,7 @@ from .custody_record_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
 )
+from .kdf_strength import ProfileKdfStrength
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 from .proof_cancellation import ProfileProofCancellation
 
@@ -107,20 +108,6 @@ def ensure_profile_custody_owner_root(store: ProfileCustodyLocalRecordStore, roo
 def default_profile_custody_local_record_store() -> ProfileCustodyLocalRecordStore:
     """Resolve the composed local-record store through the custody boundary."""
     return profile_custody_port().local_record_store()
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileKdfStrength:
-    """A measured Argon2id cost point, without a salt, held to strengthen an envelope later.
-
-    It carries no secret and names no profile: it is what this host measured,
-    and the mint that uses it checks it again against the grid, the host's
-    resources, the fallback floor and the envelope it would supersede.
-    """
-
-    memory_mib: int
-    iterations: int
-    parallelism: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -1128,13 +1115,6 @@ def profile_custody_password_kdf_at_fallback(profile_id: UUID, *, root: Path | N
     return profile_custody_port().password_kdf_at_fallback(profile_id, root=root)
 
 
-def measure_profile_custody_stronger_password_kdf(
-    profile_id: UUID, *, root: Path | None = None
-) -> ProfileKdfStrength | None:
-    """Measure a stronger point for a profile whose password envelope holds the fixed fallback, else ``None``."""
-    return profile_custody_port().measure_stronger_password_kdf(profile_id, root=root)
-
-
 def map_profile_authentication_proof_failure(
     error: BaseException,
     *,
@@ -1227,7 +1207,6 @@ __all__ = [
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
     "ProfileCustodyUnlockPort",
-    "ProfileKdfStrength",
     "ProfileRecoveryKeyPort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
@@ -1245,7 +1224,6 @@ __all__ = [
     "load_profile_custody_recovery_material",
     "make_profile_custody_record_durable",
     "map_profile_authentication_proof_failure",
-    "measure_profile_custody_stronger_password_kdf",
     "profile_custody_owner_root",
     "profile_custody_password_kdf_at_fallback",
     "profile_custody_password_replacement_pending",

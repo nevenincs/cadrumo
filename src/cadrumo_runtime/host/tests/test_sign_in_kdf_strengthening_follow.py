@@ -23,10 +23,10 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import (
-    ProfileKdfStrength,
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )
+from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
 from cadrumo.application.user_profile.passphrase_rotation import strengthen_profile_password_kdf
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition

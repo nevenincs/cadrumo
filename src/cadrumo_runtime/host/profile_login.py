@@ -24,22 +24,20 @@ from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import refresh_profile_session_with_key
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
-from cadrumo.adapters.persistence.storage.custody.kdf_supervision import (
-    ProfileKdfPointRefusedError,
-    ProfileKdfPrewarm,
-)
+from cadrumo.adapters.persistence.storage.custody.kdf_strengthening import ProfileKdfPointRefusedError
+from cadrumo.adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
-from cadrumo.application.user_profile.custody_ports import (
-    ProfileKdfStrength,
-    measure_profile_custody_stronger_password_kdf,
-)
+from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
 from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, authenticate_profile_candidate
-from cadrumo.application.user_profile.passphrase_rotation import strengthen_profile_password_kdf
+from cadrumo.application.user_profile.passphrase_rotation import (
+    measure_profile_custody_stronger_password_kdf,
+    strengthen_profile_password_kdf,
+)
 from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.errors.failure_report import log_boundary_failure

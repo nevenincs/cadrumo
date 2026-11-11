@@ -10,13 +10,14 @@ from uuid import UUID
 import pytest
 
 from ......application.user_profile.custody_ports import (
-    ProfileKdfStrength,
     create_profile_custody_registration_material,
     unlock_profile_custody_password,
 )
+from ......application.user_profile.kdf_strength import ProfileKdfStrength
 from ......core.config import override_settings
 from .. import kdf_supervision
-from ..kdf_supervision import ProfileCustodyKdfResources, ProfileKdfPointRefusedError
+from ..kdf_strengthening import ProfileKdfPointRefusedError
+from ..kdf_supervision import ProfileCustodyKdfResources
 from ..records import ProfileCustodyEnvelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
