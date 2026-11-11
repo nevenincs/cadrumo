@@ -7,7 +7,7 @@ revision_id = "2024-desde-09-y-3t"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of all six form pages of BOE-A-2024-16129, printed99216-99221. First applicable monthly period September2024; first quarterly period third-quarter2024. Exact historical export producer and projection owners retained. Does not include later gasoline election or box112. Outstanding: annual activity descriptions; no-activity declaration; payment/refund72/73 and non-IBAN details; additional electronic activity worksheets. No completed operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "56c65f0956ac70d12e42d62561138eaf7021d3b9d1c2bb9ea4ee595dd9eeaa58"
+source_state_digest = "9158ad35184f5c40351b1c43d5d9938f2ca3945d93a2ce2483f73ed9f9664892"
 design_sources = [
     { source_ref = "aeat-dr-303-2024-late", sha256 = "276e83909d9f1632b1e7051f0593845e420f67b7240ae42b272b18631b120dc2" },
     { source_ref = "boe-modelo-303-2024-form-pdf", sha256 = "6fba5a18a81ab328bfe42249a6bc236bd790959ae1a936ec4334dab6f7b14cf5" },

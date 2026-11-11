@@ -656,8 +656,9 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
                 "0606": Decimal("130.00"),
                 # 0611 is computed from the maternity deduction the profile
                 # derives per descendant; it arrives through its binding below.
+                # 0613 is computed from the guardería increment the profile derives per
+                # descendant; it arrives through its binding below.
                 "0612": Decimal("10.00"),
-                "0613": Decimal("20.00"),
                 "0623": Decimal("30.00"),
                 "0624": Decimal("40.00"),
                 "0636": Decimal("50.00"),
@@ -689,6 +690,7 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("20.00"),
             # 0596 takes the sum of the payee's work-payer certificates.
             "renta-retencion-soportada-trabajo": Decimal("40.00"),
             "renta-retencion-soportada-capital-mobiliario": Decimal("50.00"),

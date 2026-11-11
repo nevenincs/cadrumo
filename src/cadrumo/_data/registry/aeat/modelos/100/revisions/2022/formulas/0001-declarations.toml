@@ -1083,25 +1083,15 @@ target_casilla_id = "0613"
 # The manual states that the increment may not exceed, for each child, either
 # 1.000 euros a year or the lesser of (a) the cotizaciones y cuotas totales a la
 # Seguridad Social y Mutualidades devengadas in the period after the birth and
-# (b) the unsubsidised spend paid for that child. The annual cap, the month
-# proration and the spend limit are folded per child where the descendant
-# records live (this schema has no per-descendant fold), so the binding below is
-# the household sum of those per-child values. The cotizaciones limit is a
-# single figure of the mother, applied here to that sum.
-#
-# The figure is read only when there is an increment to limit. With no
-# qualifying descendant or no guardería spend the box is a computed zero and the
-# figure is not asked for. Where the increment is positive the figure stays
-# required: if_then_else evaluates only its selected branch, so an absent
-# cotizaciones fact refuses the calculation rather than standing in as zero.
-expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [{ binding = "renta-profile-incremento-guarderia" }, { literal = "0" }] },
-    { op = "min", args = [
-        { binding = "renta-profile-incremento-guarderia" },
-        { binding = "renta-profile-cotizaciones-ss-madre" },
-    ] },
-    { literal = "0" },
-] }
+# (b) the unsubsidised spend paid for that child. Every one of those bounds,
+# with the month proration, is per child, and this schema has no per-descendant
+# fold, so the fold happens where the descendant records live and the registry
+# consumes one resolved value. Each child's cotizaciones are stated on its own row.
+# This edition binds the fold that limits each child by them; the 2023 edition,
+# after the Ley 31/2022 reform, binds the fold that does not. A child with an
+# increment but no stated figure leaves the value unresolved, so the box is
+# never computed from an assumed zero.
+expression = { binding = "renta-profile-incremento-guarderia" }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-81"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-renta-2022-manual-parte1"]
