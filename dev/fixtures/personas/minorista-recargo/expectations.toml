@@ -172,7 +172,8 @@ derivation = """
 second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
-grounding = "cited"
+grounding = "unverified"
+reason = "Row MIN-IBI-1 (IBI of the shop, a deductible tributo) states no accrual date, and the persona elects the devengo criterion, so the calculation leaves the row unplaced instead of guessing (640.00 fewer gastos from 3T). The IBI accrues on the first day of its período impositivo (TRLRHL art. 75), which may also move the gasto into 1T and 2T; these figures are re-derived once the ledger states the accrual date."
 
 [[values]]
 modelo = "130"
@@ -190,7 +191,8 @@ período impositivo 2023", so in a year that provision governs: provisión = 7 %
 second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
-grounding = "cited"
+grounding = "unverified"
+reason = "Row MIN-IBI-1 (IBI of the shop, a deductible tributo) states no accrual date, and the persona elects the devengo criterion, so the calculation leaves the row unplaced instead of guessing (640.00 fewer gastos from 3T). The IBI accrues on the first day of its período impositivo (TRLRHL art. 75), which may also move the gasto into 1T and 2T; these figures are re-derived once the ledger states the accrual date."
 
 
 [[values]]
@@ -205,7 +207,8 @@ derivation = """
 second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
-grounding = "cited"
+grounding = "unverified"
+reason = "Row MIN-IBI-1 (IBI of the shop, a deductible tributo) states no accrual date, and the persona elects the devengo criterion, so the calculation leaves the row unplaced instead of guessing (640.00 fewer gastos from 3T). The IBI accrues on the first day of its período impositivo (TRLRHL art. 75), which may also move the gasto into 1T and 2T; these figures are re-derived once the ledger states the accrual date."
 
 [[values]]
 modelo = "130"
@@ -223,7 +226,8 @@ período impositivo 2023", so in a year that provision governs: provisión = 7 %
 second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
-grounding = "cited"
+grounding = "unverified"
+reason = "Row MIN-IBI-1 (IBI of the shop, a deductible tributo) states no accrual date, and the persona elects the devengo criterion, so the calculation leaves the row unplaced instead of guessing (640.00 fewer gastos from 3T). The IBI accrues on the first day of its período impositivo (TRLRHL art. 75), which may also move the gasto into 1T and 2T; these figures are re-derived once the ledger states the accrual date."
 
 
 [[values]]
