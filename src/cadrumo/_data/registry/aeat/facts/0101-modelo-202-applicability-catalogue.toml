@@ -6,14 +6,21 @@ family = "mapping"
 variant_id = "modelo-202-applicability-catalogue:2015-01-01"
 date_axis = "filing_period"
 valid_from = 2015-01-01
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-40-3"]
-source_refs = ["boe-lis-art-40-statutory-facts"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-40-3", "orden-hfp-227-2017:art-1"]
+source_refs = ["boe-lis-art-40-statutory-facts", "boe-modelo-202-base-order"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "boe-lis-art-40-statutory-facts"
 required_text = ["6 millones de euros durante los 12 meses anteriores"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-202-base-order"
+required_text = [
+  "La presentación del modelo 202 será obligatoria para aquellos contribuyentes cuyo importe neto de la cifra de negocios sea superior a 6 millones de euros",
+  "no deba efectuarse ingreso alguno en concepto de pago fraccionado de los citados impuestos en el período correspondiente, no será obligatoria la presentación del modelo 202",
+]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -23,8 +30,12 @@ entries = [
   { key = "reason.incomplete", value = 'No se puede determinar la modalidad del Modelo 202: el importe neto de la cifra de negocios de los doce meses anteriores no está declarado. Sin este dato el motor no infiere modalidad — un pago fraccionado equivocado es peor que una respuesta incompleta.' },
   { key = "reason.art_40_3_mandatory", value = 'Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone el método de la base imponible (3 / 9 / 11 primeros meses) cuando el importe neto de la cifra de negocios de los doce meses anteriores ha superado los 6.000.000 €. La modalidad del artículo 40.2 (cuota) no está disponible.' },
   { key = "reason.art_40_2_optional", value = 'Modelo 202 modalidad por defecto: el artículo 40.2 de la LIS permite el método de la cuota (18 %) cuando el importe neto de la cifra de negocios de los doce meses anteriores no ha superado los 6.000.000 €. La modalidad del artículo 40.3 sigue siendo opcional.' },
+  { key = "reason.filing_mandatory", value = 'Modelo 202 obligatorio en cada periodo: el importe neto de la cifra de negocios de los doce meses anteriores al inicio del período impositivo ha superado los 6.000.000 €, y la Orden HFP/227/2017 (artículo 1.3) obliga a presentar el modelo aunque no resulte ingreso alguno en concepto de pago fraccionado.' },
+  { key = "reason.filing_depends_on_ingreso", value = 'No se puede determinar si el Modelo 202 debe presentarse: con un importe neto de la cifra de negocios de los doce meses anteriores no superior a 6.000.000 €, la Orden HFP/227/2017 (artículo 1.3) solo obliga a presentarlo en el periodo en que resulte ingreso. En la modalidad del artículo 40.2 de la LIS la base es la cuota íntegra del último período impositivo con plazo de declaración vencido, minorada en deducciones, bonificaciones, retenciones e ingresos a cuenta; si se ejerció en la declaración censal la opción del artículo 40.3, la base es la base imponible de los 3, 9 u 11 primeros meses. El perfil no recoge esa base ni la opción ejercida, y el motor no presume ninguna de las dos.' },
   { key = "legal_refs.not_applicable", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.incomplete", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.art_40_3_mandatory", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
   { key = "legal_refs.art_40_2_optional", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
+  { key = "legal_refs.filing_mandatory", value = "ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
+  { key = "legal_refs.filing_depends_on_ingreso", value = "ley-27-2014:art-40|ley-27-2014:art-40-3|orden-hfp-227-2017:art-1" },
 ]
