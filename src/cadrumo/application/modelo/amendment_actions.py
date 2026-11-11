@@ -105,6 +105,7 @@ from .action_errors import (
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
+    amendment_evidence_missing_precondition,
 )
 from .amendment_action_ports import AmendmentActionPorts
 from .amendment_kind_resolution import (
@@ -184,11 +185,17 @@ def _load_amendment_baseline[CasillaKey](
     )
     if baseline is None or baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={
+                "work_unit_id": in_force.work_unit_id,
                 "filing_record_id": from_filing_record_id,
                 "external_evidence_present": False,
             },
+            precondition_failure=amendment_evidence_missing_precondition(
+                subject_leaf_key="modelo.work.amend",
+                work_unit_id=in_force.work_unit_id,
+                filing_record_id=from_filing_record_id,
+            ),
         )
 
     work_units, work_units_revision = ports.work_unit_repository.load_revisioned()
@@ -216,7 +223,7 @@ def _load_amendment_baseline[CasillaKey](
         refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
     if work_unit.modelo == form_for_role("iva.periodic") and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={
                 "filing_record_id": from_filing_record_id,
                 "filing_instance_evidence_present": False,
@@ -304,7 +311,7 @@ def _m303_rectificativa_motive_is_applicable(
     filing_evidence = baseline_revision.filing_instance_evidence
     if filing_evidence is None:
         raise AmendmentEvidenceMissingError(
-            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            translated_message="errors.refused.refused_modelo_amendment_evidence_missing",
             context={"work_unit_id": work_unit.work_unit_id, "filing_instance_evidence_present": False},
         )
     regimen_snapshot = filing_evidence.m303.regimen_simplificado.regimen_snapshot

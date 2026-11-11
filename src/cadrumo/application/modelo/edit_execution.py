@@ -98,7 +98,7 @@ from .edit_services import (
     validate_scalar_intent,
 )
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
-from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError
+from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloPriorPeriodUnfiledError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -485,10 +485,13 @@ def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -
 
     An unstated carry from an earlier ejercicio is addressed to the first box
     its still open carries feed, as an earlier return that cannot show them is,
-    so the refused Apply names a carry the filer has not answered yet.
+    so the refused Apply names a carry the filer has not answered yet; a carry
+    waiting on an unfiled earlier period is addressed to the box it feeds.
     """
     if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
         return _first_box_fed_by(",".join(error.open_carry_ids), revision)
+    if isinstance(error, ModeloPriorPeriodUnfiledError):
+        return _first_box_fed_by(error.binding_id, revision)
     if not isinstance(error, RegistryValidationError) or error.context is None:
         return None
     if error.translated_message == "errors.calc.bound_casilla_binding_value_missing":

@@ -76,7 +76,7 @@ export async function docsUiChecks({
         );
         const rows = palette
           .locator(".palette-results > section")
-          .first()
+          .last()
           .getByRole("option");
         await rows.first().waitFor({ state: "visible", timeout: 30000 });
         const count = await rows.count();
@@ -91,7 +91,8 @@ export async function docsUiChecks({
         assert(selected && title.startsWith(selected.title));
         const expectedUrl = new URL(selected.url, shown).href;
         assert(expectedUrl.startsWith(`${docsOrigin}/`));
-        // Documentation rows have no action shortcut; the first section is docs.
+        // Actions are listed first; the documentation section is always last
+        // while a query searches it, and its rows carry no action shortcut.
         assert.equal(await rows.first().locator(".palette-chord").count(), 0);
         await rows.first().click();
         await palette.waitFor({ state: "hidden" });

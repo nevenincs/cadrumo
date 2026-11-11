@@ -21,11 +21,10 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast, override
+from typing import TYPE_CHECKING, Protocol, cast
 
 import click
 import typer
-import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
 from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
@@ -33,6 +32,7 @@ from cadrumo_client.contracts.command_program import CommandProgram
 
 from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ...core.cli_metadata import is_metadata_invocation
+from ...core.cli_value_parsers import CliChoice, refuse_cli_value
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
@@ -48,17 +48,10 @@ from .operator_surface_reconciliation import operator_surface_target_reconciliat
 # publication therefore refuses the surface instead of falling back to a second
 # identifier universe maintained in Python.
 #
-# The parameter type is a module-level object because ``from __future__ import
-# annotations`` stringifies the ``Annotated`` metadata carrying
-# ``click_type=...`` and Typer re-evaluates that string in this module.  The
-# governed values themselves must not be resolved until Click converts a real
+# Each parser is a module-level object a command spec names as its value parser.
+# The governed values themselves are not resolved until Typer converts a real
 # command argument: importing the CLI, rendering help, and printing the version
 # are metadata-only operations and do not own an authority operation.
-#
-# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-# are the same runtime object behind two static names; the cast bridges only that
-# static duality, with no Any escape.
 def _published_modelo_codes() -> list[str]:
     """Return the identifiers admitted by the bundled published authority."""
     from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -67,66 +60,19 @@ def _published_modelo_codes() -> list[str]:
         return sorted(operation.modelo_ids())
 
 
-class _PublishedModeloCode(click.ParamType[str]):
-    """Validate a modelo identifier against the authority at argument use."""
+def _amendment_declaration_kinds() -> tuple[str, ...]:
+    """Return the declaration kinds an amendment can be filed as; never the original."""
+    from ...domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS
 
-    name = "modelo"
-
-    @property
-    def choices(self) -> tuple[str, ...]:
-        """Report the published identifiers when a schema asks for the choice set."""
-        return tuple(_published_modelo_codes())
-
-    @override
-    def convert(
-        self,
-        value: object,
-        param: click.Parameter | None,
-        ctx: click.Context | None,
-    ) -> str:
-        """Resolve the published directory only for a governed invocation."""
-        return click.Choice(_published_modelo_codes()).convert(value, param, ctx)
+    return tuple(kind.value for kind in AMENDMENT_DECLARATION_KINDS)
 
 
-MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedModeloCode(),
-)
+MODELO_CODE_CHOICE = CliChoice(_published_modelo_codes)
+AMENDMENT_DECLARATION_KIND_CHOICE = CliChoice(_amendment_declaration_kinds)
 
 
-class _AmendmentDeclarationKind(click.ParamType[str]):
-    """Admit only the declaration kinds an amendment can be filed as."""
-
-    name = "kind"
-
-    @property
-    def choices(self) -> tuple[str, ...]:
-        """Report the amendment kinds when a schema asks for the choice set."""
-        from ...domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS
-
-        return tuple(kind.value for kind in AMENDMENT_DECLARATION_KINDS)
-
-    @override
-    def convert(
-        self,
-        value: object,
-        param: click.Parameter | None,
-        ctx: click.Context | None,
-    ) -> str:
-        """Return the kind token, refusing the original, which no amendment files as."""
-        return click.Choice(self.choices).convert(value, param, ctx)
-
-
-AMENDMENT_DECLARATION_KIND_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _AmendmentDeclarationKind(),
-)
-
-
-class _PublishedIvaTerritorialScope(click.ParamType[str]):
+class _PublishedIvaTerritorialScope:
     """Project an IVA territorial scope through the published fact at argument use."""
-
-    name = "territorial_scope"
 
     @property
     def choices(self) -> tuple[str, ...]:
@@ -138,22 +84,18 @@ class _PublishedIvaTerritorialScope(click.ParamType[str]):
             catalogue = resolve_iva_classification_catalogue(operation=operation)
             return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
 
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+    def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.iva.classification import require_iva_territorial_scope
 
-        accepted = self.choices
-        click.Choice(accepted).convert(value, param, ctx)
+        CliChoice.of(self.choices)(value)
         with bundled_indexed_authority().operation() as operation:
             return require_iva_territorial_scope(value, operation=operation)
 
 
-class _PublishedEuMemberState(click.ParamType[str]):
+class _PublishedEuMemberState:
     """Project an EU IVA member-state token through the published fact at argument use."""
-
-    name = "member_state"
 
     @property
     def choices(self) -> tuple[str, ...]:
@@ -164,8 +106,7 @@ class _PublishedEuMemberState(click.ParamType[str]):
         with bundled_indexed_authority().operation() as operation:
             return tuple(str(state) for state in resolve_eu_member_state_catalogue(authority=operation).choices)
 
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+    def __call__(self, value: object) -> str:
         """Return the projected token, listing the accepted set on a refusal."""
         from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ...domain.calculations.registry.errors import RegistryValidationError
@@ -177,42 +118,36 @@ class _PublishedEuMemberState(click.ParamType[str]):
                 return catalogue.require(value)
             except RegistryValidationError:
                 accepted = tuple(str(state) for state in catalogue.choices)
-        click.Choice(accepted).convert(value, param, ctx)
-        raise click.BadParameter(str(value), ctx=ctx, param=param)
+        CliChoice.of(accepted)(value)
+        refuse_cli_value(str(value))
 
 
-class _PublishedIrpfCategory(click.ParamType[str]):
-    """Resolve a ledger IRPF category token through the published taxonomy at argument use."""
+def parse_published_irpf_category(value: object) -> str:
+    """Resolve a ledger IRPF category token through the published taxonomy, naming the accepted ids on a refusal."""
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+    from ...domain.transactions.errors import TransactionValidationError
+    from ...domain.transactions.irpf_categories import require_ledger_irpf_category
 
-    name = "irpf_category"
-
-    @override
-    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
-        """Return the normalized token, naming the accepted ids on a refusal."""
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-        from ...domain.transactions.errors import TransactionValidationError
-        from ...domain.transactions.irpf_categories import require_ledger_irpf_category
-
-        with bundled_indexed_authority().operation() as operation:
-            try:
-                return require_ledger_irpf_category(str(value), authority=operation)
-            except TransactionValidationError as refusal:
-                self.fail(str(refusal), param, ctx)
+    with bundled_indexed_authority().operation() as operation:
+        try:
+            return require_ledger_irpf_category(str(value), authority=operation)
+        except TransactionValidationError as refusal:
+            refuse_cli_value(str(refusal))
 
 
-IRPF_CATEGORY_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedIrpfCategory(),
-)
+def parse_review_state(value: object) -> ReviewState:
+    """Parse a review-state token case-insensitively."""
+    from ...application.review.enums import ReviewState
 
-IVA_TERRITORIAL_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedIvaTerritorialScope(),
-)
-EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    _PublishedEuMemberState(),
-)
+    normalized = str(value).casefold()
+    for state in ReviewState:
+        if state.value.casefold() == normalized:
+            return state
+    refuse_cli_value(f"expected one of: {', '.join(state.value for state in ReviewState)}")
+
+
+IVA_TERRITORIAL_SCOPE_CHOICE = _PublishedIvaTerritorialScope()
+EU_MEMBER_STATE_CHOICE = _PublishedEuMemberState()
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -227,6 +162,7 @@ if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
     from ...application.operator_actions.models import ActionReference, PreconditionVerdict
     from ...application.operator_surface.verb_input_contracts import VerbInputSchema
+    from ...application.review.enums import ReviewState
     from ...core.json_contract import ResolvedNoticeAction
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 

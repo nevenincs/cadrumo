@@ -124,12 +124,12 @@ dependencies = [
   "snowballstemmer>=2.2,<4",
   # Persistence
   "sqlalchemy>=2.1.4,<3",
-  # CLI. The command compiler, suggestions and error rendering import Typer's
-  # vendored Click (``typer._click``), a private layout Typer reorganises
-  # between minor releases (0.29 moved ``typer._click.types`` away), and an
+  # CLI. Suggestions and error rendering import Typer's vendored Click
+  # (``typer._click``), a private layout Typer reorganises between minor
+  # releases (0.29 removed ``typer._click.types`` and ``click_type``), and an
   # installed wheel resolves this range rather than uv.lock. Raise the ceiling
   # only together with the lock, after the installed-CLI journeys pass on it.
-  "typer>=0.27.3,<0.28",
+  "typer>=0.29,<0.30",
   # IANA timezone data for Europe/Madrid, including Windows and minimal
   # Linux containers whose operating system carries no zoneinfo database.
   "tzdata>=2026.2",

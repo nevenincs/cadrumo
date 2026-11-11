@@ -282,6 +282,8 @@ RETIRED_ERROR_CODE_SUCCESSORS: Final[Mapping[str, str]] = MappingProxyType(
     {
         # A blocked IVA wallet became a refusal with no effect rather than a failure.
         "ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED": "REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
+        # An amendment of a baseline AEAT never attested became a refusal whose door is the import.
+        "ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING": "REFUSED_MODELO_AMENDMENT_EVIDENCE_MISSING",
     }
 )
 """Every code no longer declared that a persisted record can still hold, with the code it now reads as.

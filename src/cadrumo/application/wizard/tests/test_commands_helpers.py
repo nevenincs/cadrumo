@@ -29,6 +29,7 @@ from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
+from ....core.cli_value_parsers import CliChoice
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, resolve_ccaa_catalogue
 from ....domain.contribuyente.renta_codes import (
@@ -157,8 +158,8 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum(authority_operation: Pin
     build_wizard_command(build_setup_flow(authority_operation), mode="create", operation=authority_operation)
     option = SETUP_OPTION_INFOS["tax-residence-ccaa"]
     assert option is not None, "the command builder materialized no --tax-residence-ccaa option"
-    choice_type = option.click_type
-    assert isinstance(choice_type, click.Choice)
+    choice_type = option.parser
+    assert isinstance(choice_type, CliChoice)
 
     expected = [member.value for member in ccaa_choices(authority=authority_operation)] + list(
         resolve_ccaa_catalogue(authority=authority_operation).foral_cli_aliases
@@ -187,8 +188,8 @@ def test_a_renta_code_flag_takes_its_choices_from_the_leased_flow(
     build_wizard_command(build_setup_flow(authority_operation), mode="create", operation=authority_operation)
     option = SETUP_OPTION_INFOS[flag]
     assert option is not None
-    choice_type = option.click_type
-    assert isinstance(choice_type, click.Choice)
+    choice_type = option.parser
+    assert isinstance(choice_type, CliChoice)
     assert set(choice_type.choices) == set(vocabulary.form_codes(authority=authority_operation).values())
 
 

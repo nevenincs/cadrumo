@@ -14,6 +14,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ....domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
@@ -39,6 +40,8 @@ from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
 from ..edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
 from ..edit_transient_operand import modelo_edit_financial_operand
 from ..operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+from ..reconciliation_sources import ReconciliationSourceNeed, ReconciliationSourceStanding
+from ..work_missing_input import ModeloPriorPeriodUnfiledError
 from .test_edit_models import edit_models_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,6 +91,34 @@ def test_unknown_or_malformed_producer_context_retains_only_the_safe_family(cont
     assert isinstance(refusal, ModeloEditDomainRefusalV1)
     assert refusal.address is None and refusal.evidence == ()
     assert "calculation_source_unresolved" not in refusal.facts
+
+
+def test_a_carry_waiting_on_an_unfiled_earlier_period_names_the_box_it_feeds() -> None:
+    support = published_supported_filing_years()
+    assert support is not None
+    unfiled = ModeloPriorPeriodUnfiledError(
+        _error(binding_id=_BINDING),
+        binding_id=_BINDING,
+        source_needs=(
+            ReconciliationSourceNeed(
+                modelo="130",
+                period=Period.from_year_and_code(support.horizon, "1T"),
+                standing=ReconciliationSourceStanding.MISSING,
+                unit=None,
+            ),
+        ),
+        translated_message="application.modelo.errors.prior_period_unfiled",
+        context={"modelo": "130", "filing_year": support.horizon, "period": "2T", "unfiled_period": "1T"},
+        precondition_verdict=None,
+        next_step=None,
+    )
+
+    refusal = pre_effect_refusal(unfiled, revision=_revision()).refusal
+
+    assert isinstance(refusal, ModeloEditDomainRefusalV1)
+    assert refusal.address == ModeloEditScalarAddressV1(casilla_id="1388")
+    assert refusal.evidence == (_BINDING,)
+    assert "calculation_source_unresolved" in refusal.facts
 
 
 def _modelo_100_years() -> tuple[int, ...]:

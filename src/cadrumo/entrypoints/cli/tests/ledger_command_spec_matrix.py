@@ -8,7 +8,7 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.parameters import ArgumentSpec, ParameterSpec
 from cadrumo_client.commands.spec import CommandSpec
 
-_NO_VALUE_HOOKS: Final[tuple[object, ...]] = (None, None, None, None)
+_NO_VALUE_HOOKS: Final[tuple[object, ...]] = (None, None, None)
 DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
     None,
     None,
@@ -191,7 +191,6 @@ def _value_contract(parameter: ParameterSpec) -> tuple[object, ...]:
     value = parameter.value
     return (
         _target_identity(value.annotation),
-        _target_identity(value.click_type),
         _target_identity(value.parser),
         _target_identity(value.completion),
         _target_identity(value.callback),

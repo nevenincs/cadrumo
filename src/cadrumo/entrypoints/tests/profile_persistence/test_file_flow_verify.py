@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
+from types import SimpleNamespace
+from typing import cast
+from uuid import UUID
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
@@ -19,14 +22,25 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    VerificationOutcomeIncompleteError,
 )
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
+from cadrumo.application.modelo.revision_selection_operation import (
+    MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+    ModeloWorkRevisionExecutor,
+    ModeloWorkRevisionProjection,
+    ModeloWorkRevisionRequest,
+)
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
+from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
@@ -757,3 +771,120 @@ def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_regist
 
     row_fields = {"contraparte.nif", "contraparte.clave-operacion"}
     assert not row_fields & {str(casilla_id) for casilla_id in report.missing_required_casilla_ids}, report.findings
+
+
+def _select_revision_to_file(
+    bundle: VerificationRepositoryBundle, calculation_revision_id: str, operation: PinnedAuthorityOperation
+) -> ModeloWorkRevisionProjection:
+    """Select one revision for filing through the registered selection executor over real repositories."""
+    subject_ref = profile_operation_subject(FILE_FLOW_PROFILE_ID)
+    request = OperationRequest[ModeloWorkRevisionRequest](
+        definition_id=MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
+        subject_ref=subject_ref,
+        payload=ModeloWorkRevisionRequest(
+            profile_id=UUID(FILE_FLOW_PROFILE_ID),
+            calculation_revision_id=calculation_revision_id,
+            default_for="file",
+        ),
+    )
+    captured: list[BaseModel] = []
+
+    class Events:
+        async def phase(self, phase_code: object) -> None:
+            del phase_code
+
+        async def effect(self, effect: OperationEffect) -> None:
+            assert effect is OperationEffect.NONE
+
+    class Operands:
+        async def put(self, operand: BaseModel, *, written_at: datetime) -> str:
+            del written_at
+            captured.append(operand)
+            return "selection"
+
+    context = cast(
+        OperationExecutorContext,
+        cast(
+            object,
+            SimpleNamespace(
+                authority_operation=operation,
+                identity=SimpleNamespace(subject_ref=subject_ref),
+                events=Events(),
+                operands=Operands(),
+            ),
+        ),
+    )
+    asyncio.run(
+        ModeloWorkRevisionExecutor(lambda _profile_id, *, operation, mutation_writer=None: bundle).execute(
+            request, context
+        )
+    )
+    (projection,) = captured
+    assert isinstance(projection, ModeloWorkRevisionProjection)
+    return projection
+
+
+def test_a_grant_saved_before_its_revision_was_locked_is_settled_by_verifying_again(repos: Repos) -> None:
+    """Verification saves its report, then locks the revision in a separate write.
+
+    When the second write never lands, the profile holds a granted report beside
+    a revision still in BORRADOR. Filing refuses that pair as an incomplete
+    verification rather than trusting the report, and verifying again settles
+    it: the identical outcome collapses onto the one saved report and the
+    revision is locked.
+    """
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo)
+    baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
+    baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=baseline_inputs,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            clock=T1,
+        ).revision
+    assert revision.state is CalculationRevisionState.BORRADOR
+
+    def verify(clock: datetime):
+        return verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=clock,
+        )
+
+    first = verify(T2)
+    assert first.granted_verificado_completo is True
+    # The lock never landed: the stored revision is the calculation's own BORRADOR record.
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+    assert cr_repo.load().revisions[revision.calculation_revision_id].state is CalculationRevisionState.BORRADOR
+
+    with bundled_indexed_authority().operation() as operation, pytest.raises(VerificationOutcomeIncompleteError):
+        _select_revision_to_file(
+            build_test_verification_repository_bundle(), revision.calculation_revision_id, operation
+        )
+
+    second = verify(T3)
+
+    assert second.granted_verificado_completo is True
+    assert second.verification_report_id == first.verification_report_id
+    with bundled_indexed_authority().operation() as operation:
+        stored = persisted_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            ports=build_filing_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            operation=operation,
+        )
+        selected = _select_revision_to_file(
+            build_test_verification_repository_bundle(), revision.calculation_revision_id, operation
+        )
+    assert [report.verification_report_id for report in stored] == [first.verification_report_id]
+    assert selected.calculation_state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert selected.granted_verificado_completo is True
+    assert selected.verification_report_id == first.verification_report_id
