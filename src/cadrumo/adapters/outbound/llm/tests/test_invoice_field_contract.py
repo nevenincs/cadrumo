@@ -39,6 +39,7 @@ from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, I
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
 from .....domain.iva import lookup
 from .....domain.iva.components import registry_category_projection
@@ -70,6 +71,8 @@ from .transitional_rate_support import (
     TRANSITIONAL_RATE_ANNUAL,
     TRANSITIONAL_RATE_QUARTER,
 )
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -238,7 +241,7 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
         self, category: IvaCategory, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Fixture anchor: pinned by member, so a rename cannot pass this vacuously."""
-        assert category in registry_category_projection("no_printed_tax")
+        assert category in registry_category_projection("no_printed_tax", effective_date=_ON_DATE)
         assert category.value.replace("_", " ") in _compiled(operation=operation)
 
     def test_the_line_enumerates_the_derived_set_exactly(self, *, operation: PinnedAuthorityOperation) -> None:
@@ -248,7 +251,7 @@ class TestTheNoPrintedTaxLineAsksThePaperQuestion:
         rendered = text[text.index(opening) + len(opening) : text.index(").")]
 
         assert set(rendered.split(", ")) == {
-            c.value.replace("_", " ") for c in registry_category_projection("no_printed_tax")
+            c.value.replace("_", " ") for c in registry_category_projection("no_printed_tax", effective_date=_ON_DATE)
         }
 
 

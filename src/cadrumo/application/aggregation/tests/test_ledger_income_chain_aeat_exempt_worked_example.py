@@ -96,6 +96,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 )
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -110,6 +111,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_income_ledger import aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import m130_activity_category_matcher, m130_employment_category_matcher
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -395,8 +398,10 @@ def test_the_manual_states_the_activity_is_iva_exempt() -> None:
     operation has no cuota" from "nobody recorded one", and the whole exempt
     case rests on that distinction.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_ON_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_ON_DATE
+    )
 
 
 def test_the_two_printed_income_lines_fold_into_the_bound_casilla() -> None:

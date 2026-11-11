@@ -25,6 +25,7 @@ from ...domain.invoices.models import Invoice
 from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
@@ -380,7 +381,11 @@ def _determinable_cuota(transaction: Transaction) -> Decimal | None:
     if transaction.iva_amount is not None:
         return effective_eur_iva_amount(transaction)
     category = transaction.iva_category
-    if category is not None and category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED):
+    if category is not None and category_cuota_is_zero_by_law(
+        category,
+        InvoiceKind.ISSUED,
+        effective_date=transaction_operation_date(transaction),
+    ):
         return Decimal("0")
     return None
 

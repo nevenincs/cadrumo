@@ -87,7 +87,6 @@ from pydantic import BaseModel, Field
 
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.classification import (
     CustomerTaxStatus,
@@ -150,12 +149,17 @@ class ClassificationAssembly(BaseModel):
         criteria: The record the rule table consumes, when every input was
             established. ``None`` otherwise.
         missing: What stopped it. Empty exactly when ``criteria`` is present.
+        transaction_date: The date the dated vocabularies were read on, when the
+            document established one. ``None`` exactly when the date itself is
+            among ``missing``; consumers then have no coordinate to read a dated
+            catalogue on and leave their question unresolved.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     criteria: IvaInvoiceClassificationCriteria | None = None
     missing: tuple[MissingClassifierInput, ...] = ()
+    transaction_date: date | None = None
 
     @property
     def assembled(self) -> bool:
@@ -180,9 +184,9 @@ class _InitialClassificationState(NamedTuple):
 #: the point of the probe is to decide indifference without judging the customer
 #: at all. Deriving it from the registry projection also means a new status joins
 #: the sweep when the selected fact revision declares it.
-def _status_candidates(*, operation: PinnedAuthorityOperation) -> tuple[CustomerTaxStatus, ...]:
-    """Return every status projected by the selected 0083 classification fact."""
-    return resolve_iva_classification_catalogue(operation=operation).customer_tax_statuses
+def _status_candidates(*, effective_date: date, operation: PinnedAuthorityOperation) -> tuple[CustomerTaxStatus, ...]:
+    """Return every status the 0083 classification fact projects on ``effective_date``."""
+    return resolve_iva_classification_catalogue(effective_date, operation=operation).customer_tax_statuses
 
 
 #: The status supplied on a branch whose treatment cannot turn on it.
@@ -195,9 +199,9 @@ def _status_candidates(*, operation: PinnedAuthorityOperation) -> tuple[Customer
 #: placeholder would rest entirely on the probe having been right. It is also
 #: simply true: the registry documents this projection as counterparty status
 #: unresolved, which is exactly what happened.
-def _undetermined_status(*, operation: PinnedAuthorityOperation) -> CustomerTaxStatus:
-    """Return the registry-declared unresolved-status projection."""
-    return customer_tax_status_alias("unknown", operation=operation)
+def _undetermined_status(*, effective_date: date, operation: PinnedAuthorityOperation) -> CustomerTaxStatus:
+    """Return the registry-declared unresolved-status projection on ``effective_date``."""
+    return customer_tax_status_alias("unknown", effective_date=effective_date, operation=operation)
 
 
 def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput:
@@ -526,6 +530,7 @@ def _status_axis_gap(
     status: CustomerTaxStatus | None,
     kind_candidates: tuple[TransactionKind, ...],
     inputs: ClassifierInputs,
+    effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> MissingClassifierInput | None:
     """Demand the customer's IVA status only where the table's verdict turns on it."""
@@ -533,7 +538,10 @@ def _status_axis_gap(
         return None
     if not classification_assembly_rules.axis_forks_the_law(
         probe,
-        slices=[(_status_candidates(operation=operation), (kind,)) for kind in kind_candidates],
+        slices=[
+            (_status_candidates(effective_date=effective_date, operation=operation), (kind,))
+            for kind in kind_candidates
+        ],
         operation=operation,
     ):
         return None
@@ -632,7 +640,9 @@ def _unresolved_axis_gaps(
 
     # What each axis could still be. An established axis contributes its one
     # value, so it holds genuinely fixed while the other is judged.
-    status_candidates = (status,) if status is not None else _status_candidates(operation=operation)
+    status_candidates = (
+        (status,) if status is not None else _status_candidates(effective_date=transaction_date, operation=operation)
+    )
     kind_candidates = (
         (
             classification_assembly_rules.transaction_kind_for_nature(
@@ -650,6 +660,7 @@ def _unresolved_axis_gaps(
             status=status,
             kind_candidates=kind_candidates,
             inputs=inputs,
+            effective_date=transaction_date,
             operation=operation,
         ),
         _supply_nature_axis_gap(
@@ -725,14 +736,20 @@ def _initial_classification_state(
 
     # An undetermined status is passed as an OPEN axis rather than as a value,
     # so the tier is demanded alongside it instead of one round-trip later.
-    settled_status = None if status == _undetermined_status(operation=operation) else status
-    if rate_tier is None and classification_assembly_rules.domestic_rate_tier_is_reachable(
-        issuer_scope,
-        customer_scope,
-        supply_nature,
-        settled_status,
-        effective_date=transaction_date,
-        operation=operation,
+    # Which branches the law forks on is read on the transaction's date, so with
+    # no date the tier demand cannot be decided; the missing date recorded above
+    # is the gap the operator is asked for, never today's date.
+    if (
+        rate_tier is None
+        and transaction_date is not None
+        and classification_assembly_rules.domestic_rate_tier_is_reachable(
+            issuer_scope,
+            customer_scope,
+            supply_nature,
+            None if status == _undetermined_status(effective_date=transaction_date, operation=operation) else status,
+            effective_date=transaction_date,
+            operation=operation,
+        )
     ):
         missing.append(
             MissingClassifierInput(
@@ -831,10 +848,6 @@ def assemble_classification_criteria(
         rate_tier=rate_tier,
         operation=operation,
     )
-    projected = resolve_iva_classification_inputs(
-        effective_date=transaction_date or today_madrid(),
-        operation=operation,
-    )
     missing = list(initial.missing)
     supply_nature = initial.supply_nature
     status = initial.status
@@ -861,13 +874,14 @@ def assemble_classification_criteria(
         # noise the per-branch demand exists to remove. The cost is one extra
         # round for the intra-community population, whose paper carries the
         # printed number that settles it anyway.
-        return ClassificationAssembly(missing=tuple(missing))
+        return ClassificationAssembly(missing=tuple(missing), transaction_date=transaction_date)
 
     if issuer_scope is None or customer_scope is None or transaction_date is None:
         raise ValueError(
             "classification assembly recorded no missing input yet resolved no issuer scope, "
             "customer scope or transaction date",
         )
+    projected = resolve_iva_classification_inputs(effective_date=transaction_date, operation=operation)
 
     def _criteria_for(
         status_candidate: CustomerTaxStatus,
@@ -907,11 +921,14 @@ def assemble_classification_criteria(
     )
 
     if missing:
-        return ClassificationAssembly(missing=tuple(missing))
+        return ClassificationAssembly(missing=tuple(missing), transaction_date=transaction_date)
 
     return ClassificationAssembly(
+        transaction_date=transaction_date,
         criteria=_criteria_for(
-            status if status is not None else _undetermined_status(operation=operation),
+            status
+            if status is not None
+            else _undetermined_status(effective_date=transaction_date, operation=operation),
             _transaction_kind_for(supply_nature, effective_date=transaction_date, operation=operation),
         ),
     )

@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ....core.classifier_input_source import ClassifierInputSource
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.classification import (
     CustomerTaxStatus,
     TransactionKind,
@@ -36,6 +37,8 @@ from ..classification_assembly import (
 )
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -527,6 +530,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
                 customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
                 kind=kind,
                 operation=_authority_operation_for_test,
+                transaction_date=_ON_DATE,
             ), kind
         # Immovable property is not a reverse-charge kind: a consumer's supply is
         # routed to the exempt row, while a business recipient reaches the
@@ -537,6 +541,7 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
             kind=TransactionKind("immovable_property"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -544,18 +549,21 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
             kind=TransactionKind("immovable_property"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             kind=TransactionKind("goods"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
         assert not domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             kind=TransactionKind("goods"),
             operation=_authority_operation_for_test,
+            transaction_date=_ON_DATE,
         )
 
 

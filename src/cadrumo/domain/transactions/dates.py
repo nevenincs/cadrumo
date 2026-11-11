@@ -29,7 +29,7 @@ from ..iva.schema import is_iva_cash_accounting_none
 if TYPE_CHECKING:  # pragma: no cover — typing-only import
     from .models import Transaction
 
-__all__ = ["transaction_eligible_date_span", "transaction_filing_date"]
+__all__ = ["transaction_eligible_date_span", "transaction_filing_date", "transaction_operation_date"]
 
 
 def transaction_filing_date(transaction: Transaction) -> date:
@@ -40,6 +40,15 @@ def transaction_filing_date(transaction: Transaction) -> date:
     records per transaction.
     """
     return transaction.raw.value_date or transaction.raw.booked_date
+
+
+def transaction_operation_date(transaction: Transaction) -> date:
+    """Return the date the law selects a row's dated registry values on.
+
+    The LIVA art. 75 devengo ``operation_date`` the operator states, else the
+    ledger filing date. It is never the date the program runs.
+    """
+    return transaction.operation_date or transaction_filing_date(transaction)
 
 
 def transaction_eligible_date_span(transaction: Transaction) -> tuple[date, date]:

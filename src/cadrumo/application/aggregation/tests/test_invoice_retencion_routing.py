@@ -38,6 +38,8 @@ from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 _YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -230,6 +232,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
     role = category_components(
         IvaCategory("intra_community_acquisition_reverse_charge"),
         InvoiceKind.RECEIVED,
+        effective_date=_ON_DATE,
     ).retencion_role
 
     defects = invoice_retencion_liability_defects(received_no_liability)

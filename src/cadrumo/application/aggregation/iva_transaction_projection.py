@@ -35,6 +35,7 @@ from ...domain.iva.schema import (
     IvaRateKind,
     default_iva_cash_accounting_treatment,
 )
+from ...domain.transactions.dates import transaction_operation_date
 from ...domain.transactions.models import Transaction
 from .iva_ledger import IvaLedgerAggregationIssue, IvaLedgerAggregationIssueReason, ProrrataLedgerReference
 from .iva_ledger_classification import (
@@ -91,6 +92,7 @@ def inadmissible_deduction_issue(
         if is_deducible_flow(flow_direction) and admits_iva_deduction_classification(
             category=category,
             flow_direction=flow_direction,
+            effective_date=transaction_operation_date(transaction),
         ):
             return None
         return IvaLedgerAggregationIssue(
@@ -119,6 +121,7 @@ def inadmissible_deduction_issue(
             iva_amount=iva_amount,
             investment_asset_id=transaction.investment_asset_id,
             rectifies_ledger_id=transaction.rectifies_ledger_id,
+            effective_date=transaction_operation_date(transaction),
         )
     except IvaValidationError as exc:
         return IvaLedgerAggregationIssue(
