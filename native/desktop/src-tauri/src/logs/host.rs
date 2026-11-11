@@ -299,6 +299,13 @@ pub(super) fn entry(event: &Event) -> Entry {
                 token(outcome)
             ));
         }
+        if let cadrumo_application::diagnostics::service::ServiceFact::PersonRestore {
+            cause,
+            outcome,
+        } = fact
+        {
+            message.push_str(&format!(": {} -> {}", token(cause), token(outcome)));
+        }
     }
     if let Some(fact) = event.lifecycle {
         let encoded = serde_json::to_value(fact).expect("closed lifecycle fact serializes");
@@ -872,6 +879,30 @@ mod tests {
         assert_eq!(entries[0].context["service_read"], "local_models");
         assert_eq!(entries[0].context["service_outcome"], "unanswered");
         assert_eq!(entries[0].context["service_elapsed_ms"], 21_000);
+    }
+
+    #[test]
+    fn a_stored_sign_in_presentation_is_visible_with_its_cause_and_outcome() {
+        use cadrumo_application::diagnostics::service::{
+            PersonRestoreCause, PersonRestoreOutcome, ServiceFact,
+        };
+        let diagnostics = Diagnostics::default();
+        diagnostics.service(
+            None,
+            ServiceFact::PersonRestore {
+                cause: PersonRestoreCause::HeldSessionEnded,
+                outcome: PersonRestoreOutcome::Refused,
+            },
+        );
+        let entries = HostEvents::default().poll(&diagnostics);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].message,
+            "person_restore: held_session_ended -> refused"
+        );
+        assert_eq!(entries[0].level, Some(Level::Info));
+        assert_eq!(entries[0].context["service_cause"], "held_session_ended");
+        assert_eq!(entries[0].context["service_outcome"], "refused");
     }
 
     #[test]
