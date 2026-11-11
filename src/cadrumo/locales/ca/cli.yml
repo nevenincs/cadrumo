@@ -2600,18 +2600,19 @@ cli:
             de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
             el fitxer existent; no s'ha llegit cap perfil.
       ascendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre
-          de descendents amb qui conviu l'ascendent>]. Repetible; NACIMIENTO és obligatori
-          a cada fila.
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<cognoms
+          i nom>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre de descendents
+          amb qui conviu l'ascendent>]. Repetible; NACIMIENTO és obligatori a cada
+          fila.
         add_help: Afegeix un o més ascendents al perfil actiu, o declara amb --none
           que no n'hi ha cap.
         help: Declara els ascendents del contribuent per a la secció de família del
           model 100.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
         invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
-          CLAU=VALOR amb les claus NACIMIENTO, NIF, FALLECIMIENTO i CONVIVIENTES,
-          cadascuna com a màxim una vegada i amb valor; el context de l'error indica
-          la clau quan es pot identificar.
+          CLAU=VALOR amb les claus NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO
+          i CONVIVIENTES, cadascuna com a màxim una vegada i amb valor; el context
+          de l'error indica la clau quan es pot identificar.
         list_help: Llista els ascendents declarats al perfil actiu i si el perfil
           declara que no n'hi ha cap.
         remove_help: Elimina un ascendent per índex (base 0) del perfil actiu.
@@ -2760,8 +2761,8 @@ cli:
             amb --yes per eliminar.'
         yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repetible. Executa `aeat config profile descendiente` sense subcomandament
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<cognoms
+          i nom>]. Repetible. Executa `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
         ambiguous_relacion_advisory: El descendent %{indices} declara mesos de treball
@@ -3504,9 +3505,10 @@ cli:
       reason_help: Motiu en text lliure que es registra com a notes del moviment i
         com a motiu de la decisió de classificació (visible a `aeat app ledger view`),
         o amb una decisió `--reject`.
-      recargo_amount_help: Recàrrec d'equivalència repercutit en aquest moviment (art. 161
-        LIVA). En una compra només s'admet si el règim d'IVA del perfil és el recàrrec
-        d'equivalència; amb la base i la quota d'IVA ha de sumar l'import del moviment
+      recargo_amount_help: Recàrrec d'equivalència repercutit en aquest moviment (art.
+        161 LIVA). En una compra només s'admet si el règim d'IVA del perfil és el
+        recàrrec d'equivalència; amb la base i la quota d'IVA ha de sumar l'import
+        del moviment
       reject_apply_exclusive: '--reject no es pot combinar amb --apply: `reject` registra
         un suggeriment rebutjat, `apply` un d''acceptat.'
       reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment

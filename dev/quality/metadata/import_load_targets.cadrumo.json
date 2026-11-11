@@ -2599,6 +2599,7 @@
         "cadrumo.domain.contribuyente.family_profile",
         "cadrumo.domain.contribuyente.family_types",
         "cadrumo.domain.contribuyente.guarderia_mensual",
+        "cadrumo.domain.contribuyente.household_person_name",
         "cadrumo.domain.contribuyente.inventory",
         "cadrumo.domain.contribuyente.inventory.anexo_d_records",
         "cadrumo.domain.contribuyente.inventory.closing_authority_records",

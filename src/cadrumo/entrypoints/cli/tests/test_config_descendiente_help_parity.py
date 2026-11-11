@@ -99,6 +99,7 @@ _PROBES: dict[str, tuple[str, str]] = {
     # and it is the half a parser could drop while still honouring bare months.
     "GASTOS_GUARDERIA_MENSUAL": ("GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180", "gastos_guarderia_mensuales"),
     "NIF": ("NIF=12345678Z", "nif"),
+    "APELLIDOS_NOMBRE": ("APELLIDOS_NOMBRE=Ortega Navarro Pablo", "apellidos_nombre"),
 }
 
 
