@@ -22,6 +22,7 @@ from .....application.operator_actions.models import ActionReference
 from .....core.i18n.render import tr
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -53,12 +54,13 @@ from ..models import DeclarationsWorkspaceWiringV1
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "22222222-2222-4222-8222-222222222222"
-_ORIGINAL_AT = datetime(2026, 4, 20, 9, tzinfo=UTC)
-_AMENDED_AT = datetime(2026, 5, 4, 9, tzinfo=UTC)
-_RECONCILED_AT = datetime(2026, 5, 5, 9, tzinfo=UTC)
-_OVERRIDDEN_AT = datetime(2026, 5, 6, 9, tzinfo=UTC)
-_CLEARED_AT = datetime(2026, 5, 7, 9, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_ORIGINAL_AT = datetime(_YEAR, 4, 20, 9, tzinfo=UTC)
+_AMENDED_AT = datetime(_YEAR, 5, 4, 9, tzinfo=UTC)
+_RECONCILED_AT = datetime(_YEAR, 5, 5, 9, tzinfo=UTC)
+_OVERRIDDEN_AT = datetime(_YEAR, 5, 6, 9, tzinfo=UTC)
+_CLEARED_AT = datetime(_YEAR, 5, 7, 9, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _revision(
@@ -100,11 +102,11 @@ def _revision(
 
 def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorkspaceProjectionV1:
     """A confirmed AEAT original amended by a pending local complementaria."""
-    snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    snapshot_ref = operation.snapshot("130", filing_year=_YEAR, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=snapshot_ref.revision_id,
     )
@@ -133,7 +135,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         calculation_revision_id=original_revision.calculation_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         filed_at=_ORIGINAL_AT,
         filed_by="aeat-import",
@@ -156,7 +158,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         calculation_revision_id=amended_revision.calculation_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         filed_at=_AMENDED_AT,
         filed_by="operator",
@@ -169,7 +171,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=snapshot_ref.revision_id,
         name="synthetic chain",

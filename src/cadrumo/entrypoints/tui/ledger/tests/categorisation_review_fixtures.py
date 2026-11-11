@@ -57,6 +57,7 @@ from .....core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification
 from .categorisation_entry_fixtures import MemoryLedger
 from .categorisation_fixtures import (
@@ -69,7 +70,8 @@ from .categorisation_fixtures import (
 _OPERATION_ID = "c" * 64
 _INTERACTION_ID = "d" * 64
 _DIGEST = "e" * 64
-_NOW = datetime(2026, 3, 14, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 3, 14, tzinfo=UTC)
 _PROVENANCE = "llm:lector-local"
 
 

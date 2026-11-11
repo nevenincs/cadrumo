@@ -38,8 +38,9 @@ def _assert_external_details_modal(app, external, size):
     for key in ("confirmed", "no_refile", "unavailable"):
         assert tr("workspace.declarations.list.aeat_unlinked.help." + key) in text
     assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
-    assert "2025" in text and "15" in text
     assert external.calendar is not None and external.calendar.aeat_reference_id is not None
+    assert external.calendar.aeat_submitted_at is not None
+    assert str(external.calendar.aeat_submitted_at.year) in text and "15" in text
     assert external.calendar.aeat_reference_id not in text
     detail = modal.query_one("#external-filing-technical", Static)
     assert not detail.display

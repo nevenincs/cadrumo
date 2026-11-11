@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (
@@ -38,7 +39,7 @@ _MODELO = "232"
 _DELTA_REVISION = authored_revisions(_MODELO)[-1]
 _DELTA = str(_DELTA_REVISION.id)
 #: The delta states its predecessor, which is the generated base it inherits its layouts from.
-assert _DELTA_REVISION.predecessor is not None
+assert isinstance(_DELTA_REVISION.predecessor, DeclaredPredecessor)
 _BASE = str(_DELTA_REVISION.predecessor.revision_id)
 
 

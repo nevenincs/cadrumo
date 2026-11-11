@@ -35,6 +35,7 @@ from ....domain.calculations.registry.formula_expression import evaluate_express
 from ....domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import FormulaExpression
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import merge_source_resolutions
@@ -46,7 +47,7 @@ _LEDGER_IVA = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
 def _modelo_303_revision() -> ModeloRevision:
-    return published_snapshot("303", filing_year=2024, period="1T").revision
+    return published_snapshot("303", filing_year=filing_year_envelope().horizon, period="1T").revision
 
 
 def test_expected_but_missing_fires_when_present_source_resolved_no_value() -> None:
@@ -137,7 +138,7 @@ def _evaluate_binding_leaf(*, unresolved: frozenset[str]) -> Decimal:
         values={},
         binding_values={},
         parameters={},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(filing_year_envelope().horizon, 12, 31)},
         relation_values={},
         unresolved_relation_ids=frozenset(),
         unresolved_binding_ids=unresolved,

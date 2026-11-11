@@ -8,18 +8,21 @@ from decimal import Decimal
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 
-_DEVENGO_2024_Q1 = date(2024, 3, 15)
+_YEAR = filing_year_envelope().horizon
+
+_DEVENGO_Q1 = date(_YEAR, 3, 15)
 
 
 def resolved_for(
     invoice: Invoice,
     *,
     operation: PinnedAuthorityOperation,
-    devengo_date: date = _DEVENGO_2024_Q1,
+    devengo_date: date = _DEVENGO_Q1,
 ) -> dict[str, Decimal]:
     """Project the invoice's single line the way the screen does, then resolve."""
     line = invoice.lines[0]
@@ -39,7 +42,7 @@ def resolved_for(
     )
     if observation is None:
         return {}
-    revision = published_snapshot("303", filing_year=2024, period="1T").revision
+    revision = published_snapshot("303", filing_year=devengo_date.year, period="1T").revision
     return {
         str(k): v
         for k, v in resolve_iva_ledger_binding_values(

@@ -54,6 +54,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -64,7 +65,10 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,7 +142,7 @@ async def _project_accounting_reports(report, operands, registration, receipt):
     ):
         pair = FiledCapturePairOutcome(
             modelo="303",
-            year=2025,
+            year=_FILING_YEAR,
             walk_attempted=attempted,
             walk_completed=completed,
             row_count=rows,
@@ -154,7 +158,7 @@ async def _project_accounting_reports(report, operands, registration, receipt):
                 "captured_count": captured,
                 "observation_paths": ("first", "second") if captured else (),
                 "calculation_observation_count": 1 if captured else 0,
-                "calculation_observation_keys": ("303:2025:1T",) if captured else (),
+                "calculation_observation_keys": (f"303:{_FILING_YEAR}:1T",) if captured else (),
                 "failed_count": 0,
                 "failures": (),
             }
@@ -185,7 +189,12 @@ def _assert_bulk_projection(projected):
 def _assert_bulk_preview_totals(result, output_root, composed_roots):
     assert result.output_root == str(output_root)
     assert composed_roots == [output_root]
-    assert (result.modelos, result.year_from, result.year_to, result.dry_run) == (("999",), 2025, 2025, True)
+    assert (result.modelos, result.year_from, result.year_to, result.dry_run) == (
+        ("999",),
+        _FILING_YEAR,
+        _FILING_YEAR,
+        True,
+    )
     assert (result.captured_count, result.reached_count, result.failed_count) == (0, 0, 1)
     assert result.sync_run_ref is None
     assert result.observation_paths == ()
@@ -195,12 +204,12 @@ def _assert_bulk_preview_totals(result, output_root, composed_roots):
 def _assert_bulk_preview_failure(result):
     assert len(result.pair_outcomes) == 1
     pair = result.pair_outcomes[0]
-    assert (pair.modelo, pair.year) == ("999", 2025)
+    assert (pair.modelo, pair.year) == ("999", _FILING_YEAR)
     assert (pair.walk_attempted, pair.walk_completed) == (False, False)
     assert (pair.row_count, pair.reached_count, pair.captured_count) == (0, 0, 0)
     assert len(result.failures) == 1
     failure = result.failures[0]
-    assert (failure.modelo, failure.year, failure.period, failure.expediente_id) == ("999", 2025, None, None)
+    assert (failure.modelo, failure.year, failure.period, failure.expediente_id) == ("999", _FILING_YEAR, None, None)
     assert failure.error_type == "LiveApplicationInputError"
     assert "registry has no modelo definition" in failure.message
 
@@ -217,7 +226,7 @@ def _assert_bulk_accounting_projections(accounting_projections):
     assert unwalked.pair_outcomes[0].walk_completed is False
     assert (persisted.pair_outcomes[0].row_count, persisted.captured_count) == (2, 2)
     assert persisted.calculation_observation_count == 1
-    assert persisted.calculation_observation_keys == ("303:2025:1T",)
+    assert persisted.calculation_observation_keys == (f"303:{_FILING_YEAR}:1T",)
 
 
 @pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
@@ -262,8 +271,8 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
             payload=FiledBulkCaptureRequest(
                 profile_id=profile_id,
                 output_root=output_root if names_root else None,
-                year_from=2025,
-                year_to=2025,
+                year_from=_FILING_YEAR,
+                year_to=_FILING_YEAR,
                 modelos=("999",),
                 dry_run=True,
             ),

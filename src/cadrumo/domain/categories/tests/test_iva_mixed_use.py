@@ -24,6 +24,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.variants import FactSelector
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, manual_editions_printing
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import CategoryValidationError
 from ..proportionality import (
@@ -44,6 +45,16 @@ from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_ENVELOPE = filing_year_envelope()
+#: Editions of the bundled Manual práctico IVA that print the home-office supply rule.
+_SUMINISTROS_MANUAL_EDITIONS = manual_editions_printing(
+    "iva",
+    "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.",
+)
+#: The newest bundled Manual práctico IVA and Renta editions.
+_IVA_MANUAL = _SUMINISTROS_MANUAL_EDITIONS[-1]
+_RENTA_MANUAL = manual_editions_printing("renta")[-1]
+
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
 
 _DEGREE_OF_USE_CATEGORIES = (
@@ -54,7 +65,7 @@ _DEGREE_OF_USE_CATEGORIES = (
     "telefonia_fija",
 )
 _BOE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
-_MANUAL_URL = manual_practicos_url("IVA/Manual_IVA_2025.pdf")
+_MANUAL_URL = manual_practicos_url(f"IVA/Manual_IVA_{_IVA_MANUAL}.pdf")
 
 
 def _liva_citation(source: CategoryCitationSource = CategoryCitationSource.LEY_IVA) -> CategoryCitation:
@@ -65,8 +76,8 @@ def _liva_citation(source: CategoryCitationSource = CategoryCitationSource.LEY_I
         url=parse_http_url(_BOE_URL),
         quote="Texto autoritativo de prueba.",
         legal_ref="ley-37-1992:art-95",
-        valid_from=date(2022, 1, 1),
-        valid_to=date(2026, 12, 31),
+        valid_from=date(_ENVELOPE.floor, 1, 1),
+        valid_to=date(_ENVELOPE.horizon, 12, 31),
     )
 
 
@@ -96,9 +107,9 @@ def test_a_mixed_use_mobile_phone_deducts_no_iva(operation: PinnedAuthorityOpera
     assert rule.proportionality.iva_mixed_use.share is IvaMixedUseShare.NOT_DEDUCTIBLE
 
 
-@pytest.mark.parametrize("year", (2023, 2024, 2025))
+@pytest.mark.parametrize("year", _SUMINISTROS_MANUAL_EDITIONS)
 def test_suministros_cite_the_manual_edition_of_their_own_year(operation: PinnedAuthorityOperation, year: int) -> None:
-    """The bundled Manual práctico IVA states the rule from its 2023 edition; each year cites its own."""
+    """The bundled Manual práctico IVA editions that print the rule are each cited by their own year."""
     rule = resolve_category_profile(
         require_spending_category("suministros_home_office_luz"), year, operation=operation
     ).proportionality
@@ -111,15 +122,15 @@ def test_suministros_cite_the_manual_edition_of_their_own_year(operation: Pinned
 
 
 def test_the_bundled_renta_manual_is_cited_as_verified_not_unbundled(operation: PinnedAuthorityOperation) -> None:
-    """DISCRIMINATING. The Manual de Renta 2025 is bundled, so its citation is read, not excused."""
+    """DISCRIMINATING. The newest bundled Manual de Renta is bundled, so its citation is read, not excused."""
     rule = resolve_category_profile(
-        require_spending_category("suministros_home_office_luz"), 2025, operation=operation
+        require_spending_category("suministros_home_office_luz"), _RENTA_MANUAL, operation=operation
     ).proportionality
     manual = [c for c in rule.citations if c.source is CategoryCitationSource.MANUAL_RENTA]
 
     assert len(manual) == 1
     assert manual[0].grounding is CitationGrounding.VERIFIED
-    assert manual[0].source_ref == "aeat-renta-2025-manual-parte1"
+    assert manual[0].source_ref == f"aeat-renta-{_RENTA_MANUAL}-manual-parte1"
     assert "30 por 100" in manual[0].quote
 
 
@@ -157,7 +168,9 @@ def test_vehicle_running_costs_carry_the_fifty_per_cent_presumption(
 def test_equipment_deducts_iva_by_use_only_as_a_bien_de_inversion(
     operation: PinnedAuthorityOperation, category_id: str
 ) -> None:
-    rule = resolve_category_profile(require_spending_category(category_id), 2025, operation=operation).proportionality
+    rule = resolve_category_profile(
+        require_spending_category(category_id), _ENVELOPE.horizon, operation=operation
+    ).proportionality
 
     assert rule.iva_mixed_use is not None
     assert rule.iva_mixed_use.share is IvaMixedUseShare.BIEN_INVERSION_DEGREE_OF_USE
@@ -178,9 +191,9 @@ def test_only_a_vehicle_presumption_states_a_presumed_share() -> None:
         )
 
 
-def test_no_2025_renta_manual_citation_is_excused_as_unbundled(operation: PinnedAuthorityOperation) -> None:
-    """DISCRIMINATING. The Manual de Renta 2025 is bundled, so no category may cite it unread."""
-    profiles = resolve_category_profiles(2025, operation=operation)
+def test_no_bundled_renta_manual_citation_is_excused_as_unbundled(operation: PinnedAuthorityOperation) -> None:
+    """DISCRIMINATING. The newest Manual de Renta is bundled, so no category may cite it unread."""
+    profiles = resolve_category_profiles(_RENTA_MANUAL, operation=operation)
 
     unread = sorted(
         category.value
@@ -209,12 +222,12 @@ def test_a_verified_edition_citation_must_name_its_bundled_edition() -> None:
     with pytest.raises(ValidationError, match="must name the bundled edition"):
         CategoryCitation(
             source=CategoryCitationSource.MANUAL_IVA,
-            reference="Manual práctico IVA 2025",
+            reference=f"Manual práctico IVA {_ENVELOPE.horizon}",
             locator="Deducciones",
             url=parse_http_url(_MANUAL_URL),
             quote="Texto autoritativo de prueba.",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
+            valid_from=date(_ENVELOPE.horizon, 1, 1),
+            valid_to=date(_ENVELOPE.horizon, 12, 31),
         )
 
 
@@ -227,9 +240,9 @@ def test_a_statutory_citation_may_not_name_an_edition() -> None:
             url=parse_http_url(_BOE_URL),
             quote="Texto autoritativo de prueba.",
             legal_ref="ley-37-1992:art-95",
-            source_ref="aeat-manual-iva-2025",
-            valid_from=date(2022, 1, 1),
-            valid_to=date(2026, 12, 31),
+            source_ref=f"aeat-manual-iva-{_ENVELOPE.horizon}",
+            valid_from=date(_ENVELOPE.floor, 1, 1),
+            valid_to=date(_ENVELOPE.horizon, 12, 31),
         )
 
 
@@ -240,16 +253,18 @@ def test_the_loader_refuses_a_manual_quotation_the_build_did_not_check(operation
         MappingFactQuery(
             fact_id=CATEGORY_PROFILE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2025, 12, 31),
+            effective_date=date(_IVA_MANUAL, 12, 31),
             selectors=(FactSelector(name="category", value=category.value),),
         )
     )
     assert isinstance(fact, ResolvedMappingFact)
     unchecked = fact.model_copy(
         update={
-            "source_citations": tuple(c for c in fact.source_citations if c.source_ref != "aeat-manual-iva-2025"),
+            "source_citations": tuple(
+                c for c in fact.source_citations if c.source_ref != f"aeat-manual-iva-{_IVA_MANUAL}"
+            ),
         }
     )
 
     with pytest.raises(CategoryValidationError, match="no source citation of its variant carries that text"):
-        profile_from_authority_fact(unchecked, operation=operation, year=2025)
+        profile_from_authority_fact(unchecked, operation=operation, year=_IVA_MANUAL)

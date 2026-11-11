@@ -75,7 +75,7 @@ pytestmark = [
 
 _DEFINITION = DIAGNOSTICS_READ_OPERATION_DEFINITION_ID
 _KINDS: tuple[DiagnosticsReadKind, ...] = ("run_health", "runs", "latency", "errors", "llm_usage")
-_SINCE, _UNTIL = date(2026, 4, 1), date(2026, 4, 2)
+_SINCE, _UNTIL = date(1980, 4, 1), date(1980, 4, 2)
 _PROVIDER = "llm:claude:synthetic"
 
 
@@ -120,7 +120,7 @@ def _prepare(profile_id: UUID, _root: Path, *, operation: PinnedAuthorityOperati
                 duration_ms=duration,
                 succeeded=succeeded,
                 error_kind="" if succeeded else "LLMClassifierError",
-                started_at=datetime(2026, 4, day, 9, tzinfo=UTC),
+                started_at=datetime(1980, 4, day, 9, tzinfo=UTC),
             )
         )
     ports = build_diagnostics_read_ports(profile_id=profile_id, operation=operation)

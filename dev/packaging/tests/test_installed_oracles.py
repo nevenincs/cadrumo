@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from mcp.types import LATEST_PROTOCOL_VERSION
 
 from dev.paths import REPO_ROOT
 from dev.product_environment import ambient_product_settings_removed, clean_product_env
@@ -992,7 +993,7 @@ async def _drive_mcp_server(
             "id": 1,
             "method": "initialize",
             "params": {
-                "protocolVersion": "2025-06-18",
+                "protocolVersion": LATEST_PROTOCOL_VERSION,
                 "capabilities": {},
                 "clientInfo": {"name": "storage-root-regression", "version": "0"},
             },

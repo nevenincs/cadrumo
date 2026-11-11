@@ -37,6 +37,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     unrouted_ledger_renta_income_quantities,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -55,11 +56,13 @@ from .test_renta_income_actividad_contract import (
     m130_revision_without_the_retenciones_binding,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-_Q1 = Period.from_year_and_code(2026, "1T")
-_Q4 = Period.from_year_and_code(2026, "4T")
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q4 = Period.from_year_and_code(_YEAR, "4T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _DOMESTIC_GENERAL = IvaCategory("domestic_general")
@@ -86,8 +89,8 @@ def _transaction(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 2, 10),
-        value_date=date(2026, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
         amount=cash,
         currency="EUR",
         counterparty="Cliente SL",
@@ -97,7 +100,7 @@ def _transaction(
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={},
@@ -111,7 +114,7 @@ def _transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -125,7 +128,7 @@ def _issued_invoice(
     retention_amount: Decimal | None,
     retention_rate: Decimal | None,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -139,7 +142,7 @@ def _issued_invoice(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": number,
-            "issued_at": date(2026, 2, 10),
+            "issued_at": date(_YEAR, 2, 10),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

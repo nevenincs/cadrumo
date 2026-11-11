@@ -117,9 +117,9 @@ def test_run_health_since_until_scopes_by_date(diagnostics_native_profile: Nativ
             "diagnostics",
             "run-health",
             "--since",
-            "2026-04-01",
+            "1980-04-01",
             "--until",
-            "2026-04-01",
+            "1980-04-01",
         ],
         diagnostics_native_profile,
     )
@@ -134,7 +134,7 @@ def test_run_health_since_until_scopes_by_date(diagnostics_native_profile: Nativ
 def test_run_health_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = invoke_diagnostics(
-        ["--format", "json", "app", "diagnostics", "run-health", "--since", "01/04/2026"],
+        ["--format", "json", "app", "diagnostics", "run-health", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0
@@ -205,7 +205,7 @@ def test_run_record_timestamp_round_trips_and_refuses_malformed_text() -> None:
     """``started_at`` is a real datetime on the canonical record, not free text."""
     row = RunRecordPayload.model_validate(_RUN_RECORD_BASE)
     rendered = row.model_dump_json()
-    assert '"started_at":"2026-01-01T00:00:00Z"' in rendered
+    assert '"started_at":"1980-01-01T00:00:00Z"' in rendered
     assert RunRecordPayload.model_validate_json(rendered) == row
 
     tampered = json.loads(rendered) | {"started_at": "not-date"}
@@ -221,5 +221,5 @@ _RUN_RECORD_BASE = {
     "duration_ms": 5,
     "succeeded": True,
     "error_kind": "",
-    "started_at": datetime(2026, 1, 1, tzinfo=UTC),
+    "started_at": datetime(1980, 1, 1, tzinfo=UTC),
 }

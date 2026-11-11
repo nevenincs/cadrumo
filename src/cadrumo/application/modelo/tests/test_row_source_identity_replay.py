@@ -11,6 +11,11 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import (
     ModeloBindingValue,
@@ -32,6 +37,10 @@ _RAW_IDENTITY = "opaque-inventory-activity-canary"
 _DIGEST = "a" * 64
 
 
+_YEAR = newest_authored_edition("100")
+_REVISION = str(revision_covering("100", _YEAR).id)
+
+
 def _binding(
     binding_id: str,
     *,
@@ -50,8 +59,8 @@ def _binding(
 
 
 def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
-    period = Period.from_year_and_code(2025, "0A")
-    snapshot = RegistrySnapshotRef(modelo="100", revision_id="2025", modelo_year=2025, period="0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
+    snapshot = RegistrySnapshotRef(modelo="100", revision_id=_REVISION, modelo_year=_YEAR, period="0A")
     draft_id = compute_modelo_draft_id(
         modelo="100",
         period=period,
@@ -60,7 +69,7 @@ def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
         values=(),
         binding_values=binding_values,
     )
-    now = datetime(2026, 8, 23, tzinfo=UTC)
+    now = datetime(filing_year_envelope().horizon, 8, 23, tzinfo=UTC)
     return ModeloDraft(
         draft_id=draft_id,
         modelo="100",
@@ -73,7 +82,7 @@ def _draft(binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
         binding_values=binding_values,
         created_at=now,
         updated_at=now,
-        schema_version=registry_schema_version(modelo="100", revision_id="2025"),
+        schema_version=registry_schema_version(modelo="100", revision_id=_REVISION),
     )
 
 
@@ -93,8 +102,8 @@ def _revision(
     return CalculationRevision.model_construct(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="100",
-            revision_id="2025",
-            modelo_year=2025,
+            revision_id=_REVISION,
+            modelo_year=_YEAR,
             period="0A",
         ),
         row_binding_values=rows,

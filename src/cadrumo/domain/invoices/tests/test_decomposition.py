@@ -23,6 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind
@@ -37,6 +38,8 @@ from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
@@ -46,7 +49,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 _FX_RATE_SOURCE_ID = "test_reference"
-_INVOICE_DATE = date(2026, 4, 1)
+_INVOICE_DATE = date(_YEAR, 4, 1)
 _DEFAULT_RATE_21 = IvaRate.from_registry("RATE_21")
 
 
@@ -248,7 +251,7 @@ def test_converted_foreign_invoice_decomposes_in_euro() -> None:
         iva_category=IvaCategory("export_third_country_zero_rated"),
         lines=(_line(unit_price="200.00", iva_rate=IvaRate.from_registry("RATE_0")),),
         fx_rate=Decimal("0.90"),
-        fx_rate_date=date(2026, 4, 1),
+        fx_rate_date=date(_YEAR, 4, 1),
         fx_rate_source=_FX_RATE_SOURCE_ID,
     )
 

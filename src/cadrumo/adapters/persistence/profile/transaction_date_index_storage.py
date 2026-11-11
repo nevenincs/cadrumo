@@ -1,4 +1,7 @@
-"""Encrypted SQL repository with atomic per-bucket transaction reads and writes."""
+"""Encrypted SQL repository with atomic per-bucket transaction reads and writes.
+
+It works with :class:`SecureObjectRepository`, :class:`TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 
@@ -120,6 +123,9 @@ def sync_date_index_rows(objects: SecureObjectRepository, bucket_id: str, catalo
     Each attempt reads the bucket baseline, returns when it already matches,
     and otherwise writes the diff in a transaction that first asserts the
     baseline is unchanged; a third conflict propagates.
+
+    ``objects`` is the :class:`SecureObjectRepository` it uses.
+    ``catalogue`` is the :class:`TransactionCatalogue` it uses.
     """
     incoming: dict[str, IndexedTransactionDates] = {
         transaction_id: IndexedTransactionDates.for_transaction(transaction)
@@ -163,6 +169,8 @@ def date_index_ids_and_count(objects: SecureObjectRepository, bucket_id: str) ->
     routing columns into Python is deferred to the targeted window query.
     Keeping the row count alongside the id set also refuses duplicate index
     rows instead of allowing set projection to hide them.
+
+    ``objects`` is the :class:`SecureObjectRepository` it uses.
     """
     with objects.guarded_session_scope() as session:
         rows = (
@@ -186,6 +194,8 @@ def date_index_candidate_ids(
     (distinguishing "index absent" from "index present but window empty",
     so a date-range load can tell a genuinely stale/missing index apart
     from a real empty result).
+
+    ``objects`` is the :class:`SecureObjectRepository` it uses.
     """
     with objects.guarded_session_scope() as session:
         any_row = session.execute(

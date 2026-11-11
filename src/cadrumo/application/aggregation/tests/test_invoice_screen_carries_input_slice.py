@@ -24,6 +24,7 @@ from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRe
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -35,9 +36,11 @@ from ..iva_ledger import IvaLedgerProrrataApportionment, IvaLedgerSectorApportio
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_DAY = date(2026, 3, 15)
+_DAY = date(_YEAR, 3, 15)
 _CUOTA_BINDING = "modelo-303-iva-soportado-interiores-cuota"
 
 
@@ -138,7 +141,7 @@ def _sectorised(*, sector_regime: str, sector_percentage: str) -> IvaLedgerProrr
 
 
 def _cuota(observation: IvaLedgerObservation, apportionment: IvaLedgerProrrataApportionment) -> Decimal:
-    revision = published_snapshot("303", filing_year=2026, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     values = resolve_iva_ledger_binding_values(
         revision,
         (observation,),

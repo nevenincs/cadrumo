@@ -8,12 +8,16 @@ from pathlib import Path
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.tipos_actividad import TipoActividad
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_YEAR = filing_year_envelope().horizon
+_RENTA_YEAR = newest_authored_edition("100")
 
 
 def ledger_raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -31,7 +35,7 @@ def ledger_raw_transaction(provider_id: str, *, booked_date: date, amount: Decim
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -45,7 +49,7 @@ def iva_transaction(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    booked_date: date = date(2026, 2, 10),
+    booked_date: date = date(_YEAR, 2, 10),
     iva_category: IvaCategory | None = None,
     counterparty_country: str | None = None,
 ) -> Transaction:
@@ -60,7 +64,7 @@ def iva_transaction(
         "taxable_base": taxable_base,
         "iva_rate": Decimal("0.21"),
         "iva_amount": iva_amount,
-        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(1980, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if iva_category is not None:
@@ -89,7 +93,7 @@ def renta_transaction(
     fields: dict[str, object] = {
         "raw": ledger_raw_transaction(
             provider_id,
-            booked_date=date(2025, 4, 5),
+            booked_date=date(_RENTA_YEAR, 4, 5),
             amount=amount,
         ),
         "direction": TransactionDirection.OUTGOING,
@@ -98,7 +102,7 @@ def renta_transaction(
         "source_jurisdiction": "ES",
         "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
         "category_id": (SpendingCategory.from_registry("asesoria_fiscal") if category is None else category).value,
-        "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if activity is not None:

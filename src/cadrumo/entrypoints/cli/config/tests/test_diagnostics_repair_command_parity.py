@@ -70,7 +70,7 @@ from cadrumo.entrypoints.diagnostics_repair_composition import build_diagnostics
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("97979797-9797-4797-8797-979797979797")
-_SEEDED_PROGRESS_AT = datetime(2026, 4, 3, 10, 15, 42, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(1980, 4, 3, 10, 15, 42, tzinfo=UTC)
 _OBSERVED = SiteHealthStatus(
     state=SiteHealthState.RATE_LIMITED,
     evidence=SiteHealthEvidence(
@@ -79,7 +79,7 @@ _OBSERVED = SiteHealthStatus(
         html_fragment="<html>synthetic rate limit page</html>",
         detected_markers=("retry-after:45",),
     ),
-    observed_at=datetime(2026, 4, 3, 10, 16, 0, tzinfo=UTC),
+    observed_at=datetime(1980, 4, 3, 10, 16, 0, tzinfo=UTC),
     retry_after_seconds=45,
 )
 

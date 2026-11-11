@@ -46,6 +46,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -54,7 +55,9 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 12, tzinfo=UTC)
 
 
 def _test_censal_operation_definition():

@@ -94,6 +94,7 @@ from .activity_asset_contracts import (
     ActivityAssetOperationPorts,
     ActivityAssetOperationPortsFactory,
     ActivityAssetPlanRequest,
+    ActivityAssetRefusalCode,
     ActivityAssetTimelineRequest,
 )
 from .activity_asset_read_models import project_reason_facts, reason_fact_kind, reason_fact_text
@@ -269,13 +270,20 @@ def _worker_bucket[T: BaseModel](
     return bucket_id
 
 
-_REFUSAL_CODES: Final = (
+_REFUSAL_CODES: Final[tuple[tuple[type[ActividadAssetError], ActivityAssetRefusalCode], ...]] = (
     (ActividadAssetIncompleteError, ACTIVITY_ASSET_REFUSED_INCOMPLETE),
     (ActividadAssetAcceleratedDa18DepreciationError, ACTIVITY_ASSET_REFUSED_ACCELERATED_DA18),
     (ActividadAssetUnsupportedError, ACTIVITY_ASSET_REFUSED_UNSUPPORTED),
     (ActividadAssetClaimConflictError, ACTIVITY_ASSET_REFUSED_CLAIM_CONFLICT),
     (ActividadAssetValidationError, ACTIVITY_ASSET_REFUSED_VALIDATION),
 )
+
+
+def _refusal_code(error: ActividadAssetError) -> ActivityAssetRefusalCode | None:
+    for item_type, item_code in _REFUSAL_CODES:
+        if isinstance(error, item_type):
+            return item_code
+    return None
 
 
 def _code_specific_facts(
@@ -305,7 +313,7 @@ def activity_asset_executors_refusal(
     )
     words = None if sentence is None else sentence[0]
     words_language = None if sentence is None else sentence[1]
-    code = next((item_code for item_type, item_code in _REFUSAL_CODES if isinstance(error, item_type)), None)
+    code = _refusal_code(error)
     if code is None:
         return None
     verdict, da18 = _code_specific_facts(error)

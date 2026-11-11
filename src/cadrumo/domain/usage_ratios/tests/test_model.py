@@ -19,6 +19,7 @@ from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ...categories.proportionality import ProportionalityKind
 from ...categories.registry import resolve_category_profiles
@@ -127,7 +128,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
     """``ELIGIBLE_USAGE_RATIO_CATEGORIES`` must track the registry verbatim.
 
     The eligibility set is derived from the pinned operation's
-    ``resolve_category_profiles(2025, operation=operation)`` projection. This test
+    ``resolve_category_profiles(horizon, operation=operation)`` projection. This test
     re-derives it from the registry using the same predicate
     and asserts equality, so a kind-table edit in the registry (adding or
     removing a ``USAGE_RATIO_*`` category) cannot silently drift from what the
@@ -136,7 +137,7 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
     """
     derived_from_registry = frozenset(
         category
-        for category, profile in resolve_category_profiles(2025, operation=operation).items()
+        for category, profile in resolve_category_profiles(filing_year_envelope().horizon, operation=operation).items()
         if profile.proportionality.kind
         in {
             ProportionalityKind.from_registry(
@@ -225,7 +226,7 @@ def test_validate_usage_ratio_reference_accepts_configured_category_key(operatio
         profile,
         category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
         usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
-        year=2025,
+        year=filing_year_envelope().horizon,
         operation=operation,
         business_pct=Decimal("0.60"),
     )
@@ -243,7 +244,7 @@ def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key(operation: 
             profile,
             category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id="home_office_area",
-            year=2025,
+            year=filing_year_envelope().horizon,
             operation=operation,
         )
 
@@ -261,7 +262,7 @@ def test_validate_usage_ratio_reference_rejects_category_mismatch(operation: Pin
             profile,
             category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id=SpendingCategory.from_registry("suministros_home_office_luz").value,
-            year=2025,
+            year=filing_year_envelope().horizon,
             operation=operation,
         )
 
@@ -276,7 +277,7 @@ def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry
             profile,
             category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
-            year=2025,
+            year=filing_year_envelope().horizon,
             operation=operation,
         )
 
@@ -291,7 +292,7 @@ def test_validate_usage_ratio_reference_rejects_business_pct_drift(operation: Pi
             profile,
             category_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
             usage_ratio_id=SpendingCategory.from_registry("arrendamiento_vivienda_afecto").value,
-            year=2025,
+            year=filing_year_envelope().horizon,
             operation=operation,
             business_pct=Decimal("0.50"),
         )
@@ -309,11 +310,15 @@ def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_
         pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
     ):
         validate_usage_ratio_reference(
-            profile, category_id=category, usage_ratio_id=category, year=2025, operation=operation
+            profile,
+            category_id=category,
+            usage_ratio_id=category,
+            year=filing_year_envelope().horizon,
+            operation=operation,
         )
 
 
-@pytest.mark.parametrize("year", [2022, 2025])
+@pytest.mark.parametrize("year", filing_year_envelope().years)
 def test_a_home_office_row_carries_the_degree_of_use_its_irpf_ratio_is_derived_from(
     operation: PinnedAuthorityOperation,
     year: int,

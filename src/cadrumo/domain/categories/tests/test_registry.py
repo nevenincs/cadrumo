@@ -1,6 +1,6 @@
 """Unit tests for :func:`~cadrumo.domain.categories.registry.resolve_category_profiles`.
 
-Verifies the curated 2025 registry covers every
+Verifies the curated registry of the newest supported year covers every
 :class:`~cadrumo.domain.categories.SpendingCategory`, that every profile
 carries at least one citation, and that the registry-backed entry point returns
 the curated registry surface.
@@ -20,6 +20,7 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..profile import CategoryProfile
 from ..proportionality_catalogue import require_proportionality_kind
 from ..registry import resolve_category_profiles
@@ -28,20 +29,22 @@ from ..spending_category_catalogue import spending_category_tokens
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 @pytest.fixture
 def profiles_2025(operation: PinnedAuthorityOperation) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Resolve the 2025 projection through the test operation lease."""
-    return resolve_category_profiles(2025, operation=operation)
+    """Resolve the newest supported year's projection through the test operation lease."""
+    return resolve_category_profiles(_YEAR, operation=operation)
 
 
 def test_registry_covers_every_spending_category(
     profiles_2025: Mapping[SpendingCategory, CategoryProfile],
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Every authority-declared category must have a concrete 2025 profile."""
+    """Every authority-declared category must have a concrete profile."""
 
-    expected_categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    expected_categories = spending_category_tokens(effective_date=date(_YEAR, 12, 31), authority=operation)
     assert set(profiles_2025) == set(expected_categories)
 
 

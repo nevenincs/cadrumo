@@ -20,6 +20,7 @@ from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....core.tipos_actividad import TipoActividad
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...iva.prorrata import InputClassification
 from ...iva.schema import (
@@ -34,14 +35,16 @@ from ..lineage_models import ClassificationHistoryEntry
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-#: Instants either side of a Madrid civil-date boundary. 2025-12-31 23:00 UTC is
-#: midnight in Madrid (CET, UTC+1) and also a year boundary; 2026-06-30 22:00 UTC
+_YEAR = filing_year_envelope().horizon
+
+#: Instants either side of a Madrid civil-date boundary. December 31st 23:00 UTC is
+#: midnight in Madrid (CET, UTC+1) and also a year boundary; June 30th 22:00 UTC
 #: is midnight in Madrid under summer time (CEST, UTC+2).
 MADRID_MIDNIGHT_INSTANTS: tuple[datetime, ...] = (
-    datetime(2025, 12, 31, 22, 59, 59, 999999, tzinfo=UTC),
-    datetime(2025, 12, 31, 23, 0, tzinfo=UTC),
-    datetime(2026, 6, 30, 21, 59, 59, 999999, tzinfo=UTC),
-    datetime(2026, 6, 30, 22, 0, tzinfo=UTC),
+    datetime(_YEAR, 12, 31, 22, 59, 59, 999999, tzinfo=UTC),
+    datetime(_YEAR, 12, 31, 23, 0, tzinfo=UTC),
+    datetime(_YEAR, 6, 30, 21, 59, 59, 999999, tzinfo=UTC),
+    datetime(_YEAR, 6, 30, 22, 0, tzinfo=UTC),
 )
 
 _SOURCE_PATHS: tuple[Path, ...] = (
@@ -227,10 +230,10 @@ def varied_transactions(count: int = 96) -> tuple[Transaction, ...]:
     """Return ``count`` deterministic rows that rotate through every row shape."""
     rows: list[Transaction] = []
     for index in range(count):
-        booked = date(2025, 1, 1) + timedelta(days=(index * 7) % 540)
+        booked = date(_YEAR, 1, 1) - timedelta(days=365) + timedelta(days=(index * 7) % 540)
         payload = _SHAPES[index % len(_SHAPES)](index, index // len(_SHAPES), booked)
         # Fixed lifecycle stamps keep the rows identical from one build to the next.
-        payload["created_at"] = datetime(2026, 1, 1, 0, 0, tzinfo=UTC) + timedelta(minutes=index)
-        payload["modified_at"] = datetime(2026, 1, 1, 0, 0, tzinfo=UTC) + timedelta(minutes=index, seconds=1)
+        payload["created_at"] = datetime(_YEAR, 1, 1, 0, 0, tzinfo=UTC) + timedelta(minutes=index)
+        payload["modified_at"] = datetime(_YEAR, 1, 1, 0, 0, tzinfo=UTC) + timedelta(minutes=index, seconds=1)
         rows.append(Transaction.model_validate(payload))
     return tuple(rows)

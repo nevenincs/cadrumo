@@ -62,6 +62,7 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -72,10 +73,12 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_PRIOR_YEAR, _YEAR = filing_year_envelope().years[-2:]
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_PRIOR_YEAR, "1T")
 _RELOADED_ROW = IvaCompensationHistoryRow(
-    year=2025,
+    year=_PRIOR_YEAR,
     period=_PERIOD,
     provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
     register_status="ALTA",
@@ -90,18 +93,18 @@ _RELOADED_ROW = IvaCompensationHistoryRow(
 )
 _CAPTURE_REPORT = IvaCompensationHistoryCaptureReport(
     output_root="synthetic-iva-history-output",
-    year_from=2025,
-    year_to=2026,
+    year_from=_PRIOR_YEAR,
+    year_to=_YEAR,
     captured_count=2,
-    observation_paths=("encrypted-observations/2025.json", "encrypted-observations/2026.json"),
-    artefact_refs=("encrypted-artefact:2025", "encrypted-artefact:2026"),
+    observation_paths=(f"encrypted-observations/{_PRIOR_YEAR}.json", f"encrypted-observations/{_YEAR}.json"),
+    artefact_refs=(f"encrypted-artefact:{_PRIOR_YEAR}", f"encrypted-artefact:{_YEAR}"),
     casilla_count=7,
     calculation_observation_count=2,
-    calculation_observation_keys=("303:2025:1T", "303:2026:1T"),
+    calculation_observation_keys=(f"303:{_PRIOR_YEAR}:1T", f"303:{_YEAR}:1T"),
     reloaded_history_count=1,
     reloaded_rows=(_RELOADED_ROW,),
     failed_declaration_count=1,
-    failed_declarations=("303:2026:2T:synthetic capture failure",),
+    failed_declarations=(f"303:{_YEAR}:2T:synthetic capture failure",),
 )
 
 
@@ -270,17 +273,17 @@ def _assert_history_result(projected, output_root):
     result = projected.projection
     assert result.model_dump() == {
         "output_root": str(output_root),
-        "year_from": 2025,
-        "year_to": 2026,
+        "year_from": _PRIOR_YEAR,
+        "year_to": _YEAR,
         "captured_count": 2,
-        "observation_paths": ("encrypted-observations/2025.json", "encrypted-observations/2026.json"),
-        "artefact_refs": ("encrypted-artefact:2025", "encrypted-artefact:2026"),
+        "observation_paths": (f"encrypted-observations/{_PRIOR_YEAR}.json", f"encrypted-observations/{_YEAR}.json"),
+        "artefact_refs": (f"encrypted-artefact:{_PRIOR_YEAR}", f"encrypted-artefact:{_YEAR}"),
         "casilla_count": 7,
         "calculation_observation_count": 2,
-        "calculation_observation_keys": ("303:2025:1T", "303:2026:1T"),
+        "calculation_observation_keys": (f"303:{_PRIOR_YEAR}:1T", f"303:{_YEAR}:1T"),
         "reloaded_history_count": 1,
         "failed_declaration_count": 1,
-        "failed_declarations": ("303:2026:2T:synthetic capture failure",),
+        "failed_declarations": (f"303:{_YEAR}:2T:synthetic capture failure",),
     }
     assert not hasattr(result, "reloaded_rows")
 
@@ -296,7 +299,7 @@ def _assert_history_capture_effects(
     assert resources.close_calls == 1
     assert port.session_requests == [("live-filed-read", None)]
     assert port.authority_operation is authority
-    assert port.capture_calls == [(2025, 2026, output_root)]
+    assert port.capture_calls == [(_PRIOR_YEAR, _YEAR, output_root)]
     assert port.storage_span_entries == port.storage_span_exits == 1
     assert port.storage_span_depth == 0
     assert port.guard_entries == 1
@@ -354,8 +357,8 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
             payload=IvaWalletHistoryCaptureRequest(
                 profile_id=profile_id,
                 output_root=output_root if names_root else None,
-                year_from=2025,
-                year_to=2026,
+                year_from=_PRIOR_YEAR,
+                year_to=_YEAR,
             ),
         )
         access_context = operation_access_context(
@@ -394,11 +397,11 @@ def test_an_ended_aeat_session_stops_the_history_walk_instead_of_recording_a_fai
 
     declaration = ExpedientesDeclaration(
         modelo="303",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        ejercicio=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="3032026Q1SYNTHETIC0001",
         estado="ALTA",
-        presented_at=datetime(2026, 4, 20, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, tzinfo=UTC),
     )
     walked: list[int] = []
 
@@ -442,11 +445,11 @@ def test_an_ended_aeat_session_stops_the_history_walk_instead_of_recording_a_fai
             port.capture_history(
                 cast(Any, object()),
                 settings=load_settings(),
-                year_from=2025,
-                year_to=2026,
+                year_from=_PRIOR_YEAR,
+                year_to=_YEAR,
                 output_root=Path("unused"),
                 progress_context=None,
                 authority_operation=cast(Any, object()),
             )
         )
-    assert walked == [2026]
+    assert walked == [_YEAR]

@@ -135,8 +135,9 @@ def _prepare_projections(
         "modelo.compare", profile_id=profile_id, operation=authority_operation
     )
     assert isinstance(compared.expected_projection, ModeloCompareOperationProjection)
+    seeded_year = compared.expected_projection.year_a
     projected = project_modelo_100_from_m130(
-        year=2025,
+        year=seeded_year,
         ccaa="madrid",
         bucket_id=str(profile_id),
         ports=build_calculation_action_ports(bucket_id=str(profile_id), operation=authority_operation),
@@ -144,7 +145,7 @@ def _prepare_projections(
     )
     history = assemble_modelo_lifecycle_history(
         "130",
-        filing_year=2025,
+        filing_year=seeded_year,
         period="1T",
         ports=build_modelo_history_ports(bucket_id=str(profile_id), operation=authority_operation),
     )
@@ -311,10 +312,19 @@ async def test_authorized_mcp_modelo_projection_results_and_history_disclosure_d
                 assert authenticated.is_error is False, _structured(authenticated)
                 assert _structured(authenticated)["session"] == "key", _structured(authenticated)
 
+                projected_expected, compared_expected, timeline_expected = enrolled.prepared
                 requests = (
-                    ModeloProjectOperationRequest(profile_id=enrolled.profile_id, year=2025, ccaa="madrid"),
-                    ModeloCompareOperationRequest(profile_id=enrolled.profile_id, modelo="130", years=(2025, 2026)),
-                    ModeloHistoryTimelineRequest(profile_id=enrolled.profile_id, modelo="130", year=2025, period="1T"),
+                    ModeloProjectOperationRequest(
+                        profile_id=enrolled.profile_id, year=projected_expected.year, ccaa="madrid"
+                    ),
+                    ModeloCompareOperationRequest(
+                        profile_id=enrolled.profile_id,
+                        modelo="130",
+                        years=(compared_expected.year_a, compared_expected.year_b),
+                    ),
+                    ModeloHistoryTimelineRequest(
+                        profile_id=enrolled.profile_id, modelo="130", year=timeline_expected.year, period="1T"
+                    ),
                 )
                 for definition_id, request, expected in zip(_PUBLIC_IDS, requests, enrolled.prepared, strict=True):
                     carries_pin = await _release_and_check(

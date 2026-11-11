@@ -17,6 +17,7 @@ worker, and the real encrypted catalogue, and pin the refusals:
 from __future__ import annotations
 
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -31,6 +32,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.invoices.catalogue_read_operation import INVOICE_VIEW_OPERATION_DEFINITION_ID
 from cadrumo.application.invoices.catalogue_remove_operation import INVOICE_REMOVE_OPERATION_DEFINITION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.business_premises import SituacionInmueble
 from cadrumo.tests.cli_envelope import require_error_document
 from cadrumo.tests.cli_text_output_support import line_value
@@ -38,6 +40,8 @@ from cadrumo.tests.cli_text_output_support import line_value
 from .isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .native_api_cli_support import NativeApiCliSession
 from .test_runtime_invoice_add import catalogue_after_password_login, native_invoice_runtime_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -63,7 +67,7 @@ def _create_catalogue_invoice(session: NativeApiCliSession[None], *, invoice_num
         "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
         "--counterparty-name", "Papeleria Sol SL",
         "--invoice-number", invoice_number,
-        "--invoice-date", "2026-03-10",
+        "--invoice-date", date(_YEAR, 3, 10).isoformat(),
         "--country-code", "ES",
         "--taxable-base", "100.00", "--iva-rate", "21",
         output_format="text",
@@ -99,7 +103,7 @@ def test_catalogue_create_records_a_retention_amount(
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15", "--retention-amount", "150.00",
@@ -130,7 +134,7 @@ def test_catalogue_create_refuses_a_retention_rate_without_an_amount(
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-002",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15",
@@ -238,7 +242,7 @@ def test_catalogue_remove_refuses_linked_invoice(
     ) as session:
         add = session.invoke_password(
             "app", "ledger", "add",
-            "--date", "2026-03-10", "--amount", "121.00",
+            "--date", date(_YEAR, 3, 10).isoformat(), "--amount", "121.00",
             "--direction", "OUTGOING", "--description", f"Supplier {_RECEIVED_COUNTERPARTY_CIF}",
             output_format="text",
         )  # fmt: skip
@@ -290,7 +294,7 @@ def test_catalogue_create_refuses_an_omitted_country_code(tmp_path: Path, run_ca
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", "2026-NOCOUNTRY-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--taxable-base", "100.00", "--iva-rate", "21",
             output_format="text",
         )  # fmt: skip
@@ -319,7 +323,7 @@ def test_catalogue_create_still_accepts_an_explicit_domestic_country_code(tmp_pa
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", "2026-WITHCOUNTRY-001",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
             output_format="text",
@@ -357,7 +361,7 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
             "--counterparty-nif", "B00015016",
             "--counterparty-name", "Minorista Recargo SL",
             "--invoice-number", "2026-REG-001",
-            "--invoice-date", "2026-05-04",
+            "--invoice-date", date(_YEAR, 5, 4).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "RECTIFICATIVA",
@@ -396,7 +400,7 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
             "--counterparty-nif", "B00015016",
             "--counterparty-name", "Cliente SL",
             "--invoice-number", "2026-REG-002",
-            "--invoice-date", "2026-05-04",
+            "--invoice-date", date(_YEAR, 5, 4).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--invoice-class", "no-such-class",
@@ -422,7 +426,7 @@ def test_catalogue_create_records_a_business_premises_lease(
             "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-001",
-            "--invoice-date", "2026-03-01",
+            "--invoice-date", date(_YEAR, 3, 1).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--arrendamiento-local-negocio",
@@ -456,7 +460,7 @@ def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
             "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-002",
-            "--invoice-date", "2026-03-01",
+            "--invoice-date", date(_YEAR, 3, 1).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--arrendamiento-local-negocio",

@@ -7,6 +7,7 @@ from uuid import UUID
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ...modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
 from ..workspace import (
@@ -20,7 +21,7 @@ from .reconciliation_fixtures import reconciliation_projection, reconciliation_r
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "00000000-0000-4000-8000-000000000001"
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 10, 4, tzinfo=UTC)
 
 
 def test_saved_calculation_comparison_renders_without_local_filing_or_register_capture() -> None:

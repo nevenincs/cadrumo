@@ -33,12 +33,15 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..iva_ledger_classification import IVA_LEDGER_COUNTERPARTY_GATE_REASONS, validate_iva_ledger_counterparty_category
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -57,8 +60,8 @@ def _row(
     return Transaction(
         raw=RawTransaction(
             provider_transaction_id="export-row",
-            booked_date=date(2026, 5, 12),
-            value_date=date(2026, 5, 12),
+            booked_date=date(_YEAR, 5, 12),
+            value_date=date(_YEAR, 5, 12),
             amount=Decimal("2500.00"),
             currency="EUR",
             counterparty="Acme Inc",
@@ -68,7 +71,7 @@ def _row(
                 source_sha256="c" * 64,
                 source_row_index=1,
                 source_format=SourceFormat.CSV,
-                ingested_at=datetime(2026, 5, 14, 9, 0, tzinfo=UTC),
+                ingested_at=datetime(_YEAR, 5, 14, 9, 0, tzinfo=UTC),
                 provider_name="CSV provider",
             ),
             raw_fields={},

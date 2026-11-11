@@ -1,7 +1,7 @@
 """A projected window whose close is unknown is shown as unknown, never as due or overdue.
 
-Modelo 303 for 2028 has no authored window, and the 2028 holiday calendar is
-not published, so its close cannot be classified. The calendar shows the
+Modelo 303 for the first exercise without a published holiday calendar has no
+authored window, so its close cannot be classified. The calendar shows the
 opening and the nominal close (20 April for the first quarter, RD 1624/1992
 art. 71.4) as a lower bound, and every date cohort leaves the row out.
 """
@@ -17,6 +17,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
+from ....domain.deadlines.tests.effective_close_scan import first_unpublished_calendar_year
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..agenda import build_overview_agenda
@@ -27,7 +28,8 @@ from .calendar_test_support import BUCKET_ID, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2028
+with bundled_indexed_authority().operation() as _pinned:
+    _YEAR = first_unpublished_calendar_year(_pinned)
 _FIRST_QUARTER = Period.from_year_and_code(_YEAR, "1T")
 _NOMINAL_CLOSE = date(_YEAR, 4, 20)
 _APRIL = OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30))

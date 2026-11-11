@@ -12,6 +12,7 @@ from ...core.hashing import content_hash_hex
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -25,23 +26,25 @@ from .. import calculation_review_snapshot_composition as snapshot_composition
 from .. import google_review_operation_composition as composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
 def _saved(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, WorkUnit]:
-    registry = operation.snapshot("130", filing_year=2026, period="1T")
+    registry = operation.snapshot("130", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(
         registry, authority_generation=operation.generation.logical_generation
     )
-    period = Period.from_year_and_code(2026, "1T")
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="130", filing_year=2026, period=period, revision_id=registry.revision.id
+            bucket_id=str(_PROFILE), modelo="130", filing_year=_YEAR, period=period, revision_id=registry.revision.id
         ),
         bucket_id=str(_PROFILE),
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=registry.revision.id,
         name="Saved synthetic calculation",
@@ -61,7 +64,7 @@ def _saved(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, Wo
         ),
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="130", revision_id=registry.revision.id, modelo_year=2026, period="1T"
+            modelo="130", revision_id=registry.revision.id, modelo_year=_YEAR, period="1T"
         ),
         state=CalculationRevisionState.BORRADOR,
         source_provenance=(),
@@ -138,7 +141,7 @@ def test_composed_loader_uses_exact_saved_revision_and_full_digest(
     assert selection.registry_snapshot_ref == revision.registry_snapshot_ref
     assert selection.authority_generation == authority_operation.generation.logical_generation
     registry = authority_operation.snapshot(
-        "130", filing_year=2026, period="1T", revision_id=revision.registry_snapshot_ref.revision_id
+        "130", filing_year=_YEAR, period="1T", revision_id=revision.registry_snapshot_ref.revision_id
     )
     assert selection.registry_digest == content_hash_hex(registry.model_dump(mode="json"))
     assert len(selection.registry_digest) == 64

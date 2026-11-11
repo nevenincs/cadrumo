@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.profile.tests.password_only_profile import reg
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.cli_performance import profile_cli_path
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 
@@ -208,7 +209,7 @@ def test_scripted_create_records_an_explicit_false_modelo_111_attestation_and_fr
                     "--modelo",
                     "111",
                     "--year",
-                    "2025",
+                    str(filing_year_envelope().horizon),
                     "--period",
                     "2T",
                 ),

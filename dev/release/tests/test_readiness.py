@@ -283,7 +283,7 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
     # Ensure a real, distinguishable mtime ordering regardless of filesystem
     # timestamp resolution.
     os.utime(older_manifest, (1000, 1000))
-    os.utime(newer_manifest, (2000, 2000))
+    os.utime(newer_manifest, (3000, 3000))
 
     check = readiness.check_latest_packaging_smoke_evidence(root)
 

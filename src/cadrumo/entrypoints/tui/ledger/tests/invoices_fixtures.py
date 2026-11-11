@@ -7,7 +7,7 @@ models; nothing is read from or written to storage.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -33,12 +33,15 @@ from .....application.ledger.transaction_projection import LedgerTransactionProj
 from .....application.ledger.update_contracts import LedgerUpdatePatch, LedgerUpdatePatchField
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.errors.hierarchy import CadrumoError
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import PaymentStatus
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.errors import TransactionValidationError
 from ...components.host import ScreenHostApp
 from ..invoices_import import LedgerInvoiceImportSourceV1
+
+_YEAR = filing_year_envelope().horizon
 
 INVOICES_PROFILE_ID = UUID("4dd00000-0000-4000-8000-0000000000dd")
 """The synthetic profile every fixture record belongs to."""
@@ -72,7 +75,7 @@ def invoice_snapshot(
         bucket_id=str(INVOICES_PROFILE_ID),
         kind=kind,
         invoice_number=f"F-{index + 1:05d}",
-        issued_at=date(2026, 3, 1 + index % 28),
+        issued_at=date(_YEAR, 3, 1 + index % 28),
         counterparty_name=f"Synthetic supplier {index + 1}",
         counterparty_tax_id=None,
         counterparty_country="ES",
@@ -126,8 +129,8 @@ def transaction_projection(
     """One synthetic outgoing transaction projection of 121 EUR, in the canonical decimal text the worker emits."""
     return LedgerTransactionProjection(
         transaction_id=transaction_id,
-        date="2026-03-18",
-        booked_date="2026-03-18",
+        date=date(_YEAR, 3, 18).isoformat(),
+        booked_date=date(_YEAR, 3, 18).isoformat(),
         value_date=None,
         amount="121",
         currency="EUR",
@@ -159,8 +162,8 @@ def transaction_projection(
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at="2026-03-18T10:00:00+00:00",
-        modified_at="2026-03-18T10:00:00+00:00",
+        created_at=datetime(_YEAR, 3, 18, 10, tzinfo=UTC).isoformat(),
+        modified_at=datetime(_YEAR, 3, 18, 10, tzinfo=UTC).isoformat(),
     )
 
 

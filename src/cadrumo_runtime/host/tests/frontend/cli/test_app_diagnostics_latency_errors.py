@@ -44,7 +44,7 @@ def _seed_latency_runs() -> None:
                 model="test-model",
                 duration_ms=duration_ms,
                 succeeded=True,
-                started_at=datetime(2026, 5, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 5, index, 9, 0, tzinfo=UTC),
             ),
         )
 
@@ -68,7 +68,7 @@ def _seed_error_runs() -> None:
                 duration_ms=100,
                 succeeded=False,
                 error_kind=error_kind,
-                started_at=datetime(2026, 5, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 5, index, 9, 0, tzinfo=UTC),
             ),
         )
 
@@ -140,9 +140,9 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
             "diagnostics",
             "latency",
             "--since",
-            "2026-05-01",
+            "1980-05-01",
             "--until",
-            "2026-05-01",
+            "1980-05-01",
         ],
         diagnostics_native_profile,
     )
@@ -156,7 +156,7 @@ def test_latency_since_until_scopes_by_date(diagnostics_native_profile: NativeCl
 def test_latency_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = invoke_diagnostics(
-        ["--format", "json", "app", "diagnostics", "latency", "--since", "01/04/2026"],
+        ["--format", "json", "app", "diagnostics", "latency", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0

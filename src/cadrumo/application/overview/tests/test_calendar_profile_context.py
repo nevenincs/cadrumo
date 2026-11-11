@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ....core.config import override_settings
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS, tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import ObligationStatus
 from ..agenda import build_overview_agenda
 from ..backlog import build_overview_backlog
@@ -21,6 +22,8 @@ from ..read_calendar_projection import OverviewAgendaSnapshot, OverviewBacklogSn
 from .calendar_test_support import profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize("answered", [False, True])
@@ -51,11 +54,11 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
     }
     if answered:
         raw["art109_activity_income_withholding_ge_70pct"] = False
-    today = date(2026, 10, 19)
+    today = date(_YEAR, 10, 19)
     with override_settings(cadrumo_output_language="en"):
         calendar = build_overview_calendar(
             profile(),
-            OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 1)),
+            OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR + 1, 2, 1)),
             operation=authority_operation,
             today=today,
             raw_values=raw,
@@ -104,9 +107,9 @@ def test_calendar_warnings_carry_their_sentence_in_the_read_language(
         with override_settings(cadrumo_output_language="es"):
             calendar = build_overview_calendar(
                 profile(),
-                OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 1)),
+                OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR + 1, 2, 1)),
                 operation=authority_operation,
-                today=date(2026, 10, 19),
+                today=date(_YEAR, 10, 19),
                 raw_values={"iva.regime": "GENERAL", "irpf.estimation_regime": "directa_normal"},
             )
             captured = OverviewCalendarSnapshot.from_calendar(calendar)
@@ -136,9 +139,9 @@ def test_every_profile_gap_has_real_prose_in_every_supported_language(language: 
 
 def test_undated_obligations_are_not_hidden_among_undetermined_or_excluded_forms() -> None:
     calendar = OverviewCalendar(
-        range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
-        evaluated_on=date(2026, 10, 19),
-        generated_at=datetime(2026, 10, 19, tzinfo=UTC),
+        range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
+        evaluated_on=date(_YEAR, 10, 19),
+        generated_at=datetime(_YEAR, 10, 19, tzinfo=UTC),
         entries=(),
         coverage=ObligationCoverageReport(
             advised=(

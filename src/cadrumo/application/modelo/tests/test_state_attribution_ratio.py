@@ -25,6 +25,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -42,7 +43,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _RATIO_KEY = "tax_residence.state_attribution_ratio"
 _SCOPE_KEY = "tax_residence.jurisdiction_scope"
 _BINDING_ID = "modelo-303-profile-state-attribution-ratio"
-_CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
 def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
@@ -118,7 +120,7 @@ def _profile_without_jurisdiction_scope() -> UserProfileRecord:
 def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
 
     result = resolve_profile_sourced_bindings(
         snapshot,
@@ -134,7 +136,7 @@ def test_non_m303_profile_resolution_does_not_require_jurisdiction_scope(
 def test_m303_profile_resolution_refuses_missing_jurisdiction_scope(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
 
     with pytest.raises(ProfileBindingResolutionError, match="jurisdiction_scope"):
         resolve_profile_sourced_bindings(
@@ -149,7 +151,7 @@ def test_303_state_attribution_binding_resolves_to_100_for_common_profile(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """End-to-end at the resolver boundary: the bound-casilla profile binding resolves to 100."""
-    snapshot = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
     result = resolve_profile_sourced_bindings(
         snapshot,
         bucket_id="state-attribution-test",

@@ -237,6 +237,7 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
         date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 1, 1),
         date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31),
     )
+    assert first_window[1] is not None
     assert second_window[0] == first_window[1] + timedelta(days=1)
     first_rates = by_window[first_window]
     assert first_rates[Decimal("0")] == Decimal("0.21"), "first transitional tranche must be 21 % (LIS DT 44ª)"

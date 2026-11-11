@@ -30,7 +30,7 @@ def seed_claude_and_codex_runs() -> None:
             model="test-model",
             duration_ms=1200,
             succeeded=True,
-            started_at=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+            started_at=datetime(1980, 4, 1, 9, 0, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -42,7 +42,7 @@ def seed_claude_and_codex_runs() -> None:
             duration_ms=45000,
             succeeded=False,
             error_kind="LLMClassifierError",
-            started_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+            started_at=datetime(1980, 4, 2, 9, 0, tzinfo=UTC),
         ),
     )
     recorder.record(
@@ -53,6 +53,6 @@ def seed_claude_and_codex_runs() -> None:
             model="test-model",
             duration_ms=800,
             succeeded=True,
-            started_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
+            started_at=datetime(1980, 4, 3, 9, 0, tzinfo=UTC),
         ),
     )

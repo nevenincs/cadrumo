@@ -23,6 +23,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ....core.aggregation import InvoiceDevengoRank
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
@@ -34,6 +35,8 @@ from ..invoice_devengo import (
 from ..source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -56,7 +59,7 @@ def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "2026/DEV-1",
-        "issued_at": date(2026, 4, 15),
+        "issued_at": date(_YEAR, 4, 15),
         "counterparty_name": "Cliente SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
@@ -75,7 +78,7 @@ def test_an_undated_invoice_falls_back_to_the_issue_date_proxy() -> None:
     """No recorded operation date: the only date on the record is the proxy."""
     devengo = resolve_invoice_devengo(_invoice())
 
-    assert devengo.devengo_date == date(2026, 4, 15)
+    assert devengo.devengo_date == date(_YEAR, 4, 15)
     assert devengo.rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
 
 
@@ -83,12 +86,12 @@ def test_a_recorded_operation_date_takes_precedence_over_the_issue_date() -> Non
     """Art. 75.Uno: the general-regime devengo date, when it differs from issue."""
     devengo = resolve_invoice_devengo(
         _invoice(
-            operation_date=date(2026, 3, 28),
+            operation_date=date(_YEAR, 3, 28),
             operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
         ),
     )
 
-    assert devengo.devengo_date == date(2026, 3, 28)
+    assert devengo.devengo_date == date(_YEAR, 3, 28)
     assert devengo.rank is InvoiceDevengoRank.OPERATION_DATE_DECLARED
 
 
@@ -101,12 +104,12 @@ def test_a_pago_anticipado_collection_date_is_read_identically() -> None:
     """
     devengo = resolve_invoice_devengo(
         _invoice(
-            operation_date=date(2026, 4, 1),
+            operation_date=date(_YEAR, 4, 1),
             operation_date_role=require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED"),
         ),
     )
 
-    assert devengo.devengo_date == date(2026, 4, 1)
+    assert devengo.devengo_date == date(_YEAR, 4, 1)
     assert devengo.rank is InvoiceDevengoRank.OPERATION_DATE_DECLARED
 
 
@@ -118,12 +121,12 @@ def test_an_operation_performed_in_q1_and_invoiced_in_q2_is_attributed_to_q1() -
     cuota is nevertheless devengada in Q1 and belongs on Q1's Modelo 303.
     """
     invoice = _invoice(
-        issued_at=date(2026, 4, 15),
-        operation_date=date(2026, 3, 28),
+        issued_at=date(_YEAR, 4, 15),
+        operation_date=date(_YEAR, 3, 28),
         operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
-    q1 = Period.from_year_and_code(2026, "1T")
-    q2 = Period.from_year_and_code(2026, "2T")
+    q1 = Period.from_year_and_code(_YEAR, "1T")
+    q2 = Period.from_year_and_code(_YEAR, "2T")
 
     assert invoice_devengo_in_period(invoice, period=q1) is True
     assert invoice_devengo_in_period(invoice, period=q2) is False
@@ -138,17 +141,17 @@ def test_an_invoice_with_no_operation_date_is_attributed_on_its_issue_date() -> 
     ordinary catalogue unfileable. The placement happens and the rank says it
     was a substitution.
     """
-    invoice = _invoice(issued_at=date(2026, 4, 15))
+    invoice = _invoice(issued_at=date(_YEAR, 4, 15))
 
-    assert invoice_devengo_in_period(invoice, period=Period.from_year_and_code(2026, "2T")) is True
-    assert invoice_devengo_in_period(invoice, period=Period.from_year_and_code(2026, "1T")) is False
+    assert invoice_devengo_in_period(invoice, period=Period.from_year_and_code(_YEAR, "2T")) is True
+    assert invoice_devengo_in_period(invoice, period=Period.from_year_and_code(_YEAR, "1T")) is False
 
 
 def test_proxy_advisory_names_only_the_records_resting_on_a_substitute() -> None:
     """The reporting half: declared-date invoices are not named."""
     declared = _invoice(
         invoice_number="2026/DEV-DECLARED",
-        operation_date=date(2026, 3, 28),
+        operation_date=date(_YEAR, 3, 28),
         operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
     proxied = _invoice(invoice_number="2026/DEV-PROXY")
@@ -170,7 +173,7 @@ def test_a_period_built_only_on_declared_dates_raises_no_advisory() -> None:
     so the silent case is asserted as explicitly as the noisy one.
     """
     declared = _invoice(
-        operation_date=date(2026, 3, 28),
+        operation_date=date(_YEAR, 3, 28),
         operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
 

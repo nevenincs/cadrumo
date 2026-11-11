@@ -54,6 +54,7 @@ from cadrumo.domain.calculations.registry.censo_modelos import (
     CensoModeloEventKind,
     active_036_ownership_from_registry,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -81,9 +82,9 @@ _QUERY = M036_QUERY_OPERATION_DEFINITION_ID
 _READ = M036_READ_OPERATION_DEFINITION_ID
 _RECORD = M036_RECORD_OPERATION_DEFINITION_ID
 _EVENTS = (
-    (CensoModeloEventKind.ALTA, date(2024, 1, 1)),
-    (CensoModeloEventKind.MODIFICACION, date(2025, 3, 1)),
-    (CensoModeloEventKind.BAJA, date(2026, 1, 1)),
+    (CensoModeloEventKind.ALTA, date(filing_year_envelope().floor, 1, 1)),
+    (CensoModeloEventKind.MODIFICACION, date(filing_year_envelope().floor, 3, 1)),
+    (CensoModeloEventKind.BAJA, date(filing_year_envelope().horizon, 1, 1)),
 )
 
 
@@ -345,7 +346,7 @@ async def test_installed_mcp_releases_only_safe_m036_query_rows(
                         request=M036RecordRequest(
                             profile_id=profile.profile_id,
                             event_kind=CensoModeloEventKind.ALTA,
-                            declared_on=date(2024, 1, 1),
+                            declared_on=date(filing_year_envelope().floor, 1, 1),
                         ),
                     )
 

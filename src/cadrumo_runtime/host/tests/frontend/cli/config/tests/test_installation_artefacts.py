@@ -47,6 +47,7 @@ from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, redact_struc
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -106,7 +107,7 @@ pytestmark = [
 ]
 
 _CLI = OperationFrontendProjection.CLI
-_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
+_NOW = datetime(1980, 7, 3, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="installation artefacts test")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="installation artefacts test")
 _OPERATOR_BUCKET = "33333333-3333-4333-8333-333333333333"
@@ -114,17 +115,19 @@ _UNRELATED_KEY = "ab" * 32
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
+    year = filing_year_envelope().horizon
+    revision_id = revision_serving_period("303", year, "2T").id
+    period = Period.from_year_and_code(year, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=bucket_id, modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
+            bucket_id=bucket_id, modelo="303", filing_year=year, period=period, revision_id=revision_id
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=year,
         period=period,
-        revision_id="2026-y-siguientes",
-        name="303-2026-2T",
+        revision_id=revision_id,
+        name=f"303-{year}-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,

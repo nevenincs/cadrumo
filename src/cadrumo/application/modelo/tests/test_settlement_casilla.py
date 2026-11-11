@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ..settlement_casilla import (
@@ -20,6 +21,10 @@ from ..settlement_casilla import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+_YEAR = filing_year_envelope().horizon
+_M100_YEAR = newest_authored_edition("100")
 
 
 def _revision(modelo: str, year: int, period: str):
@@ -46,7 +51,7 @@ def test_modelo_100_resolves_to_its_declared_result_casilla() -> None:
     shipped registry actually declares the role -- which is the fact the
     surface depends on.
     """
-    revision = _revision("100", 2023, "0A")
+    revision = _revision("100", _M100_YEAR, "0A")
     assert declaration_result_casilla_id(revision) == "0670"
 
 
@@ -59,7 +64,7 @@ def test_an_unmodelled_modelo_yields_nothing_rather_than_a_guess(modelo: str, pe
     under "result" that no authority supports, which is worse on a
     filing-facing list than showing nothing.
     """
-    assert declaration_result_casilla_id(_revision(modelo, 2023, period)) is None
+    assert declaration_result_casilla_id(_revision(modelo, _YEAR, period)) is None
 
 
 def test_two_casillas_claiming_the_result_role_is_refused() -> None:
@@ -98,8 +103,8 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
 
     class _Unit:
         modelo = ModeloCode("100")
-        filing_year = 2023
-        period = Period.from_year_and_code(2023, "0A")
+        filing_year = _M100_YEAR
+        period = Period.from_year_and_code(_M100_YEAR, "0A")
         current_calculation_revision_id: str | None = "a" * 64
 
     class _Revision:
@@ -124,20 +129,20 @@ def test_an_unknown_result_never_becomes_a_number_in_the_projection() -> None:
 
 def test_the_declared_type_rule_names_the_result_where_the_modelo_declares_one() -> None:
     """Modelo 130's "tipo de declaración" is read from box 19, so its result is box 19 by that rule."""
-    selected = declaration_result_casillas("130", _revision("130", 2026, "1T"))
+    selected = declaration_result_casillas("130", _revision("130", _YEAR, "1T"))
 
     assert selected == DeclarationResultCasillas(casilla_ids=("19",), by_declared_type=True)
 
 
 def test_modelo_100_names_its_result_by_its_declared_type_rule() -> None:
     """The Modelo 100 record reads "tipo de declaración" from box 0670, the box its role also names."""
-    selected = declaration_result_casillas("100", _revision("100", 2023, "0A"))
+    selected = declaration_result_casillas("100", _revision("100", _M100_YEAR, "0A"))
 
     assert selected == DeclarationResultCasillas(casilla_ids=("0670",), by_declared_type=True)
 
 
 def test_an_informative_modelo_has_no_result() -> None:
-    assert declaration_result_casillas("349", _revision("349", 2026, "1T")) is None
+    assert declaration_result_casillas("349", _revision("349", _YEAR, "1T")) is None
 
 
 def test_a_declared_result_box_the_revision_lacks_is_not_named() -> None:

@@ -28,11 +28,14 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +48,7 @@ def _authority_operation() -> Iterator[None]:
 def _line(unit_price: str) -> InvoiceLine:
     """Return one general-rate line worth ``unit_price``."""
     subtotal = Decimal(unit_price)
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     return InvoiceLine(
         description="Servicios profesionales",
@@ -72,7 +75,7 @@ def _invoice(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "F-2026-001",
-            "issued_at": date(2026, 4, 1),
+            "issued_at": date(_YEAR, 4, 1),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

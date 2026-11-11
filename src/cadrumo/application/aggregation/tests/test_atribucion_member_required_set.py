@@ -34,6 +34,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..atribucion_member import (
     REQUIRED_FIELDS,
     SocioFacts,
@@ -43,10 +44,12 @@ from ..atribucion_member import (
     observation_from_socio,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SECTION = "attribution_entity_socios"
-_FILING_YEAR = 2024
+_FILING_YEAR = _YEAR
 
 # Fixture data, not a restatement of the required set: the properties below
 # derive their field sets from the resolver and the schema, and read this only

@@ -60,6 +60,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -70,7 +71,10 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 _EXPEDIENTE_ID = "202510013522222A"
 
 
@@ -150,8 +154,8 @@ class _SyntheticFiledDataPort:
         self.register = _SyntheticRegister(trace)
         self._availability = _AvailabilityReport(
             items=(
-                _AvailabilityItem(modelo="100", ejercicios=(2025,)),
-                _AvailabilityItem(modelo="303", ejercicios=(2024, 2025)),
+                _AvailabilityItem(modelo="100", ejercicios=(_FILING_YEAR,)),
+                _AvailabilityItem(modelo="303", ejercicios=(_FILING_YEAR - 1, _FILING_YEAR)),
             )
         )
         self.register_authorities: list[PinnedAuthorityOperation | None] = []
@@ -236,11 +240,11 @@ def _assert_listed_register(projected: object, filed_port: _SyntheticFiledDataPo
     assert isinstance(list_projected.projection, FiledListPublicResultV1)
     listed = list_projected.projection
     assert listed.modelo_filter is None
-    assert (listed.year_from, listed.year_to, listed.row_count) == (2025, 2025, 1)
+    assert (listed.year_from, listed.year_to, listed.row_count) == (_FILING_YEAR, _FILING_YEAR, 1)
     assert listed.failed_count == len(listed.failures)
     assert listed.rows[0].model_dump() == {
         "modelo": filed_port.register.walk_calls[0][0],
-        "year": 2025,
+        "year": _FILING_YEAR,
         "period": "1T",
         "expediente_id": _EXPEDIENTE_ID,
         "status": "ALTA",
@@ -265,7 +269,7 @@ def _assert_listed_register(projected: object, filed_port: _SyntheticFiledDataPo
     assert len(synthetic_failures) == 1
     assert synthetic_failures[0].model_dump() == {
         "modelo": filed_port.register.failed_pair[0],
-        "year": 2025,
+        "year": _FILING_YEAR,
         "period": None,
         "expediente_id": None,
         "error_type": "RuntimeError",
@@ -292,9 +296,9 @@ def _assert_discovered_pairs(projected: object) -> None:
     assert discovered.register_options_read is True
     assert discovered.scoping_signal is RegisterScopingSignal.INCONCLUSIVE
     assert tuple((pair.modelo, pair.ejercicio, pair.signals) for pair in discovered.pairs) == (
-        ("100", 2025, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
-        ("303", 2025, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
-        ("303", 2024, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+        ("100", _FILING_YEAR, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+        ("303", _FILING_YEAR, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
+        ("303", _FILING_YEAR - 1, (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)),
     )
     assert all(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY not in pair.signals for pair in discovered.pairs)
 
@@ -364,7 +368,7 @@ def test_supervisor_records_filed_list_and_discover_for_exact_external_client_pr
         list_request = OperationRequest(
             definition_id=FILED_LIST_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
-            payload=FiledListRequest(profile_id=profile_id, modelo=None, year_from=2025, year_to=2025),
+            payload=FiledListRequest(profile_id=profile_id, modelo=None, year_from=_FILING_YEAR, year_to=_FILING_YEAR),
         )
         discover_request = OperationRequest(
             definition_id=FILED_DISCOVER_DEFINITION_ID,
