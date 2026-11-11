@@ -2,8 +2,8 @@
 
 Run the whole table, or a lane's rows only, and render it::
 
-    python -m dev.acceptance.persona_table run --out .tmp/table/rows.jsonl
-    python -m dev.acceptance.persona_table run --modelo 130 --persona autonomo-fontanero --out .tmp/table/rows.jsonl
+    python -m dev.acceptance.persona_table run --tree <sha> --out .tmp/table/rows.jsonl
+    python -m dev.acceptance.persona_table run --tree <sha> --modelo 130 --out .tmp/table/130.jsonl
     python -m dev.acceptance.persona_table render .tmp/table/rows.jsonl --head <sha> --out .tmp/table/TABLE.md
 
 Compare against the committed baseline, and regenerate it after a new head::
@@ -12,7 +12,12 @@ Compare against the committed baseline, and regenerate it after a new head::
     python -m dev.acceptance.persona_table diff dev/acceptance/persona_table/baseline .tmp/table/rows.jsonl
     python -m dev.acceptance.persona_table baseline .tmp/table/rows.jsonl
 
-``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
+``run`` needs a private ``CADRUMO_AUTHORITY_ROOT``. Before the first row it publishes
+the authority of this tree when stale, proves the published generation records this
+tree's legal sources, and exits 2 otherwise. ``--tree`` is the commit of the tree under
+test (the tool never runs git); with the generation and database digest it is written
+to ``<out>.meta.json``, which ``render`` prints in the table header (``--meta`` names
+another sidecar). ``run`` appends to ``--out``; a filtered run writes only its rows. ``check``
 exits 1 when a row the baseline holds green is not green in the rows given.
 """
 
@@ -32,6 +37,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
 
 from .diff import diff_tables, render_diff, row_id
+from .provenance import ProvenanceError, meta_path, prepare_authority, read_meta, write_meta
 from .render import render_table, summary_line
 from .rows import GREEN, TableRow, latest_rows, read_rows
 
@@ -56,6 +62,12 @@ def _rows_from(paths: Sequence[Path]) -> dict[tuple[str, str, int, str], TableRo
 
 def _run(args: argparse.Namespace) -> int:
     out = args.out.resolve()
+    try:
+        provenance = prepare_authority(os.environ, tree=args.tree)
+    except ProvenanceError as refusal:
+        sys.stderr.write(f"persona table not run: {refusal}\n")
+        return 2
+    write_meta(out, provenance)
     environment = dict(os.environ)
     environment |= {
         "PERSONA_TABLE_OUT": str(out),
@@ -82,7 +94,8 @@ def _render(args: argparse.Namespace) -> int:
     rows = _rows_from(args.rows)
     lanes = tomllib.loads(args.lanes.read_text(encoding="utf-8")) if args.lanes else None
     lane_of = {str(modelo): lane for lane, modelos in (lanes or {}).items() for modelo in modelos}
-    text = render_table(rows.values(), head=args.head, lanes=lane_of or None)
+    meta = read_meta(args.meta or meta_path(args.rows[0]))
+    text = render_table(rows.values(), head=args.head, lanes=lane_of or None, provenance=meta)
     if args.out is None:
         sys.stdout.write(text)
     else:
@@ -130,6 +143,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     run = commands.add_parser("run", help="replay the personas and append one JSON row per return")
     run.add_argument("--out", type=Path, required=True)
+    run.add_argument("--tree", required=True, help="commit SHA of the tree under test")
     run.add_argument("--persona", action="append", default=[])
     run.add_argument("--modelo", action="append", default=[])
     run.add_argument("--year", action="append", type=int, default=[])
@@ -140,6 +154,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     render.add_argument("rows", type=Path, nargs="+")
     render.add_argument("--head", required=True)
     render.add_argument("--out", type=Path)
+    render.add_argument("--meta", type=Path, help="run provenance sidecar; defaults to the first rows file's")
     render.add_argument("--lanes", type=Path, help="TOML mapping each lane to its modelo codes")
     render.set_defaults(handler=_render)
 

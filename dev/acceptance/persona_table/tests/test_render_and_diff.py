@@ -89,3 +89,9 @@ def test_baseline_writes_one_file_per_persona(tmp_path: Path) -> None:
     write_rows(rows, [_GREEN, _HISTORY])
     assert main(["baseline", str(rows), "--dir", str(tmp_path / "baseline")]) == 0
     assert [path.name for path in (tmp_path / "baseline").iterdir()] == ["persona.jsonl"]
+
+
+def test_render_prints_run_provenance_in_the_header() -> None:
+    text = render_table([_GREEN], head="abc", provenance={"tree": "t1", "logical_generation": "g1"})
+    assert "Run provenance: logical_generation `g1`, tree `t1`." in text
+    assert "Run provenance" not in render_table([_GREEN], head="abc")

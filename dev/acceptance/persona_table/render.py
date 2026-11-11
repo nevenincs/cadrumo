@@ -58,12 +58,22 @@ def _cell(text: object) -> str:
     return str(text).replace("|", "\\|").replace("\n", " ")
 
 
-def render_table(rows: Iterable[TableRow], *, head: str, lanes: Mapping[str, str] | None = None) -> str:
-    """The full table for ``head`` as Markdown."""
+def render_table(
+    rows: Iterable[TableRow],
+    *,
+    head: str,
+    lanes: Mapping[str, str] | None = None,
+    provenance: Mapping[str, str] | None = None,
+) -> str:
+    """The full table for ``head`` as Markdown, naming the run's tree and authority when ``provenance`` is given."""
     ordered = sorted(rows, key=lambda row: row.key)
-    lines = [
-        f"# Persona table at {head}",
-        "",
+    lines = [f"# Persona table at {head}", ""]
+    if provenance:
+        lines += [
+            "Run provenance: " + ", ".join(f"{key} `{value}`" for key, value in sorted(provenance.items())) + ".",
+            "",
+        ]
+    lines += [
         f"Summary: {summary_line(ordered)}.",
         "",
     ]
