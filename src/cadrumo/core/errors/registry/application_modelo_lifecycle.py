@@ -740,9 +740,9 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.modelo.action_errors.AmendmentEvidenceMissingError",
         ErrorCode(
-            code="ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_modelo_amendment_evidence_missing",
+            code="REFUSED_MODELO_AMENDMENT_EVIDENCE_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_evidence_missing",
             retryable=False,
             runbook_id=None,
         ),

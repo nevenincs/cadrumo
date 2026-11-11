@@ -310,8 +310,6 @@ errors:
     error_llm: Nyelvi modell hiba történt.
     error_modelo_aggregation_binding: A bucket-alapú összesítési kötések ellentmondanak
       a megadott bemenetnek.
-    error_modelo_amendment_evidence_missing: Bevallás nem módosítható importált hivatalos
-      igazolás nélkül. Először importáld az eredeti bevallás bizonylatát.
     error_modelo_amendment_target_state: Az aktuális állapotban nem lévő bevallás
       nem módosítható; egy újabb már felváltotta.
     error_modelo_calculation_registry_unavailable: A munkajegység Modelo nyomtatványához,
@@ -1276,6 +1274,8 @@ errors:
       a módosítás által bevallott sorokat - kiegészítő bevallásnál csak a hozzáadottakat,
       helyettesítő bevallásnál a teljes javított halmazt -, vagy üres halmazt, ha
       nincs egy sem.
+    refused_modelo_amendment_evidence_missing: Bevallás nem módosítható importált
+      hivatalos igazolás nélkül. Először importáld az eredeti bevallás bizonylatát.
     refused_modelo_amendment_kind_not_permitted: A kért módosítási típus jogilag nem
       elérhető a feloldott bevallási időszakhoz. Az elfogadott típusok listája a hiba
       kontextusában található.
