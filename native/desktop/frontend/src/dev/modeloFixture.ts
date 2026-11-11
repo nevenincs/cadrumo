@@ -200,6 +200,9 @@ export const MODELO_SHAPES = [
   /** A creation refused for a profile whose setup was never declared
    * complete, which names that declaration as the way on. */
   "profile-setup",
+  /** The same refusal, which the host reports by rejecting the submission
+   * with the settled operation's identity rather than settling it. */
+  "profile-setup-rejected",
   "unknown",
   "unavailable",
   "slow",
@@ -1018,6 +1021,18 @@ export function modeloFixture(options: Options): ModeloPort {
         return (await refusedWith(shape, spoken)) as LedgerOutcome<
           ModeloResult<typeof definition>
         >;
+      if (
+        definition === "modelo.work.create" &&
+        shape === "profile-setup-rejected"
+      ) {
+        const settled = await refusedWith("profile-setup", spoken);
+        if (settled.kind !== "refused")
+          return settled as LedgerOutcome<ModeloResult<typeof definition>>;
+        reject("refused", {
+          operation_id: settled.operation_id,
+          ...(settled.reason === null ? {} : { reason: settled.reason }),
+        });
+      }
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
           case "modelo.work.compare_taxation":
