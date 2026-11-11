@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
@@ -235,10 +236,14 @@ def test_an_iva_operation_without_its_cuota_is_still_refused(
 
     refused = _calculate(_create_work_unit())
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "missing_iva_amount"
-    assert context["transaction_id"] == incomplete
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == incomplete
