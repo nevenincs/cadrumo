@@ -775,6 +775,10 @@ def collect_verification_gate_findings(
     _append_ledger_evidence_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
     )
+    # A refused registry snapshot is the verdict: the gates below read that same
+    # snapshot, so they would only raise the refusal again instead of reporting it.
+    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
     _append_invoice_source_document_findings(
         target,
         work_unit,
@@ -788,8 +792,6 @@ def collect_verification_gate_findings(
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.
-    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
-        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
     findings.extend(
         _ledger_snapshot_findings(
             target=target,
