@@ -157,20 +157,22 @@ def test_a_marriage_box_left_manual_is_reported() -> None:
 
 
 @pytest.mark.parametrize(("year", "revision"), _supported_editions(), ids=lambda v: str(getattr(v, "id", v)))
-def test_maternidad_is_computed_from_the_year_the_cotizaciones_ceiling_is_retired(
-    year: int, revision: ModeloRevision
-) -> None:
+def test_maternidad_is_computed_in_every_edition_under_the_rule_in_force(year: int, revision: ModeloRevision) -> None:
+    """Each edition computes 0611; those before the ceiling's retirement bind the cotizaciones-limited fold."""
+    limited = year < _ceiling_retired_year()
+    suffix = "-cotizaciones" if limited else ""
     casilla = _casillas(revision)["0611"]
-    binding = _bindings(revision).get(_MATERNIDAD_BINDING)
-    if year < _ceiling_retired_year():
-        assert casilla.formula is None and casilla.input_kind.value == "manual", year
-        assert binding is None, year
-        return
-    assert str(casilla.formula) == _MATERNIDAD_FORMULA and casilla.input_kind.value == "computed", year
+    binding = _bindings(revision).get(_MATERNIDAD_BINDING + suffix)
+    formula = _formulas(revision).get(_MATERNIDAD_FORMULA + suffix)
+    assert formula is not None and str(casilla.formula) == _MATERNIDAD_FORMULA + suffix, year
+    assert casilla.input_kind.value == "computed", year
     assert binding is not None and isinstance(binding.provider, ProfileProvider), year
-    assert binding.provider.profile_key == f"renta_family.deduccion_maternidad_{year}", year
+    assert binding.provider.profile_key == "renta_family.deduccion_maternidad" + ("_cotizaciones" if limited else ""), (
+        year
+    )
+    assert (_MATERNIDAD_BINDING + ("" if limited else "-cotizaciones")) not in _bindings(revision), year
     assert _cites_own_year(binding, year), year
-    assert _cites_own_year(_formulas(revision)[_MATERNIDAD_FORMULA], year), year
+    assert _cites_own_year(formula, year), year
 
 
 @pytest.mark.parametrize(("year", "revision"), _supported_editions(), ids=lambda v: str(getattr(v, "id", v)))

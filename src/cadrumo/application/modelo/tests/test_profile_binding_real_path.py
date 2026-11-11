@@ -96,6 +96,14 @@ def _profile_bindings() -> list[Any]:
 # ---------------------------------------------------------------------------
 
 
+def _rental_tier_profile_key() -> str:
+    """The profile key the selected edition's art. 23.2 tier binding reads."""
+    binding = next(b for b in _profile_bindings() if b.id == "renta-rental-reduccion-art-23-2-tier")
+    key = binding.provider.profile_key
+    assert isinstance(key, str), binding.id
+    return key
+
+
 def _full_m100_profile() -> UserProfileRecord:
     """A UserProfileRecord populated for every profile_key appearing in M100 2025 bindings.
 
@@ -167,6 +175,8 @@ def _full_m100_profile() -> UserProfileRecord:
             # censal tipo de actividad under the direct-estimation regime)
             UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
             UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
+            # 0150 renta-rental-reduccion-art-23-2-tier: the edition inherits the art. 23.2 tier binding
+            UserProfileFact(path=_rental_tier_profile_key(), value="tier-50"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
         ),
@@ -247,7 +257,9 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     - The Art. 81.1 maternidad binding (casilla 0611): its fact is derived only by
       the calculate-path maternity injector, which this manual-injection pin does
       not run; its resolution is covered by test_maternidad_alta_posterior_resolution
-      and test_maternidad_cotizaciones_ceiling.
+      and test_maternidad_cotizaciones_limit.
+    - The guarderia increment binding (casilla 0613): its fact is derived only by the
+      calculate-path guarderia injector; test_incremento_guarderia_injection covers it.
     - The cash election binding (casilla 0169): its fact is derived per ejercicio by
       the calculate path; test_e2e_imputation_calculate_to_export covers it.
     """
@@ -278,6 +290,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     absent = {
         "renta-profile-taxpayer-death-date",
         "renta-profile-deduccion-maternidad",
+        "renta-profile-incremento-guarderia",
         "renta-profile-activity-cash-criterion-0169",
     }
 
