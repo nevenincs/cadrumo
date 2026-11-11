@@ -65,6 +65,7 @@ grounding = "verified"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
+casillas = { "0613" = "916.67" }
 concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
 derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
@@ -74,8 +75,9 @@ together, and only the months whose fee is paid for the whole month count (Manua
 2024 line 59021 and 2025 line 54996 count whole months only). The fees are paid in 11 months (August is not paid),
 so 1000.00 / 12 x 11 = 916.67, below the 2420.00 spent (11 x 220.00) and the annual cap of 1000.00.
 Total 1200.00 + 916.67 = 2116.67.
-Until ejercicio 2022 the increment is also limited by the cotizaciones devengadas after the birth (2022 manual lines 62690
-to 62700, a) and b)); 916.67 is below 2332.80, so 0613 is unchanged.
+Until ejercicio 2022 the increment is also limited, for each child, by the cotizaciones devengadas after the birth (2022 manual
+lines 62690 to 62700, a) and b)); the daughter's row states 2332.80, which is above 916.67, so 0613 is 916.67 in 2022 too.
+Casilla 0613 is asserted as a casilla, so the row checks the product rather than a named concept.
 """
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"

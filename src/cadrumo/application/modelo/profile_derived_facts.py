@@ -1024,6 +1024,13 @@ def inject_derived_incremento_guarderia_facts(
     or hand-planted, and deferring to one would substitute an operator's number
     for the law's.
 
+    Two derived facts exist and an edition declares the one that states its law. The
+    plain one is the increment as the reformed art. 81.3 sets it. The other also
+    limits each child's increment by the mother's cotizaciones stated on that
+    child's row, which art. 81.2 required until the Ley 31/2022 reform; a child that
+    needs the figure and lacks it leaves that fact absent, like the cases below. The
+    code decides nothing from a year: the editions bind one fact or the other.
+
     Leaves the fact ABSENT rather than writing a zero when either the cap
     parameter or the eligibility ceilings are unresolvable. A zero would read as
     a computed "no increment due" and silently withhold a real deducción; an
@@ -1037,8 +1044,16 @@ def inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.incremento_guarderia_{snapshot_authored_year(snapshot)}"
-    if key not in declared_selectors:
+    authored_year = snapshot_authored_year(snapshot)
+    consumers = tuple(
+        (key, limited)
+        for key, limited in (
+            (f"renta_family.incremento_guarderia_{authored_year}", False),
+            (f"renta_family.incremento_guarderia_cotizaciones_{authored_year}", True),
+        )
+        if key in declared_selectors
+    )
+    if not consumers:
         return
 
     cap_anual = guarderia_cap_anual(snapshot)
@@ -1049,12 +1064,18 @@ def inject_derived_incremento_guarderia_facts(
         return
 
     profile = renta_family_profile_from_facts(fact_index)
-    fact_index[key] = profile.incremento_guarderia_0613(
-        snapshot.filing_year,
-        thresholds=thresholds,
-        cap_anual=cap_anual,
-        context=context,
-    )
+    for key, limited in consumers:
+        increment = profile.incremento_guarderia_0613(
+            snapshot.filing_year,
+            thresholds=thresholds,
+            cap_anual=cap_anual,
+            context=context,
+            cotizaciones_limit_applies=limited,
+        )
+        if increment is None:
+            fact_index.pop(key, None)
+        else:
+            fact_index[key] = increment
 
 
 def inject_derived_state_attribution_facts(

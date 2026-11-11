@@ -68,8 +68,7 @@ _WORK_INCOME = validated_casilla_id("0003")
 _CLOCK = datetime.now(UTC).replace(microsecond=0)
 """The run's own instant: storage refuses a record stamped after the moment it is written."""
 _INCREMENTO_FORMULA = "renta-incremento-guarderia-0613"
-_COTIZACIONES_BINDING: BindingId = "renta-profile-cotizaciones-ss-madre"
-_COTIZACIONES_PATH_PREFIX = "renta_family.cotizaciones_ss_madre_"
+_INCREMENTO_BINDING: BindingId = "renta-profile-incremento-guarderia"
 _INCREMENTO_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
 """The official design's meaning of the box: the increase of the maternity deduction for custody spend."""
 _REFORM = "ley-31-2022:art-64"
@@ -112,16 +111,6 @@ def _years_before_the_reform() -> tuple[int, ...]:
     return tuple(year for year in _supported_years() if year < reform_year)
 
 
-def _cotizaciones_fact_path(snapshot: RegistrySnapshot) -> str | None:
-    """The profile path the edition reads the mother's cotizaciones from, if its 0613 limit has that term."""
-    for binding in snapshot.revision.bindings:
-        if binding.id == _COTIZACIONES_BINDING:
-            profile_key = getattr(binding.provider, "profile_key", None)
-            assert isinstance(profile_key, str), binding.provider
-            return profile_key
-    return None
-
-
 def _incremento_target(snapshot: RegistrySnapshot) -> str | None:
     """The casilla the edition's guardería increment formula writes, if it declares one."""
     for formula in snapshot.revision.formulas:
@@ -140,11 +129,17 @@ def _designed_incremento_casilla(snapshot: RegistrySnapshot) -> str:
 
 
 def _nursery_child(
-    filing_year: int, *, months: int, monthly_spend: Decimal, schedule: str | None = None
+    filing_year: int,
+    *,
+    months: int,
+    monthly_spend: Decimal,
+    schedule: str | None = None,
+    cotizaciones: Decimal | None = None,
 ) -> DescendantInfo:
     """A child under three all year, living with a mother who works every month, in a nursery from January.
 
-    ``schedule`` states the paid months outright when they are not the first ``months`` of the year.
+    ``schedule`` states the paid months outright when they are not the first ``months`` of the year, and
+    ``cotizaciones`` the mother's contributions after this child's birth.
     """
     return DescendantInfo(
         birth_date=date(filing_year - 1, 1, 15),
@@ -154,14 +149,27 @@ def _nursery_child(
             f"1-{months}:{monthly_spend}" if schedule is None else schedule, field="test"
         ),
         segundo_ciclo_infantil_inicio_mes=None,
+        cotizaciones_ss_madre_euros=cotizaciones,
     )
 
 
 def _mother_facts(
-    filing_year: int, *, months: int, monthly_spend: Decimal, schedule: str | None = None
+    filing_year: int,
+    *,
+    months: int,
+    monthly_spend: Decimal,
+    schedule: str | None = None,
+    cotizaciones: Decimal | None = None,
 ) -> tuple[UserProfileFact, ...]:
-    child = _nursery_child(filing_year, months=months, monthly_spend=monthly_spend, schedule=schedule)
-    child_facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list((child,)))
+    child = _nursery_child(
+        filing_year, months=months, monthly_spend=monthly_spend, schedule=schedule, cotizaciones=cotizaciones
+    )
+    return _household_facts((child,))
+
+
+def _household_facts(children: tuple[DescendantInfo, ...]) -> tuple[UserProfileFact, ...]:
+    """The facts of a mother who states each of her children's rows."""
+    child_facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(children))
     return (
         UserProfileFact(path="renta_taxpayer.sex", value="M"),
         UserProfileFact(path="renta_family.minor_children_in_unit", value=True),
@@ -183,12 +191,7 @@ def _seed_profile(filing_year: int, stated: tuple[UserProfileFact, ...]) -> None
                 *single,
                 *stated,
             ),
-            without=(
-                "irpf.estimation_regime",
-                "activities.",
-                "censo.activity_start_date",
-                _COTIZACIONES_PATH_PREFIX,
-            ),
+            without=("irpf.estimation_regime", "activities.", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -331,14 +334,10 @@ def test_the_registry_annual_cap_before_the_reform_is_the_statutory_one(filing_y
     assert guarderia_cap_anual(_snapshot(filing_year)) == _STATUTORY_ANNUAL_CAP
 
 
-@pytest.mark.parametrize("filing_year", _years_before_the_reform())
-def test_a_year_before_the_reform_reads_the_cotizaciones_from_its_own_year_key(filing_year: int) -> None:
-    assert _cotizaciones_fact_path(_snapshot(filing_year)) == f"{_COTIZACIONES_PATH_PREFIX}{filing_year}"
-
-
-@pytest.mark.parametrize("filing_year", _years_with_the_increment())
-def test_no_year_from_the_reform_reads_the_cotizaciones(filing_year: int) -> None:
-    assert _cotizaciones_fact_path(_snapshot(filing_year)) is None
+@pytest.mark.parametrize("filing_year", _supported_years())
+def test_no_edition_asks_for_the_cotizaciones_as_a_household_figure(filing_year: int) -> None:
+    """The limit is per child, so it lives on each child's row and no binding carries one household figure."""
+    assert not [binding.id for binding in _snapshot(filing_year).revision.bindings if "cotizaciones" in binding.id]
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
@@ -352,7 +351,6 @@ def test_a_childless_filer_calculates_without_the_cotizaciones_before_the_reform
         revision = _calculate(filing_year)
 
     assert revision.casilla_values[validated_casilla_id(target)] == Decimal("0")
-    assert _COTIZACIONES_BINDING not in revision.binding_overrides
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
@@ -366,7 +364,7 @@ def test_a_mother_owed_the_increment_is_refused_until_she_states_her_cotizacione
     with _profile(tmp_path, filing_year, mother), pytest.raises(ModeloWorkMissingInputError) as refused:
         _calculate(filing_year)
 
-    assert refused.value.binding_id == _COTIZACIONES_BINDING
+    assert refused.value.binding_id == _INCREMENTO_BINDING
 
 
 @pytest.mark.parametrize("filing_year", _years_before_the_reform())
@@ -383,15 +381,9 @@ def test_a_mother_owed_the_increment_is_refused_until_she_states_her_cotizacione
 def test_a_mother_calculates_the_increment_bounded_by_her_stated_cotizaciones(
     tmp_path: Path, filing_year: int, months: int, monthly_spend: Decimal, cotizaciones: Decimal
 ) -> None:
-    snapshot = _snapshot(filing_year)
-    path = _cotizaciones_fact_path(snapshot)
-    target = _incremento_target(snapshot)
-    assert path is not None
+    target = _incremento_target(_snapshot(filing_year))
     assert target is not None
-    stated = (
-        *_mother_facts(filing_year, months=months, monthly_spend=monthly_spend),
-        UserProfileFact(path=path, value=cotizaciones),
-    )
+    stated = _mother_facts(filing_year, months=months, monthly_spend=monthly_spend, cotizaciones=cotizaciones)
 
     with _profile(tmp_path, filing_year, stated):
         revision = _calculate(filing_year)
@@ -399,6 +391,41 @@ def test_a_mother_calculates_the_increment_bounded_by_her_stated_cotizaciones(
     expected = _expected_incremento(months=months, monthly_spend=monthly_spend, cotizaciones=cotizaciones)
     assert expected > 0
     assert revision.casilla_values[validated_casilla_id(target)] == expected
+
+
+@pytest.mark.parametrize("filing_year", _years_before_the_reform())
+def test_each_childs_own_cotizaciones_limit_that_childs_increment(tmp_path: Path, filing_year: int) -> None:
+    """One child's limit binds without touching the other's, and a larger figure on one cannot cover the other."""
+    target = _incremento_target(_snapshot(filing_year))
+    assert target is not None
+    spend, other_spend = Decimal("150"), Decimal("200")
+    limited = _nursery_child(filing_year, months=_CALENDAR_MONTHS, monthly_spend=spend, cotizaciones=Decimal("450"))
+    free = _nursery_child(filing_year, months=6, monthly_spend=other_spend, cotizaciones=Decimal("5000"))
+
+    with _profile(tmp_path, filing_year, _household_facts((limited, free))):
+        revision = _calculate(filing_year)
+
+    expected = _expected_incremento(
+        months=_CALENDAR_MONTHS, monthly_spend=spend, cotizaciones=Decimal("450")
+    ) + _expected_incremento(months=6, monthly_spend=other_spend, cotizaciones=Decimal("5000"))
+    assert revision.casilla_values[validated_casilla_id(target)] == expected
+
+
+@pytest.mark.parametrize("filing_year", _years_with_the_increment())
+def test_a_stated_cotizaciones_figure_does_not_limit_a_year_that_retired_the_limit(
+    tmp_path: Path, filing_year: int
+) -> None:
+    target = _incremento_target(_snapshot(filing_year))
+    assert target is not None
+    months, monthly_spend = _CALENDAR_MONTHS, Decimal("150")
+    stated = _mother_facts(filing_year, months=months, monthly_spend=monthly_spend, cotizaciones=Decimal("1"))
+
+    with _profile(tmp_path, filing_year, stated):
+        revision = _calculate(filing_year)
+
+    assert revision.casilla_values[validated_casilla_id(target)] == _expected_incremento(
+        months=months, monthly_spend=monthly_spend
+    )
 
 
 @pytest.mark.parametrize("filing_year", _years_with_the_increment())
