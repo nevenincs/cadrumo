@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:14f113b70fb789f98e9908146e4a6f554335c05388cf91e123fd356832cb6acd'
+body_hash: 'sha256:f1c0bf1122ef221eadd57d59f2ef23b61a3b952e9b590a2c35ef92af43c00920'
 related:
   - "[[2026-11-11-profile-password-custody-plan]]"
 ---
@@ -70,8 +70,12 @@ related:
 - `S04` `verify:` `pytest test_sign_in_kdf_strengthening_follow test_password_kdf_sign_in_strengthening` -> `pass`
 - `S04` `verify:` `ruff ty radon lint-imports` -> `pass`
 - `S04` `by:` `PERF-CUSTODY`
+- `S05` `A` `src/cadrumo_runtime/host/tests/test_human_login_kdf_strengthening.py`
+- `S05` `verify:` `pytest test_human_login_kdf_strengthening test_sign_in_kdf_strengthening_follow test_password_kdf_sign_in_strengthening test_kdf_background_yield test_kdf_strengthening_mint` -> `pass`
+- `S05` `by:` `PERF-CUSTODY`
 
 ## Notes
 
 - `S03` `test_profile_worker` browser-descendant tests fail in this worktree: worker resolves Chromium under the worktree var/storage/components, absent outside root
 - `S04` host suite 595 passed; 2 failures also fail with S04 set aside (automation requester TUI renew, modelo revision repeat effect); worktree workers run root code under -I
+- `S05` crash injection at five rewrap boundaries lives in `test_password_kdf_sign_in_strengthening` (S03 commit); end-to-end through a spawned worker runs only after landing, since worktree workers execute root code under -I

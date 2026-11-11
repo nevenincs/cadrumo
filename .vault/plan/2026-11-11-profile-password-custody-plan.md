@@ -9,7 +9,7 @@ related:
   - '[[2026-10-28-debug-startup-reliability-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:f4d1cee2ace250b40d5dfe82d547a830fda96f89c384d17f1bbd6d25d5f5fc22'
+body_hash: 'sha256:ba6df520bfe9e3fc9171b83dc2e52c1e374e308e43c2f616f1afdaef0fe23a5d'
 ---
 
 # `profile-password-custody` plan
@@ -30,7 +30,7 @@ Decision coverage: `2026-08-13-profile-password-custody-rollup-adr`, amendment 2
 - [x] `S02` - Mint a password replacement at a supplied measured point: enforce grid, eligibility floor and strictly-stronger-than-committed at the mint; same DEK, epoch and journaled replacement path; `src/cadrumo/adapters/persistence/storage/profile_custody.py`.
 - [x] `S03` - Worker: after a fallback profile's password sign-in, calibrate in the background and hold a strictly stronger point in worker memory; at a later password sign-in with no other live session and no automation enrollment, rewrap with the same password and report custody replaced; `src/cadrumo_runtime/host/profile_login.py`.
 - [x] `S04` - Runtime: carry the custody-replaced outcome from the worker, retire the replaced binding, follow the same attempt onto the successor host, prove again and admit; exempt only that attempt from generation-replacement cancellation; `src/cadrumo_runtime/host/profile_connection_login.py`.
-- [ ] `S05` - Tests: background calibration yields; mint refuses weaker or equal points; end-to-end sign-in strengthens a fallback profile once and admits on the new generation; skipped with another live session or automation; crash at each boundary settles through the T43 journal; `src/cadrumo_runtime/host/tests`.
+- [x] `S05` - Tests: background calibration yields; mint refuses weaker or equal points; end-to-end sign-in strengthens a fallback profile once and admits on the new generation; skipped with another live session or automation; crash at each boundary settles through the T43 journal; `src/cadrumo_runtime/host/tests`.
 
 ## Parallelization
 
