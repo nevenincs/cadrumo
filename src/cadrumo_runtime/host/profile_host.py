@@ -36,6 +36,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
     OsLockState,
+    ProfileAccessBinding,
     ProfileAccessState,
     SessionKind,
 )
@@ -612,6 +613,25 @@ class RuntimeProfileHost:
         )
         return min((instant for instant in instants if instant is not None), default=None)
 
+    def _fence_successor_sign_in(self, current: ProfileAccessBinding | None) -> bool:
+        """Fence and clean the obsolete receipt against proven successor custody.
+
+        The mutation's commit guard has been released. An unreadable binding
+        never authorizes destructive cleanup, so ``None`` fences nothing.
+        ``False`` means custody was replaced again after ``current`` was read:
+        fencing a superseded successor proves nothing, so retirement looks
+        again against the newer one.
+        """
+        if current is None:
+            return True
+        sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
+        try:
+            revoke_profile_sign_in(sign_in)
+        except AutomationCustodyError:
+            return False
+        self._sign_in_generation = sign_in.observe().current
+        return True
+
     def retire_replaced_binding(self, *, deadline: float) -> bool | None:
         """Drain an obsolete incarnation before permitting a fresh profile owner.
 
@@ -640,19 +660,8 @@ class RuntimeProfileHost:
                     current = None
                 if current == binding:
                     return False
-                if current is not None:
-                    # The mutation's commit guard has been released. Fence and
-                    # clean the obsolete receipt against proven successor custody;
-                    # an unreadable binding never authorizes destructive cleanup.
-                    sign_in = SignInGenerationCustody(root=self.store.root, binding=current)
-                    try:
-                        revoke_profile_sign_in(sign_in)
-                    except AutomationCustodyError:
-                        # Custody was replaced again after ``current`` was read.
-                        # Fencing a superseded successor proves nothing; retire
-                        # against the newer one on the next observation.
-                        return None
-                    self._sign_in_generation = sign_in.observe().current
+                if not self._fence_successor_sign_in(current):
+                    return None
                 worker = self.owner.begin_drain()
             finally:
                 self.guard.release()
