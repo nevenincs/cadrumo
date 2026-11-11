@@ -261,7 +261,7 @@ def test_preflight_accepts_aeat_token_with_year(isolated_backend: None) -> None:
     # The period echoes back through Period.__str__, never as a combined
     # calendar string or reversed ``<token> <year>`` pair.
     assert f"period\t{YEAR} 1T" in result.output
-    assert "1T 2026" not in result.output
+    assert f"1T {YEAR}" not in result.output
     assert f"{YEAR}Q1" not in result.output
     assert "checked\t1" in result.output
     assert "ready\tfalse" in result.output
@@ -283,8 +283,8 @@ def test_ledger_read_period_display_matches_typed_period_across_text_and_json(is
     assert preflight_json.exit_code == 0, preflight_json.output
     assert f"period\t{period}" in preflight.output
     assert f"\t{period}" in status.output
-    assert "1T 2026" not in preflight.output
-    assert "1T 2026" not in status.output
+    assert f"1T {YEAR}" not in preflight.output
+    assert f"1T {YEAR}" not in status.output
     assert json.loads(preflight_json.output)["result"]["period"] == {
         "filing_year": YEAR,
         "code": "1T",
@@ -301,7 +301,7 @@ def test_status_accepts_aeat_token_with_year(isolated_backend: None) -> None:
     assert result.exit_code == 0, result.output
     for marker in ("business_expense_total\t242", "business_net_total\t-242", f"{YEAR} 1T"):
         assert marker in result.output, result.output
-    assert "1T 2026" not in result.output
+    assert f"1T {YEAR}" not in result.output
     assert f"{YEAR}Q1" not in result.output
 
 
