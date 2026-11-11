@@ -9066,6 +9066,26 @@ position = 8
 
 [[revisions."2025".family_positions]]
 family = "parameters"
+id = "renta-ric-reduccion-rate-maximo"
+position = 27
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-ric-materializacion-plazo-anos"
+position = 28
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-ric-mantenimiento-plazo-anos"
+position = 29
+
+[[revisions."2025".family_positions]]
+family = "parameters"
+id = "renta-zec-tipo-gravamen-reducido"
+position = 30
+
+[[revisions."2025".family_positions]]
+family = "parameters"
 id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
 position = 32
 
