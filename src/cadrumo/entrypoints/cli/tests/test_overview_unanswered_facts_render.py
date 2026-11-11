@@ -11,12 +11,14 @@ taxpayer model at all, from which no obligation can be derived, still refuses.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import date
+from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.cli_exception_preconditions import CliExceptionPrecondition
 from ....application.overview.coverage import CoverageAdviceReason
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -27,6 +29,13 @@ from .cli_fixture_worlds import invoke_joined_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
+
+
+@pytest.fixture(autouse=True)
+def _isolated_profiles(tmp_path: Path) -> Iterator[None]:
+    """Give each test its own profile store, so every test registers its own profile."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _horizon() -> int:
@@ -48,8 +57,10 @@ def _activity_facts(*, declares_income: bool) -> dict[str, str]:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         }
-        if declares_income:
-            facts["taxpayer_type.irpf_income_categories"] = irpf_income_category_actividad_economica_token().value
+        # The registration placeholders declare an income category; a blank value withdraws it.
+        facts["taxpayer_type.irpf_income_categories"] = (
+            irpf_income_category_actividad_economica_token().value if declares_income else ""
+        )
         return facts
 
 
