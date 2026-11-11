@@ -36,27 +36,40 @@ def _stages(row: TableRow) -> dict[str, bool]:
     return {name: getattr(row, name) in _STAGE_GOOD for name in ("calculate", "verify", "export")}
 
 
-def diff_tables(before: Mapping[RowKey, TableRow], after: Mapping[RowKey, TableRow]) -> TableDiff:
-    """What changed from ``before`` to ``after``, keyed by row."""
-    turned_green: list[RowKey] = []
-    regressed: list[RowKey] = []
-    stage_regressed: list[tuple[RowKey, str]] = []
-    stage_improved: list[tuple[RowKey, str]] = []
-    for key in sorted(set(before) | set(after)):
+def _stage_moves(old: TableRow, new: TableRow) -> tuple[list[str], list[str]]:
+    """The stages that stopped passing, and those that started, from ``old`` to ``new``."""
+    was, now = _stages(old), _stages(new)
+    return [stage for stage in was if was[stage] and not now[stage]], [
+        stage for stage in was if now[stage] and not was[stage]
+    ]
+
+
+def _green_moves(
+    before: Mapping[RowKey, TableRow], after: Mapping[RowKey, TableRow]
+) -> tuple[list[RowKey], list[RowKey]]:
+    """The rows that turned green and those that stopped being green; a missing row is not green."""
+    turned_green, regressed = [], []
+    for key in set(before) | set(after):
         old, new = before.get(key), after.get(key)
         old_green = old is not None and old.verdict in GREEN
         new_green = new is not None and new.verdict in GREEN
-        if old_green and not new_green:
-            regressed.append(key)
-        elif new_green and not old_green:
-            turned_green.append(key)
-        elif old is not None and new is not None and not old_green:
-            was, now = _stages(old), _stages(new)
-            for stage in was:
-                if was[stage] and not now[stage]:
-                    stage_regressed.append((key, stage))
-                elif now[stage] and not was[stage]:
-                    stage_improved.append((key, stage))
+        if old_green != new_green:
+            (regressed if old_green else turned_green).append(key)
+    return sorted(turned_green), sorted(regressed)
+
+
+def diff_tables(before: Mapping[RowKey, TableRow], after: Mapping[RowKey, TableRow]) -> TableDiff:
+    """What changed from ``before`` to ``after``, keyed by row."""
+    turned_green, regressed = _green_moves(before, after)
+    stage_regressed: list[tuple[RowKey, str]] = []
+    stage_improved: list[tuple[RowKey, str]] = []
+    for key in sorted(set(before) & set(after)):
+        old, new = before[key], after[key]
+        if old.verdict in GREEN or new.verdict in GREEN:
+            continue
+        worse, better = _stage_moves(old, new)
+        stage_regressed += [(key, stage) for stage in worse]
+        stage_improved += [(key, stage) for stage in better]
     return TableDiff(
         turned_green=tuple(turned_green),
         regressed=tuple(regressed),
