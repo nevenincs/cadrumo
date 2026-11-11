@@ -57,7 +57,9 @@ from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.filing.errors import ModeloBuilderError
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -81,8 +83,9 @@ from cadrumo.tests.personas import (
 )
 
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
+from .export_readback import read_fields, readback_mismatches, readback_reason, unreadable_reason
 from .export_text import check_export_text, violation_reason
-from .roles import StatedCasilla, compared, differing, mismatch_text, revision_identities
+from .roles import StatedCasilla, compared, differing, edition_identities, mismatch_text, revision_identities
 from .rows import (
     PlannedRow,
     Stage,
@@ -233,7 +236,7 @@ def _run_return(
     calculate, reasons = _compare(plan, values, at_calculate, calculated)
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
-    export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
+    export, export_detail, export_reason = _export(world, plan, values, exports, work_unit_id, revision_id)
     calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
     reasons += [reason for reason in (verify_reason, export_reason) if reason]
     stage_reasons = {"verify": verify_reason, "export": export_reason}
@@ -448,7 +451,12 @@ def _with_counterparties(
 
 
 def _export(
-    world: PersonaWorld, plan: PlannedRow, exports: Path, work_unit_id: str, revision_id: str
+    world: PersonaWorld,
+    plan: PlannedRow,
+    values: list[ExpectedValue],
+    exports: Path,
+    work_unit_id: str,
+    revision_id: str,
 ) -> tuple[Stage, str, str]:
     """The export stage, what was written, and the reason it was not."""
     output = _export_path(plan, exports)
@@ -473,7 +481,32 @@ def _export(
     text_reason = _text_reason(plan, output)
     if text_reason:
         return Stage.REFUSED, detail, text_reason
+    readback = _readback_reason(plan, values, output)
+    if readback:
+        return Stage.REFUSED, detail, readback
     return Stage.PASSED, detail, ""
+
+
+def _readback_reason(plan: PlannedRow, values: list[ExpectedValue], output: Path) -> str:
+    """The stated casilla values the written fichero carries with another value, or empty when it agrees.
+
+    A file the registry parser cannot read is itself an export defect, reported as the reason.
+    """
+    casillas = edition_identities(plan.modelo, plan.year, plan.period)
+    with bundled_indexed_authority().operation() as operation:
+        layout = _export_layout(operation, plan)
+        try:
+            parsed = read_fields(
+                layout,
+                output.read_bytes(),
+                modelo=plan.modelo,
+                year=plan.year,
+                period=plan.period,
+                operation=operation,
+            )
+        except (RegistryError, ModeloBuilderError) as error:
+            return unreadable_reason(error)
+    return readback_reason(readback_mismatches(values, casillas, plan.unchecked, parsed))
 
 
 def _text_reason(plan: PlannedRow, output: Path) -> str:

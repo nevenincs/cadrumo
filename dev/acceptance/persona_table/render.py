@@ -66,12 +66,32 @@ def row_label(row: TableRow) -> str:
     return f"{row.persona}|{row.modelo}|{row.year}|{row.period}"
 
 
+def unchecked_causes(rows: Iterable[TableRow]) -> dict[str, int]:
+    """Unchecked rows per cause, the cause being an item's kind (``not-sourced``, ``concept``, ``role``, ...).
+
+    A row holding items of several kinds counts under each, so the counts may sum above the unchecked rows.
+    """
+    counted = Counter(
+        cause
+        for row in rows
+        if row.verdict is Verdict.UNCHECKED
+        for cause in {item.split(":", 1)[0] for item in row.unchecked}
+    )
+    return dict(sorted(counted.items()))
+
+
 def _unchecked_section(rows: Iterable[TableRow]) -> list[str]:
     """The rows whose stated values the table could not all compare, each with what it could not check."""
     held = [row for row in rows if row.verdict is Verdict.UNCHECKED]
     if not held:
         return []
-    lines = [f"Unchecked ({len(held)}): stated values the table does not compare.", ""]
+    causes = ", ".join(f"{cause} {count}" for cause, count in unchecked_causes(held).items())
+    lines = [
+        f"Unchecked ({len(held)}): stated values the table does not compare.",
+        "",
+        f"Unchecked rows by cause (a row with several causes counts under each): {causes}.",
+        "",
+    ]
     lines += [f"- {row_label(row)}: {', '.join(row.unchecked)}" for row in held]
     return [*lines, ""]
 
@@ -136,4 +156,13 @@ def render_table(
     return "\n".join(lines) + "\n"
 
 
-__all__ = ["counts", "lane_counts", "lane_line", "red_stage", "render_table", "row_label", "summary_line"]
+__all__ = [
+    "counts",
+    "lane_counts",
+    "lane_line",
+    "red_stage",
+    "render_table",
+    "row_label",
+    "summary_line",
+    "unchecked_causes",
+]
