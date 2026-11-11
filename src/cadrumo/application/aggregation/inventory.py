@@ -28,6 +28,9 @@ from ...domain.contribuyente.inventory.closing_foundations import InventoryLedge
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
 from ...domain.user_profile.values import UserProfileRecord
+from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
+from .inventory_claim_findings import inventory_claim_findings
+from .modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     CalculationSourceContext,
@@ -613,9 +616,20 @@ class InventorySourceResolver:
     resolver_id: ClassVar[str] = "inventory"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
-    def __init__(self, *, inventory_repository: InventoryLedgerRepositoryProtocol | None = None) -> None:
-        """Bind the optional repository used to read inventory facts."""
+    def __init__(
+        self,
+        *,
+        inventory_repository: InventoryLedgerRepositoryProtocol | None = None,
+        claim_reads: InventoryClaimLedgerReads | None = None,
+    ) -> None:
+        """Bind the optional repository used to read inventory facts.
+
+        ``claim_reads`` is the ledger and asset register the purchases' ledger
+        statements are checked against. Without it no statement is checked, so
+        only a caller that reads the projection, not one that files it, omits it.
+        """
         self._inventory_repository = inventory_repository
+        self._claim_reads = claim_reads
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve inventory bindings for the selected calculation context."""
@@ -663,12 +677,39 @@ class InventorySourceResolver:
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
             )
+        claim_refusal = self._claim_refusal(ledgers, binding_ids=binding_ids, filing_year=context.filing_year)
+        if claim_refusal is not None:
+            return claim_refusal
         return _resolve_inventory_rows(
             ledgers,
             binding_ids=binding_ids,
             bindings_by_operation=template.by_operation,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
+        )
+
+    def _claim_refusal(
+        self, ledgers: tuple[InventoryLedger, ...], *, binding_ids: tuple[str, ...], filing_year: int
+    ) -> CalculationSourceResolution | None:
+        """Hold the rows back while a purchase's ledger statement does not stand, or is missing."""
+        if self._claim_reads is None or self._inventory_repository is None:
+            return None
+        try:
+            findings = inventory_claim_findings(
+                self._inventory_repository.load(), ledgers, filing_year=filing_year, reads=self._claim_reads
+            )
+        except (InventoryLedgerError, *STORAGE_DEGRADATION_ERRORS):
+            return self._storage_refusal(binding_ids)
+        if not findings:
+            return None
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            unresolved_binding_ids=binding_ids,
+            diagnostics=tuple(
+                _diagnostic(reason="source_domain_not_ready", state=state, message=message, remedy=remedy)
+                for state, message, remedy in findings
+            ),
         )
 
     def _storage_refusal(self, binding_ids: tuple[str, ...]) -> CalculationSourceResolution:

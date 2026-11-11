@@ -1,4 +1,10 @@
-"""Reconcile Renta ledger expenses against the activity-asset register."""
+"""Reconcile Renta ledger expenses against the registers that claim ledger rows.
+
+Two registers claim a ledger row as their own: the activity-asset register names
+an element's acquisition, and an inventory book's purchase movement names the
+row booking it. A claimed row is withheld from every expense total through one
+claim set, so no second exclusion path can disagree on which rows are out.
+"""
 
 from __future__ import annotations
 
@@ -6,13 +12,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Final, Protocol
+from typing import Final, Literal, Protocol
 
 from pydantic import BaseModel, Field
 
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.categories.spending_category_catalogue import amortizable_spending_categories
+from ...domain.contribuyente.inventory.ledger_claims import InventoryPurchaseClaim
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.actividad_asset.claims import current_revisions
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
@@ -72,6 +79,52 @@ class RegisterOwnedAcquisition(BaseModel):
     purchase_amount: Decimal | None = None
 
 
+class BookClaimedPurchase(BaseModel):
+    """One ledger expense row an inventory book's purchase claims as the row booking it.
+
+    The book carries the purchase into casilla 0181 as its acquisition cost, so the
+    row is withheld from every ledger expense destination, 0183 included.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    actividad_id: str = Field(min_length=1)
+    book_year: int
+    movement_id: str = Field(min_length=1)
+    transaction_id: TransactionId
+    category: str | None = Field(default=None, min_length=1, max_length=128)
+    tax_year: int
+    booked_on: date | None = None
+    purchase_amount: Decimal | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class RegisterClaim:
+    """One register's claim on one ledger row: an asset's acquisition or an inventory book's purchase."""
+
+    register: Literal["activity_asset", "inventory_book"]
+    transaction_id: str
+    asset_id: str | None = None
+    purchase: InventoryPurchaseClaim | None = None
+
+
+def register_claims(
+    assets: tuple[ActivityAssetRevision, ...],
+    inventory_claims: tuple[InventoryPurchaseClaim, ...] = (),
+) -> tuple[RegisterClaim, ...]:
+    """Every claim of both registers, assets first in asset order, then purchases in book order."""
+    return (
+        *(
+            RegisterClaim(register="activity_asset", transaction_id=transaction_id, asset_id=asset_id)
+            for asset_id, transaction_id in _current_acquisition_owners(assets)
+        ),
+        *(
+            RegisterClaim(register="inventory_book", transaction_id=claim.transaction_id, purchase=claim)
+            for claim in inventory_claims
+        ),
+    )
+
+
 def amortization_labelled_expense_categories(*, effective_date: date) -> frozenset[str]:
     """Return the ledger categories that declare an amortization rather than an ordinary expense.
 
@@ -103,18 +156,23 @@ class LedgerExpenseRegisterClassification:
 
     withheld: tuple[RegisterOwnedAcquisition, ...]
     unregistered: tuple[UnregisteredAmortizationRow, ...]
+    book_claimed: tuple[BookClaimedPurchase, ...] = ()
 
     @property
     def excluded_transaction_ids(self) -> frozenset[str]:
         """Return the rows that must not reach an expense total."""
         return frozenset(
-            {row.transaction_id for row in self.withheld} | {row.transaction_id for row in self.unregistered},
+            {row.transaction_id for row in self.withheld}
+            | {row.transaction_id for row in self.unregistered}
+            | {row.transaction_id for row in self.book_claimed},
         )
 
 
 def classify_ledger_expenses_against_asset_register(
     assets: tuple[ActivityAssetRevision, ...],
     treatments: tuple[LedgerRentaExpenseTreatment, ...],
+    *,
+    inventory_claims: tuple[InventoryPurchaseClaim, ...] = (),
 ) -> LedgerExpenseRegisterClassification:
     """Withhold register-owned acquisitions and report unowned amortization rows.
 
@@ -133,11 +191,17 @@ def classify_ledger_expenses_against_asset_register(
       an element the register does not know. It is never deducted, and the
       caller turns it into a non-blocking finding whose remedy is to register the element.
 
+    - A row an inventory book's purchase claims is the purchase the book carries
+      into casilla 0181, so it is withheld from every expense destination. Only the
+      Modelo 100 resolver passes ``inventory_claims``: Modelo 130 has no variation
+      of existencias, so its gastos keep the purchase.
+
     Returns:
-        The withheld rows in asset order and the unregistered rows in ledger order.
+        The withheld rows in asset order, the book-claimed rows in book order and
+        the unregistered rows in ledger order.
     """
     owners = _current_acquisition_owners(assets)
-    owned = {transaction_id for _asset_id, transaction_id in owners}
+    owned = register_acquisition_transaction_ids(assets, inventory_claims)
     return LedgerExpenseRegisterClassification(
         withheld=tuple(
             RegisterOwnedAcquisition(
@@ -162,6 +226,22 @@ def classify_ledger_expenses_against_asset_register(
             )
             for treatment in treatments
             if treatment.amortization_labelled and treatment.transaction_id not in owned
+        ),
+        book_claimed=tuple(
+            BookClaimedPurchase(
+                actividad_id=claim.actividad_id,
+                book_year=claim.year,
+                movement_id=claim.movement_id,
+                transaction_id=treatment.transaction_id,
+                category=treatment.category,
+                tax_year=treatment.tax_year,
+                booked_on=treatment.booked_on,
+                purchase_amount=treatment.deductible_amount,
+            )
+            for claim in inventory_claims
+            for treatment in treatments
+            if treatment.transaction_id == claim.transaction_id
+            and treatment.transaction_id not in {asset_owned for _asset_id, asset_owned in owners}
         ),
     )
 
@@ -365,6 +445,46 @@ def register_owned_acquisition_diagnostics(
     )
 
 
+def book_claimed_purchase_diagnostics(
+    claimed: tuple[BookClaimedPurchase, ...],
+    *,
+    source_kind: str,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project each row an inventory book claims into an operator-visible note.
+
+    Returns:
+        One note per withheld row, naming the book, the purchase and the amount that
+        reaches casilla 0181 through the book instead of a ledger expense casilla.
+    """
+    return source_diagnostics_for(
+        claimed,
+        reason="inventory_book_claimed_purchase",
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        source_ref=lambda purchase: f"transaction:{purchase.transaction_id}",
+        message=lambda purchase: (
+            f"ledger transaction {purchase.transaction_id!r} is booked by purchase {purchase.movement_id!r} of the "
+            f"{purchase.book_year} inventory book of activity {purchase.actividad_id!r}; its "
+            + ("amount" if purchase.purchase_amount is None else f"{purchase.purchase_amount} EUR amount")
+            + " reaches the purchases of existencias through the book, not this expense total"
+        ),
+        remedy=lambda _purchase: "nothing to do: the inventory book declares this purchase",
+        fact=lambda purchase: (
+            CalculationNoteFact.of(
+                CalculationNoteSentence.BOOK_CLAIMED_PURCHASE,
+                rows=(purchase.transaction_id,),
+                row_date=purchase.booked_on.isoformat(),
+                row_amount=purchase.purchase_amount,
+            )
+            if purchase.booked_on is not None and purchase.purchase_amount is not None
+            else CalculationNoteFact.of(
+                CalculationNoteSentence.BOOK_CLAIMED_PURCHASE_UNDATED, rows=(purchase.transaction_id,)
+            )
+        ),
+    )
+
+
 def _current_acquisition_owners(
     assets: tuple[ActivityAssetRevision, ...],
 ) -> tuple[tuple[str, str], ...]:
@@ -384,13 +504,17 @@ def _current_acquisition_owners(
     )
 
 
-def register_acquisition_transaction_ids(assets: tuple[ActivityAssetRevision, ...]) -> frozenset[str]:
-    """Return the ledger transactions the register declares as an asset's acquisition.
+def register_acquisition_transaction_ids(
+    assets: tuple[ActivityAssetRevision, ...],
+    inventory_claims: tuple[InventoryPurchaseClaim, ...] = (),
+) -> frozenset[str]:
+    """Return the ledger transactions a register claims: an asset's acquisition or a book's purchase.
 
     Returns:
-        Every acquisition transaction id of every asset's current revision.
+        Every acquisition transaction id of every asset's current revision, together
+        with every transaction an inventory purchase claims.
     """
-    return frozenset(transaction_id for _asset_id, transaction_id in _current_acquisition_owners(assets))
+    return frozenset(claim.transaction_id for claim in register_claims(assets, inventory_claims))
 
 
 def dwelling_ownership_share(assets: tuple[ActivityAssetRevision, ...]) -> Decimal | None:
