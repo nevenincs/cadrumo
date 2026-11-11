@@ -872,6 +872,39 @@ def _bulk_capture_scope(
     return resolved_modelos, year_from, year_to
 
 
+def _unattempted_pair_outcomes(
+    modelos: tuple[str, ...], *, year_from: int, year_to: int
+) -> dict[tuple[str, int], FiledCapturePairOutcome]:
+    """Account every pair of the report span as not yet attempted, newest year first."""
+    return {
+        (code, year): FiledCapturePairOutcome(
+            modelo=code,
+            year=year,
+            walk_attempted=False,
+            walk_completed=False,
+            row_count=0,
+            reached_count=0,
+            captured_count=0,
+        )
+        for code in modelos
+        for year in range(year_to, year_from - 1, -1)
+    }
+
+
+def _plan_bulk_capture_queries(
+    modelos: tuple[str, ...],
+    *,
+    year_from: int,
+    year_to: int,
+    pairs: Sequence[tuple[str, int]] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[tuple[str, int]], list[FiledDataCaptureFailureRow]]:
+    """Plan the exact pairs when given, otherwise the modelos-by-years rectangle."""
+    if pairs is not None:
+        return plan_filed_capture_pair_queries(pairs, operation=operation)
+    return plan_filed_capture_queries(modelos, year_from=year_from, year_to=year_to, operation=operation)
+
+
 async def capture_filed_data_bulk(
     *,
     filed_data_port: FiledDataCapturePort,
@@ -958,28 +991,10 @@ async def capture_filed_data_bulk(
         operation=operation,
     )
     accumulator = FiledCaptureAccumulator(operation=operation)
-    pair_outcomes = {
-        (code, year): FiledCapturePairOutcome(
-            modelo=code,
-            year=year,
-            walk_attempted=False,
-            walk_completed=False,
-            row_count=0,
-            reached_count=0,
-            captured_count=0,
-        )
-        for code in resolved_modelos
-        for year in range(year_to, year_from - 1, -1)
-    }
-    if pairs is not None:
-        query_pairs, failures = plan_filed_capture_pair_queries(pairs, operation=operation)
-    else:
-        query_pairs, failures = plan_filed_capture_queries(
-            resolved_modelos,
-            year_from=year_from,
-            year_to=year_to,
-            operation=operation,
-        )
+    pair_outcomes = _unattempted_pair_outcomes(resolved_modelos, year_from=year_from, year_to=year_to)
+    query_pairs, failures = _plan_bulk_capture_queries(
+        resolved_modelos, year_from=year_from, year_to=year_to, pairs=pairs, operation=operation
+    )
     pair_total = await _announce_bulk_capture_plan(
         query_pairs=query_pairs,
         failures=failures,
