@@ -229,9 +229,7 @@ def read_entry_number(
     integer = grammar.family is ModeloEditValueFamily.INTEGER
     limit = 0 if integer else grammar.max_fraction_digits
     number = read_edit_number_lexeme(lexeme, locale, normalisations, fraction_limit=limit)
-    if not integer and limit is not None and _fraction_digits(number) > limit:
-        raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_MANY_DECIMALS, str(limit))
-    return validate_edit_number(number, grammar)
+    return validate_edit_number(number, grammar, fraction_digits_as_typed=True)
 
 
 def read_typed_edit_number(value: ModeloScalar) -> Decimal:
@@ -263,21 +261,36 @@ def _fraction_digits(value: Decimal) -> int:
     return -exponent if isinstance(exponent, int) and exponent < 0 else 0
 
 
-def validate_edit_number(value: Decimal, grammar: ModeloEditValueGrammarV1) -> Decimal:
-    """Apply precision, sign, bounds and the money operand range; never round."""
-    value = _apply_number_precision(value, grammar)
+def validate_edit_number(
+    value: Decimal,
+    grammar: ModeloEditValueGrammarV1,
+    *,
+    fraction_digits_as_typed: bool = False,
+) -> Decimal:
+    """Apply precision, sign, bounds and the money operand range; never round.
+
+    ``fraction_digits_as_typed`` counts the fraction digits as written, so a
+    lexeme's ``1.5000`` exceeds a two-digit address; a typed wire value is
+    compared at its normalised precision.
+    """
+    value = _apply_number_precision(value, grammar, fraction_digits_as_typed=fraction_digits_as_typed)
     _check_number_sign(value, grammar.sign)
     _check_number_bounds(value, grammar)
     _check_money_operand(value, grammar)
     return value
 
 
-def _apply_number_precision(value: Decimal, grammar: ModeloEditValueGrammarV1) -> Decimal:
+def _apply_number_precision(
+    value: Decimal, grammar: ModeloEditValueGrammarV1, *, fraction_digits_as_typed: bool
+) -> Decimal:
     if grammar.family is ModeloEditValueFamily.INTEGER:
         if value != value.to_integral_value():
             raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_AN_INTEGER)
         value = Decimal(int(value))
-    elif grammar.max_fraction_digits is not None and _fraction_digits(value.normalize()) > grammar.max_fraction_digits:
+    elif (
+        grammar.max_fraction_digits is not None
+        and _fraction_digits(value if fraction_digits_as_typed else value.normalize()) > grammar.max_fraction_digits
+    ):
         raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_MANY_DECIMALS, str(grammar.max_fraction_digits))
 
     return value
