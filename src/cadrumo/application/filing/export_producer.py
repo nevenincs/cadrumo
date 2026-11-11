@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
+from typing import Final
 
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.period import Period
@@ -27,6 +28,7 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingFact,
     M303InsolvencyFilingSubtype,
 )
+from ...domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
 from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
 from . import producer_ownership
 from .export_producer_m200_account import m200_account_values
@@ -943,6 +945,54 @@ def _m111_colegio_concertado(model_profile: FilingModelProfileFacts) -> bool | N
     return model_profile.colegio_concertado if isinstance(model_profile, Modelo111ProfileFacts) else None
 
 
+def _m303_lexical_producer_values(
+    m303_profile: M303ProfileLexicals,
+    m303_filing: M303FilingLexicals,
+) -> dict[FilingProducerKey, object]:
+    """Key every Modelo 303 lexical by the producer identity the export layout addresses."""
+    return {
+        FilingProducerKey.M303_REDEME_ENROLLED: m303_profile.redeme_enrolled,
+        FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
+        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: m303_profile.regime_composition_code,
+        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: m303_filing.annual_volume_nonzero,
+        FilingProducerKey.M303_JOINT_RETURN_ELECTED: m303_filing.joint_return_elected,
+        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: m303_profile.cash_accounting_regime_enrolled,
+        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
+            m303_filing.recipient_of_cash_accounting_operations
+        ),
+        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: m303_filing.prorrata_special_option,
+        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: m303_filing.prorrata_special_revocation,
+        FilingProducerKey.M303_INSOLVENCY_DECLARED: m303_filing.insolvency_declared,
+        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: m303_filing.insolvency_judicial_order_date,
+        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: m303_filing.insolvency_filing_subtype,
+        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: m303_profile.voluntary_sii_enrolled,
+        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: m303_filing.exonerado_390_applicable,
+        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
+            m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
+        ),
+    }
+
+
+#: Every producer identity the Modelo 303 lexicals feed, read from the one mapping that keys them.
+M303_LEXICAL_PRODUCER_KEYS: Final = frozenset(
+    _m303_lexical_producer_values(M303ProfileLexicals(), M303FilingLexicals())
+)
+
+
+def m303_context_producer_values(
+    m303_profile: M303ProfileLexicals,
+    m303_filing: M303FilingLexicals,
+) -> dict[FilingProducerKey, object]:
+    """Resolve the Modelo 303 producer values exactly as the export renders them, foral override included.
+
+    Callers that hold only part of the facts pass lexicals built from that part.
+    A lexical they do not hold stays ``None``, never a default answer.
+    """
+    values = _m303_lexical_producer_values(m303_profile, m303_filing)
+    _apply_foral_m303_overrides(values, m303_profile, m303_filing)
+    return values
+
+
 def _shared_filing_producer_values(
     snapshot: FilingProducerSnapshot,
     account: SelectedAccountLexicals,
@@ -970,25 +1020,7 @@ def _shared_filing_producer_values(
         FilingProducerKey.PRIOR_DOMICILIATION_ACTION: (
             "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
         ),
-        FilingProducerKey.M303_REDEME_ENROLLED: m303_profile.redeme_enrolled,
-        FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
-        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: m303_profile.regime_composition_code,
-        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: m303_filing.annual_volume_nonzero,
-        FilingProducerKey.M303_JOINT_RETURN_ELECTED: m303_filing.joint_return_elected,
-        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: m303_profile.cash_accounting_regime_enrolled,
-        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
-            m303_filing.recipient_of_cash_accounting_operations
-        ),
-        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: m303_filing.prorrata_special_option,
-        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: m303_filing.prorrata_special_revocation,
-        FilingProducerKey.M303_INSOLVENCY_DECLARED: m303_filing.insolvency_declared,
-        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: m303_filing.insolvency_judicial_order_date,
-        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: m303_filing.insolvency_filing_subtype,
-        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: m303_profile.voluntary_sii_enrolled,
-        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: m303_filing.exonerado_390_applicable,
-        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
-            m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
-        ),
+        **_m303_lexical_producer_values(m303_profile, m303_filing),
         FilingProducerKey.M111_COLEGIO_CONCERTADO: (_m111_colegio_concertado(snapshot.model_profile)),
     }
     return values
@@ -1054,7 +1086,9 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     """Resolve every canonical producer identity from one immutable snapshot."""
     account = selected_account_lexicals(snapshot)
     iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
-    m303_profile = m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
+    m303_profile = m303_profile_lexicals(
+        iva_profile, None if snapshot.m303_filing_facts is None else snapshot.m303_filing_facts.period
+    )
     m303_filing = m303_filing_lexicals(snapshot.m303_filing_facts)
     m303_motive = m303_rectificativa_motive_producer_values(snapshot.amendment_evidence)
     values = _shared_filing_producer_values(snapshot, account, m303_profile, m303_filing, m303_motive)
@@ -1098,12 +1132,11 @@ def selected_account_lexicals(snapshot: FilingProducerSnapshot) -> SelectedAccou
 
 def m303_profile_lexicals(
     iva_profile: ModeloIVAProfile | None,
-    m303_facts: M303FilingFacts | None,
+    period: Period | None,
 ) -> M303ProfileLexicals:
-    """Project the Modelo 303 IVA profile and filing facts into rendered lexicals."""
+    """Project the Modelo 303 IVA profile into rendered lexicals dated by the filing ``period``, when known."""
     if iva_profile is None:
         return M303ProfileLexicals()
-    period = m303_facts.period if m303_facts is not None else None
     a30 = (
         yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
         if period is not None and m303_a30_entitlement_applicable(period)
@@ -1140,39 +1173,68 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     if m303_facts is None:
         return M303FilingLexicals()
     transition = m303_facts.prorrata_transition
-    insolvency = m303_facts.insolvency
     transition_applicable = transition.is_applicable
-    # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
-    final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
     special_option, special_revocation = _m303_prorrata_election_lexicals(transition, transition_applicable)
-    insolvency_declared, insolvency_date, insolvency_subtype = _m303_insolvency_lexicals(insolvency)
-    return M303FilingLexicals(
-        joint_return_elected=yes_no(m303_facts.joint_return_elected),
-        # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
-        # last period; every other filing carries "0" whatever the operator answered.
-        annual_volume_nonzero=_m303_annual_volume_lexical(m303_facts, final_exonerado),
+    return replace(
+        _m303_evidence_lexicals(
+            period=m303_facts.period,
+            joint_return_elected=m303_facts.joint_return_elected,
+            annual_volume_nonzero=m303_facts.annual_volume_nonzero,
+            insolvency=m303_facts.insolvency,
+            exonerado_390=m303_facts.exonerado_390,
+        ),
         recipient_of_cash_accounting_operations=yes_no(
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
         prorrata_special_option=special_option,
         prorrata_special_revocation=special_revocation,
+        prorrata_transition_applicable=transition_applicable,
+    )
+
+
+def m303_evidence_lexicals(evidence: M303FilingInstanceEvidence) -> M303FilingLexicals:
+    """Project the operator-selected filing evidence alone; the ledger and register arrivals stay unknown."""
+    return _m303_evidence_lexicals(
+        period=evidence.period,
+        joint_return_elected=evidence.joint_return_elected,
+        annual_volume_nonzero=evidence.annual_volume_nonzero,
+        insolvency=evidence.insolvency,
+        exonerado_390=evidence.exonerado_390,
+    )
+
+
+def _m303_evidence_lexicals(
+    *,
+    period: Period,
+    joint_return_elected: bool,
+    annual_volume_nonzero: bool | None,
+    insolvency: M303InsolvencyFilingFact | None,
+    exonerado_390: M303Exonerado390FilingEvidence | None,
+) -> M303FilingLexicals:
+    # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
+    final_exonerado = exonerado_390 if is_last_filing_period_of_year(period) else None
+    insolvency_declared, insolvency_date, insolvency_subtype = _m303_insolvency_lexicals(insolvency)
+    return M303FilingLexicals(
+        joint_return_elected=yes_no(joint_return_elected),
+        # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
+        # last period; every other filing carries "0" whatever the operator answered.
+        annual_volume_nonzero=_m303_annual_volume_lexical(annual_volume_nonzero, final_exonerado),
         insolvency_declared=insolvency_declared,
         insolvency_judicial_order_date=insolvency_date,
         insolvency_filing_subtype=insolvency_subtype,
         exonerado_390_applicable=_m303_outside_period()
         if final_exonerado is None
         else yes_no(final_exonerado.applicable),
-        prorrata_transition_applicable=transition_applicable,
     )
 
 
 def _m303_annual_volume_lexical(
-    m303_facts: M303FilingFacts,
+    annual_volume_nonzero: bool | None,
     final_exonerado: M303Exonerado390FilingEvidence | None,
 ) -> str:
-    if final_exonerado is None or not final_exonerado.applicable or m303_facts.annual_volume_nonzero is None:
+    if final_exonerado is None or not final_exonerado.applicable or annual_volume_nonzero is None:
         return _m303_outside_period()
-    return yes_no(m303_facts.annual_volume_nonzero)
+    return yes_no(annual_volume_nonzero)
 
 
 def _m303_prorrata_election_lexicals(
@@ -1228,11 +1290,14 @@ def m303_a30_entitlement_applicable(period: Period) -> bool:
 
 
 __all__ = [
+    "M303_LEXICAL_PRODUCER_KEYS",
     "M303FilingLexicals",
     "M303ForalLexicals",
     "M303ProfileLexicals",
     "SelectedAccountLexicals",
     "filing_producer_values",
+    "m303_context_producer_values",
+    "m303_evidence_lexicals",
     "m303_filing_lexicals",
     "m303_foral_lexicals",
     "m303_profile_lexicals",

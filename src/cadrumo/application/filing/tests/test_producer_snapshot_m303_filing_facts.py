@@ -261,7 +261,7 @@ def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_
     # instance keeps the proof at the producer boundary instead of requiring a
     # whole bundled-registry load unrelated to this source-stated wire rule.
     facts = M303FilingFacts.model_construct(period=Period.from_year_and_code(_YEAR, period_code))
-    lexical = m303_profile_lexicals(profile, facts)
+    lexical = m303_profile_lexicals(profile, facts.period)
 
     assert lexical.hydrocarbon_deposit_advance_payment_deduction_entitled == expected
 
