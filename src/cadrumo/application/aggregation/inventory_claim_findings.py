@@ -3,15 +3,15 @@
 A purchase of the book reaches casilla 0181 as acquisition cost. If a ledger row
 books the same purchase, the row must be claimed so it is withheld from the
 ledger expense casillas; a claim that does not stand, or a purchase that states
-nothing about its ledger row while its activity holds ledger expense rows in the
-year, could deduct the purchase twice or not at all. Either leaves the inventory
-rows unresolved, which blocks verification, and never falls back to casilla 0183.
+nothing about its ledger row while the year holds ledger expense rows, could
+deduct the purchase twice or not at all. Either leaves the inventory rows
+unresolved, which blocks verification, and never falls back to casilla 0183.
 
-A ledger row belongs to the activity it declares (``tipo_actividad``). A row that
-declares none is unknown rather than any particular activity's, so it counts for
-every book. A book is matched to those rows by the Modelo 036 activity code its
-identifier states; a book whose identifier states none has no activity the rows
-can be told apart by, so every row counts for it. With one book, every row counts.
+Every ledger expense row of the year counts for every book, whatever activity the
+row declares. A book names its activity by the operator's free text, which nothing
+ties to an activity of the profile, so no book can be told apart by the activity of
+the rows. Scoping the finding to a book's own activity waits on a typed link from a
+book to its activity.
 """
 
 from __future__ import annotations
@@ -19,7 +19,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from ...core.tipos_actividad import TipoActividad
 from ...domain.contribuyente.inventory.ledger_claims import InventoryClaimRefusal, unstated_purchases
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
@@ -50,30 +49,15 @@ def _row_date(row: Transaction) -> date:
     return row.operation_date or row.raw.value_date or row.raw.booked_date
 
 
-def year_has_ledger_expense_rows(
-    transactions: TransactionCatalogue, year: int, *, activity: TipoActividad | None = None
-) -> bool:
-    """Whether the ledger holds an active business expense row dated in ``year``.
-
-    With ``activity``, only a row that declares that activity or none counts: a row
-    that declares another activity is that activity's, and an undeclared one could be.
-    """
+def year_has_ledger_expense_rows(transactions: TransactionCatalogue, year: int) -> bool:
+    """Whether the ledger holds an active business expense row dated in ``year``, of any activity."""
     return any(
         row.lifecycle_state is TransactionLifecycleState.ACTIVE
         and row.direction is TransactionDirection.OUTGOING
         and row.business_classification in _EXPENSE_CLASSIFICATIONS
         and _row_date(row).year == year
-        and (activity is None or row.tipo_actividad in (None, activity))
         for row in transactions.values()
     )
-
-
-def book_activity(ledger: InventoryLedger) -> TipoActividad | None:
-    """The Modelo 036 activity a book's identifier states, or ``None`` when it states none."""
-    try:
-        return TipoActividad(ledger.actividad_id)
-    except ValueError:
-        return None
 
 
 def claim_refusal_message(refusal: InventoryClaimRefusal) -> str:
@@ -106,21 +90,6 @@ class InventoryClaimFinding:
     fact: CalculationNoteFact
 
 
-def _unstated_blocking(
-    ledgers: tuple[InventoryLedger, ...], transactions: TransactionCatalogue, filing_year: int
-) -> tuple[str, ...]:
-    """The unstated purchases whose own activity holds ledger expense rows in the year."""
-    blocking: list[str] = []
-    for ledger in ledgers:
-        movements = unstated_purchases(ledger)
-        if not movements:
-            continue
-        activity = book_activity(ledger) if len(ledgers) > 1 else None
-        if year_has_ledger_expense_rows(transactions, filing_year, activity=activity):
-            blocking.extend(movement.movement_id for movement in movements)
-    return tuple(blocking)
-
-
 def inventory_claim_findings(
     document: InventoryLedgerDocument,
     ledgers: tuple[InventoryLedger, ...],
@@ -132,8 +101,8 @@ def inventory_claim_findings(
 
     Returns:
         One finding per refused claim, then one for the purchases that state
-        nothing about the ledger row that books them while their own activity holds
-        ledger expense rows in the year; empty when every purchase's statement
+        nothing about the ledger row that books them while the year holds ledger
+        expense rows; empty when every purchase's statement
         stands.
     """
     transactions = reads.transactions()
@@ -153,8 +122,8 @@ def inventory_claim_findings(
         for ledger in ledgers
         for refusal in ledger_claim_refusals(document, ledger, transactions=facts, assets=assets)
     )
-    unstated = _unstated_blocking(ledgers, transactions, filing_year)
-    if not unstated:
+    unstated = tuple(movement.movement_id for ledger in ledgers for movement in unstated_purchases(ledger))
+    if not unstated or not year_has_ledger_expense_rows(transactions, filing_year):
         return refused
     listed = ", ".join(repr(movement_id) for movement_id in unstated)
     return (
@@ -163,7 +132,7 @@ def inventory_claim_findings(
             state="purchase_ledger_row_unstated",
             message=(
                 f"the {filing_year} inventory purchases {listed} state nothing about the ledger row that books them, "
-                "and the ledger holds expense rows for their activity in the year"
+                "and the ledger holds expense rows for the year"
             ),
             remedy=UNSTATED_PURCHASE_REMEDY,
             fact=CalculationNoteFact.of(
@@ -179,7 +148,6 @@ __all__ = [
     "CLAIM_REFUSAL_REMEDY",
     "UNSTATED_PURCHASE_REMEDY",
     "InventoryClaimFinding",
-    "book_activity",
     "claim_refusal_message",
     "inventory_claim_findings",
     "year_has_ledger_expense_rows",

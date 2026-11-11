@@ -264,49 +264,15 @@ _RETAIL = TipoActividad.A03_RESTO_EMPRESARIALES
 _CRAFT = TipoActividad.A05_PROFESIONALES
 
 
-def test_an_unstated_purchase_of_an_activity_without_ledger_expense_rows_does_not_block() -> None:
-    quiet = inventory_ledger(_RETAIL.value)
-    busy = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
+def test_a_book_is_held_back_by_the_ledger_rows_of_another_activity() -> None:
+    """No typed link ties a book to an activity, so a row of any activity holds an unstated purchase back."""
+    retail = inventory_ledger(_RETAIL.value)
+    craft = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
 
-    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00", activity=_CRAFT))
-
-    assert resolution.unresolved_binding_ids == ()
-    assert resolution.diagnostics == ()
-    assert resolution.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
-
-
-def test_an_unstated_purchase_of_an_activity_with_ledger_expense_rows_blocks() -> None:
-    quiet = _stating_no_ledger_row(inventory_ledger(_RETAIL.value))
-    busy = inventory_ledger(_CRAFT.value)
-
-    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00", activity=_CRAFT))
+    resolution = _resolve_books((retail, craft), _expense_row(base="100.00", activity=_CRAFT))
 
     assert resolution.row_binding_values == {}
     assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
     (diagnostic,) = resolution.diagnostics
     assert diagnostic.fact is not None
     assert diagnostic.fact.values == (("count", "1"), ("year", str(YEAR)))
-
-
-def test_a_ledger_row_declaring_no_activity_counts_for_every_book() -> None:
-    quiet = inventory_ledger(_RETAIL.value)
-    busy = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
-
-    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00"))
-
-    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
-
-
-def test_a_book_stating_no_activity_is_held_back_by_a_row_of_any_activity() -> None:
-    unnamed = inventory_ledger("comercio")
-    named = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
-
-    resolution = _resolve_books((unnamed, named), _expense_row(base="100.00", activity=_CRAFT))
-
-    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
-
-
-def test_with_one_book_a_row_of_any_activity_holds_an_unstated_purchase_back() -> None:
-    resolution = _resolve(inventory_ledger(_RETAIL.value), _expense_row(base="100.00", activity=_CRAFT))
-
-    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
