@@ -13,11 +13,9 @@ use crate::provisioning::{
     local_ai::{
         fake_llamacpp::{FakeLlamaCpp, ModelStatus, Scripted},
         fake_ollama::FakeOllama,
-        llama_server::{PRESET, server_folder},
+        llama_server::{self, PRESET, server_folder},
         models::{SelectedModel, record_context},
-        program::{
-            Program, SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord,
-        },
+        program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord},
         registry,
     },
     state::RecoveryAction,
