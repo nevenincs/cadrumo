@@ -6,6 +6,7 @@ import json
 import sys
 from collections.abc import Iterator
 from contextvars import ContextVar
+from datetime import date
 
 import pytest
 
@@ -38,6 +39,8 @@ def _invoke(args: list[str]):
 
 
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
+_APRIL_15 = date(_SUPPORTED_YEARS[-1], 4, 15).isoformat()
+_JANUARY_1 = date(_SUPPORTED_YEARS[-1], 1, 1).isoformat()
 
 
 def test_agenda_renders_envelope_with_explicit_date() -> None:
@@ -45,10 +48,10 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
     horizon, and the four cohort headers."""
 
     result = _invoke(
-        ["app", "overview", "agenda", "--date", "2026-04-15", "--allow-incomplete"],
+        ["app", "overview", "agenda", "--date", _APRIL_15, "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output
-    assert "as_of\t2026-04-15" in result.output
+    assert f"as_of\t{_APRIL_15}" in result.output
     assert "horizon_days\t14" in result.output
     assert "next_due\t" in result.output
     assert "due_today\t" in result.output
@@ -89,7 +92,7 @@ def test_agenda_rejects_zero_horizon() -> None:
     """A non-positive --horizon is refused before the service runs."""
 
     result = _invoke(
-        ["app", "overview", "agenda", "--date", "2026-04-15", "--horizon", "0"],
+        ["app", "overview", "agenda", "--date", _APRIL_15, "--horizon", "0"],
     )
     assert result.exit_code != 0, result.output
 
@@ -124,7 +127,7 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
             "overview",
             "agenda",
             "--date",
-            "2026-01-01",
+            _JANUARY_1,
             "--horizon",
             "7",
             "--allow-incomplete",
@@ -136,7 +139,7 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
             "overview",
             "agenda",
             "--date",
-            "2026-01-01",
+            _JANUARY_1,
             "--horizon",
             "180",
             "--allow-incomplete",

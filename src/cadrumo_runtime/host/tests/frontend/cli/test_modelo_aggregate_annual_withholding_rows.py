@@ -67,6 +67,7 @@ from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.adapter_composition_ports import (
@@ -92,7 +93,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _ABSENT_CODE = "modelo.aggregate.calculation_rows_absent"
 

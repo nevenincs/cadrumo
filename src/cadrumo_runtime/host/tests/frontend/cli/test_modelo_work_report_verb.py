@@ -24,6 +24,7 @@ from cadrumo.application.modelo.calculation_report_document import CALCULATION_R
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -35,6 +36,8 @@ from .modelo_profile_seed import seed_profile
 from .strict_cli_fixture_support import seeded_runtime_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["seed_profile", "seeded_runtime_backend"]
 
@@ -105,7 +108,7 @@ def test_the_report_lands_at_the_chosen_path_described_by_its_own_facts(
 ) -> None:
     """The JSON result names the revision, the file and the report content digest."""
     work_unit_id, calculation_revision_id = _seed_current_sealed_revision(operation=operation)
-    output = tmp_path / "modelo-111-2026-1T-report.csv"
+    output = tmp_path / f"modelo-111-{_YEAR}-1T-report.csv"
 
     result = _report(work_unit_id, output)
 
@@ -114,7 +117,7 @@ def test_the_report_lands_at_the_chosen_path_described_by_its_own_facts(
     landed = output.read_bytes()
     assert payload["operation"] == "modelo.work.report"
     assert payload["modelo"] == "111"
-    assert payload["filing_year"] == 2026
+    assert payload["filing_year"] == _YEAR
     assert payload["work_unit_id"] == work_unit_id
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["document_format"] == CalculationReportDocumentFormat.CSV.value

@@ -17,6 +17,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaSet,
 )
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -36,6 +37,10 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+# Three distinct supported years: the one set, replaced and removed, the one added beside it,
+# and the one the refused requests address.
+_ADDED_YEAR, _SET_YEAR, _OTHER_YEAR = filing_year_envelope().years[-3:]
 
 
 def _request(
@@ -72,19 +77,19 @@ def _set_and_repeat(client: FrontendClient, profile_id: UUID, baseline: UserProf
             profile_id,
             revision=revision,
             digest=digest,
-            year=2025,
+            year=_SET_YEAR,
             change=_set("12.50", PlantillaMediaState.COMMITTED),
         ),
         timeout=90,
     )
     assert first.effect is OperationEffect.UPDATED
     assert type(first.projection) is ProfilePlantillaMediaOperationProjection
-    assert first.projection.year == 2025 and first.projection.changed
+    assert first.projection.year == _SET_YEAR and first.projection.changed
     assert first.projection.record_revision == revision + 1
     revision, digest, facts = profile_view_facts(client)
     assert revision == first.projection.record_revision
     assert {path: value for path, value in facts.items() if path.startswith("irpf.plantilla_media.")} == {
-        "irpf.plantilla_media.0.year": "2025",
+        "irpf.plantilla_media.0.year": str(_SET_YEAR),
         "irpf.plantilla_media.0.average_workforce": "12.50",
         "irpf.plantilla_media.0.state": "committed",
     }
@@ -95,7 +100,7 @@ def _set_and_repeat(client: FrontendClient, profile_id: UUID, baseline: UserProf
             profile_id,
             revision=revision,
             digest=digest,
-            year=2025,
+            year=_SET_YEAR,
             change=_set("12.50", PlantillaMediaState.COMMITTED),
         ),
         timeout=90,
@@ -116,7 +121,7 @@ def _refuse_stale_baseline(
                 profile_id,
                 revision=baseline.record_revision,
                 digest=baseline.content_digest,
-                year=2025,
+                year=_SET_YEAR,
                 change=_set("11.75", PlantillaMediaState.OBSERVED),
             ),
             timeout=90,
@@ -135,7 +140,7 @@ def _replace_then_remove(client: FrontendClient, profile_id: UUID, revision: int
             profile_id,
             revision=revision,
             digest=digest,
-            year=2025,
+            year=_SET_YEAR,
             change=_set("11.75", PlantillaMediaState.OBSERVED),
         ),
         timeout=90,
@@ -153,7 +158,7 @@ def _replace_then_remove(client: FrontendClient, profile_id: UUID, revision: int
             profile_id,
             revision=revision,
             digest=digest,
-            year=2025,
+            year=_SET_YEAR,
             change=ProfilePlantillaMediaRemove(),
         ),
         timeout=90,
@@ -173,7 +178,7 @@ def _add_next_year(client: FrontendClient, profile_id: UUID, revision: int, dige
             profile_id,
             revision=revision,
             digest=digest,
-            year=2024,
+            year=_ADDED_YEAR,
             change=_set("10", PlantillaMediaState.OBSERVED),
         ),
         timeout=90,
@@ -183,7 +188,7 @@ def _add_next_year(client: FrontendClient, profile_id: UUID, revision: int, dige
     assert next_year.projection.changed and next_year.projection.record_revision == revision + 1
     revision, digest, facts = profile_view_facts(client)
     assert {path: value for path, value in facts.items() if path.startswith("irpf.plantilla_media.")} == {
-        "irpf.plantilla_media.1.year": "2024",
+        "irpf.plantilla_media.1.year": str(_ADDED_YEAR),
         "irpf.plantilla_media.1.average_workforce": "10",
         "irpf.plantilla_media.1.state": "observed",
     }
@@ -200,7 +205,7 @@ def _refuse_invalid_and_foreign(
                 profile_id,
                 revision=revision,
                 digest=digest,
-                year=2026,
+                year=_OTHER_YEAR,
                 change=_set("12.505", PlantillaMediaState.OBSERVED),
             ),
             timeout=90,
@@ -217,7 +222,7 @@ def _refuse_invalid_and_foreign(
                 foreign_id,
                 revision=revision,
                 digest=digest,
-                year=2026,
+                year=_OTHER_YEAR,
                 change=_set("1", PlantillaMediaState.COMMITTED),
             ),
             timeout=90,

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -37,6 +38,12 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -59,6 +66,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: The year the shared scenario helpers create and capture work for.
 _SCENARIO_YEAR = str(SCENARIO_FILING_YEAR)
+# The newest supported year whose fourth-quarter filing window has already opened.
+_CLOSED_YEAR = filing_year_envelope().years[-2]
+_FLOOR = filing_year_envelope().floor
+_M130_REVISION = str(open_ended_revision("130").id)
+_M390_YEAR = filing_grade_exercises("390")[-1]
 
 
 def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> None:
@@ -80,7 +92,7 @@ def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> Non
     # The creation event names who provisioned the unit.
     assert event["actor"]
     assert event["payload"]["modelo"] == "130"
-    assert event["payload"]["revision_id"] == "2019-y-siguientes"
+    assert event["payload"]["revision_id"] == _M130_REVISION
     notice = next(
         item for item in unwrap_envelope_notices(history.output) if item["code"] == "modelo.work.history.next_action"
     )
@@ -97,8 +109,8 @@ def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: Profil
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2024", "--period", "0A",
-            "--revision", "2024",
+            "--modelo", "100", "--year", str(_FLOOR), "--period", "0A",
+            "--revision", str(revision_covering("100", _FLOOR).id),
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -308,11 +320,11 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profi
             "--modelo",
             "130",
             "--year",
-            "2025",
+            _SCENARIO_YEAR,
             "--period",
             "2T",
             "--revision",
-            "2019-y-siguientes",
+            _M130_REVISION,
         ],
     )
     assert second.exit_code == 0, second.output
@@ -337,13 +349,16 @@ def test_work_list_with_multiple_units_requires_an_explicit_selection(seed_profi
 
 
 def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSeeder) -> None:
-    seed_profile(label="operator", facts=operator_profile_facts(activity_start_date="2025-10-01"))
+    seed_profile(
+        label="operator",
+        facts=operator_profile_facts(activity_start_date=date(_CLOSED_YEAR, 10, 1).isoformat()),
+    )
     created = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", str(_CLOSED_YEAR), "--period", "4T",
+            "--revision", _M130_REVISION,
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -365,7 +380,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--modelo", "130", "--year", str(_CLOSED_YEAR), "--period", "4T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
@@ -375,7 +390,7 @@ def test_work_status_and_list_show_presentado_after_file(seed_profile: ProfileSe
         [
             "--format", "json",
             "app", "modelo", "work", "file",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--modelo", "130", "--year", str(_CLOSED_YEAR), "--period", "4T",
         ],
     )  # fmt: skip
     assert filed.exit_code == 0, filed.output
@@ -565,19 +580,21 @@ def test_work_dependencies_lists_cross_period_inventory(seed_profile: ProfileSee
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
-            "--year", "2025", "--modelo", "390",
+            "--year", str(_M390_YEAR), "--modelo", "390",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
 
     assert payload["operation"] == "modelo.work.dependencies"
-    assert payload["filing_year"] == 2025
+    assert payload["filing_year"] == _M390_YEAR
     assert payload["modelo_filter"] == "390"
     assert payload["target_modelos"] == ["390"]
     assert "303" in payload["source_modelos"]
     assert payload["target_count"] >= 1
-    annual = next(item for item in payload["items"] if item["target_period"] == {"filing_year": 2025, "code": "0A"})
+    annual = next(
+        item for item in payload["items"] if item["target_period"] == {"filing_year": _M390_YEAR, "code": "0A"}
+    )
     assert annual["target_modelo"] == "390"
     assert annual["dependency_count"] >= 4
     assert {dependency["source_modelo"] for dependency in annual["dependencies"]} == {"303"}
@@ -597,7 +614,7 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(seed_profile: P
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
-            "--year", "2025", "--modelo", "390", "--period", "0A",
+            "--year", str(_M390_YEAR), "--modelo", "390", "--period", "0A",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -605,15 +622,15 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(seed_profile: P
     clean_state = payload["clean_state"]
 
     assert clean_state["target_modelo"] == "390"
-    assert clean_state["target_filing_year"] == 2025
-    assert clean_state["target_period"] == {"filing_year": 2025, "code": "0A"}
+    assert clean_state["target_filing_year"] == _M390_YEAR
+    assert clean_state["target_period"] == {"filing_year": _M390_YEAR, "code": "0A"}
     assert clean_state["requires_clean_state"] is True
     assert clean_state["clean"] is False
     assert "missing_current_filing_record" in clean_state["blockers"]
     assert "missing_observation" in clean_state["blockers"]
     assert any(
         dependency["source_modelo"] == "303"
-        and dependency["period"] == {"filing_year": 2025, "code": "1T"}
+        and dependency["period"] == {"filing_year": _M390_YEAR, "code": "1T"}
         and "missing_current_filing_record" in dependency["blockers"]
         for dependency in clean_state["dependencies"]
     )
@@ -635,7 +652,7 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(seed
             "identity.name": "Operator",
             "identity.surnames": "Readiness",
             "activities.description": "design",
-            "censo.activity_start_date": "2025-01-01",
+            "censo.activity_start_date": date(SCENARIO_FILING_YEAR, 1, 1).isoformat(),
         },
     )
 
@@ -643,21 +660,21 @@ def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(seed
         [
             "--format", "json",
             "app", "modelo", "work", "dependencies",
-            "--year", "2025", "--modelo", "303", "--period", "1T",
+            "--year", _SCENARIO_YEAR, "--modelo", "303", "--period", "1T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     clean_state = unwrap_schema_envelope(result.output)["clean_state"]
 
-    # The 303/2025/1T target depends on the prior-year 303/2024/4T filing,
-    # whose span ends 2024-12-31 - strictly before the 2025-01-01 activity
-    # start - so it is suppressed as no-prior-obligation rather than blocking.
+    # The 1T target depends on the prior-year 4T filing of the same modelo,
+    # whose span ends on the last day of the previous year - strictly before the
+    # first-of-January activity start - so it is suppressed as no-prior-obligation rather than blocking.
     assert clean_state["requires_clean_state"] is True
     assert clean_state["clean"] is True
     assert clean_state["blockers"] == []
     assert any(
         dependency["source_modelo"] == "303"
-        and dependency["period"] == {"filing_year": 2024, "code": "4T"}
+        and dependency["period"] == {"filing_year": SCENARIO_FILING_YEAR - 1, "code": "4T"}
         and dependency["clean"] is True
         and dependency["blockers"] == []
         for dependency in clean_state["dependencies"]
@@ -740,8 +757,8 @@ def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> No
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes", "--name", "First",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
+            "--revision", _M130_REVISION, "--name", "First",
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -754,8 +771,8 @@ def test_idempotent_work_create_reports_reuse(seed_profile: ProfileSeeder) -> No
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes", "--name", "First",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
+            "--revision", _M130_REVISION, "--name", "First",
         ],
     )  # fmt: skip
     assert second.exit_code == 0, second.output
@@ -774,8 +791,8 @@ def test_work_create_without_revision_resumes_existing_visible_target(seed_profi
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
+            "--revision", _M130_REVISION,
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -785,7 +802,7 @@ def test_work_create_without_revision_resumes_existing_visible_target(seed_profi
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert second.exit_code == 0, second.output
@@ -812,21 +829,21 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(s
     )
     modelos_131, _catalogues_131 = bundled_registry_tree()
     modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
-    expected_revision = select_revision(modelo_131, filing_year=2026, period="2T").id
+    expected_revision = select_revision(modelo_131, filing_year=SCENARIO_FILING_YEAR, period="2T").id
 
     result = invoke_modelo_scenario_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "131", "--year", "2026", "--period", "2T",
+            "--modelo", "131", "--year", _SCENARIO_YEAR, "--period", "2T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
     assert payload["status"] == "created"
     assert payload["modelo"] == "131"
-    assert payload["filing_year"] == 2026
-    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
+    assert payload["filing_year"] == SCENARIO_FILING_YEAR
+    assert payload["period"] == {"filing_year": SCENARIO_FILING_YEAR, "code": "2T"}
     assert payload["revision_id"] == expected_revision
 
 
@@ -891,7 +908,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_p
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "131", "--year", "2026", "--period", "2T",
+            "--modelo", "131", "--year", _SCENARIO_YEAR, "--period", "2T",
         ],
     )  # fmt: skip
     assert created_work.exit_code == 0, created_work.output
@@ -951,8 +968,8 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: Pro
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes", "--name", "Original",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
+            "--revision", _M130_REVISION, "--name", "Original",
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -961,8 +978,8 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(seed_profile: Pro
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes", "--name", "Renamed Unit",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
+            "--revision", _M130_REVISION, "--name", "Renamed Unit",
         ],
     )  # fmt: skip
     assert renamed.exit_code == 0, renamed.output
@@ -988,7 +1005,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     added = invoke_modelo_scenario_cli(
         [
             "app", "ledger", "add",
-            "--date", "2025-01-15", "--amount", "1000.00",
+            "--date", date(SCENARIO_FILING_YEAR, 1, 15).isoformat(), "--amount", "1000.00",
             "--direction", "INCOMING", "--description", "Factura cliente A",
         ],
     )  # fmt: skip
@@ -1015,7 +1032,7 @@ def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(s
     added = invoke_modelo_scenario_cli(
         [
             "app", "ledger", "add",
-            "--date", "2025-01-15", "--amount", "1000.00",
+            "--date", date(SCENARIO_FILING_YEAR, 1, 15).isoformat(), "--amount", "1000.00",
             "--direction", "INCOMING", "--description", "Spanish-source rent",
             "--source-jurisdiction", "ES",
         ],
@@ -1037,9 +1054,9 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(seed_profi
     must be refused with a clear error naming both the revision and the
     year, not accepted silently.
 
-    M131 revision ``2026`` has ``period_selector.years = [2026]``.
-    Requesting it for ``--year 2024`` crosses that boundary — the 2026
-    DANA rules do not apply to a 2024 filing.
+    The open-ended M131 revision is authored from one exercise on, so
+    requesting it for the support floor crosses that boundary — its rules
+    do not apply to an earlier filing.
     """
 
     seed_profile(
@@ -1057,23 +1074,23 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(seed_profi
     result = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "131", "--year", "2024", "--period", "2T",
-            "--revision", "2026",
+            "--modelo", "131", "--year", str(_FLOOR), "--period", "2T",
+            "--revision", str(open_ended_revision("131").id),
         ],
     )  # fmt: skip
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     # Both the mismatched revision and the filing year must appear in the
     # diagnostic so the operator knows what to fix.
-    assert "2026" in result.output
-    assert "2024" in result.output
+    assert str(open_ended_revision("131").id) in result.output
+    assert str(_FLOOR) in result.output
 
 
 def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: ProfileSeeder) -> None:
     """Supplying a numeric value for a text-type casilla via --casilla must
     be refused before reaching the engine.
 
-    M100 2024 casilla ``0001`` has ``data_type = "text"`` with
+    M100 casilla ``0001`` has ``data_type = "text"`` with
     ``semantic_role = "irpf_toma_datos_declarante_selector"``: it names the
     contribuyente who obtains the income (declarante / cónyuge / dependant),
     not a numeric amount. Passing ``--casilla "0001=38000"`` would otherwise
@@ -1092,8 +1109,8 @@ def test_work_calculate_rejects_decimal_override_for_text_casilla(seed_profile: 
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2024", "--period", "0A",
-            "--revision", "2024",
+            "--modelo", "100", "--year", str(_FLOOR), "--period", "0A",
+            "--revision", str(revision_covering("100", _FLOOR).id),
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -1136,8 +1153,8 @@ def test_work_calculate_value_free_published_iban_refusal(tmp_path: Path) -> Non
 
         created = invoke_as_profile(
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2022", "--period", "0A",
-            "--revision", "2022",
+            "--modelo", "100", "--year", str(_FLOOR), "--period", "0A",
+            "--revision", str(revision_covering("100", _FLOOR).id),
             output_format="json",
         )  # fmt: skip
         assert created.exit_code == 0, created.output

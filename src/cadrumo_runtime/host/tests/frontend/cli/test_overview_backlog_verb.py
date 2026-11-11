@@ -52,6 +52,9 @@ _CLOSED_EXERCISES = tuple(
     for year in PublishedGovernedFactSource().supported_filing_years().years
     if date(year + 1, 2, 28) < today_madrid()
 )
+_HORIZON = PublishedGovernedFactSource().supported_filing_years().horizon
+_WINDOW_FROM = date(_HORIZON, 1, 1).isoformat()
+_WINDOW_TO = date(_HORIZON, 12, 31).isoformat()
 
 
 def test_backlog_renders_envelope_with_explicit_window() -> None:
@@ -64,15 +67,15 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
             "overview",
             "backlog",
             "--from",
-            "2026-01-01",
+            _WINDOW_FROM,
             "--to",
-            "2026-12-31",
+            _WINDOW_TO,
             "--allow-incomplete",
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "from\t2026-01-01" in result.output
-    assert "to\t2026-12-31" in result.output
+    assert f"from\t{_WINDOW_FROM}" in result.output
+    assert f"to\t{_WINDOW_TO}" in result.output
     assert "as_of\t" in result.output
     assert "late_count\t" in result.output
 
@@ -191,7 +194,7 @@ def test_backlog_renders_despite_work_unit_load_failure(authority_operation: Pin
     _persist_invalid_work_unit_catalogue_payload(authority_operation)
 
     result = _invoke(
-        ["app", "overview", "backlog", "--from", "2026-01-01", "--to", "2026-12-31", "--allow-incomplete"],
+        ["app", "overview", "backlog", "--from", _WINDOW_FROM, "--to", _WINDOW_TO, "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output
     assert "late_count\t" in result.output

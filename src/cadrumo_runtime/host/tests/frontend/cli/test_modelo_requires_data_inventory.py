@@ -22,6 +22,11 @@ import pytest
 from click.testing import Result
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    newest_authored_edition,
+)
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .profile_cli_support import partial_taxpayer_invoker
@@ -35,19 +40,19 @@ pytestmark = [
 ]
 
 _M130_MODELO = "130"
-_M130_YEAR = 2024
+_M130_YEAR = filing_year_envelope().floor
 _M130_PERIOD = "2T"
 
 _M100_MODELO = "100"
-_M100_YEAR = 2025
+_M100_YEAR = newest_authored_edition("100")
 _M100_PERIOD = "0A"
 
 _M202_MODELO = "202"
-_M202_YEAR = 2025
+_M202_YEAR = filing_year_envelope().horizon
 _M202_PERIOD = "1P"
 
 _M390_MODELO = "390"
-_M390_YEAR = 2025
+_M390_YEAR = filing_grade_exercises("390")[-1]
 _M390_PERIOD = "0A"
 # The Modelo 100 inventory closing increase, whose source family no checklist bucket owns.
 _M100_UNBUCKETED_BINDING = "renta-inventory-activity-closing-increase-0177"

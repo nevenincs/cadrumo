@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
 _COUNTERPART_WITHOUT_COUNTRY = (
     '{"source_kind": "ledger_transaction", "source_object_id": "ctr-001",'
     ' "counterparty_nif": "B00000001", "counterparty_name": "Cliente SL",'
     ' "operation_kind": "entregas_y_prestaciones", "operation_period": "0A",'
-    ' "taxable_base": "2000.00", "invoice_total": "2000.00", "accrued_on": "2025-03-01"}'
+    f' "taxable_base": "2000.00", "invoice_total": "2000.00", "accrued_on": "{date(_YEAR, 3, 1).isoformat()}"}}'
 )
 
 
@@ -44,7 +48,7 @@ def test_cli_counterpart_observation_schema_violation_is_argument_validation(tmp
                 "--modelo",
                 "347",
                 "--year",
-                "2024",
+                str(_YEAR),
                 "--period",
                 "0A",
                 "--counterpart-observation",

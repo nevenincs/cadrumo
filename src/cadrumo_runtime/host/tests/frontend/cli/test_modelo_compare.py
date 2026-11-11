@@ -50,6 +50,7 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -65,11 +66,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # ---------------------------------------------------------------------------
 
 
-# Two materially different source-owned ingresos for 2025 vs 2026.
+# Two materially different source-owned ingresos for the two newest supported years.
+_YEAR_A, _YEAR_B = filing_year_envelope().years[-2:]
 # Oracle: rendimiento neto = ingresos - gastos; pago fraccionado = 20%.
 # Authority: AEAT DR 130 Instrucciones, Casilla 03 and 04.
-_INGRESOS_2025 = Decimal("12000.00")
-_INGRESOS_2026 = Decimal("20000.00")
+_INGRESOS_A = Decimal("12000.00")
+_INGRESOS_B = Decimal("20000.00")
 
 # Same gastos in both years — the anti-tautology casilla.
 # Delta for casilla 02 must be exactly zero.
@@ -221,41 +223,41 @@ def test_modelo_compare_m130_two_year_delta_rows(
     _seed_natural_person_profile(runtime_profile)
 
     # -- Create and calculate M130 2025 (year_a) ----------------------------
-    wuid_2025 = create_modelo_work_unit_via_cli(
+    wuid_a = create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR_A,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(open_ended_revision("130").id),
     )
-    values_2025 = _calculate_m130(
-        wuid_2025,
-        filing_year=2025,
-        ingresos=_INGRESOS_2025,
+    values_a = _calculate_m130(
+        wuid_a,
+        filing_year=_YEAR_A,
+        ingresos=_INGRESOS_A,
         gastos=_GASTOS_BOTH,
     )
 
     # -- Create and calculate M130 2026 (year_b) ----------------------------
-    wuid_2026 = create_modelo_work_unit_via_cli(
+    wuid_b = create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR_B,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(open_ended_revision("130").id),
     )
-    values_2026 = _calculate_m130(
-        wuid_2026,
-        filing_year=2026,
-        ingresos=_INGRESOS_2026,
+    values_b = _calculate_m130(
+        wuid_b,
+        filing_year=_YEAR_B,
+        ingresos=_INGRESOS_B,
         gastos=_GASTOS_BOTH,
     )
 
     # Verify oracle values are non-zero and materially different.
     # Oracle: casilla 07 = max(0, 20% x (01 - 02)) - 05 - 06
-    # 2025: 20% x (12000 - 4000) = 1600; 2026: 20% x (20000 - 4000) = 3200.
-    assert Decimal(values_2025[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("1600.00"), (
-        f"2025 oracle casilla 07: expected 1600.00, got {values_2025[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
+    # year A: 20% x (12000 - 4000) = 1600; year B: 20% x (20000 - 4000) = 3200.
+    assert Decimal(values_a[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("1600.00"), (
+        f"year A oracle casilla 07: expected 1600.00, got {values_a[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
     )
-    assert Decimal(values_2026[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("3200.00"), (
-        f"2026 oracle casilla 07: expected 3200.00, got {values_2026[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
+    assert Decimal(values_b[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("3200.00"), (
+        f"year B oracle casilla 07: expected 3200.00, got {values_b[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
     )
 
     # -- Run compare verb ---------------------------------------------------
@@ -263,8 +265,8 @@ def test_modelo_compare_m130_two_year_delta_rows(
         [
             "--format", "json",
             "app", "modelo", "compare",
-            "--year", "2025",
-            "--year", "2026",
+            "--year", str(_YEAR_A),
+            "--year", str(_YEAR_B),
             "--modelo", "130",
         ],
     )  # fmt: skip
@@ -272,8 +274,8 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert "Traceback" not in compare_result.output
 
     payload = unwrap_schema_envelope(compare_result.output)
-    assert payload["year_a"] == 2025
-    assert payload["year_b"] == 2026
+    assert payload["year_a"] == _YEAR_A
+    assert payload["year_b"] == _YEAR_B
     assert payload["modelo"] == "130"
 
     # Build casilla_id → row lookup from delta_rows.
@@ -283,8 +285,8 @@ def test_modelo_compare_m130_two_year_delta_rows(
 
     # -- Assert result casilla deltas match oracle (year_b - year_a) --------
     for casilla_id in _RESULT_CASILLAS:
-        val_a = Decimal(values_2025.get(casilla_id, "0"))
-        val_b = Decimal(values_2026.get(casilla_id, "0"))
+        val_a = Decimal(values_a.get(casilla_id, "0"))
+        val_b = Decimal(values_b.get(casilla_id, "0"))
         expected_delta = val_b - val_a
 
         assert casilla_id in delta_by_casilla, (
@@ -302,7 +304,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
         # Materially different ingresos must produce non-zero deltas.
         assert expected_delta != Decimal("0"), (
             f"Casilla {casilla_id}: expected non-zero delta with "
-            f"ingresos_2025={_INGRESOS_2025}, ingresos_2026={_INGRESOS_2026}, "
+            f"ingresos_a={_INGRESOS_A}, ingresos_b={_INGRESOS_B}, "
             f"got {expected_delta}. Check M130 formula sensitivity."
         )
 
@@ -330,7 +332,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
 
     Authority: AEAT DR 130 Instrucciones; IRPF Art. 99 (BOE-A-2006-20764).
     """
-    snap = published_snapshot("130", filing_year=2026, period="1T")
+    snap = published_snapshot("130", filing_year=_YEAR_B, period="1T")
     engine_result = calculate_registry_snapshot(
         snap,
         inputs={
@@ -346,7 +348,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(2026, 3, 31)},
+        date_context={"filing_period": date(_YEAR_B, 3, 31)},
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
