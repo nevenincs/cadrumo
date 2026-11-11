@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -11,7 +12,13 @@ from ....core.aggregation import IntracomOperationType
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
-from ...calculations.registry.tests.published_authority import published_supported_filing_years
+from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ...calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ..row_models import (
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
@@ -28,6 +35,22 @@ from .row_model_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_EXERCISE = filing_year_envelope().horizon
+_EXERCISE_TEXT = str(_EXERCISE)
+
+
+def _m349_transition_year() -> int:
+    """Return the first exercise of the GB-to-XI transition, as the registry declares it."""
+    resolved = PublishedGovernedFactSource().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="detail-m349-m210-catalogues",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(_EXERCISE, 12, 31),
+        )
+    )
+    assert isinstance(resolved, ResolvedMappingFact)
+    return int(next(str(entry.value) for entry in resolved.payload.entries if str(entry.key) == "m349.transition.year"))
 
 
 _M349_INVALID_ROW_CASES = (
@@ -85,7 +108,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
             nif_comunitario="DE123456789",
             razon_social="Entidad DE",
             clave_operacion="E",
-            ejercicio="2025",
+            ejercicio=_EXERCISE_TEXT,
             periodo="2T",
             base_rectificada=Decimal("-1"),
             base_anterior=Decimal("1000"),
@@ -99,7 +122,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
             nif_comunitario="DE123456789",
             razon_social="Entidad DE",
             clave_operacion="E",
-            ejercicio="2025",
+            ejercicio=_EXERCISE_TEXT,
             periodo="2T",
             base_rectificada=Decimal("1100"),
             base_anterior=Decimal("-1"),
@@ -128,7 +151,7 @@ _M349_INVALID_RECTIFICATION_ROW_CASES = (
                 "nif_comunitario": "DE123456789",
                 "razon_social": "Entidad DE",
                 "clave_operacion": "E",
-                "ejercicio": "2025",
+                "ejercicio": _EXERCISE_TEXT,
                 "periodo": "13",
                 "base_rectificada": Decimal("1100"),
                 "base_anterior": Decimal("1000"),
@@ -175,23 +198,23 @@ _M349_NIF_FORMAT_CASES = (
 
 _M349_CONTEXT_ALLOWED_CASES = (
     CountryContextCase(
-        "xi-goods-2025",
+        "xi-goods",
         lambda: validate_m349_country_prefix_context(
             country_code="XI",
             clave_operacion="E",
-            filing_year=2025,
+            filing_year=_EXERCISE,
             period="4T",
         ),
     ),
     CountryContextCase(
-        "gb-pre-2021-rectification",
+        "gb-pre-transition-rectification",
         lambda: validate_m349_country_prefix_context(
             country_code="GB",
             clave_operacion="S",
-            filing_year=2025,
+            filing_year=_EXERCISE,
             period="4T",
             is_rectification=True,
-            rectified_year=2020,
+            rectified_year=_m349_transition_year() - 1,
             rectified_period="4T",
         ),
     ),
@@ -203,17 +226,17 @@ _M349_CONTEXT_REJECTED_CASES = (
         lambda: validate_m349_country_prefix_context(
             country_code="XI",
             clave_operacion="S",
-            filing_year=2025,
+            filing_year=_EXERCISE,
             period="4T",
         ),
         "service keys",
     ),
     CountryContextCase(
-        "gb-ordinary-2025",
+        "gb-ordinary-post-transition",
         lambda: validate_m349_country_prefix_context(
             country_code="GB",
             clave_operacion="E",
-            filing_year=2025,
+            filing_year=_EXERCISE,
             period="4T",
         ),
         "post-transition",
@@ -319,7 +342,7 @@ class TestModelo349RectificacionRow:
             nif_comunitario="DE123456789",
             razon_social="Deutschland GmbH",
             clave_operacion="E",
-            ejercicio="2025",
+            ejercicio=_EXERCISE_TEXT,
             periodo="2T",
             base_rectificada=Decimal("1100.00"),
             base_anterior=Decimal("1000.00"),
@@ -330,7 +353,7 @@ class TestModelo349RectificacionRow:
         assert row.nif_comunitario == "DE123456789"
         assert row.razon_social == "Deutschland GmbH"
         assert row.clave_operacion == "E"
-        assert row.ejercicio == "2025"
+        assert row.ejercicio == _EXERCISE_TEXT
         assert row.periodo == "2T"
         assert row.base_rectificada == Decimal("1100.00")
         assert row.base_anterior == Decimal("1000.00")
@@ -342,7 +365,7 @@ class TestModelo349RectificacionRow:
                 "nif_comunitario": "DE123456789",
                 "razon_social": "Deutschland GmbH",
                 "clave_operacion": "E",
-                "ejercicio": "2025",
+                "ejercicio": _EXERCISE_TEXT,
                 "periodo": "2t",
                 "base_rectificada": Decimal("1100.00"),
                 "base_anterior": Decimal("1000.00"),
@@ -358,7 +381,7 @@ class TestModelo349RectificacionRow:
                 nif_comunitario="DE123456789",
                 razon_social="Deutschland GmbH",
                 clave_operacion=operation_type.value,
-                ejercicio="2025",
+                ejercicio=_EXERCISE_TEXT,
                 periodo="2T",
                 base_rectificada=Decimal("1100.00"),
                 base_anterior=Decimal("1000.00"),
@@ -383,7 +406,7 @@ class TestValidateM349CountryPrefixContext:
             case.call()
 
     def test_gb_transition_goods_below_the_supported_floor_is_refused(self) -> None:
-        """The 2021 GB goods transition sits below the supported floor and cannot be selected."""
+        """The GB goods transition year sits below the supported floor and cannot be selected."""
         support = published_supported_filing_years()
         assert support is not None
         with pytest.raises(FilingYearOutsideSupportEnvelopeError):

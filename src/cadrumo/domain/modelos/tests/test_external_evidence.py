@@ -15,7 +15,7 @@ from ..filing_record import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_IMPORTED_AT = datetime(2026, 4, 1, 12, 0, 0, tzinfo=UTC)
+_IMPORTED_AT = datetime(1980, 4, 1, 12, 0, 0, tzinfo=UTC)
 
 
 def test_external_evidence_accepts_every_declared_kind() -> None:

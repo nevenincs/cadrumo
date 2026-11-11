@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..codes import ModeloCode
 from ..participation_index import TransactionRevisionParticipation
 
@@ -17,8 +18,8 @@ def _participation_payload() -> dict[str, object]:
         "calculation_revision_id": "a" * 64,
         "work_unit_id": "b" * 64,
         "modelo": "303",
-        "filing_year": 2026,
-        "period": Period.from_year_and_code(2026, "1T"),
+        "filing_year": filing_year_envelope().horizon,
+        "period": Period.from_year_and_code(filing_year_envelope().horizon, "1T"),
         "revision_state": "verificado",
     }
 

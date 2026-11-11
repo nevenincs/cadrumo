@@ -9,13 +9,14 @@ the fingerprint snapshot but dropped from the evidence) must raise a typed
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -33,7 +34,8 @@ from ..ledger_filing_snapshot import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+_EXERCISE = filing_year_envelope().horizon
+_T0 = datetime(1980, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -51,8 +53,8 @@ _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id="2024-hasta-08-y-2t",
-    modelo_year=2024,
+    revision_id=str(revision_serving_period("303", _EXERCISE, "2T").id),
+    modelo_year=_EXERCISE,
     period="2T",
 )
 
@@ -61,7 +63,7 @@ def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
     return LedgerEvidenceRow(
         transaction_id=transaction_id,
         fingerprint=_FP,
-        booked_date="2024-06-15",
+        booked_date=date(_EXERCISE, 6, 15).isoformat(),
         amount=Decimal("100.00"),
         currency="EUR",
         direction="incoming",

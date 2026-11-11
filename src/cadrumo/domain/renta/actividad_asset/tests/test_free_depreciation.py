@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....calculations.registry.tests.authored_editions import filing_year_envelope
 from ..claims import AmortizationClaim, effective_free_depreciation_claims, record_claim
 from ..election import (
     AcquiredCondition,
@@ -40,6 +41,10 @@ from ..schedule import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_TAX_YEAR = filing_year_envelope().horizon
+_YEAR_START = date(_TAX_YEAR, 1, 1)
+_YEAR_END = date(_TAX_YEAR + 1, 1, 1)
 
 
 def _election() -> ActivityAssetAmortizationElection:
@@ -77,7 +82,7 @@ def _revision(
             non_deductible_iva=non_deductible_iva,
             prior_allocation_provenance="reviewed business allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=_YEAR_START,
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -90,12 +95,12 @@ def _revision(
 def _authority(revision: ActivityAssetRevision, *, cap: Decimal = Decimal("25000.00")) -> ScheduleAuthority:
     low_value = revision.amortization.low_value
     return ScheduleAuthority(
-        tax_year=2025,
+        tax_year=_TAX_YEAR,
         asset_kind=AssetKind.MATERIAL,
         method=AmortizationMethod.LOW_VALUE_FREE,
         election_fingerprint=revision.amortization.fingerprint,
-        authority_generation="irpf-2025-published-test",
-        source_reference="modelo-100:2025:low-value-free",
+        authority_generation=f"irpf-{_TAX_YEAR}-published-test",
+        source_reference=f"modelo-100:{_TAX_YEAR}:low-value-free",
         free_depreciation_unit_threshold=Decimal("300.00"),
         free_depreciation_annual_cap=cap,
         low_value=low_value,
@@ -112,8 +117,8 @@ def _schedule(
     return schedule_charge(
         revision,
         _authority(revision, cap=cap),
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=_YEAR_START,
+        covered_until=_YEAR_END,
         history=AssetScheduleHistory(taxpayer_low_value_claimed_in_tax_year=claimed_by_taxpayer),
         requested_free_amount=requested,
     )
@@ -157,7 +162,7 @@ def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
         _schedule(revision, requested=None)
     with pytest.raises(ActividadAssetUnsupportedError, match="free_amount_exceeds_annual_cap"):
         _schedule(revision, cap=Decimal("500.00"), claimed_by_taxpayer=Decimal("200.01"))
-    late = revision.model_copy(update={"in_service_date": date(2024, 1, 1)})
+    late = revision.model_copy(update={"in_service_date": date(_TAX_YEAR - 1, 1, 1)})
     with pytest.raises(ActividadAssetUnsupportedError, match="low_value_requires_entry_year"):
         _schedule(late)
     used = revision.model_copy(update={"acquired_condition": AcquiredCondition.USED})
@@ -203,7 +208,8 @@ def test_effective_claims_enforce_exact_cap_without_request_order_or_retry_consu
 
     assert retried.reused_existing_claim is True
     assert sum(
-        (claim.amount for claim in effective_free_depreciation_claims(exact_cap.claims, tax_year=2025)), Decimal("0")
+        (claim.amount for claim in effective_free_depreciation_claims(exact_cap.claims, tax_year=_TAX_YEAR)),
+        Decimal("0"),
     ) == Decimal("500.00")
     with pytest.raises(ActividadAssetClaimConflictError, match="free_claims_exceed_annual_cap"):
         record_claim(exact_cap.claims, excess)
@@ -220,9 +226,9 @@ def test_correction_replaces_effective_free_claim_before_rechecking_cap() -> Non
 
     result = record_claim(existing, corrected)
 
-    assert effective_free_depreciation_claims(result.claims, tax_year=2025) == (corrected,)
+    assert effective_free_depreciation_claims(result.claims, tax_year=_TAX_YEAR) == (corrected,)
     assert sum(
-        (claim.amount for claim in effective_free_depreciation_claims(result.claims, tax_year=2025)), Decimal("0")
+        (claim.amount for claim in effective_free_depreciation_claims(result.claims, tax_year=_TAX_YEAR)), Decimal("0")
     ) == Decimal("200.00")
 
 
@@ -235,21 +241,21 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
         ),
     )
     linear = ScheduleAuthority(
-        tax_year=2025,
+        tax_year=_TAX_YEAR,
         asset_kind=AssetKind.MATERIAL,
         method=AmortizationMethod.LINEAR,
         election_fingerprint=linear_revision.amortization.fingerprint,
         annual_rate=Decimal("0.10"),
-        maximum_period_ends_on=date(2035, 1, 1),
-        authority_generation="irpf-2025-published-test",
-        source_reference="modelo-100:2025:linear",
+        maximum_period_ends_on=date(_TAX_YEAR + 10, 1, 1),
+        authority_generation=f"irpf-{_TAX_YEAR}-published-test",
+        source_reference=f"modelo-100:{_TAX_YEAR}:linear",
     )
 
     charge = schedule_charge(
         linear_revision,
         linear,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=_YEAR_START,
+        covered_until=_YEAR_END,
         history=AssetScheduleHistory(),
     )
 
@@ -259,8 +265,8 @@ def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation
         schedule_charge(
             linear_revision,
             linear,
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
+            covered_from=_YEAR_START,
+            covered_until=_YEAR_END,
             history=AssetScheduleHistory(),
             requested_free_amount=Decimal("30.00"),
         )
