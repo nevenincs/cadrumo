@@ -527,26 +527,7 @@ impl Server {
         if !embedded && manager != current {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
-        let mut desktops = Vec::new();
-        for image in contract
-            .layout
-            .application_images
-            .iter()
-            .filter(|i| i.target == "desktop-host-build")
-        {
-            if image.placement != "." {
-                return Err(io::ErrorKind::InvalidData.into());
-            }
-            let member = cadrumo_application::value::RelativePath::new(format!(
-                "{}{}",
-                image.name, contract.layout.entrypoint_suffix
-            ))
-            .map_err(io::Error::other)?;
-            let path = member.under(package);
-            if path.is_file() {
-                desktops.push(fs::canonicalize(path)?);
-            }
-        }
+        let desktops = package_desktops(&contract, package)?;
         if embedded && (current == manager || !desktops.contains(&current)) {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
@@ -883,6 +864,56 @@ pub fn request_host(manager_id: &str, manager: &Path, request: &Request) -> io::
         }
         result => result,
     }
+}
+
+/// The desktop images present in the package at `package`.
+fn package_desktops(
+    contract: &cadrumo_application::installation::DiscoveryContract,
+    package: &Path,
+) -> io::Result<Vec<PathBuf>> {
+    let mut desktops = Vec::new();
+    for image in contract
+        .layout
+        .application_images
+        .iter()
+        .filter(|i| i.target == "desktop-host-build")
+    {
+        if image.placement != "." {
+            return Err(io::ErrorKind::InvalidData.into());
+        }
+        let member = cadrumo_application::value::RelativePath::new(format!(
+            "{}{}",
+            image.name, contract.layout.entrypoint_suffix
+        ))
+        .map_err(io::Error::other)?;
+        let path = member.under(package);
+        if path.is_file() {
+            desktops.push(fs::canonicalize(path)?);
+        }
+    }
+    Ok(desktops)
+}
+
+/// Where an agent service the desktop of the package at `package` starts demands the
+/// local AI server for the storage `root`: the manager's pipe in this session, and the
+/// images that may serve it, the package's manager and its desktop, which hosts the
+/// manager's core where no manager runs. A pipe name alone never authenticates its
+/// server, so the service accepts only a server of one of these images.
+pub fn local_ai_demand_route(package: &Path, root: &Path) -> io::Result<(String, Vec<PathBuf>)> {
+    let contract: cadrumo_application::installation::DiscoveryContract =
+        serde_json::from_str(crate::contract::INSTALLATION_CONTRACT).map_err(io::Error::other)?;
+    let mut servers = vec![fs::canonicalize(
+        contract
+            .manager_member()
+            .map_err(io::Error::other)?
+            .under(package),
+    )?];
+    servers.extend(package_desktops(&contract, package)?);
+    let pipe = endpoint(
+        &crate::session::instance::manager_id(root)?,
+        &ManagerSession::current()?,
+    )?;
+    Ok((pipe, servers))
 }
 
 fn request_to(manager_id: &str, manager: &Path, request: &Request) -> io::Result<Response> {

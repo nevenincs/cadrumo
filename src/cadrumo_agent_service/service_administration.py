@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import secrets
 from abc import ABC, abstractmethod
 from collections.abc import Callable
@@ -23,6 +24,7 @@ from .adapters.agent_programs import (
 )
 from .adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from .adapters.agent_provider_catalog import AgentProviderCatalogSource
+from .adapters.local_ai_demand import LocalAiDemandingRuns, manager_demand_from_environment
 from .adapters.provider_catalog_metadata import declared_provider_catalog_response
 from .adapters.served_catalog_models import ServedCatalogModels
 from .contracts import HostedCertificationStatus
@@ -133,8 +135,12 @@ class AgentServiceAdministration(ABC):
             catalog_source=self._catalog,
             live_models=live_models,
             selected_engine=self._local_models.selected_engine,
-            gateway=HostedBackgroundRuns(
-                endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
+            # A read on this computer first demands the local AI server, which sleeps until then.
+            gateway=LocalAiDemandingRuns(
+                runs=HostedBackgroundRuns(
+                    endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
+                ),
+                demand=manager_demand_from_environment(os.environ),
             ),
         )
         self._attachment_releases = AttachmentReleases(

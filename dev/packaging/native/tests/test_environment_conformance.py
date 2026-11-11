@@ -205,6 +205,14 @@ def _runtime_drops_a_slot(facts: dict[str, Any]) -> None:
     facts["runtime"]["gateway_slots"].pop(0)
 
 
+def _service_reads_an_undeclared_slot(facts: dict[str, Any]) -> None:
+    facts["runtime"]["service_slots"].append("EXTRA_SLOT")
+
+
+def _service_leaves_a_declared_slot_unread(facts: dict[str, Any]) -> None:
+    facts["runtime"]["service_slots"].pop(0)
+
+
 def _composer_omits_a_slot(facts: dict[str, Any]) -> None:
     facts["runtime"]["composed"].remove(facts["runtime"]["gateway_slots"][0])
 
@@ -297,6 +305,18 @@ _PLANTED_FACTS: list[tuple[str, _Mutation, str, str]] = [
         "not fixed as the path of the package's interpreter",
     ),
     ("composer-omits-a-system-name", _composer_omits_a_system_name, "runtime-launch", "composer omits"),
+    (
+        "service-reads-an-undeclared-slot",
+        _service_reads_an_undeclared_slot,
+        "runtime-launch",
+        "the agent service reads that its profile does not declare",
+    ),
+    (
+        "service-leaves-a-declared-slot-unread",
+        _service_leaves_a_declared_slot_unread,
+        "runtime-launch",
+        "declared service slot the agent service does not read",
+    ),
     (
         "gateway-invocation",
         _set(("runtime", "gateway_arguments"), ["-m", "elsewhere", "serve"]),

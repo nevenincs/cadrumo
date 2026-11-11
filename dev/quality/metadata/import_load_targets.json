@@ -3638,6 +3638,7 @@
         "cadrumo_agent_service.adapters.agent_programs",
         "cadrumo_agent_service.adapters.agent_provider_auth_status",
         "cadrumo_agent_service.adapters.agent_provider_catalog",
+        "cadrumo_agent_service.adapters.local_ai_demand",
         "cadrumo_agent_service.adapters.provider_catalog_metadata",
         "cadrumo_agent_service.adapters.provider_login",
         "cadrumo_agent_service.adapters.served_catalog_models",

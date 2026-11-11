@@ -58,6 +58,13 @@ impl Refused {
     }
 }
 
+/// The manager's pipe the agent service demands the local AI server through.
+#[cfg(windows)]
+const LOCAL_AI_DEMAND_PIPE: &str = "CADRUMO_LOCAL_AI_DEMAND_PIPE";
+/// The JSON array of the images that may serve that pipe.
+#[cfg(windows)]
+const LOCAL_AI_DEMAND_SERVERS: &str = "CADRUMO_LOCAL_AI_DEMAND_SERVERS";
+
 /// The agent host one window serves.
 pub struct AgentHost {
     supervisor: Supervisor,
@@ -104,11 +111,23 @@ impl AgentHost {
         #[cfg(windows)]
         let launched_from = package_root.clone();
         #[cfg(windows)]
+        let served_root = storage_root.clone();
+        #[cfg(windows)]
         let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
+            // The service demands the local AI server through the manager before it reads
+            // a document on this computer. Without a route it demands nothing, and a local
+            // read finds the server as it is.
+            if let Ok((pipe, servers)) =
+                cadrumo_manager::ipc::windows::local_ai_demand_route(&launched_from, &served_root)
+                && let Ok(servers) = serde_json::to_string(&servers)
+            {
+                command.env(LOCAL_AI_DEMAND_PIPE, pipe);
+                command.env(LOCAL_AI_DEMAND_SERVERS, servers);
+            }
             Ok(supervisor::protocol::Prepared {
                 command,
                 person: Some(person),

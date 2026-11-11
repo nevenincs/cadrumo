@@ -17,6 +17,18 @@ _FIELD_ACCEPTS: Final[Mapping[str, frozenset[str]]] = {
 }
 
 
+SERVICE_PROFILE: Final = "cadrumo-agent-service"
+"""The agent service's launch profile, whose slots the desktop fills."""
+
+
+def service_slots(reference: Reference) -> set[str]:
+    """The slots the agent service's launch profile declares."""
+    for profile in reference.section["profiles"]:
+        if profile["name"] == SERVICE_PROFILE:
+            return {slot["name"] for slot in profile["slots"]}
+    return set()
+
+
 def accepts_kind(label: str | None, kind: str) -> bool:
     """Check that a component field accepts the declared package kind."""
     return label is not None and kind in _FIELD_ACCEPTS.get(label, frozenset())
@@ -66,6 +78,14 @@ def _check_fixed_cli_name(
     return findings
 
 
+def _slot_is_read(reference: Reference, name: str, cli: Mapping[str, object]) -> bool:
+    """Whether an installed component reads the slot: the command line its profile folder, the agent service its own.
+
+    The service's own slots are held to what it reads by the runtime's launch check.
+    """
+    return name in cast(Sequence[str], cli.get("profile_variables", ())) or name in service_slots(reference)
+
+
 def _check_command_line_entry(
     reference: Reference,
     name: str,
@@ -87,7 +107,7 @@ def _check_command_line_entry(
         return _check_fixed_cli_name(reference, name, kind, settings, cli)
     if role == "pass" and name in settings:
         return _reads(check, reader, name, kind, settings)
-    if role == "slot" and name in cast(Sequence[str], cli.get("profile_variables", ())):
+    if role == "slot" and _slot_is_read(reference, name, cli):
         return []
     if not name.startswith(reference.agent["prefix"]):
         return [Finding(check, name, f"role {role} is read by no installed component")]

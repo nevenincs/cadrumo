@@ -32,7 +32,7 @@ from .application_environment import bind_build_provisioning, parse
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .environment_compile import compile_section
-from .environment_conformance_cli import accepts_kind, check_command_line_names
+from .environment_conformance_cli import accepts_kind, check_command_line_names, service_slots
 from .environment_conformance_types import Finding, Reference
 from .environment_declaration_primitives import DECLARATION
 from .environment_root import channel_directory
@@ -365,6 +365,20 @@ def _check_fixed_programs(reference: Reference, runtime: Mapping[str, object], f
     )
 
 
+def _check_service_slots(reference: Reference, runtime: Mapping[str, object], findings: list[Finding]) -> None:
+    check = "runtime-launch"
+    declared = service_slots(reference)
+    read = set(cast(Sequence[str], runtime["service_slots"]))
+    findings.extend(
+        Finding(check, name, "is a declared service slot the agent service does not read")
+        for name in sorted(declared - read)
+    )
+    findings.extend(
+        Finding(check, name, "is a slot the agent service reads that its profile does not declare")
+        for name in sorted(read - declared)
+    )
+
+
 def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> list[Finding]:
     """Hold the runtime's agent launch to the gateway profile: its invocation, its slots and nothing else."""
     check = "runtime-launch"
@@ -373,6 +387,7 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
         return [Finding(check, "gateway invocation", f"no declared invocation is {runtime['gateway_arguments']}")]
     findings: list[Finding] = []
     _check_gateway_composition(reference, gateway, runtime, findings)
+    _check_service_slots(reference, runtime, findings)
     _check_fixed_programs(reference, runtime, findings)
     return findings
 
