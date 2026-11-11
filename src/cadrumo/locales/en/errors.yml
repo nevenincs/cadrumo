@@ -662,6 +662,9 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
+    integrity_modelos_operator_layer: The stored operator values for this calculation
+      contradict each other. Cadrumo wrote them itself, so the record was altered
+      or damaged and nothing can be applied from it.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or `etag`).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
@@ -719,6 +722,13 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
+    operator_layer_attestation_kinds_conflict: The stored record states binding %{binding_id}
+      both as having no amount and as having a stated amount. Cadrumo wrote that record
+      itself, so it was altered or damaged and the calculation cannot use it.
+    operator_layer_value_attestation_not_canonical: The stored value statement for
+      binding %{binding_id} does not hold a canonical decimal amount. Cadrumo wrote
+      that record itself, so it was altered or damaged and the calculation cannot
+      use it.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
     windows_credential_record: The Windows credential record does not satisfy the

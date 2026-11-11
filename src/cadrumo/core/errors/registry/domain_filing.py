@@ -358,6 +358,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.ModeloOperatorLayerIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_OPERATOR_LAYER",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_operator_layer",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.repository.WorkUnitPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_WORK_UNIT_PERSISTENCE",

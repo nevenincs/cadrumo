@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ..core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ..domain.modelos.errors import ModeloOperatorLayerIntegrityError
 from .operator_actions.models import PreconditionVerdict
 
 if TYPE_CHECKING:
@@ -39,6 +40,12 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     registry_verdict = _calculation_registry_verdict(current)
     if registry_verdict is not None:
         return registry_verdict
+    if isinstance(current, ModeloOperatorLayerIntegrityError):
+        return cli_exception_no_recovery_verdict(
+            CliExceptionPrecondition.STORED_DATA_VALID,
+            facts={"record": "calculation_operator_layer", "valid": False},
+            outcome=NoRecoveryOutcome.TERMINAL,
+        )
     if (
         isinstance(current, CoreValidationError)
         and current.context is not None
