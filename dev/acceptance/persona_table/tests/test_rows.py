@@ -148,6 +148,25 @@ def test_every_return_of_a_persona_history_is_a_row_the_table_runs_live() -> Non
         assert history <= planned, persona_id
 
 
+def test_a_return_an_obligation_states_not_applicable_is_no_row_even_with_a_stated_cross_check() -> None:
+    envelope = _envelope()
+    for persona_id in persona_ids():
+        persona = _persona(persona_id)
+        planned = {(row.modelo, row.year, row.period) for row in planned_rows(persona, envelope.horizon, envelope)}
+        filed = {
+            (block.modelo, block.year.resolve(envelope), period)
+            for block in (*persona.filed_returns, *persona.calculated_returns)
+            for period in block.periods
+        }
+        absent = {
+            (item.modelo, item.year.resolve(envelope), period)
+            for item in persona.expectations.obligations
+            if item.applicable is False
+            for period in item.periods
+        }
+        assert not (absent - filed) & planned, persona_id
+
+
 def test_a_shifted_horizon_moves_every_row_down_by_the_shift() -> None:
     envelope = _envelope()
     persona = _persona("autonomo-fontanero")

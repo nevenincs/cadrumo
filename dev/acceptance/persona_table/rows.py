@@ -246,7 +246,8 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """The returns ``persona`` owes when replayed under ``horizon``, one per modelo, year and period.
 
     A return is owed when an obligation states it applicable, the persona's
-    history files or calculates it, or a value is stated for it. Values stated
+    history files or calculates it, or a value is stated for it and no
+    obligation states it not applicable. Values stated
     per counterparty (informative returns) are not compared yet, so they do not
     make a row's oracle. ``persona`` is read under any envelope; its year
     tokens are resolved here against ``horizon``, and a return whose year falls
@@ -254,7 +255,8 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
-    keys = _owed_keys(persona, shifted) | _history_keys(persona, shifted) | set(stated)
+    stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
+    keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
     return [
         _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
         for modelo, year, period in sorted(keys, key=chain_order)
@@ -274,12 +276,16 @@ def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, 
     return stated
 
 
-def _owed_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
-    """The returns an obligation states applicable, with years resolved on ``envelope``."""
+def _obligation_keys(persona: Persona, envelope: YearEnvelope, *, applicable: bool) -> set[tuple[str, int | None, str]]:
+    """The returns an obligation states applicable (or not), with years resolved on ``envelope``.
+
+    A return stated not applicable does not exist, so a value stated for it is
+    a cross-check rather than a filing and makes no row.
+    """
     return {
         (item.modelo, _year(item.year, envelope), period)
         for item in persona.expectations.obligations
-        if item.applicable is True
+        if item.applicable is applicable
         for period in item.periods
     }
 
