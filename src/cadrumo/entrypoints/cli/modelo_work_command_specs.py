@@ -304,6 +304,47 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkAttestPriorCarriesResult",
     ),
     _leaf(
+        "set-value",
+        ".modelo_work_manual_entry_cli",
+        (
+            a("work_unit_id", required=True),
+            a("casilla_id", help_name="entry_casilla", required=True),
+            a("value", help_name="entry_value", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_manual_entry_payloads",
+        "WorkManualEntryResult",
+    ),
+    _leaf(
+        "override",
+        ".modelo_work_manual_entry_cli",
+        (
+            a("work_unit_id", required=True),
+            a("binding_id", help_name="entry_binding", required=True),
+            a("value", help_name="entry_value", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_manual_entry_payloads",
+        "WorkManualEntryResult",
+    ),
+    _leaf(
+        "attest-no-amount",
+        ".modelo_work_manual_entry_cli",
+        (
+            a("work_unit_id", required=True),
+            a("binding_id", help_name="entry_binding", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="entry_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_manual_entry_payloads",
+        "WorkManualEntryResult",
+    ),
+    _leaf(
         "create",
         ".modelo_work_lifecycle_cli",
         (

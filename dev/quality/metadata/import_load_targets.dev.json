@@ -894,6 +894,7 @@
         "dev.quality.import_target_evaluation",
         "dev.quality.import_target_value_sets",
         "dev.quality.quiet",
+        "dev.quality.refusal_shape",
         "dev.quality.repository_sources",
         "dev.quality.secure_store_write_path",
         "dev.quality.shared_scan",

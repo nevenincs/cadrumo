@@ -1694,6 +1694,9 @@ cli:
           del Model 303 de l'últim període de l'any (codi de període 12 o 4T), i imprimeix
           el seu identificador i SHA-256 per a `work calculate`. Els altres períodes
           no ho pregunten.
+        attest_no_amount_help: Indica que un import que s'arrossega d'una declaració
+          anterior és nul. Mostra la comprovació del canvi; amb --yes el registra
+          com un 0 que has declarat, diferent d'una xifra escrita.
         attest_prior_carries_confirm: Encara no s'ha declarat res. Executa `aeat app
           modelo work attest-prior-carries %{work_unit_id} --yes` per declarar-ho.
         attest_prior_carries_help: Indica que no et queda cap import pendent d'exercicis
@@ -1711,6 +1714,9 @@ cli:
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
           ser un import decimal; s''ha rebut: {value}. Utilitza el punt com a separador
           decimal i sense separador de milers, p. ex. 1234.56.'
+        binding_option_help: Valor d'entrada d'una casella amb sintaxi KEY=VALUE (repetible);
+          executa `aeat app modelo bindings list --missing` per veure els valors que
+          necessita el càlcul.
         borrador_help: Id del snapshot de l'esborrany del Model 100 (complet o prefix
           no ambigu). Els seus valors només emplenen les caselles l'origen de les
           quals està marcat com a aeat_prefilled a les definicions dels models; els
@@ -1803,6 +1809,16 @@ cli:
           `pdf`).'
         document_only_help: Comprova només el document, sense obrir el magatzem del
           perfil actiu; sense --trusted-key, un resultat vàlid queda sense clau ancorada.
+        entry_binding_help: Dada de la declaració, pel seu identificador (consulta
+          `aeat app modelo bindings list`).
+        entry_binding_unknown: '%{binding} no és un identificador de dada.'
+        entry_casilla_help: Casella de la declaració, pel seu identificador del registre
+          (consulta `aeat app modelo casillas`).
+        entry_casilla_unknown: '%{casilla} no és un identificador de casella.'
+        entry_confirm: Encara no s'ha registrat res. Executa `%{command}` per registrar-ho.
+        entry_value_help: El valor, escrit com en la teva llengua de sortida (per
+          exemple 1.234,56 en català o 1,234.56 en anglès).
+        entry_yes_help: Confirma el canvi i registra'l a la declaració
         file:
           verification_report_ambiguous: Hi ha més d’un informe de verificació favorable
             per a aquesta revisió. Resol el conflicte de verificació abans de registrar
@@ -1932,9 +1948,11 @@ cli:
         output_help: Camí on escriure l'informe de càlcul; el seu directori pare ha
           d'existir.
         output_language_help: Idioma de sortida per als missatges renderitzats.
-        override_help: Valor d'entrada d'una casella amb sintaxi KEY=VALUE (repetible);
-          executa `aeat app modelo bindings list --missing` per veure els valors que
-          necessita el càlcul.
+        override_help: Indica tu el valor d'una dada d'una declaració, per sobre del
+          que aporta la seva font o en lloc d'una font que no ha aportat res, com
+          una declaració anterior que no tens desada. Mostra el valor i la comprovació
+          del canvi; amb --yes el registra i conserva tots els altres valors que has
+          introduït.
         payment_election_help: 'Tria com es paga un resultat positiu del Model 303:
           ingrés ordinari o domiciliació.'
         period_help: 'Codi de període de la declaració: 0A anual, 1T-4T trimestres,
@@ -2133,6 +2151,10 @@ cli:
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
+        set_value_help: Escriu un valor en una casella que omples tu en una declaració,
+          tal com la pren el seu formulari. Mostra el valor tal com el llegeix la
+          casella i la comprovació del canvi; amb --yes el registra i conserva tots
+          els altres valors que has introduït.
         state_label_borrador: Esborrany
         state_label_descartado: Descartat
         state_label_presentado: Registrada com a presentada

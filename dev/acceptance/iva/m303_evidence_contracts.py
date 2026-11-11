@@ -65,7 +65,14 @@ DEVELOPMENT_MOCK_HEADER: Final = {"program": b"0000", "developer": b"00000000T"}
 EVIDENCE_SUBMIT_ID: Final = "#m303-evidence-submit"
 
 
-ATTESTATION_REFUSAL_KEY: Final = "errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible"
+MALFORMED_IDENTITY_REFUSAL_KEY: Final = "application.modelo.errors.exonerado_390_attestation_malformed_identity"
+"""The words for an attachment id and SHA-256 that are not one valid identity pair."""
+
+
+COORDINATE_MISMATCH_REFUSAL_KEY: Final = (
+    "application.modelo.errors.exonerado_390_attestation_evidence_coordinate_mismatch"
+)
+"""The words for a stored attestation of another period; they name the work unit's period and filing year."""
 
 
 type ChildMode = Literal["tui-led-calculate", "tui-continue-calculate", "tui-joint-only-calculate", "tui-reopen"]

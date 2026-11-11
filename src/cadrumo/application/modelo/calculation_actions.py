@@ -131,7 +131,13 @@ from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs, source_period_needs
 from .revision_persistence import persist_calculation_revision
-from .work_missing_input import ModeloWorkMissingInputError, prior_carry_absence_unstated, prior_period_unfiled
+from .work_missing_input import (
+    ModeloWorkMissingInputError,
+    input_required,
+    override_admitted,
+    prior_carry_absence_unstated,
+    prior_period_unfiled,
+)
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -797,6 +803,65 @@ def calculation_reconciliation_source_needs(
     )
 
 
+def _refused_missing_input(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    unresolved_binding_ids: frozenset[BindingId],
+) -> ModeloWorkMissingInputError:
+    """The refusal a binding without a value is served as, with the door to the input it needs.
+
+    A carry the filer can state holds nothing is refused as that open statement,
+    naming every carry of its family the sources left open. A carry from an
+    earlier period of this ejercicio waits on that period's filed return, which
+    the refusal opens or offers to create. Any other missing input is the
+    operator's to supply, so the refusal names it and serves the door to it.
+    """
+    boxes = snapshot_printed_boxes(ports.operation, snapshot)
+    unstated = prior_carry_absence_unstated(
+        missing,
+        work_unit=work_unit,
+        snapshot=snapshot,
+        boxes=boxes,
+        unresolved_binding_ids=unresolved_binding_ids,
+    )
+    if unstated is not None:
+        return unstated
+    unfiled = prior_period_unfiled(
+        missing,
+        work_unit=work_unit,
+        snapshot=snapshot,
+        source_needs=lambda periods: calculation_source_period_needs(work_unit, periods, ports=ports),
+    )
+    if unfiled is not None:
+        return unfiled
+    return input_required(
+        missing,
+        work_unit=work_unit,
+        snapshot=snapshot,
+        boxes=boxes,
+        overridable=_override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports),
+    )
+
+
+def _override_admitted(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+) -> bool:
+    """Whether the edit admission lets the operator state the value ``missing`` names on this work unit."""
+    return override_admitted(
+        snapshot,
+        missing.binding_id,
+        period=work_unit.period.registry_token,
+        layout=ports.operation.form_layout(str(work_unit.modelo), snapshot.revision.id),
+    )
+
+
 def _resolve_prepared_casilla_inputs(
     prepared: PreparedCalculation,
     ports: CalculationActionPorts,
@@ -898,28 +963,15 @@ def _evaluate_prepared_calculation(
         missing = ModeloWorkMissingInputError.from_registry_error(error)
         if missing is None:
             raise
-        # A carry the filer can state holds nothing is refused as that open
-        # statement, naming every carry of its family the sources left open.
-        unstated = prior_carry_absence_unstated(
-            missing,
-            work_unit=work_unit,
-            snapshot=snapshot,
-            boxes=snapshot_printed_boxes(ports.operation, snapshot),
-            unresolved_binding_ids=frozenset(unresolved_binding_ids).difference(prepared.channels.bindings),
-        )
-        if unstated is not None:
-            raise unstated from error
-        # A carry from an earlier period of this ejercicio waits on that
-        # period's filed return, which the refusal opens or offers to create.
-        unfiled = prior_period_unfiled(
-            missing,
-            work_unit=work_unit,
-            snapshot=snapshot,
-            source_needs=lambda periods: calculation_source_period_needs(work_unit, periods, ports=ports),
-        )
         # This boundary precedes revision publication. Earlier migrations may
         # already have written state; later advisory failures never enter it.
-        raise (missing if unfiled is None else unfiled) from error
+        raise _refused_missing_input(
+            missing,
+            work_unit=work_unit,
+            snapshot=snapshot,
+            ports=ports,
+            unresolved_binding_ids=frozenset(unresolved_binding_ids).difference(prepared.channels.bindings),
+        ) from error
 
     replay_payloads = build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,

@@ -78,6 +78,7 @@ from .operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     ModeloWorkVerifyProfileResolver,
     modelo_workspace_refresh_target_binding,
+    require_owning_work_unit_subject,
     resolve_active_workflow_profile,
     resolve_modelo_work_unit_refresh_target,
 )
@@ -221,6 +222,16 @@ class ModeloExportExecutor:
                     m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
                     operation=context.authority_operation,
                     mutation_writer=writes.call_writer,
+                )
+                revision = export_ports.calculation.load(operation=context.authority_operation).get(
+                    payload.calculation_revision_id
+                )
+                require_owning_work_unit_subject(
+                    request.subject_ref,
+                    owning_work_unit_id=None if revision is None else revision.work_unit_id,
+                    named_record=("calculation_revision_id", payload.calculation_revision_id),
+                    active_bucket_id=active_bucket_id,
+                    work_unit_repository=export_ports.work_unit,
                 )
                 if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
                     return ModeloExportSettledResult(

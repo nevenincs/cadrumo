@@ -75,7 +75,6 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
-    ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
     ModeloExportRequiredRecordAbsentError,
@@ -851,7 +850,7 @@ def load_exportable_revision_target(
     Raises:
         CalculationRevisionNotFoundError: No revision carries that id.
         WorkUnitNotFoundError: The revision names a work unit that is absent.
-        ModeloExportError: The work unit lacks required filing-instance evidence.
+        M303FilingEvidenceError: The work unit lacks valid filing-instance evidence.
         ModeloExportCrossBucketRefusedError: The work unit belongs to another
             bucket than the active one.
     """
@@ -868,16 +867,7 @@ def load_exportable_revision_target(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    try:
-        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
-    except ModeloError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": calculation_revision_id,
-                "cause_type": type(exc).__name__,
-            },
-        ) from exc
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
