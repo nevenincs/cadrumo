@@ -538,6 +538,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloOperationSubjectNotWorkUnitError",
+        ErrorCode(
+            code="REFUSED_MODELO_OPERATION_SUBJECT_NOT_WORK_UNIT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_operation_subject_not_work_unit",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.CalculationRevisionStateError",
         ErrorCode(
             code="ERROR_MODELO_CALCULATION_REVISION_STATE",

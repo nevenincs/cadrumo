@@ -127,6 +127,16 @@ class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevis
     """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
 
 
+class ModeloOperationSubjectNotWorkUnitError(OperationNextStepErrorMixin, ModeloError):
+    """Refused: a request's subject is not the work unit that owns the stored record its payload names.
+
+    An operation whose subject is a stored work unit is addressed by that unit,
+    never by the record it acts on, so a calculation revision id or another
+    unit's id is the wrong subject. The door opens the declaration that does
+    own the record, from which the request can be made again.
+    """
+
+
 class ModeloRecordNotFoundError(ModeloError):
     """Raised when a filing record lookup fails."""
 
@@ -648,6 +658,7 @@ __all__ = [
     "ModeloEditRefusedError",
     "ModeloInstalmentElectionRefusedError",
     "ModeloLocalObservationError",
+    "ModeloOperationSubjectNotWorkUnitError",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",
     "ModeloProfileReadinessError",
