@@ -68,7 +68,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from .generate_base import SEDE_ORIGIN
+from .generate_base import SEDE_ORIGIN, declared_filing_years
 
 
 @dataclass(frozen=True)
@@ -139,6 +139,10 @@ _CUOTA_LABELS: tuple[tuple[str, str], ...] = (
     ("0670", "Resultado de la declaración"),
 )
 
+#: The three specimen exercises run from the one before the declared floor to the one
+#: after it, written relative to the floor.
+_FLOOR = declared_filing_years().floor
+
 #: Printed amount per casilla per ejercicio.
 #:
 #: Every value is distinct from every other value in the SAME specimen and from
@@ -146,7 +150,7 @@ _CUOTA_LABELS: tuple[tuple[str, str], ...] = (
 #: names itself. Nothing here is derived from a formula and nothing asserts a
 #: tax fact.
 M100_CORPUS_AMOUNTS: dict[str, dict[str, str]] = {
-    "2021": {
+    str(_FLOOR - 1): {
         "0171": "58.412,37",
         "0180": "61.907,44",
         "0218": "12.430,55",
@@ -169,7 +173,7 @@ M100_CORPUS_AMOUNTS: dict[str, dict[str, str]] = {
         "0610": "1.947,62",
         "0670": "1.658,04",
     },
-    "2022": {
+    str(_FLOOR): {
         "0171": "63.518,92",
         "0180": "66.204,17",
         "0218": "13.877,41",
@@ -192,7 +196,7 @@ M100_CORPUS_AMOUNTS: dict[str, dict[str, str]] = {
         "0610": "3.054,75",
         "0670": "2.765,17",
     },
-    "2023": {
+    str(_FLOOR + 1): {
         "0171": "71.603,48",
         "0180": "74.288,73",
         "0218": "15.961,97",
@@ -268,7 +272,7 @@ MODELO_100_CORPUS_FIXTURES: tuple[Modelo100CorpusFixture, ...] = tuple(
         apartado_rows=_apartado_rows(ejercicio),
         cuota_rows=_cuota_rows(ejercicio),
     )
-    for ejercicio in ("2021", "2022", "2023")
+    for ejercicio in M100_CORPUS_AMOUNTS
 )
 
 _BODY_FONT = "Helvetica"

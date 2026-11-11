@@ -38,7 +38,10 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from .generate_base import SEDE_ORIGIN
+from .generate_base import SEDE_ORIGIN, declared_filing_years
+
+#: The specimens are the two exercises before the declared horizon, written relative to it.
+_HORIZON = declared_filing_years().horizon
 
 
 @dataclass(frozen=True)
@@ -161,15 +164,15 @@ _M100_CURRENT_YEAR_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
 
 MODELO_100_CURRENT_YEAR_FIXTURES: tuple[Modelo100CurrentYearFixture, ...] = (
     Modelo100CurrentYearFixture(
-        filename="100/2024-0A.pdf",
-        ejercicio="2024",
+        filename=f"100/{_HORIZON - 2}-0A.pdf",
+        ejercicio=str(_HORIZON - 2),
         tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         render_rows=_M100_CURRENT_YEAR_RENDER_ROWS,
     ),
     Modelo100CurrentYearFixture(
-        filename="100/2025-0A.pdf",
-        ejercicio="2025",
+        filename=f"100/{_HORIZON - 1}-0A.pdf",
+        ejercicio=str(_HORIZON - 1),
         tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         render_rows=_M100_CURRENT_YEAR_RENDER_ROWS,

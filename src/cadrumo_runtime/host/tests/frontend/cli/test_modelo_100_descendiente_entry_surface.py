@@ -37,6 +37,7 @@ from click.testing import Result
 
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli
@@ -56,14 +57,16 @@ pytestmark = [
 
 _PROFILE_LABEL = "Descendiente entry surface test profile"
 _ESTATAL_CASILLA_ID = "0513"
+_GUARDERIA_FORMULA_ID = "renta-incremento-guarderia-0613"
 
-# Every profile/relation-sourced binding a minimal M100 2024 calculate needs
+
+# Every profile/relation-sourced binding a minimal M100 calculate needs
 # besides the descendiente facts under test, mirroring the fixture in
 # ``application/modelo/tests/test_actions.py``. Deliberately EXCLUDES
 # ``renta-profile-minimo-descendientes-estatal`` -- that binding is the
 # exact aggregate this module's calculate engine derives from the declared
 # descendiente facts; overriding it here would make the assertions tautological.
-_REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
+_REQUIRED_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
@@ -76,6 +79,34 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
 )  # fmt: skip
 
 
+def _guarderia_proration_exercise() -> int:
+    """The newest authored Renta exercise whose revision carries what this module drives.
+
+    The Art. 81.2 increase this module drives end to end is the monthly guardería
+    formula's, and every calculate supplies the bindings above, so the module
+    calculates the exercise whose own revision declares that formula and accepts
+    every one of those bindings.
+    """
+    supplied = {assignment.partition("=")[0] for assignment in _REQUIRED_BINDING_FLAGS[1::2]}
+    exercises = []
+    for exercise in supported_authored_exercises("100"):
+        revision = published_snapshot("100", filing_year=exercise, period="0A").revision
+        if any(formula.id == _GUARDERIA_FORMULA_ID for formula in revision.formulas) and supplied <= {
+            binding.id for binding in revision.bindings
+        }:
+            exercises.append(exercise)
+    assert exercises, f"no authored Renta revision declares {_GUARDERIA_FORMULA_ID} and the supplied bindings"
+    return exercises[-1]
+
+
+_RENTA_YEAR = _guarderia_proration_exercise()
+
+
+def _declared_date(years_before: int, month: int, day: int) -> str:
+    """A descendiente date ``years_before`` the calculated exercise, as the flag writes it."""
+    return date(_RENTA_YEAR - years_before, month, day).isoformat()
+
+
 def _binding_flags_without(*binding_ids: str) -> tuple[str, ...]:
     """The required-binding flags with the named bindings' ``--binding`` PAIRS dropped.
 
@@ -85,7 +116,7 @@ def _binding_flags_without(*binding_ids: str) -> tuple[str, ...]:
     arrives as an unexpected positional argument.
     """
     kept: list[str] = []
-    pairs = zip(_REQUIRED_2024_BINDING_FLAGS[::2], _REQUIRED_2024_BINDING_FLAGS[1::2], strict=True)
+    pairs = zip(_REQUIRED_BINDING_FLAGS[::2], _REQUIRED_BINDING_FLAGS[1::2], strict=True)
     for flag, assignment in pairs:
         if any(assignment.startswith(f"{binding_id}=") for binding_id in binding_ids):
             continue
@@ -134,9 +165,13 @@ def _add_descendiente(runtime_profile: NativeCliProfileFixture, declaration: str
     return result
 
 
-def _create_renta_2024_unit(runtime_profile: NativeCliProfileFixture) -> str:
+def _create_renta_unit(runtime_profile: NativeCliProfileFixture) -> str:
     return create_modelo_work_unit_via_cli(
-        modelo="100", filing_year=2024, period="0A", revision="2024", native_profile=runtime_profile
+        modelo="100",
+        filing_year=_RENTA_YEAR,
+        period="0A",
+        revision=str(published_snapshot("100", filing_year=_RENTA_YEAR, period="0A").revision.id),
+        native_profile=runtime_profile,
     )
 
 
@@ -174,16 +209,16 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
 
-    add_result = _add_descendiente(runtime_profile, "NACIMIENTO=2015-04-01")
+    add_result = _add_descendiente(runtime_profile, f"NACIMIENTO={_declared_date(9, 4, 1)}")
     add_payload = unwrap_schema_envelope(add_result.output)
     assert add_payload["added"] == 1
     assert add_payload["total"] == 1
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
+    work_unit_id = _create_renta_unit(runtime_profile)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_BINDING_FLAGS)
     calc_payload = unwrap_schema_envelope(calc_result.output)
 
-    expected = _registry_first_tranche(2024)
+    expected = _registry_first_tranche(_RENTA_YEAR)
     actual = Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID]))
     assert actual == expected, (
         f"casilla 0513 must equal the registry first-tranche parameter {expected}; got {actual}. "
@@ -222,9 +257,9 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
     runtime_profile: NativeCliProfileFixture,
 ) -> None:
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
 
-    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_BINDING_FLAGS)
     calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
@@ -254,8 +289,8 @@ def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
 
     _add_descendiente(runtime_profile, "NACIMIENTO=1990-01-01")
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
+    work_unit_id = _create_renta_unit(runtime_profile)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_BINDING_FLAGS)
     calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
@@ -293,7 +328,7 @@ def test_descendiente_remove_rejects_an_out_of_range_index(runtime_profile: Nati
     add_result = _invoke(runtime_profile,
         [
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2018-01-01",
+            "--descendiente", f"NACIMIENTO={_declared_date(6, 1, 1)}",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -315,15 +350,15 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    _add_descendiente(runtime_profile, "NACIMIENTO=2015-04-01")
+    _add_descendiente(runtime_profile, f"NACIMIENTO={_declared_date(9, 4, 1)}")
 
     remove_result = _invoke(runtime_profile, ["--format", "json", "config", "profile", "descendiente", "remove", "0"])
     assert remove_result.exit_code == 0, remove_result.output
     remove_payload = unwrap_schema_envelope(remove_result.output)
     assert remove_payload["total"] == 0
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
+    work_unit_id = _create_renta_unit(runtime_profile)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_BINDING_FLAGS)
     calc_payload = unwrap_schema_envelope(calc_result.output)
     assert Decimal(str(calc_payload["casilla_values"][_ESTATAL_CASILLA_ID])) == Decimal("0")
 
@@ -377,10 +412,10 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
 
     _add_descendiente(
         runtime_profile,
-        "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12,SEGUNDO_CICLO_INFANTIL_INICIO_MES=8",
+        f"NACIMIENTO={_declared_date(3, 4, 15)},GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12,SEGUNDO_CICLO_INFANTIL_INICIO_MES=8",
     )
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
@@ -418,9 +453,9 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     """
     _seed_natural_person_profile(runtime_profile)
 
-    _add_descendiente(runtime_profile, "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400")
+    _add_descendiente(runtime_profile, f"NACIMIENTO={_declared_date(3, 4, 15)},GASTOS_GUARDERIA=2400")
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
@@ -438,7 +473,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
 ) -> None:
     """The AEAT manual's own worked increase, driven end to end through the CLI.
 
-    The Manual Práctico Renta 2024 works this case and PRINTS the answer:
+    The Manual Práctico Renta works this case and PRINTS the answer:
     "1.000 euros ÷ 12 meses x 2 meses) = 166,67", stated as that child's own
     "Límite del incremento". The expected figure here is that printed number,
     not a re-derivation of the formula under test — the registry parameter is
@@ -469,10 +504,10 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
 
     _add_descendiente(
         runtime_profile,
-        "NACIMIENTO=2021-09-02,GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8,SEGUNDO_CICLO_INFANTIL_INICIO_MES=9",
+        f"NACIMIENTO={_declared_date(3, 9, 2)},GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8,SEGUNDO_CICLO_INFANTIL_INICIO_MES=9",
     )
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
 
     # The manual's printed figure.
@@ -509,12 +544,12 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
             "--format", "json",
             "config", "profile", "descendiente", "add",
             # Real spend, child under three all year, and NO MESES_TRABAJO.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA_MENSUAL=1-6:200",
+            "--descendiente", f"NACIMIENTO={_declared_date(2, 6, 1)},GASTOS_GUARDERIA_MENSUAL=1-6:200",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
@@ -551,9 +586,11 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    _add_descendiente(runtime_profile, "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-4")
+    _add_descendiente(
+        runtime_profile, f"NACIMIENTO={_declared_date(2, 3, 1)},GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-4"
+    )
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
 
@@ -573,9 +610,12 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    _add_descendiente(runtime_profile, "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-12")
+    _add_descendiente(
+        runtime_profile,
+        f"NACIMIENTO={_declared_date(2, 3, 1)},GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-12",
+    )
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
 
@@ -594,7 +634,7 @@ def test_the_flag_refuses_both_spend_shapes_for_one_child(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400,GASTOS_GUARDERIA_MENSUAL=5-7:200",
+            "--descendiente", f"NACIMIENTO={_declared_date(3, 4, 15)},GASTOS_GUARDERIA=2400,GASTOS_GUARDERIA_MENSUAL=5-7:200",
         ],
     )  # fmt: skip
 
@@ -631,12 +671,12 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
             # Spend of 2.400 across a child under three all year, against a
             # mother qualifying all year, so the prorated increase is the full
             # 1.000 annual ceiling and the cotizaciones below is smaller.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
+            "--descendiente", f"NACIMIENTO={_declared_date(2, 6, 1)},GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _invoke(runtime_profile,
         [
             "--format", "json",
@@ -673,9 +713,9 @@ def test_the_population_term_binds_the_0613_cap(
     """
     _seed_natural_person_profile(runtime_profile)
 
-    _add_descendiente(runtime_profile, "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12")
+    _add_descendiente(runtime_profile, f"NACIMIENTO={_declared_date(2, 6, 1)},GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12")
 
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
+    work_unit_id = _create_renta_unit(runtime_profile)
     calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
 
     # One eligible child in the guardería all year against a mother who
@@ -687,7 +727,7 @@ def test_the_population_term_binds_the_0613_cap(
     )
 
 
-def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
+def _registry_guarderia_cap_anual(year: int = _RENTA_YEAR) -> Decimal:
     """The Art. 81.2 annual per-child ceiling as the registry parameter carries it.
 
     Read from the parameter rather than restated, so a revision that moved the
@@ -745,7 +785,7 @@ def test_a_record_level_refusal_is_translated_in_every_catalogue(
             # A tutela guardian carrying an adoption anchor: entitling for the
             # tranches, excluded from the Art. 58.2 increase, and refused by the
             # record precisely so the excluded case cannot claim it.
-            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+            "--descendiente", f"NACIMIENTO={_declared_date(9, 1, 1)},RELACION=tutela,INSCRIPCION={_declared_date(4, 1, 1)}",
             # The language option belongs to the verb, not the root. Placed at
             # the root it is refused as an unknown option -- which this test
             # caught by failing loudly on the wrong refusal rather than passing.
@@ -782,7 +822,7 @@ def test_a_record_level_refusal_does_not_echo_the_operators_record(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+            "--descendiente", f"NACIMIENTO={_declared_date(9, 1, 1)},RELACION=tutela,INSCRIPCION={_declared_date(4, 1, 1)}",
         ],
     )  # fmt: skip
 
@@ -806,7 +846,7 @@ def test_the_parser_refusal_family_still_translates(
             "--profile", _PROFILE_LABEL, "--profile-secrets-stdin",
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2015-01-01,DISCAPACIDAD=50",
+            "--descendiente", f"NACIMIENTO={_declared_date(9, 1, 1)},DISCAPACIDAD=50",
         ],
         input=json.dumps({"profile_passphrase": runtime_profile.passphrase}),
     )  # fmt: skip
