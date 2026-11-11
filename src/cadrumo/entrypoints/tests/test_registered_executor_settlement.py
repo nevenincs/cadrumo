@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -186,8 +187,13 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
     concurrent_filing_note = "concurrent filing catalogue update"
     concurrent_work_unit_name = "Concurrent work-unit update"
 
-    def amendment_ports_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> AmendmentActionPorts:
-        ports = build_amendment_action_ports(bucket_id=bucket_id, operation=operation)
+    def amendment_ports_factory(
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> AmendmentActionPorts:
+        ports = build_amendment_action_ports(bucket_id=bucket_id, operation=operation, mutation_writer=mutation_writer)
         if raced_catalogue == "filing":
             filing_repository = cast(ModeloRecordCatalogueRepository, ports.filing_repository)
             original_filing_load = filing_repository.load_revisioned

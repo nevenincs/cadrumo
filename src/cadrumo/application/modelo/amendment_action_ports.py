@@ -9,6 +9,7 @@ chain.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -42,8 +43,18 @@ class AmendmentActionPorts:
 class AmendmentActionPortsFactory(Protocol):
     """Construct the amendment authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> AmendmentActionPorts:
-        """Return the complete amendment bundle for ``bucket_id``."""
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> AmendmentActionPorts:
+        """Return the complete amendment bundle for ``bucket_id``.
+
+        ``mutation_writer``, when given, admits each actual secure-object commit
+        of the bundle, so the caller learns when the first write begins.
+        """
         ...
 
 
