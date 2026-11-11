@@ -22,12 +22,15 @@ from ....application.invoices.catalogue_read_projection import CatalogueInvoiceS
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ....tests.ecb_stub import ecb_csv_fetch
 from .. import ledger_business_invoice_commands as handler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("50505050-5050-4505-8505-505050505050")
 # Both provider paths are deterministic and network-free. The USD test transport
@@ -46,7 +49,7 @@ def _invoice(currency: str, invoice_number: str) -> Invoice:
             counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number=invoice_number,
-            issued_at=date(2026, 3, 16),
+            issued_at=date(_YEAR, 3, 16),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("21"),
             currency=currency,
@@ -78,7 +81,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Proveedor Exterior SL",
         invoice_number=invoice_number,
-        invoice_date="2026-03-16",
+        invoice_date=date(_YEAR, 3, 16).isoformat(),
         taxable_base="100.00",
         country_code="ES",
         iva_rate="21",

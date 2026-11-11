@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
 from ..app_live_iva_commands import iva_wallet_decision_reason_text
@@ -35,16 +36,17 @@ from ..app_live_iva_commands import iva_wallet_decision_reason_text
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TAXPAYER_REF = "12345678Z"
-_DECIDED_AT = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_DECIDED_AT = datetime(_YEAR, 5, 19, 10, 0, 0, tzinfo=UTC)
 
 
 def _reason(*, found_but_unusable: bool) -> IvaCompensationDecisionReason:
     """Return the locale-neutral identity for one no-authority situation."""
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref,
         wallet=None,
         local_recurrence_amount=None,
         decided_at=_DECIDED_AT,
