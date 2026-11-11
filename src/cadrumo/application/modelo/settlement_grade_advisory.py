@@ -8,8 +8,8 @@ revision leaves those casillas as
 yet the final liquidación cells remain operator-entered. A ledger-driven
 calculate on such a revision populates the inputs but never computes the
 settlement, so an operator could file a blank or zero liquidación on positive
-activity (``no-silent-under-declaration``). M100 2020-2023 are the live advisory
-case.
+activity (``no-silent-under-declaration``). Every supported Modelo 100 edition
+computes its settlement today, so the guard protects any revision that does not.
 
 This module surfaces that STRUCTURAL gap on the calculate path as a non-blocking
 :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic`, grounded in
