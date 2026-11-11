@@ -3,7 +3,7 @@
 A persona (``dev/fixtures/personas``, read by :mod:`cadrumo.tests.personas`)
 reaches its profile the way an operator's input does: the registered wizard
 patch, field and repeatable-row mutations, the household replacements, the
-suffered-withholding record, the statement import, single classification,
+own bank accounts and their designations, the suffered-withholding record, the statement import, single classification,
 invoice recording and linking, evidence intake and attachment, and, in the
 history scope, the local observations of returns the taxpayer holds, the
 withholding capture of every rent payment on leased premises, the filed
@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from enum import StrEnum
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import cast
@@ -241,6 +241,7 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
+from .persona_own_accounts import replay_own_accounts
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -264,7 +265,7 @@ class ReplayScope(StrEnum):
     HOUSEHOLD = "household"
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
-    """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    """The household scope, the own bank accounts, the declared withholding, the statement import, invoices, evidence and inventory books."""
     HISTORY = "history"
     """The full scope, then the persona's return history.
 
@@ -1538,6 +1539,7 @@ def materialise_persona(
         if scope.includes(ReplayScope.HOUSEHOLD):
             _replay_household(persona, world)
         if scope.includes(ReplayScope.FULL):
+            replay_own_accounts(persona, world.profile_id, partial(settle_operation, world))
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)

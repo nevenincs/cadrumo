@@ -49,6 +49,12 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "contact.fiscal_address" = "Calle de la Ficción 12, 3.º B, 28039 Madrid"
 "contact.contact_person_phone" = "910000001"
 
+[[own_accounts]]
+label = "Cuenta nómina"
+holding = "titular"
+iban = "ES5500000000000000000001"
+designations = [{ role = "refund", modelo = "100" }]
+
 [[household.descendants]]
 identity = "asalariada.hijo"
 birth_date = { year = "horizon-9", month = 5, day = 11 }
