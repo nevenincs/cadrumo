@@ -71,6 +71,7 @@ from cadrumo.entrypoints.tests.persona_materialisation import (
     settle_operation,
     year_envelope,
 )
+from cadrumo.entrypoints.tests.persona_prior_carries import attest_prior_carries
 from cadrumo.tests.personas import (
     ExpectedValue,
     Persona,
@@ -318,8 +319,14 @@ def _create(world: PersonaWorld, plan: PlannedRow) -> str | TableRow:
 def _calculate(
     materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str
 ) -> ModeloWorkCalculatePublicResultV3:
-    """Calculate the work unit; a Modelo 303 carries its joint-return and annual-summary evidence."""
+    """Calculate the work unit; a Modelo 303 carries its joint-return and annual-summary evidence.
+
+    A Modelo 100 first states the persona's pending carries of earlier ejercicios that no earlier return in the
+    profile supplies, through the operations the calculation's refusal names.
+    """
     world = materialised.world
+    if plan.modelo == "100":
+        attest_prior_carries(materialised.persona, world, work_unit_id, plan.year)
     evidence = None
     if plan.modelo == "303":
         last_period = max(
