@@ -39,6 +39,7 @@ from .....domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...storage.sql.engine import get_engine
 from ...storage.sql.tables import secure_objects_table
@@ -59,11 +60,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "9ab6fcf1-b639-4a5f-88ef-7a6e4e25b0eb"  # was 'revision-carry-gate-test'
 _TAX_ID = "X0001500M"
 _MODELO = "303"
-_YEAR = 2025
+_HORIZON = filing_year_envelope().horizon
+_YEAR = _HORIZON - 1
 _SOURCE_PERIOD = "1T"
 _TARGET_PERIOD = "2T"
 _M390_PERIOD = "0A"
-_CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(_HORIZON, 1, 10, 10, 0, tzinfo=UTC)
 _DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 _NONEXISTENT_MODELO = "999"
 _M303_CARRY_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"

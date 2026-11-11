@@ -40,10 +40,13 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 # The 2025 Modelo 100 XSD declares Hijo with maxOccurs 15.
 _DESCENDANT_LIMIT = 15
@@ -57,6 +60,11 @@ def _row(**leaves: str) -> ProfileDescendantRow:
     return ProfileDescendantRow(
         facts=tuple(ProfileDescendantFact(field_key=key, value=value) for key, value in leaves.items())
     )
+
+
+def _dated(years_before: int, month: int, day: int) -> str:
+    """An ISO date text ``years_before`` years ahead of the supported horizon's year, unvalidated so a refused day can be typed."""
+    return f"{_YEAR - years_before:04d}-{month:02d}-{day:02d}"
 
 
 def _text(value: object) -> str:
@@ -143,19 +151,19 @@ def test_a_family_is_stored_as_rows_with_its_count_and_served_back(world: _World
     before = world.record()
 
     mutation = world.replace(
-        _row(birth_date="2015-04-03", convivencia="true", custodia_compartida="true", nif=_ADULT_NIF),
-        _row(birth_date="2020-08-09", convivencia="false", rentas_anuales="1200.50"),
+        _row(birth_date=_dated(11, 4, 3), convivencia="true", custodia_compartida="true", nif=_ADULT_NIF),
+        _row(birth_date=_dated(6, 8, 9), convivencia="false", rentas_anuales="1200.50"),
     )
 
     assert (mutation.total, mutation.changed) == (2, True)
     assert mutation.record.record_revision == before.record_revision + 1
     assert world.facts() == {
         DESCENDANT_COUNT_PATH: "2",
-        f"{DESCENDANT_OBJECT_PATH}.0.birth_date": "2015-04-03",
+        f"{DESCENDANT_OBJECT_PATH}.0.birth_date": _dated(11, 4, 3),
         f"{DESCENDANT_OBJECT_PATH}.0.convivencia": "true",
         f"{DESCENDANT_OBJECT_PATH}.0.custodia_compartida": "true",
         f"{DESCENDANT_OBJECT_PATH}.0.nif": _ADULT_NIF,
-        f"{DESCENDANT_OBJECT_PATH}.1.birth_date": "2020-08-09",
+        f"{DESCENDANT_OBJECT_PATH}.1.birth_date": _dated(6, 8, 9),
         f"{DESCENDANT_OBJECT_PATH}.1.convivencia": "false",
         f"{DESCENDANT_OBJECT_PATH}.1.rentas_anuales": "1200.50",
     }
@@ -166,9 +174,9 @@ def test_a_family_is_stored_as_rows_with_its_count_and_served_back(world: _World
 
 def test_a_valid_nif_or_nie_is_stored_in_canonical_form_and_an_absent_one_is_allowed(world: _World) -> None:
     world.replace(
-        _row(birth_date="2015-04-03", nif="1234-5678-z"),
-        _row(birth_date="2016-04-03", nif=_FOREIGN_NIF),
-        _row(birth_date="2017-04-03"),
+        _row(birth_date=_dated(11, 4, 3), nif="1234-5678-z"),
+        _row(birth_date=_dated(10, 4, 3), nif=_FOREIGN_NIF),
+        _row(birth_date=_dated(9, 4, 3)),
     )
 
     facts = world.facts()
@@ -182,7 +190,7 @@ def test_a_nif_with_a_wrong_control_letter_is_refused_by_row_and_never_echoed(wo
 
     with pytest.raises(UserProfileValidationError) as refused:
         world.replace(
-            _row(birth_date="2015-04-03", nif=_ADULT_NIF), _row(birth_date="2016-04-03", nif=_WRONG_LETTER_NIF)
+            _row(birth_date=_dated(11, 4, 3), nif=_ADULT_NIF), _row(birth_date=_dated(10, 4, 3), nif=_WRONG_LETTER_NIF)
         )
 
     assert refused.value.context == {"row": 2}
@@ -198,21 +206,21 @@ def test_a_nif_with_a_wrong_control_letter_is_refused_by_row_and_never_echoed(wo
 
 def test_a_smaller_family_clears_the_rows_it_no_longer_holds(world: _World) -> None:
     world.replace(
-        _row(birth_date="2015-04-03", rentas_anuales="900"),
-        _row(birth_date="2020-08-09"),
+        _row(birth_date=_dated(11, 4, 3), rentas_anuales="900"),
+        _row(birth_date=_dated(6, 8, 9)),
     )
 
-    world.replace(_row(birth_date="2020-08-09"))
+    world.replace(_row(birth_date=_dated(6, 8, 9)))
 
     assert world.facts() == {
         DESCENDANT_COUNT_PATH: "1",
-        f"{DESCENDANT_OBJECT_PATH}.0.birth_date": "2020-08-09",
+        f"{DESCENDANT_OBJECT_PATH}.0.birth_date": _dated(6, 8, 9),
         f"{DESCENDANT_OBJECT_PATH}.0.convivencia": "true",
     }
 
 
 def test_a_stated_zero_is_a_declared_empty_family_and_repeats_as_no_change(world: _World) -> None:
-    world.replace(_row(birth_date="2015-04-03"))
+    world.replace(_row(birth_date=_dated(11, 4, 3)))
 
     cleared = world.replace()
 
@@ -223,12 +231,12 @@ def test_a_stated_zero_is_a_declared_empty_family_and_repeats_as_no_change(world
 
 
 def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> None:
-    full = tuple(_row(birth_date=f"20{10 + index}-01-01") for index in range(_DESCENDANT_LIMIT))
+    full = tuple(_row(birth_date=_dated(16 - index, 1, 1)) for index in range(_DESCENDANT_LIMIT))
     assert world.replace(*full).total == _DESCENDANT_LIMIT
     before = world.record()
 
     with pytest.raises(UserProfileValidationError) as refused:
-        world.replace(*full, _row(birth_date="2012-05-05"))
+        world.replace(*full, _row(birth_date=_dated(14, 5, 5)))
 
     assert refused.value.context == {"limit": _DESCENDANT_LIMIT, "count": _DESCENDANT_LIMIT + 1}
     assert world.record().content_digest == before.content_digest
@@ -238,17 +246,17 @@ def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> 
     ("leaves", "row"),
     [
         ({"convivencia": "true"}, 1),
-        ({"birth_date": "2015-02-30"}, 1),
-        ({"birth_date": "2015-04-03", "convivencia": "perhaps"}, 1),
-        ({"birth_date": "2015-04-03", "rentas_anuales": "12.500"}, 1),
-        ({"birth_date": "2015-04-03", "rentas_anuales": "-5"}, 1),
-        ({"birth_date": "2015-04-03", "relacion": "cousin"}, 1),
-        ({"birth_date": "2015-04-03", "alta_posterior_nacimiento_mes": "13"}, 1),
-        ({"birth_date": "2015-04-03", "apellidos_nombre": "Ana"}, 1),
-        ({"birth_date": "2015-04-03", "custodia_compartida": "false"}, 1),
-        ({"birth_date": "2015-04-03", "nif": _WRONG_LETTER_NIF}, 1),
-        ({"birth_date": "2015-04-03", "nif": _ENTITY_NIF}, 1),
-        ({"birth_date": "2015-04-03", "nif": "1234"}, 1),
+        ({"birth_date": _dated(11, 2, 30)}, 1),
+        ({"birth_date": _dated(11, 4, 3), "convivencia": "perhaps"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "rentas_anuales": "12.500"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "rentas_anuales": "-5"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "relacion": "cousin"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "alta_posterior_nacimiento_mes": "13"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "apellidos_nombre": "Ana"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "custodia_compartida": "false"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "nif": _WRONG_LETTER_NIF}, 1),
+        ({"birth_date": _dated(11, 4, 3), "nif": _ENTITY_NIF}, 1),
+        ({"birth_date": _dated(11, 4, 3), "nif": "1234"}, 1),
     ],
 )
 def test_a_row_the_declaration_cannot_hold_is_refused_before_anything_is_written(
@@ -267,10 +275,10 @@ def test_a_row_the_declaration_cannot_hold_is_refused_before_anything_is_written
 @pytest.mark.parametrize(
     "leaves",
     [
-        {"birth_date": "2015-04-03", "nif": _WRONG_LETTER_NIF},
-        {"birth_date": "2015-04-03", "nif": _ENTITY_NIF},
-        {"birth_date": "2015-04-03", "rentas_anuales": "12.500"},
-        {"birth_date": "2015-02-30"},
+        {"birth_date": _dated(11, 4, 3), "nif": _WRONG_LETTER_NIF},
+        {"birth_date": _dated(11, 4, 3), "nif": _ENTITY_NIF},
+        {"birth_date": _dated(11, 4, 3), "rentas_anuales": "12.500"},
+        {"birth_date": _dated(11, 2, 30)},
     ],
 )
 def test_a_refused_value_leaves_no_chained_exception_carrying_what_was_typed(
@@ -285,7 +293,7 @@ def test_a_refused_value_leaves_no_chained_exception_carrying_what_was_typed(
 
 def test_a_refusal_names_the_row_by_position(world: _World) -> None:
     with pytest.raises(UserProfileValidationError) as refused:
-        world.replace(_row(birth_date="2015-04-03"), _row(birth_date="2016-04-03"), _row(convivencia="true"))
+        world.replace(_row(birth_date=_dated(11, 4, 3)), _row(birth_date=_dated(10, 4, 3)), _row(convivencia="true"))
 
     assert refused.value.context is not None and refused.value.context["row"] == 3
 
@@ -296,15 +304,15 @@ def test_every_refusal_serves_a_sentence_in_the_workers_language_and_never_echoe
 ) -> None:
     typed = "zz-typed-value"
     attempts = (
-        (_row(birth_date="2015-04-03", convivencia=typed), ("2",)),
+        (_row(birth_date=_dated(11, 4, 3), convivencia=typed), ("2",)),
         (_row(convivencia="true"), ("2",)),
-        (_row(birth_date="2015-04-03", apellidos_nombre=typed), ("2",)),
+        (_row(birth_date=_dated(11, 4, 3), apellidos_nombre=typed), ("2",)),
     )
     sentences: set[str] = set()
     with override_settings(cadrumo_output_language=language.value):
         for offender, expected in attempts:
             with pytest.raises(UserProfileValidationError) as refused:
-                world.replace(_row(birth_date="2012-01-01"), offender)
+                world.replace(_row(birth_date=_dated(14, 1, 1)), offender)
             detail = build_operation_error_detail(refused.value)
             assert detail is not None and detail.refusal_words is not None
             assert detail.refusal_words_language is language
@@ -316,7 +324,7 @@ def test_every_refusal_serves_a_sentence_in_the_workers_language_and_never_echoe
 
 
 def test_the_over_limit_sentence_names_the_limit_and_the_count_in_every_language(world: _World) -> None:
-    rows = tuple(_row(birth_date="2012-01-01") for _ in range(_DESCENDANT_LIMIT + 1))
+    rows = tuple(_row(birth_date=_dated(14, 1, 1)) for _ in range(_DESCENDANT_LIMIT + 1))
     sentences: dict[OutputLanguage, str] = {}
     for language in OutputLanguage:
         with override_settings(cadrumo_output_language=language.value):
@@ -331,10 +339,10 @@ def test_the_over_limit_sentence_names_the_limit_and_the_count_in_every_language
 
 def test_a_stale_baseline_is_refused_and_writes_nothing(world: _World) -> None:
     stale = world.record()
-    world.replace(_row(birth_date="2015-04-03"))
+    world.replace(_row(birth_date=_dated(11, 4, 3)))
     after = world.record()
 
     with pytest.raises(ProfileRecordConflictError):
-        world.replace(_row(birth_date="2016-04-03"), baseline=stale)
+        world.replace(_row(birth_date=_dated(10, 4, 3)), baseline=stale)
 
     assert world.record().content_digest == after.content_digest

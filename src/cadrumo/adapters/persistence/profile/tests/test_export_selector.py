@@ -33,7 +33,11 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_exportable_selector_refuses_verified_fallback_when_current_draft_conflicts(
@@ -45,14 +49,14 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=revision_covering("130", _YEAR).id,
         ports=WorkLifecyclePorts(
             work_unit_repository=work_repo,
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
-        clock=datetime(2026, 6, 4, 10, 0, tzinfo=UTC),
+        clock=datetime(_YEAR, 6, 4, 10, 0, tzinfo=UTC),
         operation=operation,
     )
     verified_id = derive_calculation_revision_id(
@@ -85,13 +89,13 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         casilla_values={M130_INPUT_CASILLA: Decimal("10")},
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
             casilla_values={M130_INPUT_CASILLA: Decimal("10")},
         ),
-        created_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
-        verified_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
+        created_at=datetime(_YEAR, 6, 4, 10, 1, tzinfo=UTC),
+        updated_at=datetime(_YEAR, 6, 4, 10, 1, tzinfo=UTC),
+        verified_at=datetime(_YEAR, 6, 4, 10, 1, tzinfo=UTC),
         verified_by="operator",
         filing_instance_evidence=None,
         source_provenance=(),
@@ -110,12 +114,12 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         casilla_values={M130_INPUT_CASILLA: Decimal("20")},
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
             casilla_values={M130_INPUT_CASILLA: Decimal("20")},
         ),
-        created_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
+        created_at=datetime(_YEAR, 6, 4, 10, 2, tzinfo=UTC),
+        updated_at=datetime(_YEAR, 6, 4, 10, 2, tzinfo=UTC),
         filing_instance_evidence=None,
         source_provenance=(),
     )
