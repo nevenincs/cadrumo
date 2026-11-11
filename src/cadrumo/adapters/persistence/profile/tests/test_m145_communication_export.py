@@ -38,6 +38,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
@@ -45,6 +46,10 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
+
+_YEAR = filing_year_envelope().horizon
+#: The descendant is a minor at the communication, so the birth year follows the exercise.
+_DESCENDANT_BIRTH_YEAR = _YEAR - 16
 
 
 def _field_values(**overrides: str) -> dict[str, str]:
@@ -68,7 +73,7 @@ def _resolved_layout() -> ResolvedExportLayout:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=_YEAR,
         period="comunicacion",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -94,7 +99,7 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -138,10 +143,10 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=2026,
+                communication_year=_YEAR,
                 field_values=_field_values(
                     **{
-                        "descendiente-1.anio-nacimiento": "2010",
+                        "descendiente-1.anio-nacimiento": str(_DESCENDANT_BIRTH_YEAR),
                         "pension-compensatoria.importe-anual": "1234.56",
                     },
                 ),
@@ -158,7 +163,7 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
             operation=operation,
         )
 
-    assert _payload_slice(result.payload, descendant_year) == b"2010"
+    assert _payload_slice(result.payload, descendant_year) == str(_DESCENDANT_BIRTH_YEAR).encode()
     assert _payload_slice(result.payload, compensation) == f"{123456:017d}".encode()
     assert _payload_slice(result.payload, absent_ascendant_year) == b"0000"
 
@@ -173,7 +178,7 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=2026,
+                communication_year=_YEAR,
                 field_values=_field_values(
                     **{
                         "perceptor.primer-apellido": "García",
@@ -254,7 +259,7 @@ def test_export_m145_communication_record_refuses_a_box_written_into_unrelated_c
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -285,7 +290,7 @@ def test_export_m145_communication_record_refuses_invalid_record(
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -310,7 +315,7 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=2026,
+                communication_year=_YEAR,
                 field_values=_field_values(**{"perceptor.primer-apellido": "A" * (first_surname.length + 1)}),
             ),
             bucket_id=runtime.bucket_id,
@@ -356,7 +361,7 @@ def test_a_page_indicator_that_validates_also_exports(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=field_values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=field_values),
             bucket_id=runtime.bucket_id,
             ports=ports,
             operation=operation,
@@ -386,7 +391,7 @@ def test_a_page_indicator_outside_blank_or_c_fails_validation_before_export(
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=2026, field_values=_field_values(**{_PAGE_INDICATOR: value})
+                communication_year=_YEAR, field_values=_field_values(**{_PAGE_INDICATOR: value})
             ),
             bucket_id=runtime.bucket_id,
             ports=ports,
@@ -414,7 +419,7 @@ def test_a_page_indicator_outside_blank_or_c_fails_validation_before_export(
 def _seeded_export(runtime, *, operation: PinnedAuthorityOperation) -> M145CommunicationExportResult:
     """Produce one genuine export receipt through the production path."""
     record = create_m145_communication_record(
-        M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+        M145CommunicationCreateCommand(communication_year=_YEAR, field_values=_field_values()),
         bucket_id=runtime.bucket_id,
         ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
         operation=operation,
