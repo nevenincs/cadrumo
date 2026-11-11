@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:00cae51834284955f143abcf0759f823050b0a07660372507d58391dcc788bf5'
+body_hash: 'sha256:53c1a810ca68f0a035638f94ba7d12b718b7ee72596de663f6c7e197b6702894'
 ---
 
 <!-- RETIRED: S44 -->
@@ -62,6 +62,9 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S35` - Give Modelo 100 rental income a source: property and lease records, the inmueble rows 0100 to 0148 with their expenses and amortisation, and the art. 23.2 reduction in casilla 0150, so the landlord persona calculates, verifies and exports with its rental income asserted (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, dev/fixtures/personas/arrendador-jubilado`.
 - [ ] `P01.S45` - State the Modelo 100 settlement result in RESINGDEV for every envelope year, refund and payable, through a per-row field-to-casilla declaration on the XML layout declared at the edition whose design prints it, one stable member continuing across the renumbering from 0695 to 0700, ADR first and saying why dictionary_path_overrides cannot express it (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/domain/calculations/registry`.
 - [ ] `P01.S46` - Make the table's export stage read the exported file back through the registry parser and compare each stated expected value the design carries, the Modelo 100 settlement result first (lane ACCEPTANCE); `dev/acceptance/persona_table`.
+- [ ] `P01.S49` - Source Modelo 100 work income, casillas 0003 to 0025, from the suffered-withholding payer record in every supported edition, where today no binding carries the certificate's importe integro and the asalariada and arrendador returns lack their main income (lane CALC-PAGOS, ADR first); `src/cadrumo/application/aggregation, src/cadrumo/_data/registry/aeat/modelos/100`.
+- [ ] `P01.S50` - Bind the Modelo 100 ascendant minimum, casilla 0515, in every edition, where today it has no binding or formula (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
+- [ ] `P01.S51` - Keep the intracomunitario-desarrollador reverse-charge purchases in Modelo 100 casillas 0218 and 0222, where today the settlement comparison drops them by comparing cash paid with an invoice total that includes the recipient's self-assessed cuota (lane CALC-RENTA); `src/cadrumo/application/aggregation`.
 
 ### Phase `P02` - Deferred backend scope
 
@@ -86,6 +89,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S43` - Record the Modelo 202 obligation facts under 2026-11-11-modelo-202-obligation-adr: the art. 40.3 election as a dated three-state profile fact, the art. 40.2 base through binding modelo-202-cuota-base-ejercicio-anterior or else an attested prior value, the elected branch decided only by a current verified Modelo 202 calculation, and the first-year amendment to 2026-06-19-m202-first-period-attestation-adr (lane LIFECYCLE); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/_data/registry/aeat/modelos/202, src/cadrumo/application/modelo`.
 - [ ] `P02.S47` - Export a Modelo 100 property let under more than one contract in the ejercicio, with its nested Arrendamiento rows, where today it calculates and is blocked at export (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/filing, src/cadrumo/application/aggregation`.
 - [ ] `P02.S48` - Compute Modelo 100 furniture amortisation (0117) and the LIRPF art. 23.3 reduction (0151) from the property records, where today each is a served non-blocking limitation (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
+- [ ] `P02.S52` - Compute the negative branch of Modelo 100 casilla 0695 (TCNN112, 0670 minus 0694), unresolved until then (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100`.
 
 ### Phase `P03` - Desktop re-entry
 
