@@ -10,12 +10,11 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody import kdf_supervision
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import rotate_profile_passphrase
 from cadrumo.application.user_profile.password_kdf_notice import (
     PROFILE_KDF_AT_FALLBACK_NOTICE_CODE,
-    PROFILE_KDF_STRENGTHEN_ACTION_ID,
+    PROFILE_KDF_STRENGTHEN_ACTION,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.user_profile.view_operation import (
@@ -93,8 +92,8 @@ def test_a_profile_at_the_fallback_point_is_served_a_warning_that_opens_the_pass
     assert notice.severity is NoticeSeverity.WARNING
     assert notice.message.strip()
     assert notice.action is not None
-    assert notice.action.action_id == PROFILE_KDF_STRENGTHEN_ACTION_ID
-    assert notice.action.target_command_key == lookup_action(PROFILE_KDF_STRENGTHEN_ACTION_ID).target_command_key
+    assert notice.action == PROFILE_KDF_STRENGTHEN_ACTION
+    assert notice.action.action_id == "operator.profile.passphrase.change"
     assert notice.action.target_command_key == "config.passphrase.change"
 
 
