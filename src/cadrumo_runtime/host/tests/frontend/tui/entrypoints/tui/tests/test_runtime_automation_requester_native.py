@@ -13,7 +13,7 @@ from functools import partial
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
-from typing import Any
+from typing import Any, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -46,6 +46,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
+from cadrumo.entrypoints.tui.account import AccountSessionRetired
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
@@ -55,6 +56,7 @@ from cadrumo_client.contracts.contracts import RefusalCode
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
+from cadrumo_client.transport.automation_requester import AutomationRequesterCompletion, AutomationRequesterJourney
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installation import installation
@@ -71,6 +73,7 @@ from cadrumo_runtime.host.profile_host import RuntimeProfileHost
 from .......frontend.tui import installed_session
 from .......frontend.tui.launcher import main
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from .......frontend.tui.secret import automation_requester_delivery
 from .......frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 from .......frontend.tui.secret.automation_requester_contracts import AutomationRequestOutcome
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
@@ -704,10 +707,50 @@ def _assert_admitted_grant_and_credential(
     _assert_credential_is_valid(subject, profile_id, reference, resources)
 
 
+class _RetirementFirst:
+    """Hold a delivered terminal until the shell has handled its own lease's pushed retirement.
+
+    Renewal and scope change retire the lease that requested them, and the
+    runtime pushes that retirement on its own schedule. Holding the terminal
+    makes the retirement always arrive first, which is the order that loses a
+    settled result if the shell leaves before its requester has recorded it.
+    """
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.retires_source = False
+        self.retirement_handled = Event()
+        handle_retirement = RuntimeRestrictedSessionApp.on_account_session_retired
+        held = self
+
+        def observed(app: RuntimeRestrictedSessionApp, message: AccountSessionRetired) -> None:
+            handle_retirement(app, message)
+            held.retirement_handled.set()
+
+        class Journey(AutomationRequesterJourney):
+            @override
+            def wait_for_terminal(self) -> AutomationRequesterCompletion:
+                completed = super().wait_for_terminal()
+                if held.retires_source:
+                    assert held.retirement_handled.wait(30), "the source lease's retirement never reached the shell"
+                return completed
+
+        monkeypatch.setattr(RuntimeRestrictedSessionApp, "on_account_session_retired", observed)
+        monkeypatch.setattr(automation_requester_delivery, "AutomationRequesterJourney", Journey)
+
+    def expect(self, kind: EnrollmentKind) -> None:
+        self.retires_source = kind is not EnrollmentKind.ROTATE
+        self.retirement_handled.clear()
+
+
 def test_restricted_tui_reviews_renew_rotation_and_scope_change(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Each typed own-grant change needs a separate human and a fresh client proof."""
+    """Each typed own-grant change needs a separate human and a fresh client proof.
+
+    A change that retires the requesting lease still shows its settled result
+    before the shell leaves, even when the retirement arrives first.
+    """
+    retirement_first = _RetirementFirst(monkeypatch)
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()
     endpoint = WindowsEndpoint(storage_root=storage_root)
@@ -771,6 +814,7 @@ def test_restricted_tui_reviews_renew_rotation_and_scope_change(
                 assert server.ready.wait(3)
                 _assert_admitted_grant_and_credential(subject, profile_id, original.key_id, reference, resources)
                 for kind in (EnrollmentKind.RENEW, EnrollmentKind.ROTATE, EnrollmentKind.CHANGE_SCOPE):
+                    retirement_first.expect(kind)
                     reference = _change_grant_through_tui(
                         subject, profile_id, pool, runtime_owner, resources, kind, reference
                     )

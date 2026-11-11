@@ -285,6 +285,11 @@ class RuntimeAutomationRequesterScreen(
         self.query_one("#automation-request-status", Static).update(tr("tui.automation_request.waiting"))
         self._request_task = asyncio.create_task(self._execute(draft), name="tui-automation-request")
 
+    @property
+    def holds_request(self) -> bool:
+        """Whether a request was started here and its result is still on this screen."""
+        return self._busy or self._submitted is not None or self._outcome is not None
+
     def action_close(self) -> None:
         """A submitted request remains owned until terminal or uncertainty."""
         if not self._busy:
