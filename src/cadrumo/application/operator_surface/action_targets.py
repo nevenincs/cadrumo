@@ -265,6 +265,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget(
         "overview.explain", ("app", "overview", "explain"), "OverviewExplainResult", required_inputs=("modelo",)
+    ActionTarget(
+        "modelo.work.override",
+        ("app", "modelo", "work", "override"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
     ),
     ActionTarget("overview.status", ("app", "overview", "status"), "OverviewStatusResult"),
 )

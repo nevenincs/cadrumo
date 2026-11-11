@@ -129,6 +129,7 @@ from .revision_persistence import persist_calculation_revision
 from .work_missing_input import (
     ModeloWorkMissingInputError,
     input_required,
+    override_admitted,
     prior_carry_absence_unstated,
     prior_period_unfiled,
 )
@@ -831,7 +832,29 @@ def _refused_missing_input(
     )
     if unfiled is not None:
         return unfiled
-    return input_required(missing, work_unit=work_unit, snapshot=snapshot, boxes=boxes)
+    return input_required(
+        missing,
+        work_unit=work_unit,
+        snapshot=snapshot,
+        boxes=boxes,
+        overridable=_override_admitted(missing, work_unit=work_unit, snapshot=snapshot, ports=ports),
+    )
+
+
+def _override_admitted(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+) -> bool:
+    """Whether the edit admission lets the operator state the value ``missing`` names on this work unit."""
+    return override_admitted(
+        snapshot,
+        missing.binding_id,
+        period=work_unit.period.registry_token,
+        layout=ports.operation.form_layout(str(work_unit.modelo), snapshot.revision.id),
+    )
 
 
 def _resolve_prepared_casilla_inputs(

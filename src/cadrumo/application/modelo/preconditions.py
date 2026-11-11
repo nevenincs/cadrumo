@@ -456,6 +456,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.input.binding_unanswered",
         action_id="operator.modelo.bindings.list",
     ),
+    # An input whose value the operator may state over its source is answered
+    # by that statement: the door is the override bound to the input.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.override_unanswered",
+        action_id="operator.modelo.work.override",
+    ),
     # A carry from an earlier period of the same ejercicio is read from that
     # period's filed return; where that return stands names the work that
     # moves it on.

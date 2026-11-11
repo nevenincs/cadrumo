@@ -18,6 +18,7 @@ from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -77,6 +78,7 @@ from .projection_unresolved import (
 )
 from .registry_helpers import validate_casilla_input_ids
 from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .work_missing_input import previous_filing_unobserved
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -1029,17 +1031,32 @@ def _resolve_bucket_aggregation_run(
         operation=ports.operation,
         profile_values=record_to_path_values(preparation.profile.record),
     )
-    source_resolution = resolve_bucket_aggregation_source_resolution(
-        preparation=preparation,
-        ports=ports,
-        foreign_asset_observations=foreign_asset_observations,
-        foreign_asset_row_observations=foreign_asset_row_observations,
-        text_casilla_inputs=text_casilla_inputs,
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        enum_binding_values=enum_binding_values,
-        filing_period_date=filing_period_date,
-        transaction_repository=memoized_transaction_repository,
-    )
+    try:
+        source_resolution = resolve_bucket_aggregation_source_resolution(
+            preparation=preparation,
+            ports=ports,
+            foreign_asset_observations=foreign_asset_observations,
+            foreign_asset_row_observations=foreign_asset_row_observations,
+            text_casilla_inputs=text_casilla_inputs,
+            m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+            enum_binding_values=enum_binding_values,
+            filing_period_date=filing_period_date,
+            transaction_repository=memoized_transaction_repository,
+        )
+    except RegistryValidationError as error:
+        # A stored earlier return that does not show the boxes a carry reads is
+        # answered by the operator stating the carry, where the edit admits it.
+        snapshot = preparation.snapshot
+        refusal = previous_filing_unobserved(
+            error,
+            work_unit=preparation.work_unit,
+            snapshot=snapshot,
+            boxes=snapshot_printed_boxes(ports.operation, snapshot),
+            layout=ports.operation.form_layout(str(preparation.work_unit.modelo), snapshot.revision.id),
+        )
+        if refusal is None:
+            raise
+        raise refusal from error
     channels = _bucket_aggregation_channels(
         preparation=preparation,
         operation=ports.operation,

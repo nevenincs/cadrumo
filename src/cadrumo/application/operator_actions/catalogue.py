@@ -736,6 +736,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.override",
+            target_command_key="modelo.work.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="binding_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="binding_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="value",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="value",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.verify",
             target_command_key="modelo.work.verify",
             argument_specifications=(

@@ -2738,6 +2738,20 @@ application:
       revision_pick_explicit_id_required: La selección explícita de revisión requiere
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
+      previous_filing_unobserved: 'Todavía no se puede calcular el Modelo %{modelo}
+        %{period} %{filing_year}: la declaración del Modelo %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tienes guardada no muestra las casillas %{source_boxes},
+        que la casilla %{boxes} arrastra de ella como el dato %{binding}. Una casilla
+        que no muestra es desconocida, no cero: registra esa declaración con esas
+        casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
+      previous_filing_unobserved_unprinted: 'Todavía no se puede calcular el Modelo
+        %{modelo} %{period} %{filing_year}: la declaración del Modelo %{source_modelo}
+        de %{source_filing_year} (%{source_period}) que tienes guardada no muestra
+        las casillas %{source_boxes}, que el dato %{binding} arrastra de ella. Una
+        casilla que no muestra es desconocida, no cero: registra esa declaración con
+        esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
         válido con el selector de revisión explícita.
       source_owned_binding_override: Has introducido un valor en una casilla que se
         obtiene de tus registros; quítalo o corrige el registro del que procede.

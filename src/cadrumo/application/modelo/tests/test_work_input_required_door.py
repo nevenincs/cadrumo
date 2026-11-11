@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.error_codes import ErrorCategory, current_error_code, get_registered_error_code
 from ....core.operator_action_enums import ActionArgumentStatus
 from ....core.period import Period
@@ -21,8 +23,9 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenWorkStepV1
+from ..calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from ..printed_boxes import snapshot_printed_boxes
-from ..work_missing_input import ModeloWorkMissingInputError, input_required
+from ..work_missing_input import ModeloWorkMissingInputError, input_required, override_admitted
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -133,3 +136,76 @@ def test_an_input_no_box_prints_is_named_by_its_binding_alone(operation: PinnedA
     assert "synthetic.unprinted" in detail.refusal_words
     assert "%{" not in detail.refusal_words
     assert isinstance(detail.next_step, OperationOpenWorkStepV1)
+
+
+#: Declarations whose revisions read every carry kind the caller-override precedence ladder admits.
+_CARRY_DECLARATIONS: tuple[tuple[str, str], ...] = (("130", "1T"), ("303", "1T"), ("100", "0A"), ("390", "0A"))
+
+
+def _calculation_snapshot(operation: PinnedAuthorityOperation, modelo: str, period: str) -> RegistrySnapshot:
+    """The revision the declaration calculates against, at the grade a calculation needs."""
+    return operation.snapshot(modelo, filing_year=_YEAR, period=period, grade=RegistryAuthorityGrade.CALCULATION)
+
+
+def _overridable_carries(operation: PinnedAuthorityOperation) -> dict[BindingSourceKind, tuple[str, str, str]]:
+    """One carry the edit admission lets the operator state, per carry kind, with its modelo and period."""
+    found: dict[BindingSourceKind, tuple[str, str, str]] = {}
+    for modelo, period in _CARRY_DECLARATIONS:
+        snapshot = _calculation_snapshot(operation, modelo, period)
+        layout = operation.form_layout(modelo, snapshot.revision.id)
+        for binding in snapshot.revision.bindings:
+            if (
+                binding.source in CALLER_OVERRIDABLE_CARRY_SOURCES
+                and binding.source not in found
+                and override_admitted(snapshot, binding.id, period=period, layout=layout)
+            ):
+                found[binding.source] = (modelo, period, binding.id)
+    return found
+
+
+def test_every_carry_kind_the_operator_may_state_opens_the_override_bound_to_the_work_unit_and_input(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    carries = _overridable_carries(operation)
+    assert set(carries) == set(CALLER_OVERRIDABLE_CARRY_SOURCES)
+    for kind, (modelo, period, binding_id) in carries.items():
+        snapshot = _calculation_snapshot(operation, modelo, period)
+        unit = _work_unit().model_copy(
+            update={"modelo": ModeloCode(modelo), "period": Period.from_year_and_code(_YEAR, period)}
+        )
+        refusal = input_required(
+            _missing(binding_id),
+            work_unit=unit,
+            snapshot=snapshot,
+            boxes=snapshot_printed_boxes(operation, snapshot),
+            overridable=True,
+        )
+        detail = build_operation_error_detail(refusal)
+
+        assert detail is not None, kind
+        assert detail.error_code == "REFUSED_MODELO_WORK_INPUT_REQUIRED"
+        assert detail.refusal_words is not None
+        assert "%{" not in detail.refusal_words
+        assert binding_id in detail.refusal_words
+        assert detail.precondition_verdict_json is not None
+        verdict = json.loads(detail.precondition_verdict_json)
+        assert verdict["action"]["action_id"] == "operator.modelo.work.override", kind
+        assert verdict["failed_condition_id"] == "modelo.work.calculate.input.supplied"
+        bound = {entry["argument_name"]: entry for entry in verdict["argument_bindings"]}
+        assert bound["work_unit_id"]["value"] == unit.work_unit_id
+        assert bound["binding_id"]["value"] == binding_id
+        assert {bound[name]["status"] for name in ("work_unit_id", "binding_id")} == {
+            ActionArgumentStatus.RESOLVED.value
+        }
+        # The amount is the operator's to state; the door never supplies it.
+        assert bound["value"]["status"] == ActionArgumentStatus.MISSING.value
+
+
+def test_a_source_the_ladder_locks_is_never_offered_as_an_override(operation: PinnedAuthorityOperation) -> None:
+    snapshot = _snapshot()
+    layout = operation.form_layout(_MODELO, snapshot.revision.id)
+    locked = [binding.id for binding in snapshot.revision.bindings if binding.source in BUCKET_AGGREGATION_LOCK_SOURCES]
+    assert locked
+    assert not any(
+        override_admitted(snapshot, binding_id, period=_PERIOD.registry_token, layout=layout) for binding_id in locked
+    )

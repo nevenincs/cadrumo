@@ -2694,6 +2694,20 @@ application:
         %{eligible_states}.'
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
+      previous_filing_unobserved: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban (%{source_filing_year},
+        %{source_period}) nem szerepelnek a(z) %{source_boxes} mezők, amelyeket a(z)
+        %{boxes}. mező a(z) %{binding} adatként visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
+      previous_filing_unobserved_unprinted: 'A(z) %{modelo} %{period} %{filing_year}
+        nyomtatvány még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban
+        (%{source_filing_year}, %{source_period}) nem szerepelnek a(z) %{source_boxes}
+        mezők, amelyeket a(z) %{binding} adat visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
         explicit revízió kiválasztóval érvényes.
       source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból

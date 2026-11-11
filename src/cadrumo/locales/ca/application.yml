@@ -2737,6 +2737,19 @@ application:
       revision_pick_explicit_id_required: La selecció explícita de revisió requereix
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id només és
+      previous_filing_unobserved: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la casella %{boxes} arrossega d''ella com la dada %{binding}. Una casella
+        que no mostra és desconeguda, no zero: registra aquesta declaració amb aquestes
+        caselles o indica tu l''import de la dada %{binding}, i torna a calcular.
+        No s''ha desat res.'
+      previous_filing_unobserved_unprinted: 'Encara no es pot calcular el Model %{modelo}
+        %{period} %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
+        no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
+        de la dada %{binding}, i torna a calcular. No s''ha desat res.'
         vàlid amb el selector de revisió explícita.
       source_owned_binding_override: Has introduït un valor en una casella que s'obté
         dels teus registres; treu-lo o corregeix el registre del qual prové.

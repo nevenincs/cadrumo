@@ -2602,6 +2602,18 @@ application:
         to your profile: %{reason} No declaration was created.'
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
+      previous_filing_unobserved: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which box %{boxes}
+        carries from it as the input %{binding}. A box it does not show is unknown,
+        not zero: record that return with those boxes, or state the amount of the
+        input %{binding} yourself, then calculate again. Nothing was saved.'
+      previous_filing_unobserved_unprinted: 'Modelo %{modelo} %{period} %{filing_year}
+        cannot be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which the input %{binding}
+        carries from it. A box it does not show is unknown, not zero: record that
+        return with those boxes, or state the amount of the input %{binding} yourself,
+        then calculate again. Nothing was saved.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
         --year %{year} separately and use a period token such as 0A, 1T, or 01.
       work_unit_already_discarded: The declaration is already discarded.

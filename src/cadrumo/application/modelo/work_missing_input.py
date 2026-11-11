@@ -18,14 +18,19 @@ from ...domain.calculations.registry.bindings_previous_filing import previous_fi
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.modelos.work_unit import WorkUnit
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
+from .edit_admission import permitted_binding_entry
+from .edit_models import ModeloEditBindingIntentKind, ModeloEditWritableBindingOverrideSurfaceEntryV1
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, first_printed_dependent
 from .projection_next_steps import open_work_step
 from .reconciliation_sources import ReconciliationSourceNeed
+from .row_filled_bindings import row_filled_binding_ids
 
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
+_UNOBSERVED_PREVIOUS_FILING_MESSAGE: Final[str] = "errors.calc.previous_filing_casillas_unobserved"
 _MISSING_BINDING_MESSAGES = frozenset(
     {
         "errors.calc.binding_value_missing",
@@ -96,6 +101,32 @@ class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidatio
         except ValidationError:
             return None
         return cls(source, binding_id=binding_id)
+
+    @classmethod
+    def from_unobserved_previous_filing(cls, source: RegistryValidationError) -> Self | None:
+        """Classify a stored earlier return that does not show the boxes a carry reads, by its first carry.
+
+        The engine names every carry of that return it could not read; the
+        first, in identifier order, is the one the refusal addresses.
+        """
+        if isinstance(source, cls) or source.translated_message != _UNOBSERVED_PREVIOUS_FILING_MESSAGE:
+            return None
+        raw = (source.context or {}).get("binding_ids")
+        if not isinstance(raw, str) or not raw:
+            return None
+        try:
+            binding_id = _BINDING_ID_ADAPTER.validate_python(sorted(raw.split(","))[0], strict=True)
+        except ValidationError:
+            return None
+        return cls(source, binding_id=binding_id)
+
+    @property
+    def previous_filing_unobserved(self) -> bool:
+        """Whether the engine refused because a stored earlier return does not show the boxes the carry reads."""
+        cause = self.__cause__
+        return isinstance(cause, RegistryValidationError) and (
+            cause.translated_message == _UNOBSERVED_PREVIOUS_FILING_MESSAGE
+        )
 
 
 _PRIOR_CARRY_SUBJECT_LEAF_KEY: Final[str] = "modelo.work.calculate"
@@ -362,45 +393,44 @@ def prior_period_unfiled(
 
 
 _INPUT_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.binding_unanswered"
+_OVERRIDE_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.override_unanswered"
 _INPUT_REQUIRED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required"
 _INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required_unprinted"
+_UNOBSERVED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.previous_filing_unobserved"
+_UNOBSERVED_UNPRINTED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.previous_filing_unobserved_unprinted"
 
 
-def input_required(
-    missing: ModeloWorkMissingInputError,
-    *,
-    work_unit: WorkUnit,
-    snapshot: RegistrySnapshot,
-    boxes: PrintedBoxes,
-) -> ModeloWorkMissingInputError:
-    """The refusal for ``missing`` naming the input the operator supplies and the doors that lead to it.
+def override_admitted(
+    snapshot: RegistrySnapshot, binding_id: BindingId, *, period: str, layout: FormLayoutDefinition | None
+) -> bool:
+    """Whether the edit admission lets the operator state ``binding_id``'s value for ``period``.
 
-    The words name the binding and the box it feeds when the form prints one.
-    The door is the declared binding listing for this modelo, year and period,
-    and the next step opens the work unit whose form takes the value.
+    The same classification the edit baseline publishes: a manual input or a
+    carry of the caller-override precedence ladder, read by the calculation
+    for the period, not filled row by row, with a value channel. ``layout`` is
+    the revision's declared form layout.
 
     ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
-    box = _carry_box(snapshot, boxes, missing.binding_id)
-    failure = build_modelo_precondition_failure_for_scenario(
-        subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
-        scenario_id=_INPUT_REQUIRED_SCENARIO_ID,
-        evidence_id=f"{_INPUT_REQUIRED_SCENARIO_ID}.observation",
-        evidence_values={
-            "work_unit_id": work_unit.work_unit_id,
-            "modelo": str(work_unit.modelo),
-            "year": work_unit.filing_year,
-            "period": work_unit.period.registry_token,
-            "binding_id": missing.binding_id,
-            "box": "" if box is None else box,
-        },
-        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        action_argument_values={
-            "modelo": str(work_unit.modelo),
-            "year": work_unit.filing_year,
-            "period": work_unit.period.registry_token,
-        },
+    binding = next((item for item in snapshot.revision.bindings if item.id == binding_id), None)
+    if binding is None:
+        return False
+    entry = permitted_binding_entry(
+        binding,
+        revision=snapshot.revision,
+        period=period,
+        row_filled=row_filled_binding_ids(snapshot.revision, layout),
     )
+    return (
+        isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        and ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE in entry.allowed_intents
+    )
+
+
+def _input_words(
+    missing: ModeloWorkMissingInputError, *, work_unit: WorkUnit, box: str | None
+) -> tuple[str, dict[str, object]]:
+    """The message key and context that say which input has no value and why."""
     context: dict[str, object] = {
         "modelo": str(work_unit.modelo),
         "filing_year": work_unit.filing_year,
@@ -409,16 +439,109 @@ def input_required(
     }
     if box is not None:
         context["boxes"] = box
+    cause = missing.__cause__
+    if not (missing.previous_filing_unobserved and isinstance(cause, RegistryValidationError)):
+        return (
+            _INPUT_REQUIRED_MESSAGE_LOCALE_KEY if box is not None else _INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY
+        ), context
+    source = cause.context or {}
+    context |= {
+        "source_modelo": source.get("source_modelo", ""),
+        "source_filing_year": source.get("source_filing_year", ""),
+        "source_period": source.get("source_period", ""),
+        "source_boxes": str(source.get("casilla_ids", "")).replace(",", ", "),
+    }
+    return (_UNOBSERVED_MESSAGE_LOCALE_KEY if box is not None else _UNOBSERVED_UNPRINTED_MESSAGE_LOCALE_KEY), context
+
+
+def input_required(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    boxes: PrintedBoxes,
+    overridable: bool = False,
+) -> ModeloWorkMissingInputError:
+    """The refusal for ``missing`` naming the input the operator supplies and the doors that lead to it.
+
+    The words name the binding and the box it feeds when the form prints one;
+    for a stored earlier return that does not show the boxes the carry reads,
+    they name that return and its boxes too, and the evidence carries the
+    earlier return's modelo, year and period. When the operator may state the
+    input's value (``overridable``, from :func:`override_admitted`), the door
+    is the override bound to this work unit and input, and the value is the
+    operator's to give; otherwise it is the declared binding listing for this
+    modelo, year and period. The next step opens the work unit whose form
+    takes the value.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
+    box = _carry_box(snapshot, boxes, missing.binding_id)
+    message_key, context = _input_words(missing, work_unit=work_unit, box=box)
+    source_coordinates = {
+        key: str(value)
+        for key in ("source_modelo", "source_filing_year", "source_period")
+        if (value := context.get(key)) is not None
+    }
+    scenario_id = _OVERRIDE_REQUIRED_SCENARIO_ID if overridable else _INPUT_REQUIRED_SCENARIO_ID
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
+        scenario_id=scenario_id,
+        evidence_id=f"{scenario_id}.observation",
+        evidence_values={
+            "work_unit_id": work_unit.work_unit_id,
+            "modelo": str(work_unit.modelo),
+            "year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "binding_id": missing.binding_id,
+            "box": "" if box is None else box,
+            **source_coordinates,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values=(
+            {"work_unit_id": work_unit.work_unit_id, "binding_id": missing.binding_id}
+            if overridable
+            else {
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            }
+        ),
+        # The value is the operator's to state; the door never supplies one.
+        missing_action_arguments=("value",) if overridable else (),
+    )
     return ModeloWorkMissingInputError(
         missing,
         binding_id=missing.binding_id,
-        translated_message=_INPUT_REQUIRED_MESSAGE_LOCALE_KEY
-        if box is not None
-        else _INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY,
+        translated_message=message_key,
         context=context,
         precondition_verdict=failure.verdict,
         next_step=open_work_step(work_unit),
     )
+
+
+def previous_filing_unobserved(
+    error: RegistryValidationError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    boxes: PrintedBoxes,
+    layout: FormLayoutDefinition | None,
+) -> ModeloWorkMissingInputError | None:
+    """The refusal for a stored earlier return that does not show the boxes a carry reads, with its door.
+
+    ``None`` when ``error`` is another refusal, or when the operator may not
+    state the carry on this work unit, so the source refusal stands unchanged.
+    ``layout`` is the revision's declared form layout.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
+    unobserved = ModeloWorkMissingInputError.from_unobserved_previous_filing(error)
+    if unobserved is None or not override_admitted(
+        snapshot, unobserved.binding_id, period=work_unit.period.registry_token, layout=layout
+    ):
+        return None
+    return input_required(unobserved, work_unit=work_unit, snapshot=snapshot, boxes=boxes, overridable=True)
 
 
 __all__ = [
@@ -426,6 +549,8 @@ __all__ = [
     "ModeloPriorPeriodUnfiledError",
     "ModeloWorkMissingInputError",
     "input_required",
+    "override_admitted",
+    "previous_filing_unobserved",
     "prior_carry_absence_unstated",
     "prior_period_unfiled",
 ]
