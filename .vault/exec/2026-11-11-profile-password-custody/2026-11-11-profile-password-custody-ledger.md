@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f1c0bf1122ef221eadd57d59f2ef23b61a3b952e9b590a2c35ef92af43c00920'
+body_hash: 'sha256:58228f185ee071e3048d15f6222d25588a2824f4a0cf06d3d1d0c705ef429f62'
 related:
   - "[[2026-11-11-profile-password-custody-plan]]"
 ---
@@ -73,9 +73,19 @@ related:
 - `S05` `A` `src/cadrumo_runtime/host/tests/test_human_login_kdf_strengthening.py`
 - `S05` `verify:` `pytest test_human_login_kdf_strengthening test_sign_in_kdf_strengthening_follow test_password_kdf_sign_in_strengthening test_kdf_background_yield test_kdf_strengthening_mint` -> `pass`
 - `S05` `by:` `PERF-CUSTODY`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_strengthening_mint.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_password_kdf_sign_in_strengthening.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_login.py`
+- `S03` `M` `src/cadrumo_runtime/host/tests/test_human_login_kdf_strengthening.py`
+- `S03` `verify:` `pytest custody+host -k custody/kdf/login/rotation/automation/lock: 1688 passed, 2 failed (pre-existing: m303 expectation fixed on tui by a767ef6561; view_stream worktree Chromium)` -> `pass`
+- `S03` `verify:` `pytest strengthening/mint/yield/follow/pending_login: 40 passed` -> `pass`
+- `S03` `verify:` `measurement test fails with the bare thread restored (no measurement started)` -> `pass`
+- `S03` `verify:` `ruff ty lint-imports` -> `pass`
 
 ## Notes
 
 - `S03` `test_profile_worker` browser-descendant tests fail in this worktree: worker resolves Chromium under the worktree var/storage/components, absent outside root
 - `S04` host suite 595 passed; 2 failures also fail with S04 set aside (automation requester TUI renew, modelo revision repeat effect); worktree workers run root code under -I
 - `S05` crash injection at five rewrap boundaries lives in `test_password_kdf_sign_in_strengthening` (S03 commit); end-to-end through a spawned worker runs only after landing, since worktree workers execute root code under -I
+- `S03` Review fixes after independent review: measurement thread context; background calibration honours the measurement opt-out; only an unlocked profile-lock record is ignored by the automation probe; host-unfit point is a point refusal; follow only onto generation+1; settle/status bind the host once. Declined: gating the retained password copy on the fallback (login thread composes no custody port; copy is wiped within the attempt). Open lows: measurement thread not joined at close; recycled-PID waiter marker.
