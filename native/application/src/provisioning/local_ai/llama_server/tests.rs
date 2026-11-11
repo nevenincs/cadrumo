@@ -593,7 +593,7 @@ pub(crate) fn supervisor(
         }
         ambient(name)
     };
-    ServerSupervisor::new(
+    let mut supervisor = ServerSupervisor::new(
         server,
         address,
         Box::new(Uncontained),
@@ -605,7 +605,9 @@ pub(crate) fn supervisor(
         maximum_backoff: Duration::from_secs(4),
         crash_loop_limit: 2,
         crash_loop_window: Duration::from_secs(60),
-    })
+    });
+    supervisor.demand(Instant::now());
+    supervisor
 }
 
 fn assert_running(supervisor: &mut ServerSupervisor<LlamaServer>, now: Instant) {
