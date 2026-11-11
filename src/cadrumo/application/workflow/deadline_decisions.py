@@ -9,6 +9,9 @@ from ...core.filing_timeliness import FilingTimeliness
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
@@ -20,7 +23,7 @@ from ...domain.deadlines.effective_close import resolve_filing_timeliness
 from ...domain.deadlines.errors import DeadlineValidationError
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
 from .deadline_stage import abort_missing_deadline_obligation
@@ -57,6 +60,61 @@ def no_recovery_verdict(
         facts=values,
         provenance=provenance,
         outcome=outcome,
+    )
+
+
+_WINDOW_CONDITION_ID = "workflow.deadline.filing_window_open"
+_WINDOW_EVIDENCE_ID = "workflow.deadline.window"
+
+
+def _window_not_yet_open_verdict(obligation: ModeloDeadline) -> PreconditionVerdict:
+    """Name the local export as the door while the filing window has not opened.
+
+    Local filing waits for the window, but exporting the verified revision does
+    not: the artefact is prepared now and carried to AEAT once the window opens.
+    The window's opening date rides the evidence so the served words can state it.
+    The export needs a destination only the operator can give, so that argument
+    stays missing.
+    """
+    modelo = obligation.modelo.value
+    filing_year = obligation.period.filing_year
+    period_code = obligation.period.registry_token
+
+    def evidence_argument(name: str, key: str, value: str | int) -> ActionArgumentBinding:
+        return ActionArgumentBinding(
+            argument_name=name,
+            status=ActionArgumentStatus.RESOLVED,
+            value=value,
+            source=ActionArgumentSource.CONDITION_EVIDENCE,
+            source_key=key,
+            source_evidence_id=_WINDOW_EVIDENCE_ID,
+        )
+
+    return PreconditionVerdict(
+        failed_condition_id=_WINDOW_CONDITION_ID,
+        evidence=(
+            ConditionEvidence(
+                condition_id=_WINDOW_CONDITION_ID,
+                evidence_id=_WINDOW_EVIDENCE_ID,
+                provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                values={
+                    "filing_window": FilingWindowState.FUTURE.value,
+                    "modelo": modelo,
+                    "filing_year": filing_year,
+                    "period_code": period_code,
+                    "opens_on": obligation.opens_on.isoformat(),
+                },
+            ),
+        ),
+        action=ActionReference(action_id="operator.modelo.export"),
+        argument_bindings=(
+            evidence_argument("modelo", "modelo", modelo),
+            ActionArgumentBinding(argument_name="output", status=ActionArgumentStatus.MISSING),
+            evidence_argument("period", "period_code", period_code),
+            evidence_argument("year", "filing_year", filing_year),
+        ),
+        missing_argument_names=("output",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
     )
 
 
@@ -158,18 +216,7 @@ def decide_filing_deadline(
                     filing_window=FilingWindowState.FUTURE,
                     deadline_role=DeadlineRole.BINDING,
                 ),
-                precondition_verdict=no_recovery_verdict(
-                    condition_id="workflow.deadline.filing_window_open",
-                    evidence_id="workflow.deadline.window",
-                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-                    values={
-                        "filing_window": FilingWindowState.FUTURE.value,
-                        "modelo": obligation.modelo.value,
-                        "filing_year": obligation.period.filing_year,
-                        "period_code": obligation.period.registry_token,
-                    },
-                    outcome=NoRecoveryOutcome.TERMINAL,
-                ),
+                precondition_verdict=_window_not_yet_open_verdict(obligation),
             ),
         )
         raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
