@@ -16,11 +16,10 @@ export type ConnectionStatus =
   | "off";
 
 /** Describe what is set, without claiming more than the reading says. A
- * keyless lane whose engine runs on this computer is first as ready as the
- * local AI set up to run it, as `setup` serves it: with no model file to run
- * it is not set up, whatever the engine answers. Set up, it is ready while
- * its engine runs, and while the engine sleeps until a document is read;
- * otherwise it says what the service measured of the engine. */
+ * keyless lane whose engine runs on this computer shows the local AI's setup
+ * row, `setup`, which the setup host serves already combined from the model
+ * files, the engine's server and its last start: ready exactly when the row
+ * is. Without such a row it says what the service measured of its engine. */
 export function connectionStatus(
   provider: ProviderStatus,
   engine: AgentEngineHealth | null = null,
@@ -32,13 +31,11 @@ export function connectionStatus(
   // An app connection needs its app, whatever it signs in with.
   if (provider.cliState === "not_installed") return "setup_needed";
   // A connection with no key and no sign-in has nothing to set up but its
-  // local AI. Where the service measured its engine, that measurement is its
-  // status once the local AI is set up.
+  // local AI, whose served row is its status.
   if (provider.authKind === "none") {
-    if (setup && setup.state !== "ready") return "setup_needed";
-    if (engine?.state === "running") return "ready";
-    if (setup?.server === "dormant") return "ready";
+    if (setup) return setup.state === "ready" ? "ready" : "setup_needed";
     if (engine?.state === "not_running") return "engine_not_running";
+    if (engine?.state === "running") return "ready";
     return provider.readiness === "ready" ? "ready" : "not_checked";
   }
   if (provider.authKind === "provider_sign_in_only") {
@@ -68,18 +65,11 @@ export function connectionStatus(
   return "setup_needed";
 }
 
-/** The line beneath a keyless local lane in the setup's own words: what is
- * missing while its local AI is not set up, and that its engine starts when a
- * document is read while it sleeps; null otherwise. */
+/** The line beneath a keyless local lane: its local AI's setup row in the
+ * setup's own words, or null without one. */
 export function localLaneDetail(
   t: Translate,
-  status: ConnectionStatus,
   setup: SetupRow | null,
 ): string | null {
-  if (!setup) return null;
-  if (status === "setup_needed" && setup.state !== "ready")
-    return rowSentence(t, setup);
-  if (status === "ready" && setup.server === "dormant")
-    return rowSentence(t, setup);
-  return null;
+  return setup ? rowSentence(t, setup) : null;
 }

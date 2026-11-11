@@ -1559,6 +1559,16 @@ fn with_llama_cpp_selected_and_no_model_selected_nothing_is_ready_or_set_up() {
     assert!(world.ollama_requests().is_empty());
     assert!(world.router_requests().is_empty());
 
+    // Build 15: a router that runs and answers while it holds no model is no ready local
+    // AI either. This row is what the window shows for the lane the router serves, so
+    // the lane reads not set up, whatever the router answers.
+    world.serve_router();
+    for report in [world.status(), world.verify(&[ItemId::LocalAi])] {
+        let local_ai = row(&report, ItemId::LocalAi);
+        assert_eq!(local_ai.state, ItemState::Absent, "{:?}", report.mode);
+        assert_eq!(local_ai.recovery, None, "{:?}", report.mode);
+    }
+
     // A package that does not carry the llama-server has no local AI to set up.
     world.llama_package = world.directory.path().join("empty");
     assert_eq!(

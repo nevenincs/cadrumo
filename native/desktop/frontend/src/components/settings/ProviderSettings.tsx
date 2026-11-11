@@ -132,7 +132,7 @@ function detailWords(
   if (provider.authKind === "none")
     return status === "engine_not_running" && engine
       ? engineNotRunningWords(t, engine)
-      : localLaneDetail(t, status, setup);
+      : localLaneDetail(t, setup);
   if (status === "unconfirmed") return statusWords(t, status);
   if (provider.authKind === "provider_sign_in_only") {
     if (status === "setup_needed")

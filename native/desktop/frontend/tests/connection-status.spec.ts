@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SetupRow } from "../src/ipc/componentSetup";
+import type { SetupRow, SetupState } from "../src/ipc/componentSetup";
 import type { AgentEngineHealth } from "../src/shell/agentSession";
 import {
   connectionStatus,
@@ -7,8 +7,10 @@ import {
 } from "../src/components/settings/connectionStatus";
 import type { ProviderStatus } from "../src/components/settings/types";
 
-// What a keyless lane on this computer says, read through a translator that
-// returns the key it is asked for. No page is opened.
+// What a keyless lane on this computer shows, read through a translator that
+// returns the key it is asked for. No page is opened. Which local AI is set
+// up, and whether its engine runs, sleeps or failed to start, the setup host
+// serves as the row; these cases check only that the lane renders that row.
 
 const KEYS = (key: string) => key;
 
@@ -55,37 +57,42 @@ function setup(fields: Partial<SetupRow>): SetupRow {
   };
 }
 
-test("a local lane with no model file to run is not set up, even while its engine answers", () => {
-  const absent = setup({ state: "absent" });
+test("a local lane is ready exactly when its served setup row is, whatever the engine answers", () => {
+  const states: SetupState[] = [
+    "absent",
+    "provisioning",
+    "verifying",
+    "stale",
+    "failed",
+    "blocked",
+    "unknown",
+  ];
   for (const engine of [RUNNING, NOT_RUNNING, null]) {
-    const status = connectionStatus(LANE, engine, absent);
-    expect(status).toBe("setup_needed");
-    expect(localLaneDetail(KEYS, status, absent)).toBe(
-      "desktop.setup.state.absent",
-    );
+    expect(connectionStatus(LANE, engine, setup({}))).toBe("ready");
+    for (const state of states) {
+      expect(connectionStatus(LANE, engine, setup({ state }))).toBe(
+        "setup_needed",
+      );
+    }
   }
 });
 
-test("a set-up local lane is ready while its engine runs, and while it sleeps until a document is read", () => {
-  const ready = setup({});
-  expect(connectionStatus(LANE, RUNNING, ready)).toBe("ready");
-  expect(localLaneDetail(KEYS, "ready", ready)).toBeNull();
-
-  const dormant = setup({ server: "dormant" });
-  const status = connectionStatus(LANE, NOT_RUNNING, dormant);
-  expect(status).toBe("ready");
-  expect(localLaneDetail(KEYS, status, dormant)).toBe(
+test("a local lane says its served setup row in the setup's own words", () => {
+  expect(localLaneDetail(KEYS, setup({ state: "absent" }))).toBe(
+    "desktop.setup.state.absent",
+  );
+  expect(localLaneDetail(KEYS, setup({ server: "dormant" }))).toBe(
     "desktop.setup.ready_dormant",
   );
+  expect(
+    localLaneDetail(
+      KEYS,
+      setup({ state: "failed", failure: "program_not_running" }),
+    ),
+  ).toBe("desktop.setup.failure.program_not_running");
 });
 
-test("a set-up local lane whose server should run but does not answer says its engine is not running", () => {
-  expect(connectionStatus(LANE, NOT_RUNNING, setup({}))).toBe(
-    "engine_not_running",
-  );
-});
-
-test("a lane turned off, or with no local AI row, reads as before", () => {
+test("a lane turned off, or with no setup row, reads as before", () => {
   expect(
     connectionStatus(
       { ...LANE, mode: "disabled" },
@@ -94,6 +101,7 @@ test("a lane turned off, or with no local AI row, reads as before", () => {
     ),
   ).toBe("off");
   expect(connectionStatus(LANE, RUNNING, null)).toBe("ready");
+  expect(connectionStatus(LANE, NOT_RUNNING, null)).toBe("engine_not_running");
   expect(connectionStatus(LANE, null, null)).toBe("not_checked");
-  expect(localLaneDetail(KEYS, "ready", null)).toBeNull();
+  expect(localLaneDetail(KEYS, null)).toBeNull();
 });
