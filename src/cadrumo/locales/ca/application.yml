@@ -2533,6 +2533,12 @@ application:
         la conciliació o corregeix l''import aportat perquè hi coincideixi.'
       iva_wallet_backend_casilla_conflict: L'entrada de casella del backend per a
         la compensació prèvia del Model 303 entra en conflicte amb la decisió de conciliació
+      input_required: 'Encara no es pot calcular el Model %{modelo} %{period} %{filing_year}:
+        falta la dada %{binding} (casella %{boxes}). Indica-la i torna a calcular.
+        No s''ha desat res.'
+      input_required_unprinted: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: falta la dada %{binding}. Indica-la i torna a calcular. No
+        s''ha desat res.'
         de la cartera de compensació d'IVA.
       iva_wallet_blocked: 'La conciliació de la cartera de compensació d''IVA està
         bloquejada per al Model 303 (%{divergence}): %{reason}'

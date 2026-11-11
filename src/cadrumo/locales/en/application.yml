@@ -2408,6 +2408,12 @@ application:
         amount to match it.'
       iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
         compensation conflicts with the IVA wallet reconciliation decision.
+      input_required: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: the input %{binding} (box %{boxes}) has no value. Supply it, then calculate
+        again. Nothing was saved.'
+      input_required_unprinted: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: the input %{binding} has no value. Supply it, then calculate
+        again. Nothing was saved.'
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
       iva_wallet_caller_binding_conflict: The value you supplied for the Modelo 303

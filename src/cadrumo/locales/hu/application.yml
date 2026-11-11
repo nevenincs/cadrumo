@@ -2494,6 +2494,12 @@ application:
       iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának rovatbemenete
         ütközik az IVA-tárca egyeztetési döntésével.
       iva_wallet_blocked: 'Az IVA-tárca egyeztetése blokkolva van a Modelo 303 esetén
+      input_required: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még nem
+        számolható ki: hiányzik a(z) %{binding} adat (%{boxes}. mező). Add meg, majd
+        számolj újra. Semmi nem lett mentve.'
+      input_required_unprinted: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki: hiányzik a(z) %{binding} adat. Add meg, majd számolj
+        újra. Semmi nem lett mentve.'
         (%{divergence}): %{reason}'
       iva_wallet_caller_binding_conflict: Az általad megadott érték a Modelo 303 előző
         kompenzációjához ütközik az IVA-tárca egyeztetési döntésével.

@@ -250,9 +250,9 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
         ErrorCode(
-            code="ERROR_MODELO_WORK_INPUT_REQUIRED",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_validation",
+            code="REFUSED_MODELO_WORK_INPUT_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.input_required",
             retryable=False,
             runbook_id=None,
         ),

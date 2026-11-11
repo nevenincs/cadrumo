@@ -36,12 +36,13 @@ _MISSING_BINDING_MESSAGES = frozenset(
 )
 
 
-class ModeloWorkMissingInputError(RegistryValidationError):
+class ModeloWorkMissingInputError(OperationNextStepErrorMixin, RegistryValidationError):
     """A promptable binding refused an engine calculation before publication.
 
     Only the calculation action's engine-call boundary may raise this error.
     It says that no new calculation revision was published; earlier preparation
-    may already have changed other state.
+    may already have changed other state. The operator supplies the input, so
+    the refusal built by :func:`input_required` names it and serves the door.
     """
 
     _binding_id: BindingId
@@ -54,6 +55,7 @@ class ModeloWorkMissingInputError(RegistryValidationError):
         translated_message: str | None = None,
         context: Mapping[str, object] | None = None,
         precondition_verdict: object | None = None,
+        next_step: OperationNextStepWording | None = None,
     ) -> None:
         """Retain the original refusal and its renderer-facing metadata.
 
@@ -69,6 +71,7 @@ class ModeloWorkMissingInputError(RegistryValidationError):
             precondition_verdict=(
                 source.terminal_precondition_verdict if precondition_verdict is None else precondition_verdict
             ),
+            next_step=next_step,
         )
         self.args = source.args
         self.__cause__ = source
@@ -104,7 +107,7 @@ _PRIOR_CARRY_MESSAGE_LOCALE_KEYS: Final[Mapping[AbsenceAttestationFamily, str]] 
 }
 
 
-class ModeloPriorCarryAbsenceUnstatedError(OperationNextStepErrorMixin, ModeloWorkMissingInputError):
+class ModeloPriorCarryAbsenceUnstatedError(ModeloWorkMissingInputError):
     """Carries from earlier ejercicios hold no value and the filer has not stated that none is pending.
 
     A carry the registry declares a statement of absence for is unknown, never
@@ -226,7 +229,7 @@ def prior_carry_absence_unstated(
     )
 
 
-class ModeloPriorPeriodUnfiledError(OperationNextStepErrorMixin, ModeloWorkMissingInputError):
+class ModeloPriorPeriodUnfiledError(ModeloWorkMissingInputError):
     """An earlier period of the same ejercicio this one carries from has no return the carry can read.
 
     The carry is read from the filed earlier return, so it is unknown, never
@@ -358,10 +361,71 @@ def prior_period_unfiled(
     )
 
 
+_INPUT_REQUIRED_SCENARIO_ID: Final[str] = "modelo.work.calculate.input.binding_unanswered"
+_INPUT_REQUIRED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required"
+_INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY: Final[str] = "application.modelo.errors.input_required_unprinted"
+
+
+def input_required(
+    missing: ModeloWorkMissingInputError,
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    boxes: PrintedBoxes,
+) -> ModeloWorkMissingInputError:
+    """The refusal for ``missing`` naming the input the operator supplies and the doors that lead to it.
+
+    The words name the binding and the box it feeds when the form prints one.
+    The door is the declared binding listing for this modelo, year and period,
+    and the next step opens the work unit whose form takes the value.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
+    box = _carry_box(snapshot, boxes, missing.binding_id)
+    failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_PRIOR_CARRY_SUBJECT_LEAF_KEY,
+        scenario_id=_INPUT_REQUIRED_SCENARIO_ID,
+        evidence_id=f"{_INPUT_REQUIRED_SCENARIO_ID}.observation",
+        evidence_values={
+            "work_unit_id": work_unit.work_unit_id,
+            "modelo": str(work_unit.modelo),
+            "year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "binding_id": missing.binding_id,
+            "box": "" if box is None else box,
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        action_argument_values={
+            "modelo": str(work_unit.modelo),
+            "year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+        },
+    )
+    context: dict[str, object] = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+        "binding": missing.binding_id,
+    }
+    if box is not None:
+        context["boxes"] = box
+    return ModeloWorkMissingInputError(
+        missing,
+        binding_id=missing.binding_id,
+        translated_message=_INPUT_REQUIRED_MESSAGE_LOCALE_KEY
+        if box is not None
+        else _INPUT_REQUIRED_UNPRINTED_MESSAGE_LOCALE_KEY,
+        context=context,
+        precondition_verdict=failure.verdict,
+        next_step=open_work_step(work_unit),
+    )
+
+
 __all__ = [
     "ModeloPriorCarryAbsenceUnstatedError",
     "ModeloPriorPeriodUnfiledError",
     "ModeloWorkMissingInputError",
+    "input_required",
     "prior_carry_absence_unstated",
     "prior_period_unfiled",
 ]

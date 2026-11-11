@@ -247,6 +247,30 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.readiness.export_layout.unrenderable",
         action_id="operator.modelo.describe",
     ),
+    # An account page the export needs is written from an own account the
+    # register holds; adding one is the way to give the export what it asks for.
+    *(
+        _profile(
+            "modelo.export",
+            f"modelo.export.{role}_account.registered",
+            f"modelo.export.{role}_account.missing",
+            action_id="operator.ledger.account.add",
+        )
+        for role in ("charge", "refund")
+    ),
+    # A split in two instalments the export cannot write is a choice about the
+    # export that no catalogued action states.
+    _profile(
+        "modelo.export",
+        "modelo.export.instalment_election.admitted",
+        "modelo.export.instalment_election.refused",
+    ),
+    _profile(
+        "modelo.export",
+        "modelo.export.period.maps_to_filing_period",
+        "modelo.export.period.unmappable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     *(
         _profile(
             leaf,
@@ -423,6 +447,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.stated",
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
+    ),
+    # An input no source supplied is stated on the calculation itself; the
+    # binding listing names it and the work unit's form takes the value.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.binding_unanswered",
+        action_id="operator.modelo.bindings.list",
     ),
     # A carry from an earlier period of the same ejercicio is read from that
     # period's filed return; where that return stands names the work that
