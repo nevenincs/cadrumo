@@ -168,7 +168,12 @@ def memory_register_authority(
         admits_filing_year=_published_support().admits_filing_year,
         m130_amortization_casilla=_published_m130_box,
         m100_amortization_casillas=lambda _year: activity_asset_amortization_casillas(_published_modelo_100()),
-        last_admitted_year=lambda: last_admitted_year or _published_support().horizon,
+        projection_coordinate=lambda year: (
+            _published_support().projection_coordinate(year)
+            if last_admitted_year is None or not _published_support().admits_filing_year(year)
+            else min(year, last_admitted_year)
+        ),
+        clamp_filing_year=_published_support().clamp_coordinate,
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda _on: territory,
         claim_consumers=claim_consumers,

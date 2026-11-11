@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from cadrumo.application.actividad_asset.filing_box_names import box_name_for_kind, pinned_box_name
 from cadrumo.application.actividad_asset.operations import pinned_edition, pinned_m130_periods
-from cadrumo.application.actividad_asset.register_reads import WALK_YEARS_LIMIT, beyond_last_admitted_year
+from cadrumo.application.actividad_asset.register_reads import WALK_YEARS_LIMIT, is_projected_year
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.period import StandardPeriodCode
@@ -86,7 +86,7 @@ def render_fixture() -> str:
             stance = {
                 "tax_year": tax_year,
                 "admitted": support.admits_filing_year(tax_year),
-                "beyond_last_admitted": beyond_last_admitted_year(tax_year, support.horizon),
+                "beyond_last_admitted": is_projected_year(tax_year, support.projection_coordinate),
             }
             try:
                 resolved, _ = edition(tax_year)
