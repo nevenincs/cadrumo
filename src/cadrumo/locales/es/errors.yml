@@ -714,6 +714,19 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
+    integrity_modelo_export_field_unrenderable: 'No se ha escrito nada: el campo %{field_id}
+      (casilla %{casilla_id}) no se puede escribir a partir de su valor, porque el
+      diseño de registro oficial que lleva la aplicación y ese valor no concuerdan.
+      El defecto está en el diseño de exportación, no en tus datos, así que cambiar
+      tus datos no lo arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No se ha escrito nada:
+      el campo %{field_id} no se puede escribir a partir de su valor, porque el diseño
+      de registro oficial que lleva la aplicación y ese valor no concuerdan. El defecto
+      está en el diseño de exportación, no en tus datos, así que cambiar tus datos
+      no lo arregla.'
+    integrity_modelos_operator_layer: Los valores del operador guardados para este
+      cálculo se contradicen. La aplicación los escribió ella misma, así que el registro
+      se ha alterado o dañado y no se puede aplicar nada de él.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
@@ -776,6 +789,14 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
+      %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
+    operator_layer_value_attestation_not_canonical: La declaración de valor guardada
+      para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
     windows_credential_record: La credencial de Windows no cumple el formato requerido
@@ -1413,6 +1434,10 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo
+      %{field_id} contiene el carácter «%{character}» (%{code_point}), que el diseño
+      de registro de la AEAT no permite escribir. Quitarlo o sustituirlo declararía
+      otro dato. Corrige ese dato donde lo registraste y vuelve a exportar.'
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve

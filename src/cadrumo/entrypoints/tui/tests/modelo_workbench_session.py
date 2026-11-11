@@ -212,6 +212,8 @@ def workbench_read_ports(bucket_id: str, operation: PinnedAuthorityOperation) ->
         calculations=ports.calculation_repository,
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
+        observations=ports.observation_repository,
     )
 
 
@@ -235,6 +237,8 @@ def application_lifecycle_door(
             calculation_catalogue=ports.calculations.load(),
             operation=operation,
             operation_contracts=contracts,
+            observation_repository=ports.observations,
+            filing_catalogue=None if ports.filings is None else ports.filings.load(),
         )
 
     def preflight(submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:

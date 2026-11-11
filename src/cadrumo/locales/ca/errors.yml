@@ -720,6 +720,19 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
+    integrity_modelo_export_field_unrenderable: 'No s''ha escrit res: el camp %{field_id}
+      (casella %{casilla_id}) no es pot escriure a partir del seu valor, perquè el
+      disseny de registre oficial que porta l''aplicació i aquest valor no concorden.
+      El defecte és al disseny d''exportació, no a les teves dades, així que canviar
+      les teves dades no ho arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No s''ha escrit res: el
+      camp %{field_id} no es pot escriure a partir del seu valor, perquè el disseny
+      de registre oficial que porta l''aplicació i aquest valor no concorden. El defecte
+      és al disseny d''exportació, no a les teves dades, així que canviar les teves
+      dades no ho arregla.'
+    integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
+      càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
+      registre s'ha alterat o malmès i no se'n pot aplicar res.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
@@ -784,6 +797,14 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    operator_layer_attestation_kinds_conflict: El registre desat declara l'enllaç
+      %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
+      aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
+      el pot fer servir.
+    operator_layer_value_attestation_not_canonical: La declaració de valor desada
+      per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
+      va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el
+      càlcul no el pot fer servir.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
     windows_credential_record: La credencial de Windows no compleix el format requerit
@@ -1421,6 +1442,10 @@ errors:
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
       un registre %{export_record_id}, però aquesta declaració no en té cap, així
       que no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp
+      %{field_id} conté el caràcter «%{character}» (%{code_point}), que el disseny
+      de registre de l''AEAT no permet escriure. Treure''l o substituir-lo declararia
+      una altra dada. Corregeix aquesta dada on la vas registrar i torna a exportar.'
     refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import

@@ -148,3 +148,43 @@ def test_an_address_the_filer_cannot_type_on_or_a_value_that_cannot_be_read_is_r
     revisions = _invoke(("app", "modelo", "work", "revisions", work_unit_id))
     assert revisions.exit_code == 0, revisions.output
     assert require_schema_envelope(revisions.output)["revision_count"] == 0
+
+
+@pytest.mark.usefixtures("runtime_profile")
+def test_a_prior_figure_whose_earlier_return_is_held_nowhere_is_stated_and_recorded_as_stated() -> None:
+    work_unit_id = _create_130()
+
+    # Unconfirmed, the statement is read through the input's grammar and nothing is recorded.
+    shown = _invoke(("app", "modelo", "work", "attest-prior-value", work_unit_id, _PRIOR_NET_INCOME, "8,000.00"))
+    assert shown.exit_code == 0, shown.output
+    preview = require_schema_envelope(shown.output)
+    assert preview["applied"] is False
+    assert preview["intent"] == "attest_prior_value"
+    assert preview["binding_id"] == _PRIOR_NET_INCOME
+    assert preview["value_text"]
+    assert preview["receipt_id"] is None
+
+    stated = _invoke(
+        ("app", "modelo", "work", "attest-prior-value", work_unit_id, _PRIOR_NET_INCOME, "8,000.00", "--yes")
+    )
+    assert stated.exit_code == 0, stated.output
+    applied = require_schema_envelope(stated.output)
+    assert applied["applied"] is True
+    assert applied["receipt_id"]
+    revision = _revision(str(applied["calculation_revision_id"]))
+    assert Decimal(str(revision["binding_overrides"][_PRIOR_NET_INCOME])) == Decimal("8000.00")
+
+
+@pytest.mark.usefixtures("runtime_profile")
+def test_a_prior_figure_that_cannot_be_read_is_refused_with_words_before_anything_is_staged() -> None:
+    work_unit_id = _create_130()
+
+    unreadable = _invoke(
+        ("app", "modelo", "work", "attest-prior-value", work_unit_id, _PRIOR_NET_INCOME, "eight thousand", "--yes")
+    )
+    assert unreadable.exit_code == 2, unreadable.output
+    assert unreadable.output.strip()
+
+    revisions = _invoke(("app", "modelo", "work", "revisions", work_unit_id))
+    assert revisions.exit_code == 0, revisions.output
+    assert require_schema_envelope(revisions.output)["revision_count"] == 0

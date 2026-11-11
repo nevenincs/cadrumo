@@ -322,10 +322,11 @@ def test_revision_replay_inputs_reuse_the_callers_pinned_operation_for_relation_
         profile_arg: TaxpayerProfile,
         modelo_arg: str,
         *,
+        reference_date: date,
         operation: PinnedAuthorityOperation | None = None,
     ) -> object:
         observed_operations.append(operation)
-        return original(profile_arg, modelo_arg, operation=operation)
+        return original(profile_arg, modelo_arg, reference_date=reference_date, operation=operation)
 
     monkeypatch.setattr(revision_replay_inputs, "derive_modelo_applicability", _spy)
 
@@ -817,7 +818,11 @@ def test_populated_m190_2022_text_contact_fields_round_trip_through_the_fichero(
         parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources),
     )
 
-    assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == supplied
+    # The 190 design writes every alphanumeric field in upper case unless the field says otherwise,
+    # and the e-mail field does not, so the address comes back as the design writes it.
+    assert {_M190_2022_TEXT_CONTACT_FIELDS[field_id]: value for field_id, (_raw, value) in parsed.items()} == {
+        field_id: value.upper() for field_id, value in supplied.items()
+    }
 
 
 @pytest.mark.parametrize("missing_row", ("1", "2"))

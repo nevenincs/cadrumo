@@ -281,6 +281,11 @@ selector = {revision = "2019-2023", id = "implies-nonzero:base-declarada-cuando-
 fields = {expression = "implies_nonzero([\"03\", \"06\"])", predicate_id = "modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas"}
 
 [[revisions."2024-y-siguientes".family_overrides]]
+family = "verification_predicates"
+selector = {revision = "2019-2023", id = "implies-nonzero:base-total-implica-retenciones-total"}
+fields = {expression = "implies_nonzero([\"06\", \"09\"])", predicate_id = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"}
+
+[[revisions."2024-y-siguientes".family_overrides]]
 family = "workbook_parity_refs"
 selector = {revision = "2019-2023", id = "modelo-123-dr-xls"}
 fields = {fixture_id = "modelo-123-2024-record-design-layout", workbook_source = "aeat-dr-123-2024-v20"}

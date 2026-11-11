@@ -34,6 +34,15 @@ class ModeloValidationError(ModeloError):
     """Raised when a modelo code violates shape invariants."""
 
 
+class ModeloOperatorLayerIntegrityError(ModeloValidationError):
+    """Raised when a stored calculation operator layer contradicts the invariants its builder keeps.
+
+    The layer is written by Cadrumo itself, so a record that breaks them was
+    altered or damaged after it was stored; the operator has no entry that
+    repairs it.
+    """
+
+
 class ModeloExportError(ModeloError):
     """Base error for modelo-revision export failures (manifest, archive build)."""
 
@@ -144,6 +153,7 @@ __all__ = [
     "ModeloExportProducerFactsRefusedError",
     "ModeloExportRequiredRecordAbsentError",
     "ModeloExportValueOverflowError",
+    "ModeloOperatorLayerIntegrityError",
     "ModeloValidationError",
     "raise_catalogue_integrity_error",
 ]

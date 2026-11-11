@@ -18,6 +18,7 @@ import pytest
 
 from ...calculations.registry.applicability import derive_modelo_applicability
 from ...calculations.registry.applicability_models import ApplicabilityVerdict
+from ...calculations.registry.tests.authored_editions import latest_period_end
 from ..models import TaxpayerProfile
 from ..profiles import taxpayer_profile_from_mapping
 
@@ -73,7 +74,7 @@ def test_a_stated_payer_answer_projects_as_that_answer(answered: str) -> None:
 
 @pytest.mark.parametrize("modelo", ("111", "349"))
 def test_an_unanswered_payer_question_leaves_its_modelo_incomplete(modelo: str) -> None:
-    result = derive_modelo_applicability(_profile(), modelo)
+    result = derive_modelo_applicability(_profile(), modelo, reference_date=latest_period_end())
 
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
@@ -82,6 +83,6 @@ def test_an_unanswered_payer_question_leaves_its_modelo_incomplete(modelo: str) 
 def test_a_stated_no_to_every_payer_question_makes_its_modelo_not_applicable(modelo: str) -> None:
     profile = _profile(**dict.fromkeys(_PAYER_FACT_PATHS, "false"))
 
-    result = derive_modelo_applicability(profile, modelo)
+    result = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE

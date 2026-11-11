@@ -130,6 +130,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.cross_period_zero_value_previous_filing": (
             "application.modelo.work_form.finding_action.check_carried_zero"
         ),
+        "application.modelo.findings.cross_period_dependency_operator_attested": (
+            "application.modelo.work_form.finding_action.check_stated_figure"
+        ),
         "application.modelo.findings.withholding_detail_absent_attested": (
             "application.modelo.work_form.finding_action.review_attested_year"
         ),

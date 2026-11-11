@@ -662,6 +662,17 @@ errors:
       NIF, NIE or CIF.
     integrity_justificante_verification: The receipt verification with the AEAT could
       not be completed.
+    integrity_modelo_export_field_unrenderable: 'Nothing was written: field %{field_id}
+      (casilla %{casilla_id}) cannot be written from its value, because the official
+      record design the application carries and that value disagree. The defect is
+      in the export design, not in your data, so changing your data will not fix it.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'Nothing was written: field
+      %{field_id} cannot be written from its value, because the official record design
+      the application carries and that value disagree. The defect is in the export
+      design, not in your data, so changing your data will not fix it.'
+    integrity_modelos_operator_layer: The stored operator values for this calculation
+      contradict each other. The application wrote them itself, so the record was
+      altered or damaged and nothing can be applied from it.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or `etag`).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
@@ -719,6 +730,14 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
+    operator_layer_attestation_kinds_conflict: The stored record states binding %{binding_id}
+      both as having no amount and as having a stated amount. The application wrote
+      that record itself, so it was altered or damaged and the calculation cannot
+      use it.
+    operator_layer_value_attestation_not_canonical: The stored value statement for
+      binding %{binding_id} does not hold a canonical decimal amount. The application
+      wrote that record itself, so it was altered or damaged and the calculation cannot
+      use it.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
     windows_credential_record: The Windows credential record does not satisfy the
@@ -1311,6 +1330,10 @@ errors:
     refused_modelo_export_required_record_absent: The official design requires at
       least one %{export_record_id} record, but this return has none, so there is
       nothing to write in this format and nothing was written.
+    refused_modelo_export_unrepresentable_character: 'Nothing was written: field %{field_id}
+      holds the character «%{character}» (%{code_point}), which the AEAT record design
+      cannot write. Dropping or replacing it would declare something else. Correct
+      that value where you recorded it and export again.'
     refused_modelo_export_value_overflow: 'Nothing was written: a value does not fit
       field %{field_id}, which the AEAT record design gives %{field_length} positions.
       Cutting it would declare something else. Check that value or amount and export

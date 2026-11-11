@@ -86,7 +86,6 @@ if TYPE_CHECKING:
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.modelo import Modelo
-from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import (
     entity_type_natural_person_token,
     require_entity_type,
@@ -497,7 +496,7 @@ def derive_modelo_applicability(
     profile: TaxpayerProfile,
     modelo: str,
     *,
-    today: date | None = None,
+    reference_date: date,
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
     ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
@@ -516,10 +515,10 @@ def derive_modelo_applicability(
     Args:
         profile: The operator's three-axis taxpayer model.
         modelo: The AEAT modelo identifier to decide.
-        today: Reference date for the Beckham window check. Defaults to
-            the Europe/Madrid civil date (``today_madrid()``) when ``None`` —
-            the six-year window is a Spanish-calendar boundary. Pass an explicit
-            date in tests so results are deterministic.
+        reference_date: The last day of the tax period the applicability is
+            decided for. The impatriado six-year window runs over tax
+            periods, so it is checked against the period of the return, never
+            the clock.
         authority: Already-resolved validated authority to reuse. Omitting it
             preserves the standalone fingerprint-bounded bundled-tree lookup.
         operation: Already-pinned indexed operation to reuse for point-loaded
@@ -536,8 +535,7 @@ def derive_modelo_applicability(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    _today = today if today is not None else today_madrid()
-    beckham_window_active = profile.beckham_window_active(_today)
+    beckham_window_active = profile.beckham_window_active(reference_date)
 
     # The Art. 93 impatriado route is a modelo-level switch while the
     # six-year Beckham window is active: the annual declaration is Modelo

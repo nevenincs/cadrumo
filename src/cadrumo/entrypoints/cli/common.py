@@ -35,7 +35,13 @@ from ...core.cli_metadata import is_metadata_invocation
 from ...core.cli_value_parsers import CliChoice, refuse_cli_value
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
+from ...core.json_contract import (
+    Notice,
+    NoticeSeverity,
+    ResolvedActionArgument,
+    ResolvedActionReference,
+    ResolvedPreconditionAction,
+)
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.terminal_encoding import encode_terminal_text
@@ -453,21 +459,31 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
             canonical_cli_path=(target.program.executable_name, *target.cli_path),
         )
 
+    def with_executable(action: ResolvedActionReference) -> ResolvedActionReference:
+        target = next(row for row in ACTION_TARGETS if row.command_key == action.target_command_key)
+        if target.program is CommandProgram.AEAT:
+            from .command_specs import COMMAND_GRAPH
+
+            executable = COMMAND_GRAPH.root().token
+        else:
+            executable = target.program.executable_name
+        cli_path = action.cli_path
+        if cli_path is None:
+            raise LookupError(f"resolved CLI action has no command path: {action.target_command_key}")
+        return action.model_copy(update={"cli_path": (executable, *cli_path)})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
     if resolved.action is None:
         return resolved
-    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
-    if target.program is CommandProgram.AEAT:
-        from .command_specs import COMMAND_GRAPH
-
-        executable = COMMAND_GRAPH.root().token
-    else:
-        executable = target.program.executable_name
-    cli_path = resolved.action.cli_path
-    if cli_path is None:
-        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
-    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
-    return resolved.model_copy(update={"action": action})
+    return resolved.model_copy(
+        update={
+            "action": with_executable(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_executable(item.action)})
+                for item in resolved.alternative_actions
+            ),
+        }
+    )
 
 
 def attach_cli_policy_verdict[ExceptionT: Exception](

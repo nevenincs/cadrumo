@@ -14,16 +14,22 @@ from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ..operator_actions.catalogue import lookup_action
-from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import (
+    ActionReference,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 from ..operator_surface.models import ManifestActionProfile
+from .precondition_action_bindings import (
+    AlternativeActionArguments,
+    action_argument_bindings,
+    alternative_recovery_actions,
+    recovery_conditionality,
+)
 
 
 class ModeloPreconditionFailure(BaseModel):
@@ -50,6 +56,8 @@ class ModeloPreconditionFailure(BaseModel):
             raise ValueError("modelo precondition failure action contradicts its declaration")
         if profile.no_recovery_outcome != self.verdict.no_recovery_outcome:
             raise ValueError("modelo precondition failure no-recovery outcome contradicts its declaration")
+        if profile.alternative_actions != tuple(item.action for item in self.verdict.alternative_actions):
+            raise ValueError("modelo precondition failure alternative actions contradict its declaration")
         return self
 
 
@@ -60,6 +68,7 @@ def _profile(
     *,
     action_id: str | None = None,
     no_recovery_outcome: NoRecoveryOutcome = NoRecoveryOutcome.OPERATOR_DECISION,
+    alternative_action_ids: tuple[str, ...] = (),
 ) -> ManifestActionProfile:
     return ManifestActionProfile(
         subject_leaf_key=subject_leaf_key,
@@ -67,6 +76,7 @@ def _profile(
         scenario_id=scenario_id,
         action=ActionReference(action_id=action_id) if action_id is not None else None,
         no_recovery_outcome=(None if action_id is not None else no_recovery_outcome),
+        alternative_actions=tuple(ActionReference(action_id=item) for item in alternative_action_ids),
     )
 
 
@@ -183,19 +193,56 @@ _SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
 )
 
 
+ATTEST_PRIOR_VALUE_ACTION_ID: Final[str] = "operator.modelo.work.attest_prior_value"
+"""The catalogue action by which the filer states the figure a declaration reads from an earlier return."""
+
+# An absent earlier return whose figure the filer may state: its own door first, then the statement.
+_ATTESTABLE_SOURCE_DOORS: tuple[tuple[str, str], ...] = (
+    ("source_absent_attestable", "operator.modelo.work.create"),
+    ("filed_evidence_missing_attestable", "operator.live.filed.pull"),
+)
+
+
+def _attest_prior_value_profile(subject_leaf_key: str) -> ManifestActionProfile:
+    """A source no return can ever prove here: the filer states the figure the declaration reads from it."""
+    return _profile(
+        subject_leaf_key,
+        f"{subject_leaf_key}.cross_period_dependency.clean",
+        f"{subject_leaf_key}.cross_period_dependency.attest_prior_value",
+        action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+    )
+
+
 def _cross_period_door_profiles(subject_leaf_key: str) -> tuple[ManifestActionProfile, ...]:
-    """An unclean source routed by its first blocker: its own work, or its capture once filed."""
-    return tuple(
-        _profile(
-            subject_leaf_key,
-            f"{subject_leaf_key}.cross_period_dependency.clean",
-            f"{subject_leaf_key}.cross_period_dependency.{scenario}",
-            action_id=action_id,
-        )
-        for scenario, action_id in (
-            *_SOURCE_STANDING_DOORS,
-            ("filed_evidence_missing", "operator.live.filed.pull"),
-        )
+    """An unclean source routed by its first blocker: its own work, its capture once filed, or the filer's statement.
+
+    An absent earlier return whose figure the filer may state keeps its create
+    or capture door first and offers the statement after it.
+    """
+    return (
+        *(
+            _profile(
+                subject_leaf_key,
+                f"{subject_leaf_key}.cross_period_dependency.clean",
+                f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+                action_id=action_id,
+            )
+            for scenario, action_id in (
+                *_SOURCE_STANDING_DOORS,
+                ("filed_evidence_missing", "operator.live.filed.pull"),
+            )
+        ),
+        *(
+            _profile(
+                subject_leaf_key,
+                f"{subject_leaf_key}.cross_period_dependency.clean",
+                f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+                action_id=action_id,
+                alternative_action_ids=(ATTEST_PRIOR_VALUE_ACTION_ID,),
+            )
+            for scenario, action_id in _ATTESTABLE_SOURCE_DOORS
+        ),
+        _attest_prior_value_profile(subject_leaf_key),
     )
 
 
@@ -264,6 +311,22 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export",
         "modelo.export.instalment_election.admitted",
         "modelo.export.instalment_election.refused",
+    ),
+    # The character sits in a name the operator recorded on a profile fact, a
+    # ledger entry or an invoice; the layout field does not say which, so no
+    # single catalogued edit action reaches it.
+    _profile(
+        "modelo.export",
+        "modelo.export.text_value.writable",
+        "modelo.export.text_value.unrepresentable_character",
+    ),
+    # The official record design and the value disagree; the fault is in the
+    # design the application carries, so no filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.field.renderable",
+        "modelo.export.field.unrenderable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     _profile(
         "modelo.export",
@@ -889,6 +952,17 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     *_cross_period_door_profiles("modelo.work.verify"),
     _profile(
+        "modelo.export",
+        "modelo.export.cross_period_dependency.clean",
+        "modelo.export.cross_period_dependency.unclean",
+    ),
+    *_cross_period_door_profiles("modelo.export"),
+    _profile(
+        "modelo.export",
+        "modelo.export.activity_start_date.present",
+        "modelo.export.activity_start_date.missing_for_first_filer_adjudication",
+    ),
+    _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",
         "modelo.work.verify.activity_start_date.missing_for_first_filer_adjudication",
@@ -967,44 +1041,6 @@ if len(MODELO_PRECONDITION_PROFILE_REGISTRY) != len(MODELO_PRECONDITION_PROFILES
     raise ValueError("modelo precondition profile identities must be unique")
 
 
-def _action_argument_bindings(
-    declared_action_id: str | None,
-    action_argument_values: Mapping[str, str | int | bool | Decimal] | None,
-    missing_action_arguments: tuple[str, ...],
-) -> tuple[ActionArgumentBinding, ...]:
-    """Bind resolved and missing arguments, requiring exact coverage of the catalogue declaration."""
-    if declared_action_id is None:
-        if missing_action_arguments:
-            raise ValueError("modelo precondition failure without an action cannot name missing arguments")
-        return ()
-    declaration = lookup_action(declared_action_id)
-    values = action_argument_values or {}
-    missing = set(missing_action_arguments)
-    declared_names = {item.argument_name for item in declaration.argument_specifications}
-    if (
-        len(missing) != len(missing_action_arguments)
-        or missing & set(values)
-        or set(values) | missing != declared_names
-    ):
-        raise ValueError("modelo action argument values must exactly match the catalogue declaration")
-    return (
-        *(
-            ActionArgumentBinding(
-                argument_name=name,
-                status=ActionArgumentStatus.RESOLVED,
-                value=value,
-                source=ActionArgumentSource.VERDICT_CONTEXT,
-                source_key=name,
-            )
-            for name, value in values.items()
-        ),
-        *(
-            ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
-            for name in missing_action_arguments
-        ),
-    )
-
-
 def build_modelo_precondition_failure(
     *,
     subject_leaf_key: str,
@@ -1016,13 +1052,16 @@ def build_modelo_precondition_failure(
     action_id: str | None = None,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
     missing_action_arguments: tuple[str, ...] = (),
+    alternative_actions: tuple[AlternativeActionArguments, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Build one declared verdict and fail closed on catalogue disagreement.
 
     ``missing_action_arguments`` names the declared arguments only the operator
     can supply, such as an answer the refused request did not carry; together
     with the resolved ``action_argument_values`` they must cover the catalogue
-    declaration exactly.
+    declaration exactly. ``alternative_actions`` supplies the same for each
+    alternative the scenario declares, in its declared order; an undeclared,
+    missing or reordered alternative is refused.
     """
     identity = (subject_leaf_key, condition_id, scenario_id)
     profile = MODELO_PRECONDITION_PROFILE_REGISTRY.get(identity)
@@ -1037,21 +1076,16 @@ def build_modelo_precondition_failure(
         provenance=provenance,
         values=evidence_values,
     )
-    bindings = _action_argument_bindings(declared_action_id, action_argument_values, missing_action_arguments)
-    if declared_action_id is None:
-        conditionality = ActionConditionality.NOT_APPLICABLE
-    elif missing_action_arguments:
-        conditionality = ActionConditionality.REQUIRES_ARGUMENTS
-    else:
-        conditionality = ActionConditionality.IMMEDIATE
+    bindings = action_argument_bindings(declared_action_id, action_argument_values, missing_action_arguments)
     verdict = PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(evidence,),
         action=profile.action,
         argument_bindings=bindings,
         missing_argument_names=missing_action_arguments,
-        conditionality=conditionality,
+        conditionality=recovery_conditionality(declared_action_id, missing_action_arguments),
         no_recovery_outcome=profile.no_recovery_outcome,
+        alternative_actions=alternative_recovery_actions(profile, alternative_actions),
     )
     return ModeloPreconditionFailure(
         subject_leaf_key=subject_leaf_key,
@@ -1069,6 +1103,7 @@ def build_modelo_precondition_failure_for_scenario(
     provenance: ActionEvidenceProvenance,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
     missing_action_arguments: tuple[str, ...] = (),
+    alternative_actions: tuple[AlternativeActionArguments, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Build a failure from its declared leaf/scenario profile without re-declaring its condition."""
     profiles = tuple(
@@ -1089,6 +1124,7 @@ def build_modelo_precondition_failure_for_scenario(
         action_id=None if profile.action is None else profile.action.action_id,
         action_argument_values=action_argument_values,
         missing_action_arguments=missing_action_arguments,
+        alternative_actions=alternative_actions,
     )
 
 
@@ -1144,6 +1180,7 @@ def build_modelo_work_file_unverified_revision_failure(
 
 
 __all__ = [
+    "ATTEST_PRIOR_VALUE_ACTION_ID",
     "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
     "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
     "IVA_WALLET_OVERRIDE_ACTION_ID",

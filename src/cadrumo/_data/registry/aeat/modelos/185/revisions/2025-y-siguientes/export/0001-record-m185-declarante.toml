@@ -6,6 +6,8 @@ id = "m185-declarante"
 record_type = "declarante"
 order = 0
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-185-2026"
 line_ending = "crlf"
 required = true
 

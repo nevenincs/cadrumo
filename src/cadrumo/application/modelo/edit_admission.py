@@ -31,13 +31,17 @@ from ...core.time.clock import now as clock_now
 from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
+from ..calculations.cross_period_clean_state import attestable_carry_binding_ids
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..operations.registry import OperationPublicContractSetV1
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .edit_contract import EditModel, ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
@@ -192,6 +196,7 @@ def permitted_binding_entry(
     revision: ModeloRevision,
     period: str,
     row_filled: frozenset[str],
+    attestable_binding_ids: frozenset[str] = frozenset(),
 ) -> ModeloEditPermittedSurfaceEntryV1:
     """Classify one binding's override by its source's grounded override policy.
 
@@ -207,6 +212,13 @@ def permitted_binding_entry(
     :func:`~.row_filled_bindings.row_filled_binding_ids`) stands for a column
     of lines, and one the calculation does not read for ``period`` changes
     nothing the declaration shows.
+
+    ``attestable_binding_ids`` names the scalar previous-filing and
+    relation-prefill bindings the application holds no source for
+    (:func:`~cadrumo.application.calculations.cross_period_clean_state.attestable_carry_binding_ids`).
+    Only a carry override among them takes a stated figure
+    (``ATTEST_PRIOR_VALUE``); where a source exists the dependency follows it,
+    so a figure stated over it is refused here and never reads as proof.
 
     ``revision`` is the :class:`ModeloRevision`, the registry revision a modelo is calculated against.
     """
@@ -235,19 +247,25 @@ def permitted_binding_entry(
     # Only a carry the registry declares a statement of absence for can be
     # stated to hold nothing; on any other binding the statement would assert a figure.
     attestable = binding.absence_attestation is not None
+    value_attestable = source in CALLER_OVERRIDABLE_CARRY_SOURCES and binding.id in attestable_binding_ids
     return ModeloEditWritableBindingOverrideSurfaceEntryV1(
         binding_id=binding.id,
         allowed_intents=(
             ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
             ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
             *((ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT,) if attestable else ()),
+            *((ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,) if value_attestable else ()),
         ),
         grammar=grammar,
     )
 
 
 def _permitted_surface(
-    snapshot: RegistrySnapshot, *, period: str, layout: FormLayoutDefinition | None
+    snapshot: RegistrySnapshot,
+    *,
+    period: str,
+    layout: FormLayoutDefinition | None,
+    attestable_binding_ids: frozenset[str],
 ) -> tuple[ModeloEditPermittedSurfaceEntryV1, ...]:
     """Classify every casilla and binding of the revision as writable or read-only with its reason."""
     revision = snapshot.revision
@@ -257,7 +275,13 @@ def _permitted_surface(
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
     entries.extend(
-        permitted_binding_entry(binding, revision=revision, period=period, row_filled=row_filled)
+        permitted_binding_entry(
+            binding,
+            revision=revision,
+            period=period,
+            row_filled=row_filled,
+            attestable_binding_ids=attestable_binding_ids,
+        )
         for binding in revision.bindings
     )
 
@@ -316,6 +340,36 @@ def _current_edit_calculation_head(
     return head
 
 
+def _active_work_unit(work_unit_id: str, work_catalogue: WorkUnitCatalogue) -> WorkUnit | ModeloEditRefusedV1:
+    """Resolve the work unit afresh, refusing an absent or discarded one."""
+    work_unit = work_catalogue.get(work_unit_id)
+    if work_unit is None:
+        return _refused(ModeloEditRefusalCode.TARGET_ABSENT, "select an existing work unit", "work_unit_absent")
+    if work_unit.state is WorkUnitState.DESCARTADO:
+        return _refused(ModeloEditRefusalCode.ADMISSION_DENIED, "select an active work unit", "work_unit_discarded")
+    return work_unit
+
+
+def _offered_attestable_binding_ids(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol | None,
+    filing_catalogue: ModeloRecordCatalogue | None,
+    work_catalogue: WorkUnitCatalogue,
+) -> frozenset[BindingId]:
+    """The carry bindings a stated figure may be offered for; none without the sources that show the gap."""
+    if observation_repository is None or filing_catalogue is None:
+        return frozenset[BindingId]()
+    return attestable_carry_binding_ids(
+        snapshot,
+        operation=operation,
+        observation_repository=observation_repository,
+        filing_catalogue=filing_catalogue,
+        work_catalogue=work_catalogue,
+    )
+
+
 def admit_modelo_edit_baseline(
     *,
     work_unit_id: str,
@@ -324,6 +378,8 @@ def admit_modelo_edit_baseline(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1,
     issued_at: datetime | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
 ) -> ModeloEditAdmissionResultV1:
     """Produce a five-minute, value-free edit baseline from live authoritative state.
 
@@ -334,12 +390,14 @@ def admit_modelo_edit_baseline(
     unit's own record and its current calculation head, so work on any other
     declaration of the profile does not stale this baseline. Every
     precondition failure is a typed refusal, never an exception.
+
+    A stated figure (``ATTEST_PRIOR_VALUE``) is offered only when the caller
+    supplies the ``observation_repository`` and ``filing_catalogue`` that show
+    the application holds no source for the carry; without them none is offered.
     """
-    work_unit = work_catalogue.get(work_unit_id)
-    if work_unit is None:
-        return _refused(ModeloEditRefusalCode.TARGET_ABSENT, "select an existing work unit", "work_unit_absent")
-    if work_unit.state is WorkUnitState.DESCARTADO:
-        return _refused(ModeloEditRefusalCode.ADMISSION_DENIED, "select an active work unit", "work_unit_discarded")
+    work_unit = _active_work_unit(work_unit_id, work_catalogue)
+    if isinstance(work_unit, ModeloEditRefusedV1):
+        return work_unit
     current_revision_id = work_unit.current_calculation_revision_id
     head = _current_edit_calculation_head(work_unit, calculation_catalogue, current_revision_id)
     if isinstance(head, ModeloEditRefusedV1):
@@ -361,6 +419,13 @@ def admit_modelo_edit_baseline(
         snapshot,
         period=work_unit.period.registry_token,
         layout=operation.form_layout(str(work_unit.modelo), snapshot.revision.id),
+        attestable_binding_ids=_offered_attestable_binding_ids(
+            snapshot,
+            operation=operation,
+            observation_repository=observation_repository,
+            filing_catalogue=filing_catalogue,
+            work_catalogue=work_catalogue,
+        ),
     )
     if len(surface) > MAX_MODELO_EDIT_SURFACE_ENTRIES:
         return _refused(
@@ -460,6 +525,8 @@ def renew_modelo_edit_baseline(
     operation: PinnedAuthorityOperation,
     operation_contracts: OperationPublicContractSetV1,
     issued_at: datetime | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol | None = None,
+    filing_catalogue: ModeloRecordCatalogue | None = None,
 ) -> ModeloEditRenewalResultV1:
     """Re-admit ``baseline`` and adopt the result only when nothing but its lifetime changed.
 
@@ -477,6 +544,8 @@ def renew_modelo_edit_baseline(
         operation=operation,
         operation_contracts=operation_contracts,
         issued_at=issued_at,
+        observation_repository=observation_repository,
+        filing_catalogue=filing_catalogue,
     )
     if isinstance(admission, ModeloEditRefusedV1):
         return admission

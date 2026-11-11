@@ -6,9 +6,14 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.errors import FixedWidthValueOverflowError, RegistryValidationError
+from ...domain.calculations.registry.errors import (
+    FixedWidthUnrepresentableCharacterError,
+    FixedWidthValueOverflowError,
+    RegistryValidationError,
+)
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -19,10 +24,17 @@ from ...domain.calculations.registry.fixed_width_codec import (
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError, FilingExportValueOverflowError
+from ...domain.filing.errors import (
+    FilingExportError,
+    FilingExportFieldUnrenderableError,
+    FilingExportUnrepresentableCharacterError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
+from .errors import FilingPreconditionCondition, filing_no_recovery_verdict
 from .m190_context_validation import require_m190_signed_reintegro_context
 from .m193_context_validation import require_m193_perceptor_devengo_context
 from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
@@ -94,6 +106,7 @@ def _render_unpositioned_record(
     return "".join(
         _render_field(
             field,
+            record=record,
             draft=draft,
             headers=producer_values,
             producer_snapshot=producer_snapshot,
@@ -185,6 +198,7 @@ def _render_positioned_field_bytes(
         raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
     rendered = _render_positioned_field(
         field,
+        record=record,
         draft=draft,
         producer_values=producer_values,
         producer_snapshot=producer_snapshot,
@@ -208,6 +222,7 @@ def _render_positioned_field_bytes(
 def _render_positioned_field(
     field: ExportFieldDefinition,
     *,
+    record: ExportRecordDefinition,
     draft: ModeloDraft,
     producer_values: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -221,6 +236,7 @@ def _render_positioned_field(
         raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
     return _render_field(
         field,
+        record=record,
         draft=draft,
         headers=producer_values,
         producer_snapshot=producer_snapshot,
@@ -243,6 +259,7 @@ def _field_is_active_for_row(field: ExportFieldDefinition, row: RecordRenderRow)
 def _render_field(
     field: ExportFieldDefinition,
     *,
+    record: ExportRecordDefinition,
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -268,7 +285,7 @@ def _render_field(
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)):
         # The block carries no occurrence; _casilla_field_value refused any stray campo.
         return render_empty_block_slot(field)
-    return format_field(field, raw)
+    return format_field(field, raw, record=record)
 
 
 def _scheme_period_field_value(
@@ -570,13 +587,28 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
 
 
-def format_field(field: ExportFieldDefinition, value: object) -> str:
+def format_field(field: ExportFieldDefinition, value: object, *, record: ExportRecordDefinition | None = None) -> str:
     """Render one value through the field's fixed-width codec, as a filing export refusal on failure.
 
-    A value wider than its slot is refused as that slot's overflow, never cut to fit.
+    Every record render passes ``record``, whose text rule and encoding govern
+    a text value; a slot checked on its own omits it. A value wider than
+    its slot is refused as that slot's overflow, never cut to fit, and a
+    character the record cannot write is refused by name, never dropped.
     """
     try:
-        return render_fixed_width_export_field(field, value)
+        return render_fixed_width_export_field(field, value, record=record)
+    except FixedWidthUnrepresentableCharacterError as exc:
+        raise FilingExportUnrepresentableCharacterError(
+            field_id=field.id,
+            first_position=field.offset,
+            field_length=field.length,
+            character=exc.character,
+            rendered=exc.rendered,
+            precondition_verdict=filing_no_recovery_verdict(
+                FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+                facts={"error_type": "FilingExportUnrepresentableCharacterError", "field_id": field.id},
+            ),
+        ) from exc
     except FixedWidthValueOverflowError as exc:
         raise FilingExportValueOverflowError(
             field_id=field.id,
@@ -586,7 +618,17 @@ def format_field(field: ExportFieldDefinition, value: object) -> str:
             data_type=field.data_type.value,
         ) from exc
     except RegistryValidationError as exc:
-        raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
+        raise FilingExportFieldUnrenderableError(
+            field_id=field.id,
+            casilla_id=field.casilla_id,
+            data_type=field.data_type.value,
+            reason=str(exc),
+            precondition_verdict=filing_no_recovery_verdict(
+                FilingPreconditionCondition.OPERATION_ADMISSIBLE,
+                facts={"error_type": "FilingExportFieldUnrenderableError", "field_id": field.id},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            ),
+        ) from exc
 
 
 __all__ = [

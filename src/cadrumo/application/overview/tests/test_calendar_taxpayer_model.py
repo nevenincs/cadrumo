@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
@@ -300,16 +301,18 @@ def test_calendar_excludes_non_applicable_modelos(
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
-    assert derive_modelo_applicability(profile, "130").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
+    assert derive_modelo_applicability(profile, "130", reference_date=latest_period_end()).verdict is (
+        ApplicabilityVerdict.NOT_APPLICABLE
+    )
     # ...and therefore absent from the calendar.
     assert "130" not in calendar_modelos
     # Modelo 131 is the objetiva pago fraccionado — it must be present.
     assert "131" in calendar_modelos
     # Every surfaced row is a positively APPLICABLE seed-ruled modelo.
     for entry in cal.entries:
-        assert derive_modelo_applicability(profile, entry.modelo).verdict is (ApplicabilityVerdict.APPLICABLE), (
-            entry.modelo
-        )
+        assert derive_modelo_applicability(profile, entry.modelo, reference_date=latest_period_end()).verdict is (
+            ApplicabilityVerdict.APPLICABLE
+        ), entry.modelo
 
 
 def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:

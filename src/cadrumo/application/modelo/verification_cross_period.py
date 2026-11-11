@@ -10,10 +10,10 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple
 
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 
@@ -50,13 +50,17 @@ from ..calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
+    CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
+    OperatorAttestedValue,
 )
 from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloCrossPeriodCleanStateError
+from .precondition_action_bindings import AlternativeActionArguments
 from .preconditions import (
+    ATTEST_PRIOR_VALUE_ACTION_ID,
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
     build_modelo_precondition_failure_for_scenario,
@@ -122,6 +126,8 @@ def cross_period_clean_state_verdict_for_work_unit(
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the registry-declared cross-period dependencies of one work unit.
@@ -157,6 +163,8 @@ def cross_period_clean_state_verdict_for_work_unit(
                 workflow_profile=workflow_profile,
                 zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
                 m111_no_retenciones_periods=m111_no_retenciones_periods,
+                operator_value_attestations=operator_value_attestations,
+                work_unit_repository=work_unit_repository,
                 operation=indexed_operation,
             )
     try:
@@ -200,6 +208,14 @@ def cross_period_clean_state_verdict_for_work_unit(
         not_applicable_source_modelos=not_applicable_source_modelos,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        operator_value_attestations=operator_value_attestations,
+        work_catalogue=(
+            work_unit_repository.load()
+            if operator_value_attestations is not None
+            and len(operator_value_attestations) > 0
+            and work_unit_repository is not None
+            else None
+        ),
     )
 
 
@@ -225,7 +241,12 @@ def _not_applicable_conditional_source_modelos(
     not_applicable: set[str] = set()
     for modelo in candidates:
         try:
-            applicability = derive_modelo_applicability(profile, modelo, operation=operation)
+            applicability = derive_modelo_applicability(
+                profile,
+                modelo,
+                reference_date=date(snapshot.filing_year, 12, 31),
+                operation=operation,
+            )
         except (TypeError, ValueError, RegistryValidationError):
             return None
         if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
@@ -255,6 +276,30 @@ def zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -
         if value == 0:
             resolved.add(binding_id)
     return frozenset(resolved)
+
+
+def operator_value_attestations(target: CalculationRevision | None) -> dict[str, OperatorAttestedValue]:
+    """Return the figures the operator stated for earlier filings the product cannot hold.
+
+    Only the target's operator layer is read: a value attestation is the
+    operator's own statement, so a value a source tier merged into the
+    revision's replay map can never stand for one. A revision with no layer, or
+    a layer that attests nothing, yields none.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
+    layer = None if target is None else target.operator_layer
+    if layer is None:
+        return {}
+    return {
+        binding_id: OperatorAttestedValue(
+            binding_id=binding_id,
+            value=layer.binding_overrides[binding_id],
+            sources=attestation.sources,
+        )
+        for binding_id, attestation in layer.value_attestations.items()
+    }
 
 
 #: Evidence-missing blockers a genuine first filer hits on a pre-activity
@@ -388,25 +433,47 @@ def _cross_period_evidence_findings(
         iva_compensation_decision,
     ):
         blocks_first_filer = bool(set(evidence.blockers) & _FIRST_FILER_CANDIDATE_BLOCKERS)
-        requirement = evidence.requirement
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
-            message_facts={
-                "source_modelo": requirement.source_modelo,
-                "source_filing_year": requirement.filing_year,
-                "source_period": requirement.period.registry_token,
-                "origin_code": requirement.origin.value,
-                "origin_ids": _join_cross_period_ids(requirement.origin_ids),
-                "blocker_codes": _join_cross_period_ids(blocker.value for blocker in evidence.blockers),
-            },
-            legal_refs=_cross_period_requirement_legal_refs(requirement),
-            source_refs=_cross_period_requirement_source_refs(requirement),
-        )
+        finding = _cross_period_unclean_finding(evidence)
         findings.append(finding)
         if blocking_finding_observer is not None:
             blocking_finding_observer(finding, evidence)
+    if evidence.operator_attestation_conflict:
+        finding = _cross_period_attestation_conflict_finding(verdict, evidence)
+        findings.append(finding)
+        if blocking_finding_observer is not None:
+            blocking_finding_observer(finding, evidence)
+    findings.extend(_cross_period_evidence_advisories(verdict, evidence))
+    return tuple(findings), blocks_first_filer
+
+
+def _cross_period_unclean_finding(evidence: CrossPeriodDependencyEvidence) -> ModeloVerificationFinding:
+    requirement = evidence.requirement
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key=(
+            "application.modelo.findings.cross_period_dependency_unclean_attestable"
+            if evidence.attestation_admitted
+            else "application.modelo.findings.cross_period_dependency_unclean"
+        ),
+        message_facts={
+            "source_modelo": requirement.source_modelo,
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement.period.registry_token,
+            "origin_code": requirement.origin.value,
+            "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+            "blocker_codes": _join_cross_period_ids(blocker.value for blocker in evidence.blockers),
+        },
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
+    )
+
+
+def _cross_period_evidence_advisories(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> tuple[ModeloVerificationFinding, ...]:
+    findings: list[ModeloVerificationFinding] = []
     if evidence.operator_declared_suppression_advisory:
         findings.append(_cross_period_operator_declared_suppression_advisory_finding(evidence))
     if evidence.non_official_local_chain_advisory:
@@ -421,7 +488,9 @@ def _cross_period_evidence_findings(
         findings.append(
             _cross_period_target_advisory_finding(verdict, evidence, advisory="m111_no_retenciones"),
         )
-    return tuple(findings), blocks_first_filer
+    if evidence.operator_attested_absent_upstream_advisory:
+        findings.append(_cross_period_operator_attested_advisory_finding(verdict, evidence))
+    return tuple(findings)
 
 
 def _declared_activity_start(evidence: CrossPeriodDependencyEvidence) -> str:
@@ -504,6 +573,58 @@ def _cross_period_target_advisory_finding(
         message_facts=facts,
         legal_refs=_merged_legal_refs(_M111_NO_RETENCIONES_LEGAL_REFS, requirement),
         source_refs=source_refs,
+    )
+
+
+def _cross_period_attestation_conflict_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """Block on a stated figure that the source now held here contradicts; the source decides."""
+    requirement = evidence.requirement
+    stated = evidence.operator_attestation_conflict
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.cross_period_dependency_attestation_conflict",
+        message_facts={
+            "source_modelo": requirement.source_modelo,
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement.period.registry_token,
+            "binding_id": _join_cross_period_ids(item.binding_id for item in stated),
+            "value": "|".join(item.value for item in stated),
+            "target_modelo": verdict.target_modelo,
+            "target_filing_year": verdict.target_filing_year,
+            "target_period": verdict.target_period.registry_token,
+        },
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
+    )
+
+
+def _cross_period_operator_attested_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """Disclose a dependency admitted on the operator's stated figure for a year the product cannot hold."""
+    requirement = evidence.requirement
+    attested = evidence.operator_attested_absent_upstream
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.cross_period_dependency_operator_attested",
+        message_facts={
+            "source_modelo": requirement.source_modelo,
+            "source_filing_year": requirement.filing_year,
+            "source_period": requirement.period.registry_token,
+            "binding_id": _join_cross_period_ids(item.binding_id for item in attested),
+            "value": "|".join(item.value for item in attested),
+            "target_modelo": verdict.target_modelo,
+            "target_filing_year": verdict.target_filing_year,
+            "target_period": verdict.target_period.registry_token,
+        },
+        legal_refs=_cross_period_requirement_legal_refs(requirement),
+        source_refs=_cross_period_requirement_source_refs(requirement),
     )
 
 
@@ -624,10 +745,30 @@ _FILED_CAPTURE_BLOCKERS: Final[frozenset[CrossPeriodCleanStateBlocker]] = frozen
 """Blockers of a filed source that only its capture from the AEAT settles: its values or its official evidence."""
 
 _UNROUTED_SCENARIO: Final[str] = "unclean"
+_ATTEST_PRIOR_VALUE_SCENARIO: Final[str] = "attest_prior_value"
 _FILED_CAPTURE_SCENARIO: Final[str] = "filed_evidence_missing"
+_SOURCE_ABSENT_SCENARIO: Final[str] = "source_absent"
+_ATTESTABLE_SUFFIX: Final[str] = "_attestable"
+_ATTESTABLE_DOOR_SCENARIOS: Final[frozenset[str]] = frozenset({_SOURCE_ABSENT_SCENARIO, _FILED_CAPTURE_SCENARIO})
+"""Doors of an absent earlier return beside which the filer's statement of its figure is offered when admitted."""
 
-type CrossPeriodDoor = tuple[str, dict[str, str | int] | None]
-"""The ``cross_period_dependency`` scenario suffix and the facts its action binds, ``None`` when door-less."""
+
+class CrossPeriodDoor(NamedTuple):
+    """The ``cross_period_dependency`` scenario suffix, the facts its action binds, and the doors offered after it.
+
+    ``action_argument_values`` is ``None`` when the scenario is door-less.
+    ``alternative_actions`` lists, in order, the further actions the scenario
+    declares beside its primary one, each with the facts it binds.
+    """
+
+    scenario: str
+    action_argument_values: dict[str, str | int] | None
+    alternative_actions: tuple[AlternativeActionArguments, ...] = ()
+
+
+def cross_period_door_operator_arguments(scenario: str) -> tuple[str, ...]:
+    """The arguments of a door's action only the operator supplies: the figure a statement states."""
+    return ("value",) if scenario == _ATTEST_PRIOR_VALUE_SCENARIO else ()
 
 
 def cross_period_door(
@@ -637,6 +778,7 @@ def cross_period_door(
     work_catalogue: WorkUnitCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     operation: PinnedAuthorityOperation,
+    target: WorkUnit | None = None,
 ) -> CrossPeriodDoor:
     """The door the first blocker of an unclean source names.
 
@@ -648,10 +790,67 @@ def cross_period_door(
     source whose value only the filer stated, unless its declaration is held
     here. A member fan-in source, or any other blocker, names no command, as
     none settles it.
+
+    A previous-filing source whose year the support envelope refuses cannot be
+    created, filed or captured here, so no return can ever prove it. The door
+    for it, when the ``target`` declaration is known, is the operator stating
+    the figure for the binding that still lacks that statement, and it is the
+    only door.
+
+    Inside the envelope, a source whose figure the operator may state, because
+    the application holds no return for it, keeps its create or capture door
+    first and offers the statement after it, when the ``target`` is known.
     """
     requirement = evidence.requirement
     if not evidence.blockers or requirement.requires_member_fan_in:
-        return _UNROUTED_SCENARIO, None
+        return CrossPeriodDoor(_UNROUTED_SCENARIO, None)
+    if target is not None and _outside_envelope_previous_filing(requirement):
+        return CrossPeriodDoor(_ATTEST_PRIOR_VALUE_SCENARIO, _attest_prior_value_arguments(target, requirement))
+    door = _source_door(
+        evidence,
+        bucket_id=bucket_id,
+        work_catalogue=work_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        operation=operation,
+    )
+    if target is None or not evidence.attestation_admitted or door.scenario not in _ATTESTABLE_DOOR_SCENARIOS:
+        return door
+    return CrossPeriodDoor(
+        f"{door.scenario}{_ATTESTABLE_SUFFIX}",
+        door.action_argument_values,
+        (
+            AlternativeActionArguments(
+                action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+                action_argument_values=_attest_prior_value_arguments(target, requirement),
+                missing_action_arguments=cross_period_door_operator_arguments(_ATTEST_PRIOR_VALUE_SCENARIO),
+            ),
+        ),
+    )
+
+
+def _attest_prior_value_arguments(
+    target: WorkUnit, requirement: CrossPeriodDependencyRequirement
+) -> dict[str, str | int]:
+    """The facts the statement of a prior figure binds: the declaration it is stated on and the binding it feeds."""
+    return {
+        "work_unit_id": target.work_unit_id,
+        "modelo": str(target.modelo),
+        "year": target.filing_year,
+        "period": target.period.registry_token,
+        "binding_id": requirement.origin_ids[0],
+    }
+
+
+def _source_door(
+    evidence: CrossPeriodDependencyEvidence,
+    *,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CrossPeriodDoor:
+    """The door of the source declaration itself, chosen by the first blocker."""
+    requirement = evidence.requirement
     first = evidence.blockers[0]
     if first in _STANDING_ROUTED_BLOCKERS or first is CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE:
         need = source_declaration_need(
@@ -666,7 +865,15 @@ def cross_period_door(
             return door
     if first in _FILED_CAPTURE_BLOCKERS or first is CrossPeriodCleanStateBlocker.MISSING_OBSERVATION:
         return _filed_capture_door(requirement)
-    return _UNROUTED_SCENARIO, None
+    return CrossPeriodDoor(_UNROUTED_SCENARIO, None)
+
+
+def _outside_envelope_previous_filing(requirement: CrossPeriodDependencyRequirement) -> bool:
+    """Whether the requirement reads a previous filing the pinned support envelope refuses."""
+    return (
+        requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+        and requirement.source_outside_envelope
+    )
 
 
 def _standing_door(
@@ -684,22 +891,25 @@ def _standing_door(
     """
     if first is CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE:
         if need is not None and need.unit is not None:
-            return need.door()
+            return CrossPeriodDoor(*need.door())
         return _filed_capture_door(evidence.requirement)
     if need is None:
         return None
     if need.unit is not None or _declaration_creatable(evidence, operation=operation):
-        return need.door()
-    return _UNROUTED_SCENARIO, None
+        return CrossPeriodDoor(*need.door())
+    return CrossPeriodDoor(_UNROUTED_SCENARIO, None)
 
 
 def _filed_capture_door(requirement: CrossPeriodDependencyRequirement) -> CrossPeriodDoor:
     """Capture the filed source declaration from the AEAT."""
-    return _FILED_CAPTURE_SCENARIO, {
-        "modelos": requirement.source_modelo,
-        "period": requirement.period.registry_token,
-        "year": requirement.filing_year,
-    }
+    return CrossPeriodDoor(
+        _FILED_CAPTURE_SCENARIO,
+        {
+            "modelos": requirement.source_modelo,
+            "period": requirement.period.registry_token,
+            "year": requirement.filing_year,
+        },
+    )
 
 
 def _declaration_creatable(evidence: CrossPeriodDependencyEvidence, *, operation: PinnedAuthorityOperation) -> bool:
@@ -731,6 +941,7 @@ def cross_period_door_reader(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None,
     operation: PinnedAuthorityOperation | None,
+    target: WorkUnit | None = None,
 ) -> Callable[[CrossPeriodDependencyEvidence], CrossPeriodDoor]:
     """Route unclean sources by :func:`cross_period_door`, reading the catalogues once and only when one is unclean.
 
@@ -742,7 +953,7 @@ def cross_period_door_reader(
 
     def door(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodDoor:
         if work_unit_repository is None or operation is None:
-            return _UNROUTED_SCENARIO, None
+            return CrossPeriodDoor(_UNROUTED_SCENARIO, None)
         if not catalogues:
             revisions = (
                 calculation_repository.load(operation=operation)
@@ -757,6 +968,7 @@ def cross_period_door_reader(
             work_catalogue=work_catalogue,
             calculation_catalogue=revisions,
             operation=operation,
+            target=target,
         )
 
     return door
@@ -808,6 +1020,8 @@ def require_cross_period_clean_state(
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         workflow_profile=workflow_profile,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target_revision),
+        operator_value_attestations=operator_value_attestations(target_revision),
+        work_unit_repository=work_unit_repository,
         operation=operation,
     )
     failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
@@ -817,6 +1031,7 @@ def require_cross_period_clean_state(
         calculation_repository=calculation_repository,
         calculation_catalogue=calculation_catalogue,
         operation=operation,
+        target=work_unit,
     )
 
     def _observe_blocking_finding(
@@ -840,10 +1055,10 @@ def require_cross_period_clean_state(
             )
             return
         requirement = evidence.requirement
-        scenario, action_argument_values = door_of(evidence)
+        door = door_of(evidence)
         failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
             subject_leaf_key=subject_leaf_key,
-            scenario_id=f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+            scenario_id=f"{subject_leaf_key}.cross_period_dependency.{door.scenario}",
             evidence_id=f"{subject_leaf_key}.cross_period_dependency",
             evidence_values={
                 "work_unit_id": work_unit.work_unit_id,
@@ -855,7 +1070,9 @@ def require_cross_period_clean_state(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-            action_argument_values=action_argument_values,
+            action_argument_values=door.action_argument_values,
+            missing_action_arguments=cross_period_door_operator_arguments(door.scenario),
+            alternative_actions=door.alternative_actions,
         )
 
     findings = cross_period_clean_state_findings(
@@ -885,8 +1102,10 @@ __all__ = [
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
     "cross_period_door",
+    "cross_period_door_operator_arguments",
     "cross_period_door_reader",
     "cross_period_expected_member_sets_from_profile",
+    "operator_value_attestations",
     "registry_modality_finding",
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",

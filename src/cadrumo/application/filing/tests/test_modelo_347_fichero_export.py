@@ -517,7 +517,7 @@ def test_an_sii_filer_is_not_obliged_to_file_the_ledger_that_obliges_a_filer_out
         as_of=date(_YEAR, 12, 31),
     )
 
-    result = derive_modelo_applicability(taxpayer, "347", today=date(_YEAR + 1, 1, 15), operation=operation)
+    result = derive_modelo_applicability(taxpayer, "347", reference_date=date(_YEAR, 12, 31), operation=operation)
 
     assert result.verdict is verdict
     if verdict is ApplicabilityVerdict.NOT_APPLICABLE:

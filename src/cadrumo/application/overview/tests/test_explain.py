@@ -25,6 +25,7 @@ from ....domain.calculations.registry.applicability_models import (
     ModeloApplicabilityRule,
 )
 from ....domain.calculations.registry.applicability_payer_facts import PayerFactProjection
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import LegalEntityForm
 from ....domain.deadlines.models import (
     M303RegimeComposition,
@@ -242,7 +243,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
     profile = calendar_autonomo_profile()
     result = build_overview_explain(profile, modelo="303", year=2026)
-    derived = derive_modelo_applicability(profile, "303")
+    derived = derive_modelo_applicability(profile, "303", reference_date=latest_period_end())
 
     assert result.applicable == derived.applicable
     assert result.verdict is derived.verdict

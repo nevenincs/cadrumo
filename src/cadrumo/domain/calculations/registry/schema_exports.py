@@ -33,6 +33,7 @@ from .export_record_components import validate_export_record_components
 from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .export_value_policy import ExportValuePolicyValue
 from .fixed_width_codec import (
+    ExportAlphanumericTextValue,
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
@@ -709,6 +710,17 @@ class ExportRecordDefinition(RegistryModel):
     record_type: str
     order: NonNegativeInt
     encoding: ExportEncodingValue
+    alphanumeric_text: ExportAlphanumericTextValue | None = None
+    """How the record design states its alphanumeric field text is written.
+
+    Absent where the design states no rule, and the text is written as given.
+    Declared once for the record because the design states it once for all of
+    its alphanumeric and alphabetic fields.
+    """
+
+    alphanumeric_text_source_ref: SourceRefId | None = None
+    """The design whose own text states :attr:`alphanumeric_text`; required with it."""
+
     line_ending: ExportLineEndingField
     required: bool = True
     repeat: ExportRecordRepeatField | None = None
@@ -739,6 +751,16 @@ class ExportRecordDefinition(RegistryModel):
             has_projection=has_projection,
             allow_unresolved_binding_record=allow_unresolved_binding_record,
         )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _alphanumeric_text_names_its_source(self) -> ExportRecordDefinition:
+        if (self.alphanumeric_text is None) != (self.alphanumeric_text_source_ref is None):
+            raise RegistryValidationError(
+                f"export record {self.id!r} must declare alphanumeric_text together with "
+                "alphanumeric_text_source_ref, the design whose own text states the rule",
+            )
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -1001,6 +1023,18 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
     _validate_non_xml_metadata(layout)
     _validate_non_xml_envelope(layout)
+    _validate_alphanumeric_text_sources(layout)
+
+
+def _validate_alphanumeric_text_sources(layout: ExportLayoutDefinition) -> None:
+    """Require each record's text rule to cite a design the layout itself is built from."""
+    for record in layout.records:
+        source_ref = record.alphanumeric_text_source_ref
+        if source_ref is not None and source_ref not in layout.source_refs:
+            raise RegistryValidationError(
+                f"export layout {layout.id!r} record {record.id!r} alphanumeric text source "
+                f"{source_ref!r} must be included in source_refs",
+            )
 
 
 def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:

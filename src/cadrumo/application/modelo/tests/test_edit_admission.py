@@ -37,6 +37,7 @@ from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.calculations.registry.tests.authored_editions import (
     filing_year_envelope,
     newest_authored_edition,
@@ -44,6 +45,7 @@ from ....domain.calculations.registry.tests.authored_editions import (
 )
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
+from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.financial_operand_contract import OperationTransientFinancialOperandPublicDeclarationV1
 from ...operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
@@ -95,6 +97,7 @@ from ..work_form_models import (
     revised_field,
 )
 from ..work_form_scalar_values import comparable_entry
+from .advisory_diagnostic_repositories import EmptyObservationRepository
 from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -113,6 +116,10 @@ def _recording_operation(
     calls: list[dict[str, object]] = []
 
     class _RecordingOperation(PinnedAuthorityOperation):
+        @override
+        def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+            return filing_year_envelope()
+
         @override
         def form_layout(self, modelo_id: str | Modelo, revision_id: str) -> FormLayoutDefinition | None:
             return layout
@@ -622,8 +629,31 @@ def test_a_revision_below_calculation_grade_is_refused_not_raised() -> None:
     assert outcome.refusal.facts == ("registry_authority_grade",)
 
 
+def _held_source_unit(modelo: str, *, filing_year: int, code: str) -> WorkUnit:
+    """A work unit for an earlier declaration the application holds."""
+    period = Period.from_year_and_code(filing_year, code)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id="edit-bucket", modelo=modelo, filing_year=filing_year, period=period, revision_id="held"
+        ),
+        bucket_id="edit-bucket",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id="held",
+        name=f"{modelo} {filing_year}",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+
+
 def _served_baseline(
-    operation: PinnedAuthorityOperation, modelo: str, *, filing_year: int, code: str
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    *,
+    filing_year: int,
+    code: str,
+    held: tuple[WorkUnit, ...] = (),
 ) -> tuple[ModeloEditBaselineV1, WorkUnitCatalogue]:
     """Admit an edit baseline over the published revision and its published form layout."""
     snapshot = form_snapshot(operation, modelo, filing_year, code)
@@ -642,7 +672,7 @@ def _served_baseline(
         created_at=_NOW,
         updated_at=_NOW,
     )
-    catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
+    catalogue = WorkUnitCatalogue(work_units={unit.work_unit_id: unit for unit in (work_unit, *held)})
     recording, _ = _recording_operation(snapshot, operation.form_layout(modelo, revision_id))
     outcome = admit_modelo_edit_baseline(
         work_unit_id=work_unit.work_unit_id,
@@ -651,6 +681,8 @@ def _served_baseline(
         operation=recording,
         operation_contracts=_contracts(),
         issued_at=datetime.now(UTC),
+        observation_repository=EmptyObservationRepository(),
+        filing_catalogue=ModeloRecordCatalogue(),
     )
     assert isinstance(outcome, ModeloEditAdmittedV1)
     return outcome.baseline, catalogue
@@ -723,6 +755,62 @@ def test_an_override_the_form_serves_an_answer_for_is_admitted(authority_operati
     assert answer.editability in {ModeloFormEditability.EDITABLE_OVERRIDE, ModeloFormEditability.OVERRIDABLE_SOURCE}
     assert validate_binding_intent(baseline, address, ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE) is None
     assert _preflight(baseline, catalogue, _override(_FIRST_QUARTER_ANSWER)).findings == ()
+
+
+def _statement(binding_id: str) -> ModeloBindingEditIntentV1:
+    return ModeloBindingEditIntentV1(
+        address=ModeloEditBindingAddressV1(binding_id=binding_id),
+        kind=ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        value="12846.30",
+    )
+
+
+@pytest.mark.parametrize("offset", [0, 1], ids=["floor", "floor-plus-one"])
+def test_a_carry_the_application_holds_no_source_for_takes_a_stated_figure_inside_or_outside_the_envelope(
+    authority_operation: PinnedAuthorityOperation, offset: int
+) -> None:
+    year = filing_year_envelope().floor + offset
+    baseline, catalogue = _served_baseline(authority_operation, "130", filing_year=year, code="1T")
+    entry = _binding_entry(baseline, _FIRST_QUARTER_ANSWER)
+
+    assert isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE in entry.allowed_intents
+    assert ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE in entry.allowed_intents
+    address = ModeloEditBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER)
+    assert validate_binding_intent(baseline, address, ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE) is None
+    assert _preflight(baseline, catalogue, _statement(_FIRST_QUARTER_ANSWER)).findings == ()
+
+
+@pytest.mark.parametrize("offset", [0, 1], ids=["floor", "floor-plus-one"])
+def test_a_carry_whose_source_the_application_holds_is_refused_a_stated_figure(
+    authority_operation: PinnedAuthorityOperation, offset: int
+) -> None:
+    year = filing_year_envelope().floor + offset
+    source = _held_source_unit("100", filing_year=year - 1, code="0A")
+    baseline, catalogue = _served_baseline(authority_operation, "130", filing_year=year, code="1T", held=(source,))
+    entry = _binding_entry(baseline, _FIRST_QUARTER_ANSWER)
+
+    # Where a source exists the dependency follows it, so a figure stated over it would never read as proof.
+    assert isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+    assert ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE not in entry.allowed_intents
+    assert ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE in entry.allowed_intents
+    refusal = validate_binding_intent(
+        baseline,
+        ModeloEditBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER),
+        ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+    )
+    assert isinstance(refusal, ModeloEditDomainRefusalV1)
+    assert refusal.code is ModeloEditRefusalCode.DISALLOWED_INTENT
+    findings = _preflight(baseline, catalogue, _statement(_FIRST_QUARTER_ANSWER)).findings
+    assert [finding.code for finding in findings] == [INTENT_NOT_ADMITTED]
+
+
+def test_a_stated_figure_must_carry_a_value() -> None:
+    with pytest.raises(ValueError, match="ATTEST_PRIOR_VALUE binding intent requires a typed value"):
+        ModeloBindingEditIntentV1(
+            address=ModeloEditBindingAddressV1(binding_id=_FIRST_QUARTER_ANSWER),
+            kind=ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        )
 
 
 @pytest.mark.parametrize(

@@ -358,6 +358,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.ModeloOperatorLayerIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_OPERATOR_LAYER",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_operator_layer",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.repository.WorkUnitPersistenceError",
         ErrorCode(
             code="FAIL_MODELO_WORK_UNIT_PERSISTENCE",
@@ -488,11 +498,31 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportFieldUnrenderableError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_FIELD_UNRENDERABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameError",
         ErrorCode(
             code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_filing_export_declared_party_name",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportUnrepresentableCharacterError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_UNREPRESENTABLE_CHARACTER",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
             retryable=False,
             runbook_id=None,
         ),

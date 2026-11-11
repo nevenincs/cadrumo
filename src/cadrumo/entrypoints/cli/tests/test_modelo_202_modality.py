@@ -42,6 +42,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -191,7 +192,7 @@ def test_sl_with_declared_incn_is_applicable_for_modelo_202() -> None:
     from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _sl_profile(incn=_INCN_ABOVE_THRESHOLD)
-    verdict = derive_modelo_applicability(profile, "202")
+    verdict = derive_modelo_applicability(profile, "202", reference_date=latest_period_end())
 
     assert verdict.verdict is ApplicabilityVerdict.APPLICABLE
 
@@ -206,7 +207,7 @@ def test_natural_person_is_not_applicable_for_modelo_202() -> None:
     from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _natural_person_profile()
-    verdict = derive_modelo_applicability(profile, "202")
+    verdict = derive_modelo_applicability(profile, "202", reference_date=latest_period_end())
 
     assert verdict.verdict is not ApplicabilityVerdict.APPLICABLE
 
@@ -221,7 +222,7 @@ def test_attribution_entity_is_not_applicable_for_modelo_202() -> None:
     from ....domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _attribution_entity_profile()
-    verdict = derive_modelo_applicability(profile, "202")
+    verdict = derive_modelo_applicability(profile, "202", reference_date=latest_period_end())
 
     assert verdict.verdict is not ApplicabilityVerdict.APPLICABLE
 

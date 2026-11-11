@@ -257,7 +257,7 @@ def _verdict(
     return derive_modelo_applicability(
         profile,
         "347",
-        today=_AFTER_YEAR_END,
+        reference_date=date(_AFTER_YEAR_END.year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger,
     )

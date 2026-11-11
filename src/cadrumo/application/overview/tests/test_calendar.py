@@ -16,6 +16,8 @@ from ....core.period import Period
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.irpf_regimes import irpf_special_regime_impatriado_window_years
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -643,7 +645,8 @@ def test_calendar_preserves_every_applicable_engine_row_for_all_supported_years(
                 obligation.status,
             )
             for obligation in schedule.obligations
-            if derive_modelo_applicability(profile, obligation.modelo).verdict is ApplicabilityVerdict.APPLICABLE
+            if derive_modelo_applicability(profile, obligation.modelo, reference_date=latest_period_end()).verdict
+            is ApplicabilityVerdict.APPLICABLE
         )
         actual = tuple(
             (
@@ -692,30 +695,43 @@ def test_build_user_state_matches_engine_status_per_entry(
         assert entry.user_state is user_state_for(entry.status)
 
 
-def test_build_uses_evaluation_date_for_historical_special_regime_route(
+def test_build_decides_the_special_regime_route_by_the_returns_period_not_the_clock(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    # The impatriado regime applies to the year of the change and the five that
-    # follow, so a change five exercises before the prior exercise is in its last
-    # year there and over once the evaluation date moves into the next one.
+    # The impatriado regime applies to the period of the change and the following
+    # ones of its window, so a return's route is the same whenever it is viewed.
     prior_year = _YEAR - 1
-    profile = calendar_profile().model_copy(
+    # Modelo 100 falls due in the year after its tax period, so the range holds the prior year's returns.
+    return_year = prior_year - 1
+    window = irpf_special_regime_impatriado_window_years()
+    rng = OverviewCalendarRange(from_date=date(prior_year, 1, 1), to_date=date(prior_year, 12, 31))
+    last_window_year = calendar_profile().model_copy(
         update={
             "irpf_special_regime": IrpfSpecialRegime.from_registry("impatriado"),
-            "special_regime_start_date": date(prior_year - 5, 1, 15),
+            "special_regime_start_date": date(return_year - window + 1, 1, 15),
         },
     )
-    rng = OverviewCalendarRange(from_date=date(prior_year, 1, 1), to_date=date(prior_year, 12, 31))
+    window_over = last_window_year.model_copy(
+        update={"special_regime_start_date": date(return_year - window, 1, 15)},
+    )
 
-    active = build_overview_calendar(profile, rng, operation=authority_operation, today=date(prior_year, 6, 1))
-    expired = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_YEAR, 6, 1))
-
-    active_modelos = {entry.modelo for entry in active.entries}
-    expired_modelos = {entry.modelo for entry in expired.entries}
-    assert "151" in active_modelos
-    assert "100" not in active_modelos
-    assert "100" in expired_modelos
-    assert "151" not in expired_modelos
+    for viewed_on in (date(prior_year, 6, 1), date(_YEAR, 6, 1)):
+        inside = {
+            entry.modelo
+            for entry in build_overview_calendar(
+                last_window_year, rng, operation=authority_operation, today=viewed_on
+            ).entries
+        }
+        outside = {
+            entry.modelo
+            for entry in build_overview_calendar(
+                window_over, rng, operation=authority_operation, today=viewed_on
+            ).entries
+        }
+        assert "151" in inside, viewed_on
+        assert "100" not in inside, viewed_on
+        assert "100" in outside, viewed_on
+        assert "151" not in outside, viewed_on
 
 
 def test_build_empty_range_when_window_covers_no_obligations(

@@ -10,6 +10,7 @@ from pydantic import model_validator
 
 from .render_profile_model_base import RenderProfileAnchor, RenderProfileDesignIdentity, StrictModel
 from .render_profile_rules import (
+    AlphanumericTextRule,
     LiteralNumericRule,
     SignedMonetaryCompositeRule,
     SingletonNumericRule,
@@ -28,6 +29,8 @@ class RenderProfile(StrictModel):
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
+    #: At most one: the design states its text rule once for every record.
+    alphanumeric_text_rule: AlphanumericTextRule | None = None
     literal_numeric_rules: tuple[LiteralNumericRule, ...] = ()
     telematic_transport_choice_rules: tuple[TelematicTransportChoiceRule, ...] = ()
     empty_rule_assertion: Literal["canonical_eligibility_empty"] | None = None

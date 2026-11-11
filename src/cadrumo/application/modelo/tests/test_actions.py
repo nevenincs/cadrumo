@@ -77,6 +77,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # ---------------------------------------------------------------------------
 
 _FILING_YEAR = filing_year_envelope().horizon
+_FACT_DATE = date(_FILING_YEAR, 12, 31)
 _M100_YEAR = newest_authored_edition("100")
 _T0 = datetime(_FILING_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _TEST_LEGAL_REF = "test-actions:legal"
@@ -502,7 +503,9 @@ def test_dt12_reduccion_advisory_message_is_localised(
     revision = _dt12_revision()
     casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
-    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=authority_operation)
+    finding = dt12_reduccion_advisory_finding(
+        revision, casilla_values, operation=authority_operation, effective_date=_FACT_DATE
+    )
 
     assert finding is not None
     assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
@@ -532,6 +535,7 @@ def test_dt12_reduccion_advisory_threshold_is_the_registry_declared_bound(
         _dt12_revision(),
         {_DT12_INGRESO_CASILLA: ingreso, _DT12_REDUCCION_CASILLA: reduccion},
         operation=authority_operation,
+        effective_date=_FACT_DATE,
     )
 
     assert (finding is not None) is expect_finding
@@ -644,6 +648,7 @@ def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit(
         casilla_values,
         operation=authority_operation,
         modelo="100",
+        effective_date=_FACT_DATE,
     )
 
     assert finding is not None
@@ -683,6 +688,7 @@ def test_art52_reduccion_advisory_silent_when_employer_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -706,6 +712,7 @@ def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -736,6 +743,7 @@ def test_art52_reduccion_advisory_silent_when_autonomo_backed(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -759,6 +767,7 @@ def test_art52_reduccion_advisory_silent_when_under_sublimit(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -773,6 +782,7 @@ def test_art52_reduccion_advisory_silent_when_roles_absent(
             {},
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -800,6 +810,7 @@ def test_dt12_antiquity_advisory_fires_when_reduccion_applied(
         casilla_values,
         operation=authority_operation,
         modelo="100",
+        effective_date=_FACT_DATE,
     )
 
     assert finding is not None
@@ -828,6 +839,7 @@ def test_dt12_antiquity_advisory_silent_when_reduccion_zero(
             casilla_values,
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )
@@ -842,6 +854,7 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent(
             {},
             operation=authority_operation,
             modelo="100",
+            effective_date=_FACT_DATE,
         )
         is None
     )

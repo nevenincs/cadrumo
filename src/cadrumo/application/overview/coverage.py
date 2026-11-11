@@ -254,7 +254,12 @@ def _build_obligation_coverage(
             # and no applicability rule exist, so it cannot be positively scoped.
             advised.append(AdvisedObligation(modelo=modelo, reason=CoverageAdviceReason.REGISTRY_UNMODELED))
             continue
-        verdict = derive_modelo_applicability(profile, modelo, today=today, operation=operation).verdict
+        verdict = derive_modelo_applicability(
+            profile,
+            modelo,
+            reference_date=date(today.year, 12, 31),
+            operation=operation,
+        ).verdict
         if verdict in _CONFIDENT_NEGATIVE_VERDICTS:
             confidently_excluded.append(modelo)
             continue
