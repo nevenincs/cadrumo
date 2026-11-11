@@ -27,6 +27,7 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
@@ -116,6 +117,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
 def modelo_work_create_applicability_refusal(
     modelo: str,
     *,
+    filing_year: int,
     allow_not_applicable: bool,
     record: UserProfileRecord | None,
     operation: PinnedAuthorityOperation,
@@ -128,6 +130,14 @@ def modelo_work_create_applicability_refusal(
     projected into :class:`cadrumo.domain.deadlines.models.TaxpayerProfile` facts and
     checked against the registry-owned applicability rules. Only
     ``NOT_APPLICABLE`` and ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
+
+    Args:
+        modelo: Modelo code of the work being created.
+        filing_year: Year of the work being created; applicability is decided
+            for the tax period ending on 31 December of that year.
+        allow_not_applicable: Whether the operator bypassed the guard.
+        record: The active profile record, or ``None`` when none is loaded.
+        operation: Caller-held pinned operation for applicability facts.
 
     Returns:
         A :class:`ModeloWorkCreateApplicabilityRefusal` for a blocking verdict,
@@ -154,7 +164,12 @@ def modelo_work_create_applicability_refusal(
         profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
     except ValidationError:
         return None
-    applicability = derive_modelo_applicability(profile, modelo.strip(), operation=operation)
+    applicability = derive_modelo_applicability(
+        profile,
+        modelo.strip(),
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+    )
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return ModeloWorkCreateApplicabilityRefusal(modelo=modelo.strip(), reason=applicability.reason)

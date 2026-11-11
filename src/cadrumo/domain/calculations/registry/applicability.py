@@ -86,7 +86,6 @@ if TYPE_CHECKING:
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.modelo import Modelo
-from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import (
     entity_type_natural_person_token,
     require_entity_type,
@@ -95,6 +94,7 @@ from ...contribuyente.renta_codes import FiscalResidency
 from ...deadlines.models import (
     TaxpayerProfile,
 )
+from .applicability_modelo202 import modelo_202_filing_obligation
 from .applicability_models import (
     NO_LEDGER_PAYER_FACTS,
     ApplicabilityEvidenceDisagreement,
@@ -113,7 +113,7 @@ from .applicability_payer_facts import (
 )
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryValidationError
-from .form_codes import resolve_form_codes
+from .form_codes import form_for_role, resolve_form_codes
 from .governed_fact_scope import cache_governed_projection, governed_facts_in_scope
 from .ids import LegalRefId
 from .irpf_income_categories import (
@@ -253,6 +253,9 @@ _IMPATRIADO_M151_NOT_APPLICABLE_REASON_LOCALE_KEY = "filing.applicability.impatr
 
 _ROUTES_FACT: Final = "modelo-applicability-routes"
 """The fact naming the forms the art. 93 regime reroutes while its window is open."""
+
+_IS_INSTALMENT_ROLE: Final = "sociedades.instalment"
+"""The role-routing key naming the Impuesto sobre Sociedades pago fraccionado form."""
 
 
 def resolve_applicability_rule_from_authority(
@@ -497,7 +500,7 @@ def derive_modelo_applicability(
     profile: TaxpayerProfile,
     modelo: str,
     *,
-    today: date | None = None,
+    reference_date: date,
     authority: ValidatedRegistryAuthority | None = None,
     operation: PinnedAuthorityOperation | None = None,
     ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
@@ -516,10 +519,10 @@ def derive_modelo_applicability(
     Args:
         profile: The operator's three-axis taxpayer model.
         modelo: The AEAT modelo identifier to decide.
-        today: Reference date for the Beckham window check. Defaults to
-            the Europe/Madrid civil date (``today_madrid()``) when ``None`` —
-            the six-year window is a Spanish-calendar boundary. Pass an explicit
-            date in tests so results are deterministic.
+        reference_date: The last day of the tax period the applicability is
+            decided for. The impatriado six-year window runs over tax
+            periods, so it is checked against the period of the return, never
+            the clock.
         authority: Already-resolved validated authority to reuse. Omitting it
             preserves the standalone fingerprint-bounded bundled-tree lookup.
         operation: Already-pinned indexed operation to reuse for point-loaded
@@ -536,8 +539,7 @@ def derive_modelo_applicability(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    _today = today if today is not None else today_madrid()
-    beckham_window_active = profile.beckham_window_active(_today)
+    beckham_window_active = profile.beckham_window_active(reference_date)
 
     # The Art. 93 impatriado route is a modelo-level switch while the
     # six-year Beckham window is active: the annual declaration is Modelo
@@ -585,7 +587,12 @@ def derive_modelo_applicability(
     rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return incomplete_applicability(modelo, unruled=True)
-    return rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
+    applicability = rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
+    # The IS instalment's filing obligation turns on the INCN modality and on
+    # whether the period yields an ingreso, not on the entity type alone.
+    if modelo == form_for_role(_IS_INSTALMENT_ROLE, authority=operation):
+        return modelo_202_filing_obligation(profile, applicability, effective_date=reference_date, authority=operation)
+    return applicability
 
 
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:

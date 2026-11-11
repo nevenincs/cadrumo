@@ -6,10 +6,34 @@ id = "modelo-190-perceptor"
 record_type = "perceptor"
 order = 1
 encoding = "iso-8859-1"
+alphanumeric_text = "upper_unaccented"
+alphanumeric_text_source_ref = "aeat-dr-190-2025"
 line_ending = "none"
 required = false
 repeat = "binding_rows"
 binding_record = "perceptor"
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-190-perc-incapacidad-dineraria-retenciones"
+offset = 269
+length = 13
+kind = "binding"
+binding = "modelo-190-perceptor-row-incapacidad-dineraria-retenciones"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+value_policy = "implied-decimal"
+legal_refs = [
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+    "rd-439-2007:art-108",
+    "ley-35-2006:art-99",
+    "ley-58-2003:art-93",
+]
+source_refs = ["aeat-dr-190-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = "modelo-190-perc-signo-incapacidad-especie"

@@ -1740,6 +1740,12 @@ cli:
           que has declarado, distinto de una cifra escrita.
         attest_prior_carries_yes_help: Confirma la declaración y regístrala en la
           autoliquidación
+        attest_prior_value_help: Indica la cifra que una declaración toma de una declaración
+          anterior que la aplicación no guarda, como el Modelo 100 del año pasado
+          presentado en otro sitio. Muestra el valor y la comprobación del cambio;
+          con --yes registra la cifra como declarada por ti para esa declaración,
+          distinta de una cifra escrita. Se rechaza si la declaración anterior está
+          guardada, porque entonces se sigue esa declaración.
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica

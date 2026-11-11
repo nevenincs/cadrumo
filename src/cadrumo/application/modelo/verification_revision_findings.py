@@ -90,6 +90,7 @@ def append_revision_advisory_findings(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
+            effective_date=fact_coordinate,
         ),
         art20_reduccion_advisory_finding(
             snapshot.revision,
@@ -101,12 +102,14 @@ def append_revision_advisory_findings(
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         dt12_antiquity_advisory_finding(
             snapshot.revision,
             target.casilla_values,
             operation=operation,
             modelo=str(work_unit.modelo),
+            effective_date=fact_coordinate,
         ),
         madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,

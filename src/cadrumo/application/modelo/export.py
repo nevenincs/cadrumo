@@ -64,7 +64,9 @@ from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerPro
 from ...domain.filing.errors import (
     FilingExportDeclaredPartyNameError,
     FilingExportError,
+    FilingExportFieldUnrenderableError,
     FilingExportRequiredRecordAbsentError,
+    FilingExportUnrepresentableCharacterError,
     FilingExportValueOverflowError,
 )
 from ...domain.filing.schema import ModeloDraft
@@ -138,6 +140,7 @@ from .export_contracts import (
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
+from .export_field_refusal import export_field_unrenderable_refusal, export_unrepresentable_character_refusal
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -641,6 +644,10 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     }
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
         return ModeloExportRequiredRecordAbsentError(context=refusal_context)
+    if isinstance(exc, FilingExportUnrepresentableCharacterError):
+        return export_unrepresentable_character_refusal(command, exc)
+    if isinstance(exc, FilingExportFieldUnrenderableError):
+        return export_field_unrenderable_refusal(command, exc)
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(
@@ -937,6 +944,7 @@ def _require_modelo_export_clean_state(
     iva_wallet_decision: IvaCompensationReconciliationDecision | None,
     export_ports: ModeloExportPorts,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     require_cross_period_clean_state(
         work_unit,
@@ -960,6 +968,8 @@ def _require_modelo_export_clean_state(
         workflow_profile=workflow_profile,
         target_revision=revision,
         work_unit_repository=export_ports.work_unit,
+        subject_leaf_key="modelo.export",
+        operation=operation,
     )
 
 
@@ -1073,6 +1083,7 @@ def _prepare_modelo_export(
         iva_wallet_decision=iva_wallet_decision,
         export_ports=export_ports,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
+        operation=operation,
     )
     prior_domiciliation_election = _resolve_modelo_exportprior_domiciliation(
         command,

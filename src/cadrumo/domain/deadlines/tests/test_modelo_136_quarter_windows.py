@@ -53,7 +53,10 @@ def test_a_declared_quarter_opens_exactly_its_own_window() -> None:
     )
 
     assert _m136_periods(profile, _YEAR) == [Period.from_year_and_code(_YEAR, "1T")]
-    assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, "136", reference_date=date(_TODAY.year, 12, 31)).verdict
+        is ApplicabilityVerdict.APPLICABLE
+    )
 
 
 def test_a_wrong_quarter_opens_no_row_for_the_undeclared_quarter() -> None:
@@ -82,7 +85,7 @@ def test_yes_without_quarters_opens_no_row_and_stays_incomplete() -> None:
     profile = _profile(premio_loteria_gravamen_especial_sin_retencion=True)
 
     assert _m136_periods(profile, _YEAR) == []
-    result = derive_modelo_applicability(profile, "136", today=_TODAY)
+    result = derive_modelo_applicability(profile, "136", reference_date=date(_TODAY.year, 12, 31))
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "Periodos sin declarar" in result.reason
 
@@ -91,14 +94,20 @@ def test_no_is_not_applicable_and_opens_no_row() -> None:
     profile = _profile(premio_loteria_gravamen_especial_sin_retencion=False)
 
     assert _m136_periods(profile, _YEAR) == []
-    assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert (
+        derive_modelo_applicability(profile, "136", reference_date=date(_TODAY.year, 12, 31)).verdict
+        is ApplicabilityVerdict.NOT_APPLICABLE
+    )
 
 
 def test_an_unanswered_profile_is_incomplete_and_opens_no_row() -> None:
     profile = _profile()
 
     assert _m136_periods(profile, _YEAR) == []
-    assert derive_modelo_applicability(profile, "136", today=_TODAY).verdict is ApplicabilityVerdict.INCOMPLETE
+    assert (
+        derive_modelo_applicability(profile, "136", reference_date=date(_TODAY.year, 12, 31)).verdict
+        is ApplicabilityVerdict.INCOMPLETE
+    )
 
 
 @pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)

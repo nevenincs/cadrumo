@@ -17,6 +17,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...user_profile.tests.payer_fact_record_support import PAYER_FACT_GATED_MODELOS, payer_fact_record
 from ..work_create_policy import modelo_work_create_applicability_refusal
 
@@ -30,6 +31,7 @@ def test_an_unanswered_payer_fact_does_not_refuse_work_creation(
 ) -> None:
     refusal = modelo_work_create_applicability_refusal(
         modelo,
+        filing_year=filing_year_envelope().horizon,
         allow_not_applicable=False,
         record=payer_fact_record(operation, answer=None),
         operation=operation,
@@ -42,6 +44,7 @@ def test_an_unanswered_payer_fact_does_not_refuse_work_creation(
 def test_a_stated_no_refuses_work_creation(modelo: str, operation: PinnedAuthorityOperation) -> None:
     refusal = modelo_work_create_applicability_refusal(
         modelo,
+        filing_year=filing_year_envelope().horizon,
         allow_not_applicable=False,
         record=payer_fact_record(operation, answer=False),
         operation=operation,

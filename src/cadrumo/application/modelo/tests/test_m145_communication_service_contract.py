@@ -21,7 +21,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ..m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     M145CommunicationAction,
@@ -36,6 +36,7 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         contract = build_m145_communication_service_contract(
             period_token=M145CommunicationPeriod.COMMUNICATION,
+            filing_year=filing_year_envelope().horizon,
             operation=_authority_operation_for_test,
         )
 
@@ -61,6 +62,7 @@ def test_m145_communication_service_contract_excludes_filing_surfaces_and_terms(
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         contract = build_m145_communication_service_contract(
             period_token=M145CommunicationPeriod.COMMUNICATION,
+            filing_year=filing_year_envelope().horizon,
             operation=_authority_operation_for_test,
         )
         vocabulary = {

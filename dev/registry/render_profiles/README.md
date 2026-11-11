@@ -117,6 +117,7 @@ in the same change.
 | `identifier-digits` | How many digits an identifier field holds (Modelo 210). |
 | `literal-rates` | Fixed numbers printed in the design, such as the 303 *Tipo %* constants (`00400` = 4 %). These rules set how the number is written. They do not decide which tax rate applies. |
 | `telematic-transport` | Selecting `T` (telematic transmission) where an old design still lists cartridge and diskette codes. The rule repeats the design's exact wording so that a changed design is noticed. |
+| `alphanumeric-text` | The design's own rule for its alphanumeric and alphabetic fields, such as "en mayúsculas, sin caracteres especiales y sin vocales acentuadas". The rule repeats the design's sentence, the build checks that the design text contains it, and every record of the generated layout then declares it. At most one per design. |
 | `source-complete` | The design states every formatting fact itself, so there is nothing to answer. The file holds no rules, only `empty_rule_assertion`, as a record that this was checked. |
 
 One file, `modelo_200/2025/0129-width17-num-068-no-cumplimentar.toml`, adds a

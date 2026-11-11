@@ -120,6 +120,8 @@ _RECORD_KEYS: Final[frozenset[str]] = frozenset(
         "record_type",
         "order",
         "encoding",
+        "alphanumeric_text",
+        "alphanumeric_text_source_ref",
         "line_ending",
         "required",
         "repeat",
@@ -479,7 +481,7 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
             "length": discriminator_payload["length"],
             "requires": discriminator_payload["requires"],
         }
-    return {
+    normalised: dict[str, object] = {
         "id": payload["id"],
         "record_type": payload["record_type"],
         "order": payload["order"],
@@ -493,6 +495,12 @@ def _normalise_loader_record(payload: Mapping[str, object]) -> dict[str, object]
         "requires_positive_casilla_id": payload["requires_positive_casilla_id"],
         "fields": fields,
     }
+    # A record whose design states no text rule projects as it did before the
+    # rule existed, so only a tree that declares one attests a new digest.
+    if payload["alphanumeric_text"] is not None:
+        normalised["alphanumeric_text"] = payload["alphanumeric_text"]
+        normalised["alphanumeric_text_source_ref"] = payload["alphanumeric_text_source_ref"]
+    return normalised
 
 
 def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:

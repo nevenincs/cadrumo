@@ -2462,6 +2462,12 @@ application:
         the amount settled does not go the way the result does, as when part of the
         amount to pay is suspended against your spouse''s refund or you waive a refund.
         Cadrumo does not yet compute the remainder for this year''s form.'
+      export_text_unrepresentable_character: 'Nothing was written: «%{field_value}»
+        holds the character «%{character}» (%{code_point}), which the AEAT record
+        design cannot write at positions %{first_position}-%{last_position} of the
+        «%{record_type}» record. Dropping or replacing it would declare something
+        else. Correct it where you recorded it, as it appears in the AEAT census,
+        and export again.'
       export_text_value_overflow: 'Nothing was written: «%{field_value}» has %{value_length}
         characters and the AEAT record design allows only %{field_length} at positions
         %{first_position}-%{last_position} of the «%{record_type}» record. Cutting
@@ -2825,14 +2831,19 @@ application:
         declaration for it now exists with another figure. This declaration (modelo
         %{target_modelo} for %{target_filing_year}, period %{target_period}) must
         follow that declaration, so state the figure again or remove your statement.
-      cross_period_dependency_operator_attested: Cadrumo holds no declaration of modelo
-        %{source_modelo} for %{source_filing_year}, period %{source_period}, so the
-        figure %{value} that this declaration (modelo %{target_modelo} for %{target_filing_year},
-        period %{target_period}) takes from it is the one you stated. Keep that earlier
-        declaration as your evidence.
+      cross_period_dependency_operator_attested: The application holds no declaration
+        of modelo %{source_modelo} for %{source_filing_year}, period %{source_period},
+        so the figure %{value} that this declaration (modelo %{target_modelo} for
+        %{target_filing_year}, period %{target_period}) takes from it is the one you
+        stated. Keep that earlier declaration as your evidence.
       cross_period_dependency_unclean: This declaration uses figures from modelo %{source_modelo}
         for %{source_filing_year}, period %{source_period}, and that declaration still
         has open issues. Resolve them there first.
+      cross_period_dependency_unclean_attestable: This declaration uses figures from
+        modelo %{source_modelo} for %{source_filing_year}, period %{source_period},
+        and that declaration still has open issues. Resolve them there first or, if
+        you will not record that return here, state its figure with `aeat app modelo
+        work attest-prior-value <work unit> <binding> <value>`.
       cross_period_first_year_fractional_suppression: Modelo %{source_modelo} for
         %{source_filing_year}, period %{source_period}, does not apply to you because
         your activity started on %{activity_start_date}.

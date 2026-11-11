@@ -663,6 +663,90 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Registra una rectificació sense
+      el seu motiu, o un motiu sense la seva rectificació. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_disagree: Les seves files de registre tancades
+      no concorden amb els seus valors de vinculació desats. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_closed_rows_foreign: Les seves files de registre tancades
+      pertanyen a una altra unitat de treball o a una altra instantània del registre.
+      L'aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_handoff_outputs_disagree: 'Els valors del seu traspàs al
+      resum anual difereixen de les caselles del model 390 que conté: %{casilla_ids}.
+      L''aplicació va escriure aquest registre ella mateixa, així que es va alterar
+      o es va malmetre, i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_outputs_missing: 'El seu traspàs al resum anual anomena
+      caselles del model 390 que el càlcul no conté: %{casilla_ids}. L''aplicació
+      va escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.'
+    calculation_revision_handoff_target_mismatch: El seu traspàs al resum anual del
+      model 303 apunta a un càlcul diferent del que el conté. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_identity_mismatch: El seu identificador desat %{calculation_revision_id}
+      no és el derivat de les seves entrades (%{derived_id}). L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_lifecycle_order: Es va actualitzar per última vegada (%{updated_at})
+      abans de crear-se (%{created_at}). L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_observations_missing: Conté valors de caselles però cap de
+      les observacions de què procedeixen. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_observations_projection_mismatch: Els seus valors de caselles
+      difereixen del que donen les seves observacions. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
+    calculation_revision_operator_layer_cleared_overlap: 'Fixa i alhora esborra les
+      mateixes caselles: %{casilla_ids}. L''aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.'
+    calculation_revision_rectificativa_context_missing: És una rectificativa però
+      no es va comprovar contra la presentació que corregeix. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_identity_without_value: Una identitat d'origen de fila
+      desada no té cap valor de fila al darrere. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_index_mismatch: La posició d'una casella de fila difereix
+      de la de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va
+      escriure aquest registre ella mateixa, així que es va alterar o es va malmetre,
+      i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_identity_absent: La fila %{row_index} de %{binding_id}
+      no té identitat d'origen desada. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_source_identity_mismatch: La identitat d'origen desada
+      per a la fila %{row_index} de %{binding_id} difereix de la que registra la seva
+      casella. L'aplicació va escriure aquest registre ella mateixa, així que es va
+      alterar o es va malmetre, i cap canvi a les teves dades el repara.
+    calculation_revision_row_source_shared: La fila %{row_index} de %{binding_id}
+      alimenta més d'una casella de fila. L'aplicació va escriure aquest registre
+      ella mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves
+      dades el repara.
+    calculation_revision_row_source_value_not_decimal: El valor desat de la fila %{row_index}
+      de %{binding_id} no és un nombre. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    calculation_revision_row_value_mismatch: El valor d'una casella de fila difereix
+      de la seva fila d'origen %{row_index} de %{binding_id}. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_row_values_provenance_mismatch: Els valors de les seves caselles
+      de fila i la seva procedència cobreixen files diferents. L'aplicació va escriure
+      aquest registre ella mateixa, així que es va alterar o es va malmetre, i cap
+      canvi a les teves dades el repara.
+    calculation_revision_secure_row_fields_missing: La seva còpia desada no té els
+      camps de files que tota còpia així ha de portar. L'aplicació va escriure aquest
+      registre ella mateixa, així que es va alterar o es va malmetre, i cap canvi
+      a les teves dades el repara.
     canonical_actividad_asset_history_persistence: No s'ha pogut tornar a obrir amb
       seguretat l'historial xifrat d'actius.
     canonical_aeat_sync_workspace_projection: Les autoritats de l'AEAT ja carregades
@@ -720,6 +804,23 @@ errors:
       ni CIF espanyol vàlid.
     integrity_justificante_verification: La verificació del justificant amb l'AEAT
       no s'ha pogut completar.
+    integrity_modelo_export_field_unrenderable: 'No s''ha escrit res: el camp %{field_id}
+      (casella %{casilla_id}) no es pot escriure a partir del seu valor, perquè el
+      disseny de registre oficial que porta l''aplicació i aquest valor no concorden.
+      El defecte és al disseny d''exportació, no a les teves dades, així que canviar
+      les teves dades no ho arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No s''ha escrit res: el
+      camp %{field_id} no es pot escriure a partir del seu valor, perquè el disseny
+      de registre oficial que porta l''aplicació i aquest valor no concorden. El defecte
+      és al disseny d''exportació, no a les teves dades, així que canviar les teves
+      dades no ho arregla.'
+    integrity_modelos_calculation_revision: El càlcul desat es contradiu a si mateix,
+      així que no se'n pot aplicar res. L'aplicació va escriure aquest registre ella
+      mateixa, així que es va alterar o es va malmetre, i cap canvi a les teves dades
+      el repara.
+    integrity_modelos_operator_layer: Els valors de l'operador desats per a aquest
+      càlcul es contradiuen. L'aplicació els va escriure ella mateixa, així que el
+      registre s'ha alterat o malmès i no se'n pot aplicar res.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
     integrity_outbound_storage_corruption: S'ha detectat corrupció a l'emmagatzematge
@@ -784,6 +885,14 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    operator_layer_attestation_kinds_conflict: El registre desat declara l'enllaç
+      %{binding_id} alhora sense import i amb un import declarat. L'aplicació va escriure
+      aquest registre ella mateixa, així que s'ha alterat o malmès i el càlcul no
+      el pot fer servir.
+    operator_layer_value_attestation_not_canonical: La declaració de valor desada
+      per a l'enllaç %{binding_id} no conté un import decimal canònic. L'aplicació
+      va escriure aquest registre ella mateixa, així que s'ha alterat o malmès i el
+      càlcul no el pot fer servir.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
     windows_credential_record: La credencial de Windows no compleix el format requerit
@@ -1421,6 +1530,10 @@ errors:
     refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
       un registre %{export_record_id}, però aquesta declaració no en té cap, així
       que no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_unrepresentable_character: 'No s''ha escrit res: el camp
+      %{field_id} conté el caràcter «%{character}» (%{code_point}), que el disseny
+      de registre de l''AEAT no permet escriure. Treure''l o substituir-lo declararia
+      una altra dada. Corregeix aquesta dada on la vas registrar i torna a exportar.'
     refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
       camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
       posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import

@@ -2589,6 +2589,12 @@ application:
         como cuando se suspende una parte del importe a ingresar con cargo a la devolución
         de tu cónyuge o renuncias a una devolución. Cadrumo todavía no calcula el
         resto para el modelo de este ejercicio.'
+      export_text_unrepresentable_character: 'No se ha escrito nada: «%{field_value}»
+        contiene el carácter «%{character}» (%{code_point}), que el diseño de registro
+        de la AEAT no permite escribir en las posiciones %{first_position}-%{last_position}
+        del registro «%{record_type}». Quitarlo o sustituirlo declararía otro dato.
+        Corrige ese dato donde lo registraste, tal como figura en el censo de la AEAT,
+        y vuelve a exportar.'
       export_text_value_overflow: 'No se ha escrito nada: «%{field_value}» tiene %{value_length}
         caracteres y el diseño de registro de la AEAT solo admite %{field_length}
         en las posiciones %{first_position}-%{last_position} del registro «%{record_type}».
@@ -2981,7 +2987,7 @@ application:
         ahora existe una declaración suya con otra cifra. Esta declaración (modelo
         %{target_modelo} de %{target_filing_year}, periodo %{target_period}) debe
         seguir a aquella, así que indica la cifra de nuevo o retira tu indicación.
-      cross_period_dependency_operator_attested: Cadrumo no tiene ninguna declaración
+      cross_period_dependency_operator_attested: La aplicación no tiene ninguna declaración
         del modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
         así que la cifra %{value} que esta declaración (modelo %{target_modelo} de
         %{target_filing_year}, periodo %{target_period}) toma de ella es la que indicaste
@@ -2989,6 +2995,11 @@ application:
       cross_period_dependency_unclean: Esta declaración usa datos del modelo %{source_modelo}
         de %{source_filing_year}, periodo %{source_period}, y esa declaración aún
         tiene incidencias pendientes. Resuélvelas allí primero.
+      cross_period_dependency_unclean_attestable: Esta declaración usa cifras del
+        modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
+        y esa declaración aún tiene incidencias abiertas. Resuélvelas allí primero
+        o, si no vas a registrar esa declaración aquí, indica su cifra con `aeat app
+        modelo work attest-prior-value <unidad de trabajo> <binding> <valor>`.
       cross_period_first_year_fractional_suppression: El modelo %{source_modelo} de
         %{source_filing_year}, periodo %{source_period}, no te corresponde porque
         tu actividad empezó el %{activity_start_date}.

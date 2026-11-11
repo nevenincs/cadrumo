@@ -63,6 +63,7 @@ from cadrumo.domain.user_profile.values import (
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -706,6 +707,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
 
         refusal = modelo_applicability_refusal(
             record=nonresident,
+            filing_year=filing_year_envelope().horizon,
             bucket_id=_NONRESIDENT_PROFILE_ID,
             modelo=Modelo("100").value,
             operation=_authority_operation_for_test,
@@ -719,6 +721,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
         assert (
             modelo_applicability_refusal(
                 record=resident,
+                filing_year=filing_year_envelope().horizon,
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("100").value,
                 operation=_authority_operation_for_test,

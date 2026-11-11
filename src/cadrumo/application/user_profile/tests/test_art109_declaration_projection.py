@@ -17,6 +17,7 @@ import pytest
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ..projections import projection_for_taxpayer
 from .payer_fact_record_support import ART109_GATED_MODELO, ART109_PATH, art109_record
 
@@ -26,7 +27,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _verdict(operation: PinnedAuthorityOperation, *, answer: bool | None) -> ApplicabilityVerdict:
     record = art109_record(operation, answer=answer)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    return derive_modelo_applicability(profile, ART109_GATED_MODELO, operation=operation).verdict
+    return derive_modelo_applicability(
+        profile, ART109_GATED_MODELO, operation=operation, reference_date=latest_period_end()
+    ).verdict
 
 
 def test_an_unanswered_coverage_fact_leaves_modelo_130_incomplete(operation: PinnedAuthorityOperation) -> None:

@@ -19,6 +19,7 @@ import pytest
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ..projections import projection_for_taxpayer
 from .payer_fact_record_support import CAPITAL_GATED_MODELOS, CAPITAL_PATH, capital_income_record
 
@@ -29,7 +30,9 @@ def _verdicts(operation: PinnedAuthorityOperation, *, answer: bool | None) -> di
     record = capital_income_record(operation, answer=answer)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
     return {
-        modelo: derive_modelo_applicability(profile, modelo, operation=operation).verdict
+        modelo: derive_modelo_applicability(
+            profile, modelo, operation=operation, reference_date=latest_period_end()
+        ).verdict
         for modelo in CAPITAL_GATED_MODELOS
     }
 

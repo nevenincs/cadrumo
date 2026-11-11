@@ -45,7 +45,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import RegistrySelectorPeriodCode
 from ..calculations.registry.ids import BindingId
 from ..identifiers import canonical_decimal_string
-from .errors import ModeloValidationError
+from .errors import ModeloOperatorLayerIntegrityError, ModeloValidationError
 
 ATTESTED_ZERO: Final = canonical_decimal_string(Decimal(0))
 """The override an attested binding holds: the canonical zero of the decimal channel."""
@@ -183,12 +183,16 @@ class CalculationOperatorLayer(BaseModel):
             raw = self.binding_overrides.get(binding_id)
             parsed = None if raw is None else try_parse_canonical_decimal(raw)
             if parsed is None or canonical_decimal_string(parsed) != raw:
-                raise ModeloValidationError(
+                raise ModeloOperatorLayerIntegrityError(
                     f"operator layer value-attested binding {binding_id!r} must hold a canonical decimal override",
+                    translated_message="errors.integrity.operator_layer_value_attestation_not_canonical",
+                    context={"binding_id": binding_id},
                 )
             if binding_id in attested:
-                raise ModeloValidationError(
+                raise ModeloOperatorLayerIntegrityError(
                     f"operator layer binding {binding_id!r} cannot be both attested as no amount and value-attested",
+                    translated_message="errors.integrity.operator_layer_attestation_kinds_conflict",
+                    context={"binding_id": binding_id},
                 )
         return self
 

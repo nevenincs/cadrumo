@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Final, Self
+from typing import Any, Final, Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -113,12 +113,120 @@ def _require_argument_matches_its_evidence(
         raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
 
 
-class PreconditionOutcomeInvariant[
-    EvidenceT: PreconditionEvidence,
-    ActionT: BaseModel,
+def _canonical_argument_bindings[ArgumentT: ActionArgumentResolution](
+    value: tuple[ArgumentT, ...],
+) -> tuple[ArgumentT, ...]:
+    """Reject competing materialisations of one target argument and order them by name."""
+    names = tuple(item.argument_name for item in value)
+    if len(set(names)) != len(names):
+        raise ValueError("action argument names must be unique")
+    return tuple(sorted(value, key=lambda item: item.argument_name))
+
+
+def _canonical_missing_names(value: tuple[str, ...]) -> tuple[str, ...]:
+    """Keep a public missing-input list stable and unambiguous."""
+    if any(not re.fullmatch(FIELD_KEY_PATTERN, name) for name in value):
+        raise ValueError("missing action argument names must be stable identifiers")
+    if len(set(value)) != len(value):
+        raise ValueError("missing action argument names must be unique")
+    return tuple(sorted(value))
+
+
+def _missing_names_of_bindings(
+    missing_argument_names: tuple[str, ...],
+    argument_bindings: tuple[ActionArgumentResolution, ...],
+) -> tuple[str, ...]:
+    """Return the missing bindings' names, refusing a missing-name list that names any other set."""
+    missing_from_bindings = tuple(
+        item.argument_name for item in argument_bindings if item.status is ActionArgumentStatus.MISSING
+    )
+    if missing_argument_names != missing_from_bindings:
+        raise ValueError("missing_argument_names must exactly match missing action arguments")
+    return missing_from_bindings
+
+
+def _require_recovery_conditionality(
+    conditionality: ActionConditionality,
+    missing_from_bindings: tuple[str, ...],
+) -> None:
+    """Refuse a recovery action whose conditionality its own bindings contradict."""
+    if conditionality is ActionConditionality.NOT_APPLICABLE:
+        raise ValueError("recovery actions cannot use not_applicable conditionality")
+    if missing_from_bindings and conditionality is not ActionConditionality.REQUIRES_ARGUMENTS:
+        raise ValueError("missing action arguments require requires_arguments conditionality")
+    if not missing_from_bindings and conditionality is not ActionConditionality.IMMEDIATE:
+        raise ValueError("fully resolved recovery actions require immediate conditionality")
+
+
+def _is_empty(value: tuple[object, ...]) -> bool:
+    """Whether an optional ordered list holds nothing, so the serialized record leaves it out."""
+    return not value
+
+
+class PreconditionAlternativeAction[
+    ActionT: PreconditionActionIdentity,
     ArgumentT: ActionArgumentResolution,
 ](BaseModel):
-    """Canonical consistency rules for an actionable or closed precondition outcome."""
+    """One further recovery action that clears the same failed condition as the primary one.
+
+    It follows the argument grammar of the outcome's primary action: unique
+    argument names, missing names matching the missing bindings, and the
+    conditionality those bindings derive. Arguments drawn from condition
+    evidence are checked by the outcome, which holds the evidence.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionT
+    argument_bindings: tuple[ArgumentT, ...] = Field(default_factory=tuple)
+    missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
+    conditionality: ActionConditionality
+
+    @field_validator("argument_bindings")
+    @classmethod
+    @pydantic_validation_boundary
+    def _canonicalize_alternative_arguments(cls, value: tuple[ArgumentT, ...]) -> tuple[ArgumentT, ...]:
+        """Reject competing materialisations of one target argument."""
+        return _canonical_argument_bindings(value)
+
+    @field_validator("missing_argument_names")
+    @classmethod
+    @pydantic_validation_boundary
+    def _canonicalize_alternative_missing_names(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Keep the public missing-input list stable and unambiguous."""
+        return _canonical_missing_names(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_alternative(self) -> Self:
+        """Derive the alternative's conditionality from its own bindings."""
+        missing_from_bindings = _missing_names_of_bindings(self.missing_argument_names, self.argument_bindings)
+        _require_recovery_conditionality(self.conditionality, missing_from_bindings)
+        return self
+
+    def offered_action_id(self) -> str:
+        """Return the catalogue identity of the offered action."""
+        return self.action.action_id
+
+    def offered_arguments(self) -> tuple[ActionArgumentResolution, ...]:
+        """Return the offered action's argument bindings."""
+        return self.argument_bindings
+
+
+class PreconditionOutcomeInvariant[
+    EvidenceT: PreconditionEvidence,
+    ActionT: PreconditionActionIdentity,
+    ArgumentT: ActionArgumentResolution,
+    AlternativeT: PreconditionAlternativeAction[Any, Any],
+](BaseModel):
+    """Canonical consistency rules for an actionable or closed precondition outcome.
+
+    ``action`` and its argument fields describe the primary recovery action. An
+    actionable outcome may add ``alternative_actions``: further ways to clear
+    the same failed condition, offered in list order after the primary one. An
+    outcome without alternatives leaves the list out of its serialized form, so
+    it reads and hashes exactly as a record written before the list existed.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -129,6 +237,7 @@ class PreconditionOutcomeInvariant[
     missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None = None
+    alternative_actions: tuple[AlternativeT, ...] = Field(default_factory=tuple, exclude_if=_is_empty)
 
     @field_validator("evidence")
     @classmethod
@@ -145,21 +254,14 @@ class PreconditionOutcomeInvariant[
     @pydantic_validation_boundary
     def _canonicalize_arguments(cls, value: tuple[ArgumentT, ...]) -> tuple[ArgumentT, ...]:
         """Reject competing materialisations of one target argument."""
-        names = tuple(item.argument_name for item in value)
-        if len(set(names)) != len(names):
-            raise ValueError("action argument names must be unique")
-        return tuple(sorted(value, key=lambda item: item.argument_name))
+        return _canonical_argument_bindings(value)
 
     @field_validator("missing_argument_names")
     @classmethod
     @pydantic_validation_boundary
     def _canonicalize_missing_names(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Keep the public missing-input list stable and unambiguous."""
-        if any(not re.fullmatch(FIELD_KEY_PATTERN, name) for name in value):
-            raise ValueError("missing action argument names must be stable identifiers")
-        if len(set(value)) != len(value):
-            raise ValueError("missing action argument names must be unique")
-        return tuple(sorted(value))
+        return _canonical_missing_names(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -175,22 +277,23 @@ class PreconditionOutcomeInvariant[
 
         self._reject_arguments_their_evidence_does_not_support()
 
-        missing_from_bindings = tuple(
-            item.argument_name for item in self.argument_bindings if item.status is ActionArgumentStatus.MISSING
-        )
-        if self.missing_argument_names != missing_from_bindings:
-            raise ValueError("missing_argument_names must exactly match missing action arguments")
+        missing_from_bindings = _missing_names_of_bindings(self.missing_argument_names, self.argument_bindings)
 
         self._reject_conditionality_the_outcome_contradicts(
             has_no_recovery=has_no_recovery,
             missing_from_bindings=missing_from_bindings,
         )
+        self._reject_alternatives_the_outcome_cannot_carry()
         return self
 
     def _reject_arguments_their_evidence_does_not_support(self) -> None:
-        """Refuse condition-evidence arguments not backed by declared facts."""
+        """Refuse condition-evidence arguments, of any offered action, not backed by declared facts."""
         evidence_by_id = {item.evidence_id: item for item in self.evidence}
-        for argument in self.argument_bindings:
+        arguments: tuple[ActionArgumentResolution, ...] = (
+            *self.argument_bindings,
+            *(argument for alternative in self.alternative_actions for argument in alternative.offered_arguments()),
+        )
+        for argument in arguments:
             if argument.source is not ActionArgumentSource.CONDITION_EVIDENCE:
                 continue
             _require_argument_matches_its_evidence(argument, evidence_by_id)
@@ -207,16 +310,23 @@ class PreconditionOutcomeInvariant[
                 raise ValueError("no-recovery outcomes cannot carry action arguments")
             if self.conditionality is not ActionConditionality.NOT_APPLICABLE:
                 raise ValueError("no-recovery outcomes require not_applicable conditionality")
-        elif self.conditionality is ActionConditionality.NOT_APPLICABLE:
-            raise ValueError("recovery actions cannot use not_applicable conditionality")
-        elif missing_from_bindings and self.conditionality is not ActionConditionality.REQUIRES_ARGUMENTS:
-            raise ValueError("missing action arguments require requires_arguments conditionality")
-        elif not missing_from_bindings and self.conditionality is not ActionConditionality.IMMEDIATE:
-            raise ValueError("fully resolved recovery actions require immediate conditionality")
+            return
+        _require_recovery_conditionality(self.conditionality, missing_from_bindings)
+
+    def _reject_alternatives_the_outcome_cannot_carry(self) -> None:
+        """Refuse alternatives beside a closed outcome, and any action offered twice."""
+        if not self.alternative_actions:
+            return
+        if self.action is None:
+            raise ValueError("alternative recovery actions require a primary recovery action")
+        action_ids = (self.action.action_id, *(item.offered_action_id() for item in self.alternative_actions))
+        if len(set(action_ids)) != len(action_ids):
+            raise ValueError("recovery action identities must be unique across the primary and its alternatives")
 
 
 __all__ = [
     "PreconditionActionIdentity",
+    "PreconditionAlternativeAction",
     "PreconditionEvidence",
     "PreconditionOutcomeInvariant",
 ]

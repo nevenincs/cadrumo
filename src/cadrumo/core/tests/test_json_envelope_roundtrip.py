@@ -33,6 +33,7 @@ from ..json_contract import (
     OutputSchema,
     ResolvedActionArgument,
     ResolvedActionReference,
+    ResolvedAlternativeAction,
     ResolvedNoticeAction,
     ResolvedPreconditionAction,
     SchemaEnvelope,
@@ -391,6 +392,13 @@ def test_resolved_precondition_action_schema_pins_the_actionable_and_closed_refu
         "missing_argument_names",
         "conditionality",
         "no_recovery_outcome",
+        "alternative_actions",
+    )
+    assert tuple(ResolvedAlternativeAction.model_fields) == (
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
     )
     assert tuple(ResolvedActionReference.model_fields) == (
         "action_id",
@@ -695,4 +703,103 @@ def test_success_notice_action_rejects_unresolved_argument() -> None:
                     status=ActionArgumentStatus.MISSING,
                 ),
             ),
+        )
+
+
+def _profile_select_alternative() -> ResolvedAlternativeAction:
+    """One further resolved door whose argument the operator still supplies."""
+    return ResolvedAlternativeAction(
+        action=ResolvedActionReference(
+            action_id="profile.select",
+            target_command_key="config.profile.select",
+            cli_path=("aeat", "config", "profile", "select"),
+        ),
+        argument_bindings=(
+            _profile_name_binding(),
+            ResolvedActionArgument(argument_name="confirm", status=ActionArgumentStatus.MISSING),
+        ),
+        missing_argument_names=("confirm",),
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
+
+
+def test_resolved_action_round_trips_its_ordered_alternatives_through_json() -> None:
+    """The wire record carries every offered door, primary first, and restores them in order."""
+    second = ResolvedAlternativeAction(
+        action=ResolvedActionReference(action_id="profile.import", target_command_key="config.profile.import"),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+    with_alternatives = ResolvedPreconditionAction(
+        failed_condition_id="profile.active.required",
+        evidence=(_profile_state_evidence(),),
+        action=ResolvedActionReference(action_id="profile.create", target_command_key="config.profile.create"),
+        argument_bindings=(_profile_name_binding(),),
+        conditionality=ActionConditionality.IMMEDIATE,
+        alternative_actions=(_profile_select_alternative(), second),
+    )
+
+    round_tripped = ResolvedPreconditionAction.model_validate_json(with_alternatives.model_dump_json())
+
+    assert round_tripped == with_alternatives
+    assert [item.action.action_id for item in round_tripped.alternative_actions] == ["profile.select", "profile.import"]
+    rendered = json.loads(round_tripped.model_dump_json())
+    assert rendered["alternative_actions"][0] == {
+        "action": {
+            "action_id": "profile.select",
+            "target_command_key": "config.profile.select",
+            "cli_path": ["aeat", "config", "profile", "select"],
+        },
+        "argument_bindings": [
+            {
+                "argument_name": "confirm",
+                "status": "missing",
+                "value": None,
+                "source": None,
+                "source_key": None,
+                "source_evidence_id": None,
+            },
+            {
+                "argument_name": "profile_name",
+                "status": "resolved",
+                "value": "Ada",
+                "source": "operator_action.condition_evidence",
+                "source_key": "profile_name",
+                "source_evidence_id": "profile.state",
+            },
+        ],
+        "missing_argument_names": ["confirm"],
+        "conditionality": "requires_arguments",
+    }
+
+
+def test_resolved_action_without_alternatives_round_trips_without_the_list() -> None:
+    """A record without alternatives keeps the wire bytes it had before the list existed."""
+    action = _profile_create_action()
+
+    document = json.loads(action.model_dump_json())
+    round_tripped = ResolvedPreconditionAction.model_validate_json(action.model_dump_json())
+
+    assert set(document) == {
+        "failed_condition_id",
+        "evidence",
+        "action",
+        "argument_bindings",
+        "missing_argument_names",
+        "conditionality",
+        "no_recovery_outcome",
+    }
+    assert round_tripped == action
+    assert round_tripped.alternative_actions == ()
+    assert round_tripped.model_dump_json() == action.model_dump_json()
+
+
+def test_resolved_action_refuses_an_alternative_beside_a_closed_outcome() -> None:
+    """A terminal refusal offers no door, so it cannot offer a second one."""
+    with pytest.raises(ValidationError, match="require a primary recovery action"):
+        ResolvedPreconditionAction(
+            failed_condition_id="profile.active.required",
+            evidence=(_profile_state_evidence(),),
+            conditionality=ActionConditionality.NOT_APPLICABLE,
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+            alternative_actions=(_profile_select_alternative(),),
         )

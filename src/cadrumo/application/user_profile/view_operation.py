@@ -156,6 +156,8 @@ class ProfileViewPreconditionVerdict(BaseModel):
                 raise ValueError("health verdict carries an unsupported public value")
             return value
 
+        if verdict.alternative_actions:
+            raise ValueError("health verdict carries alternative actions this view does not represent")
         return cls(
             failed_condition_id=verdict.failed_condition_id,
             evidence=tuple(
