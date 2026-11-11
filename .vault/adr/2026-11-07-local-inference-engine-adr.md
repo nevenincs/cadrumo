@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:596d7ea972efa1f69a89e403d8275e8162ddc4f73abbbe52c44e4fb4193d8055'
+body_hash: 'sha256:53a260538534a187a8e05de1eb86a07b58e331f7240dbdecda9ed5695e06ace7'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -233,7 +233,7 @@ Basis: the coordinator's acceptance on 2026-11-08 of the residency contract sett
 - **D6, offload on llama.cpp.** "cadrumo-agent's admission picks the offload" no longer applies to llama.cpp. The placement is written into the preset by the manager: `cpu_only` writes `n-gpu-layers = 0`, and `auto` writes no key, so llama-server's own launch-time fit chooses the offload. A placement change goes through the manager's drain and restart. cadrumo-agent reads the placement from `status.args` only to word a refusal.
 - **Admission mapping.** A load that ends `failed` maps to `model_does_not_fit`. A model the router does not present maps to `model_not_installed`. A model without an explicit context, or a router that cannot be reached, maps to `provider_unavailable`.
 
-## Amendment 2026-11-11: the local AI server starts on demand (proposed)
+## Amendment 2026-11-11: the local AI server starts on demand
 
 Basis: the operator's ruling that local LLM use on the 16 GB reference machine is document extraction and classification only, and the coordinator's rulings of 2026-11-11 under delegated design authority. The evidence is build 15's packaged run, in which the app started `llama-server` at GUI launch with no request. The trace runs `native/manager/src/background.rs` `Background::new` → `LocalAi::start` → `LocalAiHost::at` (`native/manager/src/supervision/local_ai.rs`), whose supervision thread starts the server on its first look. The GUI hosts the manager core at launch, so manager start was server start. The router itself loaded no model (`--no-models-autoload`; the only load is cadrumo-agent's per-request `make_resident`). This amendment changes when the server runs. D5's router mode, addresses, containment and admission are unchanged, and so is the Ollama engine's role, which gets the same lifetime.
 
@@ -244,9 +244,9 @@ Basis: the operator's ruling that local LLM use on the 16 GB reference machine i
 - **Served state.** Dormant is a state of its own in the manager's published `ServerState` and in the local AI status the backend serves, with backend words meaning "starts when a document is read". It is never reported as `host_unreachable`, `program_not_running` or unchecked. `program_not_running` and `server_wait_expired` keep their meaning only for a demanded start that failed.
 - **Hypotheses, free to change within these constraints.** The verb's name and frame; whether the 5-minute window is a constant beside `PACE` or an environment declaration; and how the agent service learns that cadrumo-agent is about to read a document. Candidates for the last are a service hook on the local-lane run start, or cadrumo-agent asking its host before `make_resident`.
 
-Reconciliation, applied with this amendment once it is accepted:
+Reconciliation, applied with this amendment:
 
 1. `2026-10-04-runtime-manager-architecture-adr`, "The manager supervises the local AI server". Current: "it starts it while the local AI is set up, restarts it after a crash". Proposed: "it keeps the server dormant while the local AI is set up and starts it only when the agent service demands it through an admitted manager IPC verb, restarts it after a crash while it is demanded, stops it after 5 minutes holding no model".
 2. `2026-10-24-rust-component-provisioning-adr` constraint 12. Current: "It starts only the selected engine's server: the packaged llama-server while `llamacpp` is selected and the package carries it, and the Ollama server while `ollama` is selected and its program is installed and verified." Proposed: "It runs only the selected engine's server, and only on demand: the packaged llama-server while `llamacpp` is selected and the package carries it, and the Ollama server while `ollama` is selected and its program is installed and verified, each started when the agent service demands it and stopped after 5 minutes holding no model (`2026-11-07-local-inference-engine-adr`, amendment 2026-11-11)." Its last sentence, "Where no manager runs (a development checkout), the local AI reads `program_not_running`", is unchanged.
 
-Authorization: the coordinator approved this direction and its rulings (the IPC verb as the only channel, agent-service-only callers, dormant at start, 5-minute idle stop, no demand from status or setup, re-scoping E13) on 2026-11-11, and accepts this amendment under delegated design authority. Until that acceptance is recorded here, this amendment is proposed and the D5 text above still governs.
+Authorization: the coordinator approved this direction and its rulings on 2026-11-11: the IPC verb as the only channel, agent-service-only callers, dormant at start, 5-minute idle stop, no demand from status or setup, and re-scoping E13. The coordinator accepted this amendment as written at bcd69c19ba under delegated design authority on the same day. Both reconciliations above are applied in the same change.
