@@ -17,9 +17,10 @@ from .m303_evidence_cli import (
     setup_store,
 )
 from .m303_evidence_contracts import (
-    ATTESTATION_REFUSAL_KEY,
+    COORDINATE_MISMATCH_REFUSAL_KEY,
     FIRST_QUARTER,
     FIRST_QUARTER_DAYS,
+    MALFORMED_IDENTITY_REFUSAL_KEY,
     MISMATCHED_ATTACHMENT_ID,
     MISMATCHED_SHA256,
     MONTH,
@@ -67,8 +68,8 @@ def tui_led_store(
         {
             "missing_booleans": ("form_refused", "tui.modelo.m303_evidence.required"),
             "cancelled": ("cancelled_without_request", "tui.modelo.m303_evidence.cancelled"),
-            "mismatched_pair": ("refused", ATTESTATION_REFUSAL_KEY),
-            "wrong_filing_context": ("refused", ATTESTATION_REFUSAL_KEY),
+            "mismatched_pair": ("refused", MALFORMED_IDENTITY_REFUSAL_KEY),
+            "wrong_filing_context": ("refused", COORDINATE_MISMATCH_REFUSAL_KEY),
             "calculate": ("succeeded", None),
             "verify": ("succeeded", None),
         },

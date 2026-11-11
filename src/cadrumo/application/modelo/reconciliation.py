@@ -910,7 +910,7 @@ def _resolve_reconciliation_revision(
         or revision.registry_snapshot_ref != expected_ref
     ):
         raise CalculationRevisionNotFoundError(
-            "The requested calculation revision does not belong to this work unit.",
+            translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id, "work_unit_id": work_unit.work_unit_id},
         )
     require_calculation_revision_coordinates_current(revision, operation=operation)

@@ -2364,6 +2364,69 @@ application:
         entry has no invoice, so the draft is still open and picks the document up.'
       detail_row_identity_conflict: A detail row you entered does not match the row
         your records give for the same declarant; correct or remove it before calculating.
+      exonerado_390_attestation_applicable_unsupported: Only the statement that the
+        Modelo 390 does not apply can be recorded here. A Modelo 390 that does apply
+        for period %{period} of %{filing_year} is not recorded on this path. Nothing
+        was saved.
+      exonerado_390_attestation_conflicting_assertions: Another attestation on record
+        for period %{period} of %{filing_year} contradicts this one, so none can back
+        the Modelo 303. Nothing was calculated. Decide which statement stands before
+        relying on an attestation for this period.
+      exonerado_390_attestation_coordinate_unsupported: 'Modelo 390 applicability
+        evidence cannot be recorded for period %{period} of %{filing_year}: it exists
+        only for a quarterly or monthly Modelo 303 whose record design declares the
+        ordinary evidence header fields. Nothing was saved.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: The attestation you
+        named does not match period %{period} of %{filing_year} and the current profile,
+        or it says the Modelo 390 applies, so it cannot back this Modelo 303. Nothing
+        was calculated. Record a new attestation for this period and try again.
+      exonerado_390_attestation_evidence_not_attestation: The attachment you named
+        is not a Modelo 390 applicability attestation, so it cannot back the Modelo
+        303 for period %{period} of %{filing_year}. Nothing was calculated. Record
+        an attestation for this period and try again.
+      exonerado_390_attestation_evidence_other_profile: The attestation you named
+        belongs to another profile or carries a different SHA-256, so it cannot back
+        the Modelo 303 for period %{period} of %{filing_year}. Nothing was calculated.
+        Record a new attestation for this period and try again.
+      exonerado_390_attestation_evidence_reference_invalid: The attachment id and
+        SHA-256 you gave do not form a valid attestation reference, so they cannot
+        back the Modelo 303 for period %{period} of %{filing_year}. Nothing was calculated.
+        Record a new attestation for this period and use the values it reports.
+      exonerado_390_attestation_evidence_unusable: The attestation you named cannot
+        be verified from this profile's custody, so it cannot back the Modelo 303
+        for period %{period} of %{filing_year}. Nothing was calculated. Record a new
+        attestation for this period and try again.
+      exonerado_390_attestation_incomplete_identity: Give both the attachment id and
+        its SHA-256 for the Modelo 390 applicability attestation, or neither. Nothing
+        was calculated.
+      exonerado_390_attestation_malformed_identity: 'The attachment id and SHA-256
+        you gave are not a valid identity pair: each is 64 hexadecimal characters
+        and the two are equal. Nothing was calculated. Give the values the attestation
+        reported when it was recorded.'
+      exonerado_390_attestation_not_modelo_303_work_unit: Declaration %{work_unit_id}
+        is not a Modelo 303, and the Modelo 390 applicability attestation belongs
+        to a Modelo 303. Nothing was saved. Name a Modelo 303 declaration or give
+        the period instead.
+      exonerado_390_attestation_observation_timing: 'The Modelo 390 applicability
+        attestation for period %{period} of %{filing_year} cannot be recorded: it
+        can be observed only after the period ends, and not after the moment it is
+        recorded. Nothing was saved. Record it again with an observation time that
+        is on or after the end of the period and not in the future.'
+      exonerado_390_attestation_profile_bucket_invalid: The profile id you named is
+        not a valid profile identifier, so no Modelo 390 applicability attestation
+        was recorded. Nothing was saved.
+      exonerado_390_attestation_profile_not_current: The Modelo 390 applicability
+        attestation needs the profile you are signed in to, and the profile on record
+        is not it. Nothing was saved. Check the profile status.
+      exonerado_390_attestation_stored_observation_timing: The Modelo 390 applicability
+        attestation on record for period %{period} of %{filing_year} was observed
+        at a time its period does not allow, so it cannot back this Modelo 303. Nothing
+        was calculated. Record a new attestation with a valid observation time and
+        try again.
+      exonerado_390_attestation_unknown_attachment: The attestation you named is not
+        on record in this profile, so it cannot back the Modelo 303 for period %{period}
+        of %{filing_year}. Nothing was calculated. Record a new attestation for this
+        period and use the values it reports.
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -2447,6 +2510,12 @@ application:
       filed_observation_split_storage_context: The IVA compensation history store
         is a different database than the calculation observation store
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      input_required: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: the input %{binding} (box %{boxes}) has no value. Supply it, then calculate
+        again. Nothing was saved.'
+      input_required_unprinted: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: the input %{binding} has no value. Supply it, then calculate
+        again. Nothing was saved.'
       iva_wallet_amount_mismatch: 'IVA wallet reconciliation is blocked for Modelo
         303: the supplied prior-compensation amount disagrees with the amount the
         wallet authority holds. Re-run the wallet reconciliation, or correct the supplied
@@ -2572,6 +2641,18 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
+      previous_filing_unobserved: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which box %{boxes}
+        carries from it as the input %{binding}. A box it does not show is unknown,
+        not zero: record that return with those boxes, or state the amount of the
+        input %{binding} yourself, then calculate again. Nothing was saved.'
+      previous_filing_unobserved_unprinted: 'Modelo %{modelo} %{period} %{filing_year}
+        cannot be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which the input %{binding}
+        carries from it. A box it does not show is unknown, not zero: record that
+        return with those boxes, or state the amount of the input %{binding} yourself,
+        then calculate again. Nothing was saved.'
       prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'

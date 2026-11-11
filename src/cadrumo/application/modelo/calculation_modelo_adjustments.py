@@ -72,7 +72,7 @@ from ...domain.modelos.row_models import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloAggregationInputConflictError, ModeloCrossPeriodCleanStateError
-from .preconditions import build_modelo_precondition_failure
+from .preconditions import build_modelo_calculate_refusal_failure, build_modelo_precondition_failure
 from .work_form_wording import modelo_number
 
 if TYPE_CHECKING:
@@ -212,6 +212,13 @@ def union_detail_rows_by_identity(
                 "identity": [str(component) for component in _row_identity(caller_row)],
                 "divergent_fields": list(divergent_fields),
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="detail_rows.identity_conflict",
+                evidence_values={
+                    "row_type": caller_row.row_type,
+                    "divergent_fields": "|".join(divergent_fields),
+                },
+            ),
         )
     return tuple(unioned)
 

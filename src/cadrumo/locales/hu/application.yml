@@ -2441,6 +2441,71 @@ application:
       detail_row_identity_conflict: Egy általad megadott részletező sor nem egyezik
         a nyilvántartásaid szerinti sorral ugyanarra a nyilatkozóra; javítsd vagy
         töröld a számítás előtt.
+      exonerado_390_attestation_applicable_unsupported: Itt csak az a nyilatkozat
+        rögzíthető, hogy a Modelo 390 nem alkalmazandó. A(z) %{filing_year}. év %{period}
+        időszakára alkalmazandó Modelo 390-et ezen az úton nem lehet rögzíteni. Semmi
+        sem lett mentve.
+      exonerado_390_attestation_conflicting_assertions: A(z) %{filing_year}. év %{period}
+        időszakához rögzített másik nyilatkozat ellentmond ennek, ezért egyik sem
+        támaszthatja alá a Modelo 303-at. Semmi sem lett kiszámítva. Döntsd el, melyik
+        nyilatkozat marad érvényben, mielőtt erre az időszakra nyilatkozatra támaszkodnál.
+      exonerado_390_attestation_coordinate_unsupported: 'A(z) %{filing_year}. év %{period}
+        időszakára nem rögzíthető a Modelo 390 alkalmazhatóságát igazoló bizonyíték:
+        ilyen csak negyedéves vagy havi Modelo 303-hoz létezik, amelynek rekordterve
+        deklarálja a szokásos bizonyítékfejléc-mezőket. Semmi sem lett mentve.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: A megadott nyilatkozat
+        nem egyezik a(z) %{filing_year}. év %{period} időszakával és a jelenlegi profillal,
+        vagy azt állítja, hogy a Modelo 390 alkalmazandó, ezért nem támaszthatja alá
+        ezt a Modelo 303-at. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot erre
+        az időszakra, és próbáld újra.
+      exonerado_390_attestation_evidence_not_attestation: A megadott melléklet nem
+        a Modelo 390 alkalmazhatóságáról szóló nyilatkozat, ezért nem támaszthatja
+        alá a(z) %{filing_year}. év %{period} időszakának Modelo 303-át. Semmi sem
+        lett kiszámítva. Rögzíts nyilatkozatot erre az időszakra, és próbáld újra.
+      exonerado_390_attestation_evidence_other_profile: A megadott nyilatkozat másik
+        profilhoz tartozik, vagy más SHA-256 értékű, ezért nem támaszthatja alá a(z)
+        %{filing_year}. év %{period} időszakának Modelo 303-át. Semmi sem lett kiszámítva.
+        Rögzíts új nyilatkozatot erre az időszakra, és próbáld újra.
+      exonerado_390_attestation_evidence_reference_invalid: A megadott melléklet-azonosító
+        és SHA-256 nem alkot érvényes nyilatkozat-hivatkozást, ezért nem támaszthatják
+        alá a(z) %{filing_year}. év %{period} időszakának Modelo 303-át. Semmi sem
+        lett kiszámítva. Rögzíts új nyilatkozatot erre az időszakra, és a kapott értékeket
+        használd.
+      exonerado_390_attestation_evidence_unusable: A megadott nyilatkozat nem ellenőrizhető
+        e profil megőrzéséből, ezért nem támaszthatja alá a(z) %{filing_year}. év
+        %{period} időszakának Modelo 303-át. Semmi sem lett kiszámítva. Rögzíts új
+        nyilatkozatot erre az időszakra, és próbáld újra.
+      exonerado_390_attestation_incomplete_identity: A Modelo 390 alkalmazhatóságáról
+        szóló nyilatkozathoz add meg a melléklet azonosítóját és az SHA-256 értékét
+        is, vagy egyiket sem. Semmi sem lett kiszámítva.
+      exonerado_390_attestation_malformed_identity: 'A megadott melléklet-azonosító
+        és SHA-256 nem érvényes azonosítópár: mindkettő 64 hexadecimális karakter,
+        és a kettőnek egyeznie kell. Semmi sem lett kiszámítva. Add meg azokat az
+        értékeket, amelyeket a nyilatkozat a rögzítésekor közölt.'
+      exonerado_390_attestation_not_modelo_303_work_unit: A(z) %{work_unit_id} bevallás
+        nem Modelo 303, a Modelo 390 alkalmazhatóságáról szóló nyilatkozat viszont
+        egy Modelo 303-hoz tartozik. Semmi sem lett mentve. Adj meg egy Modelo 303
+        bevallást, vagy add meg inkább az időszakot.
+      exonerado_390_attestation_observation_timing: 'A Modelo 390 alkalmazhatóságáról
+        szóló nyilatkozat a(z) %{filing_year}. év %{period} időszakára nem rögzíthető:
+        csak az időszak lezárulta után figyelhető meg, és nem a rögzítés pillanata
+        után. Semmi sem lett mentve. Rögzítsd újra olyan megfigyelési időponttal,
+        amely az időszak végén vagy azután van, és nem a jövőben.'
+      exonerado_390_attestation_profile_bucket_invalid: A megadott profilazonosító
+        nem érvényes, ezért nem lett rögzítve Modelo 390 alkalmazhatóságáról szóló
+        nyilatkozat. Semmi sem lett mentve.
+      exonerado_390_attestation_profile_not_current: A Modelo 390 alkalmazhatóságáról
+        szóló nyilatkozathoz az a profil kell, amellyel bejelentkeztél, a rögzített
+        profil pedig nem az. Semmi sem lett mentve. Ellenőrizd a profil állapotát.
+      exonerado_390_attestation_stored_observation_timing: A(z) %{filing_year}. év
+        %{period} időszakához rögzített, a Modelo 390 alkalmazhatóságáról szóló nyilatkozatot
+        olyan időpontban figyelték meg, amelyet az időszaka nem enged, ezért nem támaszthatja
+        alá ezt a Modelo 303-at. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot
+        érvényes megfigyelési időponttal, és próbáld újra.
+      exonerado_390_attestation_unknown_attachment: A megadott nyilatkozat nem szerepel
+        ebben a profilban, ezért nem támaszthatja alá a(z) %{filing_year}. év %{period}
+        időszakának Modelo 303-át. Semmi sem lett kiszámítva. Rögzíts új nyilatkozatot
+        erre az időszakra, és a kapott értékeket használd.
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -2531,6 +2596,12 @@ application:
         más adatbázis, mint a számítási megfigyeléseké
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
+      input_required: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még nem
+        számolható ki: hiányzik a(z) %{binding} adat (%{boxes}. mező). Add meg, majd
+        számolj újra. Semmi nem lett mentve.'
+      input_required_unprinted: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki: hiányzik a(z) %{binding} adat. Add meg, majd számolj
+        újra. Semmi nem lett mentve.'
       iva_wallet_amount_mismatch: 'Az IVA-tárca egyeztetése blokkolva van a Modelo
         303 esetén: a megadott korábbi kompenzációs összeg eltér a tárca hiteles összegétől.
         Futtasd újra az egyeztetést, vagy javítsd a megadott összeget az egyezésig.'
@@ -2660,6 +2731,20 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
+      previous_filing_unobserved: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban (%{source_filing_year},
+        %{source_period}) nem szerepelnek a(z) %{source_boxes} mezők, amelyeket a(z)
+        %{boxes}. mező a(z) %{binding} adatként visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
+      previous_filing_unobserved_unprinted: 'A(z) %{modelo} %{period} %{filing_year}
+        nyomtatvány még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban
+        (%{source_filing_year}, %{source_period}) nem szerepelnek a(z) %{source_boxes}
+        mezők, amelyeket a(z) %{binding} adat visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
       prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
         nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás

@@ -75,6 +75,7 @@ from .operation_shared import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     ModeloWorkVerifyProfileResolver,
     modelo_workspace_refresh_target_binding,
+    require_owning_work_unit_subject,
     resolve_active_workflow_profile,
     resolve_modelo_work_unit_refresh_target,
 )
@@ -429,11 +430,20 @@ class ModeloWorkVerifyExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=request.payload.actor)
         operation = context.authority_operation
         writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+        active_bucket_id = require_active_bucket_id()
         repositories = self._verification_repository_bundle_factory(
-            require_active_bucket_id(), operation=operation, mutation_writer=writes.write
+            active_bucket_id, operation=operation, mutation_writer=writes.write
         )
 
         def prepare() -> tuple[TaxpayerProfile, ModeloLifecycleAdvisories]:
+            revision = repositories.calculation.load(operation=operation).get(request.payload.calculation_revision_id)
+            require_owning_work_unit_subject(
+                request.subject_ref,
+                owning_work_unit_id=None if revision is None else revision.work_unit_id,
+                named_record=("calculation_revision_id", request.payload.calculation_revision_id),
+                active_bucket_id=active_bucket_id,
+                work_unit_repository=repositories.work_unit,
+            )
             profile = self._profile_resolver(operation)
             return profile, _lifecycle_advisories(
                 request.payload.calculation_revision_id,
@@ -617,11 +627,22 @@ class ModeloWorkFileExecutor:
         from ...core.bucket_pointer import require_active_bucket_id
 
         writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+        active_bucket_id = require_active_bucket_id()
         filing_ports = self._filing_action_ports_factory(
-            bucket_id=require_active_bucket_id(), operation=context.authority_operation, mutation_writer=writes.write
+            bucket_id=active_bucket_id, operation=context.authority_operation, mutation_writer=writes.write
         )
 
         def prepare() -> tuple[TaxpayerProfile, ModeloLifecycleAdvisories]:
+            revision = filing_ports.calculation_repository.load(operation=context.authority_operation).get(
+                payload.approval.calculation_revision_id
+            )
+            require_owning_work_unit_subject(
+                request.subject_ref,
+                owning_work_unit_id=None if revision is None else revision.work_unit_id,
+                named_record=("calculation_revision_id", payload.approval.calculation_revision_id),
+                active_bucket_id=active_bucket_id,
+                work_unit_repository=filing_ports.work_unit_repository,
+            )
             profile = self._profile_resolver(context.authority_operation)
             return profile, _lifecycle_advisories(
                 payload.approval.calculation_revision_id,
@@ -833,6 +854,20 @@ class ModeloWorkAmendExecutor:
             # Row hydration and every authority-backed read use the retained
             # operation. The outer guard covers the complete canonical writer.
             with validating_governed_facts(context.authority_operation):
+                active_bucket_id = require_active_bucket_id()
+                ports = self._amendment_action_ports_factory(
+                    bucket_id=active_bucket_id,
+                    operation=context.authority_operation,
+                    mutation_writer=writes.write,
+                )
+                baseline = ports.filing_repository.load().records.get(payload.baseline.from_filing_record_id)
+                require_owning_work_unit_subject(
+                    request.subject_ref,
+                    owning_work_unit_id=None if baseline is None else baseline.work_unit_id,
+                    named_record=("from_filing_record_id", payload.baseline.from_filing_record_id),
+                    active_bucket_id=active_bucket_id,
+                    work_unit_repository=ports.work_unit_repository,
+                )
                 return amend_modelo_revision(
                     from_filing_record_id=payload.baseline.from_filing_record_id,
                     overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
@@ -843,11 +878,7 @@ class ModeloWorkAmendExecutor:
                     ),
                     reason=payload.reason,
                     actor=actor,
-                    ports=self._amendment_action_ports_factory(
-                        bucket_id=require_active_bucket_id(),
-                        operation=context.authority_operation,
-                        mutation_writer=writes.write,
-                    ),
+                    ports=ports,
                     operation=context.authority_operation,
                     binding_overrides={item.key: item.value for item in payload.binding_overrides},
                 )

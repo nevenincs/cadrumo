@@ -1342,6 +1342,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
+    refused_modelo_operation_subject_not_work_unit: Ez a kérés nem azt a bevallást
+      jelöli meg, amelyhez a mentett számítása tartozik; nyisd meg azt a bevallást,
+      és onnan küldd el újra.
     refused_modelo_payment_election_capability: A választott fizetési mód nem támogatott.
     refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
       eredmény szükséges.
