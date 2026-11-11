@@ -15,16 +15,20 @@ bucket through the real persistence stack — no mocks, no stubs, no skips.
 from __future__ import annotations
 
 import json
+from datetime import date
 from typing import Any
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
@@ -36,7 +40,7 @@ def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
             "ledger",
             "add",
             "--date",
-            "2026-05-02",
+            date(_YEAR, 5, 2).isoformat(),
             "--amount",
             amount,
             "--direction",
