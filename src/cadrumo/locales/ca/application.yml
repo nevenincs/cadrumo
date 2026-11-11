@@ -526,6 +526,8 @@ application:
           de la declaració.
         post_write_verification_refused: La comprovació posterior a l'escriptura ha
           rebutjat el fitxer de declaració exportat.
+        producer_fact_required: 'No s''ha escrit res: l''exportació necessita %{fact},
+          que no està indicat. Indica''l i torna a exportar.'
         receipt_artefact_unreadable: El rebut d'exportació anomena un fitxer que no
           es pot llegir.
         receipt_byte_size_mismatch: La mida del fitxer exportat no coincideix amb

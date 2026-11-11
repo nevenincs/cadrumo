@@ -336,6 +336,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.design.inconsistent",
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
+    # A party-name slot the filer's declared filing names leave without content
+    # is put right by stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",

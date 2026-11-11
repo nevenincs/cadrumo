@@ -797,6 +797,7 @@
         "cadrumo.application.filing.m347_declarado_row_scope",
         "cadrumo.application.filing.party_name_slots",
         "cadrumo.application.filing.producer_ownership",
+        "cadrumo.application.filing.producer_profile_facts",
         "cadrumo.application.filing.producer_snapshot",
         "cadrumo.application.filing.producer_snapshot_m200",
         "cadrumo.application.filing.producer_snapshot_m210",

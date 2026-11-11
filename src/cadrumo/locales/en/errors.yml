@@ -721,9 +721,15 @@ errors:
     filing_export_envelope_closer_extent: The filing-envelope closer does not render
       to the declared %{extent}-byte extent. The application derives this from its
       own export design, so no change to your data repairs it.
+    filing_export_envelope_declarant_tax_id_absent: The filing envelope was asked
+      to write the declarant's tax ID without the filing subject. The application
+      derives this from its own export design, so no change to your data repairs it.
     filing_export_envelope_election_unresolved: The filing envelope was about to be
       written without a resolved prior domiciliation election. The application derives
       this from its own export design, so no change to your data repairs it.
+    filing_export_envelope_language_casilla_absent: The filing envelope was asked
+      to write the declaration language without its declared box value. The application
+      derives this from its own export design, so no change to your data repairs it.
     filing_export_envelope_layout_absent: The filing-envelope layout declaration is
       absent. The application derives this from its own export design, so no change
       to your data repairs it.
@@ -905,6 +911,9 @@ errors:
     filing_export_result_digest_malformed: An export result carries a file digest
       that is not a lowercase hexadecimal SHA-256 value. The application derives this
       from its own export design, so no change to your data repairs it.
+    filing_export_sepa_marker_selection_unsupported: The SEPA marker met an account
+      selection it has no rule for. The application derives this from its own export
+      design, so no change to your data repairs it.
     filing_export_shared_resolver_not_exhaustive: The shared filing producer resolver
       does not cover every key it owns. The application derives this from its own
       export design, so no change to your data repairs it.
@@ -1468,6 +1477,8 @@ errors:
       filing name is %{composed_length} characters and field %{export_field_id} has
       %{field_length}. The record design allows no shortening, so state a rendering
       of the name for %{field_length} characters and export again.'
+    refused_filing_export_profile_fact_missing: 'Nothing was written: the export needs
+      a detail about you that your profile does not state. State it and export again.'
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
     refused_financial_aggregation_missing_classification: Some in-period transactions

@@ -491,6 +491,8 @@ application:
           file.
         post_write_verification_refused: The check after writing rejected the exported
           declaration file.
+        producer_fact_required: 'Nothing was written: the export needs %{fact}, which
+          is not stated. State it and export again.'
         receipt_artefact_unreadable: The export receipt names a file that cannot be
           read.
         receipt_byte_size_mismatch: The exported file's size does not match the export

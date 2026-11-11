@@ -793,10 +793,18 @@ errors:
       no es genera amb l'extensió declarada de %{extent} bytes. L'aplicació ho deriva
       del seu propi disseny d'exportació, així que cap canvi a les teves dades ho
       corregeix.
+    filing_export_envelope_declarant_tax_id_absent: S'ha demanat al sobre de presentació
+      escriure el NIF del declarant sense el subjecte de la presentació. L'aplicació
+      ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
+      dades ho corregeix.
     filing_export_envelope_election_unresolved: El sobre de la presentació s'anava
       a escriure sense una elecció de domiciliació prèvia resolta. L'aplicació ho
       deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
       ho corregeix.
+    filing_export_envelope_language_casilla_absent: S'ha demanat al sobre de presentació
+      escriure l'idioma de la declaració sense el valor de la seva casella declarada.
+      L'aplicació ho deriva del seu propi disseny d'exportació, així que cap canvi
+      a les teves dades ho corregeix.
     filing_export_envelope_layout_absent: Falta la declaració del disseny del sobre
       de la presentació. L'aplicació ho deriva del seu propi disseny d'exportació,
       així que cap canvi a les teves dades ho corregeix.
@@ -998,6 +1006,9 @@ errors:
       de fitxer que no és un valor SHA-256 hexadecimal en minúscules. L'aplicació
       ho deriva del seu propi disseny d'exportació, així que cap canvi a les teves
       dades ho corregeix.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA ha rebut una selecció
+      de compte per a la qual no té regla. L'aplicació ho deriva del seu propi disseny
+      d'exportació, així que cap canvi a les teves dades ho corregeix.
     filing_export_shared_resolver_not_exhaustive: El resolutor compartit de productors
       de la presentació no cobreix totes les claus que li pertanyen. L'aplicació ho
       deriva del seu propi disseny d'exportació, així que cap canvi a les teves dades
@@ -1613,6 +1624,8 @@ errors:
       de declaració d''una part té %{composed_length} caràcters i el camp %{export_field_id}
       en té %{field_length}. El disseny de registre no permet abreujar-lo, així que
       indica una versió del nom de %{field_length} caràcters i torna a exportar.'
+    refused_filing_export_profile_fact_missing: 'No s''ha escrit res: l''exportació
+      necessita una dada teva que el teu perfil no indica. Indica-la i torna a exportar.'
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions

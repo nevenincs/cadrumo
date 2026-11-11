@@ -528,6 +528,8 @@ application:
           de la declaración.
         post_write_verification_refused: La comprobación posterior a la escritura
           rechazó el fichero de declaración exportado.
+        producer_fact_required: 'No se ha escrito nada: la exportación necesita %{fact},
+          que no está indicado. Indícalo y vuelve a exportar.'
         receipt_artefact_unreadable: El recibo de exportación nombra un fichero que
           no se puede leer.
         receipt_byte_size_mismatch: El tamaño del fichero exportado no coincide con

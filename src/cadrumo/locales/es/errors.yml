@@ -776,10 +776,18 @@ errors:
     filing_export_envelope_closer_extent: El cierre del sobre de la presentación no
       se genera con la extensión declarada de %{extent} bytes. La aplicación lo deriva
       de su propio diseño de exportación, así que ningún cambio en tus datos lo corrige.
+    filing_export_envelope_declarant_tax_id_absent: Se pidió al sobre de presentación
+      escribir el NIF del declarante sin el sujeto de la presentación. La aplicación
+      lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
+      lo corrige.
     filing_export_envelope_election_unresolved: El sobre de la presentación se iba
       a escribir sin una elección de domiciliación previa resuelta. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
       lo corrige.
+    filing_export_envelope_language_casilla_absent: Se pidió al sobre de presentación
+      escribir el idioma de la declaración sin el valor de su casilla declarada. La
+      aplicación lo deriva de su propio diseño de exportación, así que ningún cambio
+      en tus datos lo corrige.
     filing_export_envelope_layout_absent: Falta la declaración del diseño del sobre
       de la presentación. La aplicación lo deriva de su propio diseño de exportación,
       así que ningún cambio en tus datos lo corrige.
@@ -982,6 +990,9 @@ errors:
       de archivo que no es un valor SHA-256 hexadecimal en minúsculas. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
       lo corrige.
+    filing_export_sepa_marker_selection_unsupported: La marca SEPA recibió una selección
+      de cuenta para la que no tiene regla. La aplicación lo deriva de su propio diseño
+      de exportación, así que ningún cambio en tus datos lo corrige.
     filing_export_shared_resolver_not_exhaustive: El resolvedor compartido de productores
       de la presentación no cubre todas las claves que le pertenecen. La aplicación
       lo deriva de su propio diseño de exportación, así que ningún cambio en tus datos
@@ -1594,6 +1605,8 @@ errors:
       campo %{export_field_id} tiene %{field_length}. El diseño de registro no permite
       abreviarlo, así que indica una versión del nombre de %{field_length} caracteres
       y vuelve a exportar.'
+    refused_filing_export_profile_fact_missing: 'No se ha escrito nada: la exportación
+      necesita un dato tuyo que tu perfil no indica. Indícalo y vuelve a exportar.'
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del

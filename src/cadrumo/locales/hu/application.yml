@@ -521,6 +521,8 @@ application:
           előállítani.
         post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
           exportált bevallásfájlt.
+        producer_fact_required: 'Semmi sem íródott ki: az exportáláshoz szükség van
+          erre: %{fact}, de az nincs megadva. Add meg, és exportálj újra.'
         receipt_artefact_unreadable: Az exportnyugta olyan fájlt nevez meg, amely
           nem olvasható.
         receipt_byte_size_mismatch: Az exportált fájl mérete nem egyezik az exportnyugtával.

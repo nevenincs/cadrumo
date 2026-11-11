@@ -7,16 +7,21 @@ from ...domain.filing.errors import (
     FilingExportError,
     FilingExportFieldUnrenderableError,
     FilingExportIntegrityError,
+    FilingExportProfileFactMissingError,
     FilingExportUnrepresentableCharacterError,
 )
+from ...domain.modelos.errors import ModeloError
+from ..filing.producer_profile_facts import profile_facts_for_producer_key
+from ..operator_actions.models import PreconditionVerdict
+from .action_errors import ModeloProfileReadinessError
 from .export_contracts import (
     ModeloExportCommand,
     ModeloExportDesignIntegrityError,
-    ModeloExportError,
     ModeloExportFieldUnrenderableError,
     ModeloExportUnrepresentableCharacterError,
 )
 from .preconditions import build_modelo_precondition_failure, build_modelo_precondition_failure_for_scenario
+from .profile_readiness_gate import open_profile_path_step
 
 
 def export_field_unrenderable_refusal(
@@ -77,6 +82,27 @@ def export_design_integrity_refusal(
     )
 
 
+def export_profile_fact_missing_refusal(
+    command: ModeloExportCommand, exc: FilingExportProfileFactMissingError
+) -> ModeloProfileReadinessError:
+    """Refuse an export that needs a fact about the filer the profile does not state, keeping the refusal's door.
+
+    The filing refusal carries the verdict that names the profile edit, or the
+    operator decision where no profile question states the fact. This error
+    keeps that verdict and the served words, adds the revision, and offers
+    opening the first profile detail the fact is read from.
+    """
+    context = exc.context or {}
+    verdict = exc.terminal_precondition_verdict
+    profile_paths = profile_facts_for_producer_key(context.get("missing_producer_key"))
+    return ModeloProfileReadinessError(
+        translated_message=exc.translated_message,
+        context={"calculation_revision_id": command.calculation_revision_id, **context},
+        profile_precondition_verdict=verdict if isinstance(verdict, PreconditionVerdict) else None,
+        next_step=open_profile_path_step(profile_paths[0]) if profile_paths else None,
+    )
+
+
 def export_unrepresentable_character_refusal(
     command: ModeloExportCommand, exc: FilingExportUnrepresentableCharacterError
 ) -> ModeloExportUnrepresentableCharacterError:
@@ -120,7 +146,7 @@ def export_unrepresentable_character_refusal(
     )
 
 
-def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError | None:
+def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportError) -> ModeloError | None:
     """Return the refusal for a value the record design cannot write, or ``None`` for any other failure."""
     if isinstance(exc, FilingExportUnrepresentableCharacterError):
         return export_unrepresentable_character_refusal(command, exc)
@@ -128,4 +154,6 @@ def export_field_level_refusal(command: ModeloExportCommand, exc: FilingExportEr
         return export_field_unrenderable_refusal(command, exc)
     if isinstance(exc, FilingExportIntegrityError) and exc.translated_message is not None:
         return export_design_integrity_refusal(command, exc)
+    if isinstance(exc, FilingExportProfileFactMissingError):
+        return export_profile_fact_missing_refusal(command, exc)
     return None

@@ -73,6 +73,14 @@ class FilingExportDesignIntegrityError(FilingExportIntegrityError, FilingExportV
     """
 
 
+class FilingExportProfileFactMissingError(TerminalPreconditionErrorMixin[object], FilingExportValidationError):
+    """Raised when the export needs a fact about the filer that the profile does not state.
+
+    The fact is the filer's to state, so the refusal carries the door that
+    names the action putting it right. Nothing is written until it is stated.
+    """
+
+
 class FilingExportValueOverflowError(FilingExportValidationError):
     """Raised when a value is wider than its slot in the official record design.
 
