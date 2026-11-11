@@ -372,7 +372,7 @@ def test_every_modelo_347_edition_carries_the_same_exclusions() -> None:
 
 
 # ---------------------------------------------------------------------
-# Modelo 130: RIRPF art. 109.1 withholding exception
+# Modelo 130: RIRPF art. 109.2 to 109.4 withholding exception
 # ---------------------------------------------------------------------
 
 _ART_109 = "rd-439-2007:art-109"
@@ -405,7 +405,7 @@ def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_13
 
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert _ART_109 in result.legal_refs
-    assert "artículo 109.1" in result.reason
+    assert "apartados 2 a 4 del artículo 109" in result.reason
 
 
 def test_an_activity_below_the_art109_coverage_files_modelo_130() -> None:

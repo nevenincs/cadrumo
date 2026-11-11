@@ -9,14 +9,16 @@ not_applicable_reason = "Modelo 130 no aplica: el pago fraccionado en estimació
 cuota_bearing = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "trlirnr-rdleg-5-2004:art-2"]
 
-# RIRPF art. 109.1: "No estarán obligados a efectuar pagos fraccionados los contribuyentes que
-# ejerzan actividades profesionales, agrícolas, ganaderas o forestales cuando, en el ejercicio
-# anterior, al menos el 70 por ciento de los ingresos de la actividad hubieran sido objeto de
-# retención o de ingreso a cuenta". The profile states the coverage as the yes that triggers the
-# exception and the no that leaves the pago fraccionado due; an unanswered fact is neither, so the
-# obligation is reported as incomplete until the taxpayer answers, as the deadline windows do.
+# RIRPF art. 109: apartado 2: "Los contribuyentes que desarrollen actividades profesionales no
+# estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural
+# anterior, al menos el 70 por ciento de los ingresos de la actividad fueron objeto de retención o
+# ingreso a cuenta"; apartados 3 y 4 extienden la excepción a las actividades agrícolas o ganaderas
+# y a las forestales (con exclusión de subvenciones e indemnizaciones). El apartado 1 solo fija la
+# obligación general. The profile states the coverage as the yes that triggers the exception and
+# the no that leaves the pago fraccionado due; an unanswered fact is neither, so the obligation is
+# reported as incomplete until the taxpayer answers, as the deadline windows do.
 [[revisions."2019-y-siguientes".applicability.exclusions]]
 id = "m130-art109-retencion-70"
 payer_fact = "art109_activity_income_withholding_ge_70pct"
-reason = "Modelo 130 no aplica: según el artículo 109.1 del Reglamento del IRPF, quien ejerce actividades profesionales, agrícolas, ganaderas o forestales no está obligado a efectuar pagos fraccionados cuando al menos el 70 por ciento de los ingresos de la actividad del ejercicio anterior fue objeto de retención o de ingreso a cuenta."
+reason = "Modelo 130 no aplica: según los apartados 2 a 4 del artículo 109 del Reglamento del IRPF, quien ejerce actividades profesionales, agrícolas, ganaderas o forestales no está obligado a efectuar pagos fraccionados cuando al menos el 70 por ciento de los ingresos de la actividad del ejercicio anterior fue objeto de retención o de ingreso a cuenta."
 legal_refs = ["rd-439-2007:art-109", "rd-439-2007:art-110"]
