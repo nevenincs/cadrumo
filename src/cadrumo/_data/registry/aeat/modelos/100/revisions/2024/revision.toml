@@ -2412,7 +2412,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0613" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:932 y aeat-dr-100-2024-dictionary:952: MATERB, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATERB, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", input_kind = "computed", formula = "renta-incremento-guarderia-0613", source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2023-dictionary:932 y aeat-dr-100-2024-dictionary:952: MATERB, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATERB, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"] }
 
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "0614" }
@@ -8764,7 +8764,7 @@ sequence_removals = {source_refs = [1, 2, 3, 4, 5]}
 [[revisions."2024".family_overrides]]
 family = "constructs"
 selector = {revision = "2023", id = "renta-final-settlement"}
-sequence_additions = {formulas = ["renta-incremento-guarderia-0613", "renta-resultado-ingresar-o-devolver"], legal_refs = ["ley-35-2006:art-97", "ley-31-2022:art-64"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]}
+sequence_additions = {formulas = ["renta-resultado-ingresar-o-devolver"], legal_refs = ["ley-35-2006:art-97"], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]}
 sequence_removals = {source_refs = [0, 1, 2, 3]}
 sequence_order = {formulas = [0, 1, 2, 3, 4, 8, 5, 6, 7, 9, 10, 11], source_refs = [1, 2, 3, 4, 0]}
 [[revisions."2024".family_overrides]]
@@ -9375,11 +9375,6 @@ position = 180
 
 [[revisions."2024".family_positions]]
 family = "formulas"
-id = "renta-incremento-guarderia-0613"
-position = 181
-
-[[revisions."2024".family_positions]]
-family = "formulas"
 id = "renta-reduccion-prevision-social-total"
 position = 182
 
@@ -9780,6 +9775,19 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 family = "formulas"
 selector = {revision = "2023", id = "renta-deduccion-maternidad-0611"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Deducción por maternidad", "Por tanto, 100 euros por cada mes.", "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "renta-profile-incremento-guarderia"}
+fields = {provider = {profile_key = "renta_family.incremento_guarderia_2024"}}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "Límite del incremento"]}], source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "formulas"
+selector = {revision = "2023", id = "renta-incremento-guarderia-0613"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["incremento", "guarder", "la limitación del importe de la deducción a las cotizaciones devengadas en el período impositivo", "gasto efectivo no subvencionado", "se calculará proporcionalmente al número de meses"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2024".family_overrides]]

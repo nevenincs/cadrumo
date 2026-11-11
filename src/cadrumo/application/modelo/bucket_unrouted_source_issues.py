@@ -65,10 +65,14 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "register_acquisition_row_missing"
     if diagnostic.reason == "register_owned_capital_acquisition":
         return "register_owned_capital_acquisition"
+    if diagnostic.reason == "inventory_book_claimed_purchase":
+        return "inventory_book_claimed_purchase"
     if diagnostic.reason == "ledger_expense_may_be_durable":
         return "ledger_expense_may_be_durable"
     if diagnostic.reason == "household_rows_incomplete":
         return "household_rows_incomplete"
+    if diagnostic.reason == "household_row_fact_unstated":
+        return "household_row_fact_unstated"
     return None
 
 
@@ -196,8 +200,10 @@ _DurableSourceIssueReason = Literal[
     "register_acquisition_partly_accounted",
     "register_acquisition_row_missing",
     "register_owned_capital_acquisition",
+    "inventory_book_claimed_purchase",
     "ledger_expense_may_be_durable",
     "household_rows_incomplete",
+    "household_row_fact_unstated",
     "advisory_binding_value",
     "credit_source_disagreement",
     "credit_cross_check_absent",

@@ -209,6 +209,16 @@ _TARGET_MOVEMENT_OPTION = _required_text_option(
 _CORRECTION_REASON_OPTION = _required_enum_option(
     "reason", "--reason", "cli.app.ledger.inventory.correction_reason_help", "InventoryCorrectionReason"
 )
+_MOVEMENT_ID_OPTION = _MOVEMENT_FACT_OPTIONS[0]
+_LEDGER_ROW_OPTION = _required_enum_option(
+    "ledger_row", "--ledger-row", "cli.app.ledger.inventory.ledger_row_help", "PurchaseLedgerRow"
+)
+_CLAIMED_TRANSACTION_OPTION = _optional_option(
+    "transaction_id",
+    "--transaction-id",
+    "cli.app.ledger.inventory.claimed_transaction_id_help",
+    DeferredTarget("builtins", "str"),
+)
 _RETIREMENT_REASON_OPTION = _required_enum_option(
     "reason", "--reason", "cli.app.ledger.inventory.retirement_reason_help", "InventoryRetirementReason"
 )
@@ -353,6 +363,21 @@ LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         handler="inventory_movement_reverse",
         identity="ledger.inventory.movement.reverse",
+    ),
+    _ledger_change_spec(
+        "app_ledger_inventory_movement_claim",
+        "app_ledger_inventory_movement",
+        "claim",
+        parameters=(
+            INVENTORY_ACTIVIDAD_ID_OPTION,
+            INVENTORY_YEAR_OPTION,
+            _CORRECTION_ID_OPTION,
+            _MOVEMENT_ID_OPTION,
+            _LEDGER_ROW_OPTION,
+            _CLAIMED_TRANSACTION_OPTION,
+        ),
+        handler="inventory_movement_claim",
+        identity="ledger.inventory.movement.claim",
     ),
     CommandSpec(
         "app_ledger_inventory_movement_add",

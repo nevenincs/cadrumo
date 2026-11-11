@@ -249,6 +249,7 @@ def _resolve_conditional_families(
     from ..calculations.m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,
     )
+    from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
 
     annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
     if any(
@@ -276,6 +277,10 @@ def _resolve_conditional_families(
             resolve_declared(
                 InventorySourceResolver(
                     inventory_repository=ports.inventory_repository,
+                    claim_reads=InventoryClaimLedgerReads(
+                        transactions=ports.transaction_repository.load,
+                        asset_revisions=lambda: ports.activity_asset_history_repository.load().revisions,
+                    ),
                 ),
             ),
         )
@@ -547,6 +552,7 @@ def _resolve_ledger_income_families(
                 prorrata_register_repository=prorrata_register_repository,
                 usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                 activity_asset_history_repository=ports.activity_asset_history_repository,
+                inventory_repository=ports.inventory_repository,
                 imputation_filings=imputation_filings,
             )
         ),

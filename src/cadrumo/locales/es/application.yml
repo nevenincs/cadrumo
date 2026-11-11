@@ -718,6 +718,7 @@ application:
         authority_reconciliation: Comprobación del valor de cierre
       history_kind:
         described: Descrito
+        ledger_row_stated: Movimiento de la compra indicado
         movement_corrected: Movimiento corregido
         movement_reversed: Movimiento anulado
         opening_corrected: Apertura corregida
@@ -745,6 +746,20 @@ application:
           y el ejercicio %{year}. Ábrelo en lugar de crear otro.
         activity_not_found: No existe ningún registro de inventario para esta actividad
           y el ejercicio %{year}. Créalo primero o revisa la actividad y el ejercicio.
+        claimed_transaction_amount_mismatch: 'La compra %{movement_id} del inventario
+          %{year} no coincide con su movimiento: la base, el IVA y el recargo deben
+          ser iguales al céntimo. Corrige la compra o elige otro movimiento.'
+        claimed_transaction_double_claim: El movimiento que indica la compra %{movement_id}
+          ya lo reclama otro inventario o un elemento de tu registro de bienes. Cada
+          movimiento pertenece a un solo registro.
+        claimed_transaction_missing: La compra %{movement_id} del inventario %{year}
+          indica un movimiento que no está activo en tus movimientos. Elige el movimiento
+          que registra esta compra.
+        claimed_transaction_not_eur: El movimiento que indica la compra %{movement_id}
+          no está en euros. Por ahora solo se vinculan movimientos en euros.
+        claimed_transaction_substrate_missing: El movimiento que indica la compra
+          %{movement_id} no tiene base imponible o cuota de IVA, así que no se puede
+          comparar. Complétalo primero.
         closing_authority_conflict: Ya hay otro valor de cierre registrado para esta
           actividad y este año.
         closing_authority_invalid: Este valor de cierre no se pudo registrar porque
@@ -774,6 +789,8 @@ application:
         later_closing_authority_recorded: El valor de cierre %{later_year} de esta
           actividad parte de este cierre, así que los datos de existencias de %{year}
           ya no pueden cambiar.
+        ledger_row_not_purchase: Solo una compra del inventario puede indicar qué
+          movimiento la registra, y %{movement_id} no es una compra.
         movement_already_superseded: Este movimiento ya se corrigió o se anuló.
         movement_not_found: El inventario %{year} de esta actividad no tiene este
           movimiento.
@@ -781,6 +798,9 @@ application:
           %{year}.
         prior_closing_document_needed: Este valor de cierre necesita el documento
           de cierre del año anterior. Añádelo e inténtalo de nuevo.
+        recargo_with_deductible_iva: Una compra con recargo de equivalencia no deduce
+          IVA (artículo 154.Dos de la Ley del IVA). Indica una proporción de IVA deducible
+          de cero.
         stock_would_go_negative: 'Esto dejaría las existencias por debajo de cero:
           %{sku} necesitaría más unidades de las que quedan.'
     workbench:
@@ -1663,6 +1683,12 @@ application:
           retienen, así que no puedes exportarla tal como está.
         what_to_do: Vuelve a calcular la declaración, compruébala y regístrala otra
           vez; el nuevo registro sustituye a este.
+      household_row_fact_unstated:
+        what: Hay una persona de tu hogar registrada sin un dato que la declaración
+          exige, así que no puede comprobarse, exportarse ni presentarse hasta que
+          lo indiques.
+        what_to_do: Indica en tu perfil el dato que falta de esa persona y vuelve
+          a calcular.
       household_rows_incomplete:
         what: Tu perfil indica más personas en este grupo de las que registra, así
           que la declaración usa solo las personas registradas y no da el grupo por
@@ -1685,6 +1711,10 @@ application:
           faltaba en un cobro, y podría ser una comisión o un descuento.
         what_to_do: Revisa la retención con la factura o el certificado de tu cliente
           en tus registros, corrige el registro si es distinta y vuelve a calcular.
+      inventory_book_claimed_purchase:
+        what: Una compra de existencias se deja fuera de tus gastos, porque tu inventario
+          la declara como compra de existencias.
+        what_to_do: No tienes que hacer nada.
       invoice_category_counterparty_mismatch:
         what: El tratamiento de IVA de una factura no encaja con el país del cliente,
           así que se ha dejado fuera.
@@ -1953,6 +1983,11 @@ application:
         fuera del pago fraccionado del periodo que termina el {period_end}.'
       amortization_box_unbound: '{element}: esta edición no tiene casilla para su
         dotación, así que no suma nada a este cálculo.'
+      book_claimed_purchase: El movimiento del {row_date} por {row_amount} es una
+        compra de tu inventario, así que se declara como compra de existencias y no
+        como gasto.
+      book_claimed_purchase_undated: Un movimiento es una compra de tu inventario,
+        así que se declara como compra de existencias y no como gasto.
       claim_gap_accrued: '{element}: no hay dotación registrada de {start} a {end}.
         Se han devengado {amount}, y la casilla {box} solo declara lo registrado.'
       claim_gap_free_method: '{element}: no hay dotación registrada de {start} a {end}.
@@ -2017,6 +2052,8 @@ application:
       disposal_zero_result: '{element}: su venta el {date}, con {transmission_value}
         de valor de transmisión y {net_value} de valor neto, no da ganancia ni pérdida,
         así que ninguna casilla la recoge.'
+      household_row_fact_unstated: '{group}: {recorded} registradas, {omitting} sin
+        {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
@@ -2086,6 +2123,9 @@ application:
         tributa por el IRPF o por el Impuesto sobre Sociedades. Comprueba el NIF de
         la factura.
     calc_diagnostic_words:
+      household_leaf:
+        apellidos_nombre: apellidos y nombre
+        nif: NIF
       income_class:
         actividad_economica: actividades económicas
         arrendamiento_inmueble_urbano: arrendamiento de inmueble urbano

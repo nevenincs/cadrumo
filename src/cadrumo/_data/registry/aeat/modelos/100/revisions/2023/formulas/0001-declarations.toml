@@ -32,3 +32,39 @@ required_text = [
     "Por tanto, 100 euros por cada mes.",
     "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales",
 ]
+[[revisions."2023".formulas]]
+id = "renta-incremento-guarderia-0613"
+target_casilla_id = "0613"
+# Art. 81 LIRPF, as rewritten by Ley 31/2022 art. 64 from 2023-01-01:
+# incremento de la deducción por maternidad por gastos de custodia.
+#
+# The box is the prorated increment the descendant fold resolves, and nothing
+# else bounds it. That redaction limits the increase in two ways only: up to
+# 1.000 euros (apartado 2), prorated by qualifying months and capped at the
+# unsubsidised spend paid for that child (apartado 3). The earlier limit at the
+# mother's cotizaciones devengadas was not carried into it, and the Renta 2023
+# manual says the limitation has disappeared, so no cotizaciones figure is read.
+#
+# Both remaining limits are per child: "en relación con ese hijo". This schema
+# has no per-descendant fold, and an aggregate min over the household would let
+# one child's unused ceiling absorb another child's excess spend. So the fold
+# happens where the descendant records live and the registry consumes one
+# resolved value, exactly as the mínimo por descendientes aggregate does. With
+# no qualifying descendant or no guardería spend that value is a computed zero.
+expression = { binding = "renta-profile-incremento-guarderia" }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81", "ley-31-2022:art-64"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = [
+    "incremento",
+    "guarder",
+    # The removal of the cotizaciones limit, pinned so a source that stopped
+    # stating it reds the load rather than leaving the uncapped box unbacked.
+    "la limitación del importe de la deducción a las cotizaciones devengadas en el período impositivo",
+    "gasto efectivo no subvencionado",
+    # The proration this formula defers to.
+    "se calculará proporcionalmente al número de meses",
+]

@@ -23,6 +23,7 @@ from ...domain.contribuyente.inventory.corrections import (
     inventory_refusal_key,
     is_inventory_correction_refusal_reason,
 )
+from ...domain.contribuyente.inventory.records import PurchaseLedgerRow
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
@@ -59,6 +60,7 @@ from .registered_requests import (
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     INVENTORY_LIST_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
+    INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID,
     INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID,
     INVENTORY_NOT_FOUND_REFUSAL_CODE,
@@ -76,6 +78,7 @@ from .registered_requests import (
     InventoryLedgerChangeOperationId,
     InventoryListRequest,
     InventoryMovementAddRequest,
+    InventoryMovementClaimRequest,
     InventoryMovementCorrectRequest,
     InventoryMovementReverseRequest,
     InventoryMutationOperationId,
@@ -112,6 +115,7 @@ _LEDGER_CHANGE_OPERATION_IDS: dict[str, InventoryLedgerChangeOperationId] = {
     INVENTORY_CORRECT_OPERATION_DEFINITION_ID: "correct",
     INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID: "movement.correct",
     INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID: "movement.reverse",
+    INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID: "movement.claim",
     INVENTORY_RETIRE_OPERATION_DEFINITION_ID: "retire",
     INVENTORY_RESTORE_OPERATION_DEFINITION_ID: "restore",
 }
@@ -576,6 +580,17 @@ def _ledger_change_work(
             reason=request.reason,
             actor=actor,
         )
+    if isinstance(request, InventoryMovementClaimRequest):
+        return lambda: service.movement_ledger_row(
+            bucket_id=profile,
+            actividad_id=request.actividad_id,
+            year=request.year,
+            correction_id=request.correction_id,
+            movement_id=request.movement_id,
+            ledger_row=request.ledger_row,
+            claimed_transaction_id=request.claimed_transaction_id,
+            actor=actor,
+        )
     if isinstance(request, InventoryMovementReverseRequest):
         return lambda: service.movement_reverse(
             bucket_id=profile,
@@ -617,6 +632,12 @@ def _movement_command(
         unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
         taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
         acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
+        ledger_row=(
+            request.ledger_row if isinstance(request, InventoryMovementAddRequest) else PurchaseLedgerRow.UNSTATED
+        ),
+        claimed_transaction_id=(
+            request.claimed_transaction_id if isinstance(request, InventoryMovementAddRequest) else None
+        ),
     )
 
 
