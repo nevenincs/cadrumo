@@ -52,13 +52,14 @@ than pinning a date it once accepted.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.invoices.tests.invoice_catalogue_seed import TRANSITIONAL_WINDOWS, in_force, window_middle
 
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
@@ -71,8 +72,18 @@ from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_CLASSIFIED_AT = datetime(2025, 1, 6, 12, 0, tzinfo=UTC)
-_ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
+_CLASSIFIED_AT = datetime(1980, 1, 6, 12, 0, tzinfo=UTC)
+# The exercise the 2 % and 7,5 % transitional rates run in: the annual return that spans all the windows.
+_EXERCISE = TRANSITIONAL_WINDOWS["RATE_2"][0].year
+_ANNUAL = Period.from_year_and_code(_EXERCISE, "0A")
+
+
+def _booked_in(slot: str, month: int, day: int) -> date:
+    """Return the given day of the exercise, checked to fall in the span ``slot`` was offered."""
+    booked = date(_EXERCISE, month, day)
+    assert in_force(slot, booked), f"{booked} is outside the {slot} window"
+    return booked
+
 
 # box suffix, operator-declared category, operator-declared rate, a date inside
 # that rate's 2024 window, base, cuota. Only 21 %, 10 % and 4 % run the whole
@@ -85,13 +96,20 @@ _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
 # is a transitional food rate, not a permanent tier, and a Q1 0 % sale is now
 # correctly refused by the aggregator.
 _LEDGER_ROWS = (
-    ("21", IvaCategory("domestic_general"), "0.21", date(2024, 3, 10), "4000.00", "840.00"),
-    ("10", IvaCategory("domestic_reduced"), "0.10", date(2024, 3, 11), "2500.00", "250.00"),
-    ("7-5", IvaCategory("domestic_reduced"), "0.075", date(2024, 11, 12), "1600.00", "120.00"),
-    ("5", IvaCategory("domestic_reduced"), "0.05", date(2024, 8, 13), "1400.00", "70.00"),
-    ("4", IvaCategory("domestic_super_reduced"), "0.04", date(2024, 3, 14), "1200.00", "48.00"),
-    ("2", IvaCategory("domestic_super_reduced"), "0.02", date(2024, 11, 15), "900.00", "18.00"),
-    ("0", IvaCategory("domestic_zero"), "0.00", date(2024, 8, 16), "700.00", "0.00"),
+    ("21", IvaCategory("domestic_general"), "0.21", date(_EXERCISE, 3, 10), "4000.00", "840.00"),
+    ("10", IvaCategory("domestic_reduced"), "0.10", date(_EXERCISE, 3, 11), "2500.00", "250.00"),
+    (
+        "7-5",
+        IvaCategory("domestic_reduced"),
+        "0.075",
+        window_middle("RATE_7.5") - timedelta(days=3),
+        "1600.00",
+        "120.00",
+    ),
+    ("5", IvaCategory("domestic_reduced"), "0.05", _booked_in("RATE_5", 8, 13), "1400.00", "70.00"),
+    ("4", IvaCategory("domestic_super_reduced"), "0.04", date(_EXERCISE, 3, 14), "1200.00", "48.00"),
+    ("2", IvaCategory("domestic_super_reduced"), "0.02", window_middle("RATE_2"), "900.00", "18.00"),
+    ("0", IvaCategory("domestic_zero"), "0.00", _booked_in("RATE_5", 8, 16), "700.00", "0.00"),
 )
 
 # The tier the aggregator must DERIVE for each rate. Many-to-one on purpose.
@@ -107,7 +125,7 @@ _EXPECTED_TIER = {
 
 
 def _m390_revision() -> ModeloRevision:
-    return published_snapshot("390", filing_year=2024, period="0A").revision
+    return published_snapshot("390", filing_year=_EXERCISE, period="0A").revision
 
 
 def _sale(
@@ -168,7 +186,7 @@ def _catalogue() -> TransactionCatalogue:
 
 
 def _aggregation():
-    return aggregate_iva_ledger_observations(_catalogue(), period=_ANNUAL_2024)
+    return aggregate_iva_ledger_observations(_catalogue(), period=_ANNUAL)
 
 
 def _resolved() -> dict[str, Decimal]:

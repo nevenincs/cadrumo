@@ -59,6 +59,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
@@ -94,7 +95,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 def modelo_130_revision():
     """Resolve the shipped Modelo 130 revision used by this runtime oracle."""
-    return published_snapshot("130", filing_year=2026, period="1T").revision
+    return published_snapshot("130", filing_year=_FILING_YEAR, period="1T").revision
 
 
 # The invoice, stated once from the document and the two cited rates.
@@ -108,7 +109,7 @@ _CASH = _TOTAL - _RETENCION
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 2, 16)
 _BUCKET = "46f1b1e3-e3c7-4522-8f3b-0689c804cd52"  # was 'bucket-oracle-rated'
@@ -130,7 +131,7 @@ def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Tr
         amount=_CASH if cash is None else cash,
         currency="EUR",
         counterparty="Cliente Profesional SL",
-        description="Servicios profesionales F-2026-011",
+        description=f"Servicios profesionales F-{_FILING_YEAR}-011",
         provenance=RawProvenance(
             source_path=Path(__file__),
             source_sha256="c" * 64,
@@ -139,7 +140,7 @@ def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Tr
             ingested_at=datetime(_FILING_YEAR, 4, 6, 9, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
-        raw_fields={"Concepto": "F-2026-011"},
+        raw_fields={"Concepto": f"F-{_FILING_YEAR}-011"},
     )
     return Transaction.model_validate(
         {
