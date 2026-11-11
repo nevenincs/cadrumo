@@ -20,7 +20,7 @@ from ....domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules,
 )
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, latest_period_end
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
@@ -105,7 +105,11 @@ def test_the_counter_detects_a_lease_per_applicability_decision(operation: Pinne
     profile = _autonomo()
     modelos = tuple(sorted(rule.modelo for rule in iter_modelo_applicability_rules()))[:5]
 
-    leases = _leases_during(lambda: [derive_modelo_applicability(profile, modelo, today=_TODAY) for modelo in modelos])
+    leases = _leases_during(
+        lambda: [
+            derive_modelo_applicability(profile, modelo, reference_date=date(_TODAY.year, 12, 31)) for modelo in modelos
+        ]
+    )
 
     assert len(modelos) == 5
     assert leases >= len(modelos), "an unpinned decision must show up as its own lease"
@@ -118,11 +122,13 @@ def test_the_held_operation_decides_exactly_as_a_fresh_lease_does(operation: Pin
 
     assert decided
     for modelo in sorted(decided):
-        held = derive_modelo_applicability(profile, modelo, operation=operation)
-        leased = derive_modelo_applicability(profile, modelo)
+        held = derive_modelo_applicability(profile, modelo, operation=operation, reference_date=latest_period_end())
+        leased = derive_modelo_applicability(profile, modelo, reference_date=latest_period_end())
         assert held == leased, modelo
     for row in calendar.suppressed_entries:
-        assert row.verdict == derive_modelo_applicability(profile, row.modelo).verdict
+        assert (
+            row.verdict == derive_modelo_applicability(profile, row.modelo, reference_date=latest_period_end()).verdict
+        )
     assert calendar.coverage == build_obligation_coverage(
         profile, {entry.modelo for entry in calendar.entries} | set(calendar.coverage.surfaced), today=_TODAY
     )

@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Mapping
+from datetime import date
 from functools import cache
 from itertools import pairwise
 from pathlib import PurePosixPath
@@ -38,6 +39,11 @@ def filing_year_envelope() -> SupportedFilingYearsCatalogue:
     """
     with bundled_indexed_authority().operation() as operation:
         return operation.supported_filing_years()
+
+
+def latest_period_end() -> date:
+    """Return the last day of the newest supported filing year, the period a test decides applicability for."""
+    return date(filing_year_envelope().horizon, 12, 31)
 
 
 def authored_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata, ...]:

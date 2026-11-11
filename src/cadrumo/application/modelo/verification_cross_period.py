@@ -239,7 +239,12 @@ def _not_applicable_conditional_source_modelos(
     not_applicable: set[str] = set()
     for modelo in candidates:
         try:
-            applicability = derive_modelo_applicability(profile, modelo, operation=operation)
+            applicability = derive_modelo_applicability(
+                profile,
+                modelo,
+                reference_date=date(snapshot.filing_year, 12, 31),
+                operation=operation,
+            )
         except (TypeError, ValueError, RegistryValidationError):
             return None
         if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:

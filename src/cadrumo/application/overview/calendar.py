@@ -634,7 +634,7 @@ def _calendar_obligation_projection(
     applicability = derive_modelo_applicability(
         profile if applicability_evidence is None else applicability_evidence.profile_for_year(filing_year),
         obligation.modelo,
-        today=today,
+        reference_date=date(filing_year, 12, 31),
         operation=operation,
         ledger_payer_facts=(
             {} if applicability_evidence is None else applicability_evidence.ledger_payer_facts_for_year(filing_year)

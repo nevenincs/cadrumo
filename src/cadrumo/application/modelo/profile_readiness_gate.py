@@ -563,6 +563,7 @@ def _require_modelo_applicable_for_local_work(
         record=record,
         bucket_id=bucket_id,
         modelo=modelo,
+        filing_year=filing_year,
         operation=operation,
     )
     if refusal is None:
@@ -580,6 +581,7 @@ def modelo_applicability_refusal(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]] | None:
     """Return the local-work applicability refusal for a target, if any.
@@ -590,11 +592,18 @@ def modelo_applicability_refusal(
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
+        filing_year: Year of the return; applicability is decided for the
+            tax period ending on 31 December of that year.
         operation: Caller-held pinned operation for applicability facts.
     """
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    applicability = derive_modelo_applicability(profile, modelo_code, operation=operation)
+    applicability = derive_modelo_applicability(
+        profile,
+        modelo_code,
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+    )
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
