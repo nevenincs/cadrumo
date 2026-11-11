@@ -8,8 +8,11 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, projected_exercise
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["isolated_cli_backend"]
 
@@ -31,14 +34,14 @@ def _modelo_row(payload: dict[str, object], code: str) -> dict[str, object]:
 
 
 def test_modelo_list_marks_m210_as_visible_and_registry_work_supported() -> None:
-    text_result = invoke_cached_cli(["--language", "en", "app", "modelo", "list", "--year", "2025"])
+    text_result = invoke_cached_cli(["--language", "en", "app", "modelo", "list", "--year", str(_YEAR)])
     assert text_result.exit_code == 0, text_result.output
     assert "local_work" in text_result.output
     assert "210\t" in text_result.output
     m210_text_row = next(line for line in text_result.output.splitlines() if line.startswith("210\t"))
     assert "\tsupported-model-level\t-" in m210_text_row
 
-    json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", "2025"])
+    json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", str(_YEAR)])
     assert json_result.exit_code == 0, json_result.output
     payload = unwrap_schema_envelope(json_result.output)
 
@@ -61,7 +64,9 @@ def test_modelo_list_distinguishes_model_level_support_from_revision_scope() -> 
     assert m100["local_work_supported"] is True
     assert m100["local_work_status"] == "supported-model-level"
 
-    scoped_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", "2026"])
+    scoped_result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "list", "--year", str(projected_exercise("100"))]
+    )
     assert scoped_result.exit_code == 0, scoped_result.output
     scoped = unwrap_schema_envelope(scoped_result.output)
     codes = {row["code"] for row in scoped["modelos"]}
