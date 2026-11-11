@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:2ac25ec31ac0e7948b46172d75a63caeab1028962f70e2ff384d959a9058b110'
+body_hash: 'sha256:f7550c725773d42230018cbf7bb7a57aa81bc57f7be240a74466759ece070a63'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -43,7 +43,15 @@ related:
 - `S01` `M` `native/application/src/provisioning/local_ai/supervision.rs`
 - `S01` `M` `native/application/src/provisioning/local_ai/supervision/tests.rs`
 - `S01` `M` `native/application/src/provisioning/local_ai/llama_server/tests.rs`
+- `S02` `M` `native/manager/src/supervision/local_ai.rs`
+- `S02` `M` `native/manager/src/background.rs`
+- `S02` `M` `native/manager/src/diagnostics.rs`
+- `S02` `M` `native/application/src/diagnostics/lifecycle.rs`
+- `S02` `M` `native/application/src/provisioning/local_ai/supervision.rs`
+- `S02` `M` `native/desktop/src-tauri/src/logs/manager.rs`
+- `S02` `M` `native/desktop/src-tauri/src/logs/severity.rs`
 
 ## Notes
 
 - `S01` cargo tests not run here: native builds are root-only; pending DESKTOP
+- `S02` cargo tests not run here: native builds are root-only; pending DESKTOP
