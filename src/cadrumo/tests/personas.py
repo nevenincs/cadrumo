@@ -166,6 +166,10 @@ class Identity:
     legal_name: str | None = None
     country: str | None = None
     primary: bool = False
+    province: str | None = None
+    """Two-digit Spanish province code (01-52) of the holder's domicile, where a filing names it."""
+    ceuta_melilla_deduction: bool | None = None
+    """Whether a payer's retención on this holder's rentas applied the LIRPF art. 68.4 Ceuta/Melilla deduction."""
 
     def field(self, name: IdentityField) -> str:
         """Return one field of the identity, refusing a field it does not carry."""
@@ -648,6 +652,7 @@ def _read_toml(path: Path) -> _Table:
 
 
 _KINDS: tuple[IdentityKind, ...] = ("nif", "nie", "cif", "nif_iva")
+_PROVINCE = re.compile(r"0[1-9]|[1-4][0-9]|5[0-2]")
 
 
 def _identity(table: _Table, where: str) -> Identity:
@@ -655,8 +660,13 @@ def _identity(table: _Table, where: str) -> Identity:
         table,
         where,
         required=frozenset({"role", "persona", "kind", "value"}),
-        optional=frozenset({"name", "surnames", "legal_name", "country", "primary"}),
+        optional=frozenset(
+            {"name", "surnames", "legal_name", "country", "primary", "province", "ceuta_melilla_deduction"}
+        ),
     )
+    province = _optional_string(table, "province", where)
+    if province is not None and _PROVINCE.fullmatch(province) is None:
+        raise _fail(where, f"province must be a two-digit Spanish province code 01-52, found {province!r}")
     return Identity(
         role=_string(table, "role", where),
         persona=_string(table, "persona", where),
@@ -667,6 +677,10 @@ def _identity(table: _Table, where: str) -> Identity:
         legal_name=_optional_string(table, "legal_name", where),
         country=_optional_string(table, "country", where),
         primary=_bool(table, "primary", where) if "primary" in table else False,
+        province=province,
+        ceuta_melilla_deduction=(
+            _bool(table, "ceuta_melilla_deduction", where) if "ceuta_melilla_deduction" in table else None
+        ),
     )
 
 

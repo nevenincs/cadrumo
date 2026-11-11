@@ -1167,7 +1167,9 @@ def professional_withholding_capture(
     The persona's professionals are resident individuals taxed under the IRPF,
     the only recipients whose fees carry the retención of RIRPF art. 95, at its
     general rate; the Modelo 190 annual detail names them under clave G,
-    subclave 01. Their domicile province is not stated, so it stays absent.
+    subclave 01. Their domicile province and the payer's Ceuta/Melilla
+    determination come from the professional's identity; an identity that
+    states neither leaves them absent, so the 190 refuses rather than guesses.
     """
     if (
         row.counterparty is None
@@ -1177,6 +1179,7 @@ def professional_withholding_capture(
     ):
         raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a professional fee states its base and retención")
     paid_on = row.operation_date(envelope)
+    perceptor = persona.identities.role(row.counterparty)
     with validating_governed_facts(operation):
         evidence = InvoiceWithholdingEvidenceRequest(
             invoice_id=invoice_id,
@@ -1194,7 +1197,7 @@ def professional_withholding_capture(
             modelo_190_detail=WithholdingObservation(
                 source_id=invoice_id,
                 source_allocation_id=row.ref,
-                perceptor_tax_id=persona.identities.role(row.counterparty).value,
+                perceptor_tax_id=perceptor.value,
                 perceptor_legal_name=party_name(persona, row.counterparty),
                 country_code="ES",
                 transaction_date=paid_on,
@@ -1205,6 +1208,10 @@ def professional_withholding_capture(
                 **zeroed_withholding_blocks(),
                 base_retenciones=row.taxable_base,
                 porcentaje_retencion=(row.retencion_rate * _PERCENT).quantize(_CENTS),
+                province_code=perceptor.province,
+                territorial_deduction_clave=(
+                    None if perceptor.ceuta_melilla_deduction is None else int(perceptor.ceuta_melilla_deduction)
+                ),
             ),
         )
     return WithholdingCapture(

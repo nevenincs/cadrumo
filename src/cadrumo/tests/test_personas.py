@@ -67,6 +67,27 @@ def test_an_unknown_format_is_refused() -> None:
         parse_identity_catalogue({"format": 2, "convention": {}, "identities": []})
 
 
+def _one_identity(**fields: object) -> dict[str, object]:
+    identity = {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **fields}
+    return {"format": 1, "convention": {}, "identities": [identity]}
+
+
+def test_an_identity_states_its_domicile_province_and_ceuta_melilla_determination() -> None:
+    catalogue = parse_identity_catalogue(_one_identity(province="46", ceuta_melilla_deduction=False))
+    identity = catalogue.role("a.titular")
+    assert identity.province == "46"
+    assert identity.ceuta_melilla_deduction is False
+    bare = parse_identity_catalogue(_one_identity()).role("a.titular")
+    assert bare.province is None
+    assert bare.ceuta_melilla_deduction is None
+
+
+@pytest.mark.parametrize("province", ["00", "53", "98", "6", "460"])
+def test_a_province_outside_the_spanish_codes_is_refused(province: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="province must be a two-digit Spanish province code"):
+        parse_identity_catalogue(_one_identity(province=province))
+
+
 def test_an_unknown_identity_role_is_refused() -> None:
     with pytest.raises(PersonaCatalogueError, match="unknown identity role"):
         _parse(_changed(("profile", "tax-id"), {"identity": "asalariada.desconocida"}))
