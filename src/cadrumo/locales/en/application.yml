@@ -1043,6 +1043,36 @@ application:
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
       next_step:
         choose_reading_model: Choose a reading model
+      structured:
+        fact:
+          currency: Currency
+          customer_name: Recipient
+          customer_tax_id: Recipient tax ID
+          grand_total: Invoice total
+          invoice_date: Issue date
+          invoice_number: Invoice number
+          invoice_series: Series
+          iva_amount: IVA amount
+          recargo_amount: Recargo de equivalencia
+          rectifies_invoice_number: Corrected invoice
+          regime_legend: Statement printed on the invoice
+          retencion_amount: Withholding
+          retencion_rate: Withholding rate
+          suplidos_amount: Pass-through expenses
+          supplier_name: Issuer
+          supplier_tax_id: Issuer tax ID
+          taxable_base: Taxable base
+        line:
+          description: Description
+          iva_amount: IVA amount
+          iva_rate: IVA rate
+          quantity: Quantity
+          taxable_base: Taxable base
+          unit_price: Unit price
+        title:
+          xml_cii: CII e-invoice
+          xml_facturae: Facturae e-invoice
+          xml_ubl: UBL e-invoice
     periods:
       served:
         annual: Year

@@ -1,4 +1,7 @@
-"""``aeat app ledger evidence page`` writes the drawn page the registered read returns, and nothing else."""
+"""``aeat app ledger evidence page`` writes the drawn page the registered read returns, and nothing else.
+
+A structured e-invoice has no page to draw, so the command writes nothing for one.
+"""
 
 from __future__ import annotations
 
@@ -19,12 +22,17 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ....adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
+from ....adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ....adapters.inbound.pdf.page_image import PageImageRenderer
 from ....application.ledger.evidence_page_contracts import (
     EVIDENCE_PAGE_IMAGE_URL_PREFIX,
     EVIDENCE_PAGE_MAX_IMAGE_BYTES,
+    EVIDENCE_STRUCTURED_TITLE_KEYS,
     LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
     EvidencePageMediaType,
+    EvidenceStructuredFactV1,
+    EvidenceStructuredInvoiceV1,
     LedgerEvidencePageProjection,
     LedgerEvidencePageRequest,
 )
@@ -41,6 +49,14 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _EVIDENCE_ID = "ev-page-1"
 _PDF = multi_page_text_pdf_bytes(("Factura",), ("Anexo",))
 _ATTACHMENT_ID = hashlib.sha256(_PDF).hexdigest()
+_FACTURAE = (
+    Path(__file__).resolve().parents[3]
+    / "application"
+    / "ledger"
+    / "tests"
+    / "_evidence_corpus"
+    / "facturae_32_series_and_parties_invoice.xml"
+)
 
 
 def _drawn_page() -> tuple[LedgerEvidencePageProjection, bytes]:
@@ -140,5 +156,37 @@ def test_a_result_for_another_page_writes_nothing(monkeypatch: pytest.MonkeyPatc
 
     with pytest.raises(CliRefusedBoundaryError):
         commands.evidence_page(cast(typer.Context, cast(object, None)), output, evidence_id=_EVIDENCE_ID, page=1)
+
+    assert not output.exists()
+
+
+def test_a_structured_e_invoice_is_refused_and_writes_nothing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    xml = _FACTURAE.read_bytes()
+    record = translate_parsed_einvoice(parse_einvoice_document(xml))
+    assert record.invoice_number is not None
+    digest = hashlib.sha256(xml).hexdigest()
+    projection = LedgerEvidencePageProjection(
+        profile_id=_PROFILE,
+        attachment_id=digest,
+        media_type=EvidencePageMediaType.XML,
+        page=1,
+        page_count=1,
+        source_sha256=digest,
+        file_name="factura.xml",
+        structured_invoice=EvidenceStructuredInvoiceV1(
+            title_key=EVIDENCE_STRUCTURED_TITLE_KEYS[record.shape],
+            facts=(
+                EvidenceStructuredFactV1(
+                    label_key="application.ledger.evidence.structured.fact.invoice_number", text=record.invoice_number
+                ),
+            ),
+            lines=(),
+        ),
+    )
+    _bind(monkeypatch, projection, [])
+    output = tmp_path / "page.png"
+
+    with pytest.raises(typer.BadParameter):
+        commands.evidence_page(cast(typer.Context, cast(object, None)), output, attachment_id=digest)
 
     assert not output.exists()

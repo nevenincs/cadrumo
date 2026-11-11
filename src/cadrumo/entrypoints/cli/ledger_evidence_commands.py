@@ -128,12 +128,15 @@ def evidence_page(
     read = run_ledger_evidence_page(
         ctx, evidence_id=evidence_id, attachment_id=attachment_id, page=page, max_width=max_width
     )
+    png = read.png
+    projection = read.projection
+    if png is None or projection.width is None or projection.height is None:
+        raise bad(tr("cli.app.ledger.evidence.page_structured_invoice"))
     target = output.expanduser()
     try:
-        atomic_write_bytes(target, read.png)
+        atomic_write_bytes(target, png)
     except OSError:
         raise bad(tr("cli.app.ledger.evidence.page_output_failed", path=str(output))) from None
-    projection = read.projection
     result = EvidencePageResult(
         bucket_id=str(projection.profile_id),
         evidence_id=projection.evidence_id,
@@ -146,7 +149,7 @@ def evidence_page(
         source_sha256=projection.source_sha256,
         file_name=projection.file_name,
         output_path=str(target),
-        bytes_written=len(read.png),
+        bytes_written=len(png),
     )
     emit_envelope(
         ctx,

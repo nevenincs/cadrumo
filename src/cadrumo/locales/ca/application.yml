@@ -1105,6 +1105,36 @@ application:
           tu.'
       next_step:
         choose_reading_model: Triar un model de lectura
+      structured:
+        fact:
+          currency: Moneda
+          customer_name: Destinatari
+          customer_tax_id: NIF del destinatari
+          grand_total: Total de la factura
+          invoice_date: Data d'expedició
+          invoice_number: Número de factura
+          invoice_series: Sèrie
+          iva_amount: Quota d'IVA
+          recargo_amount: Recàrrec d'equivalència
+          rectifies_invoice_number: Factura rectificada
+          regime_legend: Menció que figura a la factura
+          retencion_amount: Retenció
+          retencion_rate: Tipus de retenció
+          suplidos_amount: Suplerts
+          supplier_name: Emissor
+          supplier_tax_id: NIF de l'emissor
+          taxable_base: Base imposable
+        line:
+          description: Descripció
+          iva_amount: Quota d'IVA
+          iva_rate: Tipus d'IVA
+          quantity: Quantitat
+          taxable_base: Base imposable
+          unit_price: Preu unitari
+        title:
+          xml_cii: Factura electrònica CII
+          xml_facturae: Factura electrònica Facturae
+          xml_ubl: Factura electrònica UBL
     periods:
       served:
         annual: Any

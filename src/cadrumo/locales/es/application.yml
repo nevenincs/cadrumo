@@ -1109,6 +1109,36 @@ application:
           Rellénalos tú.'
       next_step:
         choose_reading_model: Elegir un modelo de lectura
+      structured:
+        fact:
+          currency: Moneda
+          customer_name: Destinatario
+          customer_tax_id: NIF del destinatario
+          grand_total: Total de la factura
+          invoice_date: Fecha de expedición
+          invoice_number: Número de factura
+          invoice_series: Serie
+          iva_amount: Cuota de IVA
+          recargo_amount: Recargo de equivalencia
+          rectifies_invoice_number: Factura rectificada
+          regime_legend: Mención que figura en la factura
+          retencion_amount: Retención
+          retencion_rate: Tipo de retención
+          suplidos_amount: Suplidos
+          supplier_name: Emisor
+          supplier_tax_id: NIF del emisor
+          taxable_base: Base imponible
+        line:
+          description: Descripción
+          iva_amount: Cuota de IVA
+          iva_rate: Tipo de IVA
+          quantity: Cantidad
+          taxable_base: Base imponible
+          unit_price: Precio unitario
+        title:
+          xml_cii: Factura electrónica CII
+          xml_facturae: Factura electrónica Facturae
+          xml_ubl: Factura electrónica UBL
     periods:
       served:
         annual: Año

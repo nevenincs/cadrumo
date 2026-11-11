@@ -33,6 +33,7 @@ from types import MappingProxyType
 from typing import Final
 
 from cadrumo.application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
+from cadrumo.application.ledger.evidence_page_contracts import EVIDENCE_STRUCTURED_LABEL_KEYS
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo_client.contracts.navigation import load_navigation_register
@@ -805,6 +806,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | FINDING_KEYS
     | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS
+    | EVIDENCE_STRUCTURED_LABEL_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -818,7 +820,7 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
 DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
-    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS
+    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS | EVIDENCE_STRUCTURED_LABEL_KEYS
 )
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.

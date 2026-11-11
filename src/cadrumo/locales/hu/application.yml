@@ -1091,6 +1091,36 @@ application:
           a mezőket.'
       next_step:
         choose_reading_model: Olvasómodell kiválasztása
+      structured:
+        fact:
+          currency: Pénznem
+          customer_name: Vevő
+          customer_tax_id: Vevő adóazonosítója
+          grand_total: Számla végösszege
+          invoice_date: Kiállítás dátuma
+          invoice_number: Számlaszám
+          invoice_series: Sorozat
+          iva_amount: Áfa összege
+          recargo_amount: Egyenértékűségi pótdíj
+          rectifies_invoice_number: Helyesbített számla
+          regime_legend: A számlán szereplő megjegyzés
+          retencion_amount: Forrásadó-levonás
+          retencion_rate: Forrásadó-levonás mértéke
+          suplidos_amount: Ügyfél nevében kifizetett költségek
+          supplier_name: Kibocsátó
+          supplier_tax_id: Kibocsátó adóazonosítója
+          taxable_base: Adóalap
+        line:
+          description: Megnevezés
+          iva_amount: Áfa összege
+          iva_rate: Áfakulcs
+          quantity: Mennyiség
+          taxable_base: Adóalap
+          unit_price: Egységár
+        title:
+          xml_cii: CII e-számla
+          xml_facturae: Facturae e-számla
+          xml_ubl: UBL e-számla
     periods:
       served:
         annual: Év

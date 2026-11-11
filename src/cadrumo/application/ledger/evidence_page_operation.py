@@ -1,16 +1,20 @@
-"""Worker read that draws one page of a stored document, and its registration.
+"""Worker read that shows one page of a stored document, and its registration.
 
 The worker loads the document's encrypted bytes from the profile's attachment
 custody, checks them against the digest its record names, and has the
-renderer draw the requested page. Only the bounded image and the document's
-facts enter the result operand; the decrypted bytes stay in worker memory.
+renderer draw the requested page. A structured e-invoice is not drawn: the
+e-invoice reader reads its record and the result carries the facts it
+states. Only the bounded image or those facts and the document's own facts
+enter the result operand; the decrypted bytes stay in worker memory.
 """
 
 from __future__ import annotations
 
 import asyncio
 import base64
+from collections.abc import Sequence
 from dataclasses import dataclass
+from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -30,6 +34,7 @@ from ..operations.host_path_name import host_path_file_name
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_terminal_receipt_match
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
+from ..operations.public_scalar import PublicDecimal
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -38,8 +43,16 @@ from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_page_contracts import (
     EVIDENCE_PAGE_IMAGE_URL_PREFIX,
     EVIDENCE_PAGE_MAX_IMAGE_BYTES,
+    EVIDENCE_STRUCTURED_FACT_KEYS,
+    EVIDENCE_STRUCTURED_LINE_KEYS,
+    EVIDENCE_STRUCTURED_MAX_LINES,
+    EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH,
+    EVIDENCE_STRUCTURED_TITLE_KEYS,
     LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
     EvidencePageMediaType,
+    EvidenceStructuredFactV1,
+    EvidenceStructuredInvoiceV1,
+    EvidenceStructuredLineV1,
     LedgerEvidencePageExecutionResult,
     LedgerEvidencePagePorts,
     LedgerEvidencePageProjection,
@@ -48,11 +61,14 @@ from .evidence_page_contracts import (
 from .evidence_page_errors import (
     LedgerEvidencePageDigestMismatchError,
     LedgerEvidencePageNotFoundError,
+    LedgerEvidencePageOutOfRangeError,
     LedgerEvidencePageTooLargeError,
     LedgerEvidencePageUnreadableError,
     LedgerEvidencePageUnsupportedMediaError,
 )
+from .invoice_draft_extraction_ports import StructuredInvoiceReadError
 from .read_access import resolve_ledger_request_read_access
+from .structured_invoice_ports import StructuredInvoiceReader
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,12 +135,57 @@ def _load_manifest(ports: LedgerEvidencePagePorts, bucket_id: str, document: _St
     return manifest
 
 
+def _structured_fact(label_key: str, value: object) -> EvidenceStructuredFactV1 | None:
+    """The fact a record field states, or ``None`` when the record leaves it out."""
+    if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise LedgerEvidencePageUnreadableError()
+        return EvidenceStructuredFactV1(label_key=label_key, number=PublicDecimal(decimal=str(value)))
+    if not isinstance(value, str) or not (text := value.strip()):
+        return None
+    if len(text) > EVIDENCE_STRUCTURED_MAX_TEXT_LENGTH:
+        raise LedgerEvidencePageTooLargeError()
+    return EvidenceStructuredFactV1(label_key=label_key, text=text)
+
+
+def _structured_facts(source: object, keys: Sequence[tuple[str, str]]) -> tuple[EvidenceStructuredFactV1, ...]:
+    return tuple(
+        fact for field, label_key in keys if (fact := _structured_fact(label_key, getattr(source, field))) is not None
+    )
+
+
+def _structured_invoice(reader: StructuredInvoiceReader, source: bytes, *, page: int) -> EvidenceStructuredInvoiceV1:
+    """Read a structured e-invoice's record and keep the facts it states, in reading order."""
+    if page != 1:
+        raise LedgerEvidencePageOutOfRangeError()
+    try:
+        record = reader(source)
+    except StructuredInvoiceReadError:
+        # XML that is not an e-invoice the reader knows stays a type the read cannot show.
+        raise LedgerEvidencePageUnsupportedMediaError() from None
+    title_key = EVIDENCE_STRUCTURED_TITLE_KEYS.get(record.shape)
+    if title_key is None:
+        raise LedgerEvidencePageUnsupportedMediaError()
+    lines = tuple(
+        EvidenceStructuredLineV1(facts=facts)
+        for line in record.lines
+        if (facts := _structured_facts(line, EVIDENCE_STRUCTURED_LINE_KEYS))
+    )
+    if len(lines) > EVIDENCE_STRUCTURED_MAX_LINES:
+        raise LedgerEvidencePageTooLargeError()
+    facts = _structured_facts(record, EVIDENCE_STRUCTURED_FACT_KEYS)
+    if not facts and not lines:
+        # XML shaped like an e-invoice that states nothing is no e-invoice to show.
+        raise LedgerEvidencePageUnsupportedMediaError()
+    return EvidenceStructuredInvoiceV1(title_key=title_key, facts=facts, lines=lines)
+
+
 def _read_page(
     ports: LedgerEvidencePagePorts,
     bucket_id: str,
     payload: LedgerEvidencePageRequest,
 ) -> LedgerEvidencePageProjection:
-    """Load, verify and draw the requested page in the worker thread."""
+    """Load, verify and show the requested page in the worker thread."""
     if require_active_bucket_id() != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
     document = _requested_document(ports, bucket_id, payload)
@@ -135,8 +196,35 @@ def _read_page(
     media_type = EvidencePageMediaType.of_declared(manifest.mime_type)
     if media_type is None:
         raise LedgerEvidencePageUnsupportedMediaError()
+    source = _verified_document_bytes(ports, bucket_id, document, manifest, ports.renderer.max_source_bytes)
+    if media_type is EvidencePageMediaType.XML:
+        structured = _structured_invoice(ports.structured_reader, source, page=payload.page)
+        del source
+        return LedgerEvidencePageProjection(
+            profile_id=payload.profile_id,
+            evidence_id=payload.evidence_id,
+            attachment_id=manifest.attachment_id,
+            media_type=media_type,
+            page=1,
+            page_count=1,
+            source_sha256=document.expected_sha256,
+            file_name=file_name,
+            structured_invoice=structured,
+        )
+    return _drawn_page(ports, payload, manifest, document, file_name, media_type, source)
+
+
+def _drawn_page(
+    ports: LedgerEvidencePagePorts,
+    payload: LedgerEvidencePageRequest,
+    manifest: Attachment,
+    document: _StoredDocument,
+    file_name: str | None,
+    media_type: EvidencePageMediaType,
+    source: bytes,
+) -> LedgerEvidencePageProjection:
+    """Have the renderer draw the requested page of a PDF or an image."""
     renderer = ports.renderer
-    source = _verified_document_bytes(ports, bucket_id, document, manifest, renderer.max_source_bytes)
     rendered = renderer.render(
         source,
         media_type=media_type,

@@ -1,8 +1,9 @@
-"""The registered page read draws a stored document's page, or refuses it by a typed code.
+"""The registered page read shows a stored document's page, or refuses it by a typed code.
 
 Each case runs the production definition through the real registry,
 supervisor, journal and encrypted operand store, with the production
-composition of evidence catalogue, attachment custody and renderer, against
+composition of evidence catalogue, attachment custody, renderer and
+e-invoice reader, against
 documents stored in a real encrypted profile. A success is read back as a
 frontend reads it; a refusal is read from the operation's receipt.
 """
@@ -23,6 +24,8 @@ import pytest
 from PIL import Image
 from pydantic import BaseModel
 
+from ...adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
+from ...adapters.inbound.einvoice.parsers import parse_einvoice_document
 from ...adapters.inbound.pdf.page_image import PageImageRenderer
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.storage.attachment import AttachmentStore
@@ -30,6 +33,7 @@ from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile,
 from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_page_contracts import (
     EVIDENCE_PAGE_IMAGE_URL_PREFIX,
+    EVIDENCE_STRUCTURED_TITLE_KEYS,
     LEDGER_EVIDENCE_PAGE_OPERATION_DEFINITION_ID,
     EvidencePageMediaType,
     EvidencePageRenderer,
@@ -52,6 +56,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest, OperationTerminalReceipt
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.operations.registry import OperationRegistry
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
@@ -71,6 +76,14 @@ _YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("3c1d5e7f-9a2b-4c4d-8e6f-1a2b3c4d5e6f")
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_FACTURAE = (
+    Path(__file__).resolve().parents[2]
+    / "application"
+    / "ledger"
+    / "tests"
+    / "_evidence_corpus"
+    / "facturae_32_series_and_parties_invoice.xml"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,6 +197,8 @@ def _settle(
 
 
 def _image(page: LedgerEvidencePageProjection) -> Image.Image:
+    assert page.structured_invoice is None
+    assert page.image_data_url is not None
     assert page.image_data_url.startswith(EVIDENCE_PAGE_IMAGE_URL_PREFIX)
     png = base64.b64decode(page.image_data_url.removeprefix(EVIDENCE_PAGE_IMAGE_URL_PREFIX), validate=True)
     assert png.startswith(_PNG_SIGNATURE)
@@ -268,12 +283,81 @@ def test_a_record_whose_digest_its_stored_bytes_do_not_match_is_refused(
     _assert_refused(settled, LedgerEvidencePageDigestMismatchError)
 
 
-def test_a_document_of_a_type_the_read_cannot_draw_is_refused(
+def test_a_facturae_e_invoice_is_shown_as_the_facts_its_record_states(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    xml = _FACTURAE.read_bytes()
+    record = translate_parsed_einvoice(parse_einvoice_document(xml))
+    attachment_id = _attachment(
+        profile, xml, mime_type="text/xml", source_reference=str(tmp_path / "alba-private-folder" / "factura.xml")
+    )
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    assert settled.receipt.condition is OperationTerminalCondition.SUCCEEDED
+    assert settled.receipt.effect is OperationEffect.NONE
+    page = settled.page
+    assert page is not None
+    assert page.media_type is EvidencePageMediaType.XML
+    assert (page.page, page.page_count) == (1, 1)
+    assert (page.width, page.height, page.image_data_url) == (None, None, None)
+    assert page.source_sha256 == attachment_id
+    assert page.file_name == "factura.xml"
+    shown = page.structured_invoice
+    assert shown is not None
+    assert shown.title_key == EVIDENCE_STRUCTURED_TITLE_KEYS[record.shape]
+    facts = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.facts}
+    assert record.invoice_number is not None
+    assert record.supplier_tax_id is not None
+    assert record.grand_total is not None
+    assert facts["invoice_number"].text == record.invoice_number
+    assert facts["supplier_tax_id"].text == record.supplier_tax_id
+    assert facts["grand_total"].number == PublicDecimal(decimal=str(record.grand_total))
+    assert len(shown.lines) == len(record.lines)
+    first_line = {fact.label_key.rsplit(".", 1)[-1]: fact for fact in shown.lines[0].facts}
+    assert first_line["description"].text == record.lines[0].description
+    released = page.model_dump_json()
+    assert "alba-private-folder" not in released
+    assert "<" not in released
+
+
+def test_xml_that_is_no_e_invoice_is_refused_as_a_type_the_read_cannot_show(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     attachment_id = _attachment(
         profile, b"<Invoice>synthetic</Invoice>", mime_type="application/xml", source_reference="invoice.xml"
     )
+
+    settled = _settle(
+        tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)
+    )
+
+    _assert_refused(settled, LedgerEvidencePageUnsupportedMediaError)
+
+
+def test_an_e_invoice_has_no_second_page(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    attachment_id = _attachment(
+        profile, _FACTURAE.read_bytes(), mime_type="application/xml", source_reference="factura.xml"
+    )
+
+    settled = _settle(
+        tmp_path,
+        profile,
+        operation,
+        LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id, page=2),
+    )
+
+    _assert_refused(settled, LedgerEvidencePageOutOfRangeError)
+
+
+def test_a_document_of_a_type_the_read_cannot_show_is_refused(
+    tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> None:
+    attachment_id = _attachment(profile, b"Factura 1", mime_type="text/plain", source_reference="factura.txt")
 
     settled = _settle(
         tmp_path, profile, operation, LedgerEvidencePageRequest(profile_id=_PROFILE, attachment_id=attachment_id)

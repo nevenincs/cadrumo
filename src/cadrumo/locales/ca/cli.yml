@@ -287,6 +287,9 @@ cli:
         page_number_help: Pàgina que es dibuixa, comptant des de l'1.
         page_output_failed: No s'ha pogut escriure la imatge de la pàgina a {path}.
         page_output_help: Fitxer PNG on s'escriu la pàgina.
+        page_structured_invoice: Aquest document és una factura electrònica estructurada
+          i no té cap pàgina per dibuixar; obre'l a la finestra per llegir-ne les
+          dades.
         pull_actor_help: El teu nom o etiqueta.
         pull_id_help: Identificador de transacció dels teus registres.
         remove_help: Elimina un justificant de factura de compra
