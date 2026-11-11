@@ -9778,6 +9778,12 @@ sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 
 [[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "renta-profile-incremento-guarderia"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "Límite del incremento"]}], source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2024".family_overrides]]
 family = "formulas"
 selector = {revision = "2023", id = "renta-incremento-guarderia-0613"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["incremento", "guarder", "la limitación del importe de la deducción a las cotizaciones devengadas en el período impositivo", "gasto efectivo no subvencionado", "se calculará proporcionalmente al número de meses"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]}
