@@ -33,6 +33,7 @@ from .export_field_note_references import split_official_note_references
 from .export_field_schema import is_required, require_numeric_extent, schema_field
 from .export_fragment_provenance import ExportFieldDerivation, ExportFieldDerivationCode
 from .joined_record_design import JoinedRecordDesignField
+from .note_governed_enumerations import NoteGovernedEnumerationDeclaration, note_governed_enumeration_for
 from .source_defects import NoteGovernedAmountDeclaration, note_governed_amount_for
 
 # A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not
@@ -182,6 +183,7 @@ def numeric_derivation(
     *,
     export_record_id: str,
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    note_governed_enumerations: tuple[NoteGovernedEnumerationDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     """Derive a numeric export field from its official design content."""
     parser_field = joined_field.parser_field
@@ -198,6 +200,7 @@ def numeric_derivation(
             joined_field,
             pointer_content=pointer_content,
             note_governed_amounts=note_governed_amounts,
+            note_governed_enumerations=note_governed_enumerations,
             export_record_id=export_record_id,
         )
     derived = _ordered_numeric_shape_derivation(joined_field, normalised_content, note_references, export_record_id)
@@ -249,6 +252,7 @@ def _pointer_numeric_derivation(
     *,
     pointer_content: str,
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...],
+    note_governed_enumerations: tuple[NoteGovernedEnumerationDeclaration, ...],
     export_record_id: str,
 ) -> ExportFieldDerivation:
     """Resolve a numeric cell whose only content is one or more note pointers."""
@@ -258,6 +262,19 @@ def _pointer_numeric_derivation(
         sheet=parser_field.sheet,
         published_content=pointer_content,
     )
+    enumeration = note_governed_enumeration_for(
+        note_governed_enumerations,
+        sheet=parser_field.sheet,
+        source_cell=parser_field.source_cell,
+        published_pointer=pointer_content,
+    )
+    if enumeration is not None:
+        if adjudicated is not None:
+            raise RegistryValidationError(
+                f"official numeric field {joined_field.semantic_entry.export_field_id!r} has both an amount "
+                "and an enumeration reading of one note pointer",
+            )
+        return _note_governed_enumeration_derivation(joined_field, enumeration, export_record_id)
     if adjudicated is None:
         # No reviewed note reading means the historical unscaled shape cannot
         # be silently changed by a rule nobody has adjudicated for this design.
@@ -287,6 +304,34 @@ def _pointer_numeric_derivation(
         decimals=None if signed else adjudicated.decimal_digits,
         allowed_values=adjudicated.mandated_values,
         derivation_code="numeric-note-governed-amount-v1",
+    )
+
+
+def _note_governed_enumeration_derivation(
+    joined_field: JoinedRecordDesignField,
+    enumeration: NoteGovernedEnumerationDeclaration,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    """Close a pointer-only slot to the codes its note's value table states."""
+    parser_field = joined_field.parser_field
+    # The same width rule the printed enumerations obey: a tabulated code that
+    # does not fill the slot is not a reading of this design.
+    if any(len(value) != parser_field.length for value in enumeration.allowed_values):
+        raise RegistryValidationError(
+            f"note-governed enumeration {joined_field.semantic_entry.export_field_id!r} has values "
+            "outside the declared slot width",
+        )
+    return schema_field(
+        joined_field,
+        data_type="integer",
+        required=is_required(parser_field.validation),
+        padding=ExportPadding.LEFT_ZERO,
+        justification=ExportJustification.RIGHT,
+        signed=False,
+        export_record_id=export_record_id,
+        value_policy=ExportValuePolicy.ENUMERATED_DIGITS,
+        allowed_values=enumeration.allowed_values,
+        derivation_code="numeric-note-governed-enumeration-v1",
     )
 
 

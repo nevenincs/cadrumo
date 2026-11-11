@@ -820,6 +820,8 @@ modelo:
             heading: Befizetés, visszatérítés és bankszámla
           pais-banco:
             heading: Országkód
+          prorrata-especial-no:
+            heading: Nem / ebben az időszakban nincs ilyen kérdés
           reagp:
             heading: Mezőgazdasági, állattenyésztési és halászati rendszer kompenzációja
           rectificacion-devolucion:

@@ -1368,6 +1368,7 @@
         "dev.registry.pipeline.historical_static_repair",
         "dev.registry.pipeline.joined_record_design",
         "dev.registry.pipeline.note_absent_fill",
+        "dev.registry.pipeline.note_governed_enumerations",
         "dev.registry.pipeline.note_literals",
         "dev.registry.pipeline.note_negative_amount",
         "dev.registry.pipeline.published_edition_staging",

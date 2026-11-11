@@ -284,6 +284,11 @@ padding = "left_zero"
 justification = "right"
 signed = false
 design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "1",
+    "2",
+]
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
@@ -299,6 +304,11 @@ padding = "left_zero"
 justification = "right"
 signed = false
 design_type = "Num"
+value_policy = "enumerated-digits"
+allowed_values = [
+    "1",
+    "2",
+]
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2022"]
 
