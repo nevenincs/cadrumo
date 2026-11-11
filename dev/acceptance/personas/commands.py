@@ -47,6 +47,7 @@ CLASSIFY_OPTIONS: Mapping[str, str] = {
     "taxable_base": "--taxable-base",
     "iva_rate": "--iva-rate",
     "iva_amount": "--iva-amount",
+    "recargo_amount": "--recargo-amount",
     "deduction_fact_kind": "--deduction-kind",
     "counterparty_country": "--counterparty-country",
 }

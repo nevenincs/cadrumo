@@ -67,10 +67,8 @@ from .persona_materialisation import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-#: What no production operation can record of each persona, read off its files: the declarative blocks,
-#: the employee's Seguridad Social contributions on a withholding certificate, and the cuota and recargo of
-#: a purchase bearing recargo de equivalencia, which classification cannot carry and the manual entry refuses
-#: for a retailer with no Modelo 303 regime composition.
+#: What no production operation can record of each persona, read off its files: the declarative blocks and
+#: the employee's Seguridad Social contributions on a withholding certificate.
 _NOT_LOADED: dict[str, set[str]] = {
     "arrendador-jubilado": {"rental_properties"},
     "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
@@ -78,7 +76,7 @@ _NOT_LOADED: dict[str, set[str]] = {
     "autonomo-electricista": set(),
     "autonomo-fontanero": set(),
     "intracomunitario-desarrollador": set(),
-    "minorista-recargo": {"ledger.recargo_amount"},
+    "minorista-recargo": set(),
     "sociedad-limitada": {"officers"},
     "traductora-profesional": set(),
 }
@@ -171,7 +169,7 @@ def test_a_persona_replays_through_production_operations(
             stored.transactions[materialised.transactions[row.ref]].recargo_amount,
         )
         for row in persona.ledger
-    } == {row.ref: (row.iva_amount, None) if row.recargo_amount is None else (None, None) for row in persona.ledger}
+    } == {row.ref: (row.iva_amount, row.recargo_amount) for row in persona.ledger}
     assert set(materialised.invoices) == {row.ref for row in persona.ledger if row.invoice_kind is not None}
     assert {
         (
