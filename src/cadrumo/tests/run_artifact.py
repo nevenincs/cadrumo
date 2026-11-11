@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -189,15 +190,21 @@ def run_artifact(
 
 
 def _retire(kind_root: Path, *, current: Path, retain: int) -> None:
-    """Remove all but the ``retain`` most recent entries; one still open elsewhere is left for later."""
-    entries = sorted(
-        (
-            path
-            for path in kind_root.iterdir()
-            if path.is_dir() and path != current and not path.name.startswith(_STAGING_PREFIX)
-        ),
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
+    """Remove all but the ``retain`` most recent entries; one still open elsewhere is left for later.
+
+    Another worker retiring the same kind can remove an entry between the listing
+    and its ``stat``; that entry is already gone, so it is skipped.
+    """
+    dated: list[tuple[float, Path]] = []
+    for path in kind_root.iterdir():
+        if path == current or path.name.startswith(_STAGING_PREFIX):
+            continue
+        try:
+            entry_stat = path.stat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISDIR(entry_stat.st_mode):
+            dated.append((entry_stat.st_mtime, path))
+    entries = [path for _, path in sorted(dated, key=lambda item: item[0], reverse=True)]
     for stale in entries[max(retain - 1, 0) :]:
         shutil.rmtree(stale, ignore_errors=True)

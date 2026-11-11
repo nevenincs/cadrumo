@@ -3,8 +3,9 @@
 The MCP server, its runtime adapter and the registered operation are the
 production ones; the runtime is the host's portable human runtime, whose person signs
 in with the profile password and approves the agent's attendance. The asset is
-a battery-electric van entering service in the newest supported year, whose forecast the product
-refuses under the accelerated regime it does not compute.
+a battery-electric van entering service in the first year LIS DA 18 governs, before any edition
+enrols free depreciation for it, whose forecast the product refuses under the accelerated regime
+it does not compute.
 """
 
 from __future__ import annotations
@@ -23,6 +24,8 @@ from click.testing import Result
 
 from cadrumo.core.config import load_settings
 from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_references import governed_period_span
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_fixture_ports import CliInvocation
@@ -40,7 +43,19 @@ from cadrumo_runtime.host.tests.frontend.cli.test_actividad_asset_accelerated_da
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
+_LIS_DA18 = "ley-27-2014:da-18"
+
+
+def _first_year_lis_da18_governs() -> int:
+    """Read the first exercise LIS DA 18 governs from the published legal declaration, inside the support envelope."""
+    with bundled_indexed_authority().operation() as operation:
+        governs_from, _ = governed_period_span(operation.legal_reference(_LIS_DA18))
+    envelope = filing_year_envelope()
+    assert envelope.floor <= governs_from.year <= envelope.horizon, governs_from
+    return governs_from.year
+
+
+_YEAR = _first_year_lis_da18_governs()
 _ASSET_ID = f"van-{_YEAR}"
 _IN_SERVICE = date(_YEAR, 3, 1)
 _DA18_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
@@ -127,7 +142,7 @@ def test_a_forecast_refusal_reaches_the_agent_with_its_reason_key_and_facts(
     assert refusal["reason_key"] == _DA18_REASON_KEY
     assert {fact["key"]: fact["value"] for fact in refusal["reason_facts"]} == {
         "asset_id": _ASSET_ID,
-        "legal_reference": "ley-27-2014:da-18",
+        "legal_reference": _LIS_DA18,
         "method": "electric_vehicle_free",
         "tax_year": str(_YEAR),
     }
