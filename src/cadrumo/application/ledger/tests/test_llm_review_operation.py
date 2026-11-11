@@ -24,6 +24,7 @@ from ....core.operations import (
     OperationTerminalCondition,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_origin import ClassificationOrigin
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -66,6 +67,8 @@ from ..llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin
 from ..models import ManualLedgerTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -85,7 +88,7 @@ def _baseline() -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="reviewed-executor-row",
-                booked_date=date(2026, 4, 15),
+                booked_date=date(_YEAR, 4, 15),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 description="synthetic reviewed row",
@@ -94,7 +97,7 @@ def _baseline() -> Transaction:
                     source_sha256="c" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2026, 4, 15, tzinfo=UTC),
+                    ingested_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={"source": "synthetic"},
@@ -177,7 +180,7 @@ class _Interactions:
         self.published = kwargs
         operand = kwargs["reviewed_operand"]
         assert isinstance(operand, LedgerLlmReviewedOperand)
-        await self.operands.put(operand, written_at=datetime(2026, 4, 15, tzinfo=UTC))
+        await self.operands.put(operand, written_at=datetime(_YEAR, 4, 15, tzinfo=UTC))
 
 
 class _Repository:
@@ -465,7 +468,7 @@ async def test_resume_preserves_exact_baseline_and_distinguishes_prewrite_from_p
             revision=2,
             condition=OperationTerminalCondition.SUCCEEDED,
             effect=OperationEffect.UPDATED,
-            settled_at=datetime(2026, 4, 15, tzinfo=UTC),
+            settled_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
             result_ref=reference,
         )
         assert operation.result_projector(execution, receipt) == execution.result
@@ -775,7 +778,7 @@ async def test_terminal_preview_captures_exact_proposal_without_pending_review_o
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(2026, 4, 15, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
         result_ref=reference,
     )
     assert operation.result_projector(execution, receipt) == execution.result

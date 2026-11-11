@@ -24,6 +24,7 @@ import pytest
 
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.prorrata_register_catalogue import (
@@ -43,13 +44,13 @@ from .ledger_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_EJERCICIO = 2026
+_EJERCICIO = filing_year_envelope().horizon
 _PERCENTAGE = Decimal("64")
-_DECLARED = 2025
+_DECLARED = newest_authored_edition("100")
 
 
 def _prior_m303_snapshot_ref():
-    return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot("303", filing_year=_EJERCICIO - 1, period="4T").snapshot_ref
 
 
 def _register(regime: ProrrataRegisterRegime, *, ejercicio: int = _EJERCICIO) -> ProrrataRegister:
@@ -62,7 +63,7 @@ def _register(regime: ProrrataRegisterRegime, *, ejercicio: int = _EJERCICIO) ->
                 especial_transition=None,
                 provisional_percentage=_PERCENTAGE,
                 provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                source_observation_ref="303:2025:4T",
+                source_observation_ref=f"303:{_EJERCICIO - 1}:4T",
                 source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             ),
         ),
@@ -111,7 +112,7 @@ def test_a_percentage_and_its_provenance_are_resolved_together_or_not_at_all() -
         especial_transition=None,
         provisional_percentage=_PERCENTAGE,
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-        source_observation_ref="303:2025:4T",
+        source_observation_ref=f"303:{_EJERCICIO - 1}:4T",
         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
     resolved = resolve_provisional_percentage((entry,))

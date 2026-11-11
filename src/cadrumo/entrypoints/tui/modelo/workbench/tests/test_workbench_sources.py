@@ -39,6 +39,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....navigation import TuiNavigationTargetV1, declared_destination_ids
@@ -53,6 +54,8 @@ from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, status_line_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _SIZE = (140, 40)
 
@@ -228,7 +231,7 @@ def test_a_closed_group_lists_its_boxes_in_two_lines_then_counts_the_rest() -> N
 
 
 def test_a_value_carried_from_an_earlier_declaration_names_that_declaration() -> None:
-    earlier = ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2025, "4T"))
+    earlier = ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(_YEAR, "4T"))
     carried = ModeloFormValueSource(family=SourceFamily.EARLIER_FILINGS, earlier_filings=(earlier,))
     bound = replace_fields(
         synthetic_form(),
@@ -245,10 +248,10 @@ def test_a_value_carried_from_an_earlier_declaration_names_that_declaration() ->
         unbound_summary = group_summary(unbound_group)
         generic = tr(source_policy(BindingSourceKind.PREVIOUS_FILING).label_key)
 
-    assert summary == "Modelo 130 · 4th quarter 2025"
-    assert headings[:2] == ["« Earlier declarations", "Modelo 130 · 4th quarter 2025"]
+    assert summary == f"Modelo 130 · 4th quarter {_YEAR}"
+    assert headings[:2] == ["« Earlier declarations", f"Modelo 130 · 4th quarter {_YEAR}"]
     assert unbound_group.readings == ()
-    assert unbound_summary == "Modelo 130 · 4th quarter 2025"
+    assert unbound_summary == f"Modelo 130 · 4th quarter {_YEAR}"
     assert generic not in summary
 
 
@@ -442,7 +445,7 @@ async def test_choosing_a_box_the_filer_may_change_opens_its_editor_in_the_workb
 
 @pytest.mark.asyncio
 async def test_the_declarations_status_line_leads_the_map_and_the_title_is_strong() -> None:
-    status = "To pay 1,300.00 € · file by 20 Apr 2026"
+    status = f"To pay 1,300.00 € · file by 20 Apr {_YEAR}"
     with override_settings(cadrumo_output_language="en"):
         screen = WorkbenchSourcesScreen(
             synthetic_form(), language=OutputLanguage.EN, staged={}, status_line=status_line_of(status)

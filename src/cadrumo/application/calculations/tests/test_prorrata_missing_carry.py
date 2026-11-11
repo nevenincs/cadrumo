@@ -31,6 +31,7 @@ from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
 )
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
@@ -38,6 +39,7 @@ from ..prorrata_regularizacion import (
     derive_prorrata_applicability,
 )
 
+_YEAR = filing_year_envelope().horizon
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -58,13 +60,13 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=_unresolved(),
-        ejercicio=2026,
-        revision=_m303_revision(2026),
+        ejercicio=_YEAR,
+        revision=_m303_revision(_YEAR),
     )
 
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = published_snapshot(Modelo("303").value, filing_year=2026, period="4T")
+    snapshot = published_snapshot(Modelo("303").value, filing_year=_YEAR, period="4T")
     canonical_target = next(
         casilla_id
         for binding in snapshot.revision.bindings
@@ -74,7 +76,7 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
         for casilla_id in casillas_by_binding(snapshot.revision)[binding.id]
     )
     assert diagnostic.casilla_id == canonical_target
-    assert "2026" in diagnostic.message
+    assert str(_YEAR) in diagnostic.message
     assert "definitiva del ejercicio anterior" in diagnostic.message
     assert "por defecto" in diagnostic.message
 
@@ -83,7 +85,7 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
     applicability = derive_prorrata_applicability(
         register_entries=(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_YEAR,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -94,8 +96,8 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=_unresolved(),
-        ejercicio=2026,
-        revision=_m303_revision(2026),
+        ejercicio=_YEAR,
+        revision=_m303_revision(_YEAR),
         first_ejercicio=True,
     )
 
@@ -107,7 +109,7 @@ def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -
     applicability = derive_prorrata_applicability(
         register_entries=(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_YEAR,
                 regime=ProrrataRegisterRegime.from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -120,8 +122,8 @@ def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=_unresolved(),
-        ejercicio=2026,
-        revision=_m303_revision(2026),
+        ejercicio=_YEAR,
+        revision=_m303_revision(_YEAR),
     )
 
     assert diagnostic is None
@@ -136,8 +138,8 @@ def test_missing_provisional_advisory_is_silent_when_ladder_resolves() -> None:
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=ProrrataProvisionalResolution(percentage=Decimal("75"), provenance=None),
-        ejercicio=2026,
-        revision=_m303_revision(2026),
+        ejercicio=_YEAR,
+        revision=_m303_revision(_YEAR),
     )
 
     assert diagnostic is None

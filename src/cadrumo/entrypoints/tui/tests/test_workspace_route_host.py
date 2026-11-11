@@ -19,6 +19,7 @@ exists to remove.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import NoReturn, cast
 
 import pytest
@@ -37,6 +38,7 @@ from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ....core.identity.transaction_ids import TransactionId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app import CadrumoTuiApp
 from ..home import HomeScreen
 from ..ledger.entries import LedgerEntriesScreen
@@ -68,7 +70,7 @@ _LEDGER_TARGET = TuiNavigationTargetV1(
 _ENTRY = LedgerWorkspaceEntryRefV1(
     transaction_id=cast("TransactionId", "a" * 64),
     review_status="pending",
-    date="2026-03-14",
+    date=date(filing_year_envelope().horizon, 3, 14).isoformat(),
     amount="1250.00",
     currency="EUR",
     direction="outgoing",

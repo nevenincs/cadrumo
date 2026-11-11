@@ -24,17 +24,21 @@ from ....application.aggregation.withholding_recognition import (
 )
 from ....core.aggregation import RetencionClave
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 def _invoice() -> Invoice:
     base = Decimal("1000.00")
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2025, 3, 31))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 3, 31))
     assert rate is not None
     line = InvoiceLine(
         description="Professional services",
@@ -49,7 +53,7 @@ def _invoice() -> Invoice:
             "bucket_id": "00000000-0000-4000-8000-000000000452",
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "CLI-WITHHOLDING-001",
-            "issued_at": date(2025, 3, 31),
+            "issued_at": date(_YEAR, 3, 31),
             "counterparty_name": "Resident professional SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -75,7 +79,7 @@ def _request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
             "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
             "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
             "payment_event_id": "payment-q2",
-            "payment_occurred_on": date(2025, 4, 2),
+            "payment_occurred_on": date(_YEAR, 4, 2),
             "allocation_id": "allocation-q2",
             "allocated_base": Decimal("500.00"),
             "allocated_withholding": Decimal("95.00"),
@@ -96,7 +100,7 @@ def _capital_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
             "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
             "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
             "exigibility_event_id": "capital-exigibility-q4",
-            "exigibility_occurred_on": date(2025, 12, 15),
+            "exigibility_occurred_on": date(_YEAR, 12, 15),
             "allocation_id": "capital-allocation-q4",
             "allocated_base": Decimal("500.00"),
             "allocated_withholding": Decimal("95.00"),
@@ -111,7 +115,7 @@ def _annual_detail(invoice: Invoice) -> WithholdingObservation:
         source_id=invoice.invoice_id,
         perceptor_tax_id=invoice.counterparty_tax_id or "",
         perceptor_legal_name=invoice.counterparty_name,
-        transaction_date=date(2025, 4, 2),
+        transaction_date=date(_YEAR, 4, 2),
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("500.00"),
         retencion_practicada=Decimal("95.00"),
@@ -128,15 +132,15 @@ def test_invoice_liability_revision_is_stable_across_unrelated_catalogue_revisio
         invoice,
         catalogue_revision_id="a" * 64,
         request=_request(invoice),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_YEAR,
+        cadence=quarterly_filer_cadence(_YEAR),
     )
     later = build_invoice_withholding_capture(
         invoice,
         catalogue_revision_id="b" * 64,
         request=_request(invoice),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_YEAR,
+        cadence=quarterly_filer_cadence(_YEAR),
     )
 
     assert first.catalogue_read_revision_id != later.catalogue_read_revision_id
@@ -147,7 +151,7 @@ def test_invoice_liability_revision_is_stable_across_unrelated_catalogue_revisio
 def test_cli_evidence_shape_refuses_a_caller_authored_recognition_date() -> None:
     """The transport accepts dated events, never a derived filing coordinate."""
     invoice = _invoice()
-    payload = _request(invoice).model_dump(mode="json") | {"recognized_on": "2025-04-02"}
+    payload = _request(invoice).model_dump(mode="json") | {"recognized_on": date(_YEAR, 4, 2).isoformat()}
 
     with pytest.raises(ValidationError, match="recognized_on"):
         InvoiceWithholdingEvidenceRequest.model_validate(payload)
@@ -169,12 +173,12 @@ def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payme
         invoice,
         catalogue_revision_id="a" * 64,
         request=request,
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_YEAR,
+        cadence=quarterly_filer_cadence(_YEAR),
     )
 
     assert capture.scope.modelo == "123"
-    assert capture.scope.period == Period.from_year_and_code(2025, "4T")
+    assert capture.scope.period == Period.from_year_and_code(_YEAR, "4T")
     evidence = capture.command.recognition_evidence
     assert evidence.exigibility is not None
     assert evidence.exigibility.event_id == "capital-exigibility-q4"
@@ -246,8 +250,8 @@ def test_rent_cli_evidence_refuses_missing_property_detail() -> None:
             invoice,
             catalogue_revision_id="a" * 64,
             request=request,
-            applicable_year=2025,
-            cadence=quarterly_filer_cadence(2025),
+            applicable_year=_YEAR,
+            cadence=quarterly_filer_cadence(_YEAR),
         )
 
 
@@ -261,6 +265,6 @@ def test_professional_cli_evidence_refuses_missing_modelo_190_detail() -> None:
             invoice,
             catalogue_revision_id="a" * 64,
             request=request,
-            applicable_year=2025,
-            cadence=quarterly_filer_cadence(2025),
+            applicable_year=_YEAR,
+            cadence=quarterly_filer_cadence(_YEAR),
         )

@@ -34,9 +34,13 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -52,7 +56,7 @@ def _canonical_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "F-2026-FOLD-001",
-        "issued_at": date(2026, 3, 10),
+        "issued_at": date(_YEAR, 3, 10),
         "counterparty_name": "Cliente Valido SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",

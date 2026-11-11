@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 #: The timestamp rendered the way sqlite3's default datetime adapter renders it.
 #: That adapter is deprecated since Python 3.12, and these raw inserts bypass the
 #: ORM that would otherwise serialise the value, so the text is passed directly.
-_WRITTEN_AT = datetime(2026, 6, 4, tzinfo=UTC).isoformat(" ")
+_WRITTEN_AT = datetime(1980, 6, 4, tzinfo=UTC).isoformat(" ")
 
 
 @contextmanager

@@ -37,6 +37,7 @@ from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -171,7 +172,7 @@ def _response(kind: type[OperationResponseControlRequestV1]) -> OperationRespons
 
 def test_a_registered_error_is_answered_with_the_code_and_message_the_command_line_prints() -> None:
     with pytest.raises(PeriodError) as raised:
-        Period.from_year_and_code(2025, "evento")
+        Period.from_year_and_code(filing_year_envelope().horizon, "evento")
     printed = build_error_envelope(raised.value)
 
     refusal = read_refusal(raised.value)

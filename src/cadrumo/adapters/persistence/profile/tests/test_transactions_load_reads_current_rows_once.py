@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import update
 
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions import models as transaction_models
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
@@ -27,6 +28,8 @@ from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "34343434-3434-4343-8343-343434343434"
@@ -40,7 +43,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 def _transaction(provider_id: str) -> Transaction:
-    booked = date(2025, 2, 3)
+    booked = date(_YEAR, 2, 3)
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
@@ -56,7 +59,7 @@ def _transaction(provider_id: str) -> Transaction:
                     source_sha256="e" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2025, 2, 4, 9, 0, tzinfo=UTC),
+                    ingested_at=datetime(1980, 2, 4, 9, 0, tzinfo=UTC),
                     provider_name="snapshot read provider",
                 ),
                 raw_fields={"Concepto": provider_id},

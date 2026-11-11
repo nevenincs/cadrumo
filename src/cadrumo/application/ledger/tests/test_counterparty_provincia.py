@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ine_provincia_catalogue import ine_provincia_names
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.iva.schema import IvaTerritorialScope
 from ..counterparty_establishment import (
@@ -31,13 +32,15 @@ from ..counterparty_establishment_ports import CounterpartyEstablishmentReposito
 from ..counterparty_operation import LedgerCounterpartyRequest
 from .ledger_value_fixtures import repository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = ["repository"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B00015016"
-_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
+_ASSERTED_AT = datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC)
 
 
 def _stored(repository: CounterpartyEstablishmentRepositoryProtocol) -> ConfirmedCounterpartyFacts | None:

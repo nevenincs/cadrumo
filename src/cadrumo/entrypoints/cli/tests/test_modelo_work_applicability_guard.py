@@ -33,11 +33,14 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 
 __all__ = ["isolated_cli_backend"]
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -116,8 +119,8 @@ def test_work_create_refuses_modelo_202_for_a_natural_person(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", "2025", "--period", "1P",
-            "--revision", "2025-y-siguientes",
+            "--modelo", "202", "--year", str(_YEAR), "--period", "1P",
+            "--revision", str(open_ended_revision("202").id),
         ],
     )  # fmt: skip
 
@@ -141,8 +144,8 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2025", "--period", "0A",
-            "--revision", _m100_revision_id(filing_year=2025, period="0A"),
+            "--modelo", "100", "--year", str(_YEAR), "--period", "0A",
+            "--revision", _m100_revision_id(filing_year=_YEAR, period="0A"),
         ],
     )  # fmt: skip
 
@@ -160,8 +163,8 @@ def test_work_create_refuses_modelo_130_for_non_resident_irnr(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
+            "--revision", str(open_ended_revision("130").id),
         ],
     )  # fmt: skip
 
@@ -181,8 +184,8 @@ def test_work_create_refuses_modelo_100_for_non_resident_irnr(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2025", "--period", "0A",
-            "--revision", _m100_revision_id(filing_year=2025, period="0A"),
+            "--modelo", "100", "--year", str(_YEAR), "--period", "0A",
+            "--revision", _m100_revision_id(filing_year=_YEAR, period="0A"),
         ],
     )  # fmt: skip
 
@@ -205,8 +208,8 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", "2025", "--period", "1P",
-            "--revision", "2025-y-siguientes",
+            "--modelo", "202", "--year", str(_YEAR), "--period", "1P",
+            "--revision", str(open_ended_revision("202").id),
             "--allow-not-applicable",
         ],
     )  # fmt: skip
@@ -230,8 +233,8 @@ def test_work_create_allows_an_applicable_modelo(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
+            "--revision", str(open_ended_revision("130").id),
         ],
     )  # fmt: skip
 

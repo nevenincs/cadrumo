@@ -22,6 +22,7 @@ from .....application.calculations.tests.filing_evidence import general_m303_fil
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -42,26 +43,27 @@ _BUCKET_ID = "13131313-1313-4313-8313-131313131313"
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
-_SOURCE_REFS = ("boe-modelo-303-2025-form",)
+_YEAR = filing_year_envelope().horizon
+_SOURCE_REFS = (f"boe-modelo-303-{_YEAR}-form",)
 
 
 def _seed_parent_work_unit(secure_objects: SecureObjectRepository, *, revision_id: str) -> str:
     """Persist the WorkUnit a saved revision must belong to and return its id."""
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name="303-2025-1T",
+        name=f"303-{_YEAR}-1T",
         created_at=FILING_EVIDENCE_NOW,
         updated_at=FILING_EVIDENCE_NOW,
     )
@@ -78,8 +80,8 @@ def _revision_with_evidence(
     operation: PinnedAuthorityOperation,
     secure_objects: SecureObjectRepository,
 ) -> CalculationRevision:
-    period = Period.from_year_and_code(2025, "1T")
-    registry_snapshot_ref = published_authority_operation().snapshot("303", filing_year=2025, period="1T").snapshot_ref
+    period = Period.from_year_and_code(_YEAR, "1T")
+    registry_snapshot_ref = published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref
     work_unit_id = _seed_parent_work_unit(secure_objects, revision_id=registry_snapshot_ref.revision_id)
     filing_instance_evidence = general_m303_filing_evidence(
         period, reference="test:ledger-filing-evidence", operation=operation

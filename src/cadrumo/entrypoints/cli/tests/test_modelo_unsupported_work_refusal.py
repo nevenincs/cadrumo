@@ -15,6 +15,7 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     published_legal_reference,
     published_modelo_ids,
@@ -26,6 +27,8 @@ from .cli_runner import invoke_cached_cli
 __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @dataclass(frozen=True)
@@ -40,28 +43,28 @@ class UnsupportedWorkCase:
 _UNSUPPORTED_WORK_CASES = (
     UnsupportedWorkCase(
         modelo="600",
-        year=2024,
+        year=_YEAR,
         period="0A",
         revision="actual",
         required_groups=(("28/1990", "ITPyAJD"), ("Hacienda", "CCAA")),
     ),
     UnsupportedWorkCase(
         modelo="620",
-        year=2024,
+        year=_YEAR,
         period="0A",
         revision="actual",
         required_groups=(("28/1990", "ITPyAJD"), ("Hacienda", "CCAA")),
     ),
     UnsupportedWorkCase(
         modelo="650",
-        year=2024,
+        year=_YEAR,
         period="0A",
         revision="actual",
         required_groups=(("29/1987", "LISyD"), ("Art. 67 RISD", "67 RISD", "6 mes"), ("Hacienda",)),
     ),
     UnsupportedWorkCase(
         modelo="660",
-        year=2024,
+        year=_YEAR,
         period="0A",
         revision="actual",
         required_groups=(("29/1987", "LISyD"), ("Hacienda",)),
@@ -155,7 +158,7 @@ def test_m650_foral_causante_ccaa_refuses_before_unsupported_modelo_guard(
             "--modelo",
             "650",
             "--year",
-            "2024",
+            str(_YEAR),
             "--period",
             "0A",
             "--revision",

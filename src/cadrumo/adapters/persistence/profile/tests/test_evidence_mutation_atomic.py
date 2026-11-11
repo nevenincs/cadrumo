@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -24,12 +24,16 @@ from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, Secu
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
 _TARGET_ID = "evidence-target"
 _CONCURRENT_ID = "evidence-concurrent"
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 class _UnexpectedAttachmentIngestor:
@@ -47,7 +51,7 @@ def _record(evidence_id: str) -> PurchaseInvoiceEvidence:
         media_kind=MediaKind.PDF,
         supplier="Before SL",
         invoice_number="INV-2026-05",
-        invoice_date="2026-05-08",
+        invoice_date=date(_YEAR, 5, 8).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),

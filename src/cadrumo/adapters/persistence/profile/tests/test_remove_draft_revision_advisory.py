@@ -26,6 +26,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import remove_manual_transaction
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 from .ledger_action_persistence_support import (
@@ -63,7 +64,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(1980, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     # Removal PROCEEDS for a draft-cited row.
@@ -78,7 +79,7 @@ def test_remove_advises_on_draft_revision_and_still_removes(
     assert advisory.calculation_revision_id == draft_revision_id
     assert advisory.revision_state == CalculationRevisionState.BORRADOR.value
     assert advisory.modelo == "303"
-    assert advisory.filing_year == 2026
+    assert advisory.filing_year == filing_year_envelope().horizon
     assert advisory.period == "1T"
 
 
@@ -146,7 +147,7 @@ def test_remove_uncited_row_yields_empty_draft_advisory(
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(1980, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert report.removed is True
@@ -180,7 +181,7 @@ def test_remove_discarded_draft_is_not_advised(
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(1980, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert report.removed is True

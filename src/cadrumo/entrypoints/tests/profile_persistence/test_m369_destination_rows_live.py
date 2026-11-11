@@ -55,6 +55,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus, invoice_class_simplificada
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
@@ -93,7 +94,7 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "36900000-0000-4000-8000-000000000019"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _SUPPLY = date(_YEAR, 2, 17)
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -358,25 +359,25 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """France 20/10 and Poland 23/8. Cuotas: 20.00 + 2.00 + 23.00 + 4.00 = 49.00."""
+    """France 20/10 and Poland 23/8. Cuotas: 22.00 + 3.00 + 23.00 + 4.00 = 52.00."""
     result, work_unit = _calculate(
         objects,
         scenario,
         (
-            _invoice(scenario, "OSS-1", "FR", "general", "100.00", "20.00"),
-            _invoice(scenario, "OSS-2", "FR", "reduced", "20.00", "2.00"),
+            _invoice(scenario, "OSS-1", "FR", "general", "110.00", "22.00"),
+            _invoice(scenario, "OSS-2", "FR", "reduced", "30.00", "3.00"),
             _invoice(scenario, "OSS-3", "PL", "general", "100.00", "23.00"),
             _invoice(scenario, "OSS-4", "PL", "reduced", "50.00", "4.00"),
         ),
         operation,
     )
     assert result.revision.source_issues == ()
-    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("49.00")
+    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("52.00")
 
     form_values = _form_values(work_unit, result, operation)
-    assert Decimal(str(form_values[("casilla", scenario.total_casilla)])) == Decimal("49.00")
+    assert Decimal(str(form_values[("casilla", scenario.total_casilla)])) == Decimal("52.00")
     form_cuotas = [Decimal(str(form_values[("binding", binding_id)])) for binding_id in _cuota_bindings(scenario)[:4]]
-    assert form_cuotas == [Decimal("20.00"), Decimal("2.00"), Decimal("23.00"), Decimal("4.00")]
+    assert form_cuotas == [Decimal("22.00"), Decimal("3.00"), Decimal("23.00"), Decimal("4.00")]
 
     report = _verify(result)
     assert report.granted_verificado_completo is True, [
@@ -386,8 +387,8 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
     wire = _export(objects, tmp_path, scenario, result)
     start = wire.index(scenario.page_tag) + scenario.first_position - 1
     assert wire[start : start + 4 * 42] == (
-        _line("FR", "02000", "S", "10000", "2000")
-        + _line("FR", "01000", "R", "2000", "200")
+        _line("FR", "02000", "S", "11000", "2200")
+        + _line("FR", "01000", "R", "3000", "300")
         + _line("PL", "02300", "S", "10000", "2300")
         + _line("PL", "00800", "R", "5000", "400")
     )
@@ -407,7 +408,7 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
         for field in parsed.fields
         if field.binding_id in cuota_bindings and isinstance(field.value, Decimal)
     ]
-    assert sorted(amounts) == [Decimal("2.00"), Decimal("4.00"), Decimal("20.00"), Decimal("23.00")]
+    assert sorted(amounts) == [Decimal("3.00"), Decimal("4.00"), Decimal("22.00"), Decimal("23.00")]
 
 
 @pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
@@ -634,7 +635,11 @@ def test_an_ordinary_single_page_return_leaves_every_page_indicator_blank(
 
 @pytest.mark.parametrize(
     ("scenario", "printed"),
-    [(_EXTERIOR, b"2026T01"), (_UNION, b"2026T01"), (_IMPORT, b"2026M02")],
+    [
+        (_EXTERIOR, f"{_YEAR}T01".encode("ascii")),
+        (_UNION, f"{_YEAR}T01".encode("ascii")),
+        (_IMPORT, f"{_YEAR}M02".encode("ascii")),
+    ],
     ids=_ids,
 )
 def test_the_period_rows_print_the_work_units_period_when_nobody_entered_them(

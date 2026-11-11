@@ -30,7 +30,7 @@ from ..projection import OperationModalViewModelV1, build_operation_modal_view_m
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_OTHER_TIME = datetime(2031, 7, 1, tzinfo=UTC)
+_OTHER_TIME = datetime(1981, 7, 1, tzinfo=UTC)
 
 
 def _terminal(

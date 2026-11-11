@@ -2,7 +2,7 @@
 
 These tests exercise the real :func:`~application.modelo.amend_modelo_revision`
 composition path (no mocks) against seeded Modelo 303 baselines that straddle the
-diseño-grounded rectificativa boundary (filing_year 2024, period 09/3T onward — see
+diseño-grounded rectificativa boundary (the exercise split between designs, period 09/3T onward — see
 :mod:`~core.amendment_kind_regime`). They prove:
 
 * an illegal ``--kind`` for the resolved period is refused, naming the accepted
@@ -63,6 +63,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.result_casillas import derive_result_disposition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, split_exercise_revisions
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -86,6 +87,10 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_amendment_action_ports
 
+_CLOCK_YEAR = filing_year_envelope().horizon
+#: The exercise whose Modelo 303 design splits at the rectificativa boundary.
+_BOUNDARY_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 type _Repos = tuple[
@@ -95,11 +100,11 @@ type _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(_CLOCK_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(_CLOCK_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T4 = datetime(_CLOCK_YEAR, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000234"
-_BASELINE_JUSTIFICANTE_CSV = "JUST2024303AMENDKIND"
+_BASELINE_JUSTIFICANTE_CSV = f"JUST{_BOUNDARY_YEAR}303AMENDKIND"
 _PROFILE_LABEL = "Amendment kind resolution test profile"
 _READY_PROFILE_FACTS = persona_facts_beneath(
     (
@@ -271,12 +276,12 @@ def _seed_m303_external_baseline(
 def test_rectificativa_kind_refused_for_pre_boundary_period(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M303 2T 2024 predates the rectificativa fichero fields; requesting
+    """M303 2T of the split exercise predates the rectificativa fichero fields; requesting
     ``rectificativa`` is refused, naming the accepted kind set."""
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="2T",
         operation=operation,
     )
@@ -309,7 +314,7 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="2T",
         operation=operation,
     )
@@ -321,7 +326,9 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
             amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported cuota discovered in audit",
-            result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
+            result_disposition=_correction_disposition(
+                Decimal("150.00"), Period.from_year_and_code(_BOUNDARY_YEAR, "2T")
+            ),
             actor="operator-A",
             clock=_T4,
         )
@@ -338,7 +345,7 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="2T",
         operation=operation,
     )
@@ -364,13 +371,13 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
 def test_complementaria_kind_refused_for_post_boundary_period(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """M303 3T 2024 is the diseño's stated rectificativa boundary quarter;
+    """M303 3T of the split exercise is the diseño's stated rectificativa boundary quarter;
     ``complementaria`` is no longer a permitted kind — rectificativa is the
     unified mechanism from this period onward."""
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="3T",
         operation=operation,
     )
@@ -406,7 +413,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="3T",
         operation=operation,
     )
@@ -419,7 +426,9 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             reason="lawful rectificativa lowering the declared result",
-            result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "3T")),
+            result_disposition=_correction_disposition(
+                Decimal("40.00"), Period.from_year_and_code(_BOUNDARY_YEAR, "3T")
+            ),
             actor="operator-A",
             clock=_T4,
         )
@@ -432,7 +441,7 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation:
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="2T",
         operation=operation,
     )
@@ -444,7 +453,9 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation:
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
             amendment_kind=FilingDeclarationKind.SUSTITUTIVA,
             reason="material restatement, sustitutiva always permitted",
-            result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "2T")),
+            result_disposition=_correction_disposition(
+                Decimal("40.00"), Period.from_year_and_code(_BOUNDARY_YEAR, "2T")
+            ),
             actor="operator-A",
             clock=_T4,
         )
@@ -457,7 +468,7 @@ def test_an_amendment_cannot_be_filed_as_the_original(repos: _Repos, *, operatio
     _, _, baseline = _seed_m303_external_baseline(
         repos,
         result_casilla_value=Decimal("100.00"),
-        filing_year=2024,
+        filing_year=_BOUNDARY_YEAR,
         period_code="2T",
         operation=operation,
     )
@@ -472,7 +483,9 @@ def test_an_amendment_cannot_be_filed_as_the_original(repos: _Repos, *, operatio
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
             amendment_kind=FilingDeclarationKind.ORIGINAL,
             reason="an original is not an amendment",
-            result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
+            result_disposition=_correction_disposition(
+                Decimal("150.00"), Period.from_year_and_code(_BOUNDARY_YEAR, "2T")
+            ),
             actor="operator-A",
             clock=_T4,
         )

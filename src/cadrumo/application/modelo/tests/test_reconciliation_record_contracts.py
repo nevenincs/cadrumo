@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
 _EVENT_ID = "a" * 64
-_UTC_INSTANT = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+_UTC_INSTANT = datetime(1980, 5, 3, 12, 0, tzinfo=UTC)
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 _SNAPSHOT_REF = published_snapshot("303", filing_year=_SUPPORT.horizon, period="1T").snapshot_ref
@@ -132,8 +132,8 @@ def test_history_entry_refuses_a_non_canonical_event_identity(event_id: str) -> 
 @pytest.mark.parametrize(
     "instant",
     [
-        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
-        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+        _UTC_INSTANT.replace(tzinfo=None),  # naive: the shape under test
+        _UTC_INSTANT.replace(tzinfo=timezone(timedelta(hours=1))),
     ],
 )
 def test_record_refuses_a_non_utc_instant(instant: datetime) -> None:
@@ -145,8 +145,8 @@ def test_record_refuses_a_non_utc_instant(instant: datetime) -> None:
 @pytest.mark.parametrize(
     "instant",
     [
-        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
-        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+        _UTC_INSTANT.replace(tzinfo=None),  # naive: the shape under test
+        _UTC_INSTANT.replace(tzinfo=timezone(timedelta(hours=1))),
     ],
 )
 def test_history_entry_refuses_a_non_utc_instant(instant: datetime) -> None:

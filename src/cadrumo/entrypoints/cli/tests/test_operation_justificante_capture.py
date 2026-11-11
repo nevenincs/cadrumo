@@ -23,15 +23,19 @@ from ....application.live.justificante_capture_operation import (
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_justificante_capture as bridge
 from .operation_bridge_support import bind_profile_submission
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 3, 6, 7, 8, tzinfo=UTC)
 _SNAPSHOT_ID = "b4e2" * 16
 _PDF_SHA256 = "a3f1" * 16
 _FILING_RECORD_ID = "c" * 64
@@ -42,7 +46,7 @@ def _projection(**updates: object) -> JustificanteCapturePublicResultV1:
         bucket_id=str(_PROFILE),
         snapshot_id=_SNAPSHOT_ID,
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         expediente_id="202513000000001Z",
         csv="ABCD1234EFGH",
@@ -72,8 +76,8 @@ def _capture() -> bridge.JustificanteCaptureRead:
         cast(typer.Context, cast(object, None)),
         profile_id=_PROFILE,
         modelo="130",
-        year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
     )
 
 
@@ -91,7 +95,7 @@ def test_capture_submits_exact_profile_and_filing_pair(monkeypatch: pytest.Monke
             JustificanteCaptureRequest(
                 profile_id=_PROFILE,
                 modelo="130",
-                year=2025,
+                year=_YEAR,
                 period="1T",
             ),
             {
@@ -112,7 +116,7 @@ def test_capture_submits_exact_profile_and_filing_pair(monkeypatch: pytest.Monke
     [
         {"bucket_id": str(_OTHER_PROFILE)},
         {"modelo": "303"},
-        {"filing_year": 2024},
+        {"filing_year": _YEAR - 1},
         {"period": "2T"},
     ],
     ids=["profile", "modelo", "year", "period"],
@@ -194,8 +198,8 @@ def test_capture_refuses_a_period_for_a_different_year_before_submission(
             cast(typer.Context, cast(object, None)),
             profile_id=_PROFILE,
             modelo="130",
-            year=2025,
-            period=Period.from_year_and_code(2024, "1T"),
+            year=_YEAR,
+            period=Period.from_year_and_code(_YEAR - 1, "1T"),
         )
 
     assert bound_profiles == []

@@ -67,7 +67,11 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.operation_contract_support import modelo_work_file_contract
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -75,7 +79,7 @@ _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _WORK_UNIT = "b" * 64
-_NOW = datetime(2026, 10, 2, tzinfo=UTC)
+_NOW = datetime(_YEAR + 1, 10, 2, tzinfo=UTC)
 
 
 class _FilingWire(FrontendClient):
@@ -309,8 +313,8 @@ def _filing_result() -> ModeloWorkFilePublicResultV2:
         calculation_revision_id=_WORK_UNIT,
         bucket_id=str(_PROFILE),
         modelo=ModeloCode("303"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "4T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
         filed_at=_NOW,
         filed_by="operator",
         origin=FilingOrigin.LOCAL,
@@ -321,7 +325,7 @@ def _filing_result() -> ModeloWorkFilePublicResultV2:
     return ModeloWorkFilePublicResultV2(
         record=ModeloFilingRecordSnapshot.from_record(record),
         advisories=ModeloLifecycleAdvisories(
-            work_unit_id=_WORK_UNIT, calculation_revision_id=_WORK_UNIT, modelo="303", filing_year=2025, period="4T"
+            work_unit_id=_WORK_UNIT, calculation_revision_id=_WORK_UNIT, modelo="303", filing_year=_YEAR, period="4T"
         ),
         published=True,
         filing_timeliness=FilingTimeliness.EN_PLAZO,

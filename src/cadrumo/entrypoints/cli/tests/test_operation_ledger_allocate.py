@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -21,7 +22,12 @@ from ....application.ledger.allocate_operation import (
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_ledger_allocate as bridge
+
+_YEAR = filing_year_envelope().horizon
+_BOOKED_ON = date(_YEAR, 1, 1).isoformat()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -41,8 +47,8 @@ def _projection(
 ) -> LedgerAllocateOperationResult:
     transaction = LedgerTransactionProjection(
         transaction_id=transaction_id,
-        date="2026-01-01",
-        booked_date="2026-01-01",
+        date=_BOOKED_ON,
+        booked_date=_BOOKED_ON,
         value_date=None,
         amount="100",
         currency="EUR",
@@ -74,8 +80,8 @@ def _projection(
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at="2026-01-01T00:00:00Z",
-        modified_at="2026-01-01T00:00:00Z",
+        created_at="1980-01-01T00:00:00Z",
+        modified_at="1980-01-01T00:00:00Z",
     )
     return LedgerAllocateOperationResult(
         profile_id=profile_id,

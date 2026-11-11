@@ -25,6 +25,7 @@ from cadrumo.core.hashing import HEX_ALPHABET
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document
@@ -32,6 +33,8 @@ from cadrumo.tests.cli_envelope import require_error_document
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -48,7 +51,7 @@ _PROFILE_FACTS = {
     "identity.name": "Ledger",
     "identity.surnames": "Prefix Reader",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
 }
 
 
@@ -137,14 +140,14 @@ def _seed_real_transactions_and_find_prefixes(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=bucket_id,
-                booked_date=date(2026, 2, 10),
+                booked_date=date(_YEAR, 2, 10),
                 amount=Decimal(100 + index),
                 direction=TransactionDirection.OUTGOING,
                 description=f"Native prefix refusal seed {index}",
                 idempotency_key=f"native-prefix-refusal-{index}",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 2, 10, 12, 0, index, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 2, 10, 12, 0, index, tzinfo=UTC),
         )
         transaction_id = created.transaction.transaction_id
         assert len(transaction_id) == 64

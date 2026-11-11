@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +13,8 @@ from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....application.ledger.evidence import (
     MediaKind,
@@ -35,10 +37,12 @@ from ....application.operations.owner import OperationExecutorContext
 from ....core.operations import OperationEffect, profile_operation_subject
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _record(evidence_id: str, *, source_path: str = "invoice.pdf") -> PurchaseInvoiceEvidence:
@@ -51,7 +55,7 @@ def _record(evidence_id: str, *, source_path: str = "invoice.pdf") -> PurchaseIn
         media_kind=MediaKind.PDF,
         supplier="Supplier SL",
         invoice_number="INV-2026-05",
-        invoice_date="2026-05-08",
+        invoice_date=date(_YEAR, 5, 8).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -66,14 +70,14 @@ def test_add_request_uses_wire_stable_canonical_date_and_amount_strings() -> Non
         profile_id=_PROFILE,
         source_path="invoices/invoice.pdf",
         source_directory=str(Path.cwd()),
-        invoice_date="2026-05-08",
+        invoice_date=date(_YEAR, 5, 8).isoformat(),
         taxable_base="100",
         iva_rate="21",
         iva_amount="21",
     )
 
     dumped = request.model_dump(mode="json")
-    assert dumped["invoice_date"] == "2026-05-08"
+    assert dumped["invoice_date"] == date(_YEAR, 5, 8).isoformat()
     assert dumped["taxable_base"] == "100"
     assert isinstance(dumped["iva_rate"], str)
 
@@ -85,7 +89,7 @@ def test_add_request_uses_wire_stable_canonical_date_and_amount_strings() -> Non
             profile_id=_PROFILE,
             source_path="invoice.pdf",
             source_directory=str(Path.cwd()),
-            invoice_date="08-05-2026",
+            invoice_date=date(_YEAR, 5, 8).strftime("%d-%m-%Y"),
         )
     with pytest.raises(ValidationError, match="canonical non-negative"):
         LedgerEvidenceAddRequest(
@@ -203,7 +207,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
         assert source_directory == Path.cwd()
         assert supplier == "Supplier SL"
         assert invoice_number == "INV-2026-05"
-        assert invoice_date == "2026-05-08"
+        assert invoice_date == date(_YEAR, 5, 8).isoformat()
         assert taxable_base == Decimal("100")
         assert iva_rate == Decimal("21")
         assert iva_amount == Decimal("21")
@@ -250,7 +254,7 @@ async def test_add_effect_is_unknown_before_ingestion_and_updated_even_for_keyed
             source_directory=str(Path.cwd()),
             supplier="Supplier SL",
             invoice_number="INV-2026-05",
-            invoice_date="2026-05-08",
+            invoice_date=date(_YEAR, 5, 8).isoformat(),
             taxable_base="100",
             iva_rate="21",
             iva_amount="21",

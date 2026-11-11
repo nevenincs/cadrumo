@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
@@ -54,6 +55,8 @@ from ..catalogue_read_operation import (
 from ..catalogue_read_projection import CatalogueInvoiceSnapshot
 from ..catalogue_selection import InvoiceLookupRefusalReason
 from ..inspection_read_ports import InvoiceInspectionReadPorts
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -140,7 +143,7 @@ def _receipt(
         revision=1,
         condition=condition,
         effect=effect,
-        settled_at=datetime(2026, 9, 28, 12, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 9, 28, 12, tzinfo=UTC),
         result_ref="b" * 64 if condition is OperationTerminalCondition.SUCCEEDED else None,
         refusal_ref=INVOICE_VIEW_REFUSAL_CODE if refused else None,
         refusal_detail_ref="c" * 64 if refused else None,
@@ -152,7 +155,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         bucket_id=str(_PROFILE),
         kind=InvoiceKind.RECEIVED,
         invoice_number="2026-0142",
-        issued_at=date(2026, 4, 15),
+        issued_at=date(_YEAR, 4, 15),
         counterparty_name="Synthetic supplier",
         counterparty_tax_id="B00010157",
         counterparty_country="ES",

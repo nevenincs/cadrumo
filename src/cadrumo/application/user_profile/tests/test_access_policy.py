@@ -52,6 +52,7 @@ from cadrumo.application.user_profile.operations import (
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -65,9 +66,10 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)
-PERIOD = Period.from_year_and_code(2026, "3T")
-OTHER_PERIOD = Period.from_year_and_code(2025, "3T")
+_YEAR = filing_year_envelope().horizon
+NOW = datetime(_YEAR, 9, 26, 12, tzinfo=UTC)
+PERIOD = Period.from_year_and_code(_YEAR, "3T")
+OTHER_PERIOD = Period.from_year_and_code(_YEAR - 1, "3T")
 
 
 def changed[T: BaseModel](model: T, **updates: object) -> T:
@@ -609,7 +611,7 @@ def test_contracts_are_strict_frozen_and_reject_untrusted_identity_claims(scenar
             changed(model, untrusted_identity_claim="owner", api_secret=uuid4().hex)
         with pytest.raises(ValidationError):
             model.__setattr__(next(iter(type(model).model_fields)), "replacement")
-    for invalid in (datetime(2026, 9, 26), NOW.astimezone(timezone(timedelta(hours=2)))):
+    for invalid in (datetime(_YEAR, 9, 26), NOW.astimezone(timezone(timedelta(hours=2)))):
         with pytest.raises(ValidationError):
             changed(scenario.context, now=invalid)
     with pytest.raises(ValidationError):

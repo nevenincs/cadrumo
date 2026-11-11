@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ....adapters.outbound.llm.tests.model_run_support import serving_agent
@@ -43,6 +44,8 @@ from .persistence_vision_evidence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
@@ -127,7 +130,7 @@ def test_llm_vision_off_refuses_both_image_read_modes(
 
     from ....domain.user_profile.values import UserProfileFact
 
-    clock = datetime(2026, 1, 1, tzinfo=UTC)
+    clock = datetime(_YEAR, 1, 1, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
             context=leased_profile_create_context(),
@@ -181,7 +184,7 @@ def test_a_refused_vision_lookup_reaches_the_operator_as_a_typed_reader_refusal(
             vision_transaction("reader-unavailable"),
             evidence,
             text_classifier=None,
-            spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+            spec=prompt_spec_with_saturation_fields(year=_YEAR, operation=operation),
             vision_classifier=None,
             settings=profile.settings,
             ports=ports,

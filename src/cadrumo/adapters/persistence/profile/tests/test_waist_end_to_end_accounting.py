@@ -56,6 +56,7 @@ from .....core.period import Period
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.service import AttachmentFileContent, AttachmentIngestionRequest, add_attachment
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.models import Invoice
 from .....domain.iva.schema import InvoiceKind
 from ....inbound.einvoice.shape import probe_document_shape
@@ -66,13 +67,15 @@ from ..catalogue_creation import build_catalogue_creation_ports
 from ..invoices import InvoiceCatalogueRepository
 from .published_authority_support import published_authority_operation
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 __all__ = ["evidence_input_ports"]
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 _FIXTURE = _CORPUS / "facturae_32_recargo_invoice.xml"
 _BUCKET_ID = "40404040-4040-4040-8040-404040404040"
-_CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(1980, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 #: The facts this document states, as the document states them. This is the
 #: census every hop is accounted against: a hop that drops one of these is the
@@ -373,7 +376,7 @@ class TestHop5ConfirmAndHop6Invoice:
                 counterparty_tax_id=draft.supplier_tax_id,
                 counterparty_country="ES",
                 invoice_number=draft.invoice_number or "FAC-2024-0007",
-                issued_at=date(2024, 3, 15),
+                issued_at=date(_YEAR, 3, 15),
                 taxable_base=draft.taxable_base or Decimal("0"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
@@ -443,8 +446,8 @@ class TestHop7WhereTheChainActuallyTerminates:
 
     @staticmethod
     def _revision() -> ModeloRevision:
-        period = Period.from_year_and_code(2024, "1T")
-        return published_authority_operation().snapshot("303", filing_year=2024, period=str(period.code)).revision
+        period = Period.from_year_and_code(_YEAR, "1T")
+        return published_authority_operation().snapshot("303", filing_year=_YEAR, period=str(period.code)).revision
 
     def test_modelo_303_declares_no_invoice_source_binding(self) -> None:
         revision = self._revision()
@@ -472,11 +475,11 @@ class TestHop7WhereTheChainActuallyTerminates:
     ) -> None:
         """The resolver is reached and declines, rather than silently never running."""
         TestHop5ConfirmAndHop6Invoice._confirm(runtime_profile)
-        period = Period.from_year_and_code(2024, "1T")
+        period = Period.from_year_and_code(_YEAR, "1T")
         context = CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             revision=self._revision(),
         )

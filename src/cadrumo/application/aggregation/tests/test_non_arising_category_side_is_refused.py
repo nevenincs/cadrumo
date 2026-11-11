@@ -47,6 +47,7 @@ import pytest
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import IvaKindApplicability, registry_component_catalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind, IvaCategory
@@ -61,8 +62,9 @@ from .iva_ledger_row_support import aggregate_row
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_PERIOD = Period.from_year_and_code(2024, "4T")
-_ON = date(2024, 11, 6)
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "4T")
+_ON = date(_YEAR, 11, 6)
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 _DEFAULT_EU_MEMBER_STATE = "DE"
@@ -103,7 +105,7 @@ def _transaction(
                 source_sha256="b" * 64,
                 source_row_index=1,
                 source_format=SourceFormat.MANUAL,
-                ingested_at=datetime(2024, 12, 1, 12, 0, tzinfo=UTC),
+                ingested_at=datetime(1980, 12, 1, 12, 0, tzinfo=UTC),
                 provider_name="manual-ledger",
             ),
             raw_fields={"source_kind": "ledger_transaction"},
@@ -128,7 +130,7 @@ def _transaction(
         "lifecycle_state": TransactionLifecycleState.ACTIVE,
         "fx_rate": None,
         "value_in_eur": None,
-        "classified_at": datetime(2024, 12, 2, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(1980, 12, 2, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if direction is TransactionDirection.OUTGOING:

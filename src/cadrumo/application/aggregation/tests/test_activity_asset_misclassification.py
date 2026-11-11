@@ -12,6 +12,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.i18n.render import lookup_translation, output_language
 from cadrumo.core.tipos_actividad import TipoActividad
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from cadrumo.domain.categories.spending_category_catalogue import amortizable_spending_categories
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.errors import InvoicePersistenceError
@@ -46,6 +47,8 @@ from .ledger_source_mesh_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_YEAR = newest_authored_edition("100")
+_OUTSIDE_LEDGER_ACQUISITION_YEAR = filing_year_envelope().floor - 1
 _UNREGISTERED = "ledger_amortization_row_unregistered"
 _WITHHELD = "register_owned_capital_acquisition"
 _EXCEEDS = "register_acquisition_exceeds_ledger"
@@ -173,9 +176,11 @@ def _outside_ledger_element() -> ActivityAssetRevision:
     template = register_asset("old-press", transaction_id="c" * 64)
     facts = {name: getattr(template, name) for name in type(template).model_fields}
     facts.update(
-        acquisition=AcquisitionLineageReference(invoice_evidence_id="Factura 2014/118, Prensas SA"),
+        acquisition=AcquisitionLineageReference(
+            invoice_evidence_id=f"Factura {_OUTSIDE_LEDGER_ACQUISITION_YEAR}/118, Prensas SA"
+        ),
         acquisition_shape=AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
-        declared_acquisition_date=date(2014, 3, 1),
+        declared_acquisition_date=date(_OUTSIDE_LEDGER_ACQUISITION_YEAR, 3, 1),
         declared_activity=TipoActividad.A03_RESTO_EMPRESARIALES,
     )
     return ActivityAssetRevision(**facts)
@@ -276,7 +281,7 @@ def test_the_finding_does_not_vary_with_the_interface_language(language: str) ->
 
 
 def test_every_amortizable_category_has_keywords_in_every_catalogue() -> None:
-    for category in amortizable_spending_categories(effective_date=date(2025, 12, 31)):
+    for category in amortizable_spending_categories(effective_date=date(_YEAR, 12, 31)):
         for language in SUPPORTED_OUTPUT_LANGUAGES:
             keywords = lookup_translation(f"desktop.ledger.category_keywords.{category.value}", locale=language)
             assert keywords is not None
@@ -341,7 +346,7 @@ def test_the_question_itself_refuses_owned_capital_and_amortizable_rows() -> Non
         revisions=(register_asset("monitor", transaction_id=owned.transaction_id, basis=Decimal("1000.00")),),
         ledger=ledger,
         invoices=_with_invoices(),
-        tax_year=2025,
+        tax_year=_YEAR,
         source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
         resolver_id="ledger_renta_gastos_estimacion_directa_aggregation",
     )

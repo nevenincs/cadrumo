@@ -19,8 +19,12 @@ from __future__ import annotations
 import pytest
 
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.cli_envelope import require_error_document
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -67,7 +71,7 @@ def test_invalid_choice_refusal_renders_in_requested_locale(locale: str) -> None
             "--modelo",
             "999",
             "--year",
-            "2025",
+            str(_YEAR),
         ],
     )
     assert result.exit_code == 2, result.output

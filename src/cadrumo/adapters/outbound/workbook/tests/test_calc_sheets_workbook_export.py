@@ -17,15 +17,18 @@ from openpyxl import load_workbook
 from .....application.storage.calc_sheets.records import TabName
 from .....application.storage.calc_sheets.workbook_export import export_modelo_workbook
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..calc_sheets_xlsx import materialize_export_plan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def test_entry_returns_an_openable_workbook_and_facts_that_identify_it() -> None:
     export = export_modelo_workbook(
         modelo="130",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         materializer=materialize_export_plan,
     )
 
@@ -35,7 +38,7 @@ def test_entry_returns_an_openable_workbook_and_facts_that_identify_it() -> None
     assert book.sheetnames == [tab.value for tab in TabName if tab is not TabName.FORM]
     assert export.modelo == "130"
     assert export.period == "1T"
-    assert export.filing_year == 2025
+    assert export.filing_year == _FILING_YEAR
     assert export.byte_size == len(export.payload)
     assert export.sha256 == hashlib.sha256(export.payload).hexdigest()
     # Every casilla the workbook carries is counted, and a real modelo carries some.

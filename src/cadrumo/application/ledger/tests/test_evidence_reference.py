@@ -18,6 +18,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -32,11 +33,13 @@ from ..evidence_reference import (
     find_bytes_bearing_evidence_record,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"
 _OTHER_BUCKET_ID = "31313131-3131-4131-8131-313131313131"
-_NOW = datetime(2026, 2, 5, tzinfo=UTC)
+_NOW = datetime(_YEAR, 2, 5, tzinfo=UTC)
 
 
 def _evidence_record(*, evidence_id: str = "ev-001") -> PurchaseInvoiceEvidence:
@@ -65,7 +68,7 @@ def _invoice(
             "kind": kind,
             "bucket_id": bucket_id,
             "invoice_number": invoice_number,
-            "issued_at": date(2026, 2, 5),
+            "issued_at": date(_YEAR, 2, 5),
             "counterparty_name": "Proveedor SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

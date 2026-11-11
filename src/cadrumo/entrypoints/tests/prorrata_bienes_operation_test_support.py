@@ -26,6 +26,10 @@ from ...core.operations import OperationEffect
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_DISPOSAL_YEAR = filing_year_envelope().horizon
+_ACQUISITION_YEAR = _DISPOSAL_YEAR - 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,14 +62,14 @@ def bienes_inversion_conformance_record(
             BienInversionDeclarationCommand(
                 identifier=identifier,
                 description="Conformance capital good",
-                acquisition_year=2025,
+                acquisition_year=_ACQUISITION_YEAR,
                 acquisition_ledger_id=f"{identifier}-ledger",
                 cuota_soportada=Decimal("2100.00"),
                 prorrata_inicial_pct=Decimal("60"),
                 kind="mueble",
                 art108_elegible=True,
                 prorrata_sector_id="sector-conformance",
-                disposal_year=2026,
+                disposal_year=_DISPOSAL_YEAR,
                 disposal_regime="sujeta_no_exenta",
             ),
         )
@@ -98,14 +102,14 @@ def prepare_bienes_inversion_operation_conformance_case(
                 profile_id=profile_id,
                 identifier=expected_record.identifier,
                 description="Conformance capital good",
-                acquisition_year=2025,
+                acquisition_year=_ACQUISITION_YEAR,
                 acquisition_ledger_id=expected_record.acquisition_ledger_id,
                 cuota_soportada={"decimal": "2100.00"},
                 prorrata_inicial_pct={"decimal": "60"},
                 kind="mueble",
                 art108_elegible=True,
                 prorrata_sector_id="sector-conformance",
-                disposal_year=2026,
+                disposal_year=_DISPOSAL_YEAR,
                 disposal_regime="sujeta_no_exenta",
             ),
             expected_effect=OperationEffect.UPDATED,

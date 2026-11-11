@@ -62,7 +62,7 @@ class Operand(BaseModel):
 
 
 def _snapshot() -> OperationSnapshot[Operand]:
-    observed = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    observed = datetime(1980, 8, 13, 20, tzinfo=UTC)
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     return OperationSnapshot[Operand](
         identity=identity,
@@ -109,7 +109,7 @@ def _persisted_snapshot() -> OperationPersistedSnapshot:
 
 
 def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
-    observed = datetime(2026, 8, 13, 20, 5, tzinfo=UTC)
+    observed = datetime(1980, 8, 13, 20, 5, tzinfo=UTC)
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     receipt = OperationTerminalReceipt(
         identity=identity,
@@ -136,7 +136,7 @@ def _terminal_persisted_snapshot() -> OperationPersistedSnapshot:
         lifecycle=OperationLifecycle.TERMINAL,
         terminal_condition=receipt.condition,
         effect=receipt.effect,
-        started_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
+        started_at=datetime(1980, 8, 13, 20, tzinfo=UTC),
         updated_at=observed,
         execution_deadline=None,
         cleanup_deadline=None,
@@ -448,7 +448,7 @@ def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
 
 
 def test_owner_lease_requires_a_positive_utc_window() -> None:
-    acquired = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    acquired = datetime(1980, 8, 13, 20, tzinfo=UTC)
     with pytest.raises(ValidationError):
         OperationOwnerLease(
             operation_id="a" * 64,
@@ -465,8 +465,8 @@ def _owner_lease(
     operation_id: str = "a" * 64,
     owner_id: str = "b" * 64,
     token: str = "c" * 64,
-    acquired_at: datetime = datetime(2026, 8, 13, 20, tzinfo=UTC),
-    expires_at: datetime = datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+    acquired_at: datetime = datetime(1980, 8, 13, 20, tzinfo=UTC),
+    expires_at: datetime = datetime(1980, 8, 13, 20, 3, tzinfo=UTC),
 ) -> OperationOwnerLease:
     return OperationOwnerLease(
         operation_id=operation_id,
@@ -479,7 +479,7 @@ def _owner_lease(
 
 
 def test_lease_and_replay_results_are_fail_closed() -> None:
-    observed = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    observed = datetime(1980, 8, 13, 20, tzinfo=UTC)
     for disposition in OperationLeaseDisposition:
         with pytest.raises(ValidationError):
             OperationLeaseResult(
@@ -510,9 +510,9 @@ def test_lease_and_replay_results_are_fail_closed() -> None:
 
 
 def test_lease_observation_binds_target_state_and_deterministic_evidence() -> None:
-    observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
-    active = _owner_lease(expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC))
-    expired = _owner_lease(expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC))
+    observed = datetime(1980, 8, 13, 20, 2, tzinfo=UTC)
+    active = _owner_lease(expires_at=datetime(1980, 8, 13, 20, 3, tzinfo=UTC))
+    expired = _owner_lease(expires_at=datetime(1980, 8, 13, 20, 1, tzinfo=UTC))
 
     absent = OperationLeaseObservation(
         scope_ref=_SCOPE_REF,
@@ -564,20 +564,20 @@ def test_lease_observation_binds_target_state_and_deterministic_evidence() -> No
 
 
 def test_lease_transition_contracts_bind_exact_predecessors_and_derived_evidence() -> None:
-    acquired_at = datetime(2026, 8, 13, 20, tzinfo=UTC)
-    observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
-    predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC))
-    renewed = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 4, tzinfo=UTC))
-    expired_predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC))
+    acquired_at = datetime(1980, 8, 13, 20, tzinfo=UTC)
+    observed = datetime(1980, 8, 13, 20, 2, tzinfo=UTC)
+    predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(1980, 8, 13, 20, 3, tzinfo=UTC))
+    renewed = _owner_lease(acquired_at=acquired_at, expires_at=datetime(1980, 8, 13, 20, 4, tzinfo=UTC))
+    expired_predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(1980, 8, 13, 20, 1, tzinfo=UTC))
     takeover = _owner_lease(
         owner_id="e" * 64,
         token="f" * 64,
         acquired_at=observed,
-        expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+        expires_at=datetime(1980, 8, 13, 20, 3, tzinfo=UTC),
     )
     acquired = _owner_lease(
         acquired_at=observed,
-        expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+        expires_at=datetime(1980, 8, 13, 20, 3, tzinfo=UTC),
     )
 
     results = (
@@ -774,14 +774,14 @@ def test_observation_materialization_accepts_checkpoint_suffix_and_refuses_cross
 
 
 def test_lease_transition_correlations_refuse_planted_identity_and_time_mutations() -> None:
-    observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
+    observed = datetime(1980, 8, 13, 20, 2, tzinfo=UTC)
     predecessor = OperationOwnerLease(
         operation_id="a" * 64,
         scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id="b" * 64,
         token="c" * 64,
-        acquired_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
-        expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC),
+        acquired_at=datetime(1980, 8, 13, 20, tzinfo=UTC),
+        expires_at=datetime(1980, 8, 13, 20, 1, tzinfo=UTC),
     )
     current = OperationOwnerLease(
         operation_id="a" * 64,
@@ -789,7 +789,7 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
         owner_id="e" * 64,
         token="f" * 64,
         acquired_at=observed,
-        expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+        expires_at=datetime(1980, 8, 13, 20, 3, tzinfo=UTC),
     )
     accepted = OperationLeaseResult(
         scope_ref=_SCOPE_REF,

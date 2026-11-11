@@ -31,6 +31,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import resolve_fx_conversion_stamp
 from ....domain.currency.tests.fx_lookup import eur_rate_lookup
@@ -38,11 +40,13 @@ from ....domain.iva.schema import InvoiceKind
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateProviderPort
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "39393939-3939-4939-8939-393939393939"
 
-_QUOTE_DATE = date(2025, 3, 14)
+_QUOTE_DATE = date(_YEAR - 1, 3, 14)
 _TEST_USD_RATE = Decimal("0.918273645")
 _TEST_RATE_SOURCE = "deterministic-test"
 _BASE = Decimal("1000.00")
@@ -157,7 +161,7 @@ def test_the_stamp_is_taken_at_the_invoice_date_not_at_a_later_one() -> None:
     at read time would make a stored euro figure drift every time it was read.
     """
     provider = _rated_provider()
-    later = date(2025, 6, 30)
+    later = date(_YEAR - 1, 6, 30)
 
     stamp = resolve_fx_conversion_stamp(currency="USD", on_date=later, rate_provider=provider)
 
@@ -195,7 +199,7 @@ def test_an_observation_date_without_a_stamp_is_refused() -> None:
 def test_an_observation_after_the_rate_date_is_refused() -> None:
     invoice = _invoice(currency="USD", provider=_rated_provider())
     payload = invoice.model_dump()
-    payload["fx_rate_observation_date"] = date(2025, 3, 15)
+    payload["fx_rate_observation_date"] = date(_YEAR - 1, 3, 15)
 
     with pytest.raises(ValidationError, match="cannot postdate"):
         type(invoice).model_validate(payload)

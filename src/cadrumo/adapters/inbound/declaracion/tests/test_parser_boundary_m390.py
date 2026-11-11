@@ -9,6 +9,7 @@ import pytest
 from .....core.casilla_id import CasillaId
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
+from .parser_boundary_m100_support import corpus_specimens
 from .parser_boundary_support import (
     expected_casilla_values,
     expected_period,
@@ -16,12 +17,11 @@ from .parser_boundary_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
-_M390_CORPUS_PARAMS: tuple[tuple[str, int], ...] = (
-    ("2022-0A", 2022),
-    ("2023-0A", 2023),
+_M390_CORPUS_PARAMS: tuple[tuple[str, int], ...] = tuple(
+    (stem, year) for stem, year, _period in corpus_specimens("390", role="formula_verification")
 )
-_M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
-    "2022-0A": expected_casilla_values(
+_M390_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
+    expected_casilla_values(
         {
             "iva.anual.repercutido.general": Decimal("10500.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
@@ -33,7 +33,7 @@ _M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
             "iva.anual.resultado-regimen-general": Decimal("2100.00"),
         }
     ),
-    "2023-0A": expected_casilla_values(
+    expected_casilla_values(
         {
             "iva.anual.repercutido.general": Decimal("12600.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
@@ -45,7 +45,10 @@ _M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
             "iva.anual.resultado-regimen-general": Decimal("2800.00"),
         }
     ),
-}
+)
+_M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = dict(
+    zip((stem for stem, _year in _M390_CORPUS_PARAMS), _M390_EXPECTED_OLDEST_FIRST, strict=True)
+)
 
 
 @pytest.mark.parametrize("pdf_stem,year", _M390_CORPUS_PARAMS)

@@ -33,6 +33,7 @@ from .....application.aggregation.percepciones_observations_repository import (
 from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .....domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
@@ -47,6 +48,9 @@ from ..percepciones_observations import (
 from .percepcion_observation_authoring import replace_percepcion_observations, save_percepcion_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 
 
 def _repository() -> PercepcionObservationRepositoryAdapter:
@@ -68,7 +72,7 @@ def _observation(
         perceptor_tax_id=nif,
         perceptor_legal_name="Perceptor Ejemplo SL",
         country_code="ES",
-        transaction_date=date(2024, 3, 15),
+        transaction_date=date(_YEAR, 3, 15),
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=dinerario,
@@ -85,11 +89,11 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _observation(nif="00001500M", clave="A", subclave="01")
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         save_percepcion_observation(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observation=original,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -129,7 +133,7 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
     """One perceptor under two claves persists as TWO distinct rows (percepciones key)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         records = (
             _observation(nif="00001500M", clave="A"),
             _observation(nif="00001501Y", clave="A"),
@@ -140,7 +144,7 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
             save_percepcion_observation(
                 repo,
                 modelo="190",
-                filing_year=2024,
+                filing_year=_YEAR,
                 period=period,
                 observation=record,
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -161,16 +165,16 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
 
 def test_object_key_hashes_the_nif_never_cleartext() -> None:
     """The object key carries the sha256 of the NIF, never the plaintext; clave/subclave stay plain."""
-    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "00001500M", "A", "01")
+    key = percepcion_observation_key("190", _YEAR, Period.from_year_and_code(_YEAR, "0A"), "00001500M", "A", "01")
     assert "00001500M" not in key
     digest = hashlib.sha256("00001500M".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
-    assert key == f"190:2024:0A:{digest}:A:01"
+    assert key == f"190:{_YEAR}:0A:{digest}:A:01"
 
 
 def test_blank_subclave_keys_as_dash() -> None:
     """A blank subclave is keyed as '-' so the grammar segment is never empty."""
-    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "00001500M", "B", "")
+    key = percepcion_observation_key("190", _YEAR, Period.from_year_and_code(_YEAR, "0A"), "00001500M", "B", "")
     assert key.endswith(":B:-")
 
 
@@ -182,13 +186,13 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
         save_percepcion_observation(
             repo,
             modelo="190",
-            filing_year=2023,
-            period=Period.from_year_and_code(2023, "0A"),
+            filing_year=_PRIOR_YEAR,
+            period=Period.from_year_and_code(_PRIOR_YEAR, "0A"),
             observation=obs,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        assert repo.load_observations("190", Period.from_year_and_code(2024, "0A")) == ()
-        assert repo.load_observations("190", Period.from_year_and_code(2023, "0A")) == (obs,)
+        assert repo.load_observations("190", Period.from_year_and_code(_YEAR, "0A")) == ()
+        assert repo.load_observations("190", Period.from_year_and_code(_PRIOR_YEAR, "0A")) == (obs,)
 
 
 def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
@@ -197,8 +201,8 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
 
     full = {
         "modelo": "190",
-        "filing_year": 2024,
-        "period": Period.from_year_and_code(2024, "0A"),
+        "filing_year": _YEAR,
+        "period": Period.from_year_and_code(_YEAR, "0A"),
         "observation": _observation(nif="00001503P", clave="A"),
         "captured_at": datetime.now(UTC),
         "source_kind": AggregationCaptureKind.AGGREGATE_PULL,
@@ -213,7 +217,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
     """Re-persisting a SHRUNK set removes the dropped percepción — no stale over-count."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         full = (
             _observation(nif="00001500M", clave="A"),
             _observation(nif="00001500M", clave="G"),
@@ -222,7 +226,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=full,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -232,7 +236,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=full[:1] + full[2:],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -254,7 +258,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         declared = (
             _observation(nif="00001500M", clave="A"),
             _observation(nif="00001501Y", clave="A"),
@@ -263,7 +267,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=declared,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -271,14 +275,14 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
 
         replacement = repo.build_observation_payload(
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observation=_observation(nif="00001503P", clave="A"),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            replace_records(repo, (replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
+            replace_records(repo, (replacement,), (*stale_identifiers, f"190:{_YEAR}:0A:../escape:A:-"))
 
         survived = repo.load_observations("190", period)
         assert set(survived) == set(declared)
@@ -294,11 +298,11 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(_observation(nif="00001500M", clave="A"), _observation(nif="00001501Y", clave="A")),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -307,7 +311,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(carried,),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -329,7 +333,7 @@ def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         padded = _observation(nif=" 12345678z ", clave="A", dinerario=Decimal("1000"))
         canonical = _observation(nif="12345678Z", clave="A", dinerario=Decimal("2000"))
 
@@ -343,7 +347,7 @@ def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(t
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(padded, canonical),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -355,9 +359,9 @@ def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(t
 
 def test_padded_tax_id_keys_to_the_canonical_object_key() -> None:
     """A padded declaration and its canonical form address the same stored row."""
-    period = Period.from_year_and_code(2024, "0A")
-    padded_key = percepcion_observation_key("190", 2024, period, " 12345678z ", "A", "")
-    canonical_key = percepcion_observation_key("190", 2024, period, "12345678Z", "A", "")
+    period = Period.from_year_and_code(_YEAR, "0A")
+    padded_key = percepcion_observation_key("190", _YEAR, period, " 12345678z ", "A", "")
+    canonical_key = percepcion_observation_key("190", _YEAR, period, "12345678Z", "A", "")
     assert padded_key == canonical_key
 
 
@@ -373,13 +377,13 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         row_a = _observation(nif="00001500M", clave="A")
         row_b = _observation(nif="00001501Y", clave="B")
         replace_percepcion_observations(
             repo,
             modelo="190",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(row_a, row_b),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -390,7 +394,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         def _payload(observation: WithholdingObservation):
             return repo.build_observation_payload(
                 modelo="190",
-                filing_year=2024,
+                filing_year=_YEAR,
                 period=period,
                 observation=observation,
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -416,8 +420,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 @pytest.mark.parametrize(
     "captured_at",
     [
-        datetime(2024, 4, 15, 10, 30),
-        datetime(2024, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+        datetime(1980, 4, 15, 10, 30),
+        datetime(1980, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
     ],
 )
 def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -> None:
@@ -432,8 +436,8 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
     with pytest.raises(ValidationError):
         PercepcionObservationRepositoryAdapter.payload_type(
             modelo="190",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
             observation=_observation(nif="00001500M", clave="A"),
             captured_at=captured_at,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -444,10 +448,10 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
     """The positive control for the refusal above."""
     payload = PercepcionObservationRepositoryAdapter.payload_type(
         modelo="190",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         observation=_observation(nif="00001500M", clave="A"),
-        captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+        captured_at=datetime(1980, 4, 15, 10, 30, tzinfo=UTC),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 

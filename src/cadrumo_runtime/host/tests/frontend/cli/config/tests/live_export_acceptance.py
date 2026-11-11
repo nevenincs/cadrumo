@@ -20,7 +20,12 @@ from uuid import UUID, uuid4
 
 from pydantic import TypeAdapter
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 _PROFILE = "Session02 Google Review"
+#: The synthetic Modelo 130 work unit closes an exercise, so it names the last
+#: exercise completed before the horizon campaign.
+_SYNTHETIC_WORK_YEAR = filing_year_envelope().horizon - 1
 _JSON_OBJECT: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 _JSON_OBJECT_ROWS: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
 _TEXT_LIST: TypeAdapter[list[str]] = TypeAdapter(list[str])
@@ -123,7 +128,7 @@ def _load_or_create_journal(root: Path, journal_path: Path) -> dict[str, object]
     )
     source = _JSON_OBJECT.validate_python(source_envelope["result"], strict=True)
     period = _JSON_OBJECT.validate_python(source["period"], strict=True)
-    if source["modelo"] != "130" or source["filing_year"] != 2025 or period["code"] != "4T":
+    if source["modelo"] != "130" or source["filing_year"] != _SYNTHETIC_WORK_YEAR or period["code"] != "4T":
         raise RuntimeError("synthetic work selection no longer matches its original coordinates")
     journal: dict[str, object] = {
         "version": 1,

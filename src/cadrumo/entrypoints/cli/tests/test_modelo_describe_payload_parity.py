@@ -26,9 +26,13 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
+_YEAR = newest_authored_edition("100")
+_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("100")[-2:])
+_NEWEST_REVISION = _REVISION_IDS[-1]
 _LEGAL_REF = "ley-35-2006:art-27"
 _SOURCE_REF = "aeat-manual-renta-2024"
 
@@ -42,14 +46,14 @@ def _report(**overrides: Any) -> ModeloDescribeReport:
         "tax_domain": "renta",
         "cadence": "anual",
         "jurisdiction": "ES",
-        "revision": "2025-y-siguientes",
+        "revision": _NEWEST_REVISION,
         "authority_grade": RegistryAuthorityGrade.FILING,
-        "revision_ids": ("2024-y-siguientes", "2025-y-siguientes"),
-        "filing_year": 2025,
-        "filing_period": Period(filing_year=2025, code="0A"),
+        "revision_ids": _REVISION_IDS,
+        "filing_year": _YEAR,
+        "filing_period": Period(filing_year=_YEAR, code="0A"),
         "period": "0A",
-        "valid_from": date(2025, 1, 1),
-        "valid_to": date(2025, 12, 31),
+        "valid_from": date(_YEAR, 1, 1),
+        "valid_to": date(_YEAR, 12, 31),
         "periods": ("0A",),
         "casilla_count": 12,
         "manual_casilla_count": 5,
@@ -89,9 +93,9 @@ def test_from_report_carries_legal_and_source_grounding() -> None:
     assert result.legal_refs == [_LEGAL_REF]
     assert result.source_refs == [_SOURCE_REF]
     assert result.jurisdiction == "ES"
-    assert result.valid_from == date(2025, 1, 1)
-    assert result.valid_to == date(2025, 12, 31)
-    assert result.filing_period == Period(filing_year=2025, code="0A")
+    assert result.valid_from == date(_YEAR, 1, 1)
+    assert result.valid_to == date(_YEAR, 12, 31)
+    assert result.filing_period == Period(filing_year=_YEAR, code="0A")
 
 
 @pytest.mark.parametrize(
@@ -126,9 +130,9 @@ def test_emitted_json_carries_the_grounding_fields() -> None:
     assert emitted["legal_refs"] == [_LEGAL_REF]
     assert emitted["source_refs"] == [_SOURCE_REF]
     assert emitted["jurisdiction"] == "ES"
-    assert emitted["valid_from"] == "2025-01-01"
-    assert emitted["valid_to"] == "2025-12-31"
-    assert emitted["filing_period"] == {"filing_year": 2025, "code": "0A"}
+    assert emitted["valid_from"] == date(_YEAR, 1, 1).isoformat()
+    assert emitted["valid_to"] == date(_YEAR, 12, 31).isoformat()
+    assert emitted["filing_period"] == {"filing_year": _YEAR, "code": "0A"}
     assert emitted["manual_casilla_count"] == 5
     assert emitted["bound_casilla_count"] == 4
     assert emitted["computed_casilla_count"] == 3

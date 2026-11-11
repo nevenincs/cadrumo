@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -16,7 +17,11 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_revision,
+)
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import SCENARIO_FILING_YEAR, capture_m111_invoice_withholding
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -32,6 +37,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 
 #: The year the shared withholding capture records its Modelo 111 percepción in.
 _M111_YEAR = str(SCENARIO_FILING_YEAR)
+_YEAR = SCENARIO_FILING_YEAR
 
 
 def _invoke(args: list[str]):
@@ -75,7 +81,7 @@ def _create_first_year_activity_profile() -> None:
             "identity.name": "Daniel",
             "identity.surnames": "Persona",
             "activities.description": "consultoria",
-            "censo.activity_start_date": "2025-01-01",
+            "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
             "taxpayer_type.fiscal_residency": "resident_irpf",
@@ -88,6 +94,18 @@ def _create_first_year_activity_profile() -> None:
 # The blank-ledger 1T draft values hold for every supported exercise: the activity
 # starts on its first day, so no prior-year state or earlier quarter feeds the draft.
 _SUPPORTED_EXERCISES = PublishedGovernedFactSource().supported_filing_years().years
+
+
+def _provision_rate_percent(exercise: int) -> Decimal:
+    """Return the percentage of the art. 30.2.4a provision the registry sets for one exercise."""
+    revision = published_revision("130", str(open_ended_revision("130").id))
+    parameter = next(parameter for parameter in revision.parameters if parameter.id == "irpf.art-30-2-provision-rate")
+    (value,) = (
+        candidate.value
+        for candidate in parameter.values
+        if candidate.valid_from.year <= exercise and (candidate.valid_to is None or exercise <= candidate.valid_to.year)
+    )
+    return value
 
 
 def _create_autonoma_activity_profile(exercise: int) -> None:
@@ -277,14 +295,14 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     _create_profile()
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
-        filing_year=2025,
+        filing_year=_YEAR,
         source_key="natural-key",
     )
     created = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -297,7 +315,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
             "--binding", "irpf.previous_year_economic_activity_net_income=13000",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
@@ -310,7 +328,7 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 1, verified.output
@@ -401,18 +419,17 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     assert "validate_construct_closure() missing" not in calculated.output
     assert "Traceback" not in calculated.output
     casillas = unwrap_schema_envelope(calculated.output)["casilla_values"]
-    # RIRPF art. 30.2.4a, by hand: rendimiento previo = 3000 - 600 = 2400.
-    #   2023 (7 %): provision 2400 x 7 % = 168; 02 = 600 + 168 = 768; 03 = 3000 - 768 = 2232;
-    #               04 = 2232 x 20 % = 446.40; 19 = 446.40 - 100 = 346.40.
-    #   other years (5 %): provision 2400 x 5 % = 120; 02 = 600 + 120 = 720; 03 = 3000 - 720 = 2280;
-    #               04 = 2280 x 20 % = 456; 19 = 456 - 100 = 356.
-    expected_02, expected_03, expected_19 = (
-        ("768.00", "2232.00", "346.40") if exercise == 2023 else ("720.00", "2280.00", "356.00")
-    )
+    # RIRPF art. 30.2.4a, by hand: rendimiento previo = 3000 - 600 = 2400; the provision is that
+    # sum at the registry's rate for the exercise (capped at 2000), box 02 adds it to the 600 of
+    # expenses, 03 = 3000 - 02, 04 = 03 x 20 % and 19 = 04 - 100 of the 1T payment already made.
+    provision = min(Decimal("2400") * _provision_rate_percent(exercise) / 100, Decimal("2000"))
+    expected_02 = Decimal("600") + provision
+    expected_03 = Decimal("3000") - expected_02
+    expected_19 = expected_03 * Decimal("0.20") - Decimal("100")
     assert Decimal(casillas["01"]) == Decimal("3000.00")
-    assert Decimal(casillas["02"]) == Decimal(expected_02)
-    assert Decimal(casillas["03"]) == Decimal(expected_03)
-    assert Decimal(casillas["19"]) == Decimal(expected_19)
+    assert Decimal(casillas["02"]) == expected_02
+    assert Decimal(casillas["03"]) == expected_03
+    assert Decimal(casillas["19"]) == expected_19
 
 
 def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_filed(tmp_path: Path) -> None:
@@ -425,11 +442,11 @@ def test_modelo_130_without_a_declared_criterion_cannot_be_verified_exported_or_
     _create_first_year_activity_profile()
     seed_m130_income_transaction(
         amount=Decimal("4000.00"),
-        filing_year=2025,
+        filing_year=_YEAR,
         source_key="undeclared-criterion",
         criterion_declared=False,
     )
-    period = ["--modelo", "130", "--year", "2025", "--period", "1T"]
+    period = ["--modelo", "130", "--year", str(_YEAR), "--period", "1T"]
     assert _invoke(["--format", "json", "app", "modelo", "work", "create", *period]).exit_code == 0
 
     calculated = _invoke(
@@ -473,14 +490,14 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
     _create_first_year_activity_profile()
     seed_m130_income_transaction(
         amount=Decimal("4000.00"),
-        filing_year=2025,
+        filing_year=_YEAR,
         source_key="first-year-file",
     )
     created = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -489,7 +506,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
             "--binding", "irpf.previous_year_economic_activity_net_income=0",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
@@ -501,7 +518,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
@@ -513,7 +530,7 @@ def test_modelo_130_first_year_activity_can_file_late_by_natural_key() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "file",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
             "--select", "current",
             "--by", "Daniel",
             "--notes", "local-only first-year M130 filing",
@@ -533,8 +550,8 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
+            "--revision", str(open_ended_revision("130").id),
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -542,12 +559,12 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
     result = _invoke(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "1T",
             "--revision", "conflicting-registry-revision",
         ],
     )  # fmt: skip
     assert result.exit_code != 0
-    assert "2019-y-siguientes" in result.output
+    assert str(open_ended_revision("130").id) in result.output
     assert "conflicting-registry-revision" in result.output
     assert "Traceback" not in result.output
 

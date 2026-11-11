@@ -11,11 +11,15 @@ import typer
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_iva_wallet_commands as handler
 from .. import operation_modelo_iva_wallet_balance as bridge
 from ..modelo_iva_wallet_results import IvaWalletBalanceResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_AS_OF = filing_year_envelope().horizon
+_EXPIRY = _AS_OF + 1
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OPERATION_ID = "a" * 64
@@ -24,12 +28,12 @@ _OPERATION_ID = "a" * 64
 def _read() -> bridge.ModeloIvaWalletBalanceRead:
     projection = bridge.ModeloIvaWalletBalanceProjection(
         profile_id=_PROFILE,
-        as_of_year=2028,
+        as_of_year=_AS_OF,
         total_balance="300.00",
         active_balance="200.00",
         expired_balance="100.00",
         lot_count=2,
-        next_expiry_year=2029,
+        next_expiry_year=_EXPIRY,
         unallocated_applied_amount="0.00",
     )
     completion = RegisteredOperationCompletion(
@@ -54,27 +58,27 @@ def test_balance_command_emits_the_registered_projection_without_local_reads(
     monkeypatch.setattr(handler, "read_modelo_iva_wallet_balance_for_cli", read)
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler.iva_wallet_balance_cmd(cast(typer.Context, cast(object, None)), as_of_year=2028)
+    handler.iva_wallet_balance_cmd(cast(typer.Context, cast(object, None)), as_of_year=_AS_OF)
 
-    assert submissions == [{"as_of_year": 2028}]
+    assert submissions == [{"as_of_year": _AS_OF}]
     assert len(envelopes) == 1
     envelope = envelopes[0]
     assert envelope["command"] == "modelo.iva_wallet.balance"
     result = cast(IvaWalletBalanceResult, envelope["result"])
-    assert result.as_of_year == 2028
+    assert result.as_of_year == _AS_OF
     assert result.total_balance == "300.00"
     assert result.active_balance == "200.00"
     assert result.expired_balance == "100.00"
     assert result.lot_count == 2
-    assert result.next_expiry_year == 2029
+    assert result.next_expiry_year == _EXPIRY
     assert result.unallocated_applied_amount == "0.00"
     assert envelope["lines"] == [
         "operation\tmodelo.iva-wallet.balance",
-        "as_of_year\t2028",
+        f"as_of_year\t{_AS_OF}",
         "total_balance\t300.00",
         "active_balance\t200.00",
         "expired_balance\t100.00",
         "lot_count\t2",
-        "next_expiry_year\t2029",
+        f"next_expiry_year\t{_EXPIRY}",
         "unallocated_applied_amount\t0.00",
     ]

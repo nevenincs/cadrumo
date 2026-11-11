@@ -10,6 +10,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..mutation_steps import build_prorrata_refusal_projection
 from ..projection_contracts import (
     PRORRATA_ELECTION_REFUSAL_CODE,
@@ -22,6 +23,8 @@ from ..projection_contracts import (
 from ..refusal_words import served_refusal_words
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _REASONS = cast(tuple[ProrrataRefusalReason, ...], get_args(ProrrataRefusalReason.__value__))
 _CODES: dict[str, ProrrataRefusalCode] = {
@@ -80,7 +83,7 @@ def test_an_election_reason_serves_its_own_sentence_rather_than_the_codes_genera
 
 def test_the_refusal_projection_carries_the_sentence_and_its_language() -> None:
     with override_settings(cadrumo_output_language="es"):
-        refusal = build_prorrata_refusal_projection(reason="seed_source_absent", detail="x", ejercicio=2026)
+        refusal = build_prorrata_refusal_projection(reason="seed_source_absent", detail="x", ejercicio=_YEAR)
         expected, _ = served_refusal_words("seed_source_absent", error_code=PRORRATA_VALIDATION_REFUSAL_CODE)
 
     assert refusal.refusal_words == expected

@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.irnr import M210PayerMode
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...transactions.m210_income_classification import resolve_m210_payer_mode
 from ..row_models import (
     Modelo210AgrupacionRentaRow,
@@ -18,7 +19,7 @@ from ..row_models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_M210_EFFECTIVE_DATE = date(2025, 1, 1)
+_M210_EFFECTIVE_DATE = date(filing_year_envelope().horizon, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 _MULTIPLE_PAYERS_CODE_35 = resolve_m210_payer_mode(
     "multiple_payers_code_35",

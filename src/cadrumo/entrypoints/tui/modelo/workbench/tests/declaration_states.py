@@ -21,6 +21,7 @@ from ......application.modelo.work_form_declaration_facts import (
 from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.result_disposition import ResultDisposition
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.deadlines.festivos import DeadlineHolidayCoverage
 from ......domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityBasis, RefundEligibilityOutcome
 from ......domain.modelos.verification_report import (
@@ -30,9 +31,10 @@ from ......domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 
-REFERENCE_DAY = date(2026, 4, 8)
+_YEAR = filing_year_envelope().horizon
+REFERENCE_DAY = date(_YEAR, 4, 8)
 """The day the synthetic deadlines are counted from."""
-RECORDED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
+RECORDED_AT = datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC)
 """When the synthetic declaration is recorded as filed."""
 
 _MESSAGE_KEY = "application.modelo.findings.oss_evidence_missing"

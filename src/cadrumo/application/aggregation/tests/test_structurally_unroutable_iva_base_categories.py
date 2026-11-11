@@ -30,17 +30,18 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.components import registry_category_projection
 from ....domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_Q1_2025 = Period.from_year_and_code(2025, "1T")
+_Q1 = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 _BUCKET_ID = "38383838-3838-4838-8838-383838383838"
 
 
 def _m303_revision() -> ModeloRevision:
-    return published_snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return published_snapshot("303", filing_year=_Q1.filing_year, period="1T").revision
 
 
 def test_domestic_zero_is_structurally_unroutable_on_m303() -> None:

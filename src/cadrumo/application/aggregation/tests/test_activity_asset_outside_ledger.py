@@ -5,6 +5,7 @@ Figures are hand-worked from the 12,000.00 element at a 10% linear coefficient.
 
 from __future__ import annotations
 
+from calendar import isleap
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -14,6 +15,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.tipos_actividad import TipoActividad
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
@@ -32,14 +34,19 @@ from .ledger_source_mesh_support import reasons, register_asset, register_claim,
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_YEAR = newest_authored_edition("100")
+_OUTSIDE_LEDGER_ACQUISITION_YEAR = filing_year_envelope().floor - 1
+
 
 def _facts(**changes: Any) -> dict[str, Any]:
     template = register_asset("old-press", transaction_id="c" * 64)
     facts = {name: getattr(template, name) for name in type(template).model_fields}
     facts.update(
-        acquisition=AcquisitionLineageReference(invoice_evidence_id="Factura 2014/118, Prensas SA"),
+        acquisition=AcquisitionLineageReference(
+            invoice_evidence_id=f"Factura {_OUTSIDE_LEDGER_ACQUISITION_YEAR}/118, Prensas SA"
+        ),
         acquisition_shape=AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
-        declared_acquisition_date=date(2014, 3, 1),
+        declared_acquisition_date=date(_OUTSIDE_LEDGER_ACQUISITION_YEAR, 3, 1),
         declared_activity=TipoActividad.A03_RESTO_EMPRESARIALES,
     )
     facts.update(changes)
@@ -82,8 +89,9 @@ def test_a_claim_reaches_modelo_100_and_the_instalment_with_no_row() -> None:
 
 def test_a_baja_routes_its_gain_with_no_row() -> None:
     element = _element()
+    disposal_date = date(_YEAR, 6, 30)
     baja = ActivityAssetDisposal(
-        disposal_date=date(2025, 6, 30),
+        disposal_date=disposal_date,
         reason=ActivityAssetDisposalReason.SALE,
         proceeds=Decimal("12000.00"),
         transmission_costs=Decimal("0.00"),
@@ -91,11 +99,15 @@ def test_a_baja_routes_its_gain_with_no_row() -> None:
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(element, element.with_disposal(baja))))
 
-    # The minimum 12,000 x 5% x 181 / 365 = 297.53 is all gain.
+    # The minimum 12,000 x 5% x (days in service) / (days of the year) is all gain.
+    days_in_service = (disposal_date - date(_YEAR, 1, 1)).days + 1
+    minimum = (Decimal("12000.00") * Decimal("0.05") * days_in_service / (366 if isleap(_YEAR) else 365)).quantize(
+        Decimal("0.01")
+    )
     gains = [
         value for binding, value in resolution.binding_values.items() if str(binding).endswith("gain-element-1654")
     ]
-    assert gains == [Decimal("297.53")]
+    assert gains == [minimum]
     assert set(reasons(resolution)) & GATE_REFUSED_REASONS == set()
 
 
@@ -144,7 +156,7 @@ def test_an_agrarian_element_stays_out_of_the_instalment_and_in_the_annual_retur
 
 def test_it_is_refused_with_a_date_after_service() -> None:
     with pytest.raises(ValueError, match="declared_acquisition_after_service"):
-        _element(declared_acquisition_date=date(2025, 1, 2))
+        _element(declared_acquisition_date=date(_YEAR, 1, 2))
 
 
 def test_it_cannot_also_name_a_ledger_row() -> None:

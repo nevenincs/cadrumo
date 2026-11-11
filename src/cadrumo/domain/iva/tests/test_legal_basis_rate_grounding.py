@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, timedelta
 from datetime import date as _esp_date
 from decimal import Decimal
 from typing import cast
@@ -35,8 +35,13 @@ from typing import cast
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    filing_year_envelope,
+    revision_serving_period,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_legal_reference,
     published_legal_references,
 )
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
@@ -52,6 +57,8 @@ from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
@@ -66,15 +73,18 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
     margin_percentage=Decimal("10"),
     comparison=ThresholdComparison.INCLUSIVE,
     modelo_id="303",
-    revision_id="2025",
-    resolved_on=_esp_date(2025, 12, 31),
+    revision_id=str(revision_serving_period("303", _YEAR, "4T").id),
+    resolved_on=_esp_date(_YEAR, 12, 31),
 )
 
 
-# Canonical date for rate lookups during these legal-binding checks.
-# 2025 is the current ejercicio at the time of writing, with stable
-# rates after the temporary 2022-2024 RATE_5 window closed.
-_BINDING_DATE = date(2025, 6, 15)
+# Canonical date for rate lookups during these legal-binding checks: mid-year of the
+# newest supported ejercicio, after the temporary RATE_5 window closed.
+_BINDING_DATE = date(_YEAR, 6, 15)
+
+# RD-ley 4/2024 art. 1 opens the zero-rated food window; the date inside it is read from
+# the published provision's own start.
+_RDL_4_2024_OPENS = published_legal_reference("real-decreto-ley-4-2024:art-1").effective_from
 
 
 def _strip_html(html: str) -> str:
@@ -266,10 +276,10 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
         margin_percentage=Decimal("37"),
         comparison=ThresholdComparison.EXCLUSIVE,
         modelo_id="303",
-        revision_id="2025",
-        resolved_on=_esp_date(2025, 12, 31),
+        revision_id=str(revision_serving_period("303", _YEAR, "4T").id),
+        resolved_on=_esp_date(_YEAR, 12, 31),
     )
-    rule = especial_mandatory_rule(2025, parameters=arbitrary)
+    rule = especial_mandatory_rule(_YEAR, parameters=arbitrary)
     assert rule.margin_percentage == Decimal("37")
     assert rule.multiple == Decimal("1.37")
     assert rule.inclusive is False
@@ -371,13 +381,13 @@ def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() ->
     made a 2 % foodstuffs line compute the super-reducido 4 %.
 
     So the date must sit INSIDE the statutory window. It previously used the
-    module's 2025 `_BINDING_DATE`, which asserted that a 0 % declared in 2025 still
-    resolves -- and from 2025-01-01 no general domestic 0 % tipo is in force (the
+    module's `_BINDING_DATE` after the window, which asserted that a 0 % declared then still
+    resolves -- and once the window closed no general domestic 0 % tipo is in force (the
     basic-foods list returned to 4 % super-reducido). That is a refusal the design
     intends, not a regression: declaring 0 % outside a 0 % window is a claim about
     the law, and `iva_rate_percentage` is the guard that refuses it.
     """
-    in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
+    in_window = _RDL_4_2024_OPENS + timedelta(days=50)  # RDL 4/2024 art. 1.Dos.1: 0 % for its first quarter
     assert iva_rate_kind(resolve_iva_rate_token("RATE_0", date.today())) == IvaRateKind("zero")
     assert iva_rate_percentage(resolve_iva_rate_token("RATE_0", date.today()), on_date=in_window) == Decimal("0")
 
@@ -410,7 +420,7 @@ def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outl
     inside the window, and by the dated in-force checks on every other tier --
     where registry coverage IS complete and the guard stays sound.
     """
-    for on_date in (date(2024, 3, 15), _BINDING_DATE):
+    for on_date in (_RDL_4_2024_OPENS - timedelta(days=1), _BINDING_DATE):
         assert iva_rate_percentage(resolve_iva_rate_token("RATE_0", date.today()), on_date=on_date) == Decimal("0")
 
 

@@ -58,11 +58,14 @@ from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from .....application.ledger.tests.manual_transaction_support import (
     create_manual_transaction,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     purchase_invoice,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 
 @contextmanager
@@ -185,8 +188,8 @@ def drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> C
     invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
     command = ManualLedgerTransactionCommand(
         bucket_id=BUCKET_ID,
-        booked_date=date(2026, 5, 2),
-        value_date=date(2026, 5, 3),
+        booked_date=date(_YEAR, 5, 2),
+        value_date=date(_YEAR, 5, 3),
         amount=_Decimal("121.00"),
         currency="EUR",
         direction=TransactionDirection.OUTGOING,
@@ -212,7 +215,7 @@ def drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> C
         result = create_manual_transaction(
             command,
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=_UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=_UTC),
         )
     reloaded = transaction_repository.load()
     persisted = reloaded.get(result.ref.transaction_id)

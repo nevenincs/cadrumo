@@ -24,12 +24,15 @@ from cadrumo.application.ledger.counterparty_establishment_ports import Counterp
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.domain.iva.schema import EUMemberState
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import IvaTerritorialScope
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
-_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
+_ASSERTED_AT = datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC)
 _CIF = "B00015016"
 
 

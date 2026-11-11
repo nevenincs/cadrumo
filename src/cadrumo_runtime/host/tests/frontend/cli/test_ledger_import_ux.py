@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from hashlib import sha256
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import pytest
 
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_json_support import require_json_object
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -22,6 +24,8 @@ from .ledger_ux_support import (
     invoke_exact_profile,
     ledger_ux_bucket_session,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["ledger_ux_bucket_session"]
@@ -73,7 +77,7 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
     """An unknown --provider is refused with the recognised set inline."""
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     result = invoke(
@@ -120,7 +124,7 @@ def test_missing_csv_is_refused_at_the_file_parameter(tmp_path: Path) -> None:
 def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_path: Path) -> None:
     """`--provider csv` warnings must not invent a bank brand for generic CSV."""
     statement = tmp_path / "generic.csv"
-    statement.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
+    statement.write_text(f"Date,Description,Amount\n{date(_YEAR, 4, 15)},Invoice 1,121.00\n", encoding="utf-8")
 
     result = invoke(
         [
@@ -155,11 +159,11 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     [
         (
             "missing-currency.csv",
-            "Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n",
+            f"Date,Description,Amount\n{date(_YEAR, 4, 15)},Invoice 1,121.00\n",
         ),
         (
             "blank-currency.csv",
-            N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,,n26-001\n",
+            N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,,n26-001\n",
         ),
     ],
 )
@@ -190,7 +194,7 @@ def test_short_csv_currency_preserves_typed_import_refusal(tmp_path: Path) -> No
     """A malformed nonblank currency preserves the import refusal identity."""
     statement = tmp_path / "short-currency.csv"
     statement.write_text(
-        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,EU,n26-001\n",
         encoding="utf-8",
     )
 
@@ -291,8 +295,8 @@ def _two_quarter_statement(tmp_path: Path) -> Path:
     statement = tmp_path / "two-quarters.csv"
     statement.write_text(
         N26_HEADER
-        + "2026-01-15,Client SL,Invoice 1,121.00,EUR,n26-101\n"
-        + "2026-04-15,Client SL,Invoice 2,242.00,EUR,n26-102\n",
+        + f"{date(_YEAR, 1, 15)},Client SL,Invoice 1,121.00,EUR,n26-101\n"
+        + f"{date(_YEAR, 4, 15)},Client SL,Invoice 2,242.00,EUR,n26-102\n",
         encoding="utf-8",
     )
     return statement
@@ -312,7 +316,9 @@ def test_import_period_keeps_only_rows_dated_inside_it(tmp_path: Path) -> None:
     statement = _two_quarter_statement(tmp_path)
     with native_cli_profile_scope(tmp_path / "native") as profile:
         profile.register(label="period-ledger-import", facts={})
-        scoped = require_json_object(_period_import(profile, statement, "--period", "1T", "--year", "2026")["result"])
+        scoped = require_json_object(
+            _period_import(profile, statement, "--period", "1T", "--year", str(_YEAR))["result"]
+        )
         whole = require_json_object(_period_import(profile, statement)["result"])
 
     assert (scoped["rows"], scoped["imported"], scoped["skipped"]) == (1, 1, 0)
@@ -324,7 +330,7 @@ def test_import_period_matching_no_rows_explains_the_zero_import(tmp_path: Path)
     statement = _two_quarter_statement(tmp_path)
     with native_cli_profile_scope(tmp_path / "native") as profile:
         profile.register(label="period-ledger-import", facts={})
-        document = _period_import(profile, statement, "--period", "4T", "--year", "2026")
+        document = _period_import(profile, statement, "--period", "4T", "--year", str(_YEAR))
 
     assert require_json_object(document["result"])["imported"] == 0
     assert _notice_projection(document, "ledger.import.no_rows_in_period") == {
@@ -370,7 +376,7 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
     """Re-importing only-duplicate rows reports why nothing was added."""
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     first = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
@@ -537,14 +543,14 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     """
     first = tmp_path / "first.csv"
     first.write_text(
-        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     assert invoke(["app", "ledger", "import", "--file", str(first), "--provider", "csv"]).exit_code == 0
 
     second = tmp_path / "second.csv"
     second.write_text(
-        N26_HEADER + "2026-04-15,Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,TRANSFER 99887766,121.00,EUR,xx-999\n",
         encoding="utf-8",
     )
     result = invoke(
@@ -643,7 +649,7 @@ def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_pa
     """
     statement = tmp_path / "statement.csv"
     statement.write_text(
-        N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15)},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     original = tmp_path / "original-export.csv"

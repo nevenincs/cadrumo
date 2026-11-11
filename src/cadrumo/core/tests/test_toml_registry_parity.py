@@ -15,7 +15,7 @@ The two fixtures are chosen to exercise the value shapes a type-coercion
 regression would most plausibly corrupt: a top-level table with string arrays
 (``036/manifest.toml``), and a nested table keyed by a quoted string,
 carrying a local TOML date, an inline table, a nested integer, and a nested
-string array (``036``'s ``2025-02-03-y-siguientes`` revision fragment).
+string array (the open-ended revision fragment of ``036``).
 """
 
 from __future__ import annotations
@@ -32,7 +32,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REGISTRY_ROOT = Path(__file__).resolve().parents[2] / "_data" / "registry" / "aeat" / "modelos" / "036"
 
 _MANIFEST_PATH = _REGISTRY_ROOT / "manifest.toml"
-_REVISION_PATH = _REGISTRY_ROOT / "revisions" / "2025-02-03-y-siguientes" / "revision.toml"
+
+# The open-ended edition is the one revision directory named "<valid-from date>-y-siguientes".
+# Its id and valid-from date are read from that directory name, not from any TOML parser.
+(_REVISION_DIRECTORY,) = (
+    directory
+    for directory in (_REGISTRY_ROOT / "revisions").iterdir()
+    if directory.is_dir() and directory.name.endswith("-y-siguientes")
+)
+_REVISION_ID = _REVISION_DIRECTORY.name
+_VALID_FROM = date.fromisoformat(_REVISION_ID[: len("0000-00-00")])
+_REVISION_PATH = _REVISION_DIRECTORY / "revision.toml"
 
 # Hand-derived directly from reading src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml.
 #
@@ -65,13 +75,13 @@ _EXPECTED_MANIFEST: dict[str, object] = {
 }
 
 # Hand-derived directly from reading
-# src/cadrumo/_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml.
+# the open-ended revision.toml under src/cadrumo/_data/registry/aeat/modelos/036/revisions/.
 _EXPECTED_REVISION: dict[str, object] = {
     "revisions": {
-        "2025-02-03-y-siguientes": {
-            "valid_from": date(2025, 2, 3),
+        _REVISION_ID: {
+            "valid_from": _VALID_FROM,
             "period_selector": {
-                "year_from": 2025,
+                "year_from": _VALID_FROM.year,
                 "periods": ["alta", "modificacion", "baja"],
             },
             "legal_refs": [
@@ -155,7 +165,7 @@ def test_read_toml_reproduces_known_revision_values_including_date_and_inline_ta
     revisions = parsed["revisions"]
     assert isinstance(revisions, dict)
     revisions_by_id: dict[str, object] = {str(key): value for key, value in revisions.items()}
-    revision = revisions_by_id["2025-02-03-y-siguientes"]
+    revision = revisions_by_id[_REVISION_ID]
     assert isinstance(revision, dict)
     revision_values: dict[str, object] = {str(key): value for key, value in revision.items()}
     valid_from = revision_values["valid_from"]

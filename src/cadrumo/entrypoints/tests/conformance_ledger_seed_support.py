@@ -38,6 +38,7 @@ from ...core.config_support import LLMProvider
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -51,6 +52,9 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
+
+_YEAR = filing_year_envelope().horizon
+
 
 SEED_ACTOR = "registered-executor-conformance"
 
@@ -117,7 +121,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
         seeded = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=profile,
-                booked_date=date(2025, 4, 15),
+                booked_date=date(_YEAR, 4, 15),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="conformance ledger expense",
@@ -163,7 +167,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                     kind=InvoiceKind.RECEIVED,
                     bucket_id=profile,
                     invoice_number="CONFORMANCE-LINK",
-                    issued_at=date(2025, 4, 15),
+                    issued_at=date(_YEAR, 4, 15),
                     counterparty_name="Conformance Supplier",
                     counterparty_tax_id="B00010157",
                     counterparty_country="ES",
@@ -273,7 +277,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
     if definition_id == "ledger.invoice.import":
         source = context.input_root / "invoices.csv"
         source.write_text(
-            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nB00000281,Conformance Supplier,IMPORT-001,2025-04-15,100.00,21\nB00000034,Conformance Supplier,IMPORT-002,not-a-date,50.00,21\n",
+            f"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nB00000281,Conformance Supplier,IMPORT-001,{date(_YEAR, 4, 15).isoformat()},100.00,21\nB00000034,Conformance Supplier,IMPORT-002,not-a-date,50.00,21\n",
             encoding="utf-8",
         )
 
@@ -308,7 +312,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
             counterparty_nif="B00010157",
             counterparty_name="Conformance Supplier",
             invoice_number="WIZARD-001",
-            invoice_date="2025-04-15",
+            invoice_date=date(_YEAR, 4, 15).isoformat(),
             taxable_base="100.00",
             iva_rate="21",
             currency="EUR",
@@ -339,7 +343,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                 output_tokens=7,
                 cost_estimate_usd=None,
                 cache_hit=False,
-                created_at=datetime(2026, 4, 1, tzinfo=UTC),
+                created_at=datetime(_YEAR, 4, 1, tzinfo=UTC),
                 request_id="a" * 64,
             )
         )
@@ -353,7 +357,9 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
 
         return ConformancePreparation(
             profile_operation_subject(profile),
-            LedgerLlmDiagnosticsRequest(profile_id=context.profile_id, since=date(2026, 4, 1), until=date(2026, 4, 1)),
+            LedgerLlmDiagnosticsRequest(
+                profile_id=context.profile_id, since=date(_YEAR, 4, 1), until=date(_YEAR, 4, 1)
+            ),
             verify=verify,
         )
     raise AssertionError(definition_id)

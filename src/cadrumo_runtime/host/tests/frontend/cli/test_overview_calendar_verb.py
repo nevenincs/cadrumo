@@ -35,6 +35,7 @@ from cadrumo.core.i18n.render import clear_output_language_cache
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import frozen_clock, now, today_madrid
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     leased_profile_create_context,
@@ -58,6 +59,8 @@ from .overview_calendar_support import (
     stamp_calendar_enrolment_from_censo,
 )
 from .overview_native_support import invoke_native_overview
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["isolated_backend"]
 
@@ -111,10 +114,10 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 _INVALID_CALENDAR_CLI_ARGS = (
-    pytest.param(["app", "overview", "calendar", "--to", "2026-03-31"], id="missing-from"),
-    pytest.param(["app", "overview", "calendar", "--from", "2026-01-01"], id="missing-to"),
+    pytest.param(["app", "overview", "calendar", "--to", date(_YEAR, 3, 31).isoformat()], id="missing-from"),
+    pytest.param(["app", "overview", "calendar", "--from", date(_YEAR, 1, 1).isoformat()], id="missing-to"),
     pytest.param(
-        ["app", "overview", "calendar", "--from", "not-a-date", "--to", "2026-03-31"],
+        ["app", "overview", "calendar", "--from", "not-a-date", "--to", date(_YEAR, 3, 31).isoformat()],
         id="malformed-from-date",
     ),
 )
@@ -138,9 +141,9 @@ def test_calendar_renders_entries_for_q1_window() -> None:
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -157,9 +160,9 @@ def test_calendar_warns_of_profile_derived_enrolment_without_live_censo() -> Non
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
 
@@ -174,9 +177,9 @@ def test_calendar_warns_of_profile_derived_enrolment_without_live_censo() -> Non
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
     assert as_json.exit_code == 0, as_json.output
@@ -198,9 +201,9 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
 
@@ -257,9 +260,9 @@ def test_calendar_states_that_no_aeat_history_was_ever_captured() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
@@ -439,9 +442,9 @@ def test_calendar_degrades_when_local_filing_evidence_store_is_unreadable(
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
             *extra_args,
         ],
     )
@@ -476,7 +479,7 @@ def test_calendar_output_language_applies_before_refusal_rendering() -> None:
             "--from",
             "not-a-date",
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
 
@@ -493,15 +496,15 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             declarations=(
                 ExpedientesDeclaration(
                     modelo="303",
-                    ejercicio=2025,
-                    period=Period.from_year_and_code(2025, "1T"),
+                    ejercicio=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                     expediente_id="12345678901234567890",
                     estado="ALTA",
-                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
                 ),
             ),
-            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
-            source_url="declarations:modelo=303:ejercicio=2025",
+            captured_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
+            source_url=f"declarations:modelo=303:ejercicio={_YEAR}",
             authenticated_identity="00001003Z",
         ),
     )
@@ -517,7 +520,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     titular_nombre="Test S.L.",
                     destinatario_nif="00001003Z",
                     destinatario_nombre="Test S.L.",
-                    fecha_emision=date(2025, 4, 14),
+                    fecha_emision=date(_YEAR, 4, 14),
                     fecha_notificacion=None,
                     leida=False,
                     source_url=str(SOURCE_URL),
@@ -530,13 +533,13 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
                     titular_nombre="Other S.L.",
                     destinatario_nif="B12345678",
                     destinatario_nombre="Other S.L.",
-                    fecha_emision=date(2025, 4, 14),
+                    fecha_emision=date(_YEAR, 4, 14),
                     fecha_notificacion=None,
                     leida=True,
                     source_url=str(SOURCE_URL),
                 ),
             ),
-            captured_at=datetime(2025, 4, 14, 10, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 4, 14, 10, 0, tzinfo=UTC),
             source_url=str(SOURCE_URL),
         ),
     )
@@ -549,9 +552,9 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
@@ -564,7 +567,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
     }
     filing_event = next(event for event in events if event["reference_id"] == "12345678901234567890")
     assert filing_event["aeat_submission_state"] == "submitted_observed"
-    assert filing_event["aeat_submitted_at"] == "2025-04-15T09:30:00Z"
+    assert filing_event["aeat_submitted_at"] == datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     assert filing_event["justificante_verified"] is False
 
 
@@ -576,15 +579,15 @@ def test_calendar_warns_of_an_unverified_aeat_filing() -> None:
             declarations=(
                 ExpedientesDeclaration(
                     modelo="303",
-                    ejercicio=2025,
-                    period=Period.from_year_and_code(2025, "1T"),
+                    ejercicio=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                     expediente_id="12345678901234567890",
                     estado="ALTA",
-                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
                 ),
             ),
-            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
-            source_url="declarations:modelo=303:ejercicio=2025",
+            captured_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
+            source_url=f"declarations:modelo=303:ejercicio={_YEAR}",
             authenticated_identity="00001003Z",
         ),
     )
@@ -595,9 +598,9 @@ def test_calendar_warns_of_an_unverified_aeat_filing() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
@@ -612,9 +615,9 @@ def test_calendar_warns_of_an_unverified_aeat_filing() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
     assert as_json.exit_code == 0, as_json.output
@@ -626,7 +629,7 @@ def test_calendar_warns_of_an_unverified_aeat_filing() -> None:
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
-        "year": 2025,
+        "year": _YEAR,
         "period": "1T",
     }
 
@@ -648,15 +651,15 @@ def test_calendar_warns_of_conflicting_aeat_evidence_references() -> None:
             declarations=(
                 ExpedientesDeclaration(
                     modelo="303",
-                    ejercicio=2025,
-                    period=Period.from_year_and_code(2025, "1T"),
+                    ejercicio=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                     expediente_id=remote_ref,
                     estado="ALTA",
-                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
                 ),
             ),
-            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
-            source_url="declarations:modelo=303:ejercicio=2025",
+            captured_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
+            source_url=f"declarations:modelo=303:ejercicio={_YEAR}",
             authenticated_identity="00001003Z",
         ),
     )
@@ -667,9 +670,9 @@ def test_calendar_warns_of_conflicting_aeat_evidence_references() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
@@ -684,14 +687,14 @@ def test_calendar_warns_of_conflicting_aeat_evidence_references() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
     assert as_json.exit_code == 0, as_json.output
     result = json.loads(as_json.output)["result"]
-    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
+    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == f"{_YEAR} 1T")
     assert entry["local_filing_state"] == "external_baseline_imported"
     assert entry["aeat_submission_state"] == "accepted"
     warning = next(item for item in result["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
@@ -701,7 +704,7 @@ def test_calendar_warns_of_conflicting_aeat_evidence_references() -> None:
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
-        "year": 2025,
+        "year": _YEAR,
         "period": "1T",
     }
 
@@ -725,15 +728,15 @@ def test_calendar_all_profiles_warns_of_conflicting_aeat_evidence_references() -
             declarations=(
                 ExpedientesDeclaration(
                     modelo="303",
-                    ejercicio=2025,
-                    period=Period.from_year_and_code(2025, "1T"),
+                    ejercicio=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                     expediente_id=remote_ref,
                     estado="ALTA",
-                    presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
                 ),
             ),
-            captured_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
-            source_url="declarations:modelo=303:ejercicio=2025",
+            captured_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
+            source_url=f"declarations:modelo=303:ejercicio={_YEAR}",
             authenticated_identity="00001003Z",
         ),
     )
@@ -744,9 +747,9 @@ def test_calendar_all_profiles_warns_of_conflicting_aeat_evidence_references() -
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
             "--all-profiles",
         ],
     )
@@ -762,9 +765,9 @@ def test_calendar_all_profiles_warns_of_conflicting_aeat_evidence_references() -
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
             "--all-profiles",
         ],
     )
@@ -783,9 +786,9 @@ def test_calendar_all_profiles_warns_of_conflicting_aeat_evidence_references() -
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
     assert single.exit_code == 0, single.output
@@ -811,9 +814,9 @@ def test_calendar_warns_of_an_imported_csv_register_without_justificante() -> No
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
@@ -828,14 +831,14 @@ def test_calendar_warns_of_an_imported_csv_register_without_justificante() -> No
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
     assert as_json.exit_code == 0, as_json.output
     result = json.loads(as_json.output)["result"]
-    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == "2025 1T")
+    entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == f"{_YEAR} 1T")
     assert entry["local_filing_state"] == "external_baseline_imported"
     assert entry["aeat_submission_state"] == "accepted"
     assert entry["justificante_verified"] is False
@@ -846,7 +849,7 @@ def test_calendar_warns_of_an_imported_csv_register_without_justificante() -> No
     assert fix_action["action"]["cli_path"] == ["app", "live", "filed", "pull"]
     assert {binding["argument_name"]: binding["value"] for binding in fix_action["argument_bindings"]} == {
         "modelos": "303",
-        "year": 2025,
+        "year": _YEAR,
         "period": "1T",
     }
 
@@ -866,32 +869,36 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
             "overview",
             "calendar",
             "--from",
-            "2025-04-01",
+            date(_YEAR, 4, 1).isoformat(),
             "--to",
-            "2025-04-30",
+            date(_YEAR, 4, 30).isoformat(),
         ],
     )
 
     assert result.exit_code == 0, result.output
-    row = next(line for line in result.output.splitlines() if line.startswith("303\t2025 1T\t"))
+    row = next(line for line in result.output.splitlines() if line.startswith(f"303\t{_YEAR} 1T\t"))
     assert "\tlocal=external_baseline_imported" in row
     assert "\taeat=justificante_verified" in row
     assert "\tjustificante=true" in row
     assert "\tcenso_enrolment=verified" in row
     assert f"\tlocal_record={record.filing_record_id}" in row
     assert f"\taeat_ref={csv}" in row
-    assert "\taeat_submitted_at=2025-04-15T09:30:00+00:00" in row
+    assert f"\taeat_submitted_at={datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC).isoformat()}" in row
     assert "\taeat_kind=aeat_justificante_pdf" in row
     assert f"\tverified_justificante_csv={csv}" in row
     assert "\tevidence_source=modelo_filing_record" in row
-    event_row = next(line for line in result.output.splitlines() if line.startswith("event\tfiling\t2025-04-15\t"))
+    event_row = next(
+        line
+        for line in result.output.splitlines()
+        if line.startswith(f"event\tfiling\t{date(_YEAR, 4, 15).isoformat()}\t")
+    )
     assert "\tmodelo_filing_record\t" in event_row
     assert f"\t{record.filing_record_id}\t" in event_row
     assert "\tmodelo=303" in event_row
-    assert "\tperiod=2025 1T" in event_row
+    assert f"\tperiod={_YEAR} 1T" in event_row
     assert "\tstatus=external_baseline_imported:vigente" in event_row
     assert "\taeat=justificante_verified" in event_row
-    assert "\taeat_submitted_at=2025-04-15T09:30:00+00:00" in event_row
+    assert f"\taeat_submitted_at={datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC).isoformat()}" in event_row
     assert "\tjustificante=true" in event_row
     assert f"\tverified_justificante_csv={csv}" in event_row
 
@@ -914,9 +921,9 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
             "--all-profiles",
         ],
     )

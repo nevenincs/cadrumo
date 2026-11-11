@@ -55,11 +55,13 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = "3T"
 _SURFACE = "deductible evidence parity test"
 _CAPTURED_AT = datetime(_FILING_YEAR, 10, 5, 10, 0, tzinfo=UTC)

@@ -15,6 +15,7 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.errors import IvaRateNotFoundError
 from .. import enums
 from ..enums import iva_rate_percentage, resolve_iva_rate_slot
+from .invoice_catalogue_seed import STANDING_DEVENGO, window_middle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -60,13 +61,13 @@ def test_persisted_rate_taxonomy_exposes_no_retired_local_numeric_interpretation
 @pytest.mark.parametrize(
     ("slot_token", "on_date", "expected"),
     (
-        ("RATE_0", date(2026, 6, 1), Decimal("0")),
-        ("RATE_4", date(2026, 6, 1), Decimal("0.04")),
-        ("RATE_10", date(2026, 6, 1), Decimal("0.10")),
-        ("RATE_21", date(2026, 6, 1), Decimal("0.21")),
-        ("RATE_5", date(2024, 8, 15), Decimal("0.05")),
-        ("RATE_2", date(2024, 11, 15), Decimal("0.02")),
-        ("RATE_7.5", date(2024, 11, 15), Decimal("0.075")),
+        ("RATE_0", STANDING_DEVENGO, Decimal("0")),
+        ("RATE_4", STANDING_DEVENGO, Decimal("0.04")),
+        ("RATE_10", STANDING_DEVENGO, Decimal("0.10")),
+        ("RATE_21", STANDING_DEVENGO, Decimal("0.21")),
+        ("RATE_5", window_middle("RATE_5"), Decimal("0.05")),
+        ("RATE_2", window_middle("RATE_2"), Decimal("0.02")),
+        ("RATE_7.5", window_middle("RATE_7.5"), Decimal("0.075")),
     ),
 )
 def test_persisted_numeric_slots_resolve_at_explicit_devengo_dates(
@@ -85,11 +86,11 @@ def test_transitional_slot_fails_closed_outside_its_window() -> None:
         bundled_indexed_authority().operation(),
         pytest.raises(IvaRateNotFoundError, match=r"errors\.iva\.rate_slot_not_in_force"),
     ):
-        iva_rate_percentage(resolve_iva_rate_token("RATE_2", date.today()), date(2025, 6, 1))
+        iva_rate_percentage(resolve_iva_rate_token("RATE_2", date.today()), STANDING_DEVENGO)
 
 
 def test_nonnumeric_tokens_remain_nonnumeric() -> None:
-    on_date = date(2026, 6, 1)
+    on_date = STANDING_DEVENGO
     with bundled_indexed_authority().operation():
         assert iva_rate_percentage(resolve_iva_rate_token("EXEMPT", date.today()), on_date) is None
         assert iva_rate_percentage(resolve_iva_rate_token("NOT_SUBJECT", date.today()), on_date) is None

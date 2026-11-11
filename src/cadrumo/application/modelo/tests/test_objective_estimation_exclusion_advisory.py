@@ -36,11 +36,13 @@ _DT32_LAST_EXTENDED_EXERCISE = int(
     legal_text_match("ley-35-2006:dt-32", r"en los ejercicios (\d{4}) a (\d{4})").group(2)
 )
 _ARTICLE31_YEARS = tuple(year for year in _SUPPORT.years if year > _DT32_LAST_EXTENDED_EXERCISE)
+#: The newest supported exercise still governed by DT 32's raised thresholds.
+_DT32_YEAR = max(year for year in _SUPPORT.years if year <= _DT32_LAST_EXTENDED_EXERCISE)
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(_SUPPORT.horizon, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
+def _work_unit(*, modelo: str = "131", filing_year: int = _DT32_YEAR) -> WorkUnit:
     periodo_code = "4T" if modelo == "131" else "0A"
     modelo_code = ModeloCode(modelo)
     period = Period.from_year_and_code(filing_year, periodo_code)
@@ -192,7 +194,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
     )
 
     findings = objective_estimation_exclusion_advisory_findings(
-        work_unit=_work_unit(filing_year=2027),
+        work_unit=_work_unit(filing_year=_SUPPORT.horizon + 1),
         profile=profile,
     )
 
@@ -201,7 +203,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
 
 def test_revision_verification_collects_objective_estimation_exclusion_advisory() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        work_unit = _work_unit(modelo="131", filing_year=2024)
+        work_unit = _work_unit(modelo="131", filing_year=_DT32_YEAR)
         profile = _objective_profile(
             objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         )

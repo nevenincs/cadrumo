@@ -116,6 +116,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, ValuationMethod
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -143,13 +144,15 @@ from ....frontend.tui.runtime_ledger_registers import (
 )
 from .unsupported_result import raises_unsupported_result
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d5")
 _OTHER_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d6")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000d5")
 _OPERATION_ID = "d" * 64
-_NOW = datetime(2026, 10, 22, tzinfo=UTC)
+_NOW = datetime(_YEAR, 10, 22, tzinfo=UTC)
 _LABEL = "Fixture profile"
 
 
@@ -336,7 +339,7 @@ def _decimal(text: str) -> PublicDecimal:
     return PublicDecimal(decimal=text)
 
 
-def _ledger(actividad_id: str = "act-01", year: int = 2026) -> InventoryLedgerProjection:
+def _ledger(actividad_id: str = "act-01", year: int = _YEAR) -> InventoryLedgerProjection:
     return InventoryLedgerProjection(
         actividad_id=actividad_id,
         year=year,
@@ -365,10 +368,10 @@ def _inventory(client: _Client) -> RuntimeInventoryTuiDoorV1:
     return RuntimeInventoryTuiDoorV1(cast(FrontendClient, client), profile_label=_LABEL)
 
 
-_ELECT = ProrrataElectGeneralRequest(profile_id=_PROFILE_ID, ejercicio=2026, percentage=_decimal("82"))
+_ELECT = ProrrataElectGeneralRequest(profile_id=_PROFILE_ID, ejercicio=_YEAR, percentage=_decimal("82"))
 _SETTLE = ProrrataSettleSectorRequest(
     profile_id=_PROFILE_ID,
-    ejercicio=2026,
+    ejercicio=_YEAR,
     sector_id="S1",
     con_derecho_volume=_decimal("7500"),
     sin_derecho_volume=_decimal("2500"),
@@ -377,32 +380,32 @@ _DECLARE = BienesInversionDeclareRequest(
     profile_id=_PROFILE_ID,
     identifier="BI-01",
     description="Synthetic good",
-    acquisition_year=2024,
+    acquisition_year=_YEAR - 2,
     acquisition_ledger_id="tx-BI-01",
     cuota_soportada=_decimal("2100.00"),
     prorrata_inicial_pct=_decimal("80"),
     kind="synthetic_kind",
 )
-_CREATE = InventoryCreateRequest(profile_id=_PROFILE_ID, actividad_id="act-01", year=2026, valuation_method="fifo")
+_CREATE = InventoryCreateRequest(profile_id=_PROFILE_ID, actividad_id="act-01", year=_YEAR, valuation_method="fifo")
 _MOVEMENT = InventoryMovementAddRequest(
     profile_id=_PROFILE_ID,
     actividad_id="act-01",
-    year=2026,
+    year=_YEAR,
     movement_id="mv-01",
-    movement_date=date(2026, 3, 1),
+    movement_date=date(_YEAR, 3, 1),
     kind=MovementKind.COUNT,
     quantity=_decimal("3"),
 )
-_PREVIEW = InventoryValuationPreviewRequest(profile_id=_PROFILE_ID, actividad_id="act-01", year=2026)
+_PREVIEW = InventoryValuationPreviewRequest(profile_id=_PROFILE_ID, actividad_id="act-01", year=_YEAR)
 _CLOSING = InventoryClosingAuthorityRecordRequest(
     profile_id=_PROFILE_ID,
     actividad_id="act-01",
-    year=2026,
-    authority_record=InventoryClosingAuthorityRecordInput.from_domain(synthetic_closing_authority("act-01", 2026)),
+    year=_YEAR,
+    authority_record=InventoryClosingAuthorityRecordInput.from_domain(synthetic_closing_authority("act-01", _YEAR)),
 )
 
 
-def _preview(profile_id: UUID = _PROFILE_ID, year: int = 2026) -> InventoryValuationOperationProjection:
+def _preview(profile_id: UUID = _PROFILE_ID, year: int = _YEAR) -> InventoryValuationOperationProjection:
     return InventoryValuationOperationProjection(
         outcome="previewed",
         preview=InventoryValuationPreviewProjection(
@@ -423,7 +426,7 @@ def _closing(*, changed: bool, profile_id: UUID = _PROFILE_ID) -> InventoryClosi
         record=InventoryClosingAuthorityRecordProjection(
             profile_id=profile_id,
             actividad_id="act-01",
-            year=2026,
+            year=_YEAR,
             authority_record_fingerprint="d" * 64,
             decision_fingerprint="e" * 64,
             physical_observation_fingerprint=None,
@@ -438,7 +441,7 @@ def _movement_ledger(movement_id: str) -> InventoryLedgerProjection:
 
     movement = InventoryMovementProjection(
         movement_id=movement_id,
-        movement_date=date(2026, 3, 1),
+        movement_date=date(_YEAR, 3, 1),
         kind=MovementKind.COUNT,
         sku="default",
         quantity=_decimal("3"),
@@ -474,7 +477,7 @@ _SUCCESSES: tuple[_Case, ...] = (
         lambda door: door.read_register(ProrrataListRequest(profile_id=_PROFILE_ID)),
         ProrrataListProjection(
             profile_id=_PROFILE_ID,
-            entries=(listed_prorrata_entry(synthetic_prorrata_entry(2025)),),
+            entries=(listed_prorrata_entry(synthetic_prorrata_entry(_YEAR - 1)),),
             sectors=(),
             gross_declarations=(),
             count=1,
@@ -491,7 +494,7 @@ _SUCCESSES: tuple[_Case, ...] = (
             operation_id="elect_general",
             profile_id=_PROFILE_ID,
             outcome="success",
-            entry=synthetic_prorrata_entry(2026, provisional="82"),
+            entry=synthetic_prorrata_entry(_YEAR, provisional="82"),
             count=1,
         ),
         OperationEffect.UPDATED,
@@ -506,7 +509,7 @@ _SUCCESSES: tuple[_Case, ...] = (
             operation_id="settle_sector",
             profile_id=_PROFILE_ID,
             outcome="success",
-            entry=synthetic_prorrata_entry(2026, sector_id="S1", definitive="75"),
+            entry=synthetic_prorrata_entry(_YEAR, sector_id="S1", definitive="75"),
             count=1,
         ),
         OperationEffect.UPDATED,
@@ -793,7 +796,7 @@ def test_a_refused_register_read_is_raised_rather_than_read(monkeypatch: pytest.
                 operation_id="settle_sector",
                 profile_id=_PROFILE_ID,
                 outcome="success",
-                entry=synthetic_prorrata_entry(2026, sector_id="S2", definitive="75"),
+                entry=synthetic_prorrata_entry(_YEAR, sector_id="S2", definitive="75"),
                 count=1,
             ),
         ),
@@ -803,7 +806,7 @@ def test_a_refused_register_read_is_raised_rather_than_read(monkeypatch: pytest.
                 operation_id="elect_especial",
                 profile_id=_PROFILE_ID,
                 outcome="success",
-                entry=synthetic_prorrata_entry(2026),
+                entry=synthetic_prorrata_entry(_YEAR),
                 count=1,
             ),
         ),
@@ -819,7 +822,7 @@ def test_a_refused_register_read_is_raised_rather_than_read(monkeypatch: pytest.
                 outcome="added", profile_id=_PROFILE_ID, ledger=_movement_ledger("mv-99"), bucket_event_ids=("e",)
             ),
         ),
-        (_SUCCESSES[8], _preview(year=2025)),
+        (_SUCCESSES[8], _preview(year=_YEAR - 1)),
     ],
     ids=["other sector", "other operation", "other good", "other movement", "other year"],
 )
@@ -849,14 +852,14 @@ def test_typed_source_files_are_read_and_validated_as_the_command_line_reads_the
     )
     door = _inventory(client)
     authority = tmp_path / "authority.json"
-    authority.write_text(synthetic_closing_authority("act-01", 2026).model_dump_json(), encoding="utf-8")
+    authority.write_text(synthetic_closing_authority("act-01", _YEAR).model_dump_json(), encoding="utf-8")
     purchase = tmp_path / "purchase.json"
     purchase.write_text(synthetic_acquisition_cost().model_dump_json(), encoding="utf-8")
     broken = tmp_path / "broken.json"
     broken.write_text('{"decision": {}}', encoding="utf-8")
 
     assert asyncio.run(door.read_closing_authority(str(authority))) == InventoryClosingAuthorityRecordInput.from_domain(
-        synthetic_closing_authority("act-01", 2026)
+        synthetic_closing_authority("act-01", _YEAR)
     )
     assert asyncio.run(door.read_acquisition_cost(str(purchase))) == InventoryAcquisitionCostRequest.from_domain(
         synthetic_acquisition_cost()

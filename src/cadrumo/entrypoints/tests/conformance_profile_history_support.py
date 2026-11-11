@@ -37,8 +37,8 @@ from .conformance_family_contract import (
 _ACTOR = "conformance-operator"
 _OBJECT = "conformance-history-subject"
 _OTHER_OBJECT = "conformance-history-other-subject"
-_SINCE = datetime(2026, 4, 1, tzinfo=UTC)
-_UNTIL = datetime(2026, 4, 30, 23, 59, tzinfo=UTC)
+_SINCE = datetime(1980, 4, 1, tzinfo=UTC)
+_UNTIL = datetime(1980, 4, 30, 23, 59, tzinfo=UTC)
 _TYPES = (BucketEventType.PROFILE_VALUES_UPDATED, BucketEventType.PROFILE_VALUES_CLEARED)
 _PAYLOAD_PATH_NAME = "source_path"
 _PAYLOAD_PATH_VALUE = "/home/conformance-operator/documents/synthetic-statement.pdf"
@@ -90,17 +90,17 @@ def _expected_event(event: BucketEvent) -> BucketEventProjection:
 def _prepare_history(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile_id = context.profile_id
     updated = _event(
-        profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(2026, 4, 2, 9, tzinfo=UTC), _OBJECT, {"path": "a"}
+        profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(1980, 4, 2, 9, tzinfo=UTC), _OBJECT, {"path": "a"}
     )
     cleared = _event(
-        profile_id, BucketEventType.PROFILE_VALUES_CLEARED, datetime(2026, 4, 1, 9, tzinfo=UTC), _OBJECT, {"path": "b"}
+        profile_id, BucketEventType.PROFILE_VALUES_CLEARED, datetime(1980, 4, 1, 9, tzinfo=UTC), _OBJECT, {"path": "b"}
     )
     # Each of these fails exactly one filter: before the window, another
     # object, and an event type outside the requested set.
     excluded = (
-        _event(profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(2026, 3, 31, 23, tzinfo=UTC), _OBJECT, {}),
-        _event(profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(2026, 4, 3, tzinfo=UTC), _OTHER_OBJECT, {}),
-        _event(profile_id, BucketEventType.PROFILE_RENAMED, datetime(2026, 4, 4, tzinfo=UTC), _OBJECT, {}),
+        _event(profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(1980, 3, 31, 23, tzinfo=UTC), _OBJECT, {}),
+        _event(profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(1980, 4, 3, tzinfo=UTC), _OTHER_OBJECT, {}),
+        _event(profile_id, BucketEventType.PROFILE_RENAMED, datetime(1980, 4, 4, tzinfo=UTC), _OBJECT, {}),
     )
 
     def seed(catalogue: BucketEventHistoryCatalogue) -> BucketEventHistoryCatalogue:
@@ -145,15 +145,15 @@ def _prepare_timeline(context: ConformanceFamilyContext) -> ConformancePreparati
     first = _event(
         profile_id,
         BucketEventType.PROFILE_VALUES_UPDATED,
-        datetime(2026, 4, 5, 9, tzinfo=UTC),
+        datetime(1980, 4, 5, 9, tzinfo=UTC),
         _OBJECT,
         {_PAYLOAD_PATH_NAME: _PAYLOAD_PATH_VALUE, "path": "a"},
     )
     second = _event(
-        profile_id, BucketEventType.PROFILE_VALUES_CLEARED, datetime(2026, 4, 6, 9, tzinfo=UTC), _OBJECT, {}
+        profile_id, BucketEventType.PROFILE_VALUES_CLEARED, datetime(1980, 4, 6, 9, tzinfo=UTC), _OBJECT, {}
     )
     other_object = _event(
-        profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(2026, 4, 7, tzinfo=UTC), _OTHER_OBJECT, {}
+        profile_id, BucketEventType.PROFILE_VALUES_UPDATED, datetime(1980, 4, 7, tzinfo=UTC), _OTHER_OBJECT, {}
     )
 
     def seed(catalogue: BucketEventHistoryCatalogue) -> BucketEventHistoryCatalogue:

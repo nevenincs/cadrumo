@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.aggregation import BindingSourceKind, CounterpartSourceKind
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -17,8 +19,10 @@ from ..counterpart import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
-_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_YEAR = filing_year_envelope().horizon
+_ACCRUED = date(_YEAR, 3, 15)
+_P_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_P_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _obs(
@@ -32,7 +36,7 @@ def _obs(
     source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     period: str = "0A",
-    accrued: str = "2025-03-15",
+    accrued: str = _ACCRUED.isoformat(),
 ) -> CounterpartObservation:
     return CounterpartObservation(
         source_kind=source_kind,
@@ -62,7 +66,7 @@ class TestObservationContract:
             "operation_period": "0A",
             "taxable_base": "100",
             "invoice_total": "100",
-            "accrued_on": "2025-03-15",
+            "accrued_on": _ACCRUED.isoformat(),
         }
         with pytest.raises(ValidationError, match="unsupported source_kind"):
             CounterpartObservation.model_validate(payload)
@@ -80,19 +84,19 @@ class TestAggregate347:
             _obs(nif="X1", op_kind="entregas_y_prestaciones", base="5000", source_id="t1"),
             _obs(nif="X1", op_kind="entrega_intracomunitaria_bienes", base="999", source_id="t2"),
         )
-        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
+        result = aggregate_counterpart_347(observations, period=_P_ANNUAL)
         assert result.modelo == "347"
         assert len(result.rollups) == 1
         assert result.rollups[0].operation_kind == "entregas_y_prestaciones"
 
     def test_347_groups_by_nif_and_operation_kind(self) -> None:
         observations = (
-            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2000", source_id="t1"),
-            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="3000", source_id="t2"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2500", source_id="t1"),
+            _obs(nif="X1", op_kind="entregas_y_prestaciones", base="2500", source_id="t2"),
             _obs(nif="X1", op_kind="adquisiciones_y_recepciones", base="500", source_id="t3"),
             _obs(nif="X2", op_kind="entregas_y_prestaciones", base="1000", source_id="t4"),
         )
-        result = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
+        result = aggregate_counterpart_347(observations, period=_P_ANNUAL)
         assert result.total_counterparties == 2
         x1_delivery = next(
             r for r in result.rollups if r.counterparty_nif == "X1" and r.operation_kind == "entregas_y_prestaciones"
@@ -107,7 +111,7 @@ class TestAggregate349:
             _obs(nif="DE1", op_kind="entrega_intracomunitaria_bienes", base="10000", country="DE", source_id="t1"),
             _obs(nif="DE1", op_kind="entregas_y_prestaciones", base="5000", country="DE", source_id="t2"),
         )
-        result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
+        result = aggregate_counterpart_349(observations, period=_P_Q1)
         assert result.modelo == "349"
         assert len(result.rollups) == 1
         assert result.rollups[0].operation_kind == "entrega_intracomunitaria_bienes"
@@ -117,7 +121,7 @@ class TestAggregate349:
             _obs(nif="DE1", op_kind="entrega_intracomunitaria_bienes", base="10000", country="DE", source_id="t1"),
             _obs(nif="FR1", op_kind="entrega_intracomunitaria_bienes", base="5000", country="FR", source_id="t2"),
         )
-        result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
+        result = aggregate_counterpart_349(observations, period=_P_Q1)
         de1 = next(r for r in result.rollups if r.counterparty_nif == "DE1")
         fr1 = next(r for r in result.rollups if r.counterparty_nif == "FR1")
         assert de1.counterparty_country == "DE"
@@ -143,7 +147,7 @@ class TestAggregate349:
             ),
         )
 
-        result = aggregate_counterpart_349(observations, period=_P_2025_Q1)
+        result = aggregate_counterpart_349(observations, period=_P_Q1)
 
         assert {rollup.source_kind for rollup in result.rollups} == {
             BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -176,7 +180,7 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="!= sum of rollups"):
             CounterpartAggregation(
                 modelo="347",
-                period=_P_2025_ANNUAL,
+                period=_P_ANNUAL,
                 rollups=(),
                 total_counterparties=0,
                 total_taxable_base=Decimal("999"),
@@ -190,7 +194,7 @@ class TestInvariants:
             CounterpartAggregation.model_validate(
                 {
                     "modelo": "347",
-                    "period": "2025",
+                    "period": str(_YEAR),
                     "rollups": (),
                     "total_counterparties": 0,
                     "total_taxable_base": Decimal("0"),
@@ -205,7 +209,7 @@ class TestInvariants:
             CounterpartAggregation.model_validate(
                 {
                     "modelo": "347",
-                    "period": {"filing_year": 2025, "code": "0A"},
+                    "period": {"filing_year": _YEAR, "code": "0A"},
                     "rollups": (),
                     "total_counterparties": 0,
                     "total_taxable_base": Decimal("0"),
@@ -218,15 +222,15 @@ class TestInvariants:
             _obs(nif="Z1", op_kind="arrendamientos_locales", base="500", source_id="t1"),
             _obs(nif="A1", op_kind="entregas_y_prestaciones", base="800", source_id="t2"),
         )
-        forward = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
-        reverse = aggregate_counterpart_347(tuple(reversed(observations)), period=_P_2025_ANNUAL)
+        forward = aggregate_counterpart_347(observations, period=_P_ANNUAL)
+        reverse = aggregate_counterpart_347(tuple(reversed(observations)), period=_P_ANNUAL)
         assert forward.model_dump_json() == reverse.model_dump_json()
 
 
 class TestObservationBoundaryAuthorities:
     """The operator boundary admits dates and periods through the shared authorities."""
 
-    @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01"])
+    @pytest.mark.parametrize("impossible", [f"{_YEAR}-99-99", f"{_YEAR}-02-30", f"{_YEAR}-13-01"])
     def test_impossible_accrued_dates_are_refused(self, impossible: str) -> None:
         """An impossible calendar date never reaches a preview rollup.
 
@@ -240,7 +244,7 @@ class TestObservationBoundaryAuthorities:
         with pytest.raises(ValidationError):
             _obs(nif="A1", op_kind="entregas_y_prestaciones", base="100", accrued=impossible)
 
-    @pytest.mark.parametrize("malformed", ["20250315", "2025-3-15", "15-03-2025"])
+    @pytest.mark.parametrize("malformed", [_ACCRUED.strftime("%Y%m%d"), f"{_YEAR}-3-15", _ACCRUED.strftime("%d-%m-%Y")])
     def test_non_extended_iso_accrued_dates_are_refused(self, malformed: str) -> None:
         """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
         from pydantic import ValidationError
@@ -251,7 +255,7 @@ class TestObservationBoundaryAuthorities:
     @pytest.mark.parametrize(
         "unconstrained",
         [
-            "2025",
+            str(_YEAR),
             "bogus",
             "Q1",
             "ANUAL",
@@ -305,7 +309,7 @@ class TestObservationBoundaryAuthorities:
 
         for aggregate in (aggregate_counterpart_347, aggregate_counterpart_349):
             with pytest.raises(ValueError, match="not a declared 347/349 clave"):
-                aggregate((observation,), period=_P_2025_ANNUAL)
+                aggregate((observation,), period=_P_ANNUAL)
 
     def test_a_349_clave_still_routes_past_the_347_pass(self) -> None:
         """Cross-modelo filtering is correct and is deliberately left intact.
@@ -316,7 +320,7 @@ class TestObservationBoundaryAuthorities:
         """
         observation = _obs(nif="A1", op_kind="entrega_intracomunitaria_bienes", base="10000")
 
-        aggregation = aggregate_counterpart_347((observation,), period=_P_2025_ANNUAL)
+        aggregation = aggregate_counterpart_347((observation,), period=_P_ANNUAL)
         assert aggregation.total_counterparties == 0
 
     def test_canonical_observation_is_admitted_and_aggregates(self) -> None:
@@ -330,10 +334,10 @@ class TestObservationBoundaryAuthorities:
             op_kind="entregas_y_prestaciones",
             base="100",
             period="0A",
-            accrued="2025-03-15",
+            accrued=_ACCRUED.isoformat(),
         )
         assert observation.operation_period == "0A"
-        assert observation.accrued_on == "2025-03-15"
+        assert observation.accrued_on == _ACCRUED.isoformat()
 
-        aggregation = aggregate_counterpart_347((observation,), period=_P_2025_ANNUAL)
+        aggregation = aggregate_counterpart_347((observation,), period=_P_ANNUAL)
         assert aggregation.total_counterparties == 1

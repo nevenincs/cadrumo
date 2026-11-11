@@ -40,7 +40,7 @@ from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 
-from .m130_m100_annual_support import BUCKET_ID, import_official_m130_result_observation, seed_prior_year_m100
+from .m130_m100_annual_support import BUCKET_ID, YEAR, import_official_m130_result_observation, seed_prior_year_m100
 from .renta_persona_support import (
     ACTIVITY_KEY,
     ACTIVITY_KEY_CASILLA,
@@ -162,44 +162,44 @@ def test_the_unattested_movable_capital_credit_stays_unresolved(
 _D = Decimal
 _INVOICES = (
     ActivityInvoice(
-        "F-2024-001", date(2024, 2, 10), date(2024, 2, 20), _D("4000.00"), _D("840.00"), _D("0.15"), _D("600.00")
+        f"F-{YEAR}-001", date(YEAR, 2, 10), date(YEAR, 2, 20), _D("4000.00"), _D("840.00"), _D("0.15"), _D("600.00")
     ),
     ActivityInvoice(
-        "F-2024-002", date(2024, 5, 10), date(2024, 5, 20), _D("3500.00"), _D("735.00"), _D("0.15"), _D("525.00")
+        f"F-{YEAR}-002", date(YEAR, 5, 10), date(YEAR, 5, 20), _D("3500.00"), _D("735.00"), _D("0.15"), _D("525.00")
     ),
     ActivityInvoice(
-        "F-2024-003", date(2024, 8, 10), date(2024, 8, 20), _D("2000.00"), _D("420.00"), _D("0.07"), _D("140.00")
+        f"F-{YEAR}-003", date(YEAR, 8, 10), date(YEAR, 8, 20), _D("2000.00"), _D("420.00"), _D("0.07"), _D("140.00")
     ),
     ActivityInvoice(
-        "F-2024-004", date(2024, 11, 10), date(2024, 11, 20), _D("2500.00"), _D("525.00"), _D("0.07"), _D("175.00")
+        f"F-{YEAR}-004", date(YEAR, 11, 10), date(YEAR, 11, 20), _D("2500.00"), _D("525.00"), _D("0.07"), _D("175.00")
     ),
 )
 _EXPENSES = (
-    ActivityExpense("expense-office", date(2024, 2, 5), date(2024, 2, 20), "material_oficina", _D("500.00")),
-    ActivityExpense("expense-software", date(2024, 5, 10), date(2024, 5, 22), "software_suscripcion", _D("700.00")),
-    ActivityExpense("expense-phone", date(2024, 8, 1), date(2024, 8, 12), "telefonia_movil", _D("300.00")),
-    ActivityExpense("expense-advisory", date(2024, 11, 1), date(2024, 11, 8), "asesoria_fiscal", _D("900.00")),
+    ActivityExpense("expense-office", date(YEAR, 2, 5), date(YEAR, 2, 20), "material_oficina", _D("500.00")),
+    ActivityExpense("expense-software", date(YEAR, 5, 10), date(YEAR, 5, 22), "software_suscripcion", _D("700.00")),
+    ActivityExpense("expense-phone", date(YEAR, 8, 1), date(YEAR, 8, 12), "telefonia_movil", _D("300.00")),
+    ActivityExpense("expense-advisory", date(YEAR, 11, 1), date(YEAR, 11, 8), "asesoria_fiscal", _D("900.00")),
 )
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _AUTONOMO = Persona(
     categories="trabajo,actividad_economica",
     regime="directa_simplificada",
     criterion="devengo",
-    activity_start=date(2023, 3, 1),
+    activity_start=date(YEAR - 1, 3, 1),
 )
 # The same taxpayer under estimacion directa normal, for the quarter figures the simplified modality changes.
 _AUTONOMO_NORMAL = Persona(
     categories="trabajo,actividad_economica",
     regime="directa_normal",
     criterion="devengo",
-    activity_start=date(2023, 3, 1),
+    activity_start=date(YEAR - 1, 3, 1),
 )
 # An activity-only taxpayer on the normal modality, whose quarters need no work-income certificate.
 _ACTIVITY_ONLY = Persona(
     categories="actividad_economica",
     regime="directa_normal",
     criterion="devengo",
-    activity_start=date(2023, 3, 1),
+    activity_start=date(YEAR - 1, 3, 1),
 )
 _ACTIVITY_INPUTS = {ACTIVITY_KEY_CASILLA: ACTIVITY_KEY}
 
@@ -364,11 +364,17 @@ def test_a_fourth_quarter_that_states_another_retention_withholds_the_filing(
 # accrues in, and so does the withholding (Ley 35/2006 art. 14; Reglamento art. 7).
 # ---------------------------------------------------------------------------------------------
 _LATE_PAYMENT = ActivityInvoice(
-    "F-2024-LATE", date(2024, 3, 20), date(2024, 4, 10), _D("1000.00"), _D("210.00"), _D("0.15"), _D("150.00")
+    f"F-{YEAR}-LATE", date(YEAR, 3, 20), date(YEAR, 4, 10), _D("1000.00"), _D("210.00"), _D("0.15"), _D("150.00")
 )
 # Accrued on 20 December and paid on 10 January of the next ejercicio: the same 150,00 of withholding.
 _YEAR_END_PAYMENT = ActivityInvoice(
-    "F-2024-YEAR-END", date(2024, 12, 20), date(2025, 1, 10), _D("1000.00"), _D("210.00"), _D("0.15"), _D("150.00")
+    f"F-{YEAR}-YEAR-END",
+    date(YEAR, 12, 20),
+    date(YEAR + 1, 1, 10),
+    _D("1000.00"),
+    _D("210.00"),
+    _D("0.15"),
+    _D("150.00"),
 )
 
 
@@ -391,7 +397,7 @@ def test_a_retention_paid_after_the_quarter_defers_casilla_06_and_still_counts_i
         casilla_inputs={},
         text_casilla_inputs=_ACTIVITY_INPUTS,
     )
-    # oracle: Ley 35/2006 art. 14: accrued in 2024, so the withholding is a 2024 credit.
+    # oracle: Ley 35/2006 art. 14: accrued in the ejercicio, so the withholding is a credit of that ejercicio.
     assert _box(annual, "0599") == _D("150.00")
 
 
@@ -413,7 +419,7 @@ def test_a_retention_paid_after_the_year_leaves_the_fourth_quarter_but_credits_0
 
     annual = calculate_annual(secure_objects, casilla_inputs={}, text_casilla_inputs=_ACTIVITY_INPUTS)
 
-    # oracle: Ley 35/2006 art. 14 and Reglamento art. 7: accrued in December 2024, a 2024 credit.
+    # oracle: Ley 35/2006 art. 14 and Reglamento art. 7: accrued in December of the ejercicio, a credit of that ejercicio.
     assert _box(annual, "0599") == _D("150.00")
     # The 150,00 the fourth quarter left out is timing the receipt's own payment date explains, so it is no dispute.
     assert not [issue for issue in annual.source_issues if issue.reason == "credit_source_disagreement"]
@@ -444,8 +450,8 @@ def _seed_payer_side_store(secure_objects: SecureObjectRepository) -> None:
             replace_retencion_observations(
                 repository,
                 modelo=modelo,
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, period),
+                filing_year=YEAR,
+                period=Period.from_year_and_code(YEAR, period),
                 observations=[
                     RetencionObservation(
                         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -455,9 +461,7 @@ def _seed_payer_side_store(secure_objects: SecureObjectRepository) -> None:
                         scheme=RetencionScheme(scheme),
                         taxable_base=amount * 5,
                         retencion_amount=amount,
-                        accrued_on={"1T": "2024-02-10", "2T": "2024-05-10", "3T": "2024-08-10", "4T": "2024-11-10"}[
-                            period
-                        ],
+                        accrued_on=date(YEAR, {"1T": 2, "2T": 5, "3T": 8, "4T": 11}[period], 10).isoformat(),
                     )
                 ],
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,

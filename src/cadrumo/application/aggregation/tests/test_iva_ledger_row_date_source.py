@@ -20,6 +20,7 @@ import pytest
 from ....core.i18n.render import tr as render_tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.invoices.tests.invoice_catalogue_seed import window_middle
 from ....domain.iva.lookup import coexisting_tier_rates
 from ....domain.iva.schema import IvaRateKind, spanish_eu_member_state
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -40,7 +41,7 @@ _BASE = Decimal("1000.00")
 _CUOTA = Decimal("20.00")
 # A date inside the registry's temporary 2 % super-reducido window; only the
 # window's end date is load-bearing, and that is read from the registry.
-_WINDOW_PROBE = date(2024, 11, 15)
+_WINDOW_PROBE = window_middle("RATE_2")
 
 
 def _rate_until() -> date:

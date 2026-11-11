@@ -76,7 +76,7 @@ from .renta_income_aggregation_support import catalogue_read_ports, renta_income
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "c4f1a2b3-5d6e-4f70-8a91-b2c3d4e5f607"
-_CLOCK = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(1980, 4, 2, 9, 0, tzinfo=UTC)
 _ADVISORY_REASON = "advisory_binding_value"
 _YEAR = newest_authored_edition("100")
 _ACTIVITY_DATE = date(_YEAR, 3, 10)

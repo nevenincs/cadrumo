@@ -26,10 +26,14 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..ports import ProrrataPriorSettlementSourceSnapshot
 from ..service import ProrrataRegisterService
 from .provisional_override import record_aeat_autorizada, record_inicio_actividad
+
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -123,7 +127,7 @@ def _service(operation: PinnedAuthorityOperation) -> ProrrataRegisterService:
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return published_snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot(Modelo("303").value, filing_year=_PRIOR_YEAR, period="4T").snapshot_ref
 
 
 def test_record_aeat_autorizada_preserves_sector_and_regime(
@@ -133,14 +137,14 @@ def test_record_aeat_autorizada_preserves_sector_and_regime(
 
     updated = record_aeat_autorizada(
         service,
-        ejercicio=2026,
+        ejercicio=_YEAR,
         provisional_percentage=Decimal("58"),
         authorisation_reference="AEAT-AUTH-2026-SECTOR-02",
         sector_id="arrendamiento",
         regime=ProrrataRegisterRegime.from_registry("especial"),
     )
 
-    entry = updated.entry_for(2026, sector_id="arrendamiento")
+    entry = updated.entry_for(_YEAR, sector_id="arrendamiento")
     assert entry is not None
     assert entry.regime == ProrrataRegisterRegime.from_registry("especial")
     assert entry.provisional_percentage == Decimal("58")
@@ -154,10 +158,10 @@ def test_record_inicio_actividad_uses_registry_provenance(
     service = _service(authority_operation)
 
     updated = record_inicio_actividad(
-        service, ejercicio=2026, provisional_percentage=Decimal("50"), proposal_reference="INICIO-2026-01"
+        service, ejercicio=_YEAR, provisional_percentage=Decimal("50"), proposal_reference="INICIO-2026-01"
     )
 
-    entry = updated.entry_for(2026)
+    entry = updated.entry_for(_YEAR)
     assert entry is not None
     assert entry.regime == ProrrataRegisterRegime.from_registry("general")
     assert entry.provisional_percentage == Decimal("50")
@@ -171,17 +175,17 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(
     service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
-            ejercicio=2026,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_observation_ref="303:2025:4T",
+            source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     authorised = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("63"),
@@ -190,7 +194,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(
         source_registry_snapshot_refs=(),
     )
 
-    resolution = service.resolve_provisional(2026, candidate_entries=(authorised,))
+    resolution = service.resolve_provisional(_YEAR, candidate_entries=(authorised,))
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("63")
@@ -203,17 +207,17 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(
     service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
-            ejercicio=2026,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_observation_ref="303:2025:4T",
+            source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     inicio = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("55"),
@@ -222,7 +226,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(
         source_registry_snapshot_refs=(),
     )
 
-    resolution = service.resolve_provisional(2026, candidate_entries=(inicio,))
+    resolution = service.resolve_provisional(_YEAR, candidate_entries=(inicio,))
 
     assert resolution.resolved
     assert resolution.percentage == Decimal("55")
@@ -235,18 +239,18 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(
     service = _service(authority_operation)
     service.declare(
         ProrrataRegisterEntry(
-            ejercicio=2026,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             sector_id="comercio",
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_observation_ref="303:2025:4T",
+            source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
             source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         ),
     )
     other_sector = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id="arrendamiento",
@@ -257,7 +261,7 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(
     )
 
     resolution = service.resolve_provisional(
-        2026,
+        _YEAR,
         sector_id="comercio",
         candidate_entries=(other_sector,),
     )

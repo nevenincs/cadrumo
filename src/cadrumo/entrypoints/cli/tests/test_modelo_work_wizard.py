@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator, Sequence
+from datetime import date
 from decimal import Decimal
 from io import StringIO
 from pathlib import Path
@@ -61,6 +62,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.flows import FlowMode
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.entrypoints.cli import modelo_work_wizard_cli
 from cadrumo.entrypoints.cli.modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
@@ -70,6 +72,8 @@ from .modelo_cli import create_modelo_work_unit_via_cli
 from .modelo_work_scenarios import load_work_unit_by_id
 
 __all__ = ["isolated_cli_backend"]
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -178,7 +182,7 @@ def _create_profile(fixture: RegisteredCliProfile) -> None:
             "identity.name": "Operator",
             "identity.surnames": "Wizard",
             "activities.description": "design",
-            "censo.activity_start_date": "2025-01-01",
+            "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",
             "iva.m303_regime_composition": "general",
@@ -214,26 +218,26 @@ def wizard_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
 
 def _seed_m130_ledger(source_key: str, *, fixture: RegisteredCliProfile, operation: PinnedAuthorityOperation) -> None:
     _login_for_oracle(fixture, operation=operation)
-    seed_m130_income_transaction(amount=_INGRESOS, filing_year=2025, source_key=source_key)
-    seed_m130_expense_transaction(amount=_GASTOS, filing_year=2025, source_key=source_key)
+    seed_m130_income_transaction(amount=_INGRESOS, filing_year=_YEAR, source_key=source_key)
+    seed_m130_expense_transaction(amount=_GASTOS, filing_year=_YEAR, source_key=source_key)
 
 
 def _create_m130_work_unit(fixture: RegisteredCliProfile) -> str:
     return create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(revision_serving_period("130", _YEAR, "1T").id),
         native_profile=fixture,
     )
 
 
 def _create_m123_work_unit(fixture: RegisteredCliProfile, *, operation: PinnedAuthorityOperation) -> str:
-    """Create the real 2025 2T work unit used by the no-prompt wizard path."""
-    revision = operation.snapshot("123", filing_year=2025, period="2T").revision
+    """Create the real 2T work unit used by the no-prompt wizard path."""
+    revision = operation.snapshot("123", filing_year=_YEAR, period="2T").revision
     return create_modelo_work_unit_via_cli(
         modelo="123",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
         revision=revision.id,
         native_profile=fixture,

@@ -21,25 +21,29 @@ from ....application.live.iva_wallet_capture_operation import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_iva_commands as handler
 from .. import operation_iva_wallet_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletPullResult
 from .operation_bridge_support import bind_profile_submission
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_CAPTURED_AT = datetime(2025, 2, 3, 4, 5, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CAPTURED_AT = datetime(_YEAR, 2, 3, 4, 5, tzinfo=UTC)
 
 
 def _projection() -> IvaWalletCapturePublicResultV1:
     return IvaWalletCapturePublicResultV1(
         taxpayer_ref="taxpayer-ref",
-        target_year=2025,
+        target_year=_YEAR,
         target_period="1T",
-        observation_path="iva/wallet/2025/1T.json",
+        observation_path=f"iva/wallet/{_YEAR}/1T.json",
         decision_key="wallet-decision-key",
         row_count=3,
         total_pending="120.00",
@@ -64,7 +68,7 @@ _bind = partial(
 def _read() -> bridge.IvaWalletCaptureRead:
     return bridge.read_iva_wallet_capture_for_cli(
         cast(typer.Context, cast(object, None)),
-        target_year=2025,
+        target_year=_YEAR,
         target_period=_PERIOD,
         taxpayer_nif="X0001500M",
     )
@@ -84,7 +88,7 @@ def test_registered_wallet_capture_uses_exact_profile_and_period_scope(
     request, options = submitted[0]
     assert request == IvaWalletCaptureRequest(
         profile_id=_PROFILE,
-        target_year=2025,
+        target_year=_YEAR,
         target_period="1T",
         taxpayer_nif="X0001500M",
     )
@@ -105,7 +109,7 @@ def test_mismatched_period_or_receipt_refuses_with_correlated_operation(
     condition = OperationTerminalCondition.SUCCEEDED
     refusal_code = None
     if mismatch == "year":
-        projection = projection.model_copy(update={"target_year": 2024})
+        projection = projection.model_copy(update={"target_year": _YEAR - 1})
     elif mismatch == "period":
         projection = projection.model_copy(update={"target_period": "2T"})
     elif mismatch == "effect":
@@ -147,7 +151,7 @@ def test_wallet_pull_command_emits_existing_payload_and_text_from_projection(
 
     handler.iva_wallet_pull_cmd(
         cast(typer.Context, cast(object, None)),
-        year=2025,
+        year=_YEAR,
         period="1T",
         taxpayer_nif="X0001500M",
     )
@@ -156,10 +160,10 @@ def test_wallet_pull_command_emits_existing_payload_and_text_from_projection(
     envelope = envelopes[0]
     assert envelope["command"] == "app.live.iva_wallet.pull"
     result = cast(IvaWalletPullResult, envelope["result"])
-    assert result.target_year == 2025
+    assert result.target_year == _YEAR
     assert result.target_period == _PERIOD
     assert result.taxpayer_ref == "taxpayer-ref"
-    assert result.observation_path == "iva/wallet/2025/1T.json"
+    assert result.observation_path == f"iva/wallet/{_YEAR}/1T.json"
     assert result.decision_key == "wallet-decision-key"
     assert result.row_count == 3
     assert result.total_pending == "120.00"
@@ -171,7 +175,7 @@ def test_wallet_pull_command_emits_existing_payload_and_text_from_projection(
     assert result.captured_at == _CAPTURED_AT.isoformat()
     lines = envelope["lines"]
     assert isinstance(lines, tuple)
-    assert "target_year=2025" in lines
-    assert "target_period=2025 1T" in lines
+    assert f"target_year={_YEAR}" in lines
+    assert f"target_period={_YEAR} 1T" in lines
     assert "row_count=3" in lines
-    assert "captured_at=2025-02-03T04:05:00+00:00" in lines
+    assert f"captured_at={datetime(_YEAR, 2, 3, 4, 5, tzinfo=UTC).isoformat()}" in lines

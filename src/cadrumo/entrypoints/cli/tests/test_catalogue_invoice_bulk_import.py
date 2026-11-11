@@ -13,6 +13,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Mapping, Sequence
+from datetime import date
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -26,6 +27,7 @@ from cadrumo.application.invoices.catalogue_intake_contracts import (
     InvoiceImportProjection,
     InvoiceImportRowFailure,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.ledger_business_invoice_commands import (
     invoice_import_all_refused_report,
     invoice_import_mapping_reports,
@@ -176,6 +178,14 @@ def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> No
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
 
 
+_ENVELOPE = filing_year_envelope()
+
+
+def _march(day: int) -> str:
+    """An invoice date in March of the newest supported year, as the CSV prints it."""
+    return date(_ENVELOPE.horizon, 3, day).isoformat()
+
+
 _SUPPLIER_CIF = "B00010157"
 _CUSTOMER_NIF = "B00015016"
 _CSV_HEADER = "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
@@ -184,7 +194,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Invoice Book",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_ENVELOPE.floor, 1, 1).isoformat(),
     "contact.postcode": "28013",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
@@ -242,9 +252,9 @@ def test_every_valid_row_becomes_one_invoice_carrying_its_own_source_provenance(
     book = tmp_path / "invoices.csv"
     book.write_text(
         _CSV_HEADER
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-001,2026-03-10,100.00,21\n"
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-002,2026-03-11,200.00,10\n"
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-003,2026-03-12,50.00,\n",
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-001,{_march(10)},100.00,21\n"
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-002,{_march(11)},200.00,10\n"
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BULK-003,{_march(12)},50.00,\n",
         encoding="utf-8",
     )
     digest = hashlib.sha256(book.read_bytes()).hexdigest()
@@ -280,7 +290,7 @@ def test_the_declared_kind_decides_which_side_of_the_catalogue_a_book_lands_on(t
     """``--kind issued`` creates a collectible invoice and no received one."""
     book = tmp_path / "issued.csv"
     book.write_text(
-        _CSV_HEADER + f"{_CUSTOMER_NIF},Cliente SL,2026-ISSUED-001,2026-03-10,300.00,21\n",
+        _CSV_HEADER + f"{_CUSTOMER_NIF},Cliente SL,2026-ISSUED-001,{_march(10)},300.00,21\n",
         encoding="utf-8",
     )
 
@@ -311,13 +321,13 @@ def test_an_unknown_column_is_named_rather_than_costing_the_operator_the_whole_b
     extra_column = tmp_path / "extra_column.csv"
     extra_column.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,bogus_column\n"
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BOGUS-001,2026-03-10,100.00,xyz\n",
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BOGUS-001,{_march(10)},100.00,xyz\n",
         encoding="utf-8",
     )
     missing_required = tmp_path / "no_base.csv"
     missing_required.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date\n"
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-NOBASE-001,2026-03-10\n",
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-NOBASE-001,{_march(10)}\n",
         encoding="utf-8",
     )
 
@@ -348,13 +358,13 @@ def test_a_book_whose_every_row_fails_exits_nonzero_and_says_so(tmp_path: Path) 
     """
     all_bad = tmp_path / "all_bad.csv"
     all_bad.write_text(
-        _CSV_HEADER + ",Papeleria Sol SL,2026-BAD-003,2026-03-12,50.00,21\n",
+        _CSV_HEADER + f",Papeleria Sol SL,2026-BAD-003,{_march(12)},50.00,21\n",
         encoding="utf-8",
     )
     mixed = tmp_path / "mixed.csv"
     mixed.write_text(
         _CSV_HEADER
-        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-OK-001,2026-03-10,100.00,21\n"
+        + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-OK-001,{_march(10)},100.00,21\n"
         + f"{_SUPPLIER_CIF},Papeleria Sol SL,2026-BAD-001,not-a-date,50.00,21\n",
         encoding="utf-8",
     )

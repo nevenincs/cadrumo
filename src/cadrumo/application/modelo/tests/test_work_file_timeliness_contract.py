@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -38,7 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _WORK_UNIT_ID = "b" * 64
 _REVISION_ID = "a" * 64
 _BUCKET_ID = "91fb7268-c9d4-4309-879c-d44fa7970f9d"
-_FILED_AT = datetime(2026, 4, 15, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILED_AT = datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC)
 _DAYS_OVERDUE = 10
 _CLOSES_ON = _FILED_AT.date() - timedelta(days=_DAYS_OVERDUE)
 """A plazo that closed ten days before the filing instant."""
@@ -53,8 +55,8 @@ def _record(kept: FilingTimeliness | None) -> ModeloRecord:
         calculation_revision_id=_REVISION_ID,
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         filed_at=_FILED_AT,
         filed_by="operator",
         origin=FilingOrigin.LOCAL,
@@ -71,7 +73,7 @@ def _result(record: ModeloRecord, reported: FilingTimeliness) -> ModeloWorkFileP
             work_unit_id=_WORK_UNIT_ID,
             calculation_revision_id=_REVISION_ID,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
         ),
         published=True,

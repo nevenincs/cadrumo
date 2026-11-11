@@ -25,9 +25,12 @@ from cadrumo.application.modelo.m036_lifecycle import (
 )
 from cadrumo.application.modelo.m036_lifecycle_ports import M036LifecyclePorts
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.errors import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE_ID = "31313131-3131-4131-8131-313131313131"
 
@@ -55,12 +58,12 @@ def test_alta_then_modificacion_is_accepted(tmp_path: Path) -> None:
     """A modificacion following its own prior alta is the ordinary, accepted case."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         alta = record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 10)),
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(_YEAR, 1, 10)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
         modificacion = record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.MODIFICACION, declared_on=date(2026, 3, 15)),
+            _command(event_kind=CensoModeloEventKind.MODIFICACION, declared_on=date(_YEAR, 3, 15)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
@@ -75,7 +78,7 @@ def test_alta_then_modificacion_is_accepted(tmp_path: Path) -> None:
 
 def test_modificacion_without_prior_alta_is_refused(tmp_path: Path) -> None:
     """A modificacion with nothing on record refuses, naming what's wrong."""
-    command = _command(event_kind=CensoModeloEventKind.MODIFICACION, declared_on=date(2026, 3, 15))
+    command = _command(event_kind=CensoModeloEventKind.MODIFICACION, declared_on=date(_YEAR, 3, 15))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         with pytest.raises(Modelo036PriorAltaRequiredError) as exc_info:
             record_m036_declaration(command, bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
@@ -87,7 +90,7 @@ def test_modificacion_without_prior_alta_is_refused(tmp_path: Path) -> None:
 
 def test_baja_without_prior_alta_is_refused(tmp_path: Path) -> None:
     """A baja with nothing on record refuses the same way a modificacion does."""
-    command = _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(2026, 3, 15))
+    command = _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(_YEAR, 3, 15))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         with pytest.raises(Modelo036PriorAltaRequiredError):
             record_m036_declaration(command, bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
@@ -100,12 +103,12 @@ def test_anything_after_baja_is_refused(tmp_path: Path, event_kind: CensoModeloE
     """Baja is terminal: alta, modificacion, and baja itself are all refused after it."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         alta = record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 10)),
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(_YEAR, 1, 10)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
         baja = record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(2026, 6, 30)),
+            _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(_YEAR, 6, 30)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
@@ -121,7 +124,7 @@ def test_anything_after_baja_is_refused(tmp_path: Path, event_kind: CensoModeloE
         # A distinct declared_on than the baja's own, or the derived id would
         # collide with an already-recorded declaration and this would test
         # the idempotent-repeat exemption instead of the terminal-state gate.
-        next_command = _command(event_kind=event_kind, declared_on=date(2026, 9, 1))
+        next_command = _command(event_kind=event_kind, declared_on=date(_YEAR, 9, 1))
         with pytest.raises(Modelo036TerminalStateError) as exc_info:
             record_m036_declaration(next_command, bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
 
@@ -150,11 +153,11 @@ def test_a_refused_sequence_persists_nothing_and_emits_no_event(tmp_path: Path) 
     """
     from cadrumo.application.modelo.m036_lifecycle import derive_m036_declaration_id
 
-    refused_command = _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(2026, 6, 30))
+    refused_command = _command(event_kind=CensoModeloEventKind.BAJA, declared_on=date(_YEAR, 6, 30))
     would_be_id = derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(2026, 6, 30),
+        declared_on=date(_YEAR, 6, 30),
         sede_justificante=None,
     )
 
@@ -191,12 +194,12 @@ def test_an_identical_repeat_of_the_terminal_baja_stays_idempotent(tmp_path: Pat
     """
     baja_command = _command(
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(2026, 6, 30),
+        declared_on=date(_YEAR, 6, 30),
         justificante="ACUSE-BAJA-REPEAT",
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 10)),
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(_YEAR, 1, 10)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )

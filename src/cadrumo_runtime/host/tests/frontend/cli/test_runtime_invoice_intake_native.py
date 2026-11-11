@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import hashlib
 import sys
+from datetime import date
 from pathlib import Path
 from typing import cast
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -29,7 +33,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Invoice Intake",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
     "contact.postcode": "28013",
 }
 _SUPPLIER_CIF = "B00010157"
@@ -114,9 +118,9 @@ def _assert_wizard_creates_once(profile: NativeCliProfileFixture, profile_id: ob
         "--invoice-number",
         "WIZARD-001",
         "--invoice-date",
-        "2026-03-13",
+        date(_YEAR, 3, 13).isoformat(),
         "--operation-date",
-        "2026-03-01",
+        date(_YEAR, 3, 1).isoformat(),
         "--country-code",
         "ES",
         "--taxable-base",
@@ -135,7 +139,7 @@ def _assert_wizard_creates_once(profile: NativeCliProfileFixture, profile_id: ob
     assert created_payload["already_existed"] is False
     assert created_payload["counterparty_tax_id"] == _tax_id_token(_SUPPLIER_CIF)
     assert created_payload["counterparty_tax_id"] != _SUPPLIER_CIF
-    assert created_payload["operation_date"] == "2026-03-01"
+    assert created_payload["operation_date"] == date(_YEAR, 3, 1).isoformat()
     assert created_payload["retention_amount"] == "15.00"
     assert created_payload["notes"] == "manual intake"
 
@@ -167,7 +171,7 @@ def _assert_refused_wizard_is_a_noop(profile: NativeCliProfileFixture) -> None:
         "--invoice-number",
         "WIZARD-INVALID-001",
         "--invoice-date",
-        "2026-03-14",
+        date(_YEAR, 3, 14).isoformat(),
         "--country-code",
         "ES",
         "--taxable-base",
@@ -218,14 +222,14 @@ def test_native_import_and_wizard_preserve_worker_results_and_noop_effects(tmp_p
         (
             "﻿counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,"
             "country_code,notes\n"
-            f"{_SUPPLIER_CIF},Import Supplier SL,IMPORT-VALID-001,2026-03-10,100.00,21,ES,valid row\n"
-            f"{_SUPPLIER_CIF},Import Supplier SL,,2026-03-11,50.00,10,ES,missing number\n"
+            f"{_SUPPLIER_CIF},Import Supplier SL,IMPORT-VALID-001,{date(_YEAR, 3, 10).isoformat()},100.00,21,ES,valid row\n"
+            f"{_SUPPLIER_CIF},Import Supplier SL,,{date(_YEAR, 3, 11).isoformat()},50.00,10,ES,missing number\n"
         ).encode()
     )
     clean_book = tmp_path / "clean.csv"
     clean_book.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,country_code\n"
-        f"{_SUPPLIER_CIF},Import Supplier SL,IMPORT-DUP-001,2026-03-12,75.00,10,ES\n",
+        f"{_SUPPLIER_CIF},Import Supplier SL,IMPORT-DUP-001,{date(_YEAR, 3, 12).isoformat()},75.00,10,ES\n",
         encoding="utf-8",
     )
 

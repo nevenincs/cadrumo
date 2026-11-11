@@ -32,6 +32,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ..export_xml_dictionary_values import format_xml_dictionary_value
 
@@ -362,7 +363,7 @@ def test_a_date_row_accepts_the_form_aeat_declares() -> None:
     regex in the renderer. One- and two-digit day and month both pass because the
     facet allows both.
     """
-    for usable in ("2/1/1980", "02/01/1980", "31/12/2024"):
+    for usable in ("2/1/1980", "02/01/1980", f"31/12/{filing_year_envelope().horizon}"):
         rendered = format_xml_dictionary_value("FEC", usable)
         assert _accepts("tipo_Fecha", rendered), f"tipo_Fecha rejects {rendered!r}"
     assert format_xml_dictionary_value("FEC", date(1980, 1, 2)) == "2/1/1980"

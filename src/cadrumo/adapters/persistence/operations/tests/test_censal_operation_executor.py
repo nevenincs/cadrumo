@@ -79,14 +79,17 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
+
+_YEAR = filing_year_envelope().horizon
 
 OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
+NOW = datetime(_YEAR, 8, 24, 18, tzinfo=UTC)
 _CREDENTIAL_INPUT = "censal-operation-executor-passphrase"
 RESPONSE_TOKEN = "a" * 64
 

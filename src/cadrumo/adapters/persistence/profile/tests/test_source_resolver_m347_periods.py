@@ -14,6 +14,13 @@ from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+    revision_first_exercise,
+    revision_last_exercise,
+)
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.iva.schema import IvaCategory
@@ -42,6 +49,10 @@ from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+_M347_OLD_DESIGN_LAST_YEAR = revision_last_exercise("347", authored_revisions("347")[-2].id)
+_M347_NEW_DESIGN_FIRST_YEAR = revision_first_exercise("347", authored_revisions("347")[-1].id)
+
 
 def _seed_profile(bucket_id: str, facts: tuple[UserProfileFact, ...]) -> None:
     seed_test_profile_record(
@@ -60,7 +71,7 @@ def _m347_context(bucket_id: str, *, filing_year: int) -> CalculationSourceConte
         modelo="347",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes" if filing_year >= 2025 else "2011-2024"),
+        revision=modelo_revision("347", revision_covering("347", filing_year).id),
     )
 
 
@@ -74,12 +85,12 @@ def test_m347_clave_d_kept_apart_from_adquisiciones_is_declared_and_disclosed_as
     open. An ordinary acquisition of the same filer carries no such advisory.
     """
     _seed_profile(secure_profile.bucket_id, statutory_information_duty_profile_facts())
-    context = _m347_context(secure_profile.bucket_id, filing_year=2026)
+    context = _m347_context(secure_profile.bucket_id, filing_year=_YEAR)
     outside_activity_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-D-UNSETTLED-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
@@ -103,19 +114,19 @@ def test_m347_clave_d_kept_apart_from_adquisiciones_is_declared_and_disclosed_as
     assert unsettled_reading_refs(ordinary) == []
 
 
-def test_m347_clave_e_below_the_floor_is_declared_from_2014_and_disclosed_until_the_2025_design(
+def test_m347_clave_e_below_the_floor_is_declared_from_2014_and_disclosed_until_the_newest_design(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """A 1,000 EUR subvención: declared in 2024 and in 2025, but disclosed only in 2024.
+    """A 1,000 EUR subvención: declared under both designs, but disclosed only under the older one.
 
     The consolidated art. 33.3 relates subvenciones "cualquiera que sea su
-    importe"; the 2011 design still used for 2024 says "superiores a 3.005,06
-    euros", so 2024 carries the advisory and 2025, whose design agrees with
-    the regulation, does not.
+    importe"; the 2011 design, still used for its last exercise, says "superiores
+    a 3.005,06 euros", so that exercise carries the advisory and the newest
+    design, which agrees with the regulation, does not.
     """
     _seed_profile(secure_profile.bucket_id, public_administration_profile_facts())
     resolutions = {}
-    for filing_year in (2024, 2025):
+    for filing_year in (_M347_OLD_DESIGN_LAST_YEAR, _M347_NEW_DESIGN_FIRST_YEAR):
         subvencion = source_resolver_invoice(
             bucket_id=None,
             kind=InvoiceKind.ISSUED,
@@ -134,8 +145,10 @@ def test_m347_clave_e_below_the_floor_is_declared_from_2014_and_disclosed_until_
     for resolution in resolutions.values():
         assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
         assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("1000.00")
-    assert unsettled_reading_refs(resolutions[2024]) == ["m347-threshold-bucket:subvenciones_satisfechas"]
-    assert unsettled_reading_refs(resolutions[2025]) == []
+    assert unsettled_reading_refs(resolutions[_M347_OLD_DESIGN_LAST_YEAR]) == [
+        "m347-threshold-bucket:subvenciones_satisfechas"
+    ]
+    assert unsettled_reading_refs(resolutions[_M347_NEW_DESIGN_FIRST_YEAR]) == []
 
 
 def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
@@ -143,12 +156,12 @@ def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
 ) -> None:
     """A bucket related whatever its amount admits a nil total; whether it belongs is not settled."""
     _seed_profile(secure_profile.bucket_id, public_administration_profile_facts())
-    context = _m347_context(secure_profile.bucket_id, filing_year=2026)
+    context = _m347_context(secure_profile.bucket_id, filing_year=_YEAR)
     nil_subvencion = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-E-NIL-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
@@ -159,7 +172,7 @@ def test_m347_nil_total_in_a_bucket_without_floor_is_declared_and_disclosed(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-E-POSITIVE-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="B00015016",
         counterparty_name="Otro Beneficiario SL",
         counterparty_country="ES",
@@ -218,10 +231,10 @@ def test_m347_nets_a_rectificativa_against_the_operation_it_corrects(secure_prof
     rather than netted, the same two invoices would declare 6,000.
     """
     bucket_id = secure_profile.bucket_id
-    sale = _sale(bucket_id, invoice_number="F-2026-001", issued_at=date(2026, 2, 10), gross="5000.00")
+    sale = _sale(bucket_id, invoice_number="F-2026-001", issued_at=date(_YEAR, 2, 10), gross="5000.00")
     correction = _rectificativa_of(
         "F-2026-001",
-        _sale(bucket_id, invoice_number="R-2026-001", issued_at=date(2026, 5, 10), gross="1000.00"),
+        _sale(bucket_id, invoice_number="R-2026-001", issued_at=date(_YEAR, 5, 10), gross="1000.00"),
     )
 
     resolution = public_resolution((sale, correction), context=m347_2026_context(bucket_id))
@@ -249,10 +262,10 @@ def test_m347_full_rectification_nets_to_nil_and_is_left_out_as_settled(
 ) -> None:
     """A sale rectified in full in its own year nets to nil (art. 34.4), and art. 33.1 relates no party at nil."""
     bucket_id = secure_profile.bucket_id
-    sale = _sale(bucket_id, invoice_number="F-2026-002", issued_at=date(2026, 3, 1), gross="5000.00")
+    sale = _sale(bucket_id, invoice_number="F-2026-002", issued_at=date(_YEAR, 3, 1), gross="5000.00")
     correction = _rectificativa_of(
         "F-2026-002",
-        _sale(bucket_id, invoice_number="R-2026-002", issued_at=date(2026, 9, 1), gross="5000.00"),
+        _sale(bucket_id, invoice_number="R-2026-002", issued_at=date(_YEAR, 9, 1), gross="5000.00"),
     )
 
     resolution = public_resolution((sale, correction), context=m347_2026_context(bucket_id))
@@ -266,13 +279,13 @@ def test_m347_full_rectification_nets_to_nil_and_is_left_out_as_settled(
 def test_m347_rectificativa_of_an_invoice_outside_the_ejercicio_is_named(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """A rectificativa of a 2025 sale enters the 2026 total (RD 1065/2007 art. 35.2) but not its floor comparison."""
+    """A rectificativa of a prior-year sale enters the ejercicio total (RD 1065/2007 art. 35.2) but not its floor comparison."""
     bucket_id = secure_profile.bucket_id
-    earlier_sale = _sale(bucket_id, invoice_number="F-2025-099", issued_at=date(2025, 11, 20), gross="2000.00")
-    sale = _sale(bucket_id, invoice_number="F-2026-003", issued_at=date(2026, 4, 1), gross="6000.00")
+    earlier_sale = _sale(bucket_id, invoice_number="F-2025-099", issued_at=date(_YEAR - 1, 11, 20), gross="2000.00")
+    sale = _sale(bucket_id, invoice_number="F-2026-003", issued_at=date(_YEAR, 4, 1), gross="6000.00")
     correction = _rectificativa_of(
         "F-2025-099",
-        _sale(bucket_id, invoice_number="R-2026-003", issued_at=date(2026, 1, 15), gross="500.00"),
+        _sale(bucket_id, invoice_number="R-2026-003", issued_at=date(_YEAR, 1, 15), gross="500.00"),
     )
 
     resolution = public_resolution((earlier_sale, sale, correction), context=m347_2026_context(bucket_id))
@@ -309,7 +322,7 @@ def _supplier_and_customer_invoices(bucket_id: str) -> tuple[Invoice, Invoice]:
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-PROVEEDOR-2026-001",
-        issued_at=date(2026, 6, 1),
+        issued_at=date(_YEAR, 6, 1),
         counterparty_tax_id="B00010157",
         counterparty_name="Proveedor Mayorista SA",
         base_total=Decimal("5000.00"),
@@ -319,7 +332,7 @@ def _supplier_and_customer_invoices(bucket_id: str) -> tuple[Invoice, Invoice]:
         bucket_id=bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-CLIENTE-2026-001",
-        issued_at=date(2026, 6, 1),
+        issued_at=date(_YEAR, 6, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Hosteleria SL",
         base_total=Decimal("4000.00"),
@@ -360,7 +373,7 @@ def test_m347_relates_only_issued_invoices_of_an_estimacion_objetiva_filer_under
     received, issued = _supplier_and_customer_invoices(secure_profile.bucket_id)
 
     resolution = public_resolution(
-        (received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=2026)
+        (received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=_YEAR)
     )
 
     expected = {issued.invoice_id, received.invoice_id} if received_declared else {issued.invoice_id}
@@ -372,20 +385,24 @@ def test_m347_reads_the_filer_regime_as_of_the_filing_period(secure_profile: Tes
     """A regime that starts after the ejercicio does not reach back into it.
 
     The filer moves from the general regime to the recargo de equivalencia
-    from 2027. For 2026 the received invoice is still related; read without
+    from the following year. For the ejercicio the received invoice is still related; read without
     the filing period's date, the later regime would wrongly drop it.
     """
-    general_until_2026 = tuple(
-        fact.model_copy(update={"valid_to": date(2026, 12, 31)}) if fact.path == "iva.regime" else fact
+    general_until_ejercicio_end = tuple(
+        fact.model_copy(update={"valid_to": date(_YEAR, 12, 31)}) if fact.path == "iva.regime" else fact
         for fact in _regime_profile_facts(estimation="objetiva", iva_regime="GENERAL")
     )
-    recargo_from_2027 = UserProfileFact(path="iva.regime", value="RECARGO_EQUIVALENCIA", valid_from=date(2027, 1, 1))
-    _seed_profile(secure_profile.bucket_id, (*general_until_2026, recargo_from_2027))
+    recargo_from_next_year = UserProfileFact(
+        path="iva.regime", value="RECARGO_EQUIVALENCIA", valid_from=date(_YEAR + 1, 1, 1)
+    )
+    _seed_profile(secure_profile.bucket_id, (*general_until_ejercicio_end, recargo_from_next_year))
     received, issued = _supplier_and_customer_invoices(secure_profile.bucket_id)
 
-    in_2026 = public_resolution((received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=2026))
+    in_ejercicio = public_resolution(
+        (received, issued), context=_m347_context(secure_profile.bucket_id, filing_year=_YEAR)
+    )
 
-    assert _declared_invoice_ids(in_2026) == {issued.invoice_id, received.invoice_id}
+    assert _declared_invoice_ids(in_ejercicio) == {issued.invoice_id, received.invoice_id}
 
 
 def test_m347_reads_the_filer_from_the_calculation_pinned_profile_not_per_invoice() -> None:
@@ -406,7 +423,7 @@ def test_m347_reads_the_filer_from_the_calculation_pinned_profile_not_per_invoic
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-COMPRA-2026-002",
-        issued_at=date(2026, 7, 1),
+        issued_at=date(_YEAR, 7, 1),
         counterparty_tax_id="B00010140",
         counterparty_name="Otro Proveedor SL",
         base_total=Decimal("5000.00"),
@@ -424,7 +441,7 @@ def test_m347_reads_the_filer_from_the_calculation_pinned_profile_not_per_invoic
             profile_id=BUCKET_ID,
             facts=_regime_profile_facts(estimation="objetiva", iva_regime=iva_regime, extra=(roles,)),
         )
-        context = _m347_context(BUCKET_ID, filing_year=2026).model_copy(
+        context = _m347_context(BUCKET_ID, filing_year=_YEAR).model_copy(
             update={
                 "profile": ModeloWorkProfile(record=record, profile_decode_context=decode_context),
                 "operation": operation,

@@ -34,6 +34,7 @@ from .....domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -52,6 +53,7 @@ _M115_RETENCIONES: CasillaId = validated_casilla_id("03")
 #: Per-quarter modelo 115 values the modelo 180 annual summary folds. Chosen so
 #: every quarter differs and the expected annual totals below are derived by
 #: hand from these numbers, never read back off the resolver.
+_YEAR = filing_year_envelope().horizon
 _M115_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {_M115_PERCEPTORES: Decimal("1"), _M115_BASE: Decimal("250.10"), _M115_RETENCIONES: Decimal("47.52")},
     "2T": {_M115_PERCEPTORES: Decimal("1"), _M115_BASE: Decimal("749.90"), _M115_RETENCIONES: Decimal("142.48")},
@@ -71,7 +73,7 @@ def _observations() -> tuple[RegistryModeloObservation, ...]:
     return tuple(
         registry_grounded_modelo_observation(
             modelo="115",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             casilla_values=casilla_values,
         )
@@ -94,7 +96,7 @@ def _seeded_repository() -> CalculationObservationRepository:
 
 def test_the_corpus_declares_the_m180_fold_entirely_on_the_binding_provider() -> None:
     """No second declaration remains: the slot names its own source and window."""
-    snapshot = _snapshot("180", 2026, "0A")
+    snapshot = _snapshot("180", _YEAR, "0A")
     folds = relation_prefill_bindings_for_period(snapshot.revision, period="0A")
 
     assert folds, "modelo 180 declares at least one relation-prefill fold slot"
@@ -113,15 +115,15 @@ def test_the_corpus_declares_the_m180_fold_entirely_on_the_binding_provider() ->
 
 
 def test_requirements_are_indexed_by_the_slot_binding_id() -> None:
-    snapshot = _snapshot("180", 2026, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2026, period="0A")
+    snapshot = _snapshot("180", _YEAR, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_YEAR, period="0A")
     index = relation_requirement_index(requirements)
 
     slot_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period="0A")}
     assert set(index) == slot_ids
     for requirement in requirements:
         assert requirement.source_modelo == "115"
-        assert requirement.filing_year == 2026
+        assert requirement.filing_year == _YEAR
         assert requirement.periods == ("1T", "2T", "3T", "4T")
         assert requirement.target_bindings
 
@@ -136,8 +138,8 @@ def _resolve_annual_180(repository, snapshot, operation):
         CalculationSourceContext(
             bucket_id="operator",
             modelo="180",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "0A"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
             revision=snapshot.revision,
         ),
     )
@@ -146,7 +148,7 @@ def _resolve_annual_180(repository, snapshot, operation):
 def test_the_real_resolver_folds_the_quarters_into_the_slot_values(tmp_path: Path) -> None:
     with bundled_indexed_authority().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
-        snapshot = _snapshot("180", 2026, "0A")
+        snapshot = _snapshot("180", _YEAR, "0A")
 
         resolution = _resolve_annual_180(repository, snapshot, operation)
 
@@ -171,7 +173,7 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
     """
     with bundled_indexed_authority().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
-        snapshot = _snapshot("180", 2026, "0A")
+        snapshot = _snapshot("180", _YEAR, "0A")
 
         resolution = _resolve_annual_180(repository, snapshot, operation)
 
@@ -180,14 +182,14 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
         assert item.terminal_origin is TerminalOriginClass.FILED_MODELO_CASILLA
         assert item.contributor_binding_source is BindingSourceKind.RELATION_PREFILL
         assert item.source_modelo == "115"
-        assert item.source_filing_year == 2026
+        assert item.source_filing_year == _YEAR
 
 
 def test_prefill_values_carry_the_slot_bindings_own_grounding(tmp_path: Path) -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = _seeded_repository()
-            snapshot = _snapshot("180", 2026, "0A")
+            snapshot = _snapshot("180", _YEAR, "0A")
             prefill = resolve_relations_from_local_store(
                 snapshot, repository=repository, operation=_authority_operation_for_test
             )

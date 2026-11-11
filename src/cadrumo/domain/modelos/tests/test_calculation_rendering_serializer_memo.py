@@ -16,10 +16,13 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema import MODELO_REVISION_IDS_CONTEXT, RegistrySnapshot
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import calculation_revision_rendering as rendering
 from ..calculation_revision_rendering import CalculationRenderingSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +54,7 @@ def rendering_batch() -> _RenderingBatch:
         return _RenderingBatch(
             snapshots=tuple(
                 CalculationRenderingSnapshot.capture(
-                    operation.snapshot("303", filing_year=2025, period=period),
+                    operation.snapshot("303", filing_year=_YEAR, period=period),
                     authority_generation=operation.pin().logical_generation,
                 )
                 for period in ("1T", "2T")
@@ -182,7 +185,7 @@ def test_sibling_directory_context_stays_local_to_each_snapshot(
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
         other = CalculationRenderingSnapshot.capture(
-            operation.snapshot("720", filing_year=2026, period="0A"),
+            operation.snapshot("720", filing_year=_YEAR, period="0A"),
             authority_generation=operation.pin().logical_generation,
         )
     original = _RenderingBatch(snapshots=(rendering_batch.snapshots[0], other))
@@ -210,7 +213,7 @@ def test_empty_calls_leave_the_serializer_lazy(monkeypatch: pytest.MonkeyPatch) 
 def test_a_read_keeps_valid_historical_omitted_directory_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
     with bundled_indexed_authority().operation() as operation:
         original = CalculationRenderingSnapshot.capture(
-            operation.snapshot("720", filing_year=2026, period="0A"),
+            operation.snapshot("720", filing_year=_YEAR, period="0A"),
             authority_generation=operation.pin().logical_generation,
         )
     payload = json.loads(original.model_dump_json())

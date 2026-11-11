@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from .test_config_reset import (
@@ -39,6 +40,9 @@ def _bucket_dir(root: Path, bucket_id: str) -> Path:
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: The supported year before the horizon: its filings are inside the four-year retention window.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
 
 
 _CRASH_EXIT_CODE = 91
@@ -350,7 +354,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
                     "certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS, operation=_authority_operation_for_test
                 )
             if boundary == "snapshotted":
-                persist_filing(PROFILE_A_ID, filing_year=2025, seed="7")
+                persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="7")
             dispose_engine()
 
             crashed = _run_crashing_start(root, boundary)

@@ -36,6 +36,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.models import Invoice
 from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
@@ -58,7 +59,7 @@ from .received_invoice_withholding_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _Q1 = Period.from_year_and_code(_YEAR, "1T")
 _NATURAL_PERSON_NIF = "12345678Z"
 _COMPANY_NIF = "B81000010"
@@ -190,7 +191,7 @@ _SLP_NIF = PROFESSIONAL_COMPANY_NIF
 def _slp_fee() -> Invoice:
     return received_invoice(
         "AE-2026-007",
-        date(2026, 2, 10),
+        date(_YEAR, 2, 10),
         supplier="Asesores Ejemplo SLP",
         tax_id=_SLP_NIF,
         base=Decimal("300.00"),
@@ -202,7 +203,7 @@ def _slp_fee() -> Invoice:
 
 
 def test_the_quarters_modelo_111_is_held_back_by_an_unpaid_slp_fee() -> None:
-    snapshot = published_snapshot("111", filing_year=2026, period="1T")
+    snapshot = published_snapshot("111", filing_year=_YEAR, period="1T")
     resolver = RetencionesAggregationSourceResolver(
         ports=RetencionObservationPorts(repository=EmptyRetencionStore()),
         invoice_catalogue=invoice_catalogue_ports(
@@ -214,8 +215,8 @@ def test_the_quarters_modelo_111_is_held_back_by_an_unpaid_slp_fee() -> None:
         CalculationSourceContext(
             bucket_id=BUCKET,
             modelo="111",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision=snapshot.revision,
         )
     )
@@ -227,7 +228,7 @@ def test_the_quarters_modelo_111_is_held_back_by_an_unpaid_slp_fee() -> None:
 
 
 def test_another_quarters_modelo_111_is_not_held_back_by_it() -> None:
-    snapshot = published_snapshot("111", filing_year=2026, period="2T")
+    snapshot = published_snapshot("111", filing_year=_YEAR, period="2T")
     resolver = RetencionesAggregationSourceResolver(
         ports=RetencionObservationPorts(repository=EmptyRetencionStore()),
         invoice_catalogue=invoice_catalogue_ports(
@@ -240,8 +241,8 @@ def test_another_quarters_modelo_111_is_not_held_back_by_it() -> None:
             CalculationSourceContext(
                 bucket_id=BUCKET,
                 modelo="111",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "2T"),
                 revision=snapshot.revision,
             )
         )

@@ -67,6 +67,7 @@ from .....domain.calculations.registry.bindings import (
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
 from .....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -87,10 +88,10 @@ _MODELO_111 = "111"
 _MODELO_190 = "190"
 
 #: Two distinct renta years.
-_YEAR_N = 2025
-_YEAR_N_PLUS_1 = 2026
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 
-_CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR_N_PLUS_1 + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 _M111_TRABAJO_DINERARIO_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")

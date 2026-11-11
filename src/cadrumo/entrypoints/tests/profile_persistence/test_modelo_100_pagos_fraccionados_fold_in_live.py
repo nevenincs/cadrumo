@@ -48,6 +48,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -56,6 +57,7 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....application.aggregation.tests.test_inventory_source import inventory_ledger
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -67,13 +69,16 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id_from_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .m130_m100_annual_support import m100_non_relation_zero_bindings
 from .observation_seeding_support import save_stamped_observation
 from .unchecked_credit_note_support import assert_only_unchecked_credit_notes
 
@@ -90,9 +95,9 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-_YEAR = 2024
+_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
 
 # The operator's locally filed M130 quarters reported casilla 19 ("Resultado a ingresar")
 # as EUR 380.00 in every quarter, so annual M100 must credit EUR 1520.00.
@@ -222,7 +227,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="activities.description", value="economic activity"),
                 # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
                 UserProfileFact(path="activities.iae_epigraph", value="844"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 4, 1, 1)),
                 *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
             )
         ),
@@ -233,44 +238,13 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(record)
 
 
-def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced.
-
-    The annual M100 revision binds many casillas (the Anexo-C base-liquidable
-    carry, ...) whose values an empty bucket does not supply; the engine refuses
-    the consuming casilla before reaching 0604. These are supplied as zero
-    through the caller channel (the pure-pagos-fold persona declares no other
-    prior activity), leaving the two ``relation_prefill`` pagos bindings UNSET so
-    the enrolled relation resolver folds them from the seeded M130 store on the
-    live path. Mirrors the non-profile zero-default in
-    ``test_modelo_100_cross_year_carry_continuity._calculate_100``.
-    """
-    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
-    return {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.source
-        not in (
-            "profile",
-            _RELATION_PREFILL_SOURCE,
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_estimacion_directa_aggregation",
-            "ledger_iva_aggregation",
-            "ledger_oss_aggregation",
-            "collectible_invoice",
-            "payable_invoice",
-            "retencion_soportada",
-        )
-    }
-
-
 def _calculate_m100_annual(
     secure_objects: SecureObjectRepository,
     *,
     binding_values: dict[BindingId, Decimal] | None = None,
     operation: PinnedAuthorityOperation,
 ):
-    """Run the live M100/2024/0A calculate over the seeded bucket.
+    """Run the live annual M100 calculate over the seeded bucket.
 
     Seeds the taxpayer profile and zero-defaults non-profile/non-relation
     bindings so the engine reaches casilla 0604; the two pagos-fraccionados
@@ -279,6 +253,10 @@ def _calculate_m100_annual(
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
+    # The filer carries on an economic activity, so its Anexo D inventory rows need the year's ledger.
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(inventory_ledger("actividad"),))
+    )
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -305,7 +283,7 @@ def _calculate_m100_annual(
     ) as _calculation_ports_302:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            binding_values={**_non_relation_zero_bindings(), **(binding_values or {})},
+            binding_values={**m100_non_relation_zero_bindings(), **(binding_values or {})},
             ports=_calculation_ports_302,
             clock=_T1,
         )

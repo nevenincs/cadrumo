@@ -50,6 +50,7 @@ from ....application.ledger.models import (
 )
 from ....application.ledger.notices import stale_finalized_revision_notices
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
@@ -57,6 +58,7 @@ from ....domain.transactions.models import BucketTransactionRef, derive_transact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
 _BUCKET = "32323232-3232-4232-8232-323232323232"
 
 
@@ -120,7 +122,7 @@ def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET,
-                booked_date=date(2026, 2, 11),
+                booked_date=date(_YEAR, 2, 11),
                 amount=Decimal("605.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
@@ -132,7 +134,7 @@ def _deductible_expense_row(profile: TestRuntimeProfile, *, idempotency_key: str
                 idempotency_key=idempotency_key,
             ),
             ports=ports,
-            occurred_at=datetime(2026, 2, 11, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 2, 11, 8, 0, tzinfo=UTC),
         )
     return created.ref.transaction_id
 
@@ -169,7 +171,7 @@ def test_attach_evidence_proceeds_under_finalized_revision(
             purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert attached.transaction.purchase_invoice_evidence_id == evidence_id
@@ -203,7 +205,7 @@ def test_attach_leaves_the_finalized_revision_untouched(
             purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert _revisions(profile).load().revisions[revision_id] == before
@@ -283,7 +285,7 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
             purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert attached.stale_finalized_revisions == ()
@@ -305,7 +307,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(
         calculation_revision_id="cd" * 32,
         revision_state=CalculationRevisionState.VERIFICADO_COMPLETO.value,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
     transaction_id = _deductible_expense_row(profile, idempotency_key="advisory-shape")
@@ -355,7 +357,7 @@ def test_evidence_is_not_transaction_identity_and_only_the_current_field_set_has
             purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
     after = _transactions(profile).load().get(transaction_id)
     assert after is not None

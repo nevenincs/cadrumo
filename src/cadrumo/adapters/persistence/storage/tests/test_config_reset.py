@@ -24,10 +24,14 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: The supported year before the horizon: its filings are inside the four-year retention window.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
 
 PROFILE_A_ID = "11111111-1111-4111-8111-111111111111"
 PROFILE_B_ID = "22222222-2222-4222-8222-222222222222"
@@ -531,7 +535,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00001005Q")
-        persist_filing(PROFILE_B_ID, filing_year=2025, seed="a")
+        persist_filing(PROFILE_B_ID, filing_year=_PRIOR_YEAR, seed="a")
         _write_active_pointer(root, PROFILE_A_ID)
         pointer_before = pointer_path(root).read_bytes()
         fingerprints_before = {
@@ -597,7 +601,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00001005Q")
-        persist_filing(PROFILE_B_ID, filing_year=2025, seed="a")
+        persist_filing(PROFILE_B_ID, filing_year=_PRIOR_YEAR, seed="a")
         _write_active_pointer(root, PROFILE_A_ID)
 
         paused = start_config_reset(
@@ -649,7 +653,7 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
 
     with isolated_reset_root(tmp_path):
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        persist_filing(PROFILE_A_ID, filing_year=2025, seed="c")
+        persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="c")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -673,7 +677,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
 
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        persist_filing(PROFILE_A_ID, filing_year=2025, seed="e")
+        persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="e")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -725,7 +729,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
 
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        persist_filing(PROFILE_A_ID, filing_year=2025, seed="3")
+        persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="3")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -778,7 +782,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
 
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        persist_filing(PROFILE_A_ID, filing_year=2025, seed="c")
+        persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="c")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,

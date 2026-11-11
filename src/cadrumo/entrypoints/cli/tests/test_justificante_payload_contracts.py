@@ -26,6 +26,7 @@ from pydantic import ValidationError
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.modelo import Modelo
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_justificante_results import (
     JustificanteCaptureResult,
     JustificanteSnapshotSummaryPayload,
@@ -34,10 +35,12 @@ from ..app_live_justificante_results import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET_ID = "26262626-2626-4626-8626-262626262626"
 _PDF_SHA256 = "a3f1" * 16
 _SNAPSHOT_ID = "b4e2" * 16
-_CAPTURED_AT = datetime(2026, 5, 1, 10, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 5, 1, 10, 0, tzinfo=UTC)
 
 
 def _capture_fields(**overrides: object) -> dict[str, object]:
@@ -45,7 +48,7 @@ def _capture_fields(**overrides: object) -> dict[str, object]:
         "bucket_id": _BUCKET_ID,
         "snapshot_id": _SNAPSHOT_ID,
         "modelo": Modelo("130"),
-        "filing_year": 2026,
+        "filing_year": _YEAR,
         "period": "1T",
         "expediente_id": "202613000000001Z",
         "csv": "ABCD1234EFGH",
@@ -82,7 +85,7 @@ def _summary_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "snapshot_id": _SNAPSHOT_ID,
         "modelo": Modelo("130"),
-        "filing_year": 2026,
+        "filing_year": _YEAR,
         "period": "1T",
         "pdf_sha256": _PDF_SHA256,
         "state": SnapshotLifecycleState.ACTIVE,

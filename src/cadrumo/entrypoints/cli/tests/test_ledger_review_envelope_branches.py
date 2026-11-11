@@ -14,21 +14,26 @@ invariant that refused everything would pass every refusal case and fail those.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
 from ....application.ledger.models import LedgerReviewRow
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ledger_results import LedgerReviewResult, LedgerReviewRowPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+_DAY = date(_YEAR, 5, 1).isoformat()
 _TRANSACTION_ID = "c0ffee" + "0" * 58
 
 
 def _row_fields(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "id": _TRANSACTION_ID,
-        "date": "2026-05-01",
+        "date": _DAY,
         "amount": "121.00",
         "description": "material oficina",
         "status": "pending",
@@ -59,7 +64,7 @@ def test_a_canonical_row_projects_onto_the_transport_row() -> None:
         {"id": "bad"},
         {"id": "Z" * 64},
         {"date": "bad"},
-        {"date": "2026-5-1"},
+        {"date": f"{_YEAR}-5-1"},
         {"amount": ""},
         {"description": ""},
         {"status": ""},
@@ -95,7 +100,7 @@ def test_the_detail_branch_validates() -> None:
     result = LedgerReviewResult.model_validate(
         {
             "id": _TRANSACTION_ID,
-            "date": "2026-05-01",
+            "date": _DAY,
             "amount": "121.00",
             "description": "material oficina",
             "review_status": "pending",
@@ -115,7 +120,7 @@ def test_the_detail_branch_validates() -> None:
         {"rows": [_row_fields()]},
         {"verbose": True},
         {"id": _TRANSACTION_ID},
-        {"id": _TRANSACTION_ID, "date": "2026-05-01"},
+        {"id": _TRANSACTION_ID, "date": _DAY},
     ],
     ids=["empty", "filters-only", "rows-only", "verbose-only", "id-only", "partial-detail"],
 )
@@ -131,7 +136,7 @@ def test_mixing_the_list_and_detail_branches_is_refused() -> None:
                 "rows": [],
                 "filters": [],
                 "id": _TRANSACTION_ID,
-                "date": "2026-05-01",
+                "date": _DAY,
                 "amount": "121.00",
                 "description": "material oficina",
                 "review_status": "pending",
@@ -147,7 +152,7 @@ def test_mixing_the_list_and_detail_branches_is_refused() -> None:
 def test_a_malformed_detail_branch_is_refused(overrides: dict[str, object]) -> None:
     detail: dict[str, object] = {
         "id": _TRANSACTION_ID,
-        "date": "2026-05-01",
+        "date": _DAY,
         "amount": "121.00",
         "description": "material oficina",
         "review_status": "pending",

@@ -14,6 +14,8 @@ under test.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import BaseModel
 
@@ -30,6 +32,7 @@ from ....domain.calculations.registry.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
@@ -54,6 +57,14 @@ from ..descendant_group import (
 from ..persistence import descendant_facts_from_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_FILING_YEAR = filing_year_envelope().horizon
+
+
+def _day(years_before_filing_year: int, month: int, day: int) -> str:
+    """Return an ISO day that many years before the filing year."""
+    return date(_FILING_YEAR - years_before_filing_year, month, day).isoformat()
+
 
 _NIF_INVALID_KEY = "wizard.errors.invalid_tax_id"
 _VALID_NIF = "00000000T"  # 00000000 mod 23 == 0 -> control letter T
@@ -137,8 +148,8 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "3")
 
-    # Instance 0: menor de tres years old in 2024, disabled, guardería spend.
-    state = answer(definition, state, "descendientes#0.birth-date", "2023-05-10")
+    # Instance 0: under three years old in the filing year, disabled, guardería spend.
+    state = answer(definition, state, "descendientes#0.birth-date", _day(1, 5, 10))
     state = answer(definition, state, "descendientes#0.discapacidad", "33")
     state = answer(definition, state, "descendientes#0.convivencia", "true")
     state = answer(definition, state, "descendientes#0.custodia-compartida", "false")
@@ -152,13 +163,13 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     # monthly map onto one of these two. Instance 0 already declares an annual
     # figure and the two spend shapes are mutually exclusive, so reusing it
     # would have swapped one page's coverage for another's.
-    state = answer(definition, state, "descendientes#1.birth-date", "2015-03-01")
+    state = answer(definition, state, "descendientes#1.birth-date", _day(9, 3, 1))
     # The inscription page is GATED on this instance's relación, so the answer
     # has to precede it -- answering it first is not test convenience, it is the
     # gate being real: without it the engine refuses the target as not visible.
     state = answer(definition, state, "descendientes#1.relacion", require_descendant_relacion("adoptado").value)
-    state = answer(definition, state, "descendientes#1.inscripcion-registro-civil", "2016-06-01")
-    state = answer(definition, state, "descendientes#1.fallecimiento", "2024-06-15")
+    state = answer(definition, state, "descendientes#1.inscripcion-registro-civil", _day(8, 6, 1))
+    state = answer(definition, state, "descendientes#1.fallecimiento", _day(0, 6, 15))
     state = answer(definition, state, "descendientes#1.convivencia", "true")
     state = answer(definition, state, "descendientes#1.custodia-compartida", "true")
     state = answer(definition, state, "descendientes#1.nif", _VALID_NIF)
@@ -170,7 +181,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     # The range form is used because it is the shape a taxpayer reads off a
     # certificate, and it is the half a parser could drop while still honouring
     # bare months.
-    state = answer(definition, state, "descendientes#2.birth-date", "2021-04-15")
+    state = answer(definition, state, "descendientes#2.birth-date", _day(3, 4, 15))
     state = answer(definition, state, "descendientes#2.convivencia", "true")
     state = answer(definition, state, "descendientes#2.custodia-compartida", "false")
     state = answer(definition, state, "descendientes#2.gastos-guarderia-mensuales", "5-8:210;1:180")
@@ -181,20 +192,20 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     projected = dict(_descendant_facts(state.answers))
 
     expected = {
-        "renta_family.descendiente.0.birth_date": "2023-05-10",
+        "renta_family.descendiente.0.birth_date": _day(1, 5, 10),
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.0.convivencia": "true",
         "renta_family.descendiente.0.meses_madre_trabajo": "01;02;03;04;05;06",
         "renta_family.descendiente.0.alta_posterior_nacimiento_mes": "1",
         "renta_family.descendiente.0.gastos_guarderia": "900",
-        "renta_family.descendiente.1.birth_date": "2015-03-01",
+        "renta_family.descendiente.1.birth_date": _day(9, 3, 1),
         "renta_family.descendiente.1.relacion": "adoptado",
-        "renta_family.descendiente.1.inscripcion_registro_civil": "2016-06-01",
-        "renta_family.descendiente.1.fallecimiento": "2024-06-15",
+        "renta_family.descendiente.1.inscripcion_registro_civil": _day(8, 6, 1),
+        "renta_family.descendiente.1.fallecimiento": _day(0, 6, 15),
         "renta_family.descendiente.1.convivencia": "true",
         "renta_family.descendiente.1.custodia_compartida": "true",
         "renta_family.descendiente.1.nif": _VALID_NIF,
-        "renta_family.descendiente.2.birth_date": "2021-04-15",
+        "renta_family.descendiente.2.birth_date": _day(3, 4, 15),
         "renta_family.descendiente.2.convivencia": "true",
         # Stored in the canonical expanded form regardless of the range typed
         # above, so the same map entered two ways is one set of stored bytes.
@@ -321,7 +332,7 @@ def test_invalid_descendant_nif_refuses_and_valid_commits() -> None:
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "1")
-    state = answer(definition, state, "descendientes#0.birth-date", "2020-01-01")
+    state = answer(definition, state, "descendientes#0.birth-date", _day(4, 1, 1))
 
     rejected = answer(definition, state, "descendientes#0.nif", _INVALID_NIF)
     assert "descendientes#0.nif" in rejected.verdicts
@@ -383,7 +394,7 @@ def _one_descendant_state(definition: FlowDefinition):
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, "entity-type", entity_type_natural_person_token().value)
     state = answer(definition, state, "descendientes-count", "1")
-    return answer(definition, state, "descendientes#0.birth-date", "2022-01-01")
+    return answer(definition, state, "descendientes#0.birth-date", _day(2, 1, 1))
 
 
 def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:
@@ -473,8 +484,8 @@ def test_adoption_before_birth_refuses_at_flow_scope() -> None:
     validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
-            "descendientes#0.birth-date": "2020-05-10",
-            "descendientes#0.inscripcion-registro-civil": "2010-01-01",
+            "descendientes#0.birth-date": _day(4, 5, 10),
+            "descendientes#0.inscripcion-registro-civil": _day(14, 1, 1),
         },
     )
     assert [v.message_key for v in verdicts if not v.ok] == [ENTRY_BEFORE_BIRTH_LOCALE_KEY]
@@ -484,7 +495,7 @@ def test_adoption_in_future_refuses_at_flow_scope() -> None:
     validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
-            "descendientes#0.birth-date": "2020-05-10",
+            "descendientes#0.birth-date": _day(4, 5, 10),
             "descendientes#0.inscripcion-registro-civil": "2999-01-01",
         },
     )
@@ -495,8 +506,8 @@ def test_valid_adoption_pair_passes_flow_scope() -> None:
     validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
-            "descendientes#0.birth-date": "2015-03-01",
-            "descendientes#0.inscripcion-registro-civil": "2016-06-01",
+            "descendientes#0.birth-date": _day(9, 3, 1),
+            "descendientes#0.inscripcion-registro-civil": _day(8, 6, 1),
         },
     )
     assert all(v.ok for v in verdicts)

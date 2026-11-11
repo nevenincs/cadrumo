@@ -6,10 +6,12 @@ import json
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_EXERCISE = str(filing_year_envelope().horizon)
 _NO_FORCED_LANGUAGE_ENV: dict[str, str | None] = {"CADRUMO_OUTPUT_LANGUAGE": None}
 
 
@@ -51,7 +53,7 @@ def test_casillas_command_respects_language_flag(
 def test_casillas_command_explain_option_displays_localized_help() -> None:
     """Invoking casillas with `--explain` includes the help/hint column with translations."""
     result = invoke_cached_cli(
-        ["--language", "en", "app", "modelo", "casillas", "130", "--year", "2026", "--period", "1T", "--explain"],
+        ["--language", "en", "app", "modelo", "casillas", "130", "--year", _EXERCISE, "--period", "1T", "--explain"],
         env=_NO_FORCED_LANGUAGE_ENV,
     )
     assert result.exit_code == 0, result.output
@@ -77,7 +79,7 @@ def test_casillas_json_envelope_carries_only_the_selected_locale() -> None:
             "casillas",
             "130",
             "--year",
-            "2026",
+            _EXERCISE,
             "--period",
             "1T",
         ],

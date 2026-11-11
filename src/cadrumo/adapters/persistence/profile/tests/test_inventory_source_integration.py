@@ -19,6 +19,7 @@ from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
@@ -34,21 +35,22 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_FILING_YEAR = newest_authored_edition("100")
 _BUCKET_ID = "00000000-0000-4000-8000-000000000176"
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 
 def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=2025, period="0A").revision
+    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _context(revision: ModeloRevision, *, activities: int) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="100",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "0A"),
         revision=revision,
         profile=published_work_profile_declaring_activities(activities),
     )

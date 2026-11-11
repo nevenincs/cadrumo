@@ -28,6 +28,7 @@ from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -54,7 +55,9 @@ def _form(work: SeededOperatorWork) -> ModeloWorkForm:
 
 
 def test_the_nace_slot_is_written_through_its_casilla(tmp_path: Path) -> None:
-    with seeded_operator_work(tmp_path, modelo="360", filing_year=2025, period_code="0A") as work:
+    with seeded_operator_work(
+        tmp_path, modelo="360", filing_year=filing_year_envelope().horizon, period_code="0A"
+    ) as work:
         form = _form(work)
         assert ("casilla", _CASILLA) in {address_key(field.address) for field in form.fields()}
         casilla = next(field for field in form.fields() if address_key(field.address) == ("casilla", _CASILLA))

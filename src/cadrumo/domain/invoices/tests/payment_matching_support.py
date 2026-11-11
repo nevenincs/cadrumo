@@ -8,6 +8,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any, Final
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...transactions.models import Transaction
@@ -17,8 +18,14 @@ from ..models import Invoice, InvoiceLine
 from ..payment_matching import invoice_choices, link_differences, movement_choices, suggest_payments
 from ..service import invoice_settlement
 
-ISSUED: Final = date(2026, 10, 1)
+YEAR: Final = filing_year_envelope().horizon
+ISSUED: Final = date(YEAR, 10, 1)
 PARTY: Final = "Papeleria Trazo SL"
+
+
+def iso_day(month: int, day_of_month: int) -> str:
+    """Return the ISO text of a day of the scenario year."""
+    return date(YEAR, month, day_of_month).isoformat()
 
 
 def day(offset: int, origin: date = ISSUED) -> str:
@@ -29,7 +36,7 @@ def build_invoice(
     number: str,
     *,
     kind: str = "received",
-    issued: str = "2026-10-01",
+    issued: str = ISSUED.isoformat(),
     party: str = PARTY,
     tax_id: str | None = "B00015073",
     base: str = "30.00",
@@ -77,14 +84,14 @@ def build_movement(
     *,
     amount: str = "36.30",
     direction: str = "OUTGOING",
-    on: str = "2026-10-03",
+    on: str = iso_day(10, 3),
     description: str = "TRANSFERENCIA",
     counterparty: str | None = None,
     currency: str = "EUR",
     state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     invoice_id: str | None = None,
 ) -> Transaction:
-    moment = datetime(2026, 11, 1, 9, 0, tzinfo=UTC)
+    moment = datetime(1980, 11, 1, 9, 0, tzinfo=UTC)
     raw = RawTransaction(
         provider_transaction_id=name,
         booked_date=date.fromisoformat(on),

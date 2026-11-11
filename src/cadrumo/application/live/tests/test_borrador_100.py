@@ -12,6 +12,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
     Borrador100RefusedSnapshot,
@@ -29,12 +30,13 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 
 BUCKET_ID = "0acc74be-7842-4530-95f8-8ffca3a6b654"  # was 'bucket-renta'
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
-_CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "0A")
+_YEAR = filing_year_envelope().horizon
+_CAPTURED_AT = datetime(_YEAR, 4, 3, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR - 1, "0A")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="100",
-    revision_id="2025",
-    modelo_year=2025,
+    revision_id=str(_YEAR - 1),
+    modelo_year=_YEAR - 1,
     period="0A",
 )
 
@@ -102,7 +104,7 @@ def test_borrador_snapshot_refuses_noncanonical_snapshot_identity(snapshot_id: s
             snapshot_id=snapshot_id,
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             captured_at=_CAPTURED_AT,
@@ -119,7 +121,7 @@ def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
                 "snapshot_id": "a" * 64,
                 "bucket_id": BUCKET_ID,
                 "modelo": "100",
-                "filing_year": 2025,
+                "filing_year": _YEAR - 1,
                 "period": _PERIOD,
                 "captured_at": _CAPTURED_AT,
                 "source_url": _SOURCE,
@@ -157,7 +159,7 @@ def test_borrador_snapshot_refuses_stored_binding_values_of_the_wrong_type(
                 "snapshot_id": "a" * 64,
                 "bucket_id": BUCKET_ID,
                 "modelo": "100",
-                "filing_year": 2025,
+                "filing_year": _YEAR - 1,
                 "period": _PERIOD,
                 "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
                 "captured_at": _CAPTURED_AT,
@@ -174,7 +176,7 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> 
     values = {"renta-retencion-soportada-trabajo": Decimal("15.25")}
 
     snapshot = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
@@ -182,7 +184,7 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> 
     )
 
     assert snapshot.snapshot_id == derive_borrador_100_snapshot_id(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=snapshot.registry_snapshot_ref,
         source_url=_SOURCE,
@@ -197,7 +199,7 @@ def test_borrador_100_snapshot_identity_ignores_the_capture_instant_and_follows_
 
     def capture(*, hours: int, amount: str) -> Borrador100Snapshot:
         return service.capture(
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             captured_at=_CAPTURED_AT + timedelta(hours=hours),
             source_url=_SOURCE,
@@ -227,10 +229,10 @@ def test_borrador_reads_refuse_a_stored_key_the_pinned_revision_does_not_admit(s
     service = Borrador100SnapshotService(bucket_id=BUCKET_ID, repository=repository)
     values = {stored_key: Decimal("15.25")}
     with bundled_indexed_authority().operation() as pinned:
-        ref = pinned.snapshot("100", filing_year=2025, period="0A").snapshot_ref
+        ref = pinned.snapshot("100", filing_year=_YEAR - 1, period="0A").snapshot_ref
     stored = Borrador100Snapshot(
         snapshot_id=derive_borrador_100_snapshot_id(
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             registry_snapshot_ref=ref,
             source_url=_SOURCE,
@@ -238,7 +240,7 @@ def test_borrador_reads_refuse_a_stored_key_the_pinned_revision_does_not_admit(s
         ),
         bucket_id=BUCKET_ID,
         modelo="100",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=ref,
         captured_at=_CAPTURED_AT,
@@ -266,7 +268,7 @@ def test_borrador_reads_refuse_a_stored_key_the_pinned_revision_does_not_admit(s
             ),
         )
         assert service.read_snapshots(operation=operation) == expected
-        assert service.read_latest_for_year(filing_year=2025, operation=operation) == expected
+        assert service.read_latest_for_year(filing_year=_YEAR - 1, operation=operation) == expected
     assert repository.load(stored.snapshot_id).binding_values == values
 
 
@@ -284,7 +286,7 @@ def test_borrador_capture_refuses_a_key_the_pinned_revision_does_not_admit_befor
 
     with pytest.raises(LiveApplicationInputError) as refused:
         service.capture(
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             captured_at=_CAPTURED_AT,
             source_url=_SOURCE,
@@ -301,7 +303,7 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
     repository = InMemoryBorradorRepository(bucket_id=BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=BUCKET_ID, repository=repository)
     snapshot = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
@@ -332,7 +334,7 @@ def test_borrador_100_snapshot_service_rejects_non_binding_id_keys() -> None:
 
     with pytest.raises(ValidationError, match="binding_values"):
         service.capture(
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             captured_at=_CAPTURED_AT,
             source_url=_SOURCE,
@@ -348,7 +350,7 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures() -> None
 
     def capture() -> Borrador100Snapshot:
         return service.capture(
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=_PERIOD,
             captured_at=_CAPTURED_AT,
             source_url=_SOURCE,
@@ -366,16 +368,16 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot() -> No
     repository = InMemoryBorradorRepository(bucket_id=BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=BUCKET_ID, repository=repository)
     older = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
-        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
     )
     newer = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
-        captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-retencion-soportada-trabajo": Decimal("16.25")},
     )
@@ -395,16 +397,16 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
     repository = InMemoryBorradorRepository(bucket_id=BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=BUCKET_ID, repository=repository)
     newer = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
-        captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-retencion-soportada-trabajo": Decimal("16.25")},
     )
     older = service.capture(
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
-        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
         binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
     )
@@ -421,9 +423,9 @@ def test_borrador_reading_reads_the_store_once_and_reports_the_older_rows_store_
     service = Borrador100SnapshotService(bucket_id=BUCKET_ID, repository=repository)
 
     with bundled_indexed_authority().operation() as operation:
-        year = service.read_snapshots(operation=operation, filing_year=2025)
+        year = service.read_snapshots(operation=operation, filing_year=_YEAR - 1)
         assert repository.store_reads == 1
-        latest = service.read_latest_for_year(filing_year=1999, operation=operation)
+        latest = service.read_latest_for_year(filing_year=filing_year_envelope().floor - 1, operation=operation)
 
     assert repository.store_reads == 2
     assert year.outdated_stored_snapshots == 3

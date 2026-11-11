@@ -21,11 +21,14 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     persist_verified_revision_citing_transaction,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,14 +47,14 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="modelo source row",
                 idempotency_key="update-blocked",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
     persist_verified_revision_citing_transaction(
         secure_objects,
@@ -74,14 +77,14 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("35.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="mutated modelo source row",
                 idempotency_key="update-blocked",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
         )
 
     assert tuple(transaction_repository.load().transactions) == (created.ref.transaction_id,)
@@ -104,14 +107,14 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil",
                 idempotency_key="usage-ratio-update",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
@@ -129,7 +132,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="telefono movil corrected",
@@ -139,7 +142,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
                 usage_ratio_id=category.value,
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     reloaded = transaction_repository.load()
@@ -159,14 +162,14 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="same row",
                 idempotency_key="same-row",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with (
@@ -182,14 +185,14 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="same row",
                 idempotency_key="same-row",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
 
@@ -213,14 +216,14 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="factura luz",
                 idempotency_key="home-office-usage-ratio",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -234,7 +237,7 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="factura luz",
@@ -244,7 +247,7 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
                 usage_ratio_id=category.value,
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert updated.transaction.business_pct == Decimal("0.40")

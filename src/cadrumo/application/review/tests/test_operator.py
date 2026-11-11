@@ -11,6 +11,7 @@ from ....core.config import Settings, override_settings
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import ReviewSeverity, ReviewState
 from ..errors import ReviewItemNotFoundError, UnknownReviewKindError
 from ..models import FindingReviewItem
@@ -25,6 +26,8 @@ from ..operator import (
 from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "70707070-7070-4070-8070-707070707070"
 
@@ -69,7 +72,7 @@ def test_review_queue_row_rejects_blank_legal_refs() -> None:
             blocking=True,
             current_owner_surface="app modelo",
             canonical_next_command="aeat app modelo work verify draft-abc",
-            since=datetime(2026, 4, 20, 12, 0, tzinfo=UTC),
+            since=datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC),
             summary="modelo 303 finding",
             legal_refs=(" ",),
         )
@@ -103,7 +106,7 @@ def _finding_item() -> FindingReviewItem:
         severity=ReviewSeverity.HIGH,
         summary=tr("review.operator.tests.finding_summary"),
         drill_command="aeat app modelo verify",
-        since=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+        since=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
         source=None,
         draft_id="draft-1",
         draft_path="db://filing/drafts/draft-1",
@@ -158,7 +161,7 @@ def _row_fields(**overrides: object) -> dict[str, object]:
         "blocking": True,
         "current_owner_surface": "app modelo",
         "canonical_next_command": "aeat app modelo verify",
-        "since": datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+        "since": datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
         "summary": "s",
     }
     base.update(overrides)
@@ -174,8 +177,8 @@ def test_queue_row_accepts_a_utc_aware_instant() -> None:
 @pytest.mark.parametrize(
     "instant",
     [
-        datetime(2026, 4, 6, 12, 0),
-        datetime(2026, 4, 6, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+        datetime(_YEAR, 4, 6, 12, 0),
+        datetime(_YEAR, 4, 6, 12, 0, tzinfo=timezone(timedelta(hours=1))),
     ],
     ids=["naive", "offset-plus-one"],
 )

@@ -7,7 +7,7 @@ executor, domain provenance builder and normal read projections are exercised.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
@@ -17,6 +17,7 @@ import pytest
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
@@ -42,10 +43,12 @@ from .in_memory_transaction_repository import InMemoryTransactionRepository
 from .recording_executor_context_support import RecordingEvents, RecordingOperands
 from .transaction_row_support import outgoing_manual_row
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "22222222-2222-4222-8222-222222222222"
-_AT = datetime(2026, 3, 1, 12, tzinfo=UTC)
+_AT = datetime(_YEAR, 3, 1, 12, tzinfo=UTC)
 
 
 @pytest.mark.asyncio
@@ -81,7 +84,7 @@ async def test_attach_then_classify_projects_deduction_and_preserves_invoice_aut
         media_kind=MediaKind.PDF,
         supplier="Synthetic supplier",
         invoice_number="SYNTHETIC-001",
-        invoice_date="2026-03-01",
+        invoice_date=date(_YEAR, 3, 1).isoformat(),
         taxable_base=Decimal("100"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21"),

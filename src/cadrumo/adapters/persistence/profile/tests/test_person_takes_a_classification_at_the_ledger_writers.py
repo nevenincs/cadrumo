@@ -30,6 +30,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, Manu
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from cadrumo.domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     ClassificationOrigin,
@@ -185,7 +186,7 @@ def test_a_person_running_the_derivation_automation_ran_or_accepting_the_proposa
 
 
 def _m210(_ledger_unused: Ledger) -> M210IncomeClassification:
-    devengo = date(2025, 1, 21)
+    devengo = date(filing_year_envelope().horizon, 1, 21)
     return M210IncomeClassification(
         official_tipo_renta_code="35",
         gross_income_amount=Decimal("121.00"),
@@ -237,7 +238,7 @@ _CHANGES: dict[str, Callable[[Ledger], object]] = {
     "source_jurisdiction": lambda ledger: "FR",
     "category_id": lambda ledger: "material_oficina",
     "amount": lambda ledger: Decimal("242.00"),
-    "booked_date": lambda ledger: date(2025, 2, 21),
+    "booked_date": lambda ledger: date(filing_year_envelope().horizon, 2, 21),
     "direction": lambda ledger: TransactionDirection.INCOMING,
 }
 

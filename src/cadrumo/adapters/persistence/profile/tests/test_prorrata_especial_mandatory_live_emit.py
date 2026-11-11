@@ -52,6 +52,7 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.prorrata import InputClassification
 from .....domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
@@ -69,14 +70,14 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "6e6e6e6e-6e6e-4e6e-8e6e-6e6e6e6e6e6e"
-_EJERCICIO = 2026
+_EJERCICIO = filing_year_envelope().horizon
 _GENERAL_PCT = Decimal("50")
 _SETTLEMENT_PERIOD = "4T"
 _MID_YEAR_PERIOD = "1T"
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=_EJERCICIO - 1, period="4T").snapshot_ref
 
 
 def _revision():
@@ -87,8 +88,8 @@ def _revision():
 def _raw(provider_id: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 2, 10),
-        value_date=date(2026, 2, 10),
+        booked_date=date(_EJERCICIO, 2, 10),
+        value_date=date(_EJERCICIO, 2, 10),
         amount=Decimal("1210.00"),
         currency="EUR",
         counterparty="Proveedor",
@@ -98,7 +99,7 @@ def _raw(provider_id: str) -> RawTransaction:
             source_sha256="6" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_EJERCICIO, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -132,7 +133,7 @@ def _purchase(
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="6" * 64,
             ),
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_EJERCICIO, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

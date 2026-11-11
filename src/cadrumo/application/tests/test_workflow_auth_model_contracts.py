@@ -39,9 +39,9 @@ from ..auth.models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _HEX64 = "a" * 64
-_AWARE = datetime(2026, 4, 1, 10, 30, tzinfo=UTC)
-_NAIVE = datetime(2026, 4, 1, 10, 30)
-_OFFSET = datetime(2026, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
+_AWARE = datetime(1980, 4, 1, 10, 30, tzinfo=UTC)
+_NAIVE = datetime(1980, 4, 1, 10, 30)
+_OFFSET = datetime(1980, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _cleanup(**overrides: object) -> AuthCleanupIntent:

@@ -27,6 +27,7 @@ from cadrumo.domain.attachments.m303_filing_evidence import (
 )
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .....core.period import Period
@@ -37,10 +38,12 @@ from .secure_sql import isolated_runtime_profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
-_CAPTURED_AT = datetime(2026, 1, 2, 10, tzinfo=UTC)
+#: The supported year before the horizon: its last period has closed.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
+_OBSERVED_AT = datetime(_PRIOR_YEAR, 12, 31, 12, tzinfo=UTC)
+_CAPTURED_AT = _OBSERVED_AT + timedelta(days=1, hours=22)
 #: DP30301 Nota 4 asks the Modelo 390 exemption only in the last settlement period of the year.
-_PERIOD = Period.from_year_and_code(2025, "4T")
-_OBSERVED_AT = datetime(2025, 12, 31, 12, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_PRIOR_YEAR, "4T")
 
 
 def _request(
@@ -77,7 +80,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
             reference = admission.filing_evidence_reference()
             resolved = resolve_m303_exonerado_390_not_applicable_attestation(
                 bucket_id=_BUCKET_ID,
-                filing_year=2025,
+                filing_year=_PRIOR_YEAR,
                 period=_PERIOD,
                 evidence_reference=reference,
                 operation=operation,
@@ -95,7 +98,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
 
 @pytest.mark.parametrize(
     ("code", "observed_at"),
-    [("1T", datetime(2025, 3, 31, 12, tzinfo=UTC)), ("11", datetime(2025, 11, 30, 12, tzinfo=UTC))],
+    [("1T", datetime(_PRIOR_YEAR, 3, 31, 12, tzinfo=UTC)), ("11", datetime(_PRIOR_YEAR, 11, 30, 12, tzinfo=UTC))],
     ids=["quarter-before-4T", "month-before-12"],
 )
 def test_admission_refuses_a_period_whose_return_does_not_ask_the_exemption(
@@ -110,7 +113,7 @@ def test_admission_refuses_a_period_whose_return_does_not_ask_the_exemption(
             with pytest.raises(M303FilingEvidenceError) as raised:
                 admit_m303_exonerado_390_applicability_attestation(
                     bucket_id=_BUCKET_ID,
-                    request=_request(period=Period.from_year_and_code(2025, code), observed_at=observed_at),
+                    request=_request(period=Period.from_year_and_code(_PRIOR_YEAR, code), observed_at=observed_at),
                     actor="operator:test",
                     operation=operation,
                     store=store,
@@ -127,7 +130,7 @@ def test_admission_refuses_a_period_whose_return_does_not_ask_the_exemption(
 
 def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) -> None:
     """A monthly filer answers the exemption in period 12, as a quarterly filer does in 4T."""
-    december = Period.from_year_and_code(2025, "12")
+    december = Period.from_year_and_code(_PRIOR_YEAR, "12")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
@@ -144,7 +147,7 @@ def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) ->
             assert (
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
-                    filing_year=2025,
+                    filing_year=_PRIOR_YEAR,
                     period=december,
                     evidence_reference=admission.filing_evidence_reference(),
                     operation=operation,
@@ -202,7 +205,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                 schema_version=1,
                 role="m303_exonerado_390_applicability",
                 asserted_value=M303Exonerado390ApplicabilityAssertion.APPLICABLE,
-                filing_year=2025,
+                filing_year=_PRIOR_YEAR,
                 period=_PERIOD,
                 observed_at=_OBSERVED_AT,
                 profile_witness=M303Exonerado390ApplicabilityProfileWitness.from_profile_record(
@@ -215,7 +218,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                 request=AttachmentIngestionRequest(
                     kind=AttachmentKind.M303_EXONERADO_390_APPLICABILITY_ATTESTATION,
                     source=AttachmentSource.INLINE,
-                    source_reference="m303-exonerado-390-applicability:2025:4T",
+                    source_reference=f"m303-exonerado-390-applicability:{_PRIOR_YEAR}:4T",
                     mime_type="application/vnd.cadrumo.m303-exonerado-390-applicability+json",
                     captured_at=_CAPTURED_AT,
                     bucket_id=_BUCKET_ID,
@@ -227,7 +230,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
             with pytest.raises(AttachmentValidationError, match="conflicting"):
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
-                    filing_year=2025,
+                    filing_year=_PRIOR_YEAR,
                     period=_PERIOD,
                     evidence_reference=reference,
                     operation=operation,
@@ -271,7 +274,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
             with pytest.raises(AttachmentValidationError, match="does not match"):
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
-                    filing_year=2025,
+                    filing_year=_PRIOR_YEAR,
                     period=_PERIOD,
                     evidence_reference=reference,
                     operation=operation,

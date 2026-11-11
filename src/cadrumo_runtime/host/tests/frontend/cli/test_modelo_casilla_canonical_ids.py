@@ -13,6 +13,7 @@ Coverage:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -26,6 +27,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
@@ -36,6 +38,10 @@ from .runtime_profile_backend import runtime_cli_profile
 __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().years[-2]
+# An export reference names the revision that serves the period, so it is built from it.
+_EXPORT_REFERENCE = f"m303-{revision_serving_period('303', _YEAR, '1T').id}.dp30301.f079"
 
 
 @pytest.fixture
@@ -70,7 +76,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
                 UserProfileFact(path="identity.surnames", value="Test Operator"),
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1).isoformat()),
             )
         ),
     )
@@ -93,7 +99,7 @@ def _create_m303_work_unit() -> str:
             "--modelo",
             "303",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
         ]
@@ -146,7 +152,7 @@ def test_export_ref_metadata_token_is_refused(
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_filing_evidence_arg(),
-            "--casilla", "m303-2025.dp30301.f079=0",
+            "--casilla", f"{_EXPORT_REFERENCE}=0",
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -154,7 +160,7 @@ def test_export_ref_metadata_token_is_refused(
     output = result.output.replace("\n", " ")
     assert "export reference" in output
     assert "iva.resultado-regimen-general" in output
-    assert "m303-2025.dp30301.f079" in output
+    assert _EXPORT_REFERENCE in output
 
 
 # ---------------------------------------------------------------------------

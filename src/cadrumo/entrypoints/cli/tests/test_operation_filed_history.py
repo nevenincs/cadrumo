@@ -26,6 +26,7 @@ from ....application.live.filed_history_operation import (
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_commands as handler
 from .. import operation_filed_history as bridge
 
@@ -33,7 +34,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
-_TODAY = date(2026, 9, 29)
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
+_FLOOR_YEAR = filing_year_envelope().floor
+_TODAY = date(_YEAR, 9, 29)
 _OUTPUT_ROOT = Path("filed-history")
 
 
@@ -42,7 +46,7 @@ def _report() -> FiledHistoryOnboardingRun:
         pairs=(
             FiledHistoryPairOutcome(
                 modelo="303",
-                ejercicio=2025,
+                ejercicio=_PRIOR_YEAR,
                 signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
                 walk_attempted=True,
                 walk_completed=True,
@@ -256,7 +260,7 @@ def test_history_unvisited_pair_is_not_an_empty_answer_and_extra_actual_counts_s
 ) -> None:
     unvisited = FiledHistoryPairOutcome(
         modelo="390",
-        ejercicio=2024,
+        ejercicio=_FLOOR_YEAR,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
         walk_attempted=False,
         walk_completed=False,
@@ -278,5 +282,6 @@ def test_history_unvisited_pair_is_not_an_empty_answer_and_extra_actual_counts_s
     assert result.pairs[-1].walk_attempted is False and result.pairs[-1].walk_completed is False
     assert result.pairs[-1].row_count == result.pairs[-1].reached_count == result.pairs[-1].captured_count == 0
     assert any(
-        "390\t2024" in line and "walk_attempted=False" in line and "walk_completed=False" in line for line in lines
+        f"390\t{_FLOOR_YEAR}" in line and "walk_attempted=False" in line and "walk_completed=False" in line
+        for line in lines
     )

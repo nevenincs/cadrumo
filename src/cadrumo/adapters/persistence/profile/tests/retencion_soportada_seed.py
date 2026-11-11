@@ -25,6 +25,7 @@ from .....core.identity.bucket import canonical_bucket_id
 from .....core.retencion_soportada import RetencionSoportadaClase
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ...storage.attachment import AttachmentStore
@@ -35,9 +36,11 @@ from ..retencion_soportada_records import (
     RetencionSoportadaRecordRepositoryAdapter,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 __all__ = ["active_bucket_custody", "keep_certificate", "seed_absence_attestation", "seed_payer_certificate"]
 
-_CAPTURED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 
 
 def active_bucket_custody() -> RetencionSoportadaEvidenceCustodyAdapter:

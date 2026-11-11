@@ -15,10 +15,13 @@ from .....application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateRequest,
 )
 from .....application.operations.models import OperationRequest
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.controller_port import OperationControllerPort
 from ..lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _ATTACHMENT_ID = "a" * 64
 
@@ -100,7 +103,7 @@ async def test_attestation_admission_exposes_only_its_secure_coordinates_to_calc
 
     evidence = await door.author_ordinary_m303_filing_evidence(
         joint_return_elected=False,
-        observed_at=datetime(2026, 9, 22, tzinfo=UTC),
+        observed_at=datetime(_YEAR, 9, 22, tzinfo=UTC),
     )
 
     assert evidence.joint_return_elected is False
@@ -116,7 +119,7 @@ async def test_attestation_admission_without_an_injected_door_refuses_instead_of
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         await door.author_ordinary_m303_filing_evidence(
             joint_return_elected=False,
-            observed_at=datetime(2026, 9, 22, tzinfo=UTC),
+            observed_at=datetime(_YEAR, 9, 22, tzinfo=UTC),
         )
 
     assert raised.value.translated_message == "tui.modelo.m303_evidence.admission_unavailable"

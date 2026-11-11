@@ -1,9 +1,11 @@
 """Synthetic saved review facts with independently stated amounts and attribution."""
 
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ....export.review_snapshot import (
     CalculationReviewSelection,
@@ -20,6 +22,8 @@ from ....export.review_snapshot import (
     seal_review_snapshot,
 )
 
+REVIEW_YEAR = filing_year_envelope().horizon
+
 
 def review_snapshot(*, ledger_only: bool = False, amount: str = "25.20") -> ReviewSnapshot:
     """A captured 120 EUR purchase with 25.20 IVA; no current ledger is consulted."""
@@ -31,9 +35,14 @@ def review_snapshot(*, ledger_only: bool = False, amount: str = "25.20") -> Revi
             work_unit_id="b" * 64,
             calculation_revision_id="c" * 64,
             modelo="303",
-            filing_year=2026,
+            filing_year=REVIEW_YEAR,
             period="1T",
-            registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id="2026", modelo_year=2026, period="1T"),
+            registry_snapshot_ref=RegistrySnapshotRef(
+                modelo="303",
+                revision_id=revision_serving_period("303", REVIEW_YEAR, "1T").id,
+                modelo_year=REVIEW_YEAR,
+                period="1T",
+            ),
             authority_generation="d" * 64,
             registry_digest="e" * 64,
         )
@@ -60,7 +69,7 @@ def review_snapshot(*, ledger_only: bool = False, amount: str = "25.20") -> Revi
                 LedgerEvidenceRow(
                     transaction_id="1" * 64,
                     fingerprint="f" * 64,
-                    booked_date="2026-01-12",
+                    booked_date=date(REVIEW_YEAR, 1, 12).isoformat(),
                     amount=Decimal("145.20"),
                     currency="EUR",
                     direction="outflow",

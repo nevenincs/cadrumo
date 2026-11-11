@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -28,6 +29,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -41,6 +43,8 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -48,7 +52,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_FIRST_PERIOD = Period.from_year_and_code(2025, "1T")
+_FIRST_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _INVOICE_OPERATIONS = frozenset({INVOICE_LIST_OPERATION_DEFINITION_ID, INVOICE_VIEW_OPERATION_DEFINITION_ID})
 
 
@@ -69,7 +73,7 @@ def _invoice(profile_id: UUID, invoice_number: str, authority: PinnedAuthorityOp
                 "kind": InvoiceKind.RECEIVED,
                 "bucket_id": str(profile_id),
                 "invoice_number": invoice_number,
-                "issued_at": "2025-05-01",
+                "issued_at": date(_YEAR, 5, 1).isoformat(),
                 "counterparty_name": "Native catalogue supplier",
                 "notes": "Original invoice note kept by a partial update.",
                 "counterparty_tax_id": "B00015016",

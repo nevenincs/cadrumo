@@ -42,6 +42,7 @@ from cadrumo.domain.calculations.registry.applicability import derive_modelo_app
 from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.plantilla_media import (
     PlantillaMediaState,
@@ -63,6 +64,9 @@ from .profile_schema_legacy_support import publish_capsule, publish_legacy_capsu
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_HORIZON = filing_year_envelope().horizon
+_PRIOR_YEAR = _HORIZON - 1
+
 _M347 = "obligations.third_party_transactions_above_347_threshold"
 _M720 = "obligations.bienes_extranjero_above_threshold"
 _M136 = "obligations.premio_loteria_gravamen_especial_sin_retencion"
@@ -82,7 +86,7 @@ _GROUP_MEMBER = "iva.group_member_enrolled"
 _OSS = "iva.oss_enrolled"
 _SII = "iva.sii_enrolled"
 _INTRA_50000 = "iva.intracommunity_operations_exceed_50000_eur"
-_MIGRATED_AT = datetime(2026, 9, 1, 10, 0, 0, tzinfo=UTC)
+_MIGRATED_AT = datetime(1980, 9, 1, 10, 0, 0, tzinfo=UTC)
 
 _CLEARED_FROM_V7 = (
     _LARGE_COMPANY,
@@ -148,8 +152,10 @@ _STORED_PAYER_FACTS = (
     UserProfileFact(path=_OSS, value=False),
     UserProfileFact(path=_SII, value=False),
     UserProfileFact(path=_INTRA_50000, value=False),
-    UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
-    UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2025, 1, 1)),
+    UserProfileFact(
+        path=_PAYS_RENT, value=False, valid_from=date(_PRIOR_YEAR, 1, 1), valid_to=date(_PRIOR_YEAR, 12, 31)
+    ),
+    UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(_HORIZON, 1, 1)),
 )
 """Both supported stored versions could hold every one of these paths.
 
@@ -377,7 +383,7 @@ def test_a_schema_6_record_carrying_a_later_schema_path_is_refused(
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
     """Schema 6 declared neither field, so a schema-6 row carrying one was forged."""
-    value: object = 2024 if path.endswith("year") else True
+    value: object = _PRIOR_YEAR if path.endswith("year") else True
     stored = _publish_legacy(
         tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=path, value=value)), version=6
     )
@@ -399,7 +405,7 @@ def test_a_schema_7_record_carrying_those_paths_migrates_because_schema_7_declar
     facts = (
         *_UNTOUCHED_FACTS,
         UserProfileFact(path=_M136, value=True),
-        UserProfileFact(path="obligations.premio_loteria_gravamen_especial_trimestres", value="2025-1T"),
+        UserProfileFact(path="obligations.premio_loteria_gravamen_especial_trimestres", value=f"{_HORIZON}-1T"),
     )
     _publish_legacy(tmp_path, contexts, facts, version=7)
     session = _session(contexts[1])
@@ -737,10 +743,10 @@ def test_an_average_workforce_instance_round_trips_with_its_typed_meaning(
 ) -> None:
     create_context, decode_context = contexts
     instances = (
-        UserProfileFact(path="irpf.plantilla_media.0.year", value=2024),
+        UserProfileFact(path="irpf.plantilla_media.0.year", value=_PRIOR_YEAR),
         UserProfileFact(path="irpf.plantilla_media.0.average_workforce", value=Decimal("12.50")),
         UserProfileFact(path="irpf.plantilla_media.0.state", value="observed"),
-        UserProfileFact(path="irpf.plantilla_media.1.year", value=2025),
+        UserProfileFact(path="irpf.plantilla_media.1.year", value=_HORIZON),
         UserProfileFact(path="irpf.plantilla_media.1.average_workforce", value=Decimal("13.05")),
         UserProfileFact(path="irpf.plantilla_media.1.state", value="committed"),
     )
@@ -759,8 +765,8 @@ def test_an_average_workforce_instance_round_trips_with_its_typed_meaning(
     assert loaded == written
     years = plantilla_media_years({fact.path: fact.value for fact in loaded.facts})
     assert years == (
-        PlantillaMediaYear(year=2024, average_workforce=Decimal("12.50"), state=PlantillaMediaState.OBSERVED),
-        PlantillaMediaYear(year=2025, average_workforce=Decimal("13.05"), state=PlantillaMediaState.COMMITTED),
+        PlantillaMediaYear(year=_PRIOR_YEAR, average_workforce=Decimal("12.50"), state=PlantillaMediaState.OBSERVED),
+        PlantillaMediaYear(year=_HORIZON, average_workforce=Decimal("13.05"), state=PlantillaMediaState.COMMITTED),
     )
     assert str(years[0].average_workforce) == "12.50"
 
@@ -772,10 +778,10 @@ def test_the_profile_path_port_reads_average_workforce_as_typed_years(
     """Consumers read through the path port, which projects every stored value as a string."""
     create_context, decode_context = contexts
     instances = (
-        UserProfileFact(path="irpf.plantilla_media.0.year", value=2024),
+        UserProfileFact(path="irpf.plantilla_media.0.year", value=_PRIOR_YEAR),
         UserProfileFact(path="irpf.plantilla_media.0.average_workforce", value=Decimal("12.50")),
         UserProfileFact(path="irpf.plantilla_media.0.state", value="observed"),
-        UserProfileFact(path="irpf.plantilla_media.1.year", value=2025),
+        UserProfileFact(path="irpf.plantilla_media.1.year", value=_HORIZON),
         UserProfileFact(path="irpf.plantilla_media.1.average_workforce", value=Decimal("7")),
         UserProfileFact(path="irpf.plantilla_media.1.state", value="committed"),
     )
@@ -790,21 +796,21 @@ def test_the_profile_path_port_reads_average_workforce_as_typed_years(
         session.close()
 
     assert values is not None
-    assert values["irpf.plantilla_media.0.year"] == "2024", "the port projects stored values as strings"
+    assert values["irpf.plantilla_media.0.year"] == str(_PRIOR_YEAR), "the port projects stored values as strings"
     assert plantilla_media_years(values) == (
-        PlantillaMediaYear(year=2024, average_workforce=Decimal("12.50"), state=PlantillaMediaState.OBSERVED),
-        PlantillaMediaYear(year=2025, average_workforce=Decimal("7"), state=PlantillaMediaState.COMMITTED),
+        PlantillaMediaYear(year=_PRIOR_YEAR, average_workforce=Decimal("12.50"), state=PlantillaMediaState.OBSERVED),
+        PlantillaMediaYear(year=_HORIZON, average_workforce=Decimal("7"), state=PlantillaMediaState.COMMITTED),
     )
 
 
 @pytest.mark.parametrize(
     ("subfield", "stored"),
-    (("year", "2024.5"), ("average_workforce", "12.505"), ("average_workforce", "-1"), ("state", "planned")),
+    (("year", f"{_PRIOR_YEAR}.5"), ("average_workforce", "12.505"), ("average_workforce", "-1"), ("state", "planned")),
 )
 def test_a_malformed_stored_string_is_still_refused_after_restoration(subfield: str, stored: str) -> None:
     """Restoring the stored representation must not loosen any rule."""
     values = {
-        "irpf.plantilla_media.0.year": "2024",
+        "irpf.plantilla_media.0.year": str(_PRIOR_YEAR),
         "irpf.plantilla_media.0.average_workforce": "12.50",
         "irpf.plantilla_media.0.state": "observed",
         f"irpf.plantilla_media.0.{subfield}": stored,

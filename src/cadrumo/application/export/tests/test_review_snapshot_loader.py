@@ -1,10 +1,12 @@
 """Saved review values must never be replaced with live or inferred amounts."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
 
 import pytest
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -41,6 +43,8 @@ from ..review_snapshot import (
 )
 from ..review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX, build_calculation_review_snapshot
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -48,15 +52,15 @@ def _saved(
     *, manual: bool = False, operator_layer: CalculationOperatorLayer | None = None, computed: bool = False
 ) -> tuple[CalculationReviewSelection, CalculationRevision, WorkUnit]:
     profile_id = UUID("5aa00000-0000-4000-8000-0000000000aa")
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
-    period = Period.from_year_and_code(2026, "1T")
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(profile_id), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+            bucket_id=str(profile_id), modelo="303", filing_year=_YEAR, period=period, revision_id="test-revision"
         ),
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id="test-revision",
         name="Saved synthetic example",
@@ -75,7 +79,7 @@ def _saved(
         source_provenance=(),
         operator_layer=operator_layer,
     )
-    reference = RegistrySnapshotRef(modelo="303", revision_id="test-revision", modelo_year=2026, period="1T")
+    reference = RegistrySnapshotRef(modelo="303", revision_id="test-revision", modelo_year=_YEAR, period="1T")
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=unit.work_unit_id,
@@ -103,7 +107,7 @@ def _saved(
         work_unit_id=unit.work_unit_id,
         calculation_revision_id=revision_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
         registry_snapshot_ref=reference,
         authority_generation="e" * 64,
@@ -219,7 +223,7 @@ def _with_captured_ledger(revision: CalculationRevision) -> CalculationRevision:
     row = LedgerEvidenceRow(
         transaction_id="1" * 64,
         fingerprint="2" * 64,
-        booked_date="2026-01-12",
+        booked_date=date(_YEAR, 1, 12).isoformat(),
         amount=Decimal("999.00"),
         currency="EUR",
         direction="outflow",
@@ -279,7 +283,7 @@ def _workbook_texts(snapshot: ReviewSnapshot) -> list[str]:
     plan = build_review_workbook(
         snapshot,
         publication_id=UUID(int=7),
-        exported_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
         label=ReviewWorkbookLabels(OutputLanguage.EN),
     )
     return [str(value) for block in plan_value_blocks(plan) for _address, value in block.addressed_values()]
@@ -326,7 +330,7 @@ def test_a_revision_stamped_under_the_pinned_authority_has_no_stale_screen_findi
     operation: PinnedAuthorityOperation,
 ) -> None:
     selection, revision, unit = _saved()
-    stamp = calculation_screen_stamp(operation.snapshot("303", filing_year=2026, period="1T"), operation=operation)
+    stamp = calculation_screen_stamp(operation.snapshot("303", filing_year=_YEAR, period="1T"), operation=operation)
     stamped = revision.model_copy(update={"screen_stamp": stamp})
 
     snapshot = build_calculation_review_snapshot(

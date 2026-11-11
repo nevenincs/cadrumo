@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -21,8 +22,13 @@ from ....application.ledger.ledger_add_contracts import (
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .. import operation_ledger_add as bridge
+
+_YEAR = filing_year_envelope().horizon
+_BOOKED_ON = date(_YEAR, 4, 15).isoformat()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -40,8 +46,8 @@ def _projection(
 ) -> LedgerAddOperationResult:
     transaction = LedgerTransactionProjection.model_construct(
         transaction_id=_TRANSACTION_ID,
-        date="2026-04-15",
-        booked_date="2026-04-15",
+        date=_BOOKED_ON,
+        booked_date=_BOOKED_ON,
         amount="10",
         currency="EUR",
         direction="OUTGOING",
@@ -89,7 +95,7 @@ def _bind(
 def _invoke(*, attachment_ids: Sequence[str] = ()) -> LedgerAddOperationResult:
     return bridge.run_ledger_add(
         cast(typer.Context, cast(object, None)),
-        booked_date="2026-04-15",
+        booked_date=_BOOKED_ON,
         amount="10.00",
         direction=TransactionDirection.OUTGOING,
         description="Office materials",
@@ -143,7 +149,7 @@ def test_bridge_submits_selected_prorrata_facts_and_correlates_advisories(
     assert len(submitted) == 1
     request = submitted[0]
     assert request.profile_id == _PROFILE
-    assert request.booked_date == "2026-04-15"
+    assert request.booked_date == _BOOKED_ON
     assert request.amount == "10.00"
     assert request.input_classification == "exclusively_deductible"
     assert request.prorrata_sector == "sector-typo"

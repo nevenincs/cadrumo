@@ -14,6 +14,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority_artifact import ProfileCreateContext
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.profile_grounding import ProfileKeyGrounding
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.schema import ProfileSchemaDefinition
@@ -29,6 +30,13 @@ from ..preflight import ProfilePreflightService, build_profile_preflight_require
 from ..validation import ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+
+
+def _newest_revision_id(modelo: str) -> str:
+    return str(authored_revisions(modelo)[-1].id)
+
 
 _NON_ISO_DATE_VALUES = (
     "1978-13-45",  # month 13, day 45 — impossible calendar date
@@ -139,7 +147,7 @@ def test_validation_covers_every_date_typed_field(schema: ProfileSchemaDefinitio
     svc = ProfileValidationService(schema=schema)
     for path in date_paths:
         report = svc.validate_facts(
-            "11111111-1111-4111-8111-111111111111", [UserProfileFact(path=path, value="2024-13-99")]
+            "11111111-1111-4111-8111-111111111111", [UserProfileFact(path=path, value="1980-13-99")]
         )
         assert any(issue.code == "invalid_date_value" and issue.path == path for issue in report.issues), (
             f"date field {path!r} did not reject a garbage value"
@@ -225,8 +233,8 @@ def test_preflight_ready_with_no_modelo_selectors_matched_is_not_assessed(
     report = svc.report(
         record=record,
         modelo="200",
-        revision_id="2024",
-        period=Period.from_year_and_code(2024, "0A"),
+        revision_id=_newest_revision_id("200"),
+        period=Period.from_year_and_code(_YEAR, "0A"),
     )
     assert report.ready is True
     assert report.missing == ()
@@ -247,7 +255,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     carrying it must report ``ready`` with the axis still marked assessed.
     """
     svc = ProfilePreflightService(schema=schema)
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     build = preflight_module.build_profile_grounding_index
     reads: list[PinnedAuthorityOperation] = []
 
@@ -265,7 +273,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     ready_report = svc.report(
         record=complete_record,
         modelo="100",
-        revision_id="2024-y-siguientes",
+        revision_id=_newest_revision_id("100"),
         period=period,
         operation=operation,
     )
@@ -278,7 +286,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
     missing_report = svc.report(
         record=empty_record,
         modelo="100",
-        revision_id="2024-y-siguientes",
+        revision_id=_newest_revision_id("100"),
         period=period,
         operation=operation,
     )
@@ -290,7 +298,7 @@ def test_preflight_modelo_100_per_operation_axis_now_contributes(
         expected = svc.report(
             record=empty_record,
             modelo="100",
-            revision_id="2024-y-siguientes",
+            revision_id=_newest_revision_id("100"),
             period=period,
             operation=operation,
         )
@@ -332,12 +340,12 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
         UserProfileFact(path="withholding.has_employees", value=True),
         UserProfileFact(path="activities.iae_epigraph", value="931.1"),
     )
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
 
     missing = service.report(
         record=_record(schema, operation, facts=payroll_at_a_school),
         modelo=Modelo("111").value,
-        revision_id="2019-y-siguientes",
+        revision_id=_newest_revision_id("111"),
         period=period,
     )
 
@@ -355,7 +363,7 @@ def test_preflight_modelo_111_requires_an_explicit_colegio_concertado_declaratio
                 facts=(*payroll_at_a_school, UserProfileFact(path="withholding.colegio_concertado", value=declared)),
             ),
             modelo=Modelo("111").value,
-            revision_id="2019-y-siguientes",
+            revision_id=_newest_revision_id("111"),
             period=period,
         )
         assert ready.ready is True
@@ -369,8 +377,8 @@ def test_preflight_does_not_require_the_m111_declaration_for_another_modelo(
     report = ProfilePreflightService(schema=schema).report(
         record=_record(schema, operation),
         modelo=Modelo("200").value,
-        revision_id="2024",
-        period=Period.from_year_and_code(2024, "0A"),
+        revision_id=_newest_revision_id("200"),
+        period=Period.from_year_and_code(_YEAR, "0A"),
     )
 
     assert not any(item.field_key == "colegio_concertado" for item in report.missing)
@@ -380,8 +388,8 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "1P")
-    snapshot = published_snapshot("202", filing_year=2026, period=period.registry_token)
+    period = Period.from_year_and_code(_YEAR, "1P")
+    snapshot = published_snapshot("202", filing_year=_YEAR, period=period.registry_token)
     record = _record(
         schema,
         operation,
@@ -409,8 +417,8 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
     schema: ProfileSchemaDefinition,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "1P")
-    snapshot = published_snapshot("202", filing_year=2026, period=period.registry_token)
+    period = Period.from_year_and_code(_YEAR, "1P")
+    snapshot = published_snapshot("202", filing_year=_YEAR, period=period.registry_token)
     failures: list[str] = []
     for case_id, identity_fact in (
         ("surnames-only", UserProfileFact(path="identity.surnames", value="Ferrer")),
@@ -452,14 +460,14 @@ def test_preflight_carries_request_fields_through(
     report = pre.report(
         record=record,
         modelo="303",
-        revision_id="rev-2024",
-        period=Period.from_year_and_code(2024, "1T"),
+        revision_id=f"rev-{_YEAR}",
+        period=Period.from_year_and_code(_YEAR, "1T"),
     )
     assert report.profile_id == "11111111-1111-4111-8111-111111111111"
     assert report.modelo == "303"
-    assert report.revision_id == "rev-2024"
-    assert report.filing_year == 2024
-    assert report.period == Period.from_year_and_code(2024, "1T")
+    assert report.revision_id == f"rev-{_YEAR}"
+    assert report.filing_year == _YEAR
+    assert report.period == Period.from_year_and_code(_YEAR, "1T")
     del svc
 
 
@@ -530,10 +538,10 @@ def test_preflight_requirement_builder_matches_service_report_output_for_tax_id(
     ``identity.tax_id`` under Modelo 100.
     """
     svc = ProfilePreflightService(schema=schema)
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     record = _record(schema, operation)
 
-    report = svc.report(record=record, modelo="100", revision_id="2024-y-siguientes", period=period)
+    report = svc.report(record=record, modelo="100", revision_id=_newest_revision_id("100"), period=period)
     (from_report,) = [item for item in report.missing if item.field_key == "tax_id"]
 
     direct = build_profile_preflight_requirement(

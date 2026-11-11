@@ -19,6 +19,7 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.aeat_literal_fixtures import (
     SEDE_EXAMPLE_URL_FIXTURE,
 )
@@ -45,10 +46,12 @@ from ..notifications_capture_operation import (
     build_notifications_capture_registration,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_NOW = datetime(_YEAR, 9, 29, 12, tzinfo=UTC)
 
 
 class _Resources:

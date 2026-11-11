@@ -32,6 +32,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.text_fold import fold_printed_phrase
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..legend_derivation import (
     index_regime_legends,
     match_regime_legend,
@@ -48,7 +49,7 @@ _UNACCENTED = "Inversion del sujeto pasivo"
 
 def _resolve_legends() -> tuple[RegimeLegend, ...]:
     with bundled_indexed_authority().operation() as operation:
-        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+        return resolve_regime_legends(operation=operation, effective_date=date(filing_year_envelope().horizon, 1, 1))
 
 
 _LEGENDS = _resolve_legends()

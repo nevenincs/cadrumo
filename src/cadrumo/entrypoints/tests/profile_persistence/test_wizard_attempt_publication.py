@@ -39,6 +39,7 @@ from ....core.period import Period
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .file_flow_test_support import calculation_ports_for_test
 from .test_work_missing_input_publication import (
     PROFILE_ID,
@@ -182,8 +183,8 @@ def test_real_calculated_attempt_keeps_ordinary_public_result_and_updated_effect
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
         work_missing_input_publication_profile()
-        period = Period.from_year_and_code(2025, "2T")
-        snapshot = operation.snapshot("123", filing_year=2025, period="2T")
+        period = Period.from_year_and_code(filing_year_envelope().horizon, "2T")
+        snapshot = operation.snapshot("123", filing_year=filing_year_envelope().horizon, period="2T")
         unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=period, revision_id=snapshot.revision.id
         )
@@ -212,8 +213,8 @@ def test_postpublication_same_tag_does_not_persist_needs_input(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
         work_missing_input_publication_profile()
-        period = Period.from_year_and_code(2025, "2T")
-        snapshot = operation.snapshot("123", filing_year=2025, period="2T")
+        period = Period.from_year_and_code(filing_year_envelope().horizon, "2T")
+        snapshot = operation.snapshot("123", filing_year=filing_year_envelope().horizon, period="2T")
         unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=period, revision_id=snapshot.revision.id
         )

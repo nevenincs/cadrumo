@@ -19,6 +19,7 @@ from cadrumo.application.modelo.revision_snapshot_operation import (
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -38,7 +39,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 
 
 def _external_import_scope(client_id: UUID) -> AccessScope:

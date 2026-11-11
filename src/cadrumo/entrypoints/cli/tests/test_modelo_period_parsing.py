@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 import typer
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize(
@@ -24,8 +28,8 @@ def test_work_create_accepts_core_period_tokens(period: str, expected_normalized
 
     from cadrumo.entrypoints.cli.modelo_behavior_support import resolve_year_period
 
-    normalized = resolve_year_period(2026, period)
-    assert normalized.filing_year == 2026
+    normalized = resolve_year_period(_YEAR, period)
+    assert normalized.filing_year == _YEAR
     assert normalized.registry_token == expected_normalized, (
         f"period {period!r} normalized to {normalized.registry_token!r}, expected {expected_normalized!r}"
     )

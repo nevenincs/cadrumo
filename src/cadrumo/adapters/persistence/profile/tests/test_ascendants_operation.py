@@ -42,6 +42,10 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact, UserProfileRecord
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _OBJECT = "renta_family.ascendiente"
@@ -58,6 +62,11 @@ def _row(**leaves: str) -> ProfileAscendantRow:
     return ProfileAscendantRow(
         facts=tuple(ProfileAscendantFact(field_key=key, value=value) for key, value in leaves.items())
     )
+
+
+def _dated(years_before: int, month: int, day: int) -> str:
+    """An ISO date text ``years_before`` years ahead of the supported horizon's year, unvalidated so a refused day can be typed."""
+    return f"{_YEAR - years_before:04d}-{month:02d}-{day:02d}"
 
 
 class _World:
@@ -134,7 +143,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
 
     mutation = world.replace(
         _row(nif="12345678z", birth_date="1948-03-04", convivientes="2"),
-        _row(nif=_NIE, birth_date="1951-11-30", fallecimiento="2025-02-01"),
+        _row(nif=_NIE, birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)),
         _row(birth_date="1940-01-01"),
     )
 
@@ -147,7 +156,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
         f"{_OBJECT}.0.convivientes": "2",
         f"{_OBJECT}.1.nif": _NIE,
         f"{_OBJECT}.1.birth_date": "1951-11-30",
-        f"{_OBJECT}.1.fallecimiento": "2025-02-01",
+        f"{_OBJECT}.1.fallecimiento": _dated(1, 2, 1),
         f"{_OBJECT}.2.birth_date": "1940-01-01",
     }
     group, rows = world.served()
@@ -156,7 +165,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
     assert {fact.leaf: fact.value for fact in rows[1].facts} == {
         "nif": _NIE,
         "birth_date": "1951-11-30",
-        "fallecimiento": "2025-02-01",
+        "fallecimiento": _dated(1, 2, 1),
     }
 
 
@@ -175,7 +184,7 @@ def test_the_same_set_again_publishes_nothing(world: _World) -> None:
 def test_a_smaller_set_clears_the_rows_it_no_longer_holds(world: _World) -> None:
     world.replace(
         _row(nif=_NIF, birth_date="1948-03-04", convivientes="1"),
-        _row(nif=_NIE, birth_date="1951-11-30", fallecimiento="2025-02-01"),
+        _row(nif=_NIE, birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)),
     )
 
     world.replace(_row(birth_date="1951-11-30"))
@@ -336,7 +345,7 @@ def test_a_set_replaces_only_the_ascendants_and_leaves_the_descendants(world: _W
         profile_id=world.profile_id,
         changes=(
             UserProfileFact(path="renta_family.descendientes_count", value="1"),
-            UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2015-04-03"),
+            UserProfileFact(path="renta_family.descendiente.0.birth_date", value=_dated(11, 4, 3)),
         ),
         door=ProfileFactWriteDoor.MANAGER_DESCENDANTS,
         expected_record=world.record(),
@@ -348,7 +357,7 @@ def test_a_set_replaces_only_the_ascendants_and_leaves_the_descendants(world: _W
 
     stored = {fact.path: str(fact.value) for fact in world.record().facts}
     assert stored["renta_family.descendientes_count"] == "1"
-    assert stored["renta_family.descendiente.0.birth_date"] == "2015-04-03"
+    assert stored["renta_family.descendiente.0.birth_date"] == _dated(11, 4, 3)
 
 
 def test_a_row_cannot_repeat_a_leaf() -> None:

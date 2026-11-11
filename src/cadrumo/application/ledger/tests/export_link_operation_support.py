@@ -8,6 +8,8 @@ from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast, override
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.classification.policies import SensitivityClass
 from ....core.operations import profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
@@ -31,6 +33,8 @@ from .test_classification_rule_plan import (
     ClassificationScenario,
     transaction,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 
 class Rates:
@@ -140,7 +144,7 @@ class Subject:
             counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number="synthetic-link",
-            issued_at=date(2024, 4, 10),
+            issued_at=date(_YEAR - 2, 4, 10),
             currency="EUR",
             taxable_base=Decimal("10"),
             iva_rate=Decimal("21"),

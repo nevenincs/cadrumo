@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -27,8 +28,12 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -236,9 +241,9 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
         ],
     )
     assert calendar_result.exit_code == 0, calendar_result.output
@@ -364,9 +369,9 @@ def test_app_surface_uses_singular_user_domains() -> None:
 def test_modelo_introspection_surface_uses_registry_query_backend(encrypted_user_cli: Path) -> None:
     # The binding listing is read inside a profile; the other reads need none.
     _seed_profile()
-    listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
+    listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", str(_YEAR)])
     described = _invoke(
-        ["--format", "json", "app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "modelo", "describe", "303", "--year", str(_YEAR), "--period", "1T"],
     )
     casillas = _invoke(
         [
@@ -377,7 +382,7 @@ def test_modelo_introspection_surface_uses_registry_query_backend(encrypted_user
             "casillas",
             "303",
             "--year",
-            "2026",
+            str(_YEAR),
             "--period",
             "1T",
             "--input-kind",
@@ -395,13 +400,13 @@ def test_modelo_introspection_surface_uses_registry_query_backend(encrypted_user
             "--modelo",
             "130",
             "--year",
-            "2026",
+            str(_YEAR),
             "--period",
             "1T",
         ],
     )
     formulas = _invoke(
-        ["--format", "json", "app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "modelo", "formulas", "303", "--year", str(_YEAR), "--period", "1T"],
     )
 
     assert listed.exit_code == 0, listed.output
@@ -504,7 +509,7 @@ def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
         "\n".join(
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
-                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+                f"{date(_YEAR, 1, 5).isoformat()},Cliente SL,Invoice {_YEAR}-001,121.00,EUR,n26-001",
             ],
         ),
         encoding="utf-8",
@@ -540,7 +545,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         "\n".join(
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
-                f"2026-01-05,{canary},Invoice 2026-SEC,121.00,EUR,{transaction_ref}",
+                f"{date(_YEAR, 1, 5).isoformat()},{canary},Invoice {_YEAR}-SEC,121.00,EUR,{transaction_ref}",
             ],
         ),
         encoding="utf-8",
@@ -586,7 +591,7 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
         "\n".join(
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
-                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+                f"{date(_YEAR, 1, 5).isoformat()},Cliente SL,Invoice {_YEAR}-001,121.00,EUR,n26-001",
             ],
         ),
         encoding="utf-8",
@@ -643,7 +648,7 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
         "\n".join(
             [
                 "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
-                "2026-01-05,Cliente SL,Invoice 2026-001,121.00,EUR,n26-001",
+                f"{date(_YEAR, 1, 5).isoformat()},Cliente SL,Invoice {_YEAR}-001,121.00,EUR,n26-001",
             ],
         ),
         encoding="utf-8",

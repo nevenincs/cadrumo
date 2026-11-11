@@ -18,6 +18,7 @@ from cadrumo.application.filing.tests.filing_support import empty_profile_activi
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -32,8 +33,8 @@ from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_por
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
-_PROFILE_SEEDED_AT = datetime(2025, 1, 6, 9, 0, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PROFILE_SEEDED_AT = datetime(1980, 1, 6, 9, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing_persistence.casilla")
 _M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id(
@@ -69,7 +70,7 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
             "modelo-130-estimacion-directa-modalidad": "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: Decimal("100"),
-            _M130_CASILLA_08: Decimal("2000"),
+            _M130_CASILLA_08: Decimal("2100"),
             _M130_CASILLA_10: Decimal("10"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
@@ -84,8 +85,8 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
 def _transaction(*, provider_id: str, amount: Decimal, description: str) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 10),
-        value_date=date(2026, 4, 10),
+        booked_date=date(_PERIOD.filing_year, 4, 10),
+        value_date=date(_PERIOD.filing_year, 4, 10),
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -95,7 +96,7 @@ def _transaction(*, provider_id: str, amount: Decimal, description: str) -> Tran
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},

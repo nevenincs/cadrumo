@@ -28,15 +28,18 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
+
+_YEAR = filing_year_envelope().horizon
 
 PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 OTHER_PROFILE_ID = UUID("6cc00000-0000-4000-8000-0000000000cc")
 SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 OPERATION_ID = "a" * 64
-NOW = datetime(2026, 10, 4, tzinfo=UTC)
+NOW = datetime(_YEAR, 10, 4, tzinfo=UTC)
 RECORDED_CODE = "REFUSED_LEDGER_EVIDENCE_INPUT"
 RECORDED_KEY = "errors.refused.refused_ledger_evidence_input"
 

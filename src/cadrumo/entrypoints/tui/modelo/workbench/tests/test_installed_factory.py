@@ -15,6 +15,7 @@ from ......application.modelo.workbench_read import ModeloWorkbenchFormReadV1
 from ......core.casilla_id import CasillaId
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.work_unit import WorkUnitState
 from ...lifecycle import ModeloWorkspaceLifecycleDoor
 from ..factory import ModeloWorkspaceDeclarationAdmissionError, compose_installed_modelo_workbench_factory
@@ -22,13 +23,15 @@ from ..screen import ModeloWorkbenchScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _declaration(work_unit_id: str, period_code: str = "1T") -> DeclarationsWorkspaceDeclarationRefV1:
     return DeclarationsWorkspaceDeclarationRefV1(
         work_unit_id=work_unit_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         state=WorkUnitState.BORRADOR,
         has_current_calculation=False,
         has_current_filing=False,

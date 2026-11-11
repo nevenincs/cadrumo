@@ -15,11 +15,12 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import wor
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
 )
-from ....domain.calculations.registry.tests.published_authority import published_revision
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from ..action_errors import ModeloVerificationPredicateMalformedError
 from ..verification_predicates import VerificationPredicateRefusal, evaluate_verification_predicates
 
@@ -102,11 +103,23 @@ def test_an_advisory_predicate_is_not_checked_against_the_declared_set() -> None
     evaluate_verification_predicates((advisory,), {}, workflow_profile(), declared_casilla_ids=_DECLARED)
 
 
-@pytest.mark.parametrize(("modelo", "revision_id"), [("100", "2025"), ("200", "2024"), ("303", "2026-hasta-01-y-1t")])
+def _blocks_on_a_baseline(revision: ModeloRevision) -> bool:
+    return revision.casilla_storage_baseline is not None and any(
+        p.finding_kind != "ADVISORY" for p in revision.verification_predicates
+    )
+
+
+#: The newest baseline revision of each modelo that stores casillas as a delta and ships a blocking predicate.
+_BASELINE_REVISIONS = tuple(
+    pytest.param(authored_revisions_where(modelo, _blocks_on_a_baseline)[-1], id=modelo)
+    for modelo in ("100", "200", "303")
+)
+
+
+@pytest.mark.parametrize("revision", _BASELINE_REVISIONS)
 def test_every_shipped_blocking_predicate_of_a_baseline_revision_names_a_hydrated_casilla(
-    modelo: str, revision_id: str
+    revision: ModeloRevision,
 ) -> None:
-    revision = published_revision(modelo, revision_id)
     assert revision.casilla_storage_baseline is not None
     declared = frozenset(casilla.id for casilla in revision.casillas)
     blocking = tuple(p for p in revision.verification_predicates if p.finding_kind != "ADVISORY")

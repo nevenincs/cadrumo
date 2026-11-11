@@ -31,6 +31,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -41,9 +42,9 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BINDING_ID = "irpf.previous_year_economic_activity_net_income"
-_M130_FILING_YEAR = 2025
+_M130_FILING_YEAR = filing_year_envelope().horizon
 _M130_PERIOD = "1T"
-_M100_FILING_YEAR = 2024
+_M100_FILING_YEAR = _M130_FILING_YEAR - 1
 _SOURCE_CASILLAS = ("0224", "1479", "1553", "1577")
 
 
@@ -78,7 +79,7 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
             report_with_activity_start = resolve_bindings_from_local_store(
                 snapshot,
                 repository=repository,
-                activity_start_date=date(2015, 1, 1),
+                activity_start_date=date(filing_year_envelope().floor - 1, 1, 1),
                 iva_history_repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )

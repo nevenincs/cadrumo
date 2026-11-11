@@ -18,6 +18,8 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import profile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 
 def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: str = "12345678Z") -> None:
     """Store a complete natural-person profile, with an IVA general regime and no employees, that pays capital income.
@@ -35,7 +37,7 @@ def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: st
                     UserProfileFact(path="identity.name", value="Test"),
                     UserProfileFact(path="identity.surnames", value="Operator"),
                     UserProfileFact(path="activities.description", value="capital income payer"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
                     UserProfileFact(path="withholding.colegio_concertado", value=False),
                     UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
                 )
@@ -78,7 +80,7 @@ def ready_workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
         iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(2020, 1, 1),
+        activity_start_date=date(filing_year_envelope().floor, 1, 1),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

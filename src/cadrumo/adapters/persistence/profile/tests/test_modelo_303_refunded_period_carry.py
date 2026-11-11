@@ -50,14 +50,15 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from .....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .modelo_303_carry_support import calculate_303
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "303"
-_YEAR_N = 2025
-_YEAR_N_PLUS_1 = 2026
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 _BUCKET_ID = "2983d936-f658-4178-977b-3d11f30cb3b2"  # was 'bucket-m303-refund'
 
 
@@ -82,7 +83,7 @@ def _law_determined_revision_id(modelo_id: str, *, filing_year: int, period: str
 @cache
 def _revision() -> str:
     # Resolved on first use, not at import: collection must stay cheap.
-    return _law_determined_revision_id("303", filing_year=2025, period="4T")
+    return _law_determined_revision_id("303", filing_year=_YEAR_N, period="4T")
 
 
 _CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
@@ -100,7 +101,7 @@ _YEAR_N_PLUS_1_1T_INPUTS = {
     "modelo-303-iva-repercutido-general-cuota": Decimal("50.00"),
 }
 
-_CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR_N_PLUS_1, 5, 1, 9, 0, 0, tzinfo=UTC)
 
 
 def _revision_from_result(
@@ -116,7 +117,7 @@ def _revision_from_result(
     work_unit_id = _year_n_4t_work_unit().work_unit_id
     values = dict(result.values)
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry", operation=operation
+        Period.from_year_and_code(_YEAR_N, "4T"), reference="test:m303-refunded-period-carry", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -139,7 +140,7 @@ def _revision_from_result(
         filed_at=_CLOCK,
         filed_by="refund-carry-test",
         filing_instance_evidence=filing_instance_evidence,
-        registry_snapshot_ref=operation.snapshot("303", filing_year=2025, period="4T").snapshot_ref,
+        registry_snapshot_ref=operation.snapshot("303", filing_year=_YEAR_N, period="4T").snapshot_ref,
         source_provenance=(),
     )
 
@@ -166,7 +167,7 @@ def _year_n_4t_work_unit() -> WorkUnit:
         filing_year=_YEAR_N,
         period=period,
         revision_id=_revision(),
-        name="m303-2025-4t",
+        name=f"m303-{_YEAR_N}-4t",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )

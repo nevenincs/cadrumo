@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { formatDay } from "../../src/shared/dateFormats";
 import { label } from "../support/strings";
 import { windowFixture } from "../support/windowFixtures";
+import { fixtureDay } from "../../src/dev/fixtureDates";
 
 // The Invoices section over the scenario's ledger: the whole catalogue,
 // filtered and sorted in the page, and the invoice editor. A new invoice
@@ -13,18 +14,28 @@ import { windowFixture } from "../support/windowFixtures";
 // accepts. Writes are reviewed first, an unseen outcome is said to be
 // unknown, and leaving with edits asks first.
 
-/** The counterparty's tax id the recorded invoice drafts were asked with: the
- * scenario's ledger answers a draft only when it is one of those. */
-const RECORDED_TAX_ID = (
+/** The recorded invoice drafts: the scenario's ledger answers a draft only
+ * when it is one of those. */
+const RECORDINGS = (
   JSON.parse(
     readFileSync(
       windowFixture("ledger-recordings", "ledgerInvoicePreview"),
       "utf8",
     ),
   ) as {
-    recordings: Record<string, { request: { counterparty_tax_id: string } }>;
+    recordings: Record<
+      string,
+      { request: { counterparty_tax_id: string; issued_at: string } }
+    >;
   }
-).recordings.two_lines!.request.counterparty_tax_id;
+).recordings;
+
+/** The counterparty's tax id the recorded invoice drafts were asked with. */
+const RECORDED_TAX_ID = RECORDINGS.two_lines!.request.counterparty_tax_id;
+
+/** The issue date of the recorded draft whose rates the ledger served with the
+ * 5% slot in force: the date the page is asked about, as the backend was. */
+const RATE_5_IN_FORCE_ON = RECORDINGS.rate_in_force_2023!.request.issued_at;
 
 const open = (target: Page, extra = "") =>
   target.goto(`/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`);
@@ -122,7 +133,7 @@ async function fillIssued(
   await field(target, "series").fill("F");
   await field(target, "invoice_number").fill(number);
   await field(target, "issued_at").focus();
-  await field(target, "issued_at").fill("2026-10-23");
+  await field(target, "issued_at").fill(fixtureDay(10, 23));
   await field(target, "currency").fill("eur");
   await lineCell(target, 0, 0).fill("Diseño de marca");
   await lineCell(target, 0, 2).fill("550");
@@ -424,14 +435,14 @@ test("a rate not in force cannot be chosen, and a date that strands one says so 
 }) => {
   await openInvoices(target);
   await addNew(target);
-  await field(target, "issued_at").fill("2026-10-23");
+  await field(target, "issued_at").fill(fixtureDay(10, 23));
   await lineCell(target, 0, 0).fill("Diseño de marca");
   const rates = lineCell(target, 0, 4);
   await expect(rates.locator("option[value=RATE_21]")).toBeEnabled();
   await expect(rates.locator("option[value=RATE_5]")).toBeDisabled();
 
   await field(target, "issued_at").focus();
-  await field(target, "issued_at").fill("2023-03-01");
+  await field(target, "issued_at").fill(RATE_5_IN_FORCE_ON);
   await expect(rates.locator("option[value=RATE_5]")).toBeEnabled();
   await rates.selectOption("RATE_5");
 
@@ -443,7 +454,7 @@ test("a rate not in force cannot be chosen, and a date that strands one says so 
         "application.invoices.figures_preview.finding.line_rate_not_in_force",
         {
           slot: label("application.invoices.figures_preview.rate_slot.rate_5"),
-          on_date: formatDay("en", "2026-10-23"),
+          on_date: formatDay("en", fixtureDay(10, 23)),
         },
       ),
     ),
@@ -498,7 +509,7 @@ test("the next number follows its own series (M7)", async ({
       name: label("desktop.ledger.invoices.kind_choice.issued"),
     })
     .click();
-  await field(target, "issued_at").fill("2026-10-23");
+  await field(target, "issued_at").fill(fixtureDay(10, 23));
   await field(target, "series").fill("F");
   const use = (number: string) =>
     button(target, "desktop.ledger.invoices.use_number", { number });

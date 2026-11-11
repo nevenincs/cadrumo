@@ -55,6 +55,7 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     registry_grounded_observations,
@@ -110,20 +111,20 @@ def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
 
 #: Two distinct renta (target) years the M202 2P enrollment spans. The
 #: prior-year delta (-1) makes them source M200 of 2025 and 2026 respectively.
-_TARGET_YEAR_N = 2026
-_TARGET_YEAR_N_PLUS_1 = 2027
+_TARGET_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_TARGET_YEAR_N = _TARGET_YEAR_N_PLUS_1 - 1
 
 #: Distinct prior-year M200 cuota del ejercicio per source year so a cross-year
 #: contamination surfaces as a mismatch.
 _M200_CUOTA_BY_SOURCE_YEAR: dict[int, Decimal] = {
-    2025: Decimal("48000.00"),
-    2026: Decimal("63000.00"),
+    _TARGET_YEAR_N - 1: Decimal("48000.00"),
+    _TARGET_YEAR_N: Decimal("63000.00"),
 }
-_TARGET_YEAR_1P = 2026
+_TARGET_YEAR_1P = _TARGET_YEAR_N_PLUS_1
 _M200_1P_SOURCE_TWO_BACK = Decimal("37000.00")
 _M200_1P_NEAR_PRIOR = Decimal("99000.00")
 
-_CLOCK = datetime(2028, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_TARGET_YEAR_N_PLUS_1 + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 def _seed_m200_cuota_ejercicio(*, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -289,11 +290,13 @@ def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(
+            source_year=_TARGET_YEAR_N - 1, cuota=_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1], obs_repo=obs_repo
+        )
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
-    assert result.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
+    assert result.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1]
 
 
 def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(
@@ -317,7 +320,9 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(
+            source_year=_TARGET_YEAR_N - 1, cuota=_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1], obs_repo=obs_repo
+        )
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
@@ -338,10 +343,10 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(
 
     # Wiring assertion: 03 = registry_rate × 01 (with casilla 02 = 0).
     # The rate comes from the real snapshot, not from this test's author.
-    expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[2025] * registry_rate).quantize(Decimal("0.01"))
+    expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1] * registry_rate).quantize(Decimal("0.01"))
     assert result.values[_M202_A_INGRESAR_CASILLA] == expected_03, (
         f"casilla 03 must equal registry_rate ({registry_rate}) × casilla 01 "
-        f"({_M200_CUOTA_BY_SOURCE_YEAR[2025]}) = {expected_03}; "
+        f"({_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1]}) = {expected_03}; "
         f"got {result.values[_M202_A_INGRESAR_CASILLA]}"
     )
 
@@ -361,8 +366,12 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: Pin
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_ejercicio(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
-        _seed_m200_cuota_ejercicio(source_year=2026, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2026], obs_repo=obs_repo)
+        _seed_m200_cuota_ejercicio(
+            source_year=_TARGET_YEAR_N - 1, cuota=_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1], obs_repo=obs_repo
+        )
+        _seed_m200_cuota_ejercicio(
+            source_year=_TARGET_YEAR_N, cuota=_M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N], obs_repo=obs_repo
+        )
         # Each target year cumulates its own 1P pago (distinct per year so a
         # cross-year self-pago contamination would surface).
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
@@ -389,5 +398,5 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path, *, operation: Pin
 
     # Wiring invariant: each target year's 2P base equals the immediately prior
     # M200 cuota del ejercicio, year-isolated.
-    assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
-    assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2026]
+    assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N - 1]
+    assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[_TARGET_YEAR_N]

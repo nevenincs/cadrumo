@@ -39,7 +39,10 @@ from cadrumo.domain.modelos.errors import (
 from cadrumo.domain.transactions.own_accounts import (
     OwnAccountRole,
 )
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
+    M303_YEAR,
+    build_verified_modelo_303_revision,
+)
 
 from .export_output_paths_support import (
     authored_export_clock,
@@ -72,8 +75,8 @@ def _assert_matched_wallet_provenance(result) -> None:
     assert provenance is not None
     assert provenance.selected_authority == "aeat_wallet"
     assert provenance.divergence == "match"
-    assert provenance.target_year == 2026
-    assert provenance.target_period == Period.from_year_and_code(2026, "2T")
+    assert provenance.target_year == M303_YEAR
+    assert provenance.target_period == Period.from_year_and_code(M303_YEAR, "2T")
     assert provenance.decision_ref.startswith("sha256:")
     assert provenance.authority_source_kinds == ("aeat_wallet", "local_recurrence", "filed_history_observation")
     assert provenance.authority_source_refs[0].startswith("sha256:")
@@ -129,7 +132,7 @@ def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -176,7 +179,7 @@ def test_export_modelo_303_to_a_payload_consumer_writes_no_file_and_records_the_
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
             payload_consumer=consumer,
         )
@@ -228,7 +231,7 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -268,7 +271,7 @@ def test_export_modelo_303_without_a_prior_domiciliation_election_keeps_it(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -315,7 +318,7 @@ def test_export_modelo_303_rectificativa_stating_casilla_111_requires_the_electi
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
-                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -362,7 +365,7 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 4, 15, 10, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 4, 15, 10, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -386,8 +389,8 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
         assert result.resolved_result_disposition is ResultDisposition.DOMICILIACION
         assert result.payment_election is PaymentElection.DOMICILIACION
         assert result.refund_election is None
-        # The 2026 1T window authors no payment cutoff; the governed rule derives
-        # 15 April 2026, the export's Madrid date, so the U export is checked and admitted.
+        # The 1T window authors no payment cutoff; the governed rule derives
+        # 15 April of that exercise, the export's Madrid date, so the U export is checked and admitted.
         assert result.domiciliation_cutoff_unverified is False
         assert result.selected_account == ModeloExportAccountReference(
             role=OwnAccountRole.CHARGE, own_account_id="acc-01"
@@ -455,7 +458,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
                 calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                 bucket_event=event_repo,
             ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -517,7 +520,7 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
-                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -564,7 +567,7 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
-                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 

@@ -61,6 +61,7 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.entrypoints.live_state_composition import compose_live_state
@@ -68,6 +69,9 @@ from cadrumo.entrypoints.live_state_composition import compose_live_state
 from .filed_capture_history_ports_support import FILED_OPERATION_STACK, SESSION_BUCKET_ID, filed_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
@@ -78,7 +82,7 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
-        target_snapshot = registry_snapshot("303", 2026, "2T")
+        target_snapshot = registry_snapshot("303", _YEAR, "2T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
@@ -94,9 +98,9 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
             operation=_authority_operation_for_test,
         )
 
-        assert calculation_key == "303:2026:1T"
-        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is not None
-        loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        assert calculation_key == f"303:{_YEAR}:1T"
+        assert repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T")) is not None
+        loaded = repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
         assert loaded is not None
         assert loaded.source_metadata == {
             "aeat_register_status": "ALTA",
@@ -108,7 +112,7 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         assert prefill.prefilled[0].source_periods == ("1T",)
         assert recurrence is not None
         assert recurrence.amount == Decimal("1200.00")
-        assert recurrence.source_periods == (Period.from_year_and_code(2026, "1T"),)
+        assert recurrence.source_periods == (Period.from_year_and_code(_YEAR, "1T"),)
         assert recurrence_prefill.binding_values == prefill.binding_values
 
 
@@ -123,7 +127,7 @@ def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_
             justificante_csvs=("CSV30320261T",),
         )
 
-        loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        loaded = repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
 
     assert loaded is not None
     assert loaded.source_metadata == {
@@ -141,14 +145,14 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
         keys = finalize_filed_capture(
             (observation,),
             justificante_csvs_by_observation={
-                ("303", 2026, "1T", SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
+                ("303", _YEAR, "1T", SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
             },
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         ).calculation_observation_keys
-        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
 
-    assert keys == ("303:2026:1T",)
+    assert keys == (f"303:{_YEAR}:1T",)
     assert loaded is not None
     assert loaded.source_metadata["aeat_justificante_csv"] == "CSV30320261T"
 
@@ -166,13 +170,13 @@ def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
-        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
 
     assert finalization.calculation_observation_keys == ()
     assert len(finalization.failures) == 1
     assert finalization.failures[0].modelo == "303"
-    assert finalization.failures[0].year == 2026
-    assert finalization.failures[0].period == Period.from_year_and_code(2026, "1T")
+    assert finalization.failures[0].year == _YEAR
+    assert finalization.failures[0].period == Period.from_year_and_code(_YEAR, "1T")
     assert finalization.failures[0].expediente_id == SYNTHETIC_EXPEDIENTE_ID
     assert finalization.failures[0].error_type == "SedeParseError"
     assert "has no extraction coverage" in finalization.failures[0].message
@@ -197,7 +201,7 @@ def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_
                 ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
             )
 
-        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
     assert stored is None
 
 
@@ -220,35 +224,35 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
     """
     observations = (
         prior_303_observation(
-            year=2026,
+            year=_YEAR,
             period="1T",
             expediente_id="200030300000030Z",
             pending_compensation=Decimal("20.00"),
-            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
         ),
         prior_303_observation(
-            year=2026,
+            year=_YEAR,
             period="1T",
             expediente_id="200030300000031Z",
             status="BAJA",
             pending_compensation=Decimal("99.00"),
-            presented_at=datetime(2026, 4, 25, 10, 0, 0, tzinfo=UTC),
+            presented_at=datetime(_YEAR, 4, 25, 10, 0, 0, tzinfo=UTC),
         ),
         prior_303_observation(
-            year=2025,
+            year=_PRIOR_YEAR,
             period="4T",
             expediente_id="200030300000032Z",
             pending_compensation=Decimal("10.00"),
-            presented_at=datetime(2026, 1, 20, 10, 0, 0, tzinfo=UTC),
+            presented_at=datetime(_YEAR, 1, 20, 10, 0, 0, tzinfo=UTC),
         ),
     )
 
     # Pure selection + ordering: the later BAJA is superseded by the earlier ALTA
-    # for 2026/1T, and the result is ordered by (year, history-period key).
+    # for the 1T, and the result is ordered by (year, history-period key).
     selected = select_latest_filed_observations_in_history_order(observations)
     assert tuple((obs.ejercicio, obs.period.registry_token, obs.expediente_id) for obs in selected) == (
-        (2025, "4T", "200030300000032Z"),
-        (2026, "1T", "200030300000030Z"),
+        (_PRIOR_YEAR, "4T", "200030300000032Z"),
+        (_YEAR, "1T", "200030300000030Z"),
     )
 
     # The finalizer persists those same keys in that same order via the shared authority.
@@ -260,7 +264,7 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
         )
 
     assert finalization.failures == ()
-    assert finalization.calculation_observation_keys == ("303:2025:4T", "303:2026:1T")
+    assert finalization.calculation_observation_keys == (f"303:{_PRIOR_YEAR}:4T", f"303:{_YEAR}:1T")
     # Pinned against the selector's own output, not just a literal, so the two
     # cannot drift apart without this failing.
     assert finalization.calculation_observation_keys == tuple(
@@ -279,16 +283,16 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
     observation = prior_303_observation(
         pending_compensation=Decimal("5.00"),
         expediente_id="200030300000040Z",
-        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
     )
     with secure_backend(tmp_path):
         strict_keys = persistiva_compensation_history_observations_strict(
             (observation,),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
-        strict_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+        strict_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
 
-    assert strict_keys == ("303:2026:1T",)
+    assert strict_keys == (f"303:{_YEAR}:1T",)
     assert strict_history is not None
     assert finalize_filed_capture is not persistiva_compensation_history_observations_strict
 
@@ -298,7 +302,7 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
             prior_303_observation(
-                year=2025,
+                year=_PRIOR_YEAR,
                 period="4T",
                 pending_compensation=Decimal("450.00"),
                 expediente_id="200030300000001Z",
@@ -306,7 +310,7 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
-        target_snapshot = registry_snapshot("303", 2026, "1T")
+        target_snapshot = registry_snapshot("303", _YEAR, "1T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
@@ -315,9 +319,9 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
             operation=_authority_operation_for_test,
         )
 
-        assert calculation_key == "303:2025:4T"
+        assert calculation_key == f"303:{_PRIOR_YEAR}:4T"
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
-        assert prefill.prefilled[0].source_filing_year == 2025
+        assert prefill.prefilled[0].source_filing_year == _PRIOR_YEAR
         assert prefill.prefilled[0].source_periods == ("4T",)
 
 
@@ -329,9 +333,9 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
             IvaCompensationPeriodState(
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=SYNTHETIC_PROFILE_ID,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                registry_snapshot_ref=registry_snapshot("303", 2026, "1T").snapshot_ref,
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
+                registry_snapshot_ref=registry_snapshot("303", _YEAR, "1T").snapshot_ref,
                 expediente_id=SYNTHETIC_EXPEDIENTE_ID,
                 status="ALTA",
                 presented_at=CAPTURED_AT,
@@ -342,12 +346,12 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
                 final_result_amount=Decimal("-4.32"),
                 generated_amount=Decimal("4.32"),
                 available_end_amount=Decimal("13.22"),
-                source_observation_key=f"303:2026:1T:{SYNTHETIC_EXPEDIENTE_ID}",
+                source_observation_key=f"303:{_YEAR}:1T:{SYNTHETIC_EXPEDIENTE_ID}",
                 source_artefact_sha256=hashlib.sha256(b"synthetic-submitted-file").hexdigest(),
             ),
         )
 
-        target_snapshot = registry_snapshot("303", 2026, "2T")
+        target_snapshot = registry_snapshot("303", _YEAR, "2T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
@@ -356,10 +360,10 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
             operation=_authority_operation_for_test,
         )
 
-        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is None
+        assert repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T")) is None
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("13.22")}
         assert prefill.prefilled[0].source_modelo == "303"
-        assert prefill.prefilled[0].source_filing_year == 2026
+        assert prefill.prefilled[0].source_filing_year == _YEAR
         assert prefill.prefilled[0].source_periods == ("1T",)
 
 
@@ -370,20 +374,20 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
                 prior_303_observation(
                     pending_compensation=Decimal("1.00"),
                     expediente_id="200030300000004Z",
-                    presented_at=datetime(2026, 4, 19, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 19, 10, 0, 0, tzinfo=UTC),
                 ),
                 prior_303_observation(
                     pending_compensation=Decimal("2.00"),
                     expediente_id="200030300000005Z",
-                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
 
-        assert keys == ("303:2026:1T",)
+        assert keys == (f"303:{_YEAR}:1T",)
         assert history is not None
         assert history.expediente_id == "200030300000005Z"
         assert history.pending_for_later_amount == Decimal("2.00")
@@ -399,13 +403,15 @@ def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path
                 prior_303_observation(
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
-                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
                 ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
             )
 
-        assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
-        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+        assert (
+            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T")) is None
+        )
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T")) is None
 
 
 def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_path: Path) -> None:
@@ -421,7 +427,7 @@ def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_pa
         loaded = JustificanteRepository().load("ABCD1234EFGH5678")
         assert loaded is not None
         assert loaded.modelo == "130"
-        assert loaded.period == Period.from_year_and_code(2026, "1T")
+        assert loaded.period == Period.from_year_and_code(_YEAR, "1T")
         assert loaded.tax_id == "00000000T"
 
 
@@ -442,7 +448,7 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
     what the divergence used to prevent.
     """
     receipt = parse_justificante_bytes(modelo_303_justificante_pdf_bytes())
-    expediente_id = "202630300000411A"
+    expediente_id = f"{_YEAR}30300000411A"
     assert receipt.presentation_id is not None
     assert receipt.presentation_id.strip().casefold() != expediente_id.strip().casefold(), (
         "the receipt identifier and the register expediente id agree, so this fixture cannot "
@@ -461,8 +467,8 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
         loaded = JustificanteRepository().load(MODELO_303_FIXTURE_CSV)
         assert loaded is not None
         assert loaded.modelo == "303"
-        assert loaded.ejercicio == "2026"
-        assert loaded.period == Period.from_year_and_code(2026, "1T")
+        assert loaded.ejercicio == str(_YEAR)
+        assert loaded.period == Period.from_year_and_code(_YEAR, "1T")
         assert loaded.tax_id == "00000000T"
         # The receipt's own identifier survives onto the persisted record; it is
         # no longer a matching axis, which is not the same as being discarded.
@@ -528,8 +534,8 @@ def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
         assert current is not None
@@ -583,8 +589,8 @@ def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
         assert current == filing
@@ -632,8 +638,8 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
         assert current == filing
@@ -674,8 +680,8 @@ def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
         assert current is not None
@@ -708,8 +714,8 @@ def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profi
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
         assert current is not None
@@ -724,26 +730,26 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
                 period="1T",
                 expediente_id="200030300000006Z",
                 estado="BAJA",
-                presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 4, 22, 10, 0, 0, tzinfo=UTC),
             ),
             filed_declaration(
                 period="1T",
                 expediente_id="200030300000007Z",
                 estado="ALTA",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
             ),
             filed_declaration(
                 period="2T",
                 expediente_id="200030300000008Z",
                 estado="ALTA",
-                presented_at=datetime(2026, 7, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 7, 20, 10, 0, 0, tzinfo=UTC),
             ),
         ),
     )
 
     assert tuple(row.period for row in selected) == (
-        Period.from_year_and_code(2026, "1T"),
-        Period.from_year_and_code(2026, "2T"),
+        Period.from_year_and_code(_YEAR, "1T"),
+        Period.from_year_and_code(_YEAR, "2T"),
     )
     assert selected[0].expediente_id == "200030300000007Z"
     assert selected[1].expediente_id == "200030300000008Z"
@@ -754,7 +760,7 @@ def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> N
         period="0A",
         expediente_id="200039000000020Z",
         estado="ALTA",
-        presented_at=datetime(2027, 1, 30, 10, 0, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR + 1, 1, 30, 10, 0, 0, tzinfo=UTC),
     ).model_copy(update={"modelo": "390"})
     selected = latest_declarations_by_period(
         (
@@ -763,7 +769,7 @@ def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> N
                 period="4T",
                 expediente_id="200030300000019Z",
                 estado="ALTA",
-                presented_at=datetime(2027, 1, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR + 1, 1, 20, 10, 0, 0, tzinfo=UTC),
             ),
         ),
     )
@@ -777,7 +783,7 @@ def test_filed_history_keeps_non_iva_numeric_period_order_alongside_iva_rows() -
             period=period,
             expediente_id=expediente_id,
             estado="ALTA",
-            presented_at=datetime(2027, 1, 20, 10, 0, 0, tzinfo=UTC),
+            presented_at=datetime(_YEAR + 1, 1, 20, 10, 0, 0, tzinfo=UTC),
         ).model_copy(update={"modelo": modelo})
 
     selected = latest_declarations_by_period(
@@ -802,13 +808,13 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
                 prior_303_observation(
                     expediente_id="200030300000012Z",
                     pending_compensation=Decimal("1200.00"),
-                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
                 prior_303_observation(
                     expediente_id="200030300000013Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
-                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
@@ -819,10 +825,10 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
             ),
         ).calculation_observation_keys
 
-        stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
-        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+        stored = repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
 
-        assert keys == ("303:2026:1T",)
+        assert keys == (f"303:{_YEAR}:1T",)
         assert stored is not None
         assert stored.observation.casilla_values[M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
         assert history is not None
@@ -836,21 +842,21 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
                 prior_303_observation(
                     expediente_id="200030300000014Z",
                     pending_compensation=Decimal("1200.00"),
-                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
                 prior_303_observation(
                     expediente_id="200030300000015Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
-                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
 
-        assert keys == ("303:2026:1T",)
+        assert keys == (f"303:{_YEAR}:1T",)
         assert history is not None
         assert history.expediente_id == "200030300000014Z"
         assert history.pending_for_later_amount == Decimal("1200.00")
@@ -864,15 +870,17 @@ def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path)
                     expediente_id="200030300000016Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
-                    presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
         assert keys == ()
-        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
-        assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T")) is None
+        assert (
+            CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T")) is None
+        )
 
 
 def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Path) -> None:
@@ -889,7 +897,7 @@ def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Pat
 
         assert error.value.translated_message == "live.errors.iva_history_modelo_303_only"
         assert error.value.context == {"modelo": "130"}
-        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T")) is None
 
 
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
@@ -900,12 +908,12 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
                 prior_303_observation(
                     expediente_id="200030300000002Z",
                     pending_compensation=Decimal("800.00"),
-                    presented_at=datetime(2026, 4, 19, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 19, 10, 0, 0, tzinfo=UTC),
                 ),
                 prior_303_observation(
                     expediente_id="200030300000003Z",
                     pending_compensation=Decimal("1200.00"),
-                    presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                    presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
@@ -916,7 +924,7 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
             ),
         )
 
-        stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        stored = repository.load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
 
         assert stored is not None
         assert stored.observation.casilla_values[M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
@@ -942,9 +950,9 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
 
-        assert key == "303:2026:1T"
+        assert key == f"303:{_YEAR}:1T"
         assert history is not None
         assert history.taxpayer_nif == SYNTHETIC_PROFILE_ID
         assert history.expediente_id == SYNTHETIC_EXPEDIENTE_ID
@@ -953,8 +961,11 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert history.pending_for_later_amount == pending_later
         assert history.period_result_amount == period_result
         assert history.final_result_amount == final_result
-        assert history.source_artefact_sha256 == hashlib.sha256(b"303-2026-1T-submitted-file").hexdigest()
-        assert history.source_observation_key == f"303:2026:1T:{SYNTHETIC_EXPEDIENTE_ID}"
+        assert (
+            history.source_artefact_sha256
+            == hashlib.sha256(f"303-{_YEAR}-1T-submitted-file".encode("ascii")).hexdigest()
+        )
+        assert history.source_observation_key == f"303:{_YEAR}:1T:{SYNTHETIC_EXPEDIENTE_ID}"
 
         listed = list_iva_compensation_history(
             ports=compose_live_state(
@@ -992,10 +1003,10 @@ def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: 
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
 
-        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
-        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "1T"))
+        stored = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(_YEAR, "1T"))
 
-        assert key == "303:2026:1T"
+        assert key == f"303:{_YEAR}:1T"
         assert history is not None
         assert history.prior_pending_amount == prior_pending
         assert history.applied_amount == applied
@@ -1014,10 +1025,10 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
     with secure_backend(tmp_path):
         observations = (
             parsed_303_submitted_file_observation(
-                year=2025,
+                year=_PRIOR_YEAR,
                 period="4T",
                 expediente_id="200030300000009Z",
-                presented_at=datetime(2026, 1, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 1, 20, 10, 0, 0, tzinfo=UTC),
                 casilla_110=Decimal("0.00"),
                 casilla_78=Decimal("0.00"),
                 casilla_87=Decimal("0.00"),
@@ -1025,10 +1036,10 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_71=Decimal("-100.00"),
             ),
             parsed_303_submitted_file_observation(
-                year=2026,
+                year=_YEAR,
                 period="1T",
                 expediente_id="200030300000010Z",
-                presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC),
                 casilla_110=Decimal("100.00"),
                 casilla_78=Decimal("30.00"),
                 casilla_87=Decimal("120.00"),
@@ -1036,10 +1047,10 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_71=Decimal("-50.00"),
             ),
             parsed_303_submitted_file_observation(
-                year=2026,
+                year=_YEAR,
                 period="2T",
                 expediente_id="200030300000011Z",
-                presented_at=datetime(2026, 7, 20, 10, 0, 0, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 7, 20, 10, 0, 0, tzinfo=UTC),
                 casilla_110=Decimal("170.00"),
                 casilla_78=Decimal("20.00"),
                 casilla_87=Decimal("100.00"),
@@ -1059,27 +1070,27 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 bucket_id=SESSION_BUCKET_ID,
                 operation=FILED_OPERATION_STACK.enter_context(bundled_indexed_authority().operation()),
             ).iva_remote_state_port,
-            as_of_year=2026,
+            as_of_year=_YEAR,
         )
 
         rows_by_period = {(row.year, row.period): row for row in history.rows}
         lots_by_period = {(lot.source_filing_year, lot.source_period): lot for lot in history.carry_forward_lots}
 
-        assert keys == ("303:2025:4T", "303:2026:1T", "303:2026:2T")
+        assert keys == (f"303:{_PRIOR_YEAR}:4T", f"303:{_YEAR}:1T", f"303:{_YEAR}:2T")
         assert history.row_count == 3
-        period_2025_4t = Period.from_year_and_code(2025, "4T")
-        period_2026_1t = Period.from_year_and_code(2026, "1T")
-        period_2026_2t = Period.from_year_and_code(2026, "2T")
+        period_prior_4t = Period.from_year_and_code(_PRIOR_YEAR, "4T")
+        period_1t = Period.from_year_and_code(_YEAR, "1T")
+        period_2t = Period.from_year_and_code(_YEAR, "2T")
         assert set(rows_by_period) == {
-            (2025, period_2025_4t),
-            (2026, period_2026_1t),
-            (2026, period_2026_2t),
+            (_PRIOR_YEAR, period_prior_4t),
+            (_YEAR, period_1t),
+            (_YEAR, period_2t),
         }
-        assert Decimal(rows_by_period[(2025, period_2025_4t)].generated_amount) == Decimal("100.00")
-        assert Decimal(rows_by_period[(2026, period_2026_1t)].generated_amount) == Decimal("50.00")
-        assert Decimal(rows_by_period[(2026, period_2026_2t)].generated_amount) == Decimal("0")
-        assert Decimal(rows_by_period[(2026, period_2026_2t)].available_end_amount) == Decimal("100.00")
+        assert Decimal(rows_by_period[(_PRIOR_YEAR, period_prior_4t)].generated_amount) == Decimal("100.00")
+        assert Decimal(rows_by_period[(_YEAR, period_1t)].generated_amount) == Decimal("50.00")
+        assert Decimal(rows_by_period[(_YEAR, period_2t)].generated_amount) == Decimal("0")
+        assert Decimal(rows_by_period[(_YEAR, period_2t)].available_end_amount) == Decimal("100.00")
         assert history.carry_forward_lot_count == 2
-        assert Decimal(lots_by_period[(2025, period_2025_4t)].remaining_amount) == Decimal("50.00")
-        assert Decimal(lots_by_period[(2026, period_2026_1t)].remaining_amount) == Decimal("50.00")
+        assert Decimal(lots_by_period[(_PRIOR_YEAR, period_prior_4t)].remaining_amount) == Decimal("50.00")
+        assert Decimal(lots_by_period[(_YEAR, period_1t)].remaining_amount) == Decimal("50.00")
         assert Decimal(history.unallocated_applied_amount) == Decimal("0")

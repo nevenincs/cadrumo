@@ -56,6 +56,7 @@ from cadrumo.adapters.persistence.profile.tests.observation_lookup_support impor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -66,8 +67,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "714"
 
 #: The two distinct renta ejercicios the wealth-baseline fidelity test spans.
-_YEAR_N = 2023
-_YEAR_N_PLUS_1 = 2024
+_YEAR_N_PLUS_1 = filing_grade_exercises("714")[-1]
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 
 #: Context label for the cross-year observation (data-fidelity / non-calculation mode).
 _CONTEXT_LABEL = "714-patrimonio-prior-year-wealth-baseline-two-ejercicios"
@@ -86,8 +87,8 @@ _BASE_IMPONIBLE_N1 = Decimal("2300000.00")
 _BASE_LIQUIDABLE_N1 = Decimal("1600000.00")
 _CUOTA_INTEGRA_N1 = Decimal("10523.36")
 
-_CLOCK_N = datetime(2024, 5, 15, 10, 0, 0, tzinfo=UTC)  # M714 deadline window ~ Apr-Jun
-_CLOCK_N_PLUS_1 = datetime(2025, 5, 15, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(_YEAR_N_PLUS_1, 5, 15, 10, 0, 0, tzinfo=UTC)  # M714 deadline window ~ Apr-Jun
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 5, 15, 10, 0, 0, tzinfo=UTC)
 
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")

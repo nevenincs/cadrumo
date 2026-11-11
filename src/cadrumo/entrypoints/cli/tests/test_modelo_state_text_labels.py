@@ -9,6 +9,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -24,20 +25,22 @@ from ..modelo_rendering import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 7, 2, 10, 30, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(1980, 7, 2, 10, 30, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_REVISION_ID = "2019-y-siguientes"
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="130",
     revision_id=_REVISION_ID,
-    modelo_year=2026,
+    modelo_year=_YEAR,
     period="1T",
 )
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=_BUCKET_ID,
     modelo="130",
-    filing_year=2026,
+    filing_year=_YEAR,
     period=_PERIOD,
     revision_id=_REVISION_ID,
 )
@@ -84,10 +87,10 @@ def _work_unit(*, filed_revision_id: str | None = None) -> WorkUnit:
         work_unit_id=_WORK_UNIT_ID,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=_REVISION_ID,
-        name="130-2026-1T",
+        name=f"130-{_YEAR}-1T",
         created_at=_NOW,
         updated_at=_NOW,
         current_calculation_revision_id=_draft_revision().calculation_revision_id,

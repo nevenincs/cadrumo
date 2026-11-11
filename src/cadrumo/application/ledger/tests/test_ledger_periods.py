@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import calendar
+import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from importlib.resources import files
@@ -18,6 +20,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import profile_operation_subject
 from ....core.time.clock import frozen_clock
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ..entry_options_operation import (
@@ -36,18 +39,23 @@ from ..period_options import (
     ledger_periods,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _PROFILE = UUID("41414141-4141-4141-8141-414141414141")
 
-# What a calendar says, written out by hand rather than computed.
-_QUARTERS_2026 = {
-    "1T": ("2026-01-01", "2026-03-31"),
-    "2T": ("2026-04-01", "2026-06-30"),
-    "3T": ("2026-07-01", "2026-09-30"),
-    "4T": ("2026-10-01", "2026-12-31"),
+# What a calendar says: quarter bounds written out by hand, month lengths from the standard library calendar,
+# not from the code under test.
+_QUARTERS = {
+    "1T": (date(_YEAR, 1, 1), date(_YEAR, 3, 31)),
+    "2T": (date(_YEAR, 4, 1), date(_YEAR, 6, 30)),
+    "3T": (date(_YEAR, 7, 1), date(_YEAR, 9, 30)),
+    "4T": (date(_YEAR, 10, 1), date(_YEAR, 12, 31)),
 }
-_MONTH_ENDS_2026 = ("31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31")
+_MONTH_ENDS = tuple(calendar.monthrange(_YEAR, month)[1] for month in range(1, 13))
+_LEAP_YEAR = max(year for year in filing_year_envelope().years if calendar.isleap(year))
 _MONTHS = {
     "en": [
         "January",
@@ -115,9 +123,9 @@ def _periods(year: int, language: OutputLanguage = OutputLanguage.EN) -> dict[st
 
 
 def test_a_year_lists_the_year_its_quarters_and_its_months_in_that_order() -> None:
-    served = ledger_periods(LedgerPeriodsQuery(year=2026), reference_day=date(2026, 6, 15))
+    served = ledger_periods(LedgerPeriodsQuery(year=_YEAR), reference_day=date(_YEAR, 6, 15))
 
-    assert served.year == 2026
+    assert served.year == _YEAR
     assert served.annual_code == "0A"
     assert [row.period.code for row in served.periods] == [
         "0A",
@@ -127,35 +135,40 @@ def test_a_year_lists_the_year_its_quarters_and_its_months_in_that_order() -> No
         "4T",
         *(f"{month:02d}" for month in range(1, 13)),
     ]
-    assert {row.period.filing_year for row in served.periods} == {2026}
+    assert {row.period.filing_year for row in served.periods} == {_YEAR}
     assert [row.kind for row in served.periods] == ["annual", *["quarterly"] * 4, *["monthly"] * 12]
 
 
 def test_the_year_listed_is_the_year_of_the_reference_day_unless_one_is_asked() -> None:
-    assert ledger_periods(LedgerPeriodsQuery(), reference_day=date(2031, 2, 3)).year == 2031
-    assert ledger_periods(LedgerPeriodsQuery(year=2019), reference_day=date(2031, 2, 3)).year == 2019
+    assert ledger_periods(LedgerPeriodsQuery(), reference_day=date(_YEAR + 1, 2, 3)).year == _YEAR + 1
+    assert ledger_periods(LedgerPeriodsQuery(year=_YEAR), reference_day=date(_YEAR + 1, 2, 3)).year == _YEAR
 
 
 def test_each_quarter_and_the_year_span_the_days_the_calendar_gives_them() -> None:
-    rows = _periods(2026)
+    rows = _periods(_YEAR)
 
-    for code, (first, last) in _QUARTERS_2026.items():
-        assert (rows[code].first_day.isoformat(), rows[code].last_day.isoformat()) == (first, last)
-    assert (rows["0A"].first_day, rows["0A"].last_day) == (date(2026, 1, 1), date(2026, 12, 31))
+    for code, (first, last) in _QUARTERS.items():
+        assert (rows[code].first_day, rows[code].last_day) == (first, last)
+    assert (rows["0A"].first_day, rows["0A"].last_day) == (date(_YEAR, 1, 1), date(_YEAR, 12, 31))
 
 
 def test_each_month_ends_on_the_last_day_of_its_month() -> None:
-    rows = _periods(2026)
+    rows = _periods(_YEAR)
 
-    for month, last in enumerate(_MONTH_ENDS_2026, start=1):
+    for month, last in enumerate(_MONTH_ENDS, start=1):
         row = rows[f"{month:02d}"]
-        assert row.first_day.isoformat() == f"2026-{month:02d}-01"
-        assert row.last_day.isoformat() == f"2026-{month:02d}-{last}"
+        assert row.first_day == date(_YEAR, month, 1)
+        assert row.last_day == date(_YEAR, month, last)
 
 
 @pytest.mark.parametrize(
     ("year", "february_ends"),
-    [(2024, 29), (2025, 28), (2000, 29), (1900, 28), (2100, 28)],
+    [
+        *((year, calendar.monthrange(year, 2)[1]) for year in filing_year_envelope().years),
+        (1600, 29),
+        (1900, 28),
+        (2100, 28),
+    ],
 )
 def test_february_ends_on_the_day_the_gregorian_calendar_gives_it(year: int, february_ends: int) -> None:
     assert _periods(year)["02"].last_day == date(year, 2, february_ends)
@@ -164,12 +177,12 @@ def test_february_ends_on_the_day_the_gregorian_calendar_gives_it(year: int, feb
 @pytest.mark.parametrize(
     ("year", "code", "previous", "following"),
     [
-        (2026, "1T", (2025, "4T"), (2026, "2T")),
-        (2026, "4T", (2026, "3T"), (2027, "1T")),
-        (2026, "01", (2025, "12"), (2026, "02")),
-        (2026, "12", (2026, "11"), (2027, "01")),
-        (2026, "0A", (2025, "0A"), (2027, "0A")),
-        (2026, "07", (2026, "06"), (2026, "08")),
+        (_YEAR, "1T", (_YEAR - 1, "4T"), (_YEAR, "2T")),
+        (_YEAR, "4T", (_YEAR, "3T"), (_YEAR + 1, "1T")),
+        (_YEAR, "01", (_YEAR - 1, "12"), (_YEAR, "02")),
+        (_YEAR, "12", (_YEAR, "11"), (_YEAR + 1, "01")),
+        (_YEAR, "0A", (_YEAR - 1, "0A"), (_YEAR + 1, "0A")),
+        (_YEAR, "07", (_YEAR, "06"), (_YEAR, "08")),
     ],
 )
 def test_the_neighbours_of_a_period_step_across_year_ends(
@@ -198,7 +211,7 @@ def test_a_period_beyond_the_years_that_can_be_written_has_no_neighbour_there() 
 
 
 def test_stepping_forward_and_back_returns_to_the_period_started_from() -> None:
-    rows = {year: _periods(year) for year in (2024, 2025, 2026, 2027)}
+    rows = {year: _periods(year) for year in (*filing_year_envelope().years, filing_year_envelope().horizon + 1)}
     for year, by_code in rows.items():
         for code, row in by_code.items():
             if row.next is not None and row.next.filing_year in rows:
@@ -210,21 +223,21 @@ def test_stepping_forward_and_back_returns_to_the_period_started_from() -> None:
 @pytest.mark.parametrize(
     ("day", "year", "quarter", "month"),
     [
-        (date(2026, 3, 31), 2026, "1T", "03"),
-        (date(2026, 4, 1), 2026, "2T", "04"),
-        (date(2026, 6, 30), 2026, "2T", "06"),
-        (date(2026, 7, 1), 2026, "3T", "07"),
-        (date(2026, 9, 30), 2026, "3T", "09"),
-        (date(2026, 10, 1), 2026, "4T", "10"),
-        (date(2025, 12, 31), 2025, "4T", "12"),
-        (date(2026, 1, 1), 2026, "1T", "01"),
-        (date(2024, 2, 29), 2024, "1T", "02"),
+        (date(_YEAR, 3, 31), _YEAR, "1T", "03"),
+        (date(_YEAR, 4, 1), _YEAR, "2T", "04"),
+        (date(_YEAR, 6, 30), _YEAR, "2T", "06"),
+        (date(_YEAR, 7, 1), _YEAR, "3T", "07"),
+        (date(_YEAR, 9, 30), _YEAR, "3T", "09"),
+        (date(_YEAR, 10, 1), _YEAR, "4T", "10"),
+        (date(_YEAR - 1, 12, 31), _YEAR - 1, "4T", "12"),
+        (date(_YEAR, 1, 1), _YEAR, "1T", "01"),
+        (date(_LEAP_YEAR, 2, 29), _LEAP_YEAR, "1T", "02"),
     ],
 )
 def test_the_periods_holding_a_day_follow_the_calendar_at_every_boundary(
     day: date, year: int, quarter: str, month: str
 ) -> None:
-    served = ledger_periods(LedgerPeriodsQuery(days=(day,)), reference_day=date(2026, 6, 15))
+    served = ledger_periods(LedgerPeriodsQuery(days=(day,)), reference_day=date(_YEAR, 6, 15))
 
     (found,) = served.days
     assert found.day == day
@@ -236,33 +249,33 @@ def test_the_periods_holding_a_day_follow_the_calendar_at_every_boundary(
 
 
 def test_the_days_asked_come_back_in_the_order_asked() -> None:
-    asked = (date(2026, 12, 31), date(2026, 1, 1), date(2026, 6, 30))
+    asked = (date(_YEAR, 12, 31), date(_YEAR, 1, 1), date(_YEAR, 6, 30))
 
-    served = ledger_periods(LedgerPeriodsQuery(days=asked), reference_day=date(2026, 6, 15))
+    served = ledger_periods(LedgerPeriodsQuery(days=asked), reference_day=date(_YEAR, 6, 15))
 
     assert tuple(found.day for found in served.days) == asked
 
 
 def test_the_reference_day_names_the_periods_that_hold_it() -> None:
-    served = ledger_periods(LedgerPeriodsQuery(), reference_day=date(2026, 11, 3))
+    served = ledger_periods(LedgerPeriodsQuery(), reference_day=date(_YEAR, 11, 3))
 
     assert [(p.filing_year, p.code) for p in (served.containing.annual, served.containing.quarterly)] == [
-        (2026, "0A"),
-        (2026, "4T"),
+        (_YEAR, "0A"),
+        (_YEAR, "4T"),
     ]
     assert served.containing.monthly.code == "11"
-    assert served.containing.day == date(2026, 11, 3)
+    assert served.containing.day == date(_YEAR, 11, 3)
 
 
 @pytest.mark.parametrize(
     ("instant", "year", "quarter", "month"),
     [
         # 23:30 UTC on New Year's Eve is already 1 January in Madrid.
-        (datetime(2025, 12, 31, 23, 30, tzinfo=UTC), 2026, "1T", "01"),
-        (datetime(2025, 12, 31, 22, 30, tzinfo=UTC), 2025, "4T", "12"),
+        (datetime(_YEAR - 1, 12, 31, 23, 30, tzinfo=UTC), _YEAR, "1T", "01"),
+        (datetime(_YEAR - 1, 12, 31, 22, 30, tzinfo=UTC), _YEAR - 1, "4T", "12"),
         # 22:30 UTC on 31 March is 00:30 on 1 April in Madrid, summer time.
-        (datetime(2026, 3, 31, 22, 30, tzinfo=UTC), 2026, "2T", "04"),
-        (datetime(2026, 3, 31, 21, 30, tzinfo=UTC), 2026, "1T", "03"),
+        (datetime(_YEAR, 3, 31, 22, 30, tzinfo=UTC), _YEAR, "2T", "04"),
+        (datetime(_YEAR, 3, 31, 21, 30, tzinfo=UTC), _YEAR, "1T", "03"),
     ],
 )
 def test_with_no_reference_day_the_default_period_holds_todays_date_in_spain(
@@ -279,14 +292,14 @@ def test_with_no_reference_day_the_default_period_holds_todays_date_in_spain(
 @pytest.mark.parametrize(
     ("first", "last", "expected"),
     [
-        (date(2026, 3, 1), date(2026, 3, 31), (2026, "03")),
-        (date(2026, 3, 5), date(2026, 3, 5), (2026, "03")),
-        (date(2026, 1, 31), date(2026, 3, 1), (2026, "1T")),
-        (date(2026, 1, 1), date(2026, 3, 31), (2026, "1T")),
-        (date(2026, 3, 31), date(2026, 4, 1), (2026, "0A")),
-        (date(2026, 1, 1), date(2026, 12, 31), (2026, "0A")),
-        (date(2025, 12, 31), date(2026, 1, 1), None),
-        (date(2024, 12, 31), date(2026, 1, 1), None),
+        (date(_YEAR, 3, 1), date(_YEAR, 3, 31), (_YEAR, "03")),
+        (date(_YEAR, 3, 5), date(_YEAR, 3, 5), (_YEAR, "03")),
+        (date(_YEAR, 1, 31), date(_YEAR, 3, 1), (_YEAR, "1T")),
+        (date(_YEAR, 1, 1), date(_YEAR, 3, 31), (_YEAR, "1T")),
+        (date(_YEAR, 3, 31), date(_YEAR, 4, 1), (_YEAR, "0A")),
+        (date(_YEAR, 1, 1), date(_YEAR, 12, 31), (_YEAR, "0A")),
+        (date(_YEAR - 1, 12, 31), date(_YEAR, 1, 1), None),
+        (date(_YEAR - 2, 12, 31), date(_YEAR, 1, 1), None),
     ],
 )
 def test_the_period_covering_a_span_is_the_shortest_one_that_holds_it(
@@ -294,7 +307,7 @@ def test_the_period_covering_a_span_is_the_shortest_one_that_holds_it(
 ) -> None:
     served = ledger_periods(
         LedgerPeriodsQuery(covering=LedgerPeriodSpanRequest(first_day=first, last_day=last)),
-        reference_day=date(2026, 6, 15),
+        reference_day=date(_YEAR, 6, 15),
     )
 
     assert served.covering is not None
@@ -304,30 +317,30 @@ def test_the_period_covering_a_span_is_the_shortest_one_that_holds_it(
 
 
 def test_no_covering_is_served_unless_a_span_is_asked() -> None:
-    assert ledger_periods(LedgerPeriodsQuery(), reference_day=date(2026, 6, 15)).covering is None
+    assert ledger_periods(LedgerPeriodsQuery(), reference_day=date(_YEAR, 6, 15)).covering is None
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage), ids=lambda language: language.value)
 def test_every_period_is_named_in_the_language_asked(language: OutputLanguage) -> None:
-    rows = _periods(2026, language)
+    rows = _periods(_YEAR, language)
     code = language.value
 
     assert rows["0A"].name_words == _YEAR_WORD[code]
-    assert rows["0A"].label_words == "2026"
+    assert rows["0A"].label_words == str(_YEAR)
     for month, name in enumerate(_MONTHS[code], start=1):
         row = rows[f"{month:02d}"]
         assert row.name_words == name
-        assert row.label_words == f"2026 · {name}"
+        assert row.label_words == f"{_YEAR} · {name}"
     for quarter in ("1T", "2T", "3T", "4T"):
         assert rows[quarter].name_words == quarter
-        assert rows[quarter].label_words == f"2026 · {quarter}"
+        assert rows[quarter].label_words == f"{_YEAR} · {quarter}"
     for row in rows.values():
         assert row.name_words_language is language
         assert row.label_words_language is language
 
 
 def test_the_four_languages_word_the_year_and_every_month_differently_from_each_other() -> None:
-    by_language = {language: _periods(2026, language) for language in OutputLanguage}
+    by_language = {language: _periods(_YEAR, language) for language in OutputLanguage}
 
     for code in ("0A", *(f"{month:02d}" for month in range(1, 13))):
         words = [by_language[language][code].name_words for language in OutputLanguage]
@@ -373,26 +386,37 @@ def test_a_day_in_a_year_no_period_can_be_named_for_is_refused_at_the_request() 
 
 def test_a_span_that_ends_before_it_begins_is_refused() -> None:
     with pytest.raises(ValidationError):
-        LedgerPeriodSpanRequest(first_day=date(2026, 3, 2), last_day=date(2026, 3, 1))
+        LedgerPeriodSpanRequest(first_day=date(_YEAR, 3, 2), last_day=date(_YEAR, 3, 1))
 
 
 def test_the_days_a_request_may_ask_about_are_bounded() -> None:
-    LedgerPeriodsQuery(days=(date(2026, 1, 1),) * MAX_PERIOD_LOOKUP_DAYS)
+    LedgerPeriodsQuery(days=(date(_YEAR, 1, 1),) * MAX_PERIOD_LOOKUP_DAYS)
     with pytest.raises(ValidationError):
-        LedgerPeriodsQuery(days=(date(2026, 1, 1),) * (MAX_PERIOD_LOOKUP_DAYS + 1))
+        LedgerPeriodsQuery(days=(date(_YEAR, 1, 1),) * (MAX_PERIOD_LOOKUP_DAYS + 1))
 
 
 def test_the_request_reads_its_period_questions_from_json() -> None:
     request = LedgerEntryOptionsRequest.model_validate_json(
-        '{"profile_id": "41414141-4141-4141-8141-414141414141", "output_language": "hu",'
-        ' "periods": {"year": 2025, "days": ["2026-03-31"],'
-        ' "covering": {"first_day": "2026-01-02", "last_day": "2026-02-03"}}}'
+        json.dumps(
+            {
+                "profile_id": "41414141-4141-4141-8141-414141414141",
+                "output_language": "hu",
+                "periods": {
+                    "year": _YEAR - 1,
+                    "days": [date(_YEAR, 3, 31).isoformat()],
+                    "covering": {
+                        "first_day": date(_YEAR, 1, 2).isoformat(),
+                        "last_day": date(_YEAR, 2, 3).isoformat(),
+                    },
+                },
+            }
+        )
     )
 
     assert request.output_language is OutputLanguage.HU
-    assert request.periods.year == 2025
-    assert request.periods.days == (date(2026, 3, 31),)
-    assert request.periods.covering == LedgerPeriodSpanRequest(first_day=date(2026, 1, 2), last_day=date(2026, 2, 3))
+    assert request.periods.year == _YEAR - 1
+    assert request.periods.days == (date(_YEAR, 3, 31),)
+    assert request.periods.covering == LedgerPeriodSpanRequest(first_day=date(_YEAR, 1, 2), last_day=date(_YEAR, 2, 3))
 
 
 def test_a_request_that_asks_for_no_period_gets_the_spanish_names_of_the_current_year() -> None:
@@ -432,9 +456,9 @@ def test_the_entry_options_read_serves_the_periods_with_the_vocabularies(
     subject = profile_operation_subject(str(_PROFILE))
     payload = LedgerEntryOptionsRequest(
         profile_id=_PROFILE,
-        on_date=date(2026, 1, 1),
+        on_date=date(_YEAR, 1, 1),
         output_language=OutputLanguage.CA,
-        periods=LedgerPeriodsQuery(year=2025, days=(date(2025, 12, 31),)),
+        periods=LedgerPeriodsQuery(year=_YEAR - 1, days=(date(_YEAR - 1, 12, 31),)),
     )
     request = OperationRequest[LedgerEntryOptionsRequest](
         definition_id=LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID, subject_ref=subject, payload=payload
@@ -455,10 +479,10 @@ def test_the_entry_options_read_serves_the_periods_with_the_vocabularies(
     assert isinstance(stored, LedgerEntryOptionsExecutionResult)
     periods = stored.result.periods
     assert isinstance(periods, LedgerPeriodsProjection)
-    assert periods.year == 2025
-    assert (periods.containing.quarterly.filing_year, periods.containing.quarterly.code) == (2026, "1T")
+    assert periods.year == _YEAR - 1
+    assert (periods.containing.quarterly.filing_year, periods.containing.quarterly.code) == (_YEAR, "1T")
     (day,) = periods.days
-    assert (day.quarterly.filing_year, day.quarterly.code) == (2025, "4T")
+    assert (day.quarterly.filing_year, day.quarterly.code) == (_YEAR - 1, "4T")
     assert {row.name_words_language for row in periods.periods} == {OutputLanguage.CA}
     assert next(row for row in periods.periods if row.period.code == "03").name_words == "Març"
     assert stored.result.families
@@ -470,12 +494,12 @@ def test_the_vocabularies_and_the_periods_are_one_projection_that_survives_the_w
     served = ledger_entry_options(
         _PROFILE,
         operation=operation,
-        on_date=date(2026, 2, 3),
-        periods=LedgerPeriodsQuery(days=(date(2026, 3, 31),)),
+        on_date=date(_YEAR, 2, 3),
+        periods=LedgerPeriodsQuery(days=(date(_YEAR, 3, 31),)),
         language=OutputLanguage.HU,
     )
 
     restored = type(served).model_validate_json(served.model_dump_json())
 
     assert restored == served
-    assert restored.periods.containing.day == date(2026, 2, 3)
+    assert restored.periods.containing.day == date(_YEAR, 2, 3)

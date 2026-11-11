@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 
 from .cli_runner import invoke_cached_cli
@@ -13,12 +14,14 @@ __all__ = ["seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().floor
+
 
 # --- Period-token confusion: --year and --period are composed ---
 
 
 def test_work_create_year_repeated_into_period_explains_composition(seed_profile: ProfileSeeder) -> None:
-    """``--year 2024 --period 2024`` is refused with a clear composition hint.
+    """``--year Y --period Y`` is refused with a clear composition hint.
 
     The disaster-recovery testimony flagged the M100 annual confusion:
     repeating the filing year into ``--period`` composed internally to
@@ -37,11 +40,11 @@ def test_work_create_year_repeated_into_period_explains_composition(seed_profile
             "--modelo",
             "100",
             "--year",
-            "2024",
+            str(_YEAR),
             "--period",
-            "2024",
+            str(_YEAR),
             "--revision",
-            "2024",
+            str(revision_covering("100", _YEAR).id),
         ],
     )
 
@@ -49,7 +52,7 @@ def test_work_create_year_repeated_into_period_explains_composition(seed_profile
     assert "Traceback" not in result.output
     flat = result.output.replace("\n", " ")
     # The opaque internal composition must not surface verbatim.
-    assert "2024-2024" not in flat
+    assert f"{_YEAR}-{_YEAR}" not in flat
     # The error explains the year + period composition.
     assert "--year" in flat and "--period" in flat
     # M100 is annual-only: the valid token 0A must be surfaced.

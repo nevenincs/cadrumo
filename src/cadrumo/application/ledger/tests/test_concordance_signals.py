@@ -42,14 +42,17 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.iva.regime_legend import resolve_regime_legends
 from ....domain.iva.schema import IvaTerritorialScope
 from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, printed_evidence
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DATE = date(2026, 4, 2)
+_DATE = date(_YEAR, 4, 2)
 
 #: A structurally valid German IVA number. Germany is the useful registration
 #: State here because its general rate is NOT one Spain carries, which is what

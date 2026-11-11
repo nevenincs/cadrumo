@@ -21,6 +21,7 @@ from ....core.operator_action_enums import ActionConditionality, ActionEvidenceP
 from ....core.period import Period
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.terminal_precondition_ast import call_name, fact_expressions
 from .. import errors as errors_module
 from .. import modelo_bindings_invoice_iva, preconditions
@@ -35,6 +36,8 @@ from ..service import provider_for_modelo, supported_per_modelo_modelos
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @dataclass(frozen=True)
@@ -290,13 +293,13 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="111",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision=ModeloRevision(
             id="test-111-terminal-preconditions",
             localization_key="test.schema.revision.test-111-terminal-preconditions.label",
-            valid_from=date(2026, 1, 1),
-            period_selector=PeriodSelector(year_from=2026, periods=("1T",)),
+            valid_from=date(_YEAR, 1, 1),
+            period_selector=PeriodSelector(year_from=_YEAR, periods=("1T",)),
             legal_refs=("ley-35-2006:art-99",),
             source_refs=("test-terminal-preconditions",),
             bindings=(
@@ -327,7 +330,7 @@ def test_missing_retenciones_observations_has_an_exact_application_state_operato
         condition=AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
         facts={
             "modelo": "111",
-            "filing_year": "2026",
+            "filing_year": str(_YEAR),
             "period": "1T",
             "source_kind": "retenciones_aggregation",
         },

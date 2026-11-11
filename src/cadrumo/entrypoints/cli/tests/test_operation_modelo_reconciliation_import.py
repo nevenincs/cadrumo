@@ -30,7 +30,11 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_reconciliation_import as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -88,7 +92,7 @@ def _report(
                 context={"reason": "missing_tax_id", "modelo": "303"},
             ),
         ),
-        reconciled_at=datetime(2026, 6, 1, 12, tzinfo=UTC),
+        reconciled_at=datetime(_YEAR + 1, 6, 1, 12, tzinfo=UTC),
         narrative="The evidence differs in three fields.",
     )
 
@@ -194,9 +198,9 @@ def test_bridge_forwards_natural_selectors_and_preserves_full_report(monkeypatch
 
     result = _invoke(
         modelo="303",
-        year=2024,
+        year=_YEAR,
         period=" 1T ",
-        revision="2024-revision",
+        revision="test-revision",
         bucket_id=str(_PROFILE),
     )
 
@@ -205,9 +209,9 @@ def test_bridge_forwards_natural_selectors_and_preserves_full_report(monkeypatch
         ModeloReconciliationImportRequest(
             profile_id=_PROFILE,
             modelo="303",
-            filing_year=2024,
+            filing_year=_YEAR,
             period="1T",
-            revision_id="2024-revision",
+            revision_id="test-revision",
             bucket_id=str(_PROFILE),
             source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
             source_path=str(_SOURCE_PATH),

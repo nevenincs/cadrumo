@@ -17,6 +17,7 @@ from ....core.directory_scan import scan_directory
 from ....core.irnr import M210GrossIncomeSourceMode
 from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ...calculations.row_source_identity import RowSourceIdentity
 from ...filing_evidence import FilingEvidenceReference
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
@@ -45,16 +46,18 @@ from .calculation_revision_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_EXERCISE = filing_year_envelope().horizon
+
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id="2026-y-siguientes",
-    modelo_year=2026,
+    revision_id=str(revision_serving_period("303", _EXERCISE, "1T").id),
+    modelo_year=_EXERCISE,
     period="1T",
 )
 
 
 def test_m303_filing_evidence_requires_an_explicit_nullable_insolvency_fact() -> None:
-    evidence = general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"))
+    evidence = general_m303_filing_evidence(Period.from_year_and_code(_EXERCISE, "1T"))
     payload = evidence.model_dump(mode="python")
     del payload["insolvency"]
 
@@ -104,7 +107,7 @@ def _base_id() -> str:
 
 
 def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None:
-    created = datetime(2026, 8, 23, tzinfo=UTC)
+    created = datetime(1980, 8, 23, tzinfo=UTC)
     key = ("modelo-190-perceptor-row-nif", 1)
     identity = RowSourceIdentity(
         source_kind=BindingSourceKind.WITHHOLDING,
@@ -205,7 +208,7 @@ def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None
 
 
 def test_calculation_revision_requires_explicit_source_provenance_even_when_empty() -> None:
-    created = datetime(2026, 8, 22, tzinfo=UTC)
+    created = datetime(1980, 8, 22, tzinfo=UTC)
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
         input_values_by_casilla_id={},
@@ -242,15 +245,15 @@ def test_calculation_revision_requires_explicit_source_provenance_even_when_empt
         (
             "verified_at",
             CalculationRevisionState.VERIFICADO_COMPLETO,
-            {"verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC), "verified_by": "operator"},
+            {"verified_at": datetime(1980, 5, 26, 11, 0, tzinfo=UTC), "verified_by": "operator"},
         ),
         (
             "filed_at",
             CalculationRevisionState.PRESENTADO,
             {
-                "verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "verified_at": datetime(1980, 5, 26, 11, 0, tzinfo=UTC),
                 "verified_by": "operator",
-                "filed_at": datetime(2026, 5, 26, 12, 0, tzinfo=UTC),
+                "filed_at": datetime(1980, 5, 26, 12, 0, tzinfo=UTC),
                 "filed_by": "operator",
             },
         ),
@@ -258,18 +261,18 @@ def test_calculation_revision_requires_explicit_source_provenance_even_when_empt
             "superseded_at",
             CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
             {
-                "verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "verified_at": datetime(1980, 5, 26, 11, 0, tzinfo=UTC),
                 "verified_by": "operator",
-                "filed_at": datetime(2026, 5, 26, 12, 0, tzinfo=UTC),
+                "filed_at": datetime(1980, 5, 26, 12, 0, tzinfo=UTC),
                 "filed_by": "operator",
-                "superseded_at": datetime(2026, 5, 26, 13, 0, tzinfo=UTC),
+                "superseded_at": datetime(1980, 5, 26, 13, 0, tzinfo=UTC),
             },
         ),
         (
             "discarded_at",
             CalculationRevisionState.DESCARTADO,
             {
-                "discarded_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "discarded_at": datetime(1980, 5, 26, 11, 0, tzinfo=UTC),
                 "discarded_by": "operator",
                 "discard_reason": "operator discarded incomplete draft",
             },
@@ -280,8 +283,8 @@ def test_calculation_revision_requires_explicit_source_provenance_even_when_empt
 @pytest.mark.parametrize(
     "malformed_instant",
     (
-        datetime(2026, 5, 26, 10, 0),
-        datetime(2026, 5, 26, 11, 0, tzinfo=timezone(timedelta(hours=1))),
+        datetime(1980, 5, 26, 10, 0),
+        datetime(1980, 5, 26, 11, 0, tzinfo=timezone(timedelta(hours=1))),
     ),
     ids=("naive", "non-utc"),
 )
@@ -293,7 +296,7 @@ def test_calculation_revision_refuses_non_utc_lifecycle_instants(
 ) -> None:
     """Every revision lifecycle instant is a UTC-only persistence invariant."""
 
-    utc_created_at = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+    utc_created_at = datetime(1980, 5, 26, 10, 0, tzinfo=UTC)
     payload: dict[str, object] = {
         "calculation_revision_id": _base_id(),
         "work_unit_id": "a" * 64,
@@ -334,14 +337,14 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
             source_provenance=(),
         )
 
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_EXERCISE, "1T")
     joint_m303 = general_m303_filing_evidence(period)
     joint = FilingInstanceEvidence(m303=joint_m303)
     insolvent = FilingInstanceEvidence(
         m303=joint_m303.model_copy(
             update={
                 "insolvency": M303InsolvencyFilingFact(
-                    judicial_order_date=date(2026, 2, 3),
+                    judicial_order_date=date(_EXERCISE, 2, 3),
                     subtype=M303InsolvencyFilingSubtype.POST_ORDER,
                 ),
             },
@@ -355,7 +358,7 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
     reference = FilingEvidenceReference(reference="test:revision-id:exonerado-activity")
 
     def annual_evidence(codigo_actividad: str) -> FilingInstanceEvidence:
-        annual_m303 = general_m303_filing_evidence(Period.from_year_and_code(2026, "4T"))
+        annual_m303 = general_m303_filing_evidence(Period.from_year_and_code(_EXERCISE, "4T"))
         return FilingInstanceEvidence(
             m303=annual_m303.model_copy(
                 update={
@@ -528,8 +531,8 @@ def test_portable_revision_json_missing_filing_evidence_is_rejected() -> None:
         "work_unit_id": "b" * 64,
         "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
         "state": "borrador",
-        "created_at": "2026-01-01T00:00:00Z",
-        "updated_at": "2026-01-01T00:00:00Z",
+        "created_at": "1980-01-01T00:00:00Z",
+        "updated_at": "1980-01-01T00:00:00Z",
     }
     with pytest.raises(ValidationError, match="filing_instance_evidence"):
         CalculationRevision.model_validate(payload)

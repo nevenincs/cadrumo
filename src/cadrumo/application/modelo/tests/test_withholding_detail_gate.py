@@ -1,6 +1,6 @@
 """An annual withholding summary with an empty detail store must not reach filing grade.
 
-Drives the real published Modelo 190 ejercicio-2022 revision, real ``Invoice``
+Drives the real published Modelo 190 revision of the support floor's exercise, real ``Invoice``
 records and the canonical retenedor-liability predicate. The zero percepciones
 count the calculate path materialises is the state under test: it is legitimate
 to CALCULATE, and never legitimate to FILE unless the taxpayer attested every
@@ -28,6 +28,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -62,11 +63,11 @@ from .transaction_catalogue_fake import TransactionCatalogueFake
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "19019019-0190-4190-8190-000000002022"
-_NOW = datetime(2023, 1, 15, 9, 0, tzinfo=UTC)
-_FILING_YEAR = 2022
+_FILING_YEAR = filing_year_envelope().floor
+_NOW = datetime(_FILING_YEAR + 1, 1, 15, 9, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
 _TOTAL_PERCEPCIONES: CasillaId = validated_casilla_id("decl.total-percepciones")
-_ALL_QUARTERS_ATTESTED = "2022:1T,2022:2T,2022:3T,2022:4T"
+_ALL_QUARTERS_ATTESTED = ",".join(f"{_FILING_YEAR}:{quarter}" for quarter in ("1T", "2T", "3T", "4T"))
 
 
 def _snapshot() -> RegistrySnapshot:
@@ -185,9 +186,14 @@ def _professional_invoice(
 def _quarterly_invoices() -> tuple[Invoice, ...]:
     """Four quarterly professional invoices, each with 15% practised withholding."""
     return tuple(
-        _professional_invoice(number=f"F-ASESOR-2022-{index:03d}", issued_at=issued_at)
+        _professional_invoice(number=f"F-ASESOR-{_FILING_YEAR}-{index:03d}", issued_at=issued_at)
         for index, issued_at in enumerate(
-            (date(2022, 3, 20), date(2022, 6, 20), date(2022, 9, 20), date(2022, 12, 20)),
+            (
+                date(_FILING_YEAR, 3, 20),
+                date(_FILING_YEAR, 6, 20),
+                date(_FILING_YEAR, 9, 20),
+                date(_FILING_YEAR, 12, 20),
+            ),
             start=1,
         )
     )
@@ -254,7 +260,7 @@ def _payment_row(
                     source_sha256="b" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2023, 1, 10, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(_FILING_YEAR + 1, 1, 10, 12, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={"Concepto": reference},
@@ -271,7 +277,7 @@ def _payment_row(
             "iva_rate": None,
             "iva_amount": Decimal("0.00"),
             "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2023, 1, 10, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_FILING_YEAR + 1, 1, 10, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -317,7 +323,7 @@ def test_invoice_evidence_of_practised_withholding_blocks_an_empty_summary(
         "application.modelo.findings.withholding_detail_absent_against_ledger_evidence"
     )
     assert finding.message_facts["modelo"] == "190"
-    assert finding.message_facts["filing_year"] == 2022
+    assert finding.message_facts["filing_year"] == _FILING_YEAR
     assert finding.message_facts["source_family"] == "withholding"
     assert finding.message_facts["source_modelo"] == "111"
     assert finding.message_facts["contradicting_invoice_count"] == 4
@@ -353,7 +359,7 @@ def test_an_outgoing_professional_payment_row_contradicts_an_attested_nil_summar
     snapshot, _work, absence = _absence(
         operation=operation,
         invoices=(),
-        ledger_rows=(_professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(2022, 7, 4)),),
+        ledger_rows=(_professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(_FILING_YEAR, 7, 4)),),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -378,7 +384,7 @@ def test_an_incoming_activity_row_is_the_taxpayers_own_income(operation: PinnedA
         ledger_rows=(
             _professional_payment_row(
                 reference="COBRO-CLIENTE-1",
-                paid_on=date(2022, 7, 4),
+                paid_on=date(_FILING_YEAR, 7, 4),
                 direction=TransactionDirection.INCOMING,
             ),
         ),
@@ -395,7 +401,9 @@ def test_a_ledger_row_outside_the_declared_year_is_not_evidence(operation: Pinne
     _snap, _work, absence = _absence(
         operation=operation,
         invoices=(),
-        ledger_rows=(_professional_payment_row(reference="PAGO-2023", paid_on=date(2023, 2, 1)),),
+        ledger_rows=(
+            _professional_payment_row(reference=f"PAGO-{_FILING_YEAR + 1}", paid_on=date(_FILING_YEAR + 1, 2, 1)),
+        ),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -412,7 +420,7 @@ def test_a_row_the_operator_archived_is_not_evidence(operation: PinnedAuthorityO
         ledger_rows=(
             _professional_payment_row(
                 reference="PAGO-ARCHIVADO",
-                paid_on=date(2022, 7, 4),
+                paid_on=date(_FILING_YEAR, 7, 4),
                 lifecycle_state=TransactionLifecycleState.ARCHIVED,
             ),
         ),
@@ -429,7 +437,7 @@ def test_a_row_in_no_withholding_irpf_category_is_not_evidence(operation: Pinned
     _snap, _work, absence = _absence(
         operation=operation,
         invoices=(),
-        ledger_rows=(_uncategorised_payment_row(reference="PAGO-MATERIAL", paid_on=date(2022, 7, 4)),),
+        ledger_rows=(_uncategorised_payment_row(reference="PAGO-MATERIAL", paid_on=date(_FILING_YEAR, 7, 4)),),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -460,7 +468,9 @@ def test_a_partially_attested_year_is_still_unproven(operation: PinnedAuthorityO
     _snap, _work, absence = _absence(
         operation=operation,
         invoices=(),
-        profile_values={M111_NO_RETENCIONES_PROFILE_PATH: "2022:1T,2022:2T,2022:3T"},
+        profile_values={
+            M111_NO_RETENCIONES_PROFILE_PATH: ",".join(f"{_FILING_YEAR}:{quarter}" for quarter in ("1T", "2T", "3T"))
+        },
     )
     assert absence is not None
 
@@ -490,7 +500,9 @@ def test_an_issued_invoice_is_not_evidence_of_a_retenedor_liability(operation: P
     """Retención suffered on an issued invoice is a credit, never this store's liability."""
     _snap, _work, absence = _absence(
         operation=operation,
-        invoices=(_professional_invoice(number="F-CLIENTE-1", issued_at=date(2022, 5, 5), kind=InvoiceKind.ISSUED),),
+        invoices=(
+            _professional_invoice(number="F-CLIENTE-1", issued_at=date(_FILING_YEAR, 5, 5), kind=InvoiceKind.ISSUED),
+        ),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -505,7 +517,9 @@ def test_an_invoice_outside_the_filing_year_is_not_this_years_evidence(
     """The comparison is scoped to the year under declaration."""
     _snap, _work, absence = _absence(
         operation=operation,
-        invoices=(_professional_invoice(number="F-ASESOR-2023-001", issued_at=date(2023, 1, 30)),),
+        invoices=(
+            _professional_invoice(number=f"F-ASESOR-{_FILING_YEAR + 1}-001", issued_at=date(_FILING_YEAR + 1, 1, 30)),
+        ),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -517,7 +531,9 @@ def test_a_received_invoice_declaring_no_retencion_is_not_evidence(operation: Pi
     """Most received invoices carry no retención at all and must not fire the gate."""
     _snap, _work, absence = _absence(
         operation=operation,
-        invoices=(_professional_invoice(number="F-PROV-NO-RET", issued_at=date(2022, 4, 4), retention_amount=None),),
+        invoices=(
+            _professional_invoice(number="F-PROV-NO-RET", issued_at=date(_FILING_YEAR, 4, 4), retention_amount=None),
+        ),
         profile_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
     )
     assert absence is not None
@@ -538,7 +554,7 @@ def test_no_absence_is_classified_when_the_calculate_path_recorded_none(
             target=_revision(work_unit, source_issues=()),
             invoice_repository=InvoiceCatalogueFake(*_quarterly_invoices()),
             transaction_repository=TransactionCatalogueFake(
-                _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(2022, 7, 4)),
+                _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(_FILING_YEAR, 7, 4)),
             ),
             profile_path_values=None,
             operation=operation,
@@ -565,7 +581,7 @@ def test_a_source_modelo_without_an_attestation_channel_can_never_prove_absence(
         target=_revision(work_unit, source_issues=(_detail_absent_issue(),)),
         invoice_repository=InvoiceCatalogueFake(),
         transaction_repository=TransactionCatalogueFake(
-            _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(2022, 7, 4)),
+            _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(_FILING_YEAR, 7, 4)),
         ),
         profile_path_values={M111_NO_RETENCIONES_PROFILE_PATH: _ALL_QUARTERS_ATTESTED},
         operation=operation,
@@ -596,7 +612,7 @@ def test_the_blocking_finding_carries_a_typed_precondition_failure(operation: Pi
         snapshot=snapshot,
         invoice_repository=InvoiceCatalogueFake(*_quarterly_invoices()),
         transaction_repository=TransactionCatalogueFake(
-            _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(2022, 7, 4)),
+            _professional_payment_row(reference="PAGO-ASESOR-1", paid_on=date(_FILING_YEAR, 7, 4)),
         ),
         profile_path_values=None,
         operation=operation,

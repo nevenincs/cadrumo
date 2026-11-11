@@ -17,11 +17,14 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.work_unit import WorkUnitState
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from .....frontend.tui.modelo import runtime_workbench_reads as reads
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _WORK_UNIT = "a" * 64
@@ -118,8 +121,8 @@ def _source(monkeypatch: pytest.MonkeyPatch):
         DeclarationsWorkspaceDeclarationRefV1(
             work_unit_id=_WORK_UNIT,
             modelo="303",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             state=WorkUnitState.BORRADOR,
             has_current_calculation=True,
             has_current_filing=False,
@@ -131,7 +134,7 @@ def _source(monkeypatch: pytest.MonkeyPatch):
 def _help(source: reads.RuntimeModeloWorkbenchSource, casilla: str) -> ModeloCasillaHelpCardV1:
     return source.help_card(
         validated_casilla_id(casilla, surface="test"),
-        registry_revision_id="2024",
+        registry_revision_id=str(_YEAR),
         calculation_revision_id=None,
         language=OutputLanguage.EN,
     )

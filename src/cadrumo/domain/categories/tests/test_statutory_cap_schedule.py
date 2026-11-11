@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, manual_edition_matches
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -39,16 +39,74 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _ENVELOPE = filing_year_envelope()
 
-#: The amounts AEAT prints in the Manual practico Renta for each ejercicio,
-#: with 2026 derived from Orden PJC/297/2026 by AEAT's own published method.
-#: These are external authority, not values re-derived from the code under test.
-_AEAT_PUBLISHED_CUOTA_MAXIMA = {
-    2022: Decimal("14057.40"),
-    2023: Decimal("15266.72"),
-    2024: Decimal("16030.82"),
-    2025: Decimal("16672.66"),
-    2026: Decimal("17323.68"),
-}
+#: The sentence each Manual practico Renta edition prints for its ejercicio, in the
+#: normalised corpus text: the cuota maxima, then AEAT's own method -- the
+#: contingencias comunes rate times twelve monthly maximum bases.
+_MANUAL_CUOTA_MAXIMA = (
+    r"la cuota maxima por contingencias comunes en (?P<ejercicio>\d{4}) es de (?P<cuota>[\d.]+,\d{2}) euros "
+    r"\[(?P<tipo>\d+,\d+) x \((?P<base>[\d.]+,\d{2}) x 12\)\]"
+)
+
+#: The monthly maximum contribution base Orden PJC/297/2026 fixes for the RETA. No
+#: bundled manual edition prints that ejercicio yet, so its cuota maxima is derived
+#: from this base by the method the newest manual prints.
+_ORDEN_PJC_297_2026_MONTHLY_MAXIMUM_BASE = Decimal("5101.20")
+
+
+def _printed_amount(text: str) -> Decimal:
+    """Read an amount the manual prints with Spanish grouping and decimal comma."""
+    return Decimal(text.replace(".", "").replace(",", "."))
+
+
+def _cuota_by_method(rate: Decimal, monthly_base: Decimal) -> Decimal:
+    return (rate * monthly_base * 12).quantize(Decimal("0.01"))
+
+
+def _manual_published_cuota_maxima() -> tuple[dict[int, Decimal], Decimal]:
+    """The cuota maxima each bundled manual edition prints, and the rate the newest prints.
+
+    Each edition prints the figure for its own ejercicio together with the
+    computation that yields it, so the figure is checked against that printed
+    method before it is trusted as the oracle.
+    """
+    printed: dict[int, Decimal] = {}
+    rate = Decimal(0)
+    for edition, match in manual_edition_matches("renta", _MANUAL_CUOTA_MAXIMA).items():
+        assert int(match["ejercicio"]) == edition, f"manual edition {edition} prints another ejercicio's cuota"
+        rate = _printed_amount(match["tipo"])
+        cuota = _printed_amount(match["cuota"])
+        assert cuota == _cuota_by_method(rate, _printed_amount(match["base"])), f"edition {edition} misprints"
+        printed[edition] = cuota
+    assert printed, "no bundled Manual practico Renta edition prints the cuota maxima"
+    return printed, rate
+
+
+def _aeat_published_cuota_maxima(rule: ProportionalityRule) -> dict[int, Decimal]:
+    """The figure AEAT publishes for each ejercicio the shipped schedule carries.
+
+    A year a bundled manual edition prints takes the manual's figure. The one
+    schedule year after the newest printing edition takes the figure derived from
+    Orden PJC/297/2026 by the method that edition prints. Any other schedule year
+    has no published figure here, and is reported rather than borrowing one.
+    """
+    printed, rate = _manual_published_cuota_maxima()
+    newest_printed = max(printed)
+    published = {year: cuota for year, cuota in printed.items() if year in _ENVELOPE.years}
+    unprinted = sorted(
+        amount.valid_from.year for amount in rule.statutory_cap_schedule if amount.valid_from.year not in printed
+    )
+    assert unprinted in ([], [newest_printed + 1]), (
+        f"schedule years {unprinted} have neither a manual figure nor the Orden PJC/297/2026 derivation"
+    )
+    for year in unprinted:
+        published[year] = _cuota_by_method(rate, _ORDEN_PJC_297_2026_MONTHLY_MAXIMUM_BASE)
+    return published
+
+
+def _shipped_mutualidad_rule(operation: PinnedAuthorityOperation) -> ProportionalityRule:
+    return load_category_profiles(operation=operation)[
+        require_spending_category("mutualidad_alternativa")
+    ].proportionality
 
 
 def _citation() -> CategoryCitation:
@@ -145,18 +203,21 @@ def test_the_shipped_mutualidad_cap_matches_the_figures_aeat_publishes(
 ) -> None:
     """GROUNDED against external authority, not against the registry's own formula.
 
-    Each expected amount is the figure AEAT prints in the Manual practico Renta
-    for that ejercicio (2026 derived from the cotizacion orden by AEAT's own
-    method). If the registry drifts from what AEAT publishes, this reds.
+    Each expected amount is the figure AEAT prints in the bundled Manual practico
+    Renta for that ejercicio (the year no edition prints yet derived from the
+    cotizacion orden by AEAT's own method). Every ejercicio of the filing envelope
+    a manual prints must be scheduled. If the registry drifts from what AEAT
+    publishes, this reds.
     """
-    rule = load_category_profiles(operation=operation)[
-        require_spending_category("mutualidad_alternativa")
-    ].proportionality
+    rule = _shipped_mutualidad_rule(operation)
 
     assert rule.statutory_cap_schedule, "the shipped mutualidad cap carries no schedule; it regressed to a constant"
     assert rule.statutory_cap_eur is None, "a year-referenced cap must not also carry a flat amount"
 
-    for year, expected in _AEAT_PUBLISHED_CUOTA_MAXIMA.items():
+    published = _aeat_published_cuota_maxima(rule)
+    scheduled = {amount.valid_from.year for amount in rule.statutory_cap_schedule}
+    assert scheduled <= set(published), f"schedule years {sorted(scheduled - set(published))} are ungrounded"
+    for year, expected in published.items():
         assert rule.cap_amount_for_year(year) == expected, f"ejercicio {year} diverges from the AEAT figure"
 
 
@@ -168,11 +229,9 @@ def test_the_retired_flat_fifteen_thousand_is_not_the_figure_for_any_ejercicio(
     Pinned deliberately as a literal. If someone reinstates it -- as a constant
     or as a schedule row -- this names exactly what is wrong with it.
     """
-    assert Decimal("15000") not in set(_AEAT_PUBLISHED_CUOTA_MAXIMA.values())
+    rule = _shipped_mutualidad_rule(operation)
+    assert Decimal("15000") not in set(_aeat_published_cuota_maxima(rule).values())
 
-    rule = load_category_profiles(operation=operation)[
-        require_spending_category("mutualidad_alternativa")
-    ].proportionality
     shipped = {amount.value for amount in rule.statutory_cap_schedule}
 
     assert Decimal("15000") not in shipped
@@ -182,13 +241,14 @@ def test_resolving_a_year_materialises_that_years_cap_and_drops_the_schedule(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Consumers read one cap and cannot reach past the resolver for another year's."""
+    published = _aeat_published_cuota_maxima(_shipped_mutualidad_rule(operation))
     for year in sorted(category_profile_years(operation=operation)):
         rule = resolve_category_profiles(year, operation=operation)[
             require_spending_category("mutualidad_alternativa")
         ].proportionality
 
         assert rule.statutory_cap_schedule == ()
-        assert rule.statutory_cap_eur == _AEAT_PUBLISHED_CUOTA_MAXIMA[year]
+        assert rule.statutory_cap_eur == published[year]
 
 
 def test_a_year_without_a_cap_amount_is_not_reported_as_covered(
@@ -201,9 +261,7 @@ def test_a_year_without_a_cap_amount_is_not_reported_as_covered(
     with no cap at all.
     """
     grounded = category_profile_years(operation=operation)
-    rule = load_category_profiles(operation=operation)[
-        require_spending_category("mutualidad_alternativa")
-    ].proportionality
+    rule = _shipped_mutualidad_rule(operation)
 
     for year in grounded:
         assert rule.cap_amount_for_year(year) is not None, (

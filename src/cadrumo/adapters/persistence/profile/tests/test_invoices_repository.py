@@ -18,6 +18,7 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.models import Invoice
 from .....domain.transactions.enums import TransactionDirection
@@ -29,6 +30,8 @@ from ..transactions import TransactionCatalogueRepository
 from .issued_invoice_support import issued_consulting_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
@@ -42,8 +45,8 @@ def _invoice(invoice_number: str = "INV-001") -> Invoice:
 def _transaction(provider_id: str = "row-1") -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
+        booked_date=date(_YEAR, 4, 5),
+        value_date=date(_YEAR, 4, 5),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Cliente SL",
@@ -53,7 +56,7 @@ def _transaction(provider_id: str = "row-1") -> Transaction:
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 10, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 10, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": "payment"},

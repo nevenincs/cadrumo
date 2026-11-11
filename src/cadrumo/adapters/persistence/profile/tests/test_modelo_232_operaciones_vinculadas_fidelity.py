@@ -45,6 +45,7 @@ from cadrumo.adapters.persistence.profile.tests.observation_lookup_support impor
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -55,8 +56,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "232"
 
 #: The two distinct renta ejercicios the fidelity test spans.
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 
 #: Context label for the cross-year observation (non-calculation / data-fidelity mode).
 _CONTEXT_LABEL = "232-operaciones-vinculadas-related-party-year-over-year"
@@ -72,8 +73,8 @@ _IMPORTE_N = Decimal("150000.00")
 # Year-N+1 operation amount: different from year N so field-bleeding surfaces.
 _IMPORTE_N1 = Decimal("210000.00")
 
-_CLOCK_N = datetime(2025, 1, 25, 10, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2026, 1, 25, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(_YEAR_N_PLUS_1, 1, 25, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 1, 25, 10, 0, 0, tzinfo=UTC)
 
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")

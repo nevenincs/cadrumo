@@ -24,6 +24,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
@@ -40,7 +41,7 @@ from .inventory_acquisition_fixture import acquisition_for
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "38303830-3830-4383-8383-383038303830"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 

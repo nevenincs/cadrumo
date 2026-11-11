@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Callable, Sequence
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .cli_runner import invoke_cached_cli
 from .isolated_profile_storage_fixtures import (
@@ -23,6 +25,8 @@ from .isolated_profile_storage_fixtures import (
 from .test_runtime_invoice_add import native_invoice_runtime_session, password_profile_session
 
 __all__ = ["active_profile_isolated_backend"]
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -121,26 +125,26 @@ def _add_business_expense(*, booked_date: str, idempotency_key: str) -> None:
 def test_check_accepts_period_year_filter_like_status() -> None:
     """`ledger check --period --year` scopes readiness checks to that period."""
 
-    _add_business_expense(booked_date="2026-02-10", idempotency_key="check-q1")
-    _add_business_expense(booked_date="2026-05-10", idempotency_key="check-q2")
+    _add_business_expense(booked_date=date(_YEAR, 2, 10).isoformat(), idempotency_key="check-q1")
+    _add_business_expense(booked_date=date(_YEAR, 5, 10).isoformat(), idempotency_key="check-q2")
 
-    period = Period.from_year_and_code(2026, "1T")
-    filtered = _invoke(["app", "ledger", "check", "--period", "1T", "--year", "2026"])
+    period = Period.from_year_and_code(_YEAR, "1T")
+    filtered = _invoke(["app", "ledger", "check", "--period", "1T", "--year", str(_YEAR)])
     filtered_json = _invoke(
-        ["--format", "json", "app", "ledger", "check", "--period", "1T", "--year", "2026"],
+        ["--format", "json", "app", "ledger", "check", "--period", "1T", "--year", str(_YEAR)],
     )
 
     assert filtered.exit_code == 0, filtered.output
     assert filtered_json.exit_code == 0, filtered_json.output
     assert f"periods\t{period}" in filtered.output
-    assert "1T 2026" not in filtered.output
+    assert f"1T {_YEAR}" not in filtered.output
     assert "checked\t1" in filtered.output
     assert "ready\tfalse" in filtered.output
     assert json.loads(filtered_json.output)["result"]["periods"] == [str(period)]
 
     unfiltered = _invoke(["app", "ledger", "check"])
     assert unfiltered.exit_code == 0, unfiltered.output
-    assert "periods\t2026" in unfiltered.output
+    assert f"periods\t{_YEAR}" in unfiltered.output
     assert "checked\t2" in unfiltered.output
 
 
@@ -216,7 +220,7 @@ def test_invoice_add_id_is_linkable(
     ) as session:
         added = session.invoke_password(
             "app", "ledger", "add",
-            "--date", "2026-03-10", "--amount", "121.00",
+            "--date", date(_YEAR, 3, 10).isoformat(), "--amount", "121.00",
             "--direction", "OUTGOING", "--description", "Supplier payment B00015016",
             output_format="text",
         )  # fmt: skip
@@ -229,7 +233,7 @@ def test_invoice_add_id_is_linkable(
             "--counterparty-nif", "B00015016",
             "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0142",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--taxable-base", "100.00", "--iva-rate", "21",
             "--country-code", "ES",
             output_format="text",
@@ -288,7 +292,7 @@ def test_check_reports_a_one_sided_invoice_link(
     ) as session:
         added = session.invoke_password(
             "app", "ledger", "add",
-            "--date", "2026-03-10", "--amount", "121.00",
+            "--date", date(_YEAR, 3, 10).isoformat(), "--amount", "121.00",
             "--direction", "OUTGOING", "--description", "Supplier payment B00015016",
             "--idempotency-key", "check-link-drift",
             output_format="text",
@@ -302,7 +306,7 @@ def test_check_reports_a_one_sided_invoice_link(
             "--counterparty-nif", "B00015016",
             "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0143",
-            "--invoice-date", "2026-03-10",
+            "--invoice-date", date(_YEAR, 3, 10).isoformat(),
             "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
             output_format="text",

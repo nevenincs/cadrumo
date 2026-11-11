@@ -16,9 +16,12 @@ from .registry_tree import bundled_modelo_components
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-#: The retired revision id. It is absent from the registry, so no authority read can
-#: name it; the scan below skips this module, the one place the id is spelled.
-_RETIRED_IDENTIFIER = "2023-y-siguientes"
+#: The shape of an open-ended revision id: an opening exercise followed by
+#: ``y-siguientes``. The retired Modelo 303 revision had this shape and the registry
+#: no longer holds it, so the scan flags every Modelo 303 id of this shape that is
+#: not one of the modelo's current revisions -- the retired id and any other stale
+#: open-ended id alike -- without this module spelling a year.
+_OPEN_ENDED_REVISION_ID = re.compile(r"(?<![\w-])\d{4}-y-siguientes(?![\w-])")
 
 
 def _cutover_surface_files() -> tuple[Path, ...]:
@@ -50,18 +53,21 @@ def _is_this_module(path: Path) -> bool:
     return path.name == Path(__file__).name and path.resolve() == Path(__file__).resolve()
 
 
-def _retired_identifier_locations(paths: Iterable[Path], *, retired_identifier: str) -> tuple[str, ...]:
+def _names_retired_identifier(line: str, live_revision_ids: frozenset[str]) -> bool:
+    """Whether ``line`` names an open-ended revision id the registry does not hold."""
+    return any(match.group() not in live_revision_ids for match in _OPEN_ENDED_REVISION_ID.finditer(line))
+
+
+def _retired_identifier_locations(paths: Iterable[Path], *, live_revision_ids: frozenset[str]) -> tuple[str, ...]:
     """Find retired identifiers only where their enclosing subject is Modelo 303."""
     locations: list[str] = []
     for path in paths:
-        if _is_this_module(path):
-            continue
         source = path.read_text(encoding="utf-8", errors="replace")
         if path.suffix == ".yml":
-            locations.extend(_m303_locale_retired_identifier_locations(path, source, retired_identifier))
+            locations.extend(_m303_locale_retired_identifier_locations(path, source, live_revision_ids))
         elif path.suffix == ".py":
             for line_number, line in enumerate(source.splitlines(), start=1):
-                if retired_identifier not in line:
+                if not _names_retired_identifier(line, live_revision_ids):
                     continue
                 if _is_m303_source_line(source, line_number):
                     locations.append(f"{repo_relative(path)}:{line_number}")
@@ -96,7 +102,9 @@ def _is_m303_source_line(source: str, line_number: int) -> bool:
     return nearest is not None and nearest[2] == "303"
 
 
-def _m303_locale_retired_identifier_locations(path: Path, source: str, retired_identifier: str) -> tuple[str, ...]:
+def _m303_locale_retired_identifier_locations(
+    path: Path, source: str, live_revision_ids: frozenset[str]
+) -> tuple[str, ...]:
     """Find retired keys and prose only inside the Modelo 303 locale subtree."""
     locations: list[str] = []
     in_modelo_303 = False
@@ -107,7 +115,7 @@ def _m303_locale_retired_identifier_locations(path: Path, source: str, retired_i
             continue
         if in_modelo_303 and re.match(r"^    '[0-9]{3}':\s*$", line):
             in_modelo_303 = False
-        if retired_identifier not in line:
+        if not _names_retired_identifier(line, live_revision_ids):
             continue
         nearby = "\n".join(lines[max(0, line_number - 6) : min(len(lines), line_number + 5)])
         if in_modelo_303 or _M303_CONTEXT.search(nearby):
@@ -167,17 +175,16 @@ def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_id
 
 def test_m303_retired_revision_is_refused_and_cannot_reenter_source_surfaces() -> None:
     """The deleted revision has no runtime, fixture, locale, alias, or selector path."""
-    retired_identifier = _RETIRED_IDENTIFIER
     modelo = bundled_modelo_components("303")[0]
-    assert retired_identifier not in modelo.revisions
+    live_revision_ids = frozenset(modelo.revisions)
 
     surface_files = _cutover_surface_files()
-    legacy_locations = _retired_identifier_locations(surface_files, retired_identifier=retired_identifier)
+    legacy_locations = _retired_identifier_locations(surface_files, live_revision_ids=live_revision_ids)
     assert legacy_locations == (), "retired Modelo 303 revision reappeared:\n  " + "\n  ".join(legacy_locations)
 
     selector_locations = _m303_selector_redeclaration_locations(
         surface_files,
-        revision_ids=frozenset(modelo.revisions),
+        revision_ids=live_revision_ids,
     )
     assert selector_locations == (), "Modelo 303 revision selection was redeclared:\n  " + "\n  ".join(
         selector_locations

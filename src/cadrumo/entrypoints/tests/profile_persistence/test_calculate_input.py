@@ -25,12 +25,18 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    manual_edition_matches,
+)
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,10 +65,10 @@ def _m200_calculation_unit(
     bucket_id: str, tmp_path: Path
 ) -> Generator[tuple[CalculationActionPorts, WorkUnit, PinnedAuthorityOperation]]:
     """Open an isolated profile holding one modelo 200 work unit, with its calculation ports and pinned authority."""
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     snapshot = published_authority_operation().snapshot(
         "200",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period.registry_token,
         # These exercise the CALCULATE path, so they need the rung that
         # computes amounts. The accessor defaults to the strictest rung,
@@ -88,11 +94,11 @@ def _m200_calculation_unit(
             work_unit = create_work_unit(
                 bucket_id=bucket_id,
                 modelo="200",
-                filing_year=2025,
+                filing_year=_YEAR,
                 period=period,
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
-                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+                clock=datetime(_YEAR + 1, 6, 26, 12, 0, tzinfo=UTC),
                 operation=operation,
             )
             yield calculation_ports, work_unit, operation
@@ -214,8 +220,8 @@ def _m303_bundle_with_period_override(
     raw_value: str, *, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one ``period_code`` ``--casilla`` value."""
-    period = Period.from_year_and_code(2025, "1T")
-    snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period.registry_token)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period.registry_token)
     bucket_id = _M303_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:
@@ -238,11 +244,11 @@ def _m303_bundle_with_period_override(
             work_unit = create_work_unit(
                 bucket_id=bucket_id,
                 modelo="303",
-                filing_year=2025,
+                filing_year=_YEAR,
                 period=period,
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
-                clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+                clock=datetime(_YEAR + 1, 6, 26, 12, 0, tzinfo=UTC),
                 operation=operation,
             )
             return build_work_calculate_input_bundle(
@@ -290,18 +296,28 @@ def test_period_code_casilla_override_refuses_a_malformed_token(
 # ---------------------------------------------------------------------------
 
 _MATERNIDAD_BUCKET_ID = "20000000-0000-4000-8000-000000000611"
-_MATERNIDAD_CEILINGED_FILING_YEAR = 2022
+
+
+def _last_ceilinged_year() -> int:
+    """The exercise before the one the Manual Practico de Renta says the un-capped regime applies from."""
+    matches = manual_edition_matches("renta", r"nuevo regimen resulta aplicable desde el 1 de enero de (\d{4})")
+    cutovers = {int(match.group(1)) for match in matches.values()}
+    assert len(cutovers) == 1, "the manual editions disagree on the year the limitation ended"
+    return cutovers.pop() - 1
+
+
+_MATERNIDAD_CEILINGED_FILING_YEAR = _last_ceilinged_year()
 _MATERNIDAD_CASILLA_ID: CasillaId = validated_casilla_id("0611", surface="_MATERNIDAD_CASILLA_ID")
 
 
 def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_everything(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A default-relacion descendant contributing declared months to a pre-2023 filing.
+    """A default-relacion descendant contributing declared months to a filing before the cutover.
 
     The descendant's relacion is the unstated default -- exactly the state the
     ambiguous-relacion advisory exists to disclose -- but the filing year predates
-    2023, when Art. 81.1 was still capped at a cotizaciones figure this application
+    the cutover, when Art. 81.1 was still capped at a cotizaciones figure this application
     cannot express. The deduccion is withheld entirely for that reason, so there is
     nothing left for the relacion ambiguity to threaten: only the cotizaciones
     advisory fires, never the ambiguous-relacion one.
@@ -339,7 +355,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
                 period=period,
                 revision_id=snapshot.revision.id,
                 ports=calculation_ports.work_lifecycle_ports,
-                clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
+                clock=datetime(_YEAR + 1, 8, 5, 12, 0, tzinfo=UTC),
                 operation=operation,
             )
             bundle = build_work_calculate_input_bundle(

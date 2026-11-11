@@ -48,7 +48,7 @@ _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _FAILURES = 3
 
 #: The instant every variant below names, in the three spellings under test.
-_CANONICAL = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
+_CANONICAL = datetime(1980, 5, 14, 12, 0, 0, tzinfo=UTC)
 _NAIVE = _CANONICAL.replace(tzinfo=None)
 _OFFSET = _CANONICAL.astimezone(timezone(timedelta(hours=1)))
 #: One second after the stamp: inside the 8-second window three failures buy.

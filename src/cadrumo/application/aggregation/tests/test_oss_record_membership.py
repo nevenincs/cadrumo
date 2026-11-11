@@ -10,6 +10,7 @@ from ....domain.calculations.record_row_membership import ClosedRecordRowSet
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
@@ -27,7 +28,8 @@ from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
-_DATE = date(2025, 7, 15)
+_YEAR = filing_year_envelope().horizon
+_DATE = date(_YEAR, 7, 15)
 _CORRECTIONS = "modelo-369-exterior-t36902"
 
 
@@ -106,8 +108,8 @@ def _context(operation: PinnedAuthorityOperation, revision: ModeloRevision | Non
         bucket_id=_BUCKET,
         work_unit_id="a" * 64,
         modelo="369",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "EXT-3T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "EXT-3T"),
         revision=revision or published_revision("369", "esquema-exterior"),
         operation=operation,
     )
@@ -153,7 +155,7 @@ def test_fingerprint_covers_membership_and_amounts_but_not_catalogue_order(opera
     assert original == fingerprint((second, first))
     assert original != fingerprint((first,))
     assert original != fingerprint((first, _invoice("SYNTHETIC-2", base="300")))
-    changed_supply_date = _invoice("SYNTHETIC-2", base="200", supply_date=date(2025, 7, 16))
+    changed_supply_date = _invoice("SYNTHETIC-2", base="200", supply_date=date(_YEAR, 7, 16))
     assert changed_supply_date.invoice_id == second.invoice_id
     assert original != fingerprint((first, changed_supply_date))
 

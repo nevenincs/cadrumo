@@ -153,7 +153,7 @@ def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
         pytest.param(_document(_entry("synthetic-installed:1", context_length=-1)), id="context-negative"),
         pytest.param(_document(_entry("synthetic-installed:1", vision="yes")), id="vision-not-a-bool"),
         pytest.param(_document(_entry("synthetic-installed:1", installed="yes")), id="installed-not-a-bool"),
-        pytest.param(_document(_entry("synthetic-installed:1", size_bytes="2000")), id="size-not-an-integer"),
+        pytest.param(_document(_entry("synthetic-installed:1", size_bytes="2 kB")), id="size-not-an-integer"),
         pytest.param(
             _document(_entry("synthetic-installed:1", licence={"spdx": None, "name": "x", "digest": "sha256:zz"})),
             id="licence-digest-malformed",

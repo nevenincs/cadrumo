@@ -33,6 +33,7 @@ from cadrumo.application.calculations.iva_wallet_reconciliation import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from .published_authority_support import published_authority_operation
@@ -42,9 +43,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAXPAYER = "12345678Z"
 _BUCKET_ID = "36363636-3636-4363-8363-363636363636"
-_PERIOD = Period.from_year_and_code(2026, "2T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 _BINDING = "modelo-303-compensacion-pendiente-anteriores"
-_FIRST_CAPTURE = datetime(2026, 5, 19, 10, 0, tzinfo=UTC)
+_FIRST_CAPTURE = datetime(_YEAR, 5, 19, 10, 0, tzinfo=UTC)
 _PENDING = Decimal("1200")
 
 
@@ -52,16 +54,16 @@ def _wallet(captured_at: datetime) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
         taxpayer_nif=_TAXPAYER,
         authenticated_identity=_TAXPAYER,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_PERIOD,
         rows=(
             IvaCompensationWalletRow(
-                generation_year=2026,
-                generation_period=Period.from_year_and_code(2026, "1T"),
+                generation_year=_YEAR,
+                generation_period=Period.from_year_and_code(_YEAR, "1T"),
                 generated_amount=_PENDING,
                 applied_amount=Decimal("0"),
                 pending_amount=_PENDING,
-                raw_label="2026 1T",
+                raw_label=f"{_YEAR} 1T",
             ),
         ),
         total_pending=_PENDING,
@@ -75,7 +77,7 @@ def test_a_wallet_retrieved_twice_credits_the_prior_compensation_once(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observations = CalculationObservationRepository(objects=profile.repository)
         decisions = IvaWalletDecisionRepository(objects=profile.repository)
-        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="2T")
 
         with bundled_indexed_authority().operation() as operation:
             for captured_at in (_FIRST_CAPTURE, _FIRST_CAPTURE + timedelta(hours=3)):
@@ -102,7 +104,7 @@ def test_a_wallet_retrieved_twice_credits_the_prior_compensation_once(tmp_path: 
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=_PERIOD,
                 revision=snapshot.revision,
             ),

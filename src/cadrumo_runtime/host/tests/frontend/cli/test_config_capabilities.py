@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
 from .cli_runner import invoke_cached_cli
@@ -160,7 +161,18 @@ def test_legacy_template_push_is_unavailable_even_with_google_export_enabled() -
     enabling the capability must never make that route executable.
     """
     assert _show()["google_export"]["enabled"] is True
-    argv = ["app", "modelo", "spreadsheet", "push", "--modelo", "303", "--period", "1T", "--year", "2025"]
+    argv = [
+        "app",
+        "modelo",
+        "spreadsheet",
+        "push",
+        "--modelo",
+        "303",
+        "--period",
+        "1T",
+        "--year",
+        str(filing_year_envelope().horizon),
+    ]
     for disabled in (False, True):
         if disabled:
             off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])

@@ -20,6 +20,7 @@ import pytest
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.errors import IvaValidationError
 from ....domain.iva.vehicle_use import IvaVehicleUse, require_iva_vehicle_use
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -29,7 +30,7 @@ from .ledger_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _QUARTER = Period.from_year_and_code(_YEAR, "1T")
 _MIXED = BusinessClassification.MIXED
 _BUSINESS = BusinessClassification.BUSINESS

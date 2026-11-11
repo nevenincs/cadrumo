@@ -29,9 +29,12 @@ from ....core.json_contract import Notice
 from ....core.output_rendering import jsonable_output_payload, reveal_cli_identifiers_opt_in
 from ....core.redaction.rules import redact_structured_for_cli_output
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from .. import modelo_reconcile_commands as handler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
@@ -50,7 +53,9 @@ def test_the_operation_result_is_the_document_the_command_prints(
         work_unit_id="1" * 64,
         calculation_revision_id="2" * 64,
         registry_snapshot_ref=(
-            RegistrySnapshotRef(modelo="130", revision_id="2025-y-siguientes", modelo_year=2025, period="1T")
+            RegistrySnapshotRef(
+                modelo="130", revision_id=str(open_ended_revision("130").id), modelo_year=_YEAR, period="1T"
+            )
             if snapshot
             else None
         ),
@@ -76,7 +81,7 @@ def test_the_operation_result_is_the_document_the_command_prints(
                 context={"modelo": "130", "anchor": "tax_id"},
             ),
         ),
-        reconciled_at=datetime(2026, 6, 1, 12, tzinfo=UTC),
+        reconciled_at=datetime(1980, 6, 1, 12, tzinfo=UTC),
         narrative="One filed casilla differs.",
     )
     projection = ModeloReconciliationImportProjection.from_report(report)

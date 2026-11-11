@@ -47,7 +47,7 @@ _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 
 
 def _operation(*, updated_offset: int = 0) -> ConfigResetOperation:
-    started_at = datetime(2026, 7, 16, 8, 0, tzinfo=UTC)
+    started_at = datetime(1980, 7, 16, 8, 0, tzinfo=UTC)
     return ConfigResetOperation(
         operation_id=_OPERATION_ID,
         status=ConfigResetOperationStatus.INCOMPLETE,
@@ -102,7 +102,7 @@ def test_create_persists_canonical_bucket_identities(
 ) -> None:
     """Every persisted reset identity uses the storage-wide canonical spelling."""
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
-    started_at = datetime(2026, 7, 16, 8, 0, tzinfo=UTC)
+    started_at = datetime(1980, 7, 16, 8, 0, tzinfo=UTC)
     wrapped_bucket_id = f" {_BUCKET_ID} "
     operation = ConfigResetOperation(
         operation_id=_OPERATION_ID,
@@ -156,7 +156,7 @@ def test_retention_decision_refuses_override_when_nothing_blocks_erase() -> None
     """An override cannot be journaled when the assessment needs no override."""
     with pytest.raises(ValueError):
         ConfigResetRetentionDecision(
-            assessed_at=datetime(2026, 7, 16, 8, 0, tzinfo=UTC),
+            assessed_at=datetime(1980, 7, 16, 8, 0, tzinfo=UTC),
             blocks_erase=False,
             retained_record_count=0,
             override_approved=True,

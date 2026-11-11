@@ -47,6 +47,7 @@ from .....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
 from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
@@ -78,11 +79,13 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from .m303_parent_coordinate_support import parent_work_unit_id, registry_snapshot_ref, work_unit_period
 from .published_authority_support import published_authority_operation
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "df5dd25a-ff53-4086-9cc4-a13e61538a09"  # was 'modelo-runtime'
-_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 45, 0, tzinfo=UTC)
-_FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 50, 0, tzinfo=UTC)
+_CORRUPT_ENVELOPE_WRITTEN_AT = datetime(_YEAR, 5, 28, 10, 45, 0, tzinfo=UTC)
+_FUTURE_ENVELOPE_WRITTEN_AT = datetime(_YEAR, 5, 28, 10, 50, 0, tzinfo=UTC)
 _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.base-imponible",
     surface="_IVA_BASE_IMPONIBLE_CASILLA",
@@ -109,8 +112,8 @@ def _parent_work_unit() -> WorkUnit:
         period=work_unit_period(),
         revision_id=registry_snapshot_ref().revision_id,
         name="303-2026-1T",
-        created_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-        updated_at=datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC),
+        created_at=datetime(_YEAR - 2, 7, 1, 9, 0, 0, tzinfo=UTC),
+        updated_at=datetime(_YEAR - 2, 7, 1, 12, 0, 0, tzinfo=UTC),
     )
 
 
@@ -124,13 +127,13 @@ def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
 
 
 def _filing_instance_evidence() -> FilingInstanceEvidence:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     with bundled_indexed_authority().operation() as operation:
         scope = M303RegimenSimplificadoScopeDecision(
             scope=m303_regime_composition_simplified_scope("general", authority=operation),
         )
         snapshot = resolve_m303_regimen_simplificado_snapshot(
-            registry_snapshot=operation.snapshot("303", filing_year=2026, period="1T"),
+            registry_snapshot=operation.snapshot("303", filing_year=_YEAR, period="1T"),
             scope_decision=scope,
         )
         return FilingInstanceEvidence(
@@ -150,7 +153,7 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
                 regimen_simplificado=regimen_simplificado_filing_evidence(
                     period=period,
                     scope_decision=scope,
-                    rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
+                    rows=RegimenSimplificadoFilingRows(ejercicio=_YEAR, activities=()),
                     regimen_snapshot=snapshot,
                     dana_eligibility=None,
                     operation=operation,
@@ -174,7 +177,7 @@ def _populated_catalogue(
     """
 
     work_unit_id = parent_work_unit_id(_BUCKET_ID)
-    created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    created_at = datetime(_YEAR - 2, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
     # ``decl.periodo`` is a ``period_code`` casilla: its AEAT token rides the
@@ -280,8 +283,8 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert len(loaded.revisions) == 1
     (revision,) = loaded.values()
     assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert revision.created_at == datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
-    assert revision.updated_at == datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC)
+    assert revision.created_at == datetime(_YEAR - 2, 7, 1, 9, 0, 0, tzinfo=UTC)
+    assert revision.updated_at == datetime(_YEAR - 2, 7, 1, 12, 0, 0, tzinfo=UTC)
     assert revision.verified_at == revision.updated_at
     assert revision.created_at.utcoffset() == UTC.utcoffset(revision.created_at)
     assert revision.updated_at.utcoffset() == UTC.utcoffset(revision.updated_at)
@@ -402,7 +405,7 @@ def test_a_persisted_tier_divergence_survives_encrypted_storage_with_every_tier_
 @pytest.mark.parametrize("revisioned", (False, True))
 def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_path: Path, revisioned: bool) -> None:
     operation = published_authority_operation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     original = _populated_catalogue(rendering_snapshot=rendering)
 
@@ -462,7 +465,7 @@ def _tamper_saved_rendering(saved: dict[str, Any], tamper: str) -> None:
 @pytest.mark.parametrize("tamper", ("concealed-field", "registry-digest", "rendering-digest", "authority-generation"))
 def test_a_warm_read_refuses_altered_embedded_rendering_bytes(tmp_path: Path, tamper: str) -> None:
     operation = published_authority_operation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
@@ -494,7 +497,7 @@ def test_a_warm_read_refuses_altered_embedded_rendering_bytes(tmp_path: Path, ta
 )
 def test_a_warm_read_refuses_an_altered_rendering_reference(tmp_path: Path, tamper: str, reason: str) -> None:
     operation = published_authority_operation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
@@ -534,7 +537,7 @@ class _RefusingFacts:
 
 def test_a_read_warmed_under_one_generation_is_validated_again_under_another(tmp_path: Path) -> None:
     operation = published_authority_operation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
@@ -640,7 +643,7 @@ def test_an_unchanged_row_is_decoded_once_per_session_for_every_action_that_read
 ) -> None:
     """Each action of one command composes its own repository; one decode serves them all."""
     operation = published_authority_operation()
-    snapshot = operation.snapshot("303", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
     original = _populated_catalogue(rendering_snapshot=rendering)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -1050,7 +1053,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
 )
 @pytest.mark.parametrize(
     "persisted_instant",
-    ("2024-07-01T09:00:00", "2024-07-01T10:00:00+01:00"),
+    ("1980-07-01T09:00:00", "1980-07-01T10:00:00+01:00"),
     ids=("naive", "offset"),
 )
 def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_load(

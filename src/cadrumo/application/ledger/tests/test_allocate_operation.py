@@ -13,6 +13,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, profile_operation_subject
@@ -40,6 +41,8 @@ from .recording_executor_context_support import RecordingEvents, RecordingOperan
 from .registration_access_context_support import registration_access_context
 from .transaction_projection_support import ledger_transaction_projection
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -144,7 +147,7 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
     mutation: dict[str, object] = {}
     authority = cast(PinnedAuthorityOperation, object())
     transaction = Transaction(
-        raw=ledger_raw_transaction("allocate-current", booked_date=date(2026, 4, 15), amount=Decimal("121.00")),
+        raw=ledger_raw_transaction("allocate-current", booked_date=date(_YEAR, 4, 15), amount=Decimal("121.00")),
         direction=TransactionDirection.OUTGOING,
         source_jurisdiction="ES",
         group_label=None,
@@ -254,19 +257,19 @@ def test_an_allocation_prorrata_reference_must_use_the_reference_grammar() -> No
             },
         )
 
-    accepted = operation.LedgerAllocateRequest.model_validate_json(submitted(" prorrata:2026:provisional:general "))
-    assert accepted.prorrata_reference == "prorrata:2026:provisional:general"
+    accepted = operation.LedgerAllocateRequest.model_validate_json(submitted(f" prorrata:{_YEAR}:provisional:general "))
+    assert accepted.prorrata_reference == f"prorrata:{_YEAR}:provisional:general"
     sectoral = operation.LedgerAllocateRequest.model_validate_json(
-        submitted("prorrata:2026:provisional:especial:sector-retail"),
+        submitted(f"prorrata:{_YEAR}:provisional:especial:sector-retail"),
     )
-    assert sectoral.prorrata_reference == "prorrata:2026:provisional:especial:sector-retail"
+    assert sectoral.prorrata_reference == f"prorrata:{_YEAR}:provisional:especial:sector-retail"
 
     for malformed in (
         "telefonia_movil",
         "prorrata:1999:provisional:general",
-        "prorrata:2026:usage_ratio_personal:general",
-        "prorrata:2026:provisional:general:sector with spaces",
-        "prorrata:2026:provisional:general:" + "s" * 128,
+        f"prorrata:{_YEAR}:usage_ratio_personal:general",
+        f"prorrata:{_YEAR}:provisional:general:sector with spaces",
+        f"prorrata:{_YEAR}:provisional:general:" + "s" * 128,
     ):
         with pytest.raises(ValidationError, match="prorrata"):
             operation.LedgerAllocateRequest.model_validate_json(submitted(malformed))

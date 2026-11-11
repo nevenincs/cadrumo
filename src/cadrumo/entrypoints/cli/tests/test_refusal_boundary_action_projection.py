@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import cast
 
@@ -39,10 +39,14 @@ from ....core.operator_action_enums import (
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
 from ....core.redaction.rules import redact_for_log
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import command_error_boundary
 from .cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from .corrupt_pointer_expectation import corrupt_pointer_action
+
+_YEAR = filing_year_envelope().horizon
+
 
 __all__ = ["english_locale_fixture"]
 
@@ -51,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _persisted_builder_refusal_result() -> WorkflowResult:
     """Build the persisted terminal shape emitted for a real builder refusal."""
-    started = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
+    started = datetime(_YEAR, 4, 12, 9, 0, tzinfo=UTC)
     terminal = WorkflowStep(
         stage=WorkflowStage.BUILDING_DRAFT,
         started_at=started,
@@ -359,7 +363,7 @@ def test_real_root_no_recovery_refusal_projects_the_closed_outcome(tmp_path: Pat
                 "ledger",
                 "add",
                 "--date",
-                "2026-01-01",
+                date(_YEAR, 1, 1).isoformat(),
                 "--amount",
                 "1.00",
                 "--direction",

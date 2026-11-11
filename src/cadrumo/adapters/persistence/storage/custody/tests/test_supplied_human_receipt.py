@@ -69,7 +69,7 @@ def test_a_wrong_proof_is_non_destructive_and_uses_no_keyring_lookup(
 ) -> None:
     profile_id = uuid4()
     other_id = uuid4()
-    opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    opened = datetime(1980, 9, 27, 12, tzinfo=UTC)
     dek = bytes(range(32))
     record = _mint_receipt(tmp_path, profile_id, opened, dek)
     other_record = _mint_receipt(tmp_path, other_id, opened, bytes(reversed(range(32))))
@@ -103,7 +103,7 @@ def test_a_wrong_proof_under_another_login_deletes_nothing_and_the_sign_in_survi
     tmp_path: Path, human_keyring: HumanKeyring
 ) -> None:
     profile_id = uuid4()
-    opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    opened = datetime(1980, 9, 27, 12, tzinfo=UTC)
     dek = bytes(range(32))
     record = _mint_receipt(tmp_path, profile_id, opened, dek)
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
@@ -151,7 +151,7 @@ def test_the_runtime_reader_deletes_a_receipt_its_own_bytes_refuse(
     binding: receipt.ReceiptBindingRefusal | None,
 ) -> None:
     profile_id = uuid4()
-    opened = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    opened = datetime(1980, 9, 27, 12, tzinfo=UTC)
     record = _mint_receipt(tmp_path, profile_id, opened, bytes(range(32)))
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{record.session_id}")

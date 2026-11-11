@@ -45,9 +45,12 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET = "31313131-3131-4131-8131-313131313131"
 
@@ -129,7 +132,7 @@ def _create_outgoing_business_transaction(
         profile,
         ManualLedgerTransactionCommand(
             bucket_id=_BUCKET,
-            booked_date=date(2026, 5, 1),
+            booked_date=date(_YEAR, 5, 1),
             amount=Decimal("121.00"),
             direction=TransactionDirection.OUTGOING,
             description="material oficina",
@@ -138,7 +141,7 @@ def _create_outgoing_business_transaction(
         ),
         transaction_repository=_transaction_repository(profile),
         bucket_event_repository=_event_repository(profile),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
     )
     return result.ref.transaction_id
 
@@ -158,7 +161,7 @@ def test_evidence_add_id_is_accepted_by_attach_and_persisted(
         actor="operator-A",
         transaction_repository=_transaction_repository(profile),
         bucket_event_repository=_event_repository(profile),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     assert attached.transaction.purchase_invoice_evidence_id == evidence_id
@@ -200,7 +203,7 @@ def test_generic_update_patch_refuses_evidence_field(profile: TestRuntimeProfile
             source_command="aeat app ledger link",
             transaction_repository=_transaction_repository(profile),
             bucket_event_repository=_event_repository(profile),
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert "aeat app ledger attach" in str(exc_info.value)
@@ -221,7 +224,7 @@ def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: Te
             actor="operator-A",
             transaction_repository=_transaction_repository(profile),
             bucket_event_repository=_event_repository(profile),
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     # The acceptance is store-backed, not unconditional: an absent record still refuses,
@@ -241,7 +244,7 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
     invoice_id = derive_invoice_id(
         kind=InvoiceKind.RECEIVED,
         invoice_number="INV-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
@@ -257,7 +260,7 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
             actor="operator-A",
             transaction_repository=_transaction_repository(profile),
             bucket_event_repository=_event_repository(profile),
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert "aeat app ledger invoice add" in str(exc_info.value)

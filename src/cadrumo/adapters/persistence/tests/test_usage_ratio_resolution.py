@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
 )
 from cadrumo.application.user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -39,7 +40,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "61616161-6161-4161-8161-616161616161"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 

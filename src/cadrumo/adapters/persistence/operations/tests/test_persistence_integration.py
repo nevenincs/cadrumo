@@ -29,13 +29,16 @@ from .....application.operations.persistence.leases import (
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core.directory_scan import scan_directory
 from .....core.operations import OperationEffect, OperationLifecycle
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_STARTED = datetime(2026, 8, 14, 12, tzinfo=UTC)
+_STARTED = datetime(_YEAR, 8, 14, 12, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 _REQUEST_REFERENCE = "d" * 64
 _IDENTITY = OperationIdentity(

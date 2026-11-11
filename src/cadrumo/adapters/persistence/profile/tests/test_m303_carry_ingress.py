@@ -23,6 +23,7 @@ from .....domain.calculations.registry.iva_compensation_annual_partition_binding
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
@@ -30,8 +31,10 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CAPTURED_AT = datetime(2026, 8, 11, 10, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+
+_CAPTURED_AT = datetime(_YEAR, 8, 11, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _POSTERIOR = Decimal("7.00")
 _NEGATIVE_RESULT = Decimal("-20.00")
 

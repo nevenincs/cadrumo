@@ -81,6 +81,7 @@ from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.published_authority import published_snapshot
 from ...domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -126,6 +127,8 @@ from .runtime_attached_repositories_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class _StorageDiagnosticsPort:
@@ -235,14 +238,14 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
         "calculation_observations",
         lambda: CalculationObservationRepository(bucket_id=BUCKET_A_ID).load_observation(
             "303",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(_YEAR, "1T"),
         ),
     ),
     ("iva_wallet_decisions", lambda: IvaWalletDecisionRepository().list_decisions()),
     (
         "iva_wallet_decision_history",
         lambda: load_decision_history(
-            IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
+            IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(_YEAR, "2T")
         ),
     ),
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=BUCKET_A_ID).list_periods()),
@@ -534,12 +537,12 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
 
 def _payable_m303_observation(period: str) -> RegistryModeloObservation:
     """Return a locally filed Modelo 303 whose positive result supports an ingreso."""
-    definition = casillas_by_id(published_snapshot("303", filing_year=2026, period=period).revision)[
+    definition = casillas_by_id(published_snapshot("303", filing_year=_YEAR, period=period).revision)[
         M303_COMPENSATION_RESULTADO_CASILLA
     ]
     return RegistryModeloObservation(
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         observations=(
             CasillaObservation(
@@ -574,11 +577,11 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         envelope_a = CalculationObservationRepository(bucket_id=BUCKET_A_ID).prepare_observation_envelope(
             observation_a,
             source_kind="app_filing",
-            stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
+            stamped_revision_id=str(published_snapshot("303", filing_year=_YEAR, period="1T").revision.id),
             result_disposition=ResultDispositionProjection(
                 disposition=ResultDisposition.INGRESO,
                 provenance_kind="app_filing",
-                provenance_locator="runtime-attached-local-filing:2026:1T",
+                provenance_locator=f"runtime-attached-local-filing:{_YEAR}:1T",
             ),
         )
         CalculationObservationRepository(bucket_id=BUCKET_A_ID).save(envelope_a)
@@ -599,14 +602,14 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         assert (
             CalculationObservationRepository(bucket_id=BUCKET_B_ID).load_observation(
                 "303",
-                Period.from_year_and_code(2026, "1T"),
+                Period.from_year_and_code(_YEAR, "1T"),
             )
             is None
         )
         assert IvaWalletDecisionRepository().list_decisions() == ()
         assert (
             load_decision_history(
-                IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
+                IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(_YEAR, "2T")
             )
             == ()
         )
@@ -622,11 +625,11 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             CalculationObservationRepository(bucket_id=BUCKET_B_ID).prepare_observation_envelope(
                 observation_b,
                 source_kind="app_filing",
-                stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="2T").revision.id),
+                stamped_revision_id=str(published_snapshot("303", filing_year=_YEAR, period="2T").revision.id),
                 result_disposition=ResultDispositionProjection(
                     disposition=ResultDisposition.INGRESO,
                     provenance_kind="app_filing",
-                    provenance_locator="runtime-attached-local-filing:2026:2T",
+                    provenance_locator=f"runtime-attached-local-filing:{_YEAR}:2T",
                 ),
             )
         )
@@ -643,11 +646,11 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         ).list_modelos()
         observed = CalculationObservationRepository(bucket_id=BUCKET_A_ID).load_observation(
             "303",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(_YEAR, "1T"),
         )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = load_decision_history(wallet_repo, WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
+        decision_history = load_decision_history(wallet_repo, WALLET_SUBJECT_ID, Period.from_year_and_code(_YEAR, "2T"))
         iva_periods = IvaCompensationHistoryRepository(bucket_id=BUCKET_A_ID).list_periods()
         usage = _load_usage_ratios_for_test(bucket_id=BUCKET_A_ID)
 
@@ -656,7 +659,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
     assert observed.observation == envelope_a.observation
     assert decisions == (decision_a,)
     assert decision_history == (decision_a,)
-    assert tuple(state.period for state in iva_periods) == (Period.from_year_and_code(2026, "1T"),)
+    assert tuple(state.period for state in iva_periods) == (Period.from_year_and_code(_YEAR, "1T"),)
     assert usage == usage_a
 
 
@@ -705,7 +708,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         stored_a = store.persist_artefact(
-            ("303", 2026, Period.from_year_and_code(2026, "1T"), "202610013522456T"), artefact_a, body_a
+            ("303", _YEAR, Period.from_year_and_code(_YEAR, "1T"), "202610013522456T"), artefact_a, body_a
         )
 
     with active_runtime(tmp_path, BUCKET_B_ID):
@@ -725,7 +728,7 @@ def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Pat
         )
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         store.persist_artefact(
-            ("303", 2026, Period.from_year_and_code(2026, "2T"), "202610013522457T"), artefact_b, body_b
+            ("303", _YEAR, Period.from_year_and_code(_YEAR, "2T"), "202610013522457T"), artefact_b, body_b
         )
 
     with active_runtime(tmp_path, BUCKET_A_ID):

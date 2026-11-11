@@ -49,7 +49,7 @@ pytestmark = [
 
 async def _create(root: Path, operation_id: str) -> None:
     """Publish one valid foreign-owned journal through the public adapter ports."""
-    started = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    started = datetime(1980, 8, 13, 20, tzinfo=UTC)
     identity = OperationIdentity(operation_id=operation_id, definition_id="test.operation", subject_ref="subject")
     event = OperationPhaseEvent(
         identity=identity,

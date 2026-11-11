@@ -12,12 +12,14 @@ from typing import Final, cast
 import pytest
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..duplicates import LikelyDuplicate, likely_duplicate_invoice
 from .duplicate_recording_support import recorded_duplicate_answer, stored_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_DAY: Final = date(filing_year_envelope().horizon, 2, 1)
 _QUESTIONS: Final = (
     Path(__file__).resolve().parents[5] / "dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json"
 )
@@ -63,7 +65,7 @@ def test_the_same_total_written_differently_is_the_same_total() -> None:
             "kind": "received",
             "invoice_number": "X-1",
             "counterparty_tax_id": "B00015016",
-            "issued_at": "2026-02-01",
+            "issued_at": _DAY.isoformat(),
             "grand_total": "121.00",
         }
     )
@@ -72,7 +74,7 @@ def test_the_same_total_written_differently_is_the_same_total() -> None:
         kind=InvoiceKind.RECEIVED,
         invoice_number="OTHER",
         counterparty_tax_id="b-00015016",
-        invoice_date=date(2026, 2, 1),
+        invoice_date=_DAY,
         grand_total=Decimal("121"),
     )
     assert found == LikelyDuplicate(invoice_id=stored.invoice_id, basis="party_day_total")

@@ -89,11 +89,15 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_work_lifecycle_ports,
 )
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .production_operation_registry import production_operation_registry
 
-SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+
+SEEDED_AT = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
-_ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1))
+_ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 2, 1, 1))
 # An activity in estimación directa always runs under one modality; the normal one leaves box 02
 # as the expenses the filer states, with no art. 30.2.ª provision added.
 _ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
@@ -379,7 +383,7 @@ def seeded_operator_work(
     tmp_path: Path,
     *,
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "1T",
     extra_facts: tuple[UserProfileFact, ...] = (),
     estimation_regime: str | None = "directa_normal",

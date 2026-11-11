@@ -61,6 +61,7 @@ from .....application.user_profile.censal_operation import (
 )
 from .....core.identity.bucket import BucketId
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.codes import ModeloCode
 from ....adapter_composition_ports import build_censal_fetch_port
 from ...navigation import TuiScreenContextV1
@@ -79,8 +80,9 @@ from ..reconciliation_screen import AeatSyncReconciliationScreen
 from ..screens import AeatSyncWorkspaceScreen
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
-T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
+YEAR = filing_year_envelope().horizon
+T1 = datetime(YEAR, 1, 3, 10, tzinfo=UTC)
+T2 = datetime(YEAR, 1, 4, 11, tzinfo=UTC)
 BUCKET_ID = cast(BucketId, "11111111-1111-4111-8111-111111111111")
 SUBJECT_KEY = "private-subject"
 _LOCALES_ROOT = Path(__file__).parents[4] / "locales"
@@ -174,7 +176,7 @@ def aeat_sync_workspace_projection(
         supported_actions=(action,),
         supported_operations=(operation_id,),
     )
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(YEAR, "1T")
     return project_aeat_sync_workspace(
         bucket_id=BUCKET_ID,
         subject_key=SUBJECT_KEY,
@@ -204,7 +206,7 @@ def aeat_sync_workspace_projection(
                 SUBJECT_KEY,
                 AeatSyncWorkspaceFiledDeclarationRowV1(
                     modelo=ModeloCode("130"),
-                    filing_year=2026,
+                    filing_year=YEAR,
                     period=period,
                     local_filing_state=AeatSyncLocalFilingState.FILED,
                     local_filed_at=T1,
@@ -231,7 +233,7 @@ def aeat_sync_workspace_projection(
                 ),
                 private_identity=private_identity,
             )
-            for private_identity, issued_on in (notification_specs or (("notification-private", date(2026, 1, 2)),))
+            for private_identity, issued_on in (notification_specs or (("notification-private", date(YEAR, 1, 2)),))
         ),
         evidence_comparison=(
             AeatSyncWorkspaceFactV1(
@@ -239,7 +241,7 @@ def aeat_sync_workspace_projection(
                 SUBJECT_KEY,
                 AeatSyncWorkspaceEvidenceComparisonRowV1(
                     modelo=ModeloCode("130"),
-                    filing_year=2026,
+                    filing_year=YEAR,
                     period=period,
                     local_state=AeatSyncSourceState.PRESENT,
                     aeat_state=AeatSyncSourceState.ABSENT,
@@ -255,7 +257,7 @@ def aeat_sync_workspace_projection(
                 SUBJECT_KEY,
                 AeatSyncWorkspaceReconciliationRowV1(
                     modelo=ModeloCode("130"),
-                    filing_year=2026,
+                    filing_year=YEAR,
                     period=period,
                     local_state=AeatSyncSourceState.PRESENT,
                     aeat_state=AeatSyncSourceState.ABSENT,

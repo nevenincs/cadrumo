@@ -85,6 +85,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -105,8 +106,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
 _M200 = "200"
 _M202 = "202"
 
@@ -131,9 +132,9 @@ _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
 
 # The M200 ejercicio under live calculate, and the prior ejercicio the
 # filing_year_delta = -1 self-relations source. The bundled M200 authority
-# begins at 2024, so this test must exercise a supported two-year window.
-_FILING_YEAR = 2025
-_PRIOR_YEAR = 2024
+# supports the prior ejercicio, so this test exercises a supported two-year window.
+_FILING_YEAR = newest_authored_edition("200")
+_PRIOR_YEAR = _FILING_YEAR - 1
 
 # Prior-ejercicio closing-stock casillas (manual on the prior filing) that the
 # self-relations read.

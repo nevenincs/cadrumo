@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -29,7 +30,8 @@ pytestmark = [
 ]
 
 _PROFILE_LABEL = "Malformed binding locale profile"
-_WORK_UNIT_CREATED_AT = datetime(2026, 7, 2, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_WORK_UNIT_CREATED_AT = datetime(1980, 7, 2, 10, 0, tzinfo=UTC)
 
 
 def _seed_work_unit() -> str:
@@ -37,11 +39,11 @@ def _seed_work_unit() -> str:
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     revision_id = "r" + "1" * 63
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
     )
@@ -49,10 +51,10 @@ def _seed_work_unit() -> str:
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("130"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
-        name="130-2026-1T",
+        name=f"130-{_YEAR}-1T",
         created_at=_WORK_UNIT_CREATED_AT,
         updated_at=_WORK_UNIT_CREATED_AT,
     )

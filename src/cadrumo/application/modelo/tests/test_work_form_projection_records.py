@@ -19,6 +19,11 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingColumn,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -49,6 +54,10 @@ from ..work_form_records import saved_form_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_YEAR_100 = newest_authored_edition("100")
+"""The exercise of the newest authored Modelo 100 edition."""
+
 
 def _annual_block(snapshot: RegistrySnapshot, number: int) -> FormContextFieldBlock:
     return FormContextFieldBlock(
@@ -63,9 +72,9 @@ def _annual_block(snapshot: RegistrySnapshot, number: int) -> FormContextFieldBl
 
 @pytest.fixture
 def annual_saved(operation: PinnedAuthorityOperation):
-    snapshot = operation.snapshot("303", filing_year=2026, period="4T")
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period="4T")
     envelope = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "4T"), reference="test:annual-form", operation=operation
+        Period.from_year_and_code(_YEAR, "4T"), reference="test:annual-form", operation=operation
     )
     reference = FilingEvidenceReference(reference="test:annual-form")
     annual = M303Exonerado390FilingEvidence(
@@ -126,7 +135,7 @@ def test_annual_context_rejects_foreign_saved_coordinate_and_period(annual_saved
     corrupt = revision.model_copy(
         update={
             "filing_instance_evidence": envelope.model_copy(
-                update={"m303": envelope.m303.model_copy(update={"period": Period.from_year_and_code(2026, "3T")})}
+                update={"m303": envelope.m303.model_copy(update={"period": Period.from_year_and_code(_YEAR, "3T")})}
             )
         }
     )
@@ -171,7 +180,7 @@ def _block(*field_numbers: int) -> FormRepeatingGroupBlock:
 
 def _revision(snapshot: RegistrySnapshot, evidence: FilingInstanceEvidence | None) -> CalculationRevision:
     work_id = "a" * 64
-    now = datetime(2026, 7, 1, tzinfo=UTC)
+    now = datetime(1980, 7, 1, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_id,
@@ -194,7 +203,7 @@ def _revision(snapshot: RegistrySnapshot, evidence: FilingInstanceEvidence | Non
 
 @pytest.fixture
 def snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    return operation.snapshot("303", filing_year=2026, period="2T")
+    return operation.snapshot("303", filing_year=_YEAR, period="2T")
 
 
 @pytest.fixture
@@ -367,7 +376,7 @@ def test_missing_evidence_is_unknown_but_not_claimed_scope_is_known_empty(snapsh
         snapshot=snapshot, revision=_revision(snapshot, None), block=block, column_casillas=(None,)
     ) == (False, ())
     evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "2T"), reference="test:form", operation=operation
+        Period.from_year_and_code(_YEAR, "2T"), reference="test:form", operation=operation
     )
     assert saved_form_records(
         snapshot=snapshot, revision=_revision(snapshot, evidence), block=block, column_casillas=(None,)
@@ -383,7 +392,7 @@ def test_foreign_saved_coordinate_is_rejected(snapshot, saved):
 
 
 def test_foreign_evidence_period_is_rejected(snapshot, saved):
-    facts = saved.filing_instance_evidence.m303.model_copy(update={"period": Period.from_year_and_code(2026, "3T")})
+    facts = saved.filing_instance_evidence.m303.model_copy(update={"period": Period.from_year_and_code(_YEAR, "3T")})
     corrupt = saved.model_copy(
         update={"filing_instance_evidence": saved.filing_instance_evidence.model_copy(update={"m303": facts})}
     )
@@ -423,7 +432,7 @@ def projection_block() -> FormRepeatingGroupBlock:
 
 
 def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
-    layout = operation.form_layout("100", "2025")
+    layout = operation.form_layout("100", str(revision_covering("100", _YEAR_100).id))
     assert layout is not None
     return next(
         block
@@ -437,7 +446,7 @@ def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGr
 def test_each_sale_shows_as_its_own_row_beside_the_boxes_that_hold_the_totals(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    snapshot = operation.snapshot("100", filing_year=_YEAR_100, period="0A")
     block = _disposal_rows_block(operation)
     by_box = {column.casilla_id: column.binding_id for column in block.columns}
     columns = tuple(column.casilla_id for column in block.columns)
@@ -465,7 +474,7 @@ def test_a_revision_without_rows_or_a_source_trace_leaves_the_sales_unknown(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Neither a box total nor an empty revision proves there were no sales; only a source trace can."""
-    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    snapshot = operation.snapshot("100", filing_year=_YEAR_100, period="0A")
     block = _disposal_rows_block(operation)
     columns = tuple(column.casilla_id for column in block.columns)
     empty = _revision(snapshot, None)

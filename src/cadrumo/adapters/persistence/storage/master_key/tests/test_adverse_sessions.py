@@ -21,7 +21,7 @@ from ..bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_OPENED_AT = datetime(2026, 6, 2, 8, 0, 0, tzinfo=UTC)
+_OPENED_AT = datetime(1980, 6, 2, 8, 0, 0, tzinfo=UTC)
 _DEK = bytes(range(32, 64))
 
 

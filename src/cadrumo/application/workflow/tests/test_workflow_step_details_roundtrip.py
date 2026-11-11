@@ -15,7 +15,7 @@ from ..run_models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_WORKFLOW_STEP_STARTED_AT = datetime(2026, 5, 28, 10, 5, 0, tzinfo=UTC)
+_WORKFLOW_STEP_STARTED_AT = datetime(1980, 5, 28, 10, 5, 0, tzinfo=UTC)
 
 
 def test_workflow_step_details_typed_envelope_roundtrip() -> None:

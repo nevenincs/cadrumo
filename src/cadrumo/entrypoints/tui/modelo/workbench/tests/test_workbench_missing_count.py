@@ -22,6 +22,7 @@ from ......application.modelo.work_form_next_step import (
 )
 from ......core.config import override_settings
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -34,6 +35,8 @@ from ..progress import workbench_progress
 from .workbench_fixture import registry_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _RECORD_VALUES = ("op.codigo-pais", "op.nif-comunitario", "op.clave-operacion")
 
@@ -59,7 +62,7 @@ def _missing_values(
 def test_missing_record_values_count_in_the_missing_chip_and_on_the_next_line(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    built = _missing_values(operation, "349", 2026, "1T", _RECORD_VALUES)
+    built = _missing_values(operation, "349", _YEAR, "1T", _RECORD_VALUES)
     form = built.model_copy(update={"calculation_revision_id": "b" * 64})
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level: chip.count for chip in attention_chips(form, recorded=False)}
@@ -78,8 +81,10 @@ def test_the_missing_values_only_findings_name_are_the_ones_the_findings_list_sh
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Record values are counted; a finding about a box the missing boxes already list is not counted again."""
-    records = _missing_values(operation, "349", 2026, "1T", _RECORD_VALUES)
-    listed = _missing_values(operation, "210", 2025, "0A", ("tipo_renta", "rendimientos_integros"))
+    records = _missing_values(operation, "349", _YEAR, "1T", _RECORD_VALUES)
+    listed = _missing_values(
+        operation, "210", filing_grade_exercises("210")[-1], "0A", ("tipo_renta", "rendimientos_integros")
+    )
     with override_settings(cadrumo_output_language="en"):
         shown = [sum(1 for line in issue_lines(form) if line.level is IssueLevel.MISSING) for form in (records, listed)]
 

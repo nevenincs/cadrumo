@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
@@ -65,13 +65,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
-#: Four whole years past this instant is still ahead of any plausible run date,
-#: so the record is inside the LGT art. 66 window by law rather than by fixture.
-_RETAINED_FILED_AT = datetime(2025, 7, 1, tzinfo=UTC)
+#: Filed a month before the run, so four whole years past it are still ahead:
+#: the record is inside the LGT art. 66 window by law rather than by fixture.
+_RETAINED_FILED_AT = datetime.now(UTC) - timedelta(days=30)
 
-#: Four whole years past this instant elapsed in 2023, so the record is outside
-#: the window and may be erased.
-_ELAPSED_FILED_AT = datetime(2019, 7, 1, tzinfo=UTC)
+#: Filed eight years before the run, so the four-year window has elapsed and
+#: the record is outside it and may be erased.
+_ELAPSED_FILED_AT = datetime.now(UTC) - timedelta(days=8 * 365)
 
 
 @contextmanager

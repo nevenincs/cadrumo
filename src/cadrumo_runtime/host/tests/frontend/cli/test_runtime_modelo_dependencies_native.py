@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -41,6 +42,8 @@ from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import native_api_cli_session
 from .native_profile_cli_invoke import invoke_native_profile_cli
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -49,7 +52,7 @@ pytestmark = [
 ]
 
 _LABEL = "Native dependency inspection operator"
-_TARGET = Period.from_year_and_code(2025, "0A")
+_TARGET = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _facts() -> dict[str, str]:
@@ -68,14 +71,14 @@ def test_native_inventory_and_clean_state_match_published_authority_without_muta
         fixture.register(label=_LABEL, facts=_facts())
         profile_id = resolve_login_target(_LABEL).bucket_id
         modelo_operation_test_support.seeded_modelo_work_unit(UUID(profile_id), operation=authority_operation)
-        expected_inventory = cross_period_dependency_inventory(authority_operation, filing_year=2025, modelos=("100",))
+        expected_inventory = cross_period_dependency_inventory(authority_operation, filing_year=_YEAR, modelos=("100",))
         before = BucketEventHistoryRepository().load().events
         close_active_bucket_session()
 
-        inventory = _invoke(fixture, "--year", "2025", "--modelo", "100")
+        inventory = _invoke(fixture, "--year", str(_YEAR), "--modelo", "100")
         assert inventory.exit_code == 0, inventory.output
         inventory_result = unwrap_cli_result(inventory)
-        assert inventory_result["filing_year"] == 2025
+        assert inventory_result["filing_year"] == _YEAR
         assert inventory_result["modelo_filter"] == "100"
         assert inventory_result["period_filter"] is None
         assert inventory_result["clean_state"] is None
@@ -83,14 +86,14 @@ def test_native_inventory_and_clean_state_match_published_authority_without_muta
         assert tuple(inventory_result["target_modelos"]) == expected_inventory.target_modelos
         assert tuple(inventory_result["source_modelos"]) == expected_inventory.source_modelos
 
-        detailed = _invoke(fixture, "--year", "2025", "--modelo", "100", "--period", "0A")
+        detailed = _invoke(fixture, "--year", str(_YEAR), "--modelo", "100", "--period", "0A")
         assert detailed.exit_code == 0, detailed.output
         result = unwrap_cli_result(detailed)
         assert result["target_count"] == len(expected_inventory.items)
         assert result["period_filter"] == "0A"
         clean = cast("dict[str, object]", result["clean_state"])
         assert clean["target_modelo"] == "100"
-        assert clean["target_filing_year"] == 2025
+        assert clean["target_filing_year"] == _YEAR
         assert cast("dict[str, object]", clean["target_period"])["code"] == "0A"
         assert "dependencies" in clean
 
@@ -163,7 +166,7 @@ def test_native_target_only_grant_refuses_before_private_result(
         invoke_cli=run_cadrumo_cli,
     ) as session:
         denied = session.invoke_credential_reference(
-            "app", "modelo", "work", "dependencies", "--year", "2025", "--modelo", "100", "--period", "0A"
+            "app", "modelo", "work", "dependencies", "--year", str(_YEAR), "--modelo", "100", "--period", "0A"
         )
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]
@@ -172,7 +175,7 @@ def test_native_target_only_grant_refuses_before_private_result(
 
     request = ModeloDependencyRequest(
         profile_id=UUID("5aa00000-0000-4000-8000-0000000000aa"),
-        filing_year=2025,
+        filing_year=_YEAR,
         modelo="100",
         period=PublicPeriod.from_period(_TARGET),
     )
@@ -186,7 +189,7 @@ def test_native_target_only_grant_refuses_before_private_result(
         invoke_cli=run_cadrumo_cli,
     ) as session:
         denied = session.invoke_credential_reference(
-            "app", "modelo", "work", "dependencies", "--year", "2025", "--modelo", "100", "--period", "0A"
+            "app", "modelo", "work", "dependencies", "--year", str(_YEAR), "--modelo", "100", "--period", "0A"
         )
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]

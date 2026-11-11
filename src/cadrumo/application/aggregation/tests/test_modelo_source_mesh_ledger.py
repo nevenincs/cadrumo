@@ -12,6 +12,11 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_serving_period,
+)
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
@@ -53,6 +58,10 @@ from .ledger_transaction_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_HORIZON = filing_year_envelope().horizon
+_YEAR = newest_authored_edition("100")
+_M303_HORIZON_REVISION = str(revision_serving_period("303", _HORIZON, "1T").id)
+
 
 def _apart_from_the_bank_date_advisory(
     resolution: CalculationSourceResolution,
@@ -62,7 +71,7 @@ def _apart_from_the_bank_date_advisory(
 
 
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -90,8 +99,8 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -109,7 +118,7 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
 
 
 def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() -> None:
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     prorrata_repo = InMemoryProrrataRegisterRepository(bucket_id=BUCKET_ID)
     outgoing = iva_transaction(
@@ -124,12 +133,12 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
         ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
-                    ejercicio=2026,
+                    ejercicio=_HORIZON,
                     regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                    source_observation_ref="303:2025:4T",
+                    source_observation_ref=f"303:{_HORIZON - 1}:4T",
                     source_registry_snapshot_refs=(prior_m303_snapshot_ref(),),
                 ),
             ),
@@ -144,8 +153,8 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -157,8 +166,8 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
     provenance = prorrata_provenance[0]
     assert provenance.resolved_binding_source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     assert provenance.source_ref == (
-        "prorrata-apportionment:2026:general:"
-        "percentage:80:provenance:carried_prior_definitiva:source-observation:303:2025:4T"
+        f"prorrata-apportionment:{_HORIZON}:general:"
+        f"percentage:80:provenance:carried_prior_definitiva:source-observation:303:{_HORIZON - 1}:4T"
     )
     assert provenance.source_casilla_ids == ()
     assert provenance.legal_refs
@@ -166,7 +175,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
 
 
 def _resolve_invoices_alone(*invoices: Invoice, code: str = "1T") -> CalculationSourceResolution:
-    """Resolve 2025 ``code`` over these invoices with no transaction ledger at all."""
+    """Resolve ``code`` of the newest Renta exercise over these invoices with no transaction ledger at all."""
     invoice_repo = InMemoryInvoiceCatalogueRepository()
     invoice_repo.save(build_invoice_catalogue(invoices))
     return ledger_iva_resolver(
@@ -177,8 +186,8 @@ def _resolve_invoices_alone(*invoices: Invoice, code: str = "1T") -> Calculation
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, code),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, code),
             revision=m303_revision(),
         ),
     )
@@ -193,7 +202,7 @@ def test_iva_source_mesh_declares_an_issued_invoice_without_a_ledger_movement() 
     invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
     )
@@ -210,7 +219,7 @@ def _received(number: str, base: str, cuota: str) -> Invoice:
     return domestic_iva_invoice(
         number,
         kind=InvoiceKind.RECEIVED,
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal(base),
         iva_amount=Decimal(cuota),
     )
@@ -265,10 +274,10 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     invoice = domestic_iva_invoice(
         "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 4, 10),
+        issued_at=date(_YEAR, 4, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
-        operation_date=date(2025, 3, 28),
+        operation_date=date(_YEAR, 3, 28),
     )
 
     q1_resolution = _resolve_invoices_alone(invoice, code="1T")
@@ -294,12 +303,12 @@ def _resolve_laura_first_quarter_sale(
         amount=Decimal("12100.00"),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
-        booked_date=date(2025, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
     )
     invoice = domestic_iva_invoice(
         "LAURA-1T-SALE",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
         linked_transaction_ids=(transaction.transaction_id,),
@@ -316,8 +325,8 @@ def _resolve_laura_first_quarter_sale(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision=revision,
         ),
     )
@@ -347,7 +356,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     correctly, so the declared-date case is asserted silent as explicitly as
     the proxy case is asserted noisy.
     """
-    _, resolution = _resolve_laura_first_quarter_sale(operation_date=date(2025, 2, 5))
+    _, resolution = _resolve_laura_first_quarter_sale(operation_date=date(_YEAR, 2, 5))
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
     assert _apart_from_the_bank_date_advisory(resolution) == []
@@ -370,7 +379,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     consume it (each resolves the 42.00 self-assessed cuota), so the pair nets
     to zero in the M303 resultado and the advisory no longer fires.
     """
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -412,8 +421,8 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -449,7 +458,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
     cuota-less by law. This guards against the false-positive that surfaced an
     unactionable "modelling gap" for a category that simply has no cuota.
     """
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -479,8 +488,8 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -501,7 +510,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     binding selects produce the diagnostic. A domestic sale matched by the
     repercutido-general binding must leave ``diagnostics`` empty.
     """
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -522,8 +531,8 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -533,7 +542,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
 
 
 def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic() -> None:
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -543,7 +552,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
-        booked_date=date(2026, 4, 10),
+        booked_date=date(_HORIZON, 4, 10),
     ).model_copy(
         update={
             "business_classification": BusinessClassification.PERSONAL,
@@ -553,7 +562,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
     catalogue = TransactionCatalogue.from_transactions((personal_q2,))
     tx_repo.save(catalogue)
 
-    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(_HORIZON, "1T"))
     assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD]
 
     resolution = ledger_iva_resolver(
@@ -564,8 +573,8 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -576,14 +585,14 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
     assert diagnostic.source_kind == "ledger_iva_aggregation"
     assert diagnostic.resolver_id == "ledger_iva_aggregation"
     assert diagnostic.out_of_window_count == 1
-    assert diagnostic.out_of_window_min_filing_date == date(2026, 4, 10)
-    assert diagnostic.out_of_window_max_filing_date == date(2026, 4, 10)
+    assert diagnostic.out_of_window_min_filing_date == date(_HORIZON, 4, 10)
+    assert diagnostic.out_of_window_max_filing_date == date(_HORIZON, 4, 10)
     assert "outside the requested period" in diagnostic.message
     assert personal_q2.transaction_id not in resolution.source_transaction_ids
 
 
 def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> None:
-    revision = ledger_source_mesh_revision("303", "2022")
+    revision = ledger_source_mesh_revision("303", _M303_HORIZON_REVISION)
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -597,7 +606,7 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
     catalogue = TransactionCatalogue.from_transactions((missing_rate,))
     tx_repo.save(catalogue)
 
-    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(2026, "1T"))
+    raw_aggregation = aggregate_iva_ledger_observations(catalogue, period=Period.from_year_and_code(_HORIZON, "1T"))
     assert [issue.reason for issue in raw_aggregation.issues] == [IvaLedgerAggregationIssueReason.MISSING_IVA_RATE]
 
     resolution = ledger_iva_resolver(
@@ -608,8 +617,8 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_HORIZON,
+            period=Period.from_year_and_code(_HORIZON, "1T"),
             revision=revision,
         ),
     )
@@ -624,7 +633,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-ledger-1",
-            transaction_date=date(2025, 7, 15),
+            transaction_date=date(_YEAR, 7, 15),
             regime=OssIossRegime("union_scheme"),
             destination_member_state=EUMemberState.from_registry("de"),
             rate_kind=IvaRateKind("general"),
@@ -643,8 +652,8 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="369",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "4T"),
             revision=revision,
         ),
     )
@@ -667,7 +676,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-it-unrouted",
-            transaction_date=date(2025, 7, 15),
+            transaction_date=date(_YEAR, 7, 15),
             regime=OssIossRegime("union_scheme"),
             destination_member_state=EUMemberState.from_registry("it"),
             rate_kind=IvaRateKind("general"),
@@ -685,8 +694,8 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="369",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "4T"),
             revision=revision,
         ),
     )
@@ -715,7 +724,7 @@ def test_a_non_es_invoice_carrying_spanish_cuota_is_declared() -> None:
     invoice = domestic_iva_invoice(
         "DE-1T-SALE",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("10000.00"),
         iva_amount=Decimal("2100.00"),
         counterparty_country="DE",
@@ -742,7 +751,7 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
     exempt = exempt_intracommunity_invoice(
         "DE-1T-EXEMPT",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR, 2, 10),
         taxable_base=Decimal("10000.00"),
     )
     invoice_repo.save(build_invoice_catalogue((exempt,)))
@@ -755,8 +764,8 @@ def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen() -> 
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision=revision,
         ),
     )

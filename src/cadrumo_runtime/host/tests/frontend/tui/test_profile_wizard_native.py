@@ -6,6 +6,7 @@ import asyncio
 import sys
 import time
 from collections.abc import Callable
+from datetime import date
 from importlib.metadata import version
 from pathlib import Path
 from uuid import UUID
@@ -22,6 +23,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.profile.aeat_auth_setup import AeatAuthSetupScreen
@@ -44,6 +46,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from ....frontend.tui.profile.manager_client import ProfileManagerClientComposition
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -136,7 +140,7 @@ async def _save_authentication_settings(pilot: Pilot[object], screen: ProfileMan
     await _until(pilot, lambda: not editor._busy, "reject invalid validity date")
     assert str(editor.query_one("#aeat-auth-message", Static).render()).strip()
     assert not editor._snapshot[1].ready
-    editor.query_one("#aeat-auth-field-2", Input).value = "2030-01-01"
+    editor.query_one("#aeat-auth-field-2", Input).value = date(_YEAR, 1, 1).isoformat()
     await _click(pilot, "#aeat-auth-save")
     await _until(pilot, lambda: not editor._busy, "save complete authentication")
     assert editor._snapshot is not None and editor._snapshot[1].ready, str(

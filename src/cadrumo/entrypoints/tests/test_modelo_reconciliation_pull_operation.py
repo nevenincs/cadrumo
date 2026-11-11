@@ -74,7 +74,7 @@ def _declaration_manifest(
         period=unit.period,
         expediente_id="202513000000001Z",
         status="ALTA",
-        presented_at=datetime(2025, 4, 20, tzinfo=UTC),
+        presented_at=datetime(unit.filing_year, 4, 20, tzinfo=UTC),
         authenticated_identity=modelo_operation_test_support.SEEDED_SOURCE_TAX_ID,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -83,7 +83,7 @@ def _declaration_manifest(
                 content_type="text/plain",
                 byte_count=5,
                 sha256=sha256_hex(b"filed"),
-                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
+                captured_at=datetime(unit.filing_year + 1, 9, 29, tzinfo=UTC),
             ),
         ),
         casillas=tuple(

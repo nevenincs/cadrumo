@@ -8,12 +8,16 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -28,7 +32,7 @@ def _snapshot(
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=Decimal("137.25"),
         iva_rate=Decimal("21"),
         currency="EUR",

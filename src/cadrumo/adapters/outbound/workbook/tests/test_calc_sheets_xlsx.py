@@ -40,9 +40,19 @@ from .....application.storage.calc_sheets.theme import ROLE_STYLES, WORKBOOK_FON
 from .....core.errors.hierarchy import InternalInvariantError
 from .....core.period import Period
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_serving_period,
+)
 from ..calc_sheets_xlsx import materialize_export_plan, unrendered_plan_facets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
+
+_FILING_YEAR = filing_year_envelope().horizon
+_FILING_DATE = date(_FILING_YEAR, 4, 1)
+#: An export instant that is no tax date: the workbook properties carry it, nothing is filed on it.
+_EXPORTED_AT = datetime(1980, 10, 6, tzinfo=UTC)
 
 
 class _CustomPropertyReader(Protocol):
@@ -64,7 +74,7 @@ class _WorkbookCustomProperties(Protocol):
 
 
 def _m130_snapshot() -> RegistrySnapshot:
-    return published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return published_snapshot("130", filing_year=_FILING_YEAR, period="1T", on=_FILING_DATE)
 
 
 def test_fictional_preview_materializes_without_filing_identity_or_technical_cells() -> None:
@@ -72,13 +82,13 @@ def test_fictional_preview_materializes_without_filing_identity_or_technical_cel
         metadata=SheetTemplatePreviewMetadata(
             kind="template_preview",
             modelo_id="232",
-            revision_id="2016-2017",
-            preview_year=2017,
+            revision_id=open_ended_revision("232").id,
+            preview_year=_FILING_YEAR,
             preview_period="0A",
             template_digest="a" * 64,
             engine_version="test",
-            title="Modelo 232 · Ejemplo ficticio 2017",
-            exported_at=datetime(2026, 10, 6, tzinfo=UTC),
+            title=f"Modelo 232 · Ejemplo ficticio {_FILING_YEAR}",
+            exported_at=_EXPORTED_AT,
         ),
         human_presentation=True,
         tabs=(TabName.FORM,),
@@ -95,7 +105,7 @@ def test_fictional_preview_materializes_without_filing_identity_or_technical_cel
 
 
 def _m303_snapshot() -> RegistrySnapshot:
-    return published_snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return published_snapshot("303", filing_year=_FILING_YEAR, period="1T", on=_FILING_DATE)
 
 
 def _m130_plan() -> SheetExportPlan:
@@ -256,7 +266,7 @@ def test_identity_stamps_are_carried_as_custom_document_properties() -> None:
 def test_materializing_one_plan_twice_yields_identical_bytes(modelo: str) -> None:
     # Byte determinism is what lets a caller content-address the artefact: the
     # workbook's timestamps come from the plan, never from the clock.
-    plan = build_export_plan(published_snapshot(modelo, filing_year=2025, period="1T", on=date(2025, 4, 1)))
+    plan = build_export_plan(published_snapshot(modelo, filing_year=_FILING_YEAR, period="1T", on=_FILING_DATE))
 
     first = materialize_export_plan(plan)
     second = materialize_export_plan(plan)
@@ -292,12 +302,12 @@ def test_materializer_refuses_a_plan_declaring_a_facet_it_cannot_render() -> Non
     plan = _PlanWithAnExtraFacet(
         metadata=SheetExportMetadata(
             modelo_id="303",
-            revision_id="2022",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            revision_id=revision_serving_period("303", _FILING_YEAR, "1T").id,
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "1T"),
             engine_version="test",
             registry_sha="abcd1234",
-            exported_at=datetime(2025, 4, 1, 12, 0, tzinfo=UTC),
+            exported_at=_EXPORTED_AT,
         ),
         guide=SheetGuideContent(title="Modelo 303", paragraphs=("Use Entradas.",)),
         signature_block=("firma",),

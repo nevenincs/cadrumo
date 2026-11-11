@@ -7,6 +7,7 @@ import pytest
 
 from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.human_workbook import human_workbook
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..calc_sheets_xlsx import materialize_export_plan
@@ -15,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_human_workbook_has_no_technical_custom_properties_or_notes():
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="4T")
     source = build_export_plan(snapshot)
     plan = human_workbook(source, snapshot)
     with ZipFile(BytesIO(materialize_export_plan(plan))) as archive:

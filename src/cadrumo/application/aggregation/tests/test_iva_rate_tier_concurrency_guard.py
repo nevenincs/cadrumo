@@ -28,22 +28,25 @@ they name the outcome rather than the mechanism.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.invoices.tests.invoice_catalogue_seed import TRANSITIONAL_WINDOWS, window_middle
 
 from ..iva_ledger_classification import iva_rate_kind_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Inside the 1 Oct - 31 Dec 2024 window, when the temporary rates were in force
-# alongside the standard ones.
-_IN_WINDOW = date(2024, 11, 15)
-# Inside the 1 Jul - 30 Sep 2024 window, the measure's other step.
-_EARLIER_WINDOW = date(2024, 8, 1)
+# Inside the window the governed schedule offers the temporary 2 % rate, when the temporary
+# rates were in force alongside the standard ones.
+_IN_WINDOW = window_middle("RATE_2")
+# The last day of the measure's earlier step, the day before the 2 % window opens.
+_EARLIER_WINDOW = TRANSITIONAL_WINDOWS["RATE_2"][0] - timedelta(days=1)
+# The first day after every temporary rate's window has closed.
+_AFTER_EXPIRY = max(end for _, end in TRANSITIONAL_WINDOWS.values()) + timedelta(days=1)
 
 
 @pytest.mark.parametrize("on_date", [_IN_WINDOW, _EARLIER_WINDOW])
@@ -100,10 +103,10 @@ def test_the_temporary_rates_now_classify_in_their_own_window(rate: Decimal, exp
     [
         # The Oct-Dec step, asked inside the Jul-Sep window.
         (Decimal("0.02"), _EARLIER_WINDOW),
-        # Both steps, asked after the measure expired on 2025-01-01.
-        (Decimal("0.02"), date(2025, 6, 1)),
-        (Decimal("0.075"), date(2025, 6, 1)),
-        (Decimal("0.05"), date(2025, 6, 1)),
+        # Both steps, asked after the measure expired.
+        (Decimal("0.02"), _AFTER_EXPIRY),
+        (Decimal("0.075"), _AFTER_EXPIRY),
+        (Decimal("0.05"), _AFTER_EXPIRY),
     ],
 )
 def test_a_temporary_rate_does_not_leak_outside_its_window(rate: Decimal, on_date: date) -> None:

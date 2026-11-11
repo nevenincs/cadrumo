@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.entrypoints.cli.modelo_rendering import work_unit_deadline_output_from_posture
@@ -24,8 +25,8 @@ def test_overdue_posture_fallback_emits_null_preview_without_rate_wording(
     """The real renderer emits a null preview and no displayed-rate warning."""
     deadline, notices = work_unit_deadline_output_from_posture(
         ModeloWorkDeadlinePosture(
-            closes_on=date(2026, 1, 30),
-            nominal_closes_on=date(2026, 1, 30),
+            closes_on=date(filing_year_envelope().horizon, 1, 30),
+            nominal_closes_on=date(filing_year_envelope().horizon, 1, 30),
             holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
             days_overdue=1,
         ),

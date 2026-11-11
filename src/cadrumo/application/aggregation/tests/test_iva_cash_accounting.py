@@ -8,6 +8,7 @@ from typing import TypedDict
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
@@ -29,14 +30,15 @@ from .iva_cash_accounting_support import cash_accounting_raw, cash_accounting_tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_Q1_2026 = Period.from_year_and_code(2026, "1T")
-_Q2_2026 = Period.from_year_and_code(2026, "2T")
-_Q3_2026 = Period.from_year_and_code(2026, "3T")
-_Q4_2027 = Period.from_year_and_code(2027, "4T")
+_YEAR = filing_year_envelope().horizon
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q2 = Period.from_year_and_code(_YEAR, "2T")
+_Q3 = Period.from_year_and_code(_YEAR, "3T")
+_Q4_NEXT = Period.from_year_and_code(_YEAR + 1, "4T")
 
 
 def _revision_303():
-    return published_snapshot("303", filing_year=2026, period="2T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="2T").revision
 
 
 def _binding_values(*transactions: Transaction, period: Period) -> dict[str, Decimal]:
@@ -64,14 +66,14 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
     cash_sale = cash_accounting_transaction(
         "cash-sale",
         direction=TransactionDirection.INCOMING,
-        booked_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
-        operation_date=date(2026, 3, 20),
+        operation_date=date(_YEAR, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 15),
+                payment_date=date(_YEAR, 4, 15),
                 taxable_base=Decimal("1000.00"),
                 iva_amount=Decimal("210.00"),
             ),
@@ -80,18 +82,18 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
     ordinary_sale = cash_accounting_transaction(
         "ordinary-sale",
         direction=TransactionDirection.INCOMING,
-        booked_date=date(2026, 3, 25),
+        booked_date=date(_YEAR, 3, 25),
         taxable_base=Decimal("500.00"),
         iva_amount=Decimal("105.00"),
     )
 
-    q1_values = _binding_values(cash_sale, ordinary_sale, period=_Q1_2026)
+    q1_values = _binding_values(cash_sale, ordinary_sale, period=_Q1)
     assert q1_values["modelo-303-criterio-caja-entregas-art75-base"] == Decimal("1000.00")
     assert q1_values["modelo-303-criterio-caja-entregas-art75-cuota"] == Decimal("210.00")
     assert q1_values["modelo-303-iva-repercutido-general-base"] == Decimal("500.00")
     assert q1_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("105.00")
 
-    q2_values = _binding_values(cash_sale, period=_Q2_2026)
+    q2_values = _binding_values(cash_sale, period=_Q2)
     assert q2_values["modelo-303-criterio-caja-entregas-art75-base"] == Decimal("0")
     assert q2_values["modelo-303-criterio-caja-entregas-art75-cuota"] == Decimal("0")
     assert q2_values["modelo-303-iva-repercutido-general-base"] == Decimal("1000.00")
@@ -102,14 +104,14 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
     cash_purchase = cash_accounting_transaction(
         "supplier-cash-purchase",
         direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-        operation_date=date(2026, 3, 12),
+        operation_date=date(_YEAR, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 10),
+                payment_date=date(_YEAR, 4, 10),
                 taxable_base=Decimal("300.00"),
                 iva_amount=Decimal("63.00"),
             ),
@@ -118,18 +120,18 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
     ordinary_purchase = cash_accounting_transaction(
         "ordinary-purchase",
         direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 3, 22),
+        booked_date=date(_YEAR, 3, 22),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
     )
 
-    q1_values = _binding_values(cash_purchase, ordinary_purchase, period=_Q1_2026)
+    q1_values = _binding_values(cash_purchase, ordinary_purchase, period=_Q1)
     assert q1_values["modelo-303-criterio-caja-adquisiciones-base"] == Decimal("300.00")
     assert q1_values["modelo-303-criterio-caja-adquisiciones-cuota"] == Decimal("63.00")
     assert q1_values["modelo-303-iva-soportado-interiores-base"] == Decimal("200.00")
     assert q1_values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("42.00")
 
-    q2_values = _binding_values(cash_purchase, period=_Q2_2026)
+    q2_values = _binding_values(cash_purchase, period=_Q2)
     assert q2_values["modelo-303-criterio-caja-adquisiciones-base"] == Decimal("0")
     assert q2_values["modelo-303-criterio-caja-adquisiciones-cuota"] == Decimal("0")
     assert q2_values["modelo-303-iva-soportado-interiores-base"] == Decimal("300.00")
@@ -148,31 +150,31 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
     cash_purchase = cash_accounting_transaction(
         "supplier-regime-partial",
         direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-        operation_date=date(2026, 3, 12),
+        operation_date=date(_YEAR, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 3, 14),
+                payment_date=date(_YEAR, 3, 14),
                 taxable_base=Decimal("50.00"),
                 iva_amount=Decimal("10.50"),
             ),
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 3, 28),
+                payment_date=date(_YEAR, 3, 28),
                 taxable_base=Decimal("100.00"),
                 iva_amount=Decimal("21.00"),
             ),
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 4, 10),
+                payment_date=date(_YEAR, 4, 10),
                 taxable_base=Decimal("150.00"),
                 iva_amount=Decimal("31.50"),
             ),
         ),
     )
 
-    q1 = _aggregation(cash_purchase, period=_Q1_2026)
+    q1 = _aggregation(cash_purchase, period=_Q1)
     assert q1.issues == ()
     assert {observation.observation_role for observation in q1.observations} == {
         IvaLedgerObservationRole.OPERATION_INFORMATIONAL,
@@ -203,17 +205,17 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
         == q1.observations
     )
 
-    q1_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=q1)
+    q1_arrival = resolve_m303_supplier_regime_arrival(period=_Q1, iva_aggregation=q1)
     assert q1_arrival.recipient_of_cash_accounting_operations is True
     assert q1_arrival.source_ledger_ids == (cash_purchase.transaction_id,)
 
-    q2 = _aggregation(cash_purchase, period=_Q2_2026)
+    q2 = _aggregation(cash_purchase, period=_Q2)
     assert q2.issues == ()
     assert len(q2.observations) == 1
     assert q2.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
     assert q2.observations[0].cash_accounting_treatment == IvaCashAccountingTreatment("supplier_regime")
     assert q2.observations[0].base_amount == Decimal("150.00")
-    assert resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=q2).source_ledger_ids == (
+    assert resolve_m303_supplier_regime_arrival(period=_Q2, iva_aggregation=q2).source_ledger_ids == (
         cash_purchase.transaction_id,
     )
 
@@ -223,40 +225,40 @@ def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_
     partially_unpaid_purchase = cash_accounting_transaction(
         "supplier-regime-fallback",
         direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 3, 12),
+        booked_date=date(_YEAR, 3, 12),
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-        operation_date=date(2026, 3, 12),
+        operation_date=date(_YEAR, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 3, 20),
+                payment_date=date(_YEAR, 3, 20),
                 taxable_base=Decimal("100.00"),
                 iva_amount=Decimal("21.00"),
             ),
         ),
     )
 
-    q1 = _aggregation(partially_unpaid_purchase, period=_Q1_2026)
+    q1 = _aggregation(partially_unpaid_purchase, period=_Q1)
     assert q1.issues == ()
-    assert resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=q1).source_ledger_ids == (
+    assert resolve_m303_supplier_regime_arrival(period=_Q1, iva_aggregation=q1).source_ledger_ids == (
         partially_unpaid_purchase.transaction_id,
     )
 
-    empty_q3 = _aggregation(partially_unpaid_purchase, period=_Q3_2026)
+    empty_q3 = _aggregation(partially_unpaid_purchase, period=_Q3)
     assert empty_q3.observations == ()
     assert tuple(issue.reason.value for issue in empty_q3.issues) == ("outside_period",)
-    empty_arrival = resolve_m303_supplier_regime_arrival(period=_Q3_2026, iva_aggregation=empty_q3)
+    empty_arrival = resolve_m303_supplier_regime_arrival(period=_Q3, iva_aggregation=empty_q3)
     assert empty_arrival.recipient_of_cash_accounting_operations is False
     assert empty_arrival.source_ledger_ids == ()
 
-    fallback = _aggregation(partially_unpaid_purchase, period=_Q4_2027)
+    fallback = _aggregation(partially_unpaid_purchase, period=_Q4_NEXT)
     assert fallback.issues == ()
     assert len(fallback.observations) == 1
-    assert fallback.observations[0].transaction_date == date(2027, 12, 31)
+    assert fallback.observations[0].transaction_date == date(_YEAR + 1, 12, 31)
     assert fallback.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
     assert fallback.observations[0].base_amount == Decimal("200.00")
-    assert resolve_m303_supplier_regime_arrival(period=_Q4_2027, iva_aggregation=fallback).source_ledger_ids == (
+    assert resolve_m303_supplier_regime_arrival(period=_Q4_NEXT, iva_aggregation=fallback).source_ledger_ids == (
         partially_unpaid_purchase.transaction_id,
     )
 
@@ -266,14 +268,14 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
     taxpayer_cash_sale = cash_accounting_transaction(
         "taxpayer-regime-sale",
         direction=TransactionDirection.INCOMING,
-        booked_date=date(2026, 3, 20),
+        booked_date=date(_YEAR, 3, 20),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
-        operation_date=date(2026, 3, 12),
+        operation_date=date(_YEAR, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 3, 20),
+                payment_date=date(_YEAR, 3, 20),
                 taxable_base=Decimal("200.00"),
                 iva_amount=Decimal("42.00"),
             ),
@@ -282,31 +284,31 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
     supplier_cash_purchase = cash_accounting_transaction(
         "supplier-regime-mixed",
         direction=TransactionDirection.OUTGOING,
-        booked_date=date(2026, 3, 24),
+        booked_date=date(_YEAR, 3, 24),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
-        operation_date=date(2026, 3, 14),
+        operation_date=date(_YEAR, 3, 14),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2026, 3, 24),
+                payment_date=date(_YEAR, 3, 24),
                 taxable_base=Decimal("100.00"),
                 iva_amount=Decimal("21.00"),
             ),
         ),
     )
 
-    taxpayer_only = _aggregation(taxpayer_cash_sale, period=_Q1_2026)
+    taxpayer_only = _aggregation(taxpayer_cash_sale, period=_Q1)
     assert (
         resolve_m303_supplier_regime_arrival(
-            period=_Q1_2026,
+            period=_Q1,
             iva_aggregation=taxpayer_only,
         ).recipient_of_cash_accounting_operations
         is False
     )
 
-    mixed = _aggregation(taxpayer_cash_sale, supplier_cash_purchase, period=_Q1_2026)
-    mixed_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=mixed)
+    mixed = _aggregation(taxpayer_cash_sale, supplier_cash_purchase, period=_Q1)
+    mixed_arrival = resolve_m303_supplier_regime_arrival(period=_Q1, iva_aggregation=mixed)
     assert mixed_arrival.recipient_of_cash_accounting_operations is True
     assert mixed_arrival.source_ledger_ids == (supplier_cash_purchase.transaction_id,)
 
@@ -320,7 +322,7 @@ def _not_subject_transaction(
     """A cuota-less row under the cash-accounting regime, category varied by the caller."""
     return Transaction.model_validate(
         {
-            "raw": cash_accounting_raw(provider_id, booked_date=date(2026, 2, 10), amount=Decimal("1000.00")),
+            "raw": cash_accounting_raw(provider_id, booked_date=date(_YEAR, 2, 10), amount=Decimal("1000.00")),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -330,7 +332,7 @@ def _not_subject_transaction(
             "iva_amount": Decimal("0"),
             "iva_category": category,
             "cash_accounting_treatment": cash_accounting_treatment,
-            "operation_date": date(2026, 2, 10),
+            "operation_date": date(_YEAR, 2, 10),
             # The model refuses payment evidence without an active regime, so a
             # NONE-treatment row carries none -- that pairing is the control for
             # the gate keying on the regime rather than on the category alone.
@@ -338,13 +340,13 @@ def _not_subject_transaction(
             if cash_accounting_treatment == IvaCashAccountingTreatment("none")
             else (
                 IvaCashAccountingPaymentEvidence(
-                    payment_date=date(2026, 2, 20),
+                    payment_date=date(_YEAR, 2, 20),
                     taxable_base=Decimal("1000.00"),
                     iva_amount=Decimal("0"),
                     recargo_amount=Decimal("0"),
                 ),
             ),
-            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -353,7 +355,7 @@ def _not_subject_transaction(
 def _gate_reasons(transaction: Transaction) -> tuple[str, ...]:
     aggregation = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q1_2026,
+        period=_Q1,
     )
     return tuple(issue.reason.value for issue in aggregation.issues)
 
@@ -397,7 +399,7 @@ def test_an_exempt_domestic_supply_still_enters_the_cash_accounting_regime() -> 
 
     aggregation = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q1_2026,
+        period=_Q1,
     )
 
     assert aggregation.issues == ()
@@ -420,13 +422,13 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
     assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)
 
 
-_M390_EJERCICIO = 2025
+_M390_EJERCICIO = filing_grade_exercises("390")[-1]
 
 
 def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     """Resolve the real M390 repercutido bindings for one transaction."""
     # Modelo 390 is annual and AEAT publishes an ejercicio's design late in that
-    # same year, so ejercicio 2026 has no instrument yet. The caller's claim is
+    # same year, so the horizon ejercicio may have no instrument yet. The caller's claim is
     # an equality between two economically identical sales within ONE ejercicio,
     # so it is year-agnostic and reads the latest published one.
     annual = Period.from_year_and_code(_M390_EJERCICIO, "0A")
@@ -472,15 +474,15 @@ def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() ->
         "taxable_base": Decimal("1000.00"),
         "iva_amount": Decimal("210.00"),
     }
-    ordinary = cash_accounting_transaction("ordinary-rate-box", booked_date=date(2025, 4, 20), **common)
+    ordinary = cash_accounting_transaction("ordinary-rate-box", booked_date=date(_M390_EJERCICIO, 4, 20), **common)
     cash = cash_accounting_transaction(
         "cash-rate-box",
-        booked_date=date(2025, 4, 15),
+        booked_date=date(_M390_EJERCICIO, 4, 15),
         cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),
-        operation_date=date(2025, 4, 10),
+        operation_date=date(_M390_EJERCICIO, 4, 10),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
-                payment_date=date(2025, 4, 15),
+                payment_date=date(_M390_EJERCICIO, 4, 15),
                 taxable_base=Decimal("1000.00"),
                 iva_amount=Decimal("210.00"),
             ),

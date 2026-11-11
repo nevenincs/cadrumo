@@ -68,7 +68,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import projected_exercise
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, projected_exercise
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
@@ -84,6 +84,7 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
+_YEAR = filing_year_envelope().horizon
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
@@ -243,9 +244,9 @@ def test_overview_status_reports_modelo_work_units(
     create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=_YEAR, period="1T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         operation=operation,
     )
@@ -275,10 +276,10 @@ def test_overview_status_distinguishes_drafts_from_work_units(
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, period_token),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period_token),
             revision_id=active_registry_revision_id(
-                modelo="303", filing_year=2026, period=period_token, operation=operation
+                modelo="303", filing_year=_YEAR, period=period_token, operation=operation
             ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
             operation=operation,
@@ -312,10 +313,10 @@ def test_work_units_counter_excludes_discarded_units(
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, period_token),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period_token),
             revision_id=active_registry_revision_id(
-                modelo="303", filing_year=2026, period=period_token, operation=operation
+                modelo="303", filing_year=_YEAR, period=period_token, operation=operation
             ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
             operation=operation,
@@ -323,9 +324,9 @@ def test_work_units_counter_excludes_discarded_units(
     discarded = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "4T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="4T", operation=operation),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "4T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=_YEAR, period="4T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         operation=operation,
     )
@@ -380,10 +381,10 @@ def test_surfaces_agree_on_one_projection(
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, period_token),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period_token),
             revision_id=active_registry_revision_id(
-                modelo="303", filing_year=2026, period=period_token, operation=operation
+                modelo="303", filing_year=_YEAR, period=period_token, operation=operation
             ),
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
             operation=operation,
@@ -398,10 +399,10 @@ def test_surfaces_agree_on_one_projection(
                 ModeloReadinessRequest(
                     modelo="303",
                     revision_id=active_registry_revision_id(
-                        modelo="303", filing_year=2026, period="1T", operation=operation
+                        modelo="303", filing_year=_YEAR, period="1T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                 ),
             ),
             probe_live_backend=True,
@@ -469,7 +470,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=bucket_id,
-                booked_date=date(2026, 2, 10),
+                booked_date=date(_YEAR, 2, 10),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="business expense without category",
@@ -491,10 +492,10 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
                 ModeloReadinessRequest(
                     modelo="303",
                     revision_id=active_registry_revision_id(
-                        modelo="303", filing_year=2026, period="1T", operation=operation
+                        modelo="303", filing_year=_YEAR, period="1T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -506,7 +507,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
+    assert readiness.ledger_period == Period.from_year_and_code(_YEAR, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
 
@@ -549,7 +550,7 @@ def test_modelo_100_readiness_of_a_projected_year_reports_the_registry_ready(sta
 
 def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projection_dependencies) -> None:
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
-    bucket_id = _register_active_profile(overrides={"censo.activity_start_date": "2026-05-01"})
+    bucket_id = _register_active_profile(overrides={"censo.activity_start_date": date(_YEAR, 5, 1).isoformat()})
 
     with bundled_indexed_authority().operation() as operation:
         projection = build_operator_state_projection(
@@ -560,10 +561,10 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
                 ModeloReadinessRequest(
                     modelo="303",
                     revision_id=active_registry_revision_id(
-                        modelo="303", filing_year=2026, period="1T", operation=operation
+                        modelo="303", filing_year=_YEAR, period="1T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -575,8 +576,11 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
     assert readiness.registry_ready is True
     assert readiness.profile_ready is False
     assert readiness.ready is False
-    assert "Modelo 303 2026 1T is before the profile activity-start date 2026-05-01" in readiness.profile_refusal
-    assert "filing period ends on 2026-03-31" in readiness.profile_refusal
+    assert (
+        f"Modelo 303 {_YEAR} 1T is before the profile activity-start date {date(_YEAR, 5, 1).isoformat()}"
+        in readiness.profile_refusal
+    )
+    assert f"filing period ends on {date(_YEAR, 3, 31).isoformat()}" in readiness.profile_refusal
     assert "pre-activity period" in readiness.profile_refusal
     # A pre-activity period is a fact no catalogued action repairs.
     assert readiness.profile_precondition_verdict is None
@@ -617,10 +621,10 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
                 ModeloReadinessRequest(
                     modelo="349",
                     revision_id=active_registry_revision_id(
-                        modelo="349", filing_year=2026, period="1T", operation=operation
+                        modelo="349", filing_year=_YEAR, period="1T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -656,7 +660,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=bucket_id,
-                booked_date=date(2026, 4, 15),
+                booked_date=date(_YEAR, 4, 15),
                 amount=Decimal("1210.00"),
                 direction=TransactionDirection.INCOMING,
                 description="consulting invoice with output IVA",
@@ -677,7 +681,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=bucket_id,
-                booked_date=date(2026, 4, 20),
+                booked_date=date(_YEAR, 4, 20),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="office supplies with input IVA",
@@ -700,10 +704,10 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
                 ModeloReadinessRequest(
                     modelo="303",
                     revision_id=active_registry_revision_id(
-                        modelo="303", filing_year=2026, period="2T", operation=operation
+                        modelo="303", filing_year=_YEAR, period="2T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "2T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "2T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -732,10 +736,10 @@ def test_modelo_369_extended_period_readiness_fails_closed_for_non_span_ledger_p
                 ModeloReadinessRequest(
                     modelo="369",
                     revision_id=active_registry_revision_id(
-                        modelo="369", filing_year=2026, period="EXT-1T", operation=operation
+                        modelo="369", filing_year=_YEAR, period="EXT-1T", operation=operation
                     ),
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "EXT-1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "EXT-1T"),
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -748,7 +752,7 @@ def test_modelo_369_extended_period_readiness_fails_closed_for_non_span_ledger_p
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
-    assert readiness.ledger_period == Period.from_year_and_code(2026, "EXT-1T")
+    assert readiness.ledger_period == Period.from_year_and_code(_YEAR, "EXT-1T")
     assert readiness.ledger_checked_transaction_count == 0
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["unsupported_period"]
 
@@ -776,8 +780,8 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
             modelo_readiness_requests=(
                 ModeloReadinessRequest(
                     modelo="303",
-                    revision_id="2022",
-                    filing_year=2026,
+                    revision_id=str(filing_year_envelope().floor),
+                    filing_year=_YEAR,
                 ),
             ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -786,7 +790,7 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
 
     readiness = projection.modelo_readiness[0]
     assert readiness.profile_id == bucket_id
-    assert readiness.period == Period.from_year_and_code(2026, "0A")
+    assert readiness.period == Period.from_year_and_code(_YEAR, "0A")
 
 
 def test_projection_is_pure_read(state_projection_dependencies, *, operation: PinnedAuthorityOperation) -> None:
@@ -798,9 +802,9 @@ def test_projection_is_pure_read(state_projection_dependencies, *, operation: Pi
     create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=active_registry_revision_id(modelo="303", filing_year=_YEAR, period="1T", operation=operation),
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         operation=operation,
     )

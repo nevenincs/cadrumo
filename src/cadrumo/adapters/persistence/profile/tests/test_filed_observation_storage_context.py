@@ -41,13 +41,16 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 from .....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_serving_period("303", _YEAR, "2T").id)
 _BUCKET_A = "3aa00000-0000-4000-8000-0000000000aa"
 _BUCKET_B = "3bb00000-0000-4000-8000-0000000000bb"
 _TAX_ID = "X0001500M"
-_CAPTURED_AT = datetime(2026, 4, 15, 12, 0, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 15, 12, 0, 0, tzinfo=UTC)
 _FILING_RECORD_ID = "filing-record-split-context"
 
 _DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
@@ -57,21 +60,21 @@ _DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _work_unit(bucket_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_YEAR, "2T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=Modelo("303").value,
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2026-y-siguientes",
+            revision_id=_REVISION_ID,
         ),
         bucket_id=bucket_id,
-        name="303-2026-2T",
+        name=f"303-{_YEAR}-2T",
         modelo=Modelo("303").value,
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION_ID,
         created_at=_CAPTURED_AT,
         updated_at=_CAPTURED_AT,
     )

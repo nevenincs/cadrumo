@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID, uuid4
@@ -25,6 +25,7 @@ from ....core.operations import OperationEffect, OperationFrontendProjection, pr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -50,7 +51,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
+_EXERCISE = filing_year_envelope().horizon
+_NOW = datetime(_EXERCISE, 3, 10, 12, tzinfo=UTC)
+_LATER = _NOW + timedelta(hours=1)
+_M303_REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
 _WORK_A = "1" * 64
 _WORK_B = "2" * 64
 
@@ -100,7 +104,7 @@ def _registered():
 
 
 def test_public_projection_preserves_stored_differences_and_advisories() -> None:
-    reference = RegistrySnapshotRef(modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1t")
+    reference = RegistrySnapshotRef(modelo="303", revision_id=_M303_REVISION_ID, modelo_year=_EXERCISE, period="1t")
     first = reconciliation_history_entry_fixture(event_id="a" * 64).model_copy(
         update={
             "calculation_revision_id": "c" * 64,
@@ -115,9 +119,7 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
             ),
         }
     )
-    second = reconciliation_history_entry_fixture(
-        event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)
-    )
+    second = reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=_LATER)
     projection = ModeloReconciliationListProjection(
         profile_id=_PROFILE,
         work_unit_id=None,
@@ -152,8 +154,8 @@ def test_public_projection_preserves_stored_differences_and_advisories() -> None
     assert dumped["reconciliations"][0]["calculation_revision_id"] == "c" * 64
     assert dumped["reconciliations"][0]["registry_snapshot_ref"] == {
         "modelo": "303",
-        "revision_id": "2026-y-siguientes",
-        "modelo_year": 2026,
+        "revision_id": _M303_REVISION_ID,
+        "modelo_year": _EXERCISE,
         "period": "1T",
     }
     assert dumped["reconciliations"][0]["advisory_count"] == 1
@@ -171,7 +173,7 @@ def test_public_projection_rejects_wrong_scope_duplicates_order_and_unbounded_fi
         reconciliation_history_entry_fixture(event_id="a" * 64)
     )
     later = ModeloReconciliationListEntryProjection.from_history_entry(
-        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
+        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=_LATER)
     )
     other_profile = ModeloReconciliationListEntryProjection.from_history_entry(
         reconciliation_history_entry_fixture(event_id="c" * 64, bucket_id=_OTHER)
@@ -246,7 +248,7 @@ def test_access_resolves_whole_profile_disclosure_and_requires_all_periods() -> 
     from ...user_profile.operation_access_policy import operation_scope_refusal
 
     assert operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=scope) is None
-    finite_scope = scope.model_copy(update={"periods": frozenset({Period.from_year_and_code(2026, "1T")})})
+    finite_scope = scope.model_copy(update={"periods": frozenset({Period.from_year_and_code(_EXERCISE, "1T")})})
     refused = operation_scope_refusal(request=resolved.request, policy=resolved.policy, scope=finite_scope)
     assert refused is not None and refused.code is AccessDenialCode.PERIOD_DENIED
 
@@ -265,7 +267,7 @@ def test_wrong_profile_is_refused_before_access_is_admitted() -> None:
 def test_executor_projects_saved_differences_with_existing_filter_and_order(monkeypatch: pytest.MonkeyPatch) -> None:
     entries = (
         reconciliation_history_entry_fixture(event_id="a" * 64),
-        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=datetime(2026, 3, 10, 13, tzinfo=UTC)),
+        reconciliation_history_entry_fixture(event_id="b" * 64, reconciled_at=_LATER),
     )
     calls: list[tuple[str, str | None, object]] = []
 

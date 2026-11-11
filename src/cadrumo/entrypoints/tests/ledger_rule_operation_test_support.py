@@ -52,7 +52,7 @@ from ..ledger_action_composition import compose_ledger_action_ports
 
 LedgerRuleOperationDefinitionId = Literal["ledger.rule.add", "ledger.rule.list", "ledger.rule.apply"]
 
-_SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_SEED_AT = datetime(1980, 5, 8, 10, 15, tzinfo=UTC)
 _ACTOR = "registered-rule-conformance"
 
 

@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.digest.identity"
 _KEY = "digest-identity-subject"
 _PAYLOAD = b"digest-identity-payload"
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
+_NOW = datetime(1980, 1, 1, tzinfo=UTC)
 
 _VALID_DIGEST = "a" * 64
 #: 64 characters, so a length-only constraint admits both; neither is hex.

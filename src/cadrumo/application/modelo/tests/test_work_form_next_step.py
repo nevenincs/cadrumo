@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -46,11 +47,13 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _INCOME = "rendimientos_integros"
 _KIND = "tipo_renta"
 _HELD: dict[str, Decimal | str] = {_INCOME: Decimal("1200.00"), _KIND: "01"}
 _CALCULATION = "c" * 64
-_EXPORTED_AT = datetime(2026, 4, 2, tzinfo=UTC)
+_EXPORTED_AT = datetime(_YEAR, 4, 2, tzinfo=UTC)
 _FILE_ACTIONS = frozenset(
     {ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
 )
@@ -58,12 +61,12 @@ _FILE_ACTIONS = frozenset(
 
 def _empty(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     """Nothing calculated and the required income box still to fill in."""
-    return built_form(operation, "210", 2025, "0A", entered=frozenset())
+    return built_form(operation, "210", _YEAR, "0A", entered=frozenset())
 
 
 def _entered(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     """The income and its kind entered by the filer, so nothing is missing or assumed."""
-    return built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
+    return built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset(_HELD))
 
 
 def _calculated(form: ModeloWorkForm, **update: object) -> ModeloWorkForm:
@@ -90,10 +93,12 @@ def _stale() -> ModeloVerificationFinding:
 def test_each_state_offers_the_one_action_its_facts_call_for(operation: PinnedAuthorityOperation) -> None:
     empty = _empty(operation)
     entered = _entered(operation)
-    assumed = built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND}))
+    assumed = built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset({_KIND}))
     verified = _calculated(entered, verification=VerificationCompletenessStatus.COMPLETE)
-    stale = _calculated(built_form(operation, "210", 2025, "0A", entered=frozenset(), findings=(_stale(),)))
-    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
+    stale = _calculated(built_form(operation, "210", _YEAR, "0A", entered=frozenset(), findings=(_stale(),)))
+    filed = built_form(
+        operation, "210", _YEAR, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO
+    )
     check_note = sorted(CHECK_REFUSED_REASONS)[0]
 
     table = [
@@ -184,7 +189,9 @@ def test_only_rules_short_of_calculation_grade_halt_the_next_step() -> None:
 
 
 def test_a_recorded_filing_leaves_its_receipt_to_add_until_it_is_verified(operation: PinnedAuthorityOperation) -> None:
-    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
+    filed = built_form(
+        operation, "210", _YEAR, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO
+    )
     verified = _calculated(_entered(operation), verification=VerificationCompletenessStatus.COMPLETE)
 
     unverified = form_next_step(filed, verified=True, filed=True, receipt_confirmed=False)

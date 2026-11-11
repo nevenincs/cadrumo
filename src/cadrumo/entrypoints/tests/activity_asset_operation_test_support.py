@@ -56,6 +56,7 @@ from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_directa_normal_token
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     asset_schedule_history,
@@ -83,6 +84,8 @@ from ...domain.user_profile.values import UserProfileFact
 from ..actividad_asset_composition import build_activity_asset_operation_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 
+_YEAR = filing_year_envelope().horizon
+
 
 @dataclass(frozen=True, slots=True)
 class ActivityAssetSeed:
@@ -100,7 +103,7 @@ def seed_acquisition_transaction(profile_id: UUID, *, operation: PinnedAuthority
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(profile_id),
-            booked_date=date(2025, 1, 1),
+            booked_date=date(_YEAR, 1, 1),
             amount=Decimal("300.00"),
             direction=TransactionDirection.OUTGOING,
             description="activity-asset conformance acquisition",
@@ -137,7 +140,7 @@ def activity_asset_revision(
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="conformance reviewed allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -175,15 +178,15 @@ def seed_activity_asset(
     history = repository.append_revision(revision)
     forecast = forecast_activity_asset_charge(
         revision,
-        modelo_100_revision=operation.revision_for_context("100", filing_year=2025, period="0A"),
+        modelo_100_revision=operation.revision_for_context("100", filing_year=_YEAR, period="0A"),
         authority_generation=operation.pin().logical_generation,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_YEAR, 1, 1),
+        covered_until=date(_YEAR + 1, 1, 1),
         history=asset_schedule_history(
             history.claims,
             history.revisions,
             asset_id=asset_id,
-            tax_year=2025,
+            tax_year=_YEAR,
         ),
         taxpayer_workforce=lambda: (),
         legal_reference=operation.legal_reference,
@@ -380,7 +383,7 @@ def _assert_dispose(
     recorded = after.revisions[-1].disposal
     assert recorded is not None
     assert recorded.disposal_date == payload.disposal.disposal_date
-    assert after.revisions[-1].out_of_service_date == date(2025, 7, 1)
+    assert after.revisions[-1].out_of_service_date == date(_YEAR, 7, 1)
 
 
 def _assert_disposal_calculate(
@@ -443,7 +446,7 @@ def _assert_plan(
     """Check the planned amortization rows and limits."""
     assert isinstance(projection, ActivityAssetPlanProjection)
     assert projection.rows is not None
-    assert projection.rows[0].tax_year == 2025
+    assert projection.rows[0].tax_year == _YEAR
     assert projection.rows[0].planned is not None
     assert projection.rows[0].planned.decimal == "75.00"
     assert projection.limits is not None

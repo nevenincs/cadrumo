@@ -36,9 +36,12 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES
 from cadrumo.domain.usage_ratios.service import usage_ratio_bucket_lock
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -87,7 +90,7 @@ def test_concurrent_distinct_category_sets_do_not_lose_updates(
                     bucket_id=bucket_id,
                     category=category,
                     ratio=_RATIO,
-                    year=2025,
+                    year=_YEAR,
                     operation=authority_operation,
                 )
             except Exception as exc:  # surface any worker failure to the assertion

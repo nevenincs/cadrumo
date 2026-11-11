@@ -95,7 +95,7 @@ def _put(
         engine=engine,
         placement=placement,
         generation=new_settings_generation(),
-        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
+        updated_at=datetime(1980, 10, 27, 9, 0, tzinfo=UTC),
     )
     assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
     assert store.stored is not None

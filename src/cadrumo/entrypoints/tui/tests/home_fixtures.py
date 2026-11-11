@@ -33,10 +33,12 @@ from ....application.overview.home import (
     HomeZoneState,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-_GENERATED_AT: Final[datetime] = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
-_PAST_DUE_ON: Final[date] = date(2026, 7, 20)
-_DUE_ON: Final[date] = date(2026, 10, 20)
+_YEAR: Final[int] = filing_year_envelope().horizon
+_GENERATED_AT: Final[datetime] = datetime(_YEAR, 9, 3, 10, 0, tzinfo=UTC)
+_PAST_DUE_ON: Final[date] = date(_YEAR, 7, 20)
+_DUE_ON: Final[date] = date(_YEAR, 10, 20)
 _PROFILE_LABEL: Final[str] = "Fixture profile"
 
 
@@ -72,7 +74,7 @@ def _available() -> HomeZoneState:
 
 def _period(code: str = "3T") -> Period:
     """Build a fresh typed period coordinate for one nested record."""
-    return Period.from_year_and_code(2026, code)
+    return Period.from_year_and_code(_YEAR, code)
 
 
 def _account(posture: HomeSessionPosture = HomeSessionPosture.ACTIVE) -> HomeAccountSession:
@@ -101,7 +103,7 @@ def _action(
         action=DeclaredNextAction(action=ActionReference(action_id=action_id)),
         reason_code=reason_code,
         modelo=modelo,
-        filing_year=2026 if modelo is not None else None,
+        filing_year=_YEAR if modelo is not None else None,
         period=_period(period_code) if period_code is not None else None,
     )
 
@@ -118,7 +120,7 @@ def _declaration(
     return HomeDeclarationResume(
         work_unit_id=work_unit_id,
         modelo=modelo,
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_period(period_code),
         name=name,
         state=state,
@@ -146,7 +148,7 @@ def _agenda(
 ) -> HomeAgendaEntry:
     return HomeAgendaEntry(
         modelo=modelo,
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_period(period_code),
         due_on=due_on,
         period_state=period_state,
@@ -222,7 +224,7 @@ def _ready() -> HomeProjectionV1:
             _agenda(
                 modelo="390",
                 period_code="0A",
-                due_on=date(2026, 10, 22),
+                due_on=date(_YEAR, 10, 22),
                 period_state=OverviewPeriodState.FILED,
                 local_state=OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
                 aeat_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
@@ -372,7 +374,7 @@ def _blocked() -> HomeProjectionV1:
             _agenda(
                 modelo="390",
                 period_code="0A",
-                due_on=date(2026, 10, 22),
+                due_on=date(_YEAR, 10, 22),
                 period_state=OverviewPeriodState.FILED,
                 local_state=OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
                 aeat_state=OverviewAeatSubmissionState.ACCEPTED,

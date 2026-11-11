@@ -9,6 +9,11 @@ from functools import cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    revision_covering,
+    revision_serving_period,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -33,7 +38,8 @@ from .filing_support import empty_prior_filing_observations_fingerprint, empty_p
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_EXERCISE = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
 
 
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing.casilla")
@@ -219,7 +225,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
 
     values = {value.casilla_id: value for value in draft.values}
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
-    assert draft.schema_version == "registry:130:2019-y-siguientes"
+    assert draft.schema_version == f"registry:130:{revision_covering('130', _EXERCISE).id}"
     assert _M130_CASILLA_19 in values
     assert values[_M130_CASILLA_19].kind is ModeloValueKind.COMPUTED
     assert values[_M130_CASILLA_19].formula_trace_casilla_ids == _M130_RESULT_TRACE
@@ -238,7 +244,7 @@ def test_build_draft_refuses_negative_modelo_130_retenciones() -> None:
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
     """A bound filing value cannot be projected from an ungrounded binding definition."""
 
-    snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=_EXERCISE, period="1T")
     binding = next(item for item in snapshot.revision.bindings if item.legal_refs and item.source_refs)
     source, legal_refs, source_refs = binding_provenance(binding)
     assert source == binding.source
@@ -268,7 +274,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
 
     values = {value.casilla_id: value for value in draft.values}
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
-    assert draft.schema_version == "registry:111:2019-y-siguientes"
+    assert draft.schema_version == f"registry:111:{revision_covering('111', _EXERCISE).id}"
     assert {_M111_CASILLA_28, _M111_CASILLA_30} <= set(values)
     assert values[_M111_CASILLA_28].kind is ModeloValueKind.COMPUTED
     assert values[_M111_CASILLA_28].formula_trace_casilla_ids == _M111_CASILLA_28_TRACE
@@ -318,7 +324,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
 
     values = {value.casilla_id: value for value in draft.values}
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
-    assert draft.schema_version == "registry:115:2019-y-siguientes"
+    assert draft.schema_version == f"registry:115:{revision_covering('115', _EXERCISE).id}"
     assert {_M115_CASILLA_03, _M115_CASILLA_05} <= set(values)
     assert values[_M115_CASILLA_03].value == Decimal("237.60")
     assert values[_M115_CASILLA_05].kind is ModeloValueKind.COMPUTED
@@ -326,7 +332,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_123(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = operation.snapshot("123", filing_year=_EXERCISE, period="1T", on=date(_EXERCISE, 4, 1))
     draft = build_draft(
         modelo="123",
         period=_PERIOD,
@@ -372,7 +378,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
 
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
-    assert draft.schema_version == "registry:131:2026"
+    assert draft.schema_version == f"registry:131:{revision_serving_period('131', _EXERCISE, '1T').id}"
     assert _M131_CASILLA_15 in values
     assert binding_values["modelo-131.dpa.epigrafe-iae"] == "722"
     assert binding_values["modelo-131.dpa.vehiculos-afectos"] == 2
@@ -594,7 +600,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint(operation: Pi
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.schema_version == "registry:111:2019-y-siguientes"
+    assert approved.schema_version == f"registry:111:{revision_covering('111', _EXERCISE).id}"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
 
@@ -626,13 +632,13 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: Pi
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.schema_version == "registry:115:2019-y-siguientes"
+    assert approved.schema_version == f"registry:115:{revision_covering('115', _EXERCISE).id}"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
 
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
-    snapshot = operation.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = operation.snapshot("123", filing_year=_EXERCISE, period="1T", on=date(_EXERCISE, 4, 1))
     schema_provider = build_runtime_schema_provider(
         modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
     )
@@ -718,7 +724,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     draft = _draft(schema_provider).model_copy(
         update={
             "status": ModeloDraftStatus.PRESENTADA,
-            "approved_at": datetime(2026, 4, 18, 8, 0, tzinfo=UTC),
+            "approved_at": datetime(_EXERCISE, 4, 18, 8, 0, tzinfo=UTC),
             "approved_by": "operator",
             "review_checksum": "a" * 64,
             "approval_basis": None,

@@ -27,13 +27,17 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from .....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("303").id)
+
 _BUCKET_ID = "e3030000-0000-4000-8000-000000000059"
-_PERIOD = Period.from_year_and_code(2026, "1T")
-_CLOCK = datetime(2026, 4, 1, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CLOCK = datetime(_YEAR, 4, 1, tzinfo=UTC)
 
 
 def _work_unit() -> WorkUnit:
@@ -41,16 +45,16 @@ def _work_unit() -> WorkUnit:
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=_PERIOD,
-            revision_id="2026-y-siguientes",
+            revision_id=_REVISION_ID,
         ),
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
-        revision_id="2026-y-siguientes",
-        name="303-2026-1T",
+        revision_id=_REVISION_ID,
+        name=f"303-{_YEAR}-1T",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )

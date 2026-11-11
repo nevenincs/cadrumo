@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
@@ -28,9 +29,20 @@ from .calendar_test_support import BUCKET_ID, SOURCE_URL, profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+# The year after the horizon carries no registered deadline windows.
+_NEXT_YEAR = _YEAR + 1
+
 # ---------------------------------------------------------------------
 # Taxpayer-model derivation at the calendar surface
 # ---------------------------------------------------------------------
+
+
+def _next_weekday(day: date) -> date:
+    """Return ``day`` or the first Monday-to-Friday day after it."""
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day
 
 
 def _landlord_profile() -> TaxpayerProfile:
@@ -55,8 +67,8 @@ def test_calendar_landlord_never_shows_modelo_130(authority_operation: PinnedAut
     landlord's calendar must not list Modelo 130, even across a full
     year where every quarterly window is registered."""
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     assert cal.taxpayer_model_declared is True
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" not in modelos
@@ -66,8 +78,8 @@ def test_calendar_landlord_never_shows_modelo_130(authority_operation: PinnedAut
 def test_calendar_autonomo_still_shows_modelo_130(authority_operation: PinnedAuthorityOperation) -> None:
     """The autónomo persona is unchanged: Modelo 130 still appears."""
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     modelos = {entry.modelo for entry in cal.entries}
     assert "130" in modelos
 
@@ -119,10 +131,10 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
 
     profile = _autonomo_without_declared_regime()
     assert profile.irpf_estimation_regime is None
-    # The range includes the closing 2025 4T filing window in January
-    # 2026 and all four filing-year 2026 quarterly windows.
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
+    # The range includes the closing prior-year 4T filing window in January
+    # and all four quarterly windows of the horizon year.
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_NEXT_YEAR, 2, 28))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_YEAR, 4, 1))
 
     assert cal.taxpayer_model_declared is True
     m130_entries = sorted(
@@ -131,22 +143,24 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
     )
     # Every M130 filing window intersecting the calendar range is present.
     assert len(m130_entries) == 5, [(e.period.filing_year, e.period.registry_token, e.closes_on) for e in m130_entries]
-    # The close dates are the registry deadline windows — never hand-invented.
-    # (M130 deadline_windows: 2025 4T closes in January 2026; filing-year
-    # 2026 contributes its 1T/2T/3T/4T windows.)
+    # The close dates are the registry deadline windows - never hand-invented.
+    # (M130 deadline_windows: the prior year's 4T closes on 30 January; the
+    # horizon year contributes its 1T/2T/3T/4T windows.)
     assert [(entry.period.filing_year, entry.period.registry_token) for entry in m130_entries] == [
-        (2025, "4T"),
-        (2026, "1T"),
-        (2026, "2T"),
-        (2026, "3T"),
-        (2026, "4T"),
+        (_YEAR - 1, "4T"),
+        (_YEAR, "1T"),
+        (_YEAR, "2T"),
+        (_YEAR, "3T"),
+        (_YEAR, "4T"),
     ]
+    # Each nominal close (30 January, 20 April, 20 July, 20 October, then 30
+    # January of the following year) moves to the next working weekday.
     assert [entry.closes_on for entry in m130_entries] == [
-        date(2026, 1, 30),
-        date(2026, 4, 20),
-        date(2026, 7, 20),
-        date(2026, 10, 20),
-        date(2027, 2, 1),
+        _next_weekday(date(_YEAR, 1, 30)),
+        _next_weekday(date(_YEAR, 4, 20)),
+        _next_weekday(date(_YEAR, 7, 20)),
+        _next_weekday(date(_YEAR, 10, 20)),
+        _next_weekday(date(_NEXT_YEAR, 1, 30)),
     ]
     # The business-day-adjusted close is never earlier than the legal close.
     for entry in m130_entries:
@@ -169,8 +183,8 @@ def test_calendar_pure_landlord_without_regime_owes_no_m130(
     adds M130 only for profiles that genuinely owe it.
     """
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 28))
-    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_NEXT_YEAR, 2, 28))
+    cal = build_overview_calendar(_landlord_profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     assert "130" not in {entry.modelo for entry in cal.entries}
 
 
@@ -180,8 +194,8 @@ def test_calendar_undeclared_profile_yields_incomplete_empty_calendar(
     """An undeclared taxpayer model yields an empty calendar flagged
     taxpayer_model_declared=False — never the autónomo guess."""
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(_undeclared_profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     assert cal.taxpayer_model_declared is False
     assert cal.entries == ()
     assert cal.incomplete_reason is not None
@@ -194,25 +208,25 @@ def test_calendar_undeclared_profile_preserves_observed_events(
 ) -> None:
     """Observed AEAT events remain visible even when obligations cannot be derived."""
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
     events = calendar_events_from_expedientes_snapshots(
         (
             PersistedExpedientesSnapshot(
                 snapshot_id="e" * 64,
                 bucket_id=BUCKET_ID,
-                captured_at=datetime(2026, 4, 16, 10, 0, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 4, 16, 10, 0, tzinfo=UTC),
                 source_url=SOURCE_URL,
                 declarations=(
                     ExpedientesDeclaration(
                         modelo="303",
-                        ejercicio=2026,
-                        period=Period.from_year_and_code(2026, "1T"),
+                        ejercicio=_YEAR,
+                        period=Period.from_year_and_code(_YEAR, "1T"),
                         expediente_id="202630313520389Q",
                         estado="ALTA",
-                        presented_at=datetime(2026, 4, 15, 9, 30, tzinfo=UTC),
+                        presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
                     ),
                 ),
-                persisted_at=datetime(2026, 4, 16, 10, 5, tzinfo=UTC),
+                persisted_at=datetime(_YEAR, 4, 16, 10, 5, tzinfo=UTC),
             ),
         ),
         rng,
@@ -222,7 +236,7 @@ def test_calendar_undeclared_profile_preserves_observed_events(
         _undeclared_profile(),
         rng,
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
         events=events,
     )
 
@@ -295,8 +309,8 @@ def test_calendar_excludes_non_applicable_modelos(
     from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 
     profile = _objetiva_autonomo()
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_YEAR, 4, 1))
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
@@ -322,10 +336,10 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
 
         profile = _objetiva_autonomo()
 
-        # A horizon that keeps the agenda window inside 2026 (the agenda
+        # A horizon that keeps the agenda window inside the horizon year (the agenda
         # adds a 90-day overdue lookback, so the horizon must leave room).
         agenda = build_overview_agenda(
-            profile, as_of=date(2026, 4, 1), horizon_days=200, operation=_authority_operation_for_test
+            profile, as_of=date(_YEAR, 4, 1), horizon_days=200, operation=_authority_operation_for_test
         )
         agenda_modelos = {
             entry.modelo for bucket in (agenda.due_today, agenda.due_soon, agenda.overdue) for entry in bucket
@@ -335,9 +349,9 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
 
         backlog = build_overview_backlog(
             profile,
-            from_date=date(2026, 1, 1),
-            to_date=date(2026, 12, 31),
-            as_of=date(2026, 12, 31),
+            from_date=date(_YEAR, 1, 1),
+            to_date=date(_YEAR, 12, 31),
+            as_of=date(_YEAR, 12, 31),
             operation=_authority_operation_for_test,
         )
         backlog_modelos = {item.modelo for item in backlog.items}
@@ -355,25 +369,25 @@ def test_calendar_year_without_windows_only_does_not_raise(
     """A range whose primary year has no registered deadline windows
     does not raise, and the taxpayer-model state is answered.
 
-    The registry has no deadline windows for 2027 (registry-track gap
-    R1). Before the multi-year degradation fix the deadline engine's
+    The registry has no deadline windows for the year after the horizon
+    (registry-track gap R1). Before the multi-year degradation fix the deadline engine's
     ``ScheduleComputationError`` for that year propagated all the way to
     the operator as a hard error. A year with no registered window data
     is a normal "no data yet" state: ``build_overview_calendar`` must
     return a valid :class:`OverviewCalendar` instead of raising.
 
-    Note: ``covered_years()`` now includes the prior year (2026) to pick
+    Note: ``covered_years()`` now includes the prior year to pick
     up prior-fiscal-year deadlines (e.g. IS / Renta annual declarations)
-    that open in the queried calendar year. Some 2026 Q4 windows open in
-    January 2027 and therefore appear in a 2027 range. The contract is
+    that open in the queried calendar year. Some horizon-year Q4 windows open in
+    January of the next year and therefore appear in that year's range. The contract is
     that the call succeeds — not that the calendar is empty.
     """
 
     profile = _fully_enrolled_autonomo()
-    rng = OverviewCalendarRange(from_date=date(2027, 1, 1), to_date=date(2027, 12, 31))
+    rng = OverviewCalendarRange(from_date=date(_NEXT_YEAR, 1, 1), to_date=date(_NEXT_YEAR, 12, 31))
 
     # The contract: this call does not raise.
-    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2027, 6, 1))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_NEXT_YEAR, 6, 1))
 
     assert isinstance(cal, OverviewCalendar)
     assert cal.taxpayer_model_declared is True
@@ -390,38 +404,38 @@ def test_calendar_spanning_a_year_without_windows_does_not_raise(
     """A range crossing into a year with no registered deadline windows
     must succeed instead of raising.
 
-    The registry has no deadline windows for 2027. Before the
+    The registry has no deadline windows for the year after the horizon. Before the
     degradation fix the engine's ``ScheduleComputationError`` for the
-    uncovered 2027 year propagated through ``build_overview_calendar``
+    uncovered year propagated through ``build_overview_calendar``
     and surfaced to the operator as a hard error. A range spanning
-    2026 (populated) and 2027 (no data) must instead return a valid
+    the horizon year (populated) and the next year (no data) must instead return a valid
     :class:`OverviewCalendar`: the empty year's swallowed schedule
     contributes nothing while the populated years still answer.
 
     The degradation invariant: extending a populated-year range into a
-    no-windows year never *removes* an entry — every row a 2026-only
-    range produces, the 2026/2027-spanning range still produces (a
+    no-windows year never *removes* an entry — every row a horizon-year-only
+    range produces, the range spanning into the next year still produces (a
     wider window can only admit more rows, never fewer).
     """
 
     profile = _fully_enrolled_autonomo()
-    multi_year = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 7, 31))
-    populated_only = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    multi_year = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_NEXT_YEAR, 7, 31))
+    populated_only = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
 
-    # The contract: neither call raises on the empty 2027 year.
-    multi_cal = build_overview_calendar(profile, multi_year, operation=authority_operation, today=date(2026, 4, 1))
+    # The contract: neither call raises on the empty next year.
+    multi_cal = build_overview_calendar(profile, multi_year, operation=authority_operation, today=date(_YEAR, 4, 1))
     populated_cal = build_overview_calendar(
         profile,
         populated_only,
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
 
     assert isinstance(multi_cal, OverviewCalendar)
     assert multi_cal.taxpayer_model_declared is True
     assert multi_cal.incomplete_reason is None
-    # The empty 2027 year never drops a populated-year obligation: the
-    # spanning range is a superset of the 2026-only range.
+    # The empty next year never drops a populated-year obligation: the
+    # spanning range is a superset of the horizon-year-only range.
     populated_keys = {(entry.modelo, entry.period, entry.closes_on) for entry in populated_cal.entries}
     multi_keys = {(entry.modelo, entry.period, entry.closes_on) for entry in multi_cal.entries}
     assert populated_keys <= multi_keys
@@ -432,9 +446,9 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
     on ``as_of``; a horizon that pushes the window into a year with no
     registered windows must not raise.
 
-    With ``as_of`` late in 2026 and a 365-day horizon the agenda window
-    crosses into 2027 (no windows). Before the degradation fix the
-    engine's ``ScheduleComputationError`` for 2027 surfaced as a hard
+    With ``as_of`` late in the horizon year and a 365-day horizon the agenda window
+    crosses into the next year (no windows). Before the degradation fix the
+    engine's ``ScheduleComputationError`` for that year surfaced as a hard
     operator error. The agenda must answer instead — every cohort is a
     valid tuple.
     """
@@ -443,15 +457,15 @@ def test_agenda_across_year_boundary_without_windows_does_not_raise() -> None:
 
         profile = _fully_enrolled_autonomo()
 
-        # The contract: this call does not raise on the empty 2027 year.
+        # The contract: this call does not raise on the empty next year.
         agenda = build_overview_agenda(
-            profile, as_of=date(2026, 11, 1), horizon_days=365, operation=_authority_operation_for_test
+            profile, as_of=date(_YEAR, 11, 1), horizon_days=365, operation=_authority_operation_for_test
         )
 
         assert agenda.taxpayer_model_declared is True
         assert agenda.incomplete_reason is None
         # Every cohort is a valid tuple; the agenda answered rather than
-        # crashing on the uncovered 2027 year.
+        # crashing on the uncovered next year.
         assert isinstance(agenda.due_today, tuple)
         assert isinstance(agenda.due_soon, tuple)
         assert isinstance(agenda.overdue, tuple)
@@ -461,22 +475,22 @@ def test_backlog_across_year_boundary_without_windows_does_not_raise() -> None:
     """``overview backlog`` composes the calendar; a lookback window that
     starts in a year with no registered windows must not raise.
 
-    ``as_of`` in 2027 (no windows) with the default 365-day lookback
-    spans into 2026. The backlog must answer rather than crash on the
-    uncovered 2027 year.
+    ``as_of`` in the next year (no windows) with the default 365-day lookback
+    spans into the horizon year. The backlog must answer rather than crash on the
+    uncovered next year.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..backlog import build_overview_backlog
 
         profile = _fully_enrolled_autonomo()
 
-        # The contract: this call does not raise on the empty 2027 year.
-        backlog = build_overview_backlog(profile, as_of=date(2027, 3, 1), operation=_authority_operation_for_test)
+        # The contract: this call does not raise on the empty next year.
+        backlog = build_overview_backlog(profile, as_of=date(_NEXT_YEAR, 3, 1), operation=_authority_operation_for_test)
 
         assert backlog.taxpayer_model_declared is True
         # Every surfaced backlog item is past-due relative to as_of — the
-        # backlog answered instead of crashing on the uncovered 2027 year.
-        assert all(item.adjusted_closes_on < date(2027, 3, 1) for item in backlog.items)
+        # backlog answered instead of crashing on the uncovered next year.
+        assert all(item.adjusted_closes_on < date(_NEXT_YEAR, 3, 1) for item in backlog.items)
 
 
 # ---------------------------------------------------------------------
@@ -517,8 +531,8 @@ def test_undeclared_profile_message_names_the_missing_fact_in_every_locale(
         iva_regime=IVARegime("GENERAL"),
         entity_type=EntityType.from_registry("natural_person") if natural_person else None,
     )
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     assert cal.incomplete_reason == tr(key)
 
 
@@ -564,8 +578,8 @@ def test_calendar_legal_entity_is_never_shown_an_irpf_cuota(
     NOT_APPLICABLE and is dropped. The engine never shows a company an
     IRPF tarifa obligation (corporate-entity contract §4)."""
 
-    rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 7, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR - 2, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(_YEAR - 1, 7, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     # No IRPF cuota modelo reaches a legal entity's calendar.
@@ -580,8 +594,8 @@ def test_calendar_natural_person_shows_irpf_not_corporate(
     a corporate-tax modelo. An autónomo en estimación directa keeps
     Modelo 130 / 303; Modelo 200 / 202 never reach the calendar."""
 
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "130" in surfaced
@@ -598,7 +612,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
     suppresses them as incomplete.
     """
 
-    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 3, 31))
     for declared, expected_verdict in ((False, "not_applicable"), (None, "incomplete")):
         profile = TaxpayerProfile(
             tax_id="X0001500M",
@@ -613,7 +627,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
             profile,
             rng,
             operation=authority_operation,
-            today=date(2025, 1, 15),
+            today=date(_YEAR, 1, 15),
             show_suppressed=True,
         )
 
@@ -635,12 +649,12 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation(
     the engine never shows the entity a cuota obligation it does not
     owe."""
 
-    rng = OverviewCalendarRange(from_date=date(2024, 1, 1), to_date=date(2026, 12, 31))
+    rng = OverviewCalendarRange(from_date=date(_YEAR - 2, 1, 1), to_date=date(_YEAR, 12, 31))
     cal = build_overview_calendar(
         _attribution_entity(),
         rng,
         operation=authority_operation,
-        today=date(2025, 7, 1),
+        today=date(_YEAR - 1, 7, 1),
     )
 
     surfaced = {entry.modelo for entry in cal.entries}

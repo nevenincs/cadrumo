@@ -8,11 +8,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_UTC = datetime(2026, 8, 1, 10, 0, tzinfo=UTC)
+_UTC = datetime(1980, 8, 1, 10, 0, tzinfo=UTC)
 
 
 def _presented(*, submitted_at: datetime = _UTC, acknowledged_at: datetime | None = None) -> ModeloPresentado:
@@ -22,7 +23,7 @@ def _presented(*, submitted_at: datetime = _UTC, acknowledged_at: datetime | Non
         submission_id=submission_id,
         draft_id="draft-utc-boundary",
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(filing_year_envelope().horizon, "1T"),
         profile_tax_id="X0001500M",
         status=SubmissionStatus.PRESENTADA,
         submitted_at=submitted_at,
@@ -41,8 +42,8 @@ def _presented(*, submitted_at: datetime = _UTC, acknowledged_at: datetime | Non
 @pytest.mark.parametrize(
     "value",
     (
-        datetime(2026, 8, 1, 10, 0),
-        datetime(2026, 8, 1, 11, 0, tzinfo=timezone(timedelta(hours=1))),
+        datetime(1980, 8, 1, 10, 0),
+        datetime(1980, 8, 1, 11, 0, tzinfo=timezone(timedelta(hours=1))),
     ),
 )
 def test_submission_attempt_refuses_naive_and_non_utc_timestamps(value: datetime) -> None:
@@ -59,7 +60,7 @@ def test_submission_attempt_refuses_naive_and_non_utc_timestamps(value: datetime
 def test_presented_record_refuses_mixed_awareness_before_ordering() -> None:
     """A mixed pair yields the domain validation error, not Python's TypeError."""
     with pytest.raises(ValidationError, match="timezone-aware UTC"):
-        _presented(acknowledged_at=datetime(2026, 8, 1, 10, 1))
+        _presented(acknowledged_at=datetime(1980, 8, 1, 10, 1))
 
 
 def test_presented_record_preserves_valid_utc_timestamps() -> None:

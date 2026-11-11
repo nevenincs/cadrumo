@@ -5,12 +5,14 @@ Figures are hand-worked from the 12,000.00 mobiliario element at a 10% linear co
 
 from __future__ import annotations
 
+from calendar import isleap
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -47,6 +49,7 @@ from .ledger_source_mesh_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TRANSACTION = "c" * 64
+_YEAR = newest_authored_edition("100")
 
 
 def _blocks(resolution: CalculationSourceResolution) -> set[str]:
@@ -65,7 +68,7 @@ def _disposed_with_unknown_opening(
     asset = _opening_unknown(register_asset("furniture", transaction_id=_TRANSACTION))
     proceeds = Decimal("0.00") if reason is ActivityAssetDisposalReason.WITHDRAWAL else Decimal("5000.00")
     baja = ActivityAssetDisposal(
-        disposal_date=date(2025, 6, 30),
+        disposal_date=date(_YEAR, 6, 30),
         reason=reason,
         proceeds=proceeds,
         transmission_costs=Decimal("0.00"),
@@ -79,7 +82,7 @@ def _profile(operation, *facts: UserProfileFact) -> ModeloWorkProfile:
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"), *facts, *cash_criterion_facts(2025)),
+            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"), *facts, *cash_criterion_facts(_YEAR)),
             context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),
@@ -144,7 +147,7 @@ def test_a_registry_failure_behind_a_baja_is_an_unresolved_finding(monkeypatch: 
     monkeypatch.setattr(activity_asset_disposal_projection, "pinned_disposal_bounds", failing_bounds)
     asset = register_asset("furniture", transaction_id=_TRANSACTION)
     baja = ActivityAssetDisposal(
-        disposal_date=date(2025, 6, 30),
+        disposal_date=date(_YEAR, 6, 30),
         reason=ActivityAssetDisposalReason.SALE,
         proceeds=Decimal("5000.00"),
         transmission_costs=Decimal("0.00"),
@@ -156,19 +159,19 @@ def test_a_registry_failure_behind_a_baja_is_an_unresolved_finding(monkeypatch: 
     assert "activity_asset_disposal_finding" in reasons(resolution)
 
 
-def _moved_to_navarra_in_2026(operation) -> ModeloWorkProfile:
+def _moved_to_navarra_the_year_after(operation) -> ModeloWorkProfile:
     return _profile(
         operation,
-        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(2025, 12, 31)),
-        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2026, 1, 1)),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(_YEAR, 12, 31)),
+        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(_YEAR + 1, 1, 1)),
     )
 
 
-def test_a_move_to_foral_territory_in_2026_leaves_the_2025_returns_alone(operation) -> None:
+def test_a_move_to_foral_territory_the_year_after_leaves_the_filing_year_returns_alone(operation) -> None:
     asset = register_asset("furniture", transaction_id=_TRANSACTION)
     claim = register_claim(asset, amount=Decimal("1200.00"))
     history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
-    profile = _moved_to_navarra_in_2026(operation)
+    profile = _moved_to_navarra_the_year_after(operation)
 
     annual = resolve_m100(history, profile=profile)
     fourth_quarter = resolve_m130(history, "4T", profile=profile)
@@ -185,21 +188,24 @@ def test_the_foral_refusal_holds_for_the_period_truly_in_foral_territory(operati
 
     profile = _profile(
         operation,
-        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(2025, 6, 30)),
-        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2025, 7, 1)),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid", valid_to=date(_YEAR, 6, 30)),
+        UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(_YEAR, 7, 1)),
     )
 
     expected = [PRIOR_YEAR_ROW_NOTE, "activity_asset_foral_territory"]
     assert reasons(resolve_m100(history, rows=(row,), profile=profile)) == expected
     assert reasons(resolve_m130(history, "3T", rows=(row,), profile=profile)) == expected
-    # 12,000 x 10% x 90 / 365 = 295.89, in the quarter still in common territory.
-    assert m130_box(resolve_m130(history, "1T", rows=(row,), profile=profile)) == Decimal("295.89")
+    # 12,000 x 10% x (days of the first quarter) / (days of the year), in the quarter still in common territory.
+    first_quarter_days = (date(_YEAR, 3, 31) - date(_YEAR, 1, 1)).days + 1
+    year_days = 366 if isleap(_YEAR) else 365
+    expected_box = (Decimal("12000.00") * Decimal("0.10") * first_quarter_days / year_days).quantize(Decimal("0.01"))
+    assert m130_box(resolve_m130(history, "1T", rows=(row,), profile=profile)) == expected_box
 
 
 def test_a_residence_recorded_only_for_later_periods_is_a_finding_and_the_register_still_counts(operation) -> None:
     asset = register_asset("furniture", transaction_id=_TRANSACTION)
     profile = _profile(
-        operation, UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(2026, 1, 1))
+        operation, UserProfileFact(path="tax_residence.ccaa", value="navarra", valid_from=date(_YEAR + 1, 1, 1))
     )
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,)), "4T", profile=profile)

@@ -10,19 +10,21 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_PRESENTED_AT = datetime(2025, 4, 15, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PRESENTED_AT = datetime(_YEAR, 4, 15, 12, 0, tzinfo=UTC)
 
 
 def _receipt(**updates: object) -> Justificante:
     values: dict[str, object] = {
         "csv": "JUST3032025X1T7",
         "modelo": "303",
-        "ejercicio": "2025",
+        "ejercicio": str(_YEAR),
         "period": _PERIOD,
         # A receipt-shaped Número de justificante. It used to be an
         # expediente-shaped literal, which read as evidence that a register
@@ -45,8 +47,8 @@ def _receipt(**updates: object) -> Justificante:
     (
         ({"modelo": " 303 "}, True),
         ({"modelo": "130"}, False),
-        ({"ejercicio": "2024"}, False),
-        ({"period": Period.from_year_and_code(2025, "2T")}, False),
+        ({"ejercicio": str(filing_year_envelope().floor)}, False),
+        ({"period": Period.from_year_and_code(_YEAR, "2T")}, False),
         ({"tax_id": "Y0001503E"}, False),
         # The receipt's own presentation identifier is not a matching axis, so
         # neither carrying a different one nor carrying none at all changes the
@@ -64,7 +66,7 @@ def test_matches_filing_target_uses_one_normalised_axis_matrix(
     assert (
         receipt.matches_filing_target(
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             tax_id=" x0001500m ",
         )
@@ -90,7 +92,7 @@ def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> N
     with pytest.raises(TypeError, match="presentation_id"):
         receipt.matches_filing_target(  # type: ignore[call-arg]
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             tax_id="X0001500M",
             presentation_id="202530300000101A",  # ty: ignore[unknown-argument]  # reason: passing the removed parameter is the refusal under test
@@ -100,7 +102,7 @@ def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> N
     # above is about the parameter and not about an unrelatedly broken call.
     assert receipt.matches_filing_target(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=_PERIOD,
         tax_id="X0001500M",
     )

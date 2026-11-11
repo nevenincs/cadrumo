@@ -20,7 +20,7 @@ import json
 import sys
 from collections.abc import Iterator
 from contextvars import ContextVar
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -35,6 +35,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.verification_report import (
     VerificationCompletenessStatus,
     VerificationReport,
@@ -47,6 +48,8 @@ from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_en
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -74,7 +77,7 @@ def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
         "identity.name": "Native",
         "identity.surnames": "Pipeline",
         "activities.description": "design",
-        "censo.activity_start_date": activity_start_date or "2025-01-01",
+        "censo.activity_start_date": activity_start_date or date(_YEAR, 1, 1).isoformat(),
         "taxpayer_type.irpf_income_categories": "actividad_economica",
         "irpf.estimation_regime": "directa_normal",
         "taxpayer_type.fiscal_residency": "resident_irpf",
@@ -101,7 +104,7 @@ def _invoke(arguments: list[str]) -> Result:
 
 
 def _create_complete_pipeline_profile() -> None:
-    _create_profile(activity_start_date="2025-10-01")
+    _create_profile(activity_start_date=date(_YEAR, 10, 1).isoformat())
 
 
 def _create_calculated_130_unit() -> tuple[str, Result]:
@@ -110,8 +113,8 @@ def _create_calculated_130_unit() -> tuple[str, Result]:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
-            "--revision", "2019-y-siguientes",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "4T",
+            "--revision", revision_covering("130", _YEAR).id,
         ],
     )  # fmt: skip
     assert created.exit_code == 0
@@ -144,12 +147,12 @@ def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos() -> None:
     _create_profile()
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "1T"],
     )
     assert result.exit_code == 0
     payload = unwrap_schema_envelope(result.output)
 
-    assert payload["filing_year"] == 2025
+    assert payload["filing_year"] == _YEAR
     assert payload["period"] == "1T"
     assert payload["ledger"]["total_count"] == 0
     assert payload["modelos"] == []
@@ -169,14 +172,14 @@ def test_pipeline_surfaces_unclassified_ledger_pending_count() -> None:
     added = _invoke(
         [
             "app", "ledger", "add",
-            "--date", "2025-02-10", "--amount", "1000.00",
+            "--date", date(_YEAR, 2, 10).isoformat(), "--amount", "1000.00",
             "--direction", "INCOMING", "--description", "Factura cliente A",
         ],
     )  # fmt: skip
     assert added.exit_code == 0
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "1T"],
     )
     assert result.exit_code == 0
     payload = unwrap_schema_envelope(result.output)
@@ -195,14 +198,14 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
     findings; with a clean ledger for the same period the overall pipeline
     is honestly ``ready``."""
 
-    _create_profile(activity_start_date="2025-10-01")
+    _create_profile(activity_start_date=date(_YEAR, 10, 1).isoformat())
     work_unit_id, _calculated = _create_calculated_130_unit()
 
     verified = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "4T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0
@@ -212,13 +215,13 @@ def test_pipeline_shows_filed_modelo_readiness_row_and_reports_ready() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "file",
-            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--modelo", "130", "--year", str(_YEAR), "--period", "4T",
         ],
     )  # fmt: skip
     assert filed.exit_code == 0
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "4T"],
     )
     assert result.exit_code == 0
     payload = unwrap_schema_envelope(result.output)
@@ -243,11 +246,11 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     """A modelo whose current revision is calculated but not yet verified
     reports the ``calculated`` state and keeps the pipeline unready."""
 
-    _create_profile(activity_start_date="2025-10-01")
+    _create_profile(activity_start_date=date(_YEAR, 10, 1).isoformat())
     work_unit_id, _calculated = _create_calculated_130_unit()
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "4T"],
     )
     assert result.exit_code == 0
     payload = unwrap_schema_envelope(result.output)
@@ -303,14 +306,14 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
     calculation_revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
 
     before = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "4T"],
     )
     assert before.exit_code == 0
     before_row = next(row for row in unwrap_schema_envelope(before.output)["modelos"] if row["modelo"] == "130")
     assert before_row["state"] == ModeloReadinessState.CALCULATED.value
     assert before_row["summary"] != "Modelo 130: check incomplete."
 
-    run_at = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
+    run_at = datetime(_YEAR, 8, 12, 12, 0, tzinfo=UTC)
     report_id = derive_verification_report_id(
         calculation_revision_id=calculation_revision_id,
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
@@ -322,8 +325,8 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
         calculation_revision_id=calculation_revision_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2025,
+            revision_id=revision_covering("130", _YEAR).id,
+            modelo_year=_YEAR,
             period="4T",
         ),
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
@@ -356,7 +359,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> No
         close_active_bucket_session()
 
     after = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "4T"],
     )
     assert after.exit_code == 0
     payload = unwrap_schema_envelope(after.output)
@@ -380,10 +383,10 @@ def test_pipeline_is_read_only_and_safe_to_run_repeatedly() -> None:
     _create_profile()
 
     first = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "1T"],
     )
     second = _invoke(
-        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "1T"],
+        ["--format", "json", "app", "overview", "pipeline", "--year", str(_YEAR), "--period", "1T"],
     )
     assert first.exit_code == 0
     assert second.exit_code == 0

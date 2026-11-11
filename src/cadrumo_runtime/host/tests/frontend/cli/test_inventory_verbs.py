@@ -6,7 +6,7 @@ import json
 import os
 import sys
 from contextlib import suppress
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -15,6 +15,7 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.inventory.registered_requests import InventoryClosingValueFactsInput
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -37,6 +38,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_PRIOR_YEAR, _YEAR = filing_year_envelope().years[-2:]
 
 pytestmark = [
     pytest.mark.integration,
@@ -126,7 +129,7 @@ def _create_ledger(
         "create",
         actividad_id,
         "--year",
-        "2026",
+        str(_YEAR),
         "--valuation-method",
         "fifo",
         "--opening-stock",
@@ -149,14 +152,14 @@ def _authority_payload(actividad_id: str, *, reason: str = "Reviewed movement-de
     )
     record = InventoryClosingAuthorityRecord(
         decision=InventoryClosingAuthorityDecision(
-            decision_id=f"decision-{actividad_id}-2026",
+            decision_id=f"decision-{actividad_id}-{_YEAR}",
             actividad_id=actividad_id,
-            filing_year=2026,
+            filing_year=_YEAR,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             reason=reason,
             actor="secret-operator",
             source_command="inventory.closing.authority.decide",
-            decided_at=datetime(2027, 1, 2, tzinfo=UTC),
+            decided_at=datetime.combine(date(_YEAR, 12, 31) + timedelta(days=2), time(), tzinfo=UTC),
             evidence=(
                 InventoryClosingDecisionEvidence(
                     reference=FilingEvidenceReference(reference=f"{actividad_id}-decision-secret-ref"),
@@ -167,14 +170,14 @@ def _authority_payload(actividad_id: str, *, reason: str = "Reviewed movement-de
         ),
         prior_closing_link=PriorAuthoritativeClosingLink(
             actividad_id=actividad_id,
-            current_filing_year=2026,
-            prior_filing_year=2025,
+            current_filing_year=_YEAR,
+            prior_filing_year=_PRIOR_YEAR,
             prior_authoritative_closing_value=Decimal("100.00"),
             current_opening_value=Decimal("100.00"),
             prior_authoritative_source_fingerprint="c" * 64,
             prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
                 actividad_id=actividad_id,
-                filing_year=2025,
+                filing_year=_PRIOR_YEAR,
                 authoritative_closing_value=Decimal("100.00"),
                 authoritative_source_fingerprint="c" * 64,
                 evidence=continuity_evidence,
@@ -190,11 +193,11 @@ def _physical_authority_payload(actividad_id: str) -> str:
 
     base = InventoryClosingAuthorityRecord.model_validate_json(_authority_payload(actividad_id))
     observation = PhysicalClosingObservation(
-        observation_id=f"physical-{actividad_id}-2026",
-        observed_on=date(2027, 1, 1),
-        as_of_date=date(2026, 12, 31),
+        observation_id=f"physical-{actividad_id}-{_YEAR}",
+        observed_on=date(_YEAR, 12, 31) + timedelta(days=1),
+        as_of_date=date(_YEAR, 12, 31),
         actividad_id=actividad_id,
-        filing_year=2026,
+        filing_year=_YEAR,
         closing_value=Decimal("101.00"),
         valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
         evidence=(
@@ -243,11 +246,11 @@ def _assert_create_and_purchase(profile: NativeCliProfileFixture, failures: list
         "--actividad-id",
         "act-1",
         "--year",
-        "2026",
+        str(_YEAR),
         "--movement-id",
         "purchase-1",
         "--date",
-        "2026-03-15",
+        date(_YEAR, 3, 15).isoformat(),
         "--kind",
         "purchase",
         "--quantity",
@@ -284,7 +287,7 @@ def _assert_duplicate_list_and_legacy_refusals(profile: NativeCliProfileFixture)
     listed_payload = unwrap_cli_result(listed)
     assert listed_payload["count"] == 1
     assert listed_payload["rows"][0]["actividad_id"] == "act-1"
-    assert listed_payload["rows"][0]["year"] == 2026
+    assert listed_payload["rows"][0]["year"] == _YEAR
     assert listed_payload["rows"][0]["valuation_method"] == "fifo"
     assert listed_payload["rows"][0]["opening_stock"] == "100.00"
     assert listed_payload["rows"][0]["movement_count"] == 1
@@ -299,11 +302,11 @@ def _assert_duplicate_list_and_legacy_refusals(profile: NativeCliProfileFixture)
         "--actividad-id",
         "act-1",
         "--year",
-        "2026",
+        str(_YEAR),
         "--movement-id",
         "legacy-1",
         "--date",
-        "2026-03-15",
+        date(_YEAR, 3, 15).isoformat(),
         "--kind",
         "purchase",
         "--quantity",
@@ -331,7 +334,7 @@ def _assert_valuation_preview(profile: NativeCliProfileFixture) -> None:
         "--actividad-id",
         "act-1",
         "--year",
-        "2026",
+        str(_YEAR),
     )
     assert preview.exit_code == 0, preview.output
     preview_payload = unwrap_cli_result(preview)
@@ -425,11 +428,11 @@ def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp
             "--actividad-id",
             "act-names",
             "--year",
-            "2026",
+            str(_YEAR),
             "--movement-id",
             "named-purchase",
             "--date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--kind",
             "purchase",
             "--quantity",
@@ -440,7 +443,7 @@ def test_native_inventory_inspect_names_held_documents_and_the_list_does_not(tmp
         assert purchase.exit_code == 0, purchase.output
         assert "private-invoice" not in purchase.output
 
-        inspected = _invoke(profile, "app", "ledger", "inventory", "inspect", "act-names", "--year", "2026")
+        inspected = _invoke(profile, "app", "ledger", "inventory", "inspect", "act-names", "--year", str(_YEAR))
         assert inspected.exit_code == 0, inspected.output
         detail = unwrap_cli_result(inspected)["period_movements"][0]["acquisition_detail"]
         assert {item["evidence_kind"]: item["file_name"] for item in detail["documents"]} == {
@@ -471,7 +474,7 @@ def test_native_inventory_document_of_a_type_not_kept_is_refused_in_its_own_word
 
 def _closing_value_facts(*, prior_document: bool) -> str:
     return InventoryClosingValueFactsInput(
-        decision_id="closing-2026",
+        decision_id=f"closing-{_YEAR}",
         authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
         reason="Reviewed movement-derived closing.",
         decision_evidence=(
@@ -509,7 +512,7 @@ def test_native_closing_value_asks_for_the_prior_document_and_a_retry_replays_th
             "closing-value-record",
             "closing",
             "--year",
-            "2026",
+            str(_YEAR),
             "--file",
             str(facts_file),
         )
@@ -545,7 +548,7 @@ def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path
             "closing-authority-record",
             "authority",
             "--year",
-            "2026",
+            str(_YEAR),
             "--file",
             str(authority_file),
         )
@@ -588,7 +591,7 @@ def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path
             "closing-authority-record",
             "authority-physical",
             "--year",
-            "2026",
+            str(_YEAR),
             "--file",
             str(physical_file),
         )
@@ -609,11 +612,11 @@ def test_native_inventory_closing_authority_replay_and_divergence(tmp_path: Path
             "--actividad-id",
             "authority",
             "--year",
-            "2026",
+            str(_YEAR),
             "--movement-id",
             "post-authority",
             "--date",
-            "2026-03-15",
+            date(_YEAR, 3, 15).isoformat(),
             "--kind",
             "cogs",
             "--quantity",

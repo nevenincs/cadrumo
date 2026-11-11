@@ -41,6 +41,7 @@ from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support imp
     M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     M303_POSTERIOR_CASILLA,
     M303_RESULTADO_CASILLA,
+    TARGET_YEAR,
     TAXPAYER_NIF,
     save_wallet_gate_decision,
     secure_backend,
@@ -144,7 +145,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
             casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             iva_compensation_decision=report.decision,
-            filing_period_date=date(2026, 3, 31),
+            filing_period_date=date(TARGET_YEAR, 3, 31),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -165,7 +166,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
             verification_repositories=build_test_verification_repository_bundle(),
             actor="operator",
             workflow_profile=workflow_profile(taxpayer_nif).model_copy(
-                update={"activity_start_date": date(2026, 1, 1)},
+                update={"activity_start_date": date(TARGET_YEAR, 1, 1)},
             ),
             settings=ready_clave_settings(taxpayer_nif),
             clock=DECIDED_AT,
@@ -273,7 +274,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
             casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             iva_compensation_decision=report.decision,
-            filing_period_date=date(2026, 6, 30),
+            filing_period_date=date(TARGET_YEAR, 6, 30),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -343,7 +344,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
         )
         decisions = IvaWalletDecisionRepository(operation=operation)
         observations = CalculationObservationRepository()
-        profile = workflow_profile().model_copy(update={"activity_start_date": date(2026, 1, 1)})
+        profile = workflow_profile().model_copy(update={"activity_start_date": date(TARGET_YEAR, 1, 1)})
         revision = None
         verification = None
         if action != "calculate":
@@ -366,7 +367,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=fresh.decision,
-                filing_period_date=date(2026, 3, 31),
+                filing_period_date=date(TARGET_YEAR, 3, 31),
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
@@ -412,7 +413,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
                     actor="operator",
                     casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    filing_period_date=date(2026, 3, 31),
+                    filing_period_date=date(TARGET_YEAR, 3, 31),
                     work_unit_repository=work_repo,
                     calculation_repository=calc_repo,
                     bucket_event_repository=event_repo,

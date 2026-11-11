@@ -25,6 +25,12 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+    revision_serving_period,
+)
 from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -40,8 +46,10 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_RENTA_YEAR = newest_authored_edition("100")
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET = "44444444-4444-4444-8444-444444444444"
 _READY_PROFILE_FACTS = persona_facts_beneath(
     (
@@ -49,7 +57,7 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="source mesh"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 6, 1, 1)),
         UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
         UserProfileFact(path="renta_taxpayer.sex", value="H"),
         UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
@@ -131,14 +139,14 @@ def _raw_transaction(
             source_sha256="3" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
     )
 
 
-def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2026, 2, 10)) -> Transaction:
+def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(_YEAR, 2, 10)) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=Decimal("1000.00")),
@@ -154,7 +162,7 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
             "counterparty_country": "DE",
             "counterparty_identification_state": require_eu_member_state("de", effective_date=booked_date),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -163,8 +171,20 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "binding_id"),
     [
-        ("303", 2026, "1T", "2026-hasta-01-y-1t", "modelo-303-iva-repercutido-general-cuota"),
-        ("100", 2025, "0A", "2025", "renta-ledger-expense-0199-deductible"),
+        (
+            "303",
+            _YEAR,
+            "1T",
+            str(revision_serving_period("303", _YEAR, "1T").id),
+            "modelo-303-iva-repercutido-general-cuota",
+        ),
+        (
+            "100",
+            _RENTA_YEAR,
+            "0A",
+            str(revision_covering("100", _RENTA_YEAR).id),
+            "renta-ledger-expense-0199-deductible",
+        ),
     ],
 )
 def test_bucket_calculation_rejects_source_owned_binding_overrides(
@@ -210,9 +230,9 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     work_unit = _seed_work_unit(
         wu_repo,
         modelo="349",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
-        revision_id="2020-y-siguientes",
+        revision_id=str(revision_covering("349", _YEAR).id),
         operation=operation,
     )
     intracom_sale = _intracom_ledger_transaction("intracom-sale-de")
@@ -248,12 +268,12 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     work_unit = _seed_work_unit(
         wu_repo,
         modelo="349",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="03",
-        revision_id="2020-y-siguientes",
+        revision_id=str(revision_covering("349", _YEAR).id),
         operation=operation,
     )
-    intracom_sale = _intracom_ledger_transaction("intracom-sale-march-20", booked_date=date(2026, 3, 20))
+    intracom_sale = _intracom_ledger_transaction("intracom-sale-march-20", booked_date=date(_YEAR, 3, 20))
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info, bundled_indexed_authority().operation() as operation:
@@ -278,8 +298,8 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "revision_id", "casilla_id"),
     [
-        ("303", 2026, "1T", "2026-hasta-01-y-1t", "iva.repercutido.general"),
-        ("100", 2025, "0A", "2025", "0199"),
+        ("303", _YEAR, "1T", str(revision_serving_period("303", _YEAR, "1T").id), "iva.repercutido.general"),
+        ("100", _RENTA_YEAR, "0A", str(revision_covering("100", _RENTA_YEAR).id), "0199"),
     ],
 )
 def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(

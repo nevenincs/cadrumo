@@ -33,8 +33,11 @@ from cadrumo.application.storage.calc_sheets.records import (
 )
 from cadrumo.application.storage.calc_sheets.review_workbook import ReviewLabelResolver
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints import google_export_operation_composition as export_composition
 from cadrumo.entrypoints import google_review_operation_composition as review_composition
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -43,9 +46,9 @@ def _plan() -> SheetExportPlan:
     return SheetExportPlan(
         metadata=SheetExportMetadata(
             modelo_id="303",
-            revision_id="2026",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            revision_id=str(_YEAR),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             engine_version="test",
             registry_sha="a" * 64,
             exported_at=EXPORTED_AT,
@@ -102,11 +105,12 @@ from cadrumo.entrypoints import google_export_operation_composition as export_co
 export_composition.resolve_drive_root_folder_id = lambda **kwargs: 'fixture-root'
 export_composition.build_google_credentials = lambda **kwargs: object()
 prepared = export_composition.build_google_sheets_export_prepare_port()('fixture-profile')
+year = int(sys.argv[3])
 plan = SheetExportPlan(
     metadata=SheetExportMetadata(
-        modelo_id='303', revision_id='2026', filing_year=2026,
-        period=Period.from_year_and_code(2026, '1T'), engine_version='test', registry_sha='a' * 64,
-        exported_at=datetime(2026, 10, 5, 14, tzinfo=UTC),
+        modelo_id='303', revision_id=sys.argv[3], filing_year=year,
+        period=Period.from_year_and_code(year, '1T'), engine_version='test', registry_sha='a' * 64,
+        exported_at=datetime(year, 10, 5, 14, tzinfo=UTC),
     ),
     guide=SheetGuideContent(title='Fixture export', paragraphs=('Synthetic dependency fixture',)),
 )
@@ -132,7 +136,7 @@ assert not Path(sys.argv[2]).exists()
         }
     )
     result = subprocess.run(  # noqa: S603 - fixed interpreter and repository-owned finite import-only fixture
-        [sys.executable, "-I", "-B", "-c", script, str(source), str(tmp_path / "storage")],
+        [sys.executable, "-I", "-B", "-c", script, str(source), str(tmp_path / "storage"), str(_YEAR)],
         cwd=tmp_path,
         env=environment,
         capture_output=True,

@@ -16,10 +16,15 @@ from ....application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
 from ..app_live_rendering import filed_capture_lines, source_filed_capture_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+YEAR = filing_year_envelope().horizon
+OTHER_YEAR = filing_year_envelope().floor
+FIRST_YEAR, SECOND_YEAR = filing_year_envelope().years[:2]
 
 
 def _filed_observation_path(modelo: str, year: int, period: str) -> str:
@@ -34,39 +39,39 @@ def test_live_filed_pull_text_reports_mode_failures_and_evidence_counts() -> Non
     report = FiledDataCaptureReport(
         output_root="filed-declarations",
         modelo="303",
-        year=2026,
+        year=YEAR,
         captured_count=1,
-        observation_paths=(_filed_observation_path("303", 2026, "1T"),),
+        observation_paths=(_filed_observation_path("303", YEAR, "1T"),),
         artefact_refs=("secure-object:financial:" + "a" * 64,),
         justificante_metadata_count=1,
-        justificante_csvs=("CSV30320261T",),
+        justificante_csvs=(f"CSV303{YEAR}1T",),
         filing_evidence_stamped_count=1,
-        filing_record_ids=(_filing_record_id("303", 2026, "1T"),),
+        filing_record_ids=(_filing_record_id("303", YEAR, "1T"),),
         filing_evidence_conflict_count=0,
         filing_evidence_conflict_record_ids=(),
         casilla_count=12,
         calculation_observation_count=1,
-        calculation_observation_keys=("303:2026:1T:12345678901234567890",),
+        calculation_observation_keys=(f"303:{YEAR}:1T:12345678901234567890",),
     )
 
     lines = filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
 
     assert "mode=single" in lines
     assert "modelo=303" in lines
-    assert "year=2026" in lines
+    assert f"year={YEAR}" in lines
     assert "failed_count=0" in lines
     assert "justificante_metadata_count=1" in lines
-    assert "justificante_csvs=CSV30320261T" in lines
+    assert f"justificante_csvs=CSV303{YEAR}1T" in lines
     assert "filing_evidence_stamped_count=1" in lines
-    assert f"filing_record_ids={_filing_record_id('303', 2026, '1T')}" in lines
+    assert f"filing_record_ids={_filing_record_id('303', YEAR, '1T')}" in lines
 
 
 def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
     failure = FiledDataCaptureFailureRow(
         modelo="303",
-        year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        expediente_id="202620013522222B",
+        year=YEAR,
+        period=Period.from_year_and_code(YEAR, "2T"),
+        expediente_id=f"{YEAR}20013522222B",
         error_type="ValueError",
         message="bounded register timeout",
     )
@@ -74,7 +79,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="303",
-                year=2026,
+                year=YEAR,
                 walk_attempted=True,
                 walk_completed=False,
                 row_count=0,
@@ -83,7 +88,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
             ),
             FiledCapturePairOutcome(
                 modelo="390",
-                year=2026,
+                year=YEAR,
                 walk_attempted=False,
                 walk_completed=False,
                 row_count=0,
@@ -93,8 +98,8 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         ),
         output_root="filed-declarations",
         modelos=("303", "390"),
-        year_from=2026,
-        year_to=2026,
+        year_from=YEAR,
+        year_to=YEAR,
         captured_count=0,
         failed_count=1,
         observation_paths=(),
@@ -122,46 +127,46 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
 
     assert "mode=bulk" in lines
     assert "modelo_count=2" in lines
-    assert "year_from=2026" in lines
-    assert "year_to=2026" in lines
+    assert f"year_from={YEAR}" in lines
+    assert f"year_to={YEAR}" in lines
     assert "failed_count=1" in lines
     assert "pair_count=2" in lines
     assert any(
-        "303\t2026" in line and "walk_attempted=True" in line and "walk_completed=False" in line for line in lines
+        f"303\t{YEAR}" in line and "walk_attempted=True" in line and "walk_completed=False" in line for line in lines
     )
     assert any(
-        "390\t2026" in line and "walk_attempted=False" in line and "walk_completed=False" in line for line in lines
+        f"390\t{YEAR}" in line and "walk_attempted=False" in line and "walk_completed=False" in line for line in lines
     )
-    assert any(line.startswith("failure=303\t2026\t2T\t202620013522222B\tValueError\t") for line in lines)
+    assert any(line.startswith(f"failure=303\t{YEAR}\t2T\t{YEAR}20013522222B\tValueError\t") for line in lines)
 
 
 def test_live_filed_pull_sources_text_reports_target_period_and_evidence_counts() -> None:
     report = SourceFiledDataCaptureReport(
         output_root="filed-declarations",
         target_modelo="130",
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
+        target_year=YEAR,
+        target_period=Period.from_year_and_code(YEAR, "1T"),
         captured_count=2,
         observation_paths=(
-            _filed_observation_path("130", 2026, "1T"),
-            _filed_observation_path("100", 2025, "0A"),
+            _filed_observation_path("130", YEAR, "1T"),
+            _filed_observation_path("100", OTHER_YEAR, "0A"),
         ),
         artefact_refs=("secure-object:financial:" + "b" * 64,),
         justificante_metadata_count=1,
-        justificante_csvs=("CSV13020261T",),
+        justificante_csvs=(f"CSV130{YEAR}1T",),
         filing_evidence_stamped_count=1,
-        filing_record_ids=(_filing_record_id("130", 2026, "1T"),),
+        filing_record_ids=(_filing_record_id("130", YEAR, "1T"),),
         filing_evidence_conflict_count=0,
         filing_evidence_conflict_record_ids=(),
         casilla_count=18,
         calculation_observation_count=2,
-        calculation_observation_keys=("130:2026:1T:EXP", "100:2025:0A:EXP"),
+        calculation_observation_keys=(f"130:{YEAR}:1T:EXP", f"100:{OTHER_YEAR}:0A:EXP"),
     )
 
     lines = source_filed_capture_lines(report)
 
     assert "target_modelo=130" in lines
-    assert "target_year=2026" in lines
+    assert f"target_year={YEAR}" in lines
     assert "target_period=1T" in lines
     assert "mode=sources" in lines
     assert "failed_count=0" in lines
@@ -180,18 +185,18 @@ def test_capture_history_result_names_its_failed_declarations() -> None:
     """
     report = IvaCompensationHistoryCaptureReport(
         output_root="live/iva-compensation-history",
-        year_from=2023,
-        year_to=2024,
+        year_from=FIRST_YEAR,
+        year_to=SECOND_YEAR,
         captured_count=5,
-        observation_paths=("obs/2023-1T.json", "obs/2023-2T.json"),
-        artefact_refs=("artefact:2023-1T",),
+        observation_paths=(f"obs/{FIRST_YEAR}-1T.json", f"obs/{FIRST_YEAR}-2T.json"),
+        artefact_refs=(f"artefact:{FIRST_YEAR}-1T",),
         casilla_count=12,
         calculation_observation_count=3,
         calculation_observation_keys=("k1", "k2", "k3"),
         reloaded_history_count=2,
         reloaded_rows=(),
         failed_declaration_count=1,
-        failed_declarations=("303-2024-2T: read timed out",),
+        failed_declarations=(f"303-{SECOND_YEAR}-2T: read timed out",),
     )
 
     result = IvaWalletCaptureHistoryResult(
@@ -216,7 +221,7 @@ def test_capture_history_result_names_its_failed_declarations() -> None:
     expected = set(report.model_dump()) - {"reloaded_rows"}
     assert expected - set(rendered) == set()
     assert rendered["failed_declaration_count"] == 1
-    assert rendered["failed_declarations"] == ["303-2024-2T: read timed out"]
+    assert rendered["failed_declarations"] == [f"303-{SECOND_YEAR}-2T: read timed out"]
 
     assert IvaWalletCaptureHistoryResult.model_validate_json(result.model_dump_json()) == result
 
@@ -226,11 +231,11 @@ def test_capture_history_result_refuses_a_failure_count_without_its_names() -> N
     with pytest.raises(ValidationError, match="failed_declaration_count"):
         IvaWalletCaptureHistoryResult(
             output_root="live/iva-compensation-history",
-            year_from=2024,
-            year_to=2024,
+            year_from=SECOND_YEAR,
+            year_to=SECOND_YEAR,
             captured_count=0,
             calculation_observation_count=0,
             reloaded_history_count=0,
             failed_declaration_count=3,
-            failed_declarations=["303-2024-2T: read timed out"],
+            failed_declarations=[f"303-{SECOND_YEAR}-2T: read timed out"],
         )

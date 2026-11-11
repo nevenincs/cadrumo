@@ -15,6 +15,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
@@ -25,7 +26,8 @@ from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
-_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FOREIGN_CLASS_WRITTEN_AT = datetime(_YEAR, 5, 26, 16, 0, 0, tzinfo=UTC)
 
 
 def _make_justificante(
@@ -41,9 +43,9 @@ def _make_justificante(
             "csv": csv,
             "modelo": "130",
             "period": period,
-            "ejercicio": "2026",
+            "ejercicio": str(_YEAR),
             "presentation_id": None,
-            "presented_at": datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
+            "presented_at": datetime(_YEAR, 4, 10, 11, 23, 45, tzinfo=UTC),
             "tax_id": "00000000T",
             "total_a_ingresar": Decimal("10.00"),
             "total_a_devolver": None,
@@ -52,7 +54,7 @@ def _make_justificante(
             ),
             "source_pdf_path": pdf,
             "source_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
-            "parsed_at": datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
+            "parsed_at": datetime(_YEAR, 4, 12, 0, 0, 0, tzinfo=UTC),
         },
     )
 
@@ -102,11 +104,11 @@ class TestSaveLoad:
 
     def test_annual_period_requires_bare_registry_token(self, tmp_path: Path) -> None:
         record = _make_justificante(tmp_path, period="0A")
-        assert record.period == Period.from_year_and_code(2026, "0A")
+        assert record.period == Period.from_year_and_code(_YEAR, "0A")
 
     def test_bare_year_period_is_not_accepted_as_annual_token(self, tmp_path: Path) -> None:
         with pytest.raises(ValidationError, match="Period"):
-            _make_justificante(tmp_path, period="2026")
+            _make_justificante(tmp_path, period=str(_YEAR))
 
     def test_save_idempotent(self, repo: JustificanteRepository, tmp_path: Path) -> None:
         record = _make_justificante(tmp_path)

@@ -31,6 +31,7 @@ from ...application.ledger.list_query import (
 from ...application.review.filter import LedgerReviewFilterSpec
 from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -38,6 +39,8 @@ from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction
 from ..ledger_action_composition import compose_ledger_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET = "55555555-5555-4555-8555-555555555555"
 
@@ -55,36 +58,41 @@ class _Row:
     accrued: date | None = None
 
 
-#: Boundary rows around the fourth quarter of 2030. The listing keys on the
+#: Boundary rows around the fourth quarter of the base year. The listing keys on the
 #: value date when present, else the booked date; the accrued rows are
 #: criterio-de-caja rows whose devengo date sits apart from that filing date.
 _ROWS: tuple[_Row, ...] = (
-    _Row("q3-last-day", booked=date(2030, 9, 30)),
-    _Row("q4-first-day", booked=date(2030, 10, 1), amount=Decimal("40.00"), group_label="office"),
-    _Row("booked-q3-valued-q4", booked=date(2030, 9, 30), value=date(2030, 10, 1), amount=Decimal("5.00")),
+    _Row("q3-last-day", booked=date(_YEAR, 9, 30)),
+    _Row("q4-first-day", booked=date(_YEAR, 10, 1), amount=Decimal("40.00"), group_label="office"),
+    _Row("booked-q3-valued-q4", booked=date(_YEAR, 9, 30), value=date(_YEAR, 10, 1), amount=Decimal("5.00")),
     _Row(
         "q4-mid-travel",
-        booked=date(2030, 11, 15),
+        booked=date(_YEAR, 11, 15),
         amount=Decimal("30.00"),
         group_label="travel",
         classification=BusinessClassification.NOT_YET_PROCESSED,
     ),
-    _Row("q4-mid-office", booked=date(2030, 11, 15), amount=Decimal("20.00"), group_label="office"),
+    _Row("q4-mid-office", booked=date(_YEAR, 11, 15), amount=Decimal("20.00"), group_label="office"),
     _Row(
         "q4-last-day",
-        booked=date(2030, 12, 31),
+        booked=date(_YEAR, 12, 31),
         amount=Decimal("15.00"),
         classification=BusinessClassification.NOT_YET_PROCESSED,
     ),
-    _Row("booked-q4-valued-next-year", booked=date(2030, 12, 31), value=date(2031, 1, 1)),
-    _Row("next-year-first-day", booked=date(2031, 1, 1)),
-    _Row("same-quarter-prior-year", booked=date(2029, 11, 15)),
-    _Row("filed-next-year-accrued-q4", booked=date(2031, 1, 15), amount=Decimal("1210.00"), accrued=date(2030, 11, 2)),
-    _Row("filed-q4-accrued-q3", booked=date(2030, 12, 1), amount=Decimal("1210.00"), accrued=date(2030, 8, 3)),
+    _Row("booked-q4-valued-next-year", booked=date(_YEAR, 12, 31), value=date(_YEAR + 1, 1, 1)),
+    _Row("next-year-first-day", booked=date(_YEAR + 1, 1, 1)),
+    _Row("same-quarter-prior-year", booked=date(_YEAR - 1, 11, 15)),
+    _Row(
+        "filed-next-year-accrued-q4",
+        booked=date(_YEAR + 1, 1, 15),
+        amount=Decimal("1210.00"),
+        accrued=date(_YEAR, 11, 2),
+    ),
+    _Row("filed-q4-accrued-q3", booked=date(_YEAR, 12, 1), amount=Decimal("1210.00"), accrued=date(_YEAR, 8, 3)),
 )
 
-#: Independently stated: the rows whose filing date falls in 2030-Q4.
-_Q4_2030: frozenset[str] = frozenset(
+#: Independently stated: the rows whose filing date falls in the base year's Q4.
+_Q4_ROWS: frozenset[str] = frozenset(
     {
         "q4-first-day",
         "booked-q3-valued-q4",
@@ -94,7 +102,7 @@ _Q4_2030: frozenset[str] = frozenset(
         "filed-q4-accrued-q3",
     }
 )
-_Q1_2031: frozenset[str] = frozenset(
+_Q1_NEXT_YEAR_ROWS: frozenset[str] = frozenset(
     {"booked-q4-valued-next-year", "next-year-first-day", "filed-next-year-accrued-q4"}
 )
 
@@ -113,7 +121,7 @@ def _transaction(row: _Row) -> Transaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
             provider_name="synthetic provider",
         ),
         raw_fields={"Concepto": row.provider_id},
@@ -124,8 +132,8 @@ def _transaction(row: _Row) -> Transaction:
         "business_classification": row.classification,
         "source_jurisdiction": "ES",
         "group_label": row.group_label,
-        "created_at": datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
-        "modified_at": datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
+        "created_at": datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
+        "modified_at": datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
     }
     if row.accrued is not None:
         fields |= {
@@ -143,7 +151,7 @@ def _transaction(row: _Row) -> Transaction:
                     recargo_amount=Decimal("0.00"),
                 ),
             ),
-            "classified_at": datetime(2031, 2, 1, 10, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR + 1, 2, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
         }
     return Transaction.model_validate(fields)
@@ -155,7 +163,7 @@ def _query(filters: tuple[str, ...], **options: object) -> LedgerTransactionList
     )
 
 
-_Q4 = ("period=4T", "year=2030")
+_Q4 = ("period=4T", f"year={_YEAR}")
 
 _Q4_BY_DATE = _query(_Q4, sort_by=LedgerSortField.DATE)
 _Q4_PAGES = (
@@ -165,8 +173,8 @@ _Q4_PAGES = (
 )
 _Q4_OFFICE = _query(_Q4, group="office", sort_by=LedgerSortField.DATE)
 _Q4_PENDING = _query((*_Q4, "status=pending"))
-_Q1_2031_BY_DATE = _query(("period=1T", "year=2031"), sort_by=LedgerSortField.DATE)
-_EMPTY_PERIOD = _query(("period=2T", "year=2030"))
+_Q1_NEXT_YEAR_BY_DATE = _query(("period=1T", f"year={_YEAR + 1}"), sort_by=LedgerSortField.DATE)
+_EMPTY_PERIOD = _query(("period=2T", f"year={_YEAR}"))
 
 #: The listing shapes whose pages must not depend on which read path served them.
 _QUERIES: tuple[LedgerTransactionListQuery, ...] = (
@@ -177,11 +185,11 @@ _QUERIES: tuple[LedgerTransactionListQuery, ...] = (
     _query(_Q4, by_group=True),
     _Q4_OFFICE,
     _Q4_PENDING,
-    _query(("period=12", "year=2030"), sort_by=LedgerSortField.DATE),
-    _query(("period=01", "year=2031"), sort_by=LedgerSortField.DATE),
-    _Q1_2031_BY_DATE,
+    _query(("period=12", f"year={_YEAR}"), sort_by=LedgerSortField.DATE),
+    _query(("period=01", f"year={_YEAR + 1}"), sort_by=LedgerSortField.DATE),
+    _Q1_NEXT_YEAR_BY_DATE,
     _EMPTY_PERIOD,
-    _query(("period=0A", "year=2030"), sort_by=LedgerSortField.DATE, limit=3, offset=1),
+    _query(("period=0A", f"year={_YEAR}"), sort_by=LedgerSortField.DATE, limit=3, offset=1),
 )
 
 
@@ -241,13 +249,13 @@ def test_a_period_page_from_the_date_index_selects_exactly_the_filing_date_windo
     transactions: dict[str, Transaction],
 ) -> None:
     """Boundary dates, the value-date key and devengo-only candidates resolve as stated."""
-    assert _index_is_complete((date(2030, 10, 1), date(2030, 12, 31)))
+    assert _index_is_complete((date(_YEAR, 10, 1), date(_YEAR, 12, 31)))
 
     pages = dict(zip(_QUERIES, _pages(authority_operation), strict=True))
 
     q4 = pages[_Q4_BY_DATE]
-    assert set(_provider_ids(q4)) == _Q4_2030
-    assert q4.total == len(_Q4_2030)
+    assert set(_provider_ids(q4)) == _Q4_ROWS
+    assert q4.total == len(_Q4_ROWS)
     assert q4.truncated is False
     filing_dates = [item.transaction.raw.value_date or item.transaction.raw.booked_date for item in q4.results]
     assert filing_dates == sorted(filing_dates)
@@ -255,10 +263,10 @@ def test_a_period_page_from_the_date_index_selects_exactly_the_filing_date_windo
 
     paged = [pages[query] for query in _Q4_PAGES]
     assert [provider_id for page in paged for provider_id in _provider_ids(page)] == _provider_ids(q4)
-    assert [page.total for page in paged] == [len(_Q4_2030)] * 3
+    assert [page.total for page in paged] == [len(_Q4_ROWS)] * 3
     assert all(page.truncated for page in paged)
 
-    assert set(_provider_ids(pages[_Q1_2031_BY_DATE])) == _Q1_2031
+    assert set(_provider_ids(pages[_Q1_NEXT_YEAR_BY_DATE])) == _Q1_NEXT_YEAR_ROWS
     assert _provider_ids(pages[_Q4_PENDING]) == ["q4-mid-travel", "q4-last-day"]
     assert _provider_ids(pages[_Q4_OFFICE]) == ["q4-first-day", "q4-mid-office"]
 
@@ -289,7 +297,7 @@ def test_a_stale_date_index_falls_back_to_the_full_scan_page(
     the page with nothing to say it was missing.
     """
     complete_pages = _pages(authority_operation)
-    assert _index_is_complete((date(2030, 10, 1), date(2030, 12, 31)))
+    assert _index_is_complete((date(_YEAR, 10, 1), date(_YEAR, 12, 31)))
 
     missing = frozenset(
         transactions[provider_id].transaction_id for provider_id in (dropped if dropped is not None else transactions)
@@ -298,10 +306,10 @@ def test_a_stale_date_index_falls_back_to_the_full_scan_page(
     assert _indexed_ids(seeded_profile).isdisjoint(missing), (
         "fixture must leave the index without the dropped rows for this proof to mean anything"
     )
-    assert not _index_is_complete((date(2030, 10, 1), date(2030, 12, 31)))
+    assert not _index_is_complete((date(_YEAR, 10, 1), date(_YEAR, 12, 31)))
 
     stale_pages = _pages(authority_operation)
 
     for query, complete, stale in zip(_QUERIES, complete_pages, stale_pages, strict=True):
         assert stale == complete, f"stale-index page differs from the complete-index page for {query!r}"
-    assert set(_provider_ids(stale_pages[_QUERIES.index(_Q4_BY_DATE)])) == _Q4_2030
+    assert set(_provider_ids(stale_pages[_QUERIES.index(_Q4_BY_DATE)])) == _Q4_ROWS

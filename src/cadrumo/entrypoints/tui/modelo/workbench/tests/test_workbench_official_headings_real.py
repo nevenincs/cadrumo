@@ -23,6 +23,10 @@ from ......application.modelo.work_form_models import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    supported_authored_exercises,
+)
 from ......domain.user_profile.values import UserProfileFact
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
@@ -36,11 +40,13 @@ from ..screen import ModeloWorkbenchScreen
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ADDRESSES = [
-    pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="renta"),
+    pytest.param(
+        {"modelo": "100", "filing_year": supported_authored_exercises("100")[-1], "period_code": "0A"}, id="renta"
+    ),
     pytest.param(
         {
             "modelo": "349",
-            "filing_year": 2026,
+            "filing_year": filing_year_envelope().horizon,
             "period_code": "1T",
             "extra_facts": (UserProfileFact(path="iva.does_intracomunitario", value=True),),
         },

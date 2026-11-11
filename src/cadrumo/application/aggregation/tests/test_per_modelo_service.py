@@ -40,6 +40,7 @@ from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.foreign_assets.register import (
     ForeignAssetDeclarationEntry,
@@ -92,8 +93,15 @@ from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
-_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_YEAR = filing_year_envelope().horizon
+_P_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_P_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
+_MARCH_1 = date(_YEAR, 3, 1).isoformat()
+_JUNE_1 = date(_YEAR, 6, 1).isoformat()
+_ACQUIRED_YEAR = filing_year_envelope().floor
+_ACQUIRED_JAN = date(_ACQUIRED_YEAR, 1, 15).isoformat()
+_ACQUIRED_FEB = date(_ACQUIRED_YEAR, 2, 20).isoformat()
+_ACQUIRED_MAR = date(_ACQUIRED_YEAR, 3, 25).isoformat()
 
 
 def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION) -> RetencionObservation:
@@ -105,7 +113,7 @@ def _retencion_obs(*, source_kind: BindingSourceKind = BindingSourceKind.LEDGER_
         scheme=RetencionScheme("rendimientos_trabajo"),
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("150.00"),
-        accrued_on="2025-03-01",
+        accrued_on=_MARCH_1,
     )
 
 
@@ -129,7 +137,7 @@ def _counterpart_obs(
         operation_period="0A",
         taxable_base=Decimal(invoice_total),
         invoice_total=Decimal(invoice_total),
-        accrued_on="2025-03-01",
+        accrued_on=_MARCH_1,
         groi_verified=True,
         nif_iva_verified=True,
     )
@@ -154,7 +162,7 @@ def _asset_obs(
     asset_external_id: str | None = None,
     country: str = "AD",
     valuation: str = "50000.01",
-    acquisition_date: str = "2023-01-15",
+    acquisition_date: str = _ACQUIRED_JAN,
 ) -> ForeignAssetIngestObservation:
     declared_source_id = source_id or f"{source_kind.value}-asset-1"
     return ForeignAssetIngestObservation(
@@ -205,7 +213,7 @@ def _register_for(observations: tuple[ForeignAssetIngestObservation, ...]) -> Fo
                     value="" if scheme is M720IdentifierScheme.NONE else observation.asset_external_id,
                 ),
                 description="synthetic asset",
-                held_since=date(2015, 1, 1),
+                held_since=date(_ACQUIRED_YEAR, 1, 1),
             ),
         )
     return ForeignAssetRegister(
@@ -238,7 +246,7 @@ def _m720_row(
 def test_command_contract_is_strict_and_immutable() -> None:
     command = PerModeloAggregationCommand(
         modelo="111",
-        period=_P_2025_Q1,
+        period=_P_Q1,
         retencion_observations=(_retencion_obs(),),
     )
 
@@ -251,13 +259,13 @@ def test_command_contract_is_strict_and_immutable() -> None:
         PerModeloAggregationCommand.model_validate(
             {
                 "modelo": "111",
-                "period": _P_2025_Q1,
+                "period": _P_Q1,
                 "retencion_observations": (_retencion_obs(),),
                 "unexpected": "field",
             },
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        command.period = Period.from_year_and_code(2025, "2T")
+        command.period = Period.from_year_and_code(_YEAR, "2T")
 
 
 def test_routing_one_modelo_agrees_with_the_registry_wide_inventory() -> None:
@@ -288,7 +296,7 @@ def test_routing_one_modelo_agrees_with_the_registry_wide_inventory() -> None:
 
 def test_period_boundary_accepts_period_dict_for_roundtrip() -> None:
     command = PerModeloAggregationCommand.model_validate(
-        {"modelo": "111", "period": {"filing_year": 2025, "code": "1T"}},
+        {"modelo": "111", "period": {"filing_year": _YEAR, "code": "1T"}},
     )
     log_fields = PerModeloAggregationLogFields.model_validate(
         {
@@ -301,18 +309,18 @@ def test_period_boundary_accepts_period_dict_for_roundtrip() -> None:
         },
     )
 
-    assert command.period == _P_2025_Q1
-    assert log_fields.period == _P_2025_Q1
+    assert command.period == _P_Q1
+    assert log_fields.period == _P_Q1
 
 
 def test_period_boundary_rejects_combined_period_string() -> None:
     with pytest.raises(ValidationError) as command_exc:
-        PerModeloAggregationCommand.model_validate({"modelo": "111", "period": "2026Q1"})
+        PerModeloAggregationCommand.model_validate({"modelo": "111", "period": f"{_YEAR}Q1"})
     with pytest.raises(ValidationError) as log_fields_exc:
         PerModeloAggregationLogFields.model_validate(
             {
                 "modelo": "111",
-                "period": "2026Q1",
+                "period": f"{_YEAR}Q1",
                 "provider": PerModeloAggregationContributor.RETENCIONES,
                 "observation_count": 0,
                 "source_kind_count": 0,
@@ -328,7 +336,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         command = PerModeloAggregationCommand(
             modelo="111",
-            period=_P_2025_Q1,
+            period=_P_Q1,
             retencion_observations=(_retencion_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION),),
         )
 
@@ -357,7 +365,7 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
         )
         command = PerModeloAggregationCommand(
             modelo="347",
-            period=_P_2025_ANNUAL,
+            period=_P_ANNUAL,
             counterpart_observations=observations,
         )
 
@@ -379,7 +387,7 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
         )
         command = PerModeloAggregationCommand(
             modelo="720",
-            period=_P_2025_ANNUAL,
+            period=_P_ANNUAL,
             foreign_asset_observations=observations,
         )
 
@@ -395,24 +403,24 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
 
 
 def _m720_service_and_resolution(observations, operation):
-    """Aggregate the same 2025 foreign-asset observations through the service and the registry resolver."""
-    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+    """Aggregate the same foreign-asset observations through the service and the registry resolver."""
+    expected_aggregation = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
     service_result = aggregate_per_modelo(
         PerModeloAggregationCommand(
             modelo="720",
-            period=_P_2025_ANNUAL,
+            period=_P_ANNUAL,
             foreign_asset_observations=observations,
         ),
         operation=operation,
     )
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_720 = next(candidate for candidate in _modelos if candidate.id == "720")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=2025, period="0A"))
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_720, filing_year=_YEAR, period="0A"))
     context = CalculationSourceContext(
         bucket_id="operator",
         modelo="720",
-        filing_year=2025,
-        period=_P_2025_ANNUAL,
+        filing_year=_YEAR,
+        period=_P_ANNUAL,
         revision=snapshot.revision,
     )
     resolution = ForeignAssetsAggregationSourceResolver(
@@ -430,7 +438,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
                 asset_external_id="AD-ACCOUNT-001",
                 country="AD",
                 valuation="40000.00",
-                acquisition_date="2020-01-15",
+                acquisition_date=_ACQUIRED_JAN,
             ),
             _asset_obs(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
@@ -438,7 +446,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
                 asset_external_id="CH-ACCOUNT-002",
                 country="CH",
                 valuation="15000.00",
-                acquisition_date="2021-02-20",
+                acquisition_date=_ACQUIRED_FEB,
             ),
             _asset_obs(
                 source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -447,7 +455,7 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
                 asset_external_id="LI-SECURITY-001",
                 country="LI",
                 valuation="1000.00",
-                acquisition_date="2022-03-25",
+                acquisition_date=_ACQUIRED_MAR,
             ),
         )
         expected_aggregation, service_result, resolution = _m720_service_and_resolution(
@@ -457,10 +465,10 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
         assert service_result.aggregation == expected_aggregation
         assert dict(resolution.row_binding_values) == {
             **_m720_row(
-                1, label="AD-ACCOUNT-001", asset_class="C", country="AD", valuation="40000.00", acquired="2020-01-15"
+                1, label="AD-ACCOUNT-001", asset_class="C", country="AD", valuation="40000.00", acquired=_ACQUIRED_JAN
             ),
             **_m720_row(
-                2, label="CH-ACCOUNT-002", asset_class="C", country="CH", valuation="15000.00", acquired="2021-02-20"
+                2, label="CH-ACCOUNT-002", asset_class="C", country="CH", valuation="15000.00", acquired=_ACQUIRED_FEB
             ),
         }
         assert resolution.binding_values == {}
@@ -481,7 +489,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
                 asset_external_id="ZLI",
                 country="LI",
                 valuation="30000.00",
-                acquisition_date="2020-01-15",
+                acquisition_date=_ACQUIRED_JAN,
             ),
             _asset_obs(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
@@ -490,7 +498,7 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
                 asset_external_id="CH-INSURANCE-001",
                 country="CH",
                 valuation="25000.00",
-                acquisition_date="2021-02-20",
+                acquisition_date=_ACQUIRED_FEB,
             ),
         )
         expected_aggregation, service_result, resolution = _m720_service_and_resolution(
@@ -506,9 +514,9 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
         )
         assert dict(resolution.row_binding_values) == {
             **_m720_row(
-                1, label="CH-INSURANCE-001", asset_class="S", country="CH", valuation="25000.00", acquired="2021-02-20"
+                1, label="CH-INSURANCE-001", asset_class="S", country="CH", valuation="25000.00", acquired=_ACQUIRED_FEB
             ),
-            **_m720_row(2, label="ZLI", asset_class="V", country="LI", valuation="30000.00", acquired="2020-01-15"),
+            **_m720_row(2, label="ZLI", asset_class="V", country="LI", valuation="30000.00", acquired=_ACQUIRED_JAN),
         }
         assert resolution.binding_values == {}
         assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
@@ -527,7 +535,7 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
     """
     command = PerModeloAggregationCommand(
         modelo="111",
-        period=_P_2025_Q1,
+        period=_P_Q1,
         foreign_asset_observations=(_asset_obs(),),
     )
     with (
@@ -540,7 +548,7 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
 
 
 def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
-    command = PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
+    command = PerModeloAggregationCommand(modelo="999", period=_P_ANNUAL)
     with (
         bundled_indexed_authority().operation() as operation,
         pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info,
@@ -560,7 +568,7 @@ def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
 def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
     command = PerModeloAggregationCommand(
         modelo=" 347 ",
-        period=_P_2025_ANNUAL,
+        period=_P_ANNUAL,
         counterpart_observations=(_counterpart_obs(),),
     )
     with (
@@ -577,7 +585,7 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
         aggregation_payload = aggregate_per_modelo(
             PerModeloAggregationCommand(
                 modelo="347",
-                period=_P_2025_ANNUAL,
+                period=_P_ANNUAL,
                 counterpart_observations=(_counterpart_obs(),),
             ),
             operation=_authority_operation_for_test,
@@ -586,13 +594,13 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
         with pytest.raises(ValidationError, match=r"aggregation\.service\.errors\.envelope_modelo_mismatch"):
             PerModeloAggregationResult(
                 modelo="349",
-                period=_P_2025_ANNUAL,
+                period=_P_ANNUAL,
                 provider=PerModeloAggregationContributor.COUNTERPART,
                 aggregation=aggregation_payload,
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
                 log_fields=PerModeloAggregationLogFields(
                     modelo="349",
-                    period=_P_2025_ANNUAL,
+                    period=_P_ANNUAL,
                     provider=PerModeloAggregationContributor.COUNTERPART,
                     observation_count=1,
                     source_kind_count=1,
@@ -606,7 +614,7 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         aggregation_payload = aggregate_per_modelo(
             PerModeloAggregationCommand(
                 modelo="111",
-                period=_P_2025_Q1,
+                period=_P_Q1,
                 retencion_observations=(_retencion_obs(),),
             ),
             operation=_authority_operation_for_test,
@@ -618,13 +626,13 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         ):
             PerModeloAggregationResult(
                 modelo="111",
-                period=_P_2025_Q1,
+                period=_P_Q1,
                 provider=PerModeloAggregationContributor.COUNTERPART,
                 aggregation=aggregation_payload,
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
                 log_fields=PerModeloAggregationLogFields(
                     modelo="111",
-                    period=_P_2025_Q1,
+                    period=_P_Q1,
                     provider=PerModeloAggregationContributor.COUNTERPART,
                     observation_count=1,
                     source_kind_count=1,
@@ -656,12 +664,12 @@ _RETENCIONES_CORE_ORACLE = {
     "193": aggregate_retenciones_193,
 }
 _RETENCIONES_PERIOD = {
-    "111": _P_2025_Q1,
-    "115": _P_2025_Q1,
-    "123": _P_2025_Q1,
-    "180": _P_2025_ANNUAL,
-    "190": _P_2025_ANNUAL,
-    "193": _P_2025_ANNUAL,
+    "111": _P_Q1,
+    "115": _P_Q1,
+    "123": _P_Q1,
+    "180": _P_ANNUAL,
+    "190": _P_ANNUAL,
+    "193": _P_ANNUAL,
 }
 
 
@@ -673,7 +681,7 @@ def _urban_property(nif: str) -> Modelo180PropertyEvidence:
         cadastral_reference=f"{nif}PROPERTY",
         recipient_province_code="28",
         modality="1",
-        accrual_year=2025,
+        accrual_year=_YEAR,
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
@@ -707,7 +715,7 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
             scheme=scheme,
             taxable_base=Decimal(base),
             retencion_amount=Decimal(ret),
-            accrued_on="2025-03-01",
+            accrued_on=_MARCH_1,
             modelo_180_property=_urban_property(nif) if scheme == RetencionScheme("arrendamiento_urbano") else None,
         )
 
@@ -761,9 +769,9 @@ def test_retenciones_collapse_dispatch_is_not_cross_wired(operation: PinnedAutho
     # distinct non-empty rollups; if the dispatch collapsed two modelos onto one core the
     # rollup schemes would coincide and this assertion — plus the oracle equality — fail.
     observations = _mixed_scheme_retencion_observations()
-    m111 = RetencionesAggregationSourceResolver.aggregate("111", observations, period=_P_2025_Q1, operation=operation)
-    m115 = RetencionesAggregationSourceResolver.aggregate("115", observations, period=_P_2025_Q1, operation=operation)
-    m123 = RetencionesAggregationSourceResolver.aggregate("123", observations, period=_P_2025_Q1, operation=operation)
+    m111 = RetencionesAggregationSourceResolver.aggregate("111", observations, period=_P_Q1, operation=operation)
+    m115 = RetencionesAggregationSourceResolver.aggregate("115", observations, period=_P_Q1, operation=operation)
+    m123 = RetencionesAggregationSourceResolver.aggregate("123", observations, period=_P_Q1, operation=operation)
 
     assert m111.rollups and m115.rollups and m123.rollups
     schemes_by_modelo = {
@@ -794,7 +802,7 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count(
             scheme=RetencionScheme("arrendamiento_urbano"),
             taxable_base=Decimal("1200.00"),
             retencion_amount=Decimal("228.00"),
-            accrued_on="2025-03-01",
+            accrued_on=_MARCH_1,
             modelo_180_property=_urban_property("B00000041"),
         ),
         RetencionObservation(
@@ -805,13 +813,13 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count(
             scheme=RetencionScheme("arrendamiento_urbano"),
             taxable_base=Decimal("800.00"),
             retencion_amount=Decimal("152.00"),
-            accrued_on="2025-06-01",
+            accrued_on=_JUNE_1,
             modelo_180_property=_urban_property("B00010173"),
         ),
     )
-    expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL, operation=operation)
+    expected = aggregate_retenciones_180(observations, period=_P_ANNUAL, operation=operation)
     mesh_value = RetencionesAggregationSourceResolver.aggregate(
-        "180", observations, period=_P_2025_ANNUAL, operation=operation
+        "180", observations, period=_P_ANNUAL, operation=operation
     )
 
     assert expected.total_perceptors == 2

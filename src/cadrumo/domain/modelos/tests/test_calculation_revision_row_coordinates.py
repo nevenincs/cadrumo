@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ...calculations.row_source_identity import RowSourceIdentity
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..calculation_revision_identity import canonical_row_binding_values
@@ -19,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _SECURE = {"secure_calculation_revision": True}
 _BINDING = "modelo-190-perceptor-row-nif"
+_EXERCISE = filing_year_envelope().horizon
+_REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
 
 
 def _identity(row_identity: str) -> RowSourceIdentity:
@@ -30,7 +33,7 @@ def _identity(row_identity: str) -> RowSourceIdentity:
 
 
 def _secure_payload() -> dict[str, object]:
-    created = datetime(2026, 8, 23, tzinfo=UTC)
+    created = datetime(1980, 8, 23, tzinfo=UTC)
     row_binding_values = {_BINDING: {"1": "10.00", "2": "20.00"}}
     row_source_identities = {(_BINDING, 1): _identity("row-1"), (_BINDING, 2): _identity("row-2")}
     revision = CalculationRevision(
@@ -47,8 +50,8 @@ def _secure_payload() -> dict[str, object]:
         work_unit_id="a" * 64,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id="2026-y-siguientes",
-            modelo_year=2026,
+            revision_id=_REVISION_ID,
+            modelo_year=_EXERCISE,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,
@@ -103,7 +106,7 @@ def test_secure_wire_form_refuses_two_source_identities_at_one_coordinate() -> N
                 "source_row_index": 1,
                 "source_identity": _identity("row-1").model_dump(mode="json"),
                 "materialization_rule_id": _BINDING,
-                "materialization_rule_version": "2026-y-siguientes",
+                "materialization_rule_version": _REVISION_ID,
             },
             "row casilla provenance contains a duplicate coordinate",
         ),

@@ -9,11 +9,14 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ...aggregation.tests.ledger_transaction_support import ledger_raw_transaction
 from ...review.filter import LedgerReviewStatus
 from ..review_projection import ledger_transaction_review_status
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -36,7 +39,7 @@ _EXPECTED = {
 @pytest.mark.parametrize("classification", list(BusinessClassification), ids=lambda value: value.name)
 def test_every_classification_maps_to_its_review_status(classification: BusinessClassification) -> None:
     row = Transaction(
-        raw=ledger_raw_transaction("review-status", booked_date=date(2026, 4, 15), amount=Decimal("10.00")),
+        raw=ledger_raw_transaction("review-status", booked_date=date(_YEAR, 4, 15), amount=Decimal("10.00")),
         direction=TransactionDirection.OUTGOING,
         source_jurisdiction="ES",
         group_label=None,

@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from .....domain.calculations.registry.tests.authored_editions import authored_revisions, revision_last_exercise
 from ..export_tables import IDENTITY_STAMP_KEYS, export_identity_stamps, guide_stamps
 from ..records import (
     SheetExportMetadata,
@@ -17,19 +18,22 @@ from ..workbook_cells import evidence_cell_blocks, guide_cell_blocks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_REVISION_ID = authored_revisions("232")[0].id
+_PREVIEW_YEAR = revision_last_exercise("232", _REVISION_ID)
+
 
 def _preview() -> SheetExportPlan[SheetTemplatePreviewMetadata]:
     return SheetExportPlan[SheetTemplatePreviewMetadata](
         metadata=SheetTemplatePreviewMetadata(
             kind="template_preview",
             modelo_id="232",
-            revision_id="2016-2017",
-            preview_year=2017,
+            revision_id=_REVISION_ID,
+            preview_year=_PREVIEW_YEAR,
             preview_period="0A",
             template_digest="a" * 64,
             engine_version="test",
-            title="Modelo 232 · Ejemplo ficticio 2017",
-            exported_at=datetime(2026, 10, 6, tzinfo=UTC),
+            title=f"Modelo 232 · Ejemplo ficticio {_PREVIEW_YEAR}",
+            exported_at=datetime(1980, 10, 6, tzinfo=UTC),
         ),
         guide=SheetGuideContent(title="Ejemplo ficticio", paragraphs=("No válido para presentar.",)),
     )
@@ -53,7 +57,7 @@ def test_preview_round_trip_cannot_decode_as_production_metadata_or_plan() -> No
         ("kind", "calculation"),
         ("preview_period", "invented"),
         ("template_digest", "bad"),
-        ("exported_at", datetime(2026, 10, 6)),
+        ("exported_at", datetime(1980, 10, 6)),
         ("registry_snapshot_ref", "invented"),
     ],
 )

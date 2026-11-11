@@ -57,6 +57,7 @@ from .....core.operator_action_enums import (
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.models import ObligationStatus
 from .....domain.submission.models import ModeloDraftStatus
 from ..envelope.contract import Envelope
@@ -66,11 +67,13 @@ from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_RUN_ENDED_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
+_RUN_ENDED_AT = datetime(1980, 5, 25, 14, 0, 0, tzinfo=UTC)
 _RUN_STARTED_AT = _RUN_ENDED_AT - timedelta(minutes=10)
 _SECOND_STEP_STARTED_AT = _RUN_ENDED_AT - timedelta(minutes=9)
-_MUTATED_RUN_WRITTEN_AT = datetime(2026, 5, 25, 14, 5, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_MUTATED_RUN_WRITTEN_AT = datetime(1980, 5, 25, 14, 5, 0, tzinfo=UTC)
+#: The supported year before the horizon: its first quarter is a closed period.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
+_PERIOD = Period.from_year_and_code(_PRIOR_YEAR, "1T")
 
 
 def _draft_not_ready_verdict() -> PreconditionVerdict:
@@ -109,9 +112,9 @@ def _populated_run() -> WorkflowResult:
         obligation=WorkflowObligationFacts(
             modelo=Modelo("303"),
             period=_PERIOD,
-            opens_on=date(2025, 4, 1),
-            closes_on=date(2025, 4, 20),
-            payment_cutoff_on=date(2025, 4, 15),
+            opens_on=date(_PRIOR_YEAR, 4, 1),
+            closes_on=date(_PRIOR_YEAR, 4, 20),
+            payment_cutoff_on=date(_PRIOR_YEAR, 4, 15),
             status=ObligationStatus.OVERDUE,
             boe_references=("ley-58-2003:art-27.2",),
             recovery=WorkflowDeadlineRecoveryFacts(
@@ -137,8 +140,8 @@ def _populated_run() -> WorkflowResult:
                     kind="deadline_context",
                     modelo=Modelo("303"),
                     period=_PERIOD,
-                    opens_on=date(2025, 4, 1),
-                    closes_on=date(2025, 4, 20),
+                    opens_on=date(_PRIOR_YEAR, 4, 1),
+                    closes_on=date(_PRIOR_YEAR, 4, 20),
                 ),
             ),
             WorkflowStep(
@@ -161,7 +164,7 @@ def _populated_run() -> WorkflowResult:
             kind="deadline_context",
             modelo=Modelo("303"),
             period=_PERIOD,
-            closes_on=date(2025, 4, 20),
+            closes_on=date(_PRIOR_YEAR, 4, 20),
         ),
         resumed_from="p" * 16,
     )

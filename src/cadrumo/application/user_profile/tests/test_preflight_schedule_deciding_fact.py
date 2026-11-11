@@ -9,11 +9,14 @@ that names nothing.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.calculations.registry.tests.modelo_303_registry_support import load_modelo_303
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
@@ -21,6 +24,8 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..preflight import ProfilePreflightService
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -31,7 +36,7 @@ _FACTS: dict[str, object] = {
     "taxpayer_type.entity_type": "natural_person",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "activities.description": "Servicios profesionales",
-    "censo.activity_start_date": "2022-01-10",
+    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 10).isoformat(),
     "irpf.estimation_regime": "directa_simplificada",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -56,7 +61,7 @@ def _missing_paths(*, large_company: bool | None, period: Period) -> tuple[str, 
         context=leased_profile_create_context(),
     )
     modelo, _catalogues = load_modelo_303()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[revision_serving_period("303", _YEAR, "1T").id]
     report = ProfilePreflightService(schema=published_profile_schema()).report(
         record=record,
         modelo="303",
@@ -69,13 +74,13 @@ def _missing_paths(*, large_company: bool | None, period: Period) -> tuple[str, 
 
 @pytest.mark.parametrize("code", ["1T", "01"])
 def test_an_unanswered_gran_empresa_condition_is_required_for_the_period(code: str) -> None:
-    assert _LARGE_COMPANY in _missing_paths(large_company=None, period=Period.from_year_and_code(2025, code))
+    assert _LARGE_COMPANY in _missing_paths(large_company=None, period=Period.from_year_and_code(_YEAR, code))
 
 
 def test_an_answered_condition_is_not_asked_again() -> None:
-    assert _LARGE_COMPANY not in _missing_paths(large_company=False, period=Period.from_year_and_code(2025, "1T"))
+    assert _LARGE_COMPANY not in _missing_paths(large_company=False, period=Period.from_year_and_code(_YEAR, "1T"))
 
 
 def test_a_cadence_mismatch_is_not_reported_as_a_missing_fact() -> None:
     """A quarterly filer asking for a month answered everything; the period is what is wrong."""
-    assert _LARGE_COMPANY not in _missing_paths(large_company=False, period=Period.from_year_and_code(2025, "01"))
+    assert _LARGE_COMPANY not in _missing_paths(large_company=False, period=Period.from_year_and_code(_YEAR, "01"))

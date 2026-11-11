@@ -46,6 +46,7 @@ from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice
@@ -55,7 +56,7 @@ from ...adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 # The filing conftest's module-scope ``_active_bucket_runtime`` activates this
 # bucket; integration tests below route their invoice repository, approval, and
 # staleness checks through it (via ``runtime.bucket_id``) so the self-load lands
@@ -93,7 +94,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
         counterparty_tax_id=_COUNTERPARTY_CIF,
         counterparty_country="ES",
         invoice_number=invoice_number,
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_PERIOD.filing_year, 3, 10),
         taxable_base=taxable_base,
         iva_rate=Decimal("21"),
         currency="EUR",
