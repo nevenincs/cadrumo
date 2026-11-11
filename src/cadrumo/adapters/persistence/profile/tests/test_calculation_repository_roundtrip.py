@@ -635,9 +635,10 @@ def _count_validations(monkeypatch: pytest.MonkeyPatch) -> list[bytes]:
     return validated
 
 
-def test_an_unchanged_row_is_decoded_once_per_repository_and_reads_as_a_fresh_repository_does(
+def test_an_unchanged_row_is_decoded_once_per_session_for_every_action_that_reads_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Each action of one command composes its own repository; one decode serves them all."""
     operation = published_authority_operation()
     snapshot = operation.snapshot("303", filing_year=2026, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
@@ -650,14 +651,56 @@ def test_an_unchanged_row_is_decoded_once_per_repository_and_reads_as_a_fresh_re
         with validating_governed_facts(operation):
             first, first_revision_id = repo.load_revisioned(operation=operation)
             second, second_revision_id = repo.load_revisioned(operation=operation)
-            assert len(validated) == 1
             fresh, fresh_revision_id = CalculationRevisionCatalogueRepository(
                 objects=profile.repository
             ).load_revisioned(operation=operation)
 
-    assert len(validated) == 2
+    assert len(validated) == 1
     assert first == second == fresh == original
     assert first_revision_id == second_revision_id == fresh_revision_id
+
+
+def test_a_write_between_two_actions_is_read_by_the_later_action(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A row saved after one action read it is decoded afresh by the next action's repository."""
+    operation = published_authority_operation()
+    original = _populated_catalogue()
+    replacement = _populated_catalogue(source_issues=(_tier_divergence_issue(),))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(original)
+        validated = _count_validations(monkeypatch)
+        submitted, submitted_revision_id = CalculationRevisionCatalogueRepository(
+            objects=profile.repository
+        ).load_revisioned(operation=operation)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(replacement)
+        seen, seen_revision_id = CalculationRevisionCatalogueRepository(objects=profile.repository).load_revisioned(
+            operation=operation
+        )
+
+    assert submitted == original
+    assert seen == replacement
+    assert seen_revision_id != submitted_revision_id
+    assert len(validated) == 2
+
+
+def test_a_closed_session_never_serves_its_decoded_catalogue_to_the_next_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    operation = published_authority_operation()
+    original = _populated_catalogue()
+    validated = _count_validations(monkeypatch)
+    for opened in ("first", "second"):
+        with isolated_runtime_profile(tmp_path=tmp_path / opened, bucket_id=_BUCKET_ID) as profile:
+            _seed_parent_work_unit(profile)
+            CalculationRevisionCatalogueRepository(objects=profile.repository).save(original)
+            loaded, _revision_id = CalculationRevisionCatalogueRepository(objects=profile.repository).load_revisioned(
+                operation=operation
+            )
+            assert loaded == original
+
+    assert len(validated) == 2
 
 
 def test_a_saved_row_or_another_madrid_day_decodes_the_stored_bytes_again(
