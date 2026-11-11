@@ -89,8 +89,8 @@ def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> Non
 
 
 def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: ProfileSeeder) -> None:
-    """M18: the first ``work calculate`` that hits an unsatisfied binding
-    refuses by naming that binding rather than failing opaquely."""
+    """M18: the first ``work calculate`` that hits an unanswered input
+    refuses by naming the boxes the filer answers rather than failing opaquely."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
     created = invoke_modelo_scenario_cli(
@@ -110,12 +110,17 @@ def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: Profil
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
-    # Which unsatisfied binding the calculation reaches first is not the
-    # subject; that it is refused with nothing written, naming a concrete
-    # binding and the failed condition, is.
+    # Which unanswered input the calculation reaches first is not the
+    # subject; that it is refused with nothing written, naming the concrete
+    # boxes the form prints and the failed condition, is. The filer reads
+    # boxes, never the registry's binding identifiers.
     assert error["category"] == "REFUSED", error
-    assert error["context"]["effect"] == "none"
-    assert re.fullmatch(r"[a-z0-9-]+", error["context"]["binding_id"]), error
+    context = error["context"]
+    assert context["effect"] == "none"
+    assert "binding_id" not in context, error
+    boxes = context["boxes"].split(", ")
+    assert boxes and all(re.fullmatch(r"[0-9]+", box) for box in boxes), error
+    assert all(box in error["message"] for box in boxes), error
     assert error["action"]["failed_condition_id"], error
 
 
