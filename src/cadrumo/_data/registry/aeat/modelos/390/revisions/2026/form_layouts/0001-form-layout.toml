@@ -7,7 +7,7 @@ revision_id = "2026"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of all nine BOE-A-2026-1761 Annex IV form pages, printed12135-12143. Authored page6 settlement, page8 three differentiated-deduction grids and totals; page2bis quota36/600/602 restored to exact rate rows. Other pages retain generated predecessor geometry. Still missing page1 identity/statistics/representatives, page5 simplified activity detail, page7 prorrata; remaining rate grids and full printed calculation coverage need reconciliation. No filing layout, native Sheet or operator visual review claimed. Page7 specific operations now form one section in printed order (230,109,231,232,111,113,523; cash-accounting pairs654/655 and656/657). Prorrata detail remains missing. Page3 now keeps each six-rate deduction breakdown and its subtotal together in one grid, preserving all98 casilla owners and printed sequence; seven redundant headings removed. Page4 keeps each intra-community rate breakdown with its subtotal; compensation and adjustment pairs share one ordered base/deductible-quota grid. All40 owners retained." }
 generator_version = 1
-source_state_digest = "28e5e5e8c51ec797f0ee01c033154b1a991e6b3b39dba0e998fcc79250f98ef7"
+source_state_digest = "101687199d70f6662a39b9372aebcfcce02f9c45f2776d7c4ed45bf5980fc03f"
 design_sources = [
     { source_ref = "aeat-dr-390-2025", sha256 = "f8d08b418662b3ac482669ed1ffdd498a07906b96fff6217bb8a4abc9ae7ce12" },
     { source_ref = "boe-modelo-390-2026-form", sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694" },
