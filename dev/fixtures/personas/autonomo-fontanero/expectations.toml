@@ -473,9 +473,14 @@ grounding = "verified"
 modelo = "180"
 period = "0A"
 year = "horizon-1"
-concepts = { perceptores = "1", base_retenciones = "7200.00", retenciones = "1368.00", porcentaje_retencion = "19.00", situacion_inmueble = "1", referencia_catastral = "0000001VK0000N0001PH", modalidad = "1" }
+roles = { "total-perceptores-count" = "1", "base-retenciones-ingresos-a-cuenta" = "7200.00", "retenciones-ingresos-a-cuenta" = "1368.00" }
+concepts = { base_retenciones = "7200.00", retenciones = "1368.00", porcentaje_retencion = "19.00", situacion_inmueble = "1", referencia_catastral = "0000001VK0000N0001PH", modalidad = "1" }
 counterparty = "fontanero.arrendador-taller"
 derivation = """
+The roles are the declarant (type-1) totals of the 180 design (aeat-dr-180-2014, record type 1): número total de perceptores,
+positions 137-145; base de retenciones e ingresos a cuenta, positions 146-161; retenciones e ingresos a cuenta, positions
+162-176. The concepts are the perceptor's own type-2 record fields (base, retenciones, porcentaje, situación and referencia
+catastral of the property, modalidad), compared per counterparty; no casilla carries them.
 Twelve monthly rents of 600.00 = 7200.00; 19 % = 1368.00, equal to the sum of the four 115 casillas 03.
 The 19 % is the RIRPF art. 101.8 rate on rent from urban property. One perceptor and one property: the leased
 workshop, situation 1 (cadastral reference outside the País Vasco and Navarra), rent paid in money (modality 1),
