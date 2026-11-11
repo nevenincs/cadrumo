@@ -2935,6 +2935,11 @@ application:
       cross_period_dependency_unclean: Aquesta declaració fa servir dades del model
         %{source_modelo} de %{source_filing_year}, període %{source_period}, i aquella
         declaració encara té incidències pendents. Resol-les allà primer.
+      cross_period_dependency_unclean_attestable: Aquesta declaració fa servir xifres
+        del model %{source_modelo} de %{source_filing_year}, període %{source_period},
+        i aquesta declaració encara té incidències obertes. Resol-les allà primer
+        o, si no vas a registrar aquesta declaració aquí, indica'n la xifra amb `aeat
+        app modelo work attest-prior-value <unitat de treball> <binding> <valor>`.
       cross_period_first_year_fractional_suppression: El model %{source_modelo} de
         %{source_filing_year}, període %{source_period}, no et correspon perquè la
         teva activitat va començar el %{activity_start_date}.

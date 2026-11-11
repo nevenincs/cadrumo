@@ -430,7 +430,11 @@ def _cross_period_evidence_findings(
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.cross_period_dependency_unclean",
+            message_locale_key=(
+                "application.modelo.findings.cross_period_dependency_unclean_attestable"
+                if evidence.attestation_admitted
+                else "application.modelo.findings.cross_period_dependency_unclean"
+            ),
             message_facts={
                 "source_modelo": requirement.source_modelo,
                 "source_filing_year": requirement.filing_year,

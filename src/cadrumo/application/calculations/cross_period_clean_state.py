@@ -795,6 +795,7 @@ def _evaluate_in_scope_dependencies(
     target_filing_year: int,
     operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
     work_catalogue: WorkUnitCatalogue,
+    snapshot: RegistrySnapshot,
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     """Evaluate only requirements that were not explicitly scoped out."""
     suppressed_keys = {
@@ -806,6 +807,7 @@ def _evaluate_in_scope_dependencies(
         )
     }
     dependencies: list[CrossPeriodDependencyEvidence] = []
+    attestable: frozenset[BindingId] | None = None
     for requirement in scope.partition.in_scope:
         if requirement.key in suppressed_keys:
             continue
@@ -832,7 +834,19 @@ def _evaluate_in_scope_dependencies(
                 filing_catalogue=repositories.filing_catalogue,
                 work_catalogue=work_catalogue,
             )
-        dependencies.append(relax_same_year_local_chain(evidence, target_filing_year=target_filing_year))
+        evidence = relax_same_year_local_chain(evidence, target_filing_year=target_filing_year)
+        if evidence.blockers and not evidence.requirement.requires_member_fan_in:
+            if attestable is None:
+                attestable = attestable_carry_binding_ids(
+                    snapshot,
+                    operation=operation,
+                    observation_repository=observation_repository,
+                    filing_catalogue=repositories.filing_catalogue,
+                    work_catalogue=work_catalogue,
+                )
+            if all(origin_id in attestable for origin_id in requirement.origin_ids):
+                evidence = evidence.model_copy(update={"attestation_admitted": True})
+        dependencies.append(evidence)
     return tuple(dependencies)
 
 
@@ -1016,6 +1030,7 @@ def evaluate_cross_period_clean_state(
                 target_filing_year=snapshot.filing_year,
                 operator_value_attestations=operator_value_attestations,
                 work_catalogue=WorkUnitCatalogue() if work_catalogue is None else work_catalogue,
+                snapshot=snapshot,
             ),
             activity_start_date=activity_start_date,
         ),

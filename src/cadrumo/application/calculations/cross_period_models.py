@@ -477,6 +477,14 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     The dependency follows the source; the attestation is never preferred to it.
     """
+    attestation_admitted: bool = Field(default=False, exclude=True)
+    """Whether the operator may state the figure of this unclean dependency's source.
+
+    Set only on a blocked dependency whose every origin binding is a scalar carry
+    the application holds no source of, so the statement is admitted for it.
+    Derived from the repositories at evaluation, never stored.
+    """
+
     m111_no_retenciones_no_obligation_advisory: bool = False
     """Non-blocking advisory: an M111 source period was explicitly attested as no-obligation.
 
