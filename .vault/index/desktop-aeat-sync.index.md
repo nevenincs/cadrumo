@@ -4,14 +4,12 @@ tags:
   - '#index'
   - '#desktop-aeat-sync'
 date: '2026-10-29'
-modified: '2026-10-29'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a83d71c01319eba9c9512e642dcfaf54a9f8db11cbcf91476c8b98f685081154'
+body_hash: 'sha256:20f770403f63afbbb72875dfc138eacc85ca1f2868b5ec21300851c2575fa0ca'
 related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
   - '[[2026-10-29-desktop-aeat-sync-audit]]'
-  - '[[2026-10-29-desktop-aeat-sync-ledger]]'
-  - '[[2026-10-29-desktop-aeat-sync-plan]]'
   - '[[2026-10-29-desktop-aeat-sync-reference]]'
 ---
 
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#desktop-aeat-sync`.
 ### audit
 
 - `2026-10-29-desktop-aeat-sync-audit` - `desktop-aeat-sync` audit: `desktop AEAT sync integrated review`
-
-### exec
-
-- `2026-10-29-desktop-aeat-sync-ledger` - `desktop-aeat-sync` ledger
-
-### plan
-
-- `2026-10-29-desktop-aeat-sync-plan` - `desktop-aeat-sync` plan
 
 ### reference
 

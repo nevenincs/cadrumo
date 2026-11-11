@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#live-agent-evaluation'
 date: '2026-10-12'
-modified: '2026-10-14'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b6d0ac75c2b1b1cbbcecd6e4abb29234506b1de4512dfc5429c1b322be0b5c2'
+body_hash: 'sha256:34743ea737a85924aee4b7237439c6d33e10b533d2ae102e400545e30fc433fc'
 related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
-  - '[[2026-10-12-live-agent-evaluation-ledger]]'
-  - '[[2026-10-12-live-agent-evaluation-plan]]'
   - '[[2026-10-12-live-agent-evaluation-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#live-agent-evaluation`.
 ### adr
 
 - `2026-10-12-live-agent-evaluation-adr` - `live-agent-evaluation` adr: `live agent evaluation runs an agent client over MCP against a verified copy of the built package` | (**status:** `accepted`)
-
-### exec
-
-- `2026-10-12-live-agent-evaluation-ledger` - `live-agent-evaluation` ledger
-
-### plan
-
-- `2026-10-12-live-agent-evaluation-plan` - `live-agent-evaluation` plan
 
 ### reference
 

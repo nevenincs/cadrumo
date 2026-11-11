@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#startup-performance'
 date: '2026-10-13'
-modified: '2026-10-22'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a68e161d1d2a82bd3baaa0a7fdef22bea42c40eab581881bc78cd2da79fdcadc'
+body_hash: 'sha256:15ce1b17bb4a61feeec627688b822ca1cfe90dfb20b153bdcb6cedc0c5e2bc4b'
 related:
   - '[[2026-10-13-startup-performance-audit]]'
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
@@ -15,7 +15,6 @@ related:
   - '[[2026-10-15-startup-performance-desktop-tui-sequence-audit]]'
   - '[[2026-10-22-startup-performance-authority-observation-adr]]'
   - '[[2026-10-22-startup-performance-ledger]]'
-  - '[[2026-10-22-startup-performance-plan]]'
   - '[[2026-10-22-startup-performance-request-path-audit]]'
   - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
 ---
@@ -46,4 +45,3 @@ Auto-generated index of all documents tagged with `#startup-performance`.
 ### plan
 
 - `2026-10-14-startup-performance-plan` - `startup-performance` plan
-- `2026-10-22-startup-performance-plan` - `startup-performance` plan

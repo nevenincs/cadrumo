@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#test-suite-budget'
 date: '2026-10-30'
-modified: '2026-11-01'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:858cfd199ba4228f8cf897cb91a9b12778efd72e00e6508e0464c23cd695e588'
+body_hash: 'sha256:ed06b100e384218b430354751c445541b426888e99a49e9e3f697981949c88ee'
 related:
-  - '[[2026-10-30-test-suite-budget-ledger]]'
-  - '[[2026-10-30-test-suite-budget-plan]]'
   - '[[2026-10-31-test-suite-budget-cli-file-operations-audit]]'
 ---
 
@@ -22,11 +20,3 @@ Auto-generated index of all documents tagged with `#test-suite-budget`.
 ### audit
 
 - `2026-10-31-test-suite-budget-cli-file-operations-audit` - `test-suite-budget` audit: `cli-file-operations`
-
-### exec
-
-- `2026-10-30-test-suite-budget-ledger` - `test-suite-budget` ledger
-
-### plan
-
-- `2026-10-30-test-suite-budget-plan` - `test-suite-budget` plan

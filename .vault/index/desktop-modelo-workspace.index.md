@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#desktop-modelo-workspace'
 date: '2026-10-23'
-modified: '2026-10-24'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4056706785a66f6de4d8809f2a643ab3a633436663769407d0ad341d23dfafbc'
+body_hash: 'sha256:38a9f1cffefa0927cc96c09f09970146ce55ad9154c526c7e51f8f4637bcd25f'
 related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
-  - '[[2026-10-23-desktop-modelo-workspace-ledger]]'
-  - '[[2026-10-23-desktop-modelo-workspace-plan]]'
   - '[[2026-10-23-desktop-modelo-workspace-research]]'
   - '[[2026-10-24-desktop-modelo-workspace-audit]]'
 ---
@@ -28,14 +26,6 @@ Auto-generated index of all documents tagged with `#desktop-modelo-workspace`.
 ### audit
 
 - `2026-10-24-desktop-modelo-workspace-audit` - `desktop-modelo-workspace` audit: `P01 phase-close review`
-
-### exec
-
-- `2026-10-23-desktop-modelo-workspace-ledger` - `desktop-modelo-workspace` ledger
-
-### plan
-
-- `2026-10-23-desktop-modelo-workspace-plan` - `desktop-modelo-workspace` plan
 
 ### research
 
