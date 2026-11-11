@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:3e658e0d23cce45587d54ce342b1dd47b36ad07833acc03c0322bc2363d14e34'
+body_hash: 'sha256:d3f90c955d2f32cfa2faa75a46a95b3b26a61bd227eb5e2c9420660ba1162406'
 related:
   - "[[2026-11-01-export-parity-suffered-withholding-schemas-adr]]"
   - "[[2026-06-15-art20-trabajo-reduccion-compute-adr]]"
@@ -16,7 +16,7 @@ related:
   - '[[2026-09-27-export-parity-renta-withholding-sources-adr]]'
   - '[[2026-11-11-export-parity-work-income-sourcing-research]]'
 ---
-# `export-parity` adr: `Modelo 100 work income from the suffered-withholding payer record` | (**status:** `proposed`)
+# `export-parity` adr: `Modelo 100 work income from the suffered-withholding payer record` | (**status:** `accepted`)
 
 This record proposes an amendment to the accepted `2026-11-01-export-parity-suffered-withholding-schemas-adr`, which left income casillas to "a later decision" (its section 1, validator bullets) and kept the income quantities for them. It also proposes reconciling edits to the accepted `2026-06-15-art20-trabajo-reduccion-compute-adr` and `2026-07-01-modelo-100-trabajo-casilla-compute-adr`. Every accepted body stays unchanged until the operator or the coordinator authorizes this proposal. The wording to apply then is under "Proposed wording for the accepted records".
 
@@ -161,6 +161,15 @@ No new door is added. The new facts, findings and refusal reasons get served wor
 - Refusals: a declared category with no record; an attestation without a record (credit zero, income unresolved); a record beside an attestation; a v1 record; a non-trabajo record carrying the new fields; a trabajo request without them; an unstated 0008 role; 0021 unstated with a stated disability; 0016 above its limit.
 - Validator teeth on isolated fixtures: a second source on 0003, `importe_integro` bound to 0003, an income quantity on another class, an income binding as a formula operand, `aeat_prefilled` on an income binding, and a negative rate in a `progressive` table.
 - `just check-registry`, `just check-registry-gate`, `just check-bindings`, the report-only edition migration, `just test-registry`, and the year-literal ratchet with no new finding.
+
+### Conditions of acceptance (2026-11-12)
+
+Accepted by the coordinator on 2026-11-12 with these conditions. They bind the implementation.
+
+- **(A) Other-income node.** For the 6.500 test, an income family the profile declares absent is a proven zero; a declared or unknown family without figures leaves the node unresolved. Both are tested: a worker whose profile declares no other income gets the reduction, and one with a declared family lacking figures does not.
+- **(B) One statement for the four income boxes.** One action may state 0008, 0009, 0010 and 0024 as zero together, provided its served words name all four boxes; settled in one exchange with the lifecycle owner. A dated profile fact holding "no such contributions" once is a later Step and is not built here.
+- **(C) Frozen desktop.** The withholding pane and its payload types get a line in the native-debt register.
+- **(D) Delivery units**, about ten commits each, in order: record version 2 and its doors; provider, validator and bindings; parameters and formulas, with the `bracket_kind` registry schema change as its own unit and an authority rebuild; personas with the acceptance owner.
 
 ## Rationale
 
