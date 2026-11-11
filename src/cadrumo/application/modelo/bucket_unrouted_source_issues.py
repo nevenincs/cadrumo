@@ -67,6 +67,10 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "register_owned_capital_acquisition"
     if diagnostic.reason == "inventory_book_claimed_purchase":
         return "inventory_book_claimed_purchase"
+    return _durable_ledger_note_reason(diagnostic)
+
+
+def _durable_ledger_note_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     if diagnostic.reason == "ledger_expense_may_be_durable":
         return "ledger_expense_may_be_durable"
     if diagnostic.reason == "household_rows_incomplete":
