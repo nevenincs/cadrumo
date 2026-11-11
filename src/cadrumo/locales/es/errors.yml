@@ -1384,10 +1384,16 @@ errors:
       datos que el fichero declara sobre ti o sobre esta declaración (identificación,
       cuenta bancaria o datos propios del modelo). Complétalos en tu perfil o en las
       opciones de la exportación y vuelve a exportar.'
+    refused_modelo_export_required_record_absent: El diseño oficial exige al menos
+      un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
+      que no hay nada que escribir en este formato y no se ha escrito nada.
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve
       a exportar.'
+    refused_modelo_household_row_fact_unstated: 'La declaración sigue rechazada: tu
+      perfil no indica un dato del hogar que el diseño oficial exige. Añádelo en tu
+      perfil y vuelve a calcular.'
     refused_modelo_instalment_election: 'Esta declaración no se puede pagar en dos
       plazos: hace falta un resultado a ingresar que deje un segundo plazo de al menos
       un céntimo, que no sea rectificativa y se presente dentro de plazo y, si domicilias
@@ -1408,6 +1414,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
       exactamente un motivo canónico en un diseño de registro aplicable y revisado;
       el motivo está prohibido en los demás casos.
+    refused_modelo_operation_subject_not_work_unit: Esta solicitud no indica la declaración
+      a la que pertenece su cálculo guardado; abre esa declaración y repítela desde
+      allí.
     refused_modelo_payment_election_capability: El método de pago elegido aun no esta
       disponible.
     refused_modelo_payment_election_incompatible: La opción de pago elegida requiere

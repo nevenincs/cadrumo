@@ -1284,10 +1284,16 @@ errors:
       about you or about this return are missing or inconsistent (identification,
       bank account or facts specific to the modelo). Complete them in your profile
       or in the export options and export again.'
+    refused_modelo_export_required_record_absent: The official design requires at
+      least one %{export_record_id} record, but this return has none, so there is nothing
+      to write in this format and nothing was written.
     refused_modelo_export_value_overflow: 'Nothing was written: a value does not fit
       field %{field_id}, which the AEAT record design gives %{field_length} positions.
       Cutting it would declare something else. Check that value or amount and export
       again.'
+    refused_modelo_household_row_fact_unstated: 'The declaration stays refused: your
+      profile does not state a household fact that the official design requires. Add
+      it in your profile, then calculate again.'
     refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,
@@ -1308,6 +1314,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.
+    refused_modelo_operation_subject_not_work_unit: This request does not name the
+      declaration its saved calculation belongs to; open that declaration and make
+      the request again from there.
     refused_modelo_payment_election_capability: The selected payment method is not
       supported yet.
     refused_modelo_payment_election_incompatible: The selected payment election requires

@@ -1307,10 +1307,16 @@ errors:
       egyeznek azok az adatok, amelyeket a fájl rólad vagy erről a bevallásról közöl
       (azonosítás, bankszámla vagy a modellre jellemző adatok). Egészítsd ki őket
       a profilodban vagy az exportálási beállításokban, és exportálj újra.'
+    refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
+      rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
+      mit kiírni, és semmi sem íródott ki.
     refused_modelo_export_value_overflow: 'Semmi sem íródott ki: egy érték nem fér
       el a(z) %{field_id} mezőben, amelynek az AEAT rekordterve %{field_length} pozíciót
       ad. A levágás más adatot vallana be. Ellenőrizd az adatot vagy az összeget,
       és exportálj újra.'
+    refused_modelo_household_row_fact_unstated: 'A bevallás továbbra is elutasított:
+      a profilod nem tartalmaz egy olyan háztartási adatot, amelyet a hivatalos kialakítás
+      megkövetel. Add meg a profilodban, majd számíts újra.'
     refused_modelo_instalment_election: 'Ezt a bevallást nem fizetheted két részletben:
       ehhez olyan fizetendő eredmény kell, amelyből a második részlet legalább egy
       cent marad, a bevallás nem lehet helyesbítő, határidőn belül kell benyújtanod,
@@ -1332,6 +1338,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
+    refused_modelo_operation_subject_not_work_unit: Ez a kérés nem azt a bevallást
+      jelöli meg, amelyhez a mentett számítása tartozik; nyisd meg azt a bevallást,
+      és onnan küldd el újra.
     refused_modelo_payment_election_capability: A választott fizetési mód nem támogatott.
     refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
       eredmény szükséges.

@@ -289,12 +289,17 @@ class ModeloReconciliationPullExecutor:
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
         try:
-            work_unit_id, prepared = await await_cancellation_complete(
+            outcome = await await_cancellation_complete(
                 asyncio.to_thread(self._prepare, payload, context, profile_id, actor),
                 task_name="modelo-reconciliation-pull-prepare",
             )
-        except CalculationRevisionNotFoundError as exc:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
+        except CalculationRevisionNotFoundError:
+            outcome = None
+        if outcome is None:
+            # Raised outside the handler: the denial must not chain to the lookup's
+            # served door, which would tell the caller the revision is not stored.
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        work_unit_id, prepared = outcome
         projection = ModeloReconciliationImportProjection.from_report(prepared.report)
         _require_pull_projection(payload, projection, profile_id, work_unit_id)
         if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_DOCUMENT_BYTES:

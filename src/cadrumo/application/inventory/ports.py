@@ -14,6 +14,7 @@ from typing import Protocol
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
+from .movement_claim_checks import InventoryClaimLedgerReads
 
 
 class InventoryLedgerServiceRepositoryProtocol(Protocol):
@@ -87,6 +88,8 @@ class InventoryServicePorts:
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     document_file_name: Callable[[str], str | None]
     """The name a held document arrived under, by digest; ``None`` when none is held."""
+    claim_reads_factory: Callable[[str], InventoryClaimLedgerReads]
+    """The ledger and asset register of one bucket, which a purchase's claim is checked against."""
 
 
 class InventoryServicePortsFactory(Protocol):

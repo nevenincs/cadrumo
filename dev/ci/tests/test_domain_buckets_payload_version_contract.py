@@ -120,6 +120,7 @@ def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
 def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
     """An inventory ledger create writes the inventory payload contract."""
     from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+    from cadrumo.adapters.persistence.profile.tests.inventory_service_integration_support import claim_reads
     from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from cadrumo.application.inventory.ports import InventoryServicePorts
     from cadrumo.application.inventory.service import InventoryService
@@ -132,6 +133,7 @@ def test_inventory_events_persist_version_one(tmp_path: Path) -> None:
                 ),
                 document_file_name=lambda _digest: None,
                 bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+                claim_reads_factory=lambda bucket_id: claim_reads(profile, bucket_id),
             ),
         ).create(
             bucket_id=profile.bucket_id,

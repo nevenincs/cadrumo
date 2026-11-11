@@ -18,6 +18,7 @@ from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -67,6 +68,7 @@ from .m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
 from .operator_override_advisory import collect_operator_override_divergence_diagnostics
+from .preconditions import build_modelo_calculate_refusal_failure
 from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_casilla_gap_diagnostics, profile_text_fact_index
 from .projection_unresolved import (
@@ -77,6 +79,7 @@ from .projection_unresolved import (
 )
 from .registry_helpers import validate_casilla_input_ids
 from .transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .work_missing_input import previous_filing_unobserved
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -746,6 +749,7 @@ def _bucket_aggregation_source_diagnostics(
             operation=ports.operation,
         ),
         supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
+        derived_selectors=preparation.profile.profile_decode_context.schema.derived_selectors,
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics
@@ -1033,17 +1037,32 @@ def _resolve_bucket_aggregation_run(
         operation=ports.operation,
         profile_values=record_to_path_values(preparation.profile.record),
     )
-    source_resolution = resolve_bucket_aggregation_source_resolution(
-        preparation=preparation,
-        ports=ports,
-        foreign_asset_observations=foreign_asset_observations,
-        foreign_asset_row_observations=foreign_asset_row_observations,
-        text_casilla_inputs=text_casilla_inputs,
-        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        enum_binding_values=enum_binding_values,
-        filing_period_date=filing_period_date,
-        transaction_repository=memoized_transaction_repository,
-    )
+    try:
+        source_resolution = resolve_bucket_aggregation_source_resolution(
+            preparation=preparation,
+            ports=ports,
+            foreign_asset_observations=foreign_asset_observations,
+            foreign_asset_row_observations=foreign_asset_row_observations,
+            text_casilla_inputs=text_casilla_inputs,
+            m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+            enum_binding_values=enum_binding_values,
+            filing_period_date=filing_period_date,
+            transaction_repository=memoized_transaction_repository,
+        )
+    except RegistryValidationError as error:
+        # A stored earlier return that does not show the boxes a carry reads is
+        # answered by the operator stating the carry, where the edit admits it.
+        snapshot = preparation.snapshot
+        refusal = previous_filing_unobserved(
+            error,
+            work_unit=preparation.work_unit,
+            snapshot=snapshot,
+            boxes=snapshot_printed_boxes(ports.operation, snapshot),
+            layout=ports.operation.form_layout(str(preparation.work_unit.modelo), snapshot.revision.id),
+        )
+        if refusal is None:
+            raise
+        raise refusal from error
     channels = _bucket_aggregation_channels(
         preparation=preparation,
         operation=ports.operation,
@@ -1117,6 +1136,10 @@ def _reject_manual_m210_gross_income_override_in_ledger_mode(
         raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": ["rendimientos_integros"]},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="m210.gross_income_source.ledger_with_manual_gross_income",
+                evidence_values={"rejected_casilla_ids": "rendimientos_integros", "ledger_source": True},
+            ),
         )
 
 
@@ -1131,6 +1154,10 @@ def _validate_m210_official_tipo_renta_selection(
         if mode is M210GrossIncomeSourceMode.LEDGER:
             raise ModeloAggregationInputConflictError(
                 translated_message="application.modelo.errors.m210_ledger_source_selection_required",
+                precondition_failure=build_modelo_calculate_refusal_failure(
+                    scenario="m210.tipo_renta.ledger_selection_missing",
+                    evidence_values={"ledger_source": True, "official_tipo_renta_code_stated": False},
+                ),
             )
         return
     expected_tipo_renta = m210_tipo_renta_code_projection().get(m210_official_tipo_renta_code)
@@ -1142,6 +1169,13 @@ def _validate_m210_official_tipo_renta_selection(
                 "expected_tipo_renta": expected_tipo_renta.value if expected_tipo_renta is not None else None,
                 "tipo_renta": text_casilla_inputs.get("tipo_renta"),
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="m210.tipo_renta.official_code_mismatch",
+                evidence_values={
+                    "official_tipo_renta_code": m210_official_tipo_renta_code,
+                    "official_code_recognised": expected_tipo_renta is not None,
+                },
+            ),
         )
 
 
@@ -1156,6 +1190,15 @@ def _reject_manual_m210_agrupacion_rows_in_ledger_mode(
     ):
         raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_ledger_manual_agrupacion_rows",
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="m210.gross_income_source.ledger_with_manual_agrupacion_rows",
+                evidence_values={
+                    "ledger_source": True,
+                    "manual_agrupacion_row_count": sum(
+                        isinstance(row, Modelo210AgrupacionRentaRow) for row in detail_rows
+                    ),
+                },
+            ),
         )
 
 
@@ -1175,6 +1218,10 @@ def _merge_bucket_bound_inputs(
         raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.computed_casilla_binding_conflict",
             context={"computed": computed},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="bound_inputs.computed_casilla_bound",
+                evidence_values={"computed_casilla_count": len(computed), "computed_casilla_ids": "|".join(computed)},
+            ),
         )
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 

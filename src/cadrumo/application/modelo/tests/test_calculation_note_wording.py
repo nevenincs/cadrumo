@@ -86,6 +86,8 @@ _VALUES = {
     "field": "irpf.estimation_regime",
     "stated": "3",
     "recorded": "1",
+    "omitting": "1",
+    "leaf": "nif",
     "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
     "compared_amount": "1199.99",
     "cross_check": "retencion_soportada",

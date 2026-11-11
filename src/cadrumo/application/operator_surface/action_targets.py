@@ -158,6 +158,11 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("config.profile.create", ("config", "profile", "create"), "ConfigProfileCreateResult"),
     ActionTarget(
+        "config.profile.ascendiente.list",
+        ("config", "profile", "ascendiente", "list"),
+        "ConfigProfileAscendienteListResult",
+    ),
+    ActionTarget(
         "config.profile.descendiente.list",
         ("config", "profile", "descendiente", "list"),
         "ConfigProfileDescendienteListResult",
@@ -172,6 +177,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("config.repair.quarantine", ("config", "repair", "quarantine"), "RepairQuarantineResult"),
     ActionTarget("config.repair.reset_progress", ("config", "repair", "reset-progress"), "RepairResetProgressResult"),
     ActionTarget("config.storage.init", ("config", "storage", "init"), "ConfigStorageInitResult"),
+    ActionTarget(
+        "ledger.account.add",
+        ("app", "ledger", "account", "add"),
+        "OwnAccountChangeResult",
+        required_inputs=("label", "holding"),
+        profile_bound_write=True,
+    ),
     ActionTarget(
         "ledger.actividad_asset.correct",
         ("app", "ledger", "actividad-asset", "correct"),
@@ -233,6 +245,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "VerificationReportListResult",
     ),
     ActionTarget(
+        "modelo.work.attest_m303_exonerado_390",
+        ("app", "modelo", "work", "attest-m303-exonerado-390"),
+        "M303Exonerado390AttestationResult",
+        required_inputs=("year", "period", "observed_at"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.work.attest_prior_carries",
         ("app", "modelo", "work", "attest-prior-carries"),
         "WorkAttestPriorCarriesResult",
@@ -251,6 +270,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("modelo.work.file", ("app", "modelo", "work", "file"), "WorkFileResult", profile_bound_write=True),
     ActionTarget("modelo.work.list", ("app", "modelo", "work", "list"), "WorkListResult"),
+    ActionTarget(
+        "modelo.work.override",
+        ("app", "modelo", "work", "override"),
+        "WorkManualEntryResult",
+        required_inputs=("work_unit_id", "binding_id", "value"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
     ActionTarget("modelo.work.status", ("app", "modelo", "work", "status"), "WorkStatusResult"),
     ActionTarget(

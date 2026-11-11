@@ -61,9 +61,13 @@ as_of = { year = "horizon", month = 2, day = 16 }
 [fields]
 "irpf.activity_kind" = "profesional"
 
+# The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
+# "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
+# IAE sección segunda, grupo 763 "Programadores y Analistas de Informática": actividad profesional, so A05.
 [[activities]]
 description = "Programación y análisis informático"
 iae_epigraph = "763"
+tipo_actividad = "A05"
 
 # He sells his own programming and analysis work and holds no mercaderías or
 # materias primas, so his activity holds no existencias: the book opens at
@@ -153,3 +157,21 @@ modelo = "303"
 year = "horizon-1"
 periods = ["1T", "2T", "3T", "4T"]
 iva_compensation_carried_in = "0.00"
+
+# A synthetic titular account (checksum-valid, not a real bank) designated for a
+# Modelo 100 refund: AEAT pays a refund by transfer to the account the taxpayer
+# states as held in the return (Manual Renta, devolución; art. 132.1 RGAT).
+[[own_accounts]]
+label = "Cuenta principal"
+holding = "titular"
+iban = "ES1700000000000000000006"
+designations = [{ role = "refund", modelo = "100" }]
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+nothing_pending = true

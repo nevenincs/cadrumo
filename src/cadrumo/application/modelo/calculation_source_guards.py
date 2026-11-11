@@ -34,7 +34,7 @@ from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
-from .preconditions import build_modelo_precondition_failure
+from .preconditions import build_modelo_calculate_refusal_failure, build_modelo_precondition_failure
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -74,6 +74,10 @@ def require_m303_regimen_simplificado_annual_summary_handoff(
             "declares_handoff": declares_handoff,
             "expects_handoff": expects_handoff,
         },
+        precondition_failure=build_modelo_calculate_refusal_failure(
+            scenario="m303_annual_summary.handoff_required",
+            evidence_values={"declares_handoff": declares_handoff, "expects_handoff": expects_handoff},
+        ),
     )
 
 
@@ -96,6 +100,10 @@ def require_m303_regimen_simplificado_annual_summary_arrival_values(
             "reason": "m303_regimen_simplificado_annual_summary_arrival_mismatch",
             "casilla_ids": mismatches,
         },
+        precondition_failure=build_modelo_calculate_refusal_failure(
+            scenario="m303_annual_summary.arrival_mismatch",
+            evidence_values={"mismatched_casilla_count": len(mismatches)},
+        ),
     )
 
 
@@ -137,6 +145,10 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.novel_source_kind_rejected",
             context={"novel_source_kinds": novel, "revision_id": revision.id},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="source_bindings.novel_source_kind",
+                evidence_values={"novel_source_kind_count": len(novel), "novel_source_kinds": "|".join(novel)},
+            ),
         )
 
 
@@ -252,6 +264,10 @@ def m210_gross_source_mode(
     if mode is M210GrossIncomeSourceMode.LEDGER:
         raise ModeloAggregationInputConflictError(
             translated_message="application.modelo.errors.m210_ledger_source_requires_modelo_210",
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="m210.gross_income_source.ledger_on_other_modelo",
+                evidence_values={"modelo": str(work_unit.modelo), "ledger_source": True},
+            ),
         )
     return None
 

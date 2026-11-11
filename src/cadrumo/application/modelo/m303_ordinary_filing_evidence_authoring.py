@@ -30,16 +30,18 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from .action_errors import (
-    M303Exonerado390AttestationUnadmissibleError,
-    M303FilingEvidenceError,
-    ModeloProfileReadinessError,
-)
+from .action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
 from .m303_exonerado_390_applicability_attestation import (
     m303_exonerado_390_filing_evidence_reference,
     modelo_390_question_asked,
     require_modelo_390_question_in_period,
     resolve_m303_exonerado_390_not_applicable_attestation,
+)
+from .m303_exonerado_390_attestation_refusal import (
+    PeriodAttestationRefusal,
+    RequestAttestationRefusal,
+    period_attestation_unadmissible,
+    request_attestation_unadmissible,
 )
 from .m303_filing_evidence import m303_filing_evidence_failure, validate_m303_filing_instance_evidence_for_revision
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
@@ -169,10 +171,7 @@ def author_ordinary_m303_evidence_for_work(
     opened only once the identifiers are well formed.
     """
     if (exonerado_390_attachment_id is None) != (exonerado_390_sha256 is None):
-        raise M303Exonerado390AttestationUnadmissibleError(
-            "Modelo 390 applicability attestation needs both its attachment id and its SHA-256",
-            context={"reason": "incomplete_identity"},
-        )
+        raise request_attestation_unadmissible(RequestAttestationRefusal.INCOMPLETE_IDENTITY)
     reference = (
         None
         if exonerado_390_attachment_id is None or exonerado_390_sha256 is None
@@ -252,11 +251,10 @@ def _modelo_390_exemption_evidence(
             store=attachment_store,
             profile=profile,
         )
-    except (AttachmentNotFoundError, AttachmentValidationError) as exc:
-        raise M303Exonerado390AttestationUnadmissibleError(
-            "Modelo 390 applicability attestation cannot back this Modelo 303 work unit",
-            context={"reason": type(exc).__name__},
-        ) from exc
+    except AttachmentNotFoundError as exc:
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.UNKNOWN_ATTACHMENT, request.period) from exc
+    except AttachmentValidationError as exc:
+        raise period_attestation_unadmissible(PeriodAttestationRefusal.EVIDENCE_UNUSABLE, request.period) from exc
     return M303Exonerado390FilingEvidence(
         applicable=False,
         applicability_reference=applicability_reference,

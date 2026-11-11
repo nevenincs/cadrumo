@@ -184,6 +184,7 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
     # index leaves every ordinary profile binding unresolved too, so a wider
     # set would mean the advisory had escaped its derived scope.
     assert {str(d.binding_id) for d in fired} == {
+        "renta-modelo-100-estimacion-directa-actividad-tipo-clave",
         "renta-modelo-100-estimacion-directa-es-normal",
         "renta-modelo-100-estimacion-directa-modalidad-clave",
         "renta-profile-activity-cash-criterion-0169",

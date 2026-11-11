@@ -352,6 +352,10 @@ cli:
         authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
+        claim_transaction_mismatch: A főkönyvi tranzakció 64 karakteres azonosítóját
+          a `--ledger-row claimed` értékkel add meg, és csak azzal.
+        claimed_transaction_id_help: A beszerzést könyvelő főkönyvi tranzakció; a
+          `claimed` értékkel add meg, és csak azzal.
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         closing_value_file_help: JSON-fájl a záróérték adataival.
         closing_value_file_invalid: A záróérték fájlja nem érvényes ehhez a készlethez.
@@ -374,9 +378,15 @@ cli:
         inspect_help: Megmutat egy készletet az érvényes mozgásaival és a megőrzött
           előzményeivel.
         label_help: A készlet neve.
+        ledger_row_help: 'Amit a beszerzésről a főkönyvvel kapcsolatban megadsz: `claimed`
+          (megnevez egy tranzakciót), `none` (egyetlen főkönyvi tranzakció sem könyveli)
+          vagy `unstated`.'
         list_help: Készletnyilvántartások listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a készletnyilvántartáshoz.
+        movement_claim_help: Megadod, melyik főkönyvi tranzakció könyveli a beszerzést,
+          vagy hogy egyik sem, vagy törlöd a megjelölést; a lefoglalt tranzakció kikerül
+          a főkönyvi költségrovatokból.
         movement_correct_help: Egy mozgást javítottra cserél; az eredeti az előzményekben
           marad.
         movement_date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN).
@@ -1673,6 +1683,9 @@ cli:
           az év utolsó időszakára (12 vagy 4T időszakkód) szóló 303-as bevallásra,
           és kiírja az azonosítóját és SHA-256 értékét a `work calculate` számára.
           A többi időszak ezt nem kérdezi.
+        attest_no_amount_help: Kijelented, hogy egy korábbi bevallásból áthozott tételnek
+          nincs összege. Megmutatja a módosítás ellenőrzését; a --yes kapcsolóval
+          általad kijelentett 0-ként rögzíti, a beírt számtól külön.
         attest_prior_carries_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
           app modelo work attest-prior-carries %{work_unit_id} --yes` a kijelentéshez.'
         attest_prior_carries_help: Kijelented, hogy egy bevallásban nincs korábbi
@@ -1690,6 +1703,9 @@ cli:
         autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek
           decimális összegnek kell lennie; kapott érték: {value}. Használj tizedespontot
           ezreselválasztó nélkül, pl. 1234.56.'
+        binding_option_help: 'Rovatbemeneti érték KEY=VALUE szintaxissal (ismételhető);
+          futtasd: `aeat app modelo bindings list --missing` a számításhoz szükséges
+          értékek megtekintéséhez.'
         borrador_help: A Modelo 100 nyomtatvány borrador-pillanatképének azonosítója
           (teljes vagy egyértelmű előtag). Értékei csak azokat a rovatokat töltik
           ki, amelyek forrása a nyomtatványdefiníciókban aeat_prefilled jelölésű;
@@ -1781,6 +1797,16 @@ cli:
         document_only_help: Csak a dokumentum ellenőrzése, az aktív profil tárolójának
           megnyitása nélkül; --trusted-key nélkül az érvényes eredmény kulcshoz nem
           rögzített marad.
+        entry_binding_help: 'A bevallás adata, az azonosítójával (lásd: `aeat app
+          modelo bindings list`).'
+        entry_binding_unknown: '%{binding} nem adatazonosító.'
+        entry_casilla_help: 'A bevallás mezője, a nyilvántartásbeli azonosítójával
+          (lásd: `aeat app modelo casillas`).'
+        entry_casilla_unknown: '%{casilla} nem mezőazonosító.'
+        entry_confirm: 'Még semmit sem rögzítettél. Futtasd: `%{command}`, hogy rögzítsd.'
+        entry_value_help: Az érték, a kimeneti nyelvednek megfelelően írva (például
+          1 234,56 magyarul vagy 1,234.56 angolul).
+        entry_yes_help: A módosítás megerősítése és rögzítése a bevallásban
         file:
           verification_report_ambiguous: Ehhez a változathoz több jóváhagyó ellenőrzési
             jelentés tartozik. A bevallás rögzítése előtt oldd fel az ellenőrzési
@@ -1915,9 +1941,11 @@ cli:
         output_help: Az útvonal, ahová a számítási jelentés kerül; a szülőkönyvtárnak
           léteznie kell.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
-        override_help: 'Rovatbemeneti érték KEY=VALUE szintaxissal (ismételhető);
-          futtasd: `aeat app modelo bindings list --missing` a számításhoz szükséges
-          értékek megtekintéséhez.'
+        override_help: Te adod meg egy bevallás egyik adatának értékét a forrása által
+          adott érték helyett, vagy egy olyan forrás helyett, amely nem adott semmit,
+          például egy nem tárolt korábbi bevallás helyett. Megmutatja az értéket és
+          a módosítás ellenőrzését; a --yes kapcsolóval rögzíti, és megtart minden
+          más általad megadott értéket.
         payment_election_help: 'Válaszd ki, hogyan fizetik a pozitív Modelo 303 eredményt:
           átutalással vagy csoportos beszedéssel.'
         period_help: 'A bevallás időszakkódja: 0A éves, 1T-4T negyedévek, 01-12 hónapok;
@@ -2121,6 +2149,10 @@ cli:
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
         set_override_help: Javított mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
+        set_value_help: Beírsz egy értéket egy bevallás általad kitöltött mezőjébe,
+          úgy, ahogy az űrlapja fogadja. Megmutatja az értéket úgy, ahogy a mező olvassa,
+          és a módosítás ellenőrzését; a --yes kapcsolóval rögzíti, és megtart minden
+          más általad megadott értéket.
         state_label_borrador: Piszkozat
         state_label_descartado: Eldobva
         state_label_presentado: Benyújtottként rögzítve

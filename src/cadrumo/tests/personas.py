@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Final, Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
+from ..core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from .inventory import REPO_ROOT
 from .run_artifact import file_inputs_digest
 
@@ -255,6 +256,41 @@ class Election:
 
 
 @dataclass(frozen=True, slots=True)
+class OwnAccountDesignation:
+    """The modelo role an own account is designated for; an absent ``modelo`` covers every modelo."""
+
+    role: Literal["charge", "refund"]
+    modelo: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class OwnAccount:
+    """A bank account the persona holds, with the roles it is designated for."""
+
+    label: str
+    holding: Literal["titular", "cotitular"]
+    iban: str
+    designations: tuple[OwnAccountDesignation, ...]
+
+
+PRIOR_CARRY_BOXES: tuple[str, ...] = ("1380", "1382", "1385", "1388")
+"""The Modelo 100 boxes of the negative general bases still pending from the four previous ejercicios."""
+
+
+@dataclass(frozen=True, slots=True)
+class PriorCarries:
+    """What the persona states is still pending, on one year's Modelo 100, of earlier ejercicios' negative bases.
+
+    An empty ``pending`` is the statement that nothing is pending. Otherwise each
+    entry is a box of :data:`PRIOR_CARRY_BOXES` with the amount pending in it,
+    and a box it does not name is stated to hold nothing.
+    """
+
+    year: YearToken
+    pending: tuple[tuple[str, Decimal], ...]
+
+
+@dataclass(frozen=True, slots=True)
 class HouseholdMember:
     """One descendant or ascendant row: canonical leaves plus the identity supplying its ``nif``."""
 
@@ -421,10 +457,12 @@ class LeasedPremises:
 class InventoryBook:
     """The existencias book of one activity for one year, which the Modelo 100 Anexo D rows read.
 
-    The book records no movement: it opens at ``opening_stock`` and closes on
-    its movements, so ``closing_stock`` equals it. ``statement`` is the text of
-    the taxpayer's statement that evidences both the closing and the prior
-    year's closing it continues from.
+    The book opens at ``opening_stock`` and closes on its movements at
+    ``closing_stock``. ``purchases`` names the ledger rows that book its
+    purchases; each becomes a purchase claiming its row, and the stock sold
+    is what leaves ``closing_stock``. A book with no purchase closes at its
+    opening. ``statement`` is the text of the taxpayer's statement that
+    evidences both the closing and the prior year's closing it continues from.
     """
 
     activity: str
@@ -433,6 +471,7 @@ class InventoryBook:
     opening_stock: Decimal
     closing_stock: Decimal
     statement: str
+    purchases: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -544,9 +583,12 @@ class ExpectedValue:
     legal_ref: tuple[str, ...]
     grounding: Literal["verified", "cited", "unverified"]
     reason: str | None
-    #: The error code the application refuses this period's calculation with; ``reason``
-    #: states why. The casillas then record what the law gives, and are not compared.
+    #: The error code the application refuses this period with; ``reason`` states why.
+    #: The casillas then record what the law gives, and are not compared.
     refusal: str | None = None
+    #: The stage that refuses: the calculation itself, or its verification or export
+    #: once the calculation has completed (a value wider than its export slot).
+    refusal_stage: Literal["calculate", "verify", "export"] = "calculate"
     #: Casillas with the figure the law gives that the calculation leaves unresolved;
     #: ``reason`` states the gap. They are asserted not to carry that figure.
     not_sourced: tuple[tuple[str, str], ...] = ()
@@ -567,7 +609,6 @@ class Expectations:
 
 type BelowFloorBlock = Literal[
     "filed_returns",
-    "filed_returns.iva_compensation_carried_in",
     "calculated_returns",
     "local_observations",
     "aeat_filings",
@@ -578,13 +619,7 @@ type BelowFloorBlock = Literal[
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
-    {
-        "filed_returns",
-        "filed_returns.iva_compensation_carried_in",
-        "calculated_returns",
-        "local_observations",
-        "aeat_filings",
-    }
+    {"filed_returns", "calculated_returns", "local_observations", "aeat_filings"}
 )
 
 
@@ -638,6 +673,10 @@ class Persona:
     A family the persona lists as empty is a declaration that it has no member;
     a family it leaves out is unstated.
     """
+    own_accounts: tuple[OwnAccount, ...]
+    """The bank accounts the persona states as its own, each with the charge and refund roles it is designated for."""
+    prior_carries: tuple[PriorCarries, ...]
+    """The Modelo 100 returns whose pending negative bases of earlier ejercicios the persona states, one per year."""
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
@@ -855,6 +894,8 @@ _PERSONA_TABLES = frozenset(
         "activities",
         "elections",
         "household",
+        "own_accounts",
+        "prior_carries",
         "withholding_certificates",
         "rental_properties",
         "officers",
@@ -943,6 +984,64 @@ def _household(rows: object, where: str, leaves: frozenset[str], roles: _Roles) 
     return tuple(members)
 
 
+def _own_account_designation(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccountDesignation:
+    _keys(table, where, required=frozenset({"role"}), optional=frozenset({"modelo"}))
+    modelo = _optional_string(table, "modelo", where)
+    if modelo is not None and modelo not in modelos:
+        raise _fail(where, f"modelo {modelo!r} is not one of the persona's modelos {list(modelos)}")
+    return OwnAccountDesignation(
+        role=_choice(_string(table, "role", where), ("charge", "refund"), where), modelo=modelo
+    )
+
+
+def _own_account(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccount:
+    _keys(table, where, required=frozenset({"label", "holding", "iban"}), optional=frozenset({"designations"}))
+    iban = normalise_iban(_string(table, "iban", where))
+    if not IBAN_SHAPE_RE.match(iban) or iban_mod_97(iban) != 1:
+        raise _fail(where, "iban is not a checksum-valid ISO 13616 account number")
+    return OwnAccount(
+        label=_string(table, "label", where),
+        holding=_choice(_string(table, "holding", where), ("titular", "cotitular"), where),
+        iban=iban,
+        designations=tuple(
+            _own_account_designation(item, f"{where} designations[{index}]", modelos)
+            for index, item in enumerate(_tables(table.get("designations"), where))
+        ),
+    )
+
+
+def _check_designations(accounts: tuple[OwnAccount, ...], where: str) -> None:
+    """Refuse two designations of one role and scope, which the register holds once."""
+    keys = [(item.role, item.modelo) for account in accounts for item in account.designations]
+    if len(keys) != len(set(keys)):
+        raise _fail(where, "two designations state one role and scope")
+
+
+def _prior_carries(table: _Table, where: str, modelos: tuple[str, ...]) -> PriorCarries:
+    _keys(table, where, required=frozenset({"year"}), optional=frozenset({"nothing_pending", "pending"}))
+    if "100" not in modelos:
+        raise _fail(where, "the pending carries are a Modelo 100 statement, and the persona files no Modelo 100")
+    year = YearToken.parse(table["year"], where=f"{where}.year")
+    if ("nothing_pending" in table) == ("pending" in table):
+        raise _fail(where, "state either nothing_pending = true or the pending amounts")
+    if "nothing_pending" in table:
+        if not _bool(table, "nothing_pending", where):
+            raise _fail(where, "nothing_pending can only be stated true; state the pending amounts instead")
+        return PriorCarries(year=year, pending=())
+    boxes = _table(table["pending"], f"{where}.pending")
+    if not boxes:
+        raise _fail(where, "pending must name at least one box; state nothing_pending = true when none is pending")
+    pending: list[tuple[str, Decimal]] = []
+    for box, text in sorted(boxes.items()):
+        if box not in PRIOR_CARRY_BOXES:
+            raise _fail(where, f"box {box!r} is not one of {list(PRIOR_CARRY_BOXES)}")
+        amount = _amount(text, f"{where}.pending.{box}")
+        if amount <= 0:
+            raise _fail(where, f"box {box} must hold a positive amount; a box left out is stated to hold nothing")
+        pending.append((box, amount))
+    return PriorCarries(year=year, pending=tuple(pending))
+
+
 def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertificate:
     _keys(
         table,
@@ -1007,9 +1106,6 @@ def _officer(table: _Table, where: str, roles: _Roles) -> Officer:
 _FILED_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T", "0A")
 """The period codes a filed return may name, in the order their windows close within a year."""
 _IVA_COMPENSATION_MODELO: Final[str] = "303"
-_FIRST_QUARTER: Final[str] = "1T"
-_LAST_QUARTER: Final[str] = "4T"
-"""A first quarter carries compensation in from the last quarter of the year before."""
 
 
 def _filed_returns(table: _Table, where: str) -> FiledReturns:
@@ -1231,12 +1327,14 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         table,
         where,
         required=frozenset({"activity", "year", "valuation_method", "opening_stock", "closing_stock", "statement"}),
+        optional=frozenset({"purchases"}),
     )
     opening = _amount(table["opening_stock"], f"{where}.opening_stock")
     closing = _amount(table["closing_stock"], f"{where}.closing_stock")
+    purchases = _strings(table, "purchases", where) if "purchases" in table else ()
     if opening < 0 or closing < 0:
         raise _fail(where, "existencias are valued at a nonnegative amount")
-    if closing != opening:
+    if closing != opening and not purchases:
         raise _fail(where, "a book with no movement closes at its opening stock")
     return InventoryBook(
         activity=_string(table, "activity", where),
@@ -1245,6 +1343,7 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         opening_stock=opening,
         closing_stock=closing,
         statement=_string(table, "statement", where),
+        purchases=purchases,
     )
 
 
@@ -1415,6 +1514,7 @@ def _documents(document: _Table, where: str, persona_id: str, refs: frozenset[st
 
 
 _GROUNDING: tuple[Literal["verified", "cited", "unverified"], ...] = ("verified", "cited", "unverified")
+_REFUSAL_STAGES: tuple[Literal["calculate", "verify", "export"], ...] = ("calculate", "verify", "export")
 
 
 def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) -> Expectations:
@@ -1493,6 +1593,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "derivation",
                     "reason",
                     "refusal",
+                    "refusal_stage",
                     "not_sourced",
                     "governed_by",
                 }
@@ -1512,6 +1613,9 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 raise _fail(here, "a refusal names the application error code")
             if reason is None:
                 raise _fail(here, "a refusal says in its reason why the application refuses")
+        refusal_stage = _choice(_optional_string(table, "refusal_stage", here) or "calculate", _REFUSAL_STAGES, here)
+        if refusal is None and "refusal_stage" in table:
+            raise _fail(here, "a refusal stage belongs to a stated refusal")
         casillas = _string_map(table, "casillas", here)
         not_sourced = _string_map(table, "not_sourced", here)
         if not_sourced:
@@ -1535,6 +1639,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 grounding=grounding,
                 reason=reason,
                 refusal=refusal,
+                refusal_stage=refusal_stage,
                 not_sourced=not_sourced,
                 governed_by=governed_by,
             )
@@ -1615,9 +1720,8 @@ def parse_persona(
     A year outside the envelope is refused. With ``omit_below_floor``, for a
     read under a horizon lowered below the registry's own, a return-history
     record or an expectation whose year falls below the floor is left out and
-    listed in :attr:`Persona.below_floor` instead, as is a Modelo 303
-    compensation carried in from a quarter below the floor; every other token
-    stays refused there.
+    listed in :attr:`Persona.below_floor` instead; every other token stays
+    refused there.
     """
     where = f"{persona_id}/persona.toml"
     if persona_document.get("format") != CATALOGUE_FORMAT:
@@ -1656,6 +1760,12 @@ def parse_persona(
                 year=YearToken.parse(table["year"], where=f"{here}.year"),
             )
         )
+    modelos = _strings(head, "modelos", where)
+    own_accounts = tuple(
+        _own_account(table, f"{where} own_accounts[{index}]", modelos)
+        for index, table in enumerate(_tables(persona_document.get("own_accounts"), where))
+    )
+    _check_designations(own_accounts, f"{where} own_accounts")
     ledger = _parse_ledger(ledger_text, where=f"{persona_id}/ledger.csv", roles=roles)
     persona = Persona(
         id=persona_id,
@@ -1663,7 +1773,7 @@ def parse_persona(
         summary=_string(head, "summary", where),
         taxpayer=roles(head["taxpayer"], where),
         fiscal_year=YearToken.parse(head["fiscal_year"], where=f"{where}.fiscal_year"),
-        modelos=_strings(head, "modelos", where),
+        modelos=modelos,
         as_of=_date(clock["as_of"], f"{where} [clock].as_of", biographical=False),
         profile=tuple(
             ProfileAnswer(question_id=key, value=_profile_value(key, value, f"{where} [profile].{key}", roles))
@@ -1675,6 +1785,11 @@ def parse_persona(
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
         household_families=tuple(family for family in ("descendants", "ascendants") if family in household),
+        own_accounts=own_accounts,
+        prior_carries=tuple(
+            _prior_carries(table, f"{where} prior_carries[{index}]", modelos)
+            for index, table in enumerate(_tables(persona_document.get("prior_carries"), where))
+        ),
         withholding_certificates=tuple(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
@@ -1736,6 +1851,7 @@ def parse_persona(
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
     _check_attested_prior_values(persona, envelope)
+    _check_prior_carries(persona, envelope)
     return persona
 
 
@@ -1774,27 +1890,10 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
                 inside.append(record)
         return tuple(inside)
 
-    def carried_in_kept(block: FiledReturns) -> FiledReturns:
-        """``block``, without the compensation it carries in from a quarter below the floor."""
-        if block.iva_compensation_carried_in is None or block.periods[0] != _FIRST_QUARTER:
-            return block
-        prior = YearToken(anchor=block.year.anchor, offset=block.year.offset - 1)
-        if not prior.precedes_floor(envelope):
-            return block
-        dropped.append(
-            BelowFloorRecord(
-                block="filed_returns.iva_compensation_carried_in",
-                modelo=block.modelo,
-                year=prior,
-                periods=(_LAST_QUARTER,),
-            )
-        )
-        return dataclasses.replace(block, iva_compensation_carried_in=None)
-
     expectations = persona.expectations
     return dataclasses.replace(
         persona,
-        filed_returns=tuple(carried_in_kept(block) for block in kept("filed_returns", persona.filed_returns)),
+        filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
@@ -1863,6 +1962,13 @@ def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> No
             )
 
 
+def _check_prior_carries(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse two statements of the pending carries for one Modelo 100 year."""
+    years = [statement.year.resolve(envelope) for statement in persona.prior_carries]
+    if len(set(years)) != len(years):
+        raise _fail(persona.id, "the pending carries of one Modelo 100 year are stated twice")
+
+
 def _check_inventory(persona: Persona) -> None:
     """Refuse two books for one activity and year."""
     books = [(book.activity, str(book.year)) for book in persona.inventory]
@@ -1887,6 +1993,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         persona.fiscal_year,
         *(election.year for election in persona.elections),
         *(certificate.ejercicio for certificate in persona.withholding_certificates),
+        *(statement.year for statement in persona.prior_carries),
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
@@ -1944,6 +2051,7 @@ __all__ = [
     "LEDGER_ACCRUAL_COLUMNS",
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
+    "PRIOR_CARRY_BOXES",
     "ActivityRow",
     "AeatFiling",
     "AttestedPriorValue",
@@ -1967,10 +2075,13 @@ __all__ = [
     "LedgerRow",
     "LocalObservation",
     "Officer",
+    "OwnAccount",
+    "OwnAccountDesignation",
     "Persona",
     "PersonaCatalogueError",
     "PersonaDate",
     "PersonaDocument",
+    "PriorCarries",
     "PriorValueSource",
     "ProfileAnswer",
     "ProfileValue",

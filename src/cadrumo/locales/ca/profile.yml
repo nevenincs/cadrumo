@@ -151,6 +151,19 @@ profile:
           label: Descripció de l'activitat
         iae_epigraph:
           label: Epígraf IAE
+        tipo_actividad:
+          choices:
+            A01: Arrendadors de béns immobles
+            A02: Ramaderia independent
+            A03: Resta d'activitats empresarials no incloses en altres apartats
+            A04: Activitats professionals de caràcter artístic o esportiu
+            A05: Resta d'activitats professionals
+            B01: Activitat agrícola
+            B02: Activitat ramadera dependent
+            B03: Activitat forestal
+            B04: Producció de musclo en batea
+            B05: Activitat pesquera, excepte la producció de musclo en batea
+          label: Tipus d'activitat (Model 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci

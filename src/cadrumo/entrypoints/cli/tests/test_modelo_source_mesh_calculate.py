@@ -117,7 +117,6 @@ _M100_FACTS: dict[str, str] = {
     "renta_filing.declaration_type": "1",
     "renta_family.minor_children_in_unit": "false",
     "renta_family.descendientes_count": "0",
-    "renta_family.cotizaciones_ss_madre_2024": "0",
     "renta_family.descendants_eu_eea_deduction": "false",
 }
 

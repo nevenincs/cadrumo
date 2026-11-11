@@ -423,8 +423,8 @@ def test_the_same_declaration_without_autoconsumo_raises_no_blocking_finding(fil
     assert _blocking(findings) == [], revision_id
 
 
-def test_the_check_is_general_and_refuses_an_untranscribed_floor_edition_box() -> None:
-    """The support-floor edition prints [09] as a manual box, so a ledger cuota left untranscribed is unprinted too."""
+def test_the_floor_edition_derives_the_rate_row_cuota_so_the_printed_total_holds() -> None:
+    """The support-floor edition prints [09] from the ledger cuota, so [27] equals its printed summands."""
     modelo, catalogues = load_modelo_303()
 
     revision_id, values, findings = _calculated_findings(
@@ -437,20 +437,8 @@ def test_the_check_is_general_and_refuses_an_untranscribed_floor_edition_box() -
     )
     assert revision_id == _FLOOR_EDITION
     assert values[_TOTAL_BOX] == _GENERAL_CUOTA
-    assert [(f.message_locale_key, f.message_facts["printed_sum"]) for f in _blocking(findings)] == [
-        (_PRINTED_TOTAL_MISMATCH, Decimal("0")),
-    ]
-
-    _, _, transcribed = _calculated_findings(
-        modelo,
-        catalogues,
-        filing_year=filing_year_envelope().floor,
-        period="1T",
-        general_cuota=_GENERAL_CUOTA,
-        autoconsumo_base=None,
-        casilla_inputs={_GENERAL_CUOTA_BOX: _GENERAL_CUOTA},
-    )
-    assert _blocking(transcribed) == []
+    assert values[_GENERAL_CUOTA_BOX] == _GENERAL_CUOTA
+    assert _blocking(findings) == []
 
 
 def _remove_declaration(modelo_directory: Path, edition: str, predicate: VerificationPredicateDefinition) -> None:

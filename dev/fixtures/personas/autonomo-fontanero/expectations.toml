@@ -513,6 +513,9 @@ concepts = { clave = "B", importe_anual = "6765.00" }
 derivation = "Sales FON-VTA-03, 08, 12 including IVA: 2860.00 + 2035.00 + 1870.00 = 6765.00."
 legal_ref = ["rd-1065-2007:art-33"]
 grounding = "verified"
+reason = "The AEAT Modelo 347 record design gives the declarado's name the type-2 positions 36-75 (40 characters) and asks for the complete denomination of the entity, sin anagramas, with no abbreviation or truncation rule; this counterparty's name is 41 characters. The export refuses rather than shorten it, until the operator states the name as declared."
+refusal = "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
+refusal_stage = "export"
 
 [[values]]
 modelo = "347"

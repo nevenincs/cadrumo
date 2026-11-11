@@ -35,6 +35,12 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "taxpayer-birth-date" = { year = "horizon-71", month = 9, day = 2 }
 "third-party-transactions-above-347-threshold" = false
 
+[[own_accounts]]
+label = "Cuenta de la pensión"
+holding = "titular"
+iban = "ES2800000000000000000002"
+designations = [{ role = "refund", modelo = "100" }]
+
 # The taxpayer transcribes the payer's certificate: the catalogue holds no
 # certificate document, so the figures are recorded as his own declaration.
 [[withholding_certificates]]
@@ -68,3 +74,12 @@ year = "horizon-2"
 period = "0A"
 casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
 reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+nothing_pending = true

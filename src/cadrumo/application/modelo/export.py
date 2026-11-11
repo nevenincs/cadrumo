@@ -61,7 +61,11 @@ from ...domain.calculations.registry.payment_instalment_split import first_insta
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
-from ...domain.filing.errors import FilingExportError, FilingExportValueOverflowError
+from ...domain.filing.errors import (
+    FilingExportError,
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
     AeatProductSoftwareIdentity,
@@ -71,9 +75,9 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
-    ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportRequiredRecordAbsentError,
     ModeloExportValueOverflowError,
 )
 from ...domain.modelos.work_unit import WorkUnit
@@ -627,6 +631,10 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportRequiredRecordAbsentError):
+        return ModeloExportRequiredRecordAbsentError(
+            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        )
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,
@@ -842,7 +850,7 @@ def load_exportable_revision_target(
     Raises:
         CalculationRevisionNotFoundError: No revision carries that id.
         WorkUnitNotFoundError: The revision names a work unit that is absent.
-        ModeloExportError: The work unit lacks required filing-instance evidence.
+        M303FilingEvidenceError: The work unit lacks valid filing-instance evidence.
         ModeloExportCrossBucketRefusedError: The work unit belongs to another
             bucket than the active one.
     """
@@ -859,16 +867,7 @@ def load_exportable_revision_target(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    try:
-        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
-    except ModeloError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": calculation_revision_id,
-                "cause_type": type(exc).__name__,
-            },
-        ) from exc
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",

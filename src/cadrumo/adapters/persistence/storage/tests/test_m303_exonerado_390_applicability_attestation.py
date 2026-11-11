@@ -19,7 +19,6 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
     resolve_m303_exonerado_390_not_applicable_attestation,
 )
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
-from cadrumo.domain.attachments.errors import AttachmentValidationError
 from cadrumo.domain.attachments.m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
     M303Exonerado390ApplicabilityAttestation,
@@ -161,7 +160,7 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
 
-            with pytest.raises(AttachmentValidationError, match="not supported"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 admit_m303_exonerado_390_applicability_attestation(
                     bucket_id=_BUCKET_ID,
                     request=_request(M303Exonerado390ApplicabilityAssertion.APPLICABLE),
@@ -170,6 +169,8 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
                     store=store,
                     clock=lambda: _CAPTURED_AT,
                 )
+
+            assert dict(raised.value.context or {}).get("reason") == "applicable_unsupported"
 
             assert tuple(store.iter_manifests()) == ()
 
@@ -255,7 +256,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                 ),
             )
 
-            with pytest.raises(AttachmentValidationError, match="conflicting"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
                     filing_year=2025,
@@ -265,6 +266,8 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                     store=store,
                     clock=lambda: _CAPTURED_AT,
                 )
+
+            assert dict(raised.value.context or {}).get("reason") == "conflicting_assertions"
 
 
 def test_resolution_refuses_an_attestation_stale_against_the_current_profile_witness(
@@ -299,7 +302,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
                 now=updated_at,
             )
 
-            with pytest.raises(AttachmentValidationError, match="does not match"):
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
                 resolve_m303_exonerado_390_not_applicable_attestation(
                     bucket_id=_BUCKET_ID,
                     filing_year=2025,
@@ -309,3 +312,5 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
                     store=store,
                     clock=lambda: updated_at,
                 )
+
+            assert dict(raised.value.context or {}).get("reason") == "evidence_coordinate_mismatch"

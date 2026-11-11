@@ -514,4 +514,7 @@ def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest
             "total_acquisition_cost": canonical_decimal_string(acquisition.total_acquisition_cost),
         },
     }
+    # Added only when set, so a purchase recorded before recargo was a fact keeps its fingerprint.
+    if acquisition.consideration_recargo_amount != MONEY_ZERO:
+        payload["consideration_recargo_amount"] = canonical_decimal_string(acquisition.consideration_recargo_amount)
     return content_hash_hex(payload)

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#inventory-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-11-04'
+modified: '2026-11-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:d9372b5e17ffa02e8710a16d8c29ee36e05f84a696af9ce3221cf44a6ff298e8'
+body_hash: 'sha256:3b0ec414bb7e1c8001301e23c62456d0da1a89190731dfd50cefaf3e90459826'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -128,3 +128,9 @@ The complete three-output runtime-row projection is the only option that preserv
 ## Amendment 2026-10-30
 
 Authorized by the operator on 2026-10-30. The accepted body is preserved. `2026-08-22-source-casilla-integration-adr` retired the connectivity census from product code on 2026-09-07, so "connected" here means delivered through the registry binding and resolver path with the proofs this record requires. It names no status field and no census. This record's valuation and year scope are unchanged.
+
+## Amendment 2026-11-11: book-claimed purchases
+
+Accepted 2026-11-11 by PRIME under the operator's delegation, as recorded in `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr`.
+
+Casilla 0181 remains sourced only from the inventory book. A ledger row that a purchase movement of the book claims is withheld from every Modelo 100 ledger expense destination, including 0183, through the shared register claim, and refuses on a missing transaction, a double claim or an amount mismatch, as `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr` states. In the constraint defining 0181, 'non-recoverable IVA' reads 'non-recoverable indirect taxes, namely non-recoverable IVA and recargo de equivalencia (PGC NRV 10ª.1, LIVA art. 154)'. An unlinked purchase movement in an activity and year with ledger expense rows blocks Modelo 100 verification until it is linked or stated as having no ledger row.

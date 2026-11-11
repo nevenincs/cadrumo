@@ -716,6 +716,7 @@ application:
         authority_reconciliation: Comprovació del valor de tancament
       history_kind:
         described: Descrit
+        ledger_row_stated: Moviment de la compra indicat
         movement_corrected: Moviment corregit
         movement_reversed: Moviment anul·lat
         opening_corrected: Obertura corregida
@@ -743,6 +744,20 @@ application:
           i l'exercici %{year}. Obre'l en lloc de crear-ne un altre.
         activity_not_found: No existeix cap registre d'inventari per a aquesta activitat
           i l'exercici %{year}. Crea'l primer o revisa l'activitat i l'exercici.
+        claimed_transaction_amount_mismatch: 'La compra %{movement_id} de l''inventari
+          %{year} no coincideix amb el seu moviment: la base, l''IVA i el recàrrec
+          han de ser iguals al cèntim. Corregeix la compra o tria un altre moviment.'
+        claimed_transaction_double_claim: El moviment que indica la compra %{movement_id}
+          ja el reclama un altre inventari o un element del teu registre de béns.
+          Cada moviment pertany a un sol registre.
+        claimed_transaction_missing: La compra %{movement_id} de l'inventari %{year}
+          indica un moviment que no està actiu als teus moviments. Tria el moviment
+          que registra aquesta compra.
+        claimed_transaction_not_eur: El moviment que indica la compra %{movement_id}
+          no està en euros. De moment només es vinculen moviments en euros.
+        claimed_transaction_substrate_missing: El moviment que indica la compra %{movement_id}
+          no té base imposable o quota d'IVA, així que no es pot comparar. Completa'l
+          primer.
         closing_authority_conflict: Ja hi ha un altre valor de tancament registrat
           per a aquesta activitat i aquest any.
         closing_authority_invalid: Aquest valor de tancament no s'ha pogut registrar
@@ -772,11 +787,16 @@ application:
         later_closing_authority_recorded: El valor de tancament %{later_year} d'aquesta
           activitat parteix d'aquest tancament, així que les dades d'existències de
           %{year} ja no poden canviar.
+        ledger_row_not_purchase: Només una compra de l'inventari pot indicar quin
+          moviment la registra, i %{movement_id} no és una compra.
         movement_already_superseded: Aquest moviment ja es va corregir o anul·lar.
         movement_not_found: L'inventari %{year} d'aquesta activitat no té aquest moviment.
         movement_outside_year: Aquest moviment té una data fora de l'inventari %{year}.
         prior_closing_document_needed: Aquest valor de tancament necessita el document
           de tancament de l'any anterior. Afegeix-lo i torna-ho a provar.
+        recargo_with_deductible_iva: Una compra amb recàrrec d'equivalència no dedueix
+          IVA (article 154.Dos de la Llei de l'IVA). Indica una proporció d'IVA deduïble
+          de zero.
         stock_would_go_negative: 'Això deixaria les existències per sota de zero:
           %{sku} necessitaria més unitats de les que queden.'
     workbench:
@@ -1653,6 +1673,11 @@ application:
           comprovacions retenen, així que no pots exportar-la tal com està.
         what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
           altra vegada; el nou registre substitueix aquest.
+      household_row_fact_unstated:
+        what: Hi ha una persona de la teva llar registrada sense una dada que la declaració
+          exigeix, així que no es pot comprovar, exportar ni presentar fins que l'indiquis.
+        what_to_do: Indica al teu perfil la dada que falta d'aquesta persona i torna
+          a calcular.
       household_rows_incomplete:
         what: El teu perfil indica més persones en aquest grup de les que registra,
           així que la declaració només fa servir les persones registrades i no dona
@@ -1675,6 +1700,10 @@ application:
           faltava en un cobrament, i podria ser una comissió o un descompte.
         what_to_do: Revisa la retenció amb la factura o el certificat del teu client
           als teus registres, corregeix el registre si és diferent i torna a calcular.
+      inventory_book_claimed_purchase:
+        what: Una compra d'existències es deixa fora de les teves despeses, perquè
+          el teu inventari la declara com a compra d'existències.
+        what_to_do: No has de fer res.
       invoice_category_counterparty_mismatch:
         what: El tractament d'IVA d'una factura no encaixa amb el país del client,
           així que s'ha deixat fora.
@@ -1946,6 +1975,11 @@ application:
         queda fora del pagament fraccionat del període que acaba el {period_end}.'
       amortization_box_unbound: '{element}: aquesta edició no té casella per a la
         seva dotació, de manera que no suma res a aquest càlcul.'
+      book_claimed_purchase: El moviment del {row_date} per {row_amount} és una compra
+        del teu inventari, de manera que es declara com a compra d'existències i no
+        com a despesa.
+      book_claimed_purchase_undated: Un moviment és una compra del teu inventari,
+        de manera que es declara com a compra d'existències i no com a despesa.
       claim_gap_accrued: '{element}: no hi ha dotació registrada de {start} a {end}.
         S''han meritat {amount}, i la casella {box} només declara el que està registrat.'
       claim_gap_free_method: '{element}: no hi ha dotació registrada de {start} a
@@ -2013,6 +2047,8 @@ application:
       disposal_zero_result: '{element}: la seva venda el {date}, amb {transmission_value}
         de valor de transmissió i {net_value} de valor net, no dona ni guany ni pèrdua,
         així que cap casella no la recull.'
+      household_row_fact_unstated: '{group}: {recorded} registrades, {omitting} sense
+        {leaf}.'
       household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
@@ -2083,6 +2119,9 @@ application:
         declara una retenció de {amount}, però el seu NIF no indica si qui l'emet
         tributa per l'IRPF o per l'Impost sobre Societats. Comprova el NIF de la factura.
     calc_diagnostic_words:
+      household_leaf:
+        apellidos_nombre: cognoms i nom
+        nif: NIF
       income_class:
         actividad_economica: activitats econòmiques
         arrendamiento_inmueble_urbano: arrendament d'immoble urbà
@@ -2440,6 +2479,72 @@ application:
       detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
         amb la que donen els teus registres per al mateix declarat; corregeix-la o
         treu-la abans de calcular.
+      exonerado_390_attestation_applicable_unsupported: Aquí només es pot registrar
+        la declaració que el model 390 no és aplicable. Un model 390 que sí és aplicable
+        en el període %{period} de %{filing_year} no es registra per aquesta via.
+        No s'ha desat res.
+      exonerado_390_attestation_conflicting_assertions: Una altra atestació registrada
+        per al període %{period} de %{filing_year} contradiu aquesta, així que cap
+        no pot donar suport al model 303. No s'ha calculat res. Decideix quina declaració
+        preval abans de basar-te en una atestació d'aquest període.
+      exonerado_390_attestation_coordinate_unsupported: 'No es pot registrar prova
+        d''aplicabilitat del model 390 per al període %{period} de %{filing_year}:
+        només existeix per a un model 303 trimestral o mensual el disseny de registre
+        del qual declara els camps ordinaris de capçalera de la prova. No s''ha desat
+        res.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: L'atestació que has
+        indicat no coincideix amb el període %{period} de %{filing_year} i el perfil
+        actual, o diu que el model 390 sí és aplicable, així que no pot donar suport
+        a aquest model 303. No s'ha calculat res. Registra una atestació nova per
+        a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_not_attestation: L'adjunt que has indicat
+        no és una atestació d'aplicabilitat del model 390, així que no pot donar suport
+        al model 303 del període %{period} de %{filing_year}. No s'ha calculat res.
+        Registra una atestació per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_other_profile: L'atestació que has indicat
+        pertany a un altre perfil o té un altre SHA-256, així que no pot donar suport
+        al model 303 del període %{period} de %{filing_year}. No s'ha calculat res.
+        Registra una atestació nova per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_reference_invalid: L'identificador de l'adjunt
+        i el SHA-256 que has donat no formen una referència d'atestació vàlida, així
+        que no poden donar suport al model 303 del període %{period} de %{filing_year}.
+        No s'ha calculat res. Registra una atestació nova per a aquest període i fes
+        servir els valors que t'indiqui.
+      exonerado_390_attestation_evidence_unusable: L'atestació que has indicat no
+        es pot verificar des de la custòdia d'aquest perfil, així que no pot donar
+        suport al model 303 del període %{period} de %{filing_year}. No s'ha calculat
+        res. Registra una atestació nova per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_incomplete_identity: Indica tant l'identificador de
+        l'adjunt com el seu SHA-256 de l'atestació d'aplicabilitat del model 390,
+        o cap dels dos. No s'ha calculat res.
+      exonerado_390_attestation_malformed_identity: 'L''identificador de l''adjunt
+        i el SHA-256 que has donat no són un parell d''identitat vàlid: cadascun té
+        64 caràcters hexadecimals i els dos són iguals. No s''ha calculat res. Indica
+        els valors que va donar l''atestació en registrar-se.'
+      exonerado_390_attestation_not_modelo_303_work_unit: La declaració %{work_unit_id}
+        no és un model 303, i l'atestació d'aplicabilitat del model 390 pertany a
+        un model 303. No s'ha desat res. Indica una declaració del model 303 o el
+        període.
+      exonerado_390_attestation_observation_timing: 'L''atestació d''aplicabilitat
+        del model 390 del període %{period} de %{filing_year} no es pot registrar:
+        només es pot observar després que acabi el període i no després del moment
+        en què es registra. No s''ha desat res. Registra-la de nou amb una hora d''observació
+        igual o posterior al final del període i que no sigui futura.'
+      exonerado_390_attestation_profile_bucket_invalid: L'identificador de perfil
+        que has indicat no és vàlid, així que no s'ha registrat cap atestació d'aplicabilitat
+        del model 390. No s'ha desat res.
+      exonerado_390_attestation_profile_not_current: L'atestació d'aplicabilitat del
+        model 390 necessita el perfil amb el qual has iniciat sessió, i el perfil
+        registrat no és aquest. No s'ha desat res. Comprova l'estat del perfil.
+      exonerado_390_attestation_stored_observation_timing: L'atestació d'aplicabilitat
+        del model 390 registrada per al període %{period} de %{filing_year} es va
+        observar en un moment que el seu període no permet, així que no pot donar
+        suport a aquest model 303. No s'ha calculat res. Registra una atestació nova
+        amb una hora d'observació vàlida i torna-ho a provar.
+      exonerado_390_attestation_unknown_attachment: L'atestació que has indicat no
+        consta en aquest perfil, així que no pot donar suport al model 303 del període
+        %{period} de %{filing_year}. No s'ha calculat res. Registra una atestació
+        nova per a aquest període i fes servir els valors que t'indiqui.
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
@@ -2527,6 +2632,12 @@ application:
       filed_observation_split_storage_context: El magatzem de l'historial de compensació
         d'IVA és una base de dades diferent de la d'observacions de càlcul
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
+      input_required: 'Encara no es pot calcular el Model %{modelo} %{period} %{filing_year}:
+        falta la dada %{binding} (casella %{boxes}). Indica-la i torna a calcular.
+        No s''ha desat res.'
+      input_required_unprinted: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: falta la dada %{binding}. Indica-la i torna a calcular. No
+        s''ha desat res.'
       iva_wallet_amount_mismatch: 'La conciliació de la cartera de compensació d''IVA
         està bloquejada per al Model 303: l''import de compensació anterior aportat
         no coincideix amb el que manté l''autoritat de la cartera. Torna a executar
@@ -2659,6 +2770,19 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      previous_filing_unobserved: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la casella %{boxes} arrossega d''ella com la dada %{binding}. Una casella
+        que no mostra és desconeguda, no zero: registra aquesta declaració amb aquestes
+        caselles o indica tu l''import de la dada %{binding}, i torna a calcular.
+        No s''ha desat res.'
+      previous_filing_unobserved_unprinted: 'Encara no es pot calcular el Model %{modelo}
+        %{period} %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
+        no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
+        de la dada %{binding}, i torna a calcular. No s''ha desat res.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
         import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
         ja té un valor o la teva declaració, o la declaració no n''arrossega cap.

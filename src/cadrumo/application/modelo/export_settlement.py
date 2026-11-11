@@ -53,6 +53,7 @@ from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.modelos.errors import ModeloExportError
+from .action_errors import instalment_election_refusal, own_account_missing_error
 from .settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_remainder_casilla_ids
 
 if TYPE_CHECKING:
@@ -178,8 +179,13 @@ def settlement_dictionary_values(
 
     Raises:
         ModeloExportError: When the settled amount is unknown or disagrees
-            with the disposition, the disposition needs an account the export
-            does not hold, or is one this export never composes.
+            with the disposition, or is one this export never composes.
+        ModeloChargeAccountMissingError: When a debit needs a charge account
+            the export does not hold.
+        ModeloRefundAccountMissingError: When a refund needs a refund account
+            the export does not hold.
+        ModeloInstalmentElectionRefusedError: When the elected split cannot be
+            written.
     """
     if disposition is None:
         return {}
@@ -216,14 +222,16 @@ def _payment_values(
     iban = None
     if debits_any:
         if charge_account is None:
-            raise _uncomposed(disposition, cause="charge_account_missing")
+            raise own_account_missing_error("charge", context={"result_disposition": disposition.value})
         iban = charge_account.iban
     if not instalment.splits:
         return {_SINGLE_AMOUNT_FIELD: amount, _SINGLE_ACCOUNT_FIELD: iban if debits_first else None}
     if first_share is None:
-        raise _uncomposed(disposition, cause="instalment_split_undeclared")
+        raise instalment_election_refusal("not_declared", context={"result_disposition": disposition.value})
     if not second_instalment_is_payable(amount, first_share=first_share):
-        raise _uncomposed(disposition, cause="second_instalment_zero")
+        raise instalment_election_refusal(
+            "second_instalment_nothing", context={"result_disposition": disposition.value}
+        )
     first, second = instalment_amounts(amount, first_share=first_share)
     # The manual requires the second instalment to be debited from the same
     # account as the first when both are, so one charge account serves both.
@@ -238,7 +246,7 @@ def _payment_values(
 
 def _refund_values(amount: Decimal, refund_account: RefundAccount | None) -> dict[str, object]:
     if refund_account is None or refund_account.iban is None:
-        raise _uncomposed(ResultDisposition.DEVOLUCION, cause="refund_account_missing")
+        raise own_account_missing_error("refund", context={"result_disposition": ResultDisposition.DEVOLUCION.value})
     values: dict[str, object] = {_REFUND_AMOUNT_FIELD: amount}
     marca = derive_sepa_marca(iban=refund_account.iban, bank_country_code=refund_account.bank_country_code)
     if marca is SepaMarca.ESPANA:

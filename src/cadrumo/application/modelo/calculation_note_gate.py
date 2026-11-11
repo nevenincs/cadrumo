@@ -23,13 +23,15 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
@@ -39,6 +41,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
+from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
@@ -53,11 +56,68 @@ from .calculation_screen import (
     calculation_screen_outdated_message_key,
     calculation_screen_stamp,
 )
+from .household_row_fact_gate import household_row_fact_refusal
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 
 
-class ModeloCalculationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
-    """The current calculation carries a note that withholds this action until a recalculation clears it."""
+class ModeloCalculationBlockedError(OperationNextStepErrorMixin, ModeloPreconditionErrorMixin, ModeloError):
+    """The current calculation carries a note that withholds this action until a recalculation clears it.
+
+    Where the declaration is known, the refusal carries the door that leads on:
+    a recalculation for a stale screen, the declaration's status for a blocking
+    note, and an operator decision for a filing recorded before screens existed.
+    """
+
+
+_GATED_ACTION_LEAVES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "verify": "modelo.work.verify",
+        "file": "modelo.work.file",
+        "export": "modelo.export",
+        "report": "modelo.work.report",
+    }
+)
+"""The command leaf each gated action is declared under, for the precondition profile its refusal carries."""
+
+_DOOR_ACTION_SCENARIOS: Final[frozenset[str]] = frozenset({"screen_outdated", "blocking_note"})
+"""The scenarios whose declared door is a catalogued action bound to the work unit."""
+
+
+def _next_step_for(work_unit: WorkUnit | None, *, recalculate: bool) -> OperationNextStepWording | None:
+    """The step that opens or recalculates ``work_unit``, or ``None`` when no declaration is known.
+
+    The wording module reaches this one through the form models, so it is read
+    when a refusal is built rather than when this module loads.
+    """
+    if work_unit is None:
+        return None
+    from .projection_next_steps import calculate_work_step, open_work_step
+
+    return calculate_work_step(work_unit) if recalculate else open_work_step(work_unit)
+
+
+def _calculation_blocked_door(
+    work_unit: WorkUnit | None, *, action: str, scenario: str, reason: str
+) -> ModeloPreconditionFailure | None:
+    """The declared verdict for one way the gate withholds ``action``, or ``None`` when no declaration is known."""
+    leaf = _GATED_ACTION_LEAVES.get(action)
+    if work_unit is None or leaf is None:
+        return None
+    scenario_id = f"{leaf}.calculation_notes.{scenario}"
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=leaf,
+        scenario_id=scenario_id,
+        evidence_id=f"{scenario_id}.observation",
+        evidence_values={
+            "work_unit_id": work_unit.work_unit_id,
+            "gated_step": action,
+            "reason": reason,
+            "withheld": True,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": work_unit.work_unit_id} if scenario in _DOOR_ACTION_SCENARIOS else None,
+    )
 
 
 _FILED_STATES: frozenset[CalculationRevisionState] = frozenset(
@@ -169,18 +229,27 @@ def require_no_blocking_calculation_notes(
     action: str,
     boxes: PrintedBoxes | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    work_unit: WorkUnit | None = None,
 ) -> None:
     """Refuse ``action`` while ``revision`` carries a persisted blocking note.
 
     The refusal is worded by the first note's own catalogue sentence and
-    carries every note's reason in its context. ``boxes`` are the boxes the
+    carries every note's reason in its context. ``work_unit``, where the
+    caller knows the declaration, is the one whose status the refusal offers.
+    ``boxes`` are the boxes the
     revision's form prints, used to name the note's box by its printed number.
     A source disagreement is named by its finding id, the id an operator
     resolution answers; ``resolutions_unreadable`` says the resolutions could
     not be read, so none was honoured.
 
+    A household row that omits a fact the official design requires is refused
+    with its own typed error, which names the fact and the profile door that
+    states it.
+
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
+        ModeloHouseholdRowFactUnstatedError: The blocking note is a required
+            household fact the profile has not stated.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -189,10 +258,17 @@ def require_no_blocking_calculation_notes(
     blocking = blocking_calculation_issues(revision, resolutions)
     if not blocking:
         return
+    household_refusal = household_row_fact_refusal(revision, blocking, action=action)
+    if household_refusal is not None:
+        raise household_refusal
     first = blocking[0]
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),
         context=_blocked_context(revision, blocking, action=action, boxes=boxes, resolutions=resolutions),
+        precondition_failure=_calculation_blocked_door(
+            work_unit, action=action, scenario="blocking_note", reason=first.reason
+        ),
+        next_step=_next_step_for(work_unit, recalculate=False),
     )
 
 
@@ -399,7 +475,9 @@ def saved_calculation_filed_before_grade_cap(
         return True
 
 
-def _refuse_outdated_screen(revision: CalculationRevision, *, action: str) -> ModeloCalculationBlockedError:
+def _refuse_outdated_screen(
+    revision: CalculationRevision, *, action: str, work_unit: WorkUnit
+) -> ModeloCalculationBlockedError:
     return ModeloCalculationBlockedError(
         translated_message=calculation_screen_outdated_message_key(),
         context={
@@ -408,6 +486,10 @@ def _refuse_outdated_screen(revision: CalculationRevision, *, action: str) -> Mo
             "reason": CALCULATION_SCREEN_OUTDATED_REASON,
             "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
         },
+        precondition_failure=_calculation_blocked_door(
+            work_unit, action=action, scenario="screen_outdated", reason=CALCULATION_SCREEN_OUTDATED_REASON
+        ),
+        next_step=_next_step_for(work_unit, recalculate=True),
     )
 
 
@@ -415,6 +497,7 @@ def _refuse_filed_before_grade_cap(
     revision: CalculationRevision,
     *,
     action: str,
+    work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
     capped_box: CasillaId,
@@ -429,6 +512,9 @@ def _refuse_filed_before_grade_cap(
             "reasons": FILED_BEFORE_GRADE_CAP_REASON,
             **({} if box is None else {"box": box}),
         },
+        precondition_failure=_calculation_blocked_door(
+            work_unit, action=action, scenario="filed_before_grade_cap", reason=FILED_BEFORE_GRADE_CAP_REASON
+        ),
     )
 
 
@@ -457,11 +543,11 @@ def require_work_unit_calculation_screen_current(
         operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
     )
     if _screen_outdated(revision, snapshot, operation):
-        raise _refuse_outdated_screen(revision, action=action)
+        raise _refuse_outdated_screen(revision, action=action, work_unit=work_unit)
     capped_box = filed_before_grade_cap(revision, snapshot, operation)
     if capped_box is not None:
         raise _refuse_filed_before_grade_cap(
-            revision, action=action, snapshot=snapshot, operation=operation, capped_box=capped_box
+            revision, action=action, work_unit=work_unit, snapshot=snapshot, operation=operation, capped_box=capped_box
         )
 
 
@@ -501,11 +587,11 @@ def require_work_unit_calculation_unblocked(
         )
     )
     if snapshot is not None and _screen_outdated(revision, snapshot, operation):
-        raise _refuse_outdated_screen(revision, action=action)
+        raise _refuse_outdated_screen(revision, action=action, work_unit=work_unit)
     capped_box = None if snapshot is None else filed_before_grade_cap(revision, snapshot, operation)
     if snapshot is not None and capped_box is not None:
         raise _refuse_filed_before_grade_cap(
-            revision, action=action, snapshot=snapshot, operation=operation, capped_box=capped_box
+            revision, action=action, work_unit=work_unit, snapshot=snapshot, operation=operation, capped_box=capped_box
         )
     if not blocking_calculation_issues(revision, resolutions):
         return
@@ -514,7 +600,11 @@ def require_work_unit_calculation_unblocked(
             operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
         )
     require_no_blocking_calculation_notes(
-        revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot), resolutions=resolutions
+        revision,
+        action=action,
+        boxes=snapshot_printed_boxes(operation, snapshot),
+        resolutions=resolutions,
+        work_unit=work_unit,
     )
 
 

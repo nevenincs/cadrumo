@@ -536,10 +536,13 @@ def build_modelo_iva_wallet_seed_ports(
 
 def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
     """Compose the encrypted inventory repository and bucket-event sink."""
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.inventory import InventoryLedgerRepository
     from ..adapters.persistence.profile.inventory_documents import attachment_source_file_name
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.inventory.movement_claim_checks import InventoryClaimLedgerReads
     from ..application.inventory.ports import InventoryServicePorts
 
     normalized_bucket_id = bucket_id.strip()
@@ -551,10 +554,23 @@ def build_inventory_service_ports(*, bucket_id: str) -> InventoryServicePorts:
             objects=secure_object_repository_for_bucket(requested_bucket_id),
         )
 
+    def claim_reads_factory(requested_bucket_id: str) -> InventoryClaimLedgerReads:
+        """Read the bucket's ledger and asset register when a claim is checked, not before."""
+        requested_objects = secure_object_repository_for_bucket(requested_bucket_id)
+        return InventoryClaimLedgerReads(
+            transactions=TransactionCatalogueRepository(bucket_id=requested_bucket_id, objects=requested_objects).load,
+            asset_revisions=lambda: (
+                ActividadAssetHistoryRepository(bucket_id=requested_bucket_id, objects=requested_objects)
+                .load()
+                .revisions
+            ),
+        )
+
     return InventoryServicePorts(
         inventory_repository_factory=inventory_repository_factory,
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         document_file_name=lambda content_digest: attachment_source_file_name(objects, content_digest),
+        claim_reads_factory=claim_reads_factory,
     )
 
 
