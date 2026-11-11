@@ -215,7 +215,7 @@ from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.errors import ProfileSchemaValidationError
-from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, compose_legal_full_name
 from ...tests.persona_invoices import render_facturae
 from ...tests.personas import (
     CalculatedReturns,
@@ -579,13 +579,16 @@ def patch_answers(persona: Persona, envelope: YearEnvelope) -> tuple[tuple[str, 
 
 
 def household_leaves(persona: Persona, member: HouseholdMember, envelope: YearEnvelope) -> tuple[tuple[str, str], ...]:
-    """One household row as the descendant and ascendant operations take it, with its identity as ``nif``."""
+    """One household row as the operations take it: its identity's NIF and its surnames-first name."""
     leaves = [
         (key, value.resolve(envelope).isoformat() if isinstance(value, PersonaDate) else value)
         for key, value in member.leaves
     ]
     if member.identity is not None:
-        leaves.append(("nif", persona.identity(member.identity)))
+        person = persona.identities.role(member.identity)
+        leaves.append(("nif", person.value))
+        if person.name is not None and person.surnames is not None:
+            leaves.append(("apellidos_nombre", compose_legal_full_name(surnames=person.surnames, name=person.name)))
     return tuple(leaves)
 
 

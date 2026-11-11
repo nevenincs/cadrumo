@@ -140,6 +140,9 @@ wizard:
         invalid_range: A hónapnak %{minimum} és %{maximum} között kell lennie.
         prompt: Az a hónap, amikor az anya a születés után teljesítette a 30 járulékfizetési
           napot
+      apellidos-nombre:
+        prompt: A leszármazott vezeték- és utóneve (elöl a vezetéknév)
+        too_long: Legfeljebb %{limit} karakterben add meg a vezeték- és utónevet.
       birth-date:
         prompt: Születési dátum
       convivencia:
@@ -316,7 +319,8 @@ wizard:
         help: Modelo 347 bevallói szerepkör; add meg a --declaration-roles kapcsolót
           szerepkörönként egyszer
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<vezeték-
+          és utónév>]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

@@ -46,6 +46,7 @@ def _row_lines(rows: tuple[ProfileAscendantRow, ...]) -> list[str]:
                     f"fallecimiento={values.get('fallecimiento', '-')}",
                     f"convivientes={values.get('convivientes', '-')}",
                     f"nif={values.get('nif', '-')}",
+                    f"apellidos_nombre={values.get('apellidos_nombre', '-')}",
                 )
             )
         )
@@ -66,6 +67,7 @@ def _row_payloads(rows: tuple[ProfileAscendantRow, ...]) -> list[ProfileAscendie
             ProfileAscendientePayload(
                 index=index,
                 nif=values.get("nif"),
+                apellidos_nombre=values.get("apellidos_nombre"),
                 birth_date=date.fromisoformat(values["birth_date"]),
                 death_date=date.fromisoformat(death) if death is not None else None,
                 convivientes=int(cohabiting) if cohabiting is not None else None,

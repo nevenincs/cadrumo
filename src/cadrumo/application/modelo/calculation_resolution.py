@@ -24,7 +24,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
@@ -67,6 +67,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    RowBindingValue,
 )
 from ..aggregation.source_resolution_operations import (
     PrecedenceKeyKind,
@@ -74,6 +75,7 @@ from ..aggregation.source_resolution_operations import (
     PrecedenceTier,
     TierDivergence,
     TierValueProvenance,
+    merge_source_resolutions,
     merge_source_resolutions_by_precedence,
 )
 from .binding_resolution import (
@@ -87,8 +89,13 @@ from .profile_binding import profile_resolved_binding_ids
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.row_source_identity import RowBindingKey
     from ..live.borrador_100 import Borrador100SnapshotRepository
     from .work_profile import ModeloWorkProfile
+
+
+def _no_row_values() -> dict[RowBindingKey, RowBindingValue]:
+    return {}
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,7 +122,10 @@ class ResolvedCalculationChannels:
     profile_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """The profile's unanswered bindings that no higher tier answered, each naming the box and the fact to record."""
     profile_source_provenance: tuple[CalculationSourceRef, ...] = ()
-    """Scalar profile evidence considered by the overlay, including evidence a caller value superseded."""
+    """Profile evidence considered by the overlay: each scalar, including one a caller value superseded, and
+    each row set the profile enumerated, which is what shows a declared-empty group as empty rather than unknown."""
+    row_binding_values: Mapping[RowBindingKey, RowBindingValue] = field(default_factory=_no_row_values)
+    """The row sets the precedence tiers answered, such as the household rows a profile states."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -265,11 +275,39 @@ def resolve_calculation_binding_channels(
             tuple(
                 row
                 for row in profile_resolution.provenance
-                if _BINDING_REF_MARKER in row.source_ref
-                and row.source_ref.rsplit(_BINDING_REF_MARKER, 1)[1] in profile_scalar_binding_ids
+                if _ROWS_REF_MARKER in row.source_ref
+                or (
+                    _BINDING_REF_MARKER in row.source_ref
+                    and row.source_ref.rsplit(_BINDING_REF_MARKER, 1)[1] in profile_scalar_binding_ids
+                )
             )
         ),
+        row_binding_values=dict(merged.row_binding_values),
     )
+
+
+def calculation_row_binding_values(
+    mesh_row_binding_values: Mapping[RowBindingKey, RowBindingValue] | None,
+    channels: ResolvedCalculationChannels,
+) -> dict[RowBindingKey, RowBindingValue]:
+    """Join the source mesh's row sets with the row sets the precedence tiers answered.
+
+    Each row binding has one owning source, so the join is the exclusive merge the
+    mesh itself applies: a row both sides state is refused rather than overlaid.
+    """
+    merged = merge_source_resolutions(
+        (
+            CalculationSourceResolution(
+                resolver_id=_BACKEND_ROWS_RESOLVER_ID,
+                row_binding_values=dict(mesh_row_binding_values or {}),
+            ),
+            CalculationSourceResolution(
+                resolver_id=_PRECEDENCE_TIERS_RESOLVER_ID,
+                row_binding_values=dict(channels.row_binding_values),
+            ),
+        )
+    )
+    return dict(merged.row_binding_values)
 
 
 def _bindings_won_by_borrador(
@@ -351,6 +389,9 @@ OPERATOR_INPUT_SOURCE_FAMILY: Final[str] = "operator_input"
 """The source family of every value the operator supplied: a binding, a relation or a box."""
 _BACKEND_SOURCE_FAMILY: Final[str] = "source_mesh"
 _BINDING_REF_MARKER: Final[str] = ":binding:"
+_ROWS_REF_MARKER: Final[str] = ":rows:"
+_PRECEDENCE_TIERS_RESOLVER_ID: Final[str] = "calculate_precedence_tiers"
+_BACKEND_ROWS_RESOLVER_ID: Final[str] = "calculate_backend_rows"
 PRECEDENCE_TIER_DIVERGENCE_REASON: Final = "precedence_tier_divergence"
 """The reason of a divergence on a filed figure; it withholds checking, exporting and recording."""
 PRECEDENCE_TIER_DIVERGENCE_ADVISORY_REASON: Final = "precedence_tier_divergence_advisory"
@@ -927,6 +968,7 @@ __all__ = [
     "ResolvedCalculationChannels",
     "ResolvedCalculationInputs",
     "build_calculation_replay_payloads",
+    "calculation_row_binding_values",
     "calculation_source_provenance_refs",
     "operator_over_source_divergences",
     "precedence_divergence_diagnostics",

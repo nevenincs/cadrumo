@@ -16,9 +16,9 @@ Ascendants are stored as ``renta_family.ascendiente.{n}.{leaf}`` facts with
 ``renta_family.ascendientes_count``. The ``user-profile.ascendants`` operation
 writes them, and the schema names no leaves, so the leaves served are the ones the
 Modelo 100 household bindings read from that object and that a row can state.
-The two leaves those bindings read but nothing could store (the name and the
-official disability clave) are not offered. A filer with no stored ascendant
-therefore reads as unknown, never as an empty household.
+The one leaf those bindings read but nothing can store (the official disability
+clave) is not offered. A filer with no stored ascendant therefore reads as unknown,
+never as an empty household.
 
 A group says what is known about its rows, never more. ``unknown`` means nothing
 was stated and no row is stored; ``none_declared`` means the profile states a
@@ -63,6 +63,7 @@ _ASCENDANT_FIELD_KEY: Final = "ascendiente"
 _ASCENDANT_COUNT_PATH: Final = "renta_family.ascendientes_count"
 
 _ASCENDANT_NIF_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.nif.label"
+_ASCENDANT_NAME_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.apellidos_nombre.label"
 _ASCENDANT_BIRTH_DATE_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.birth_date.label"
 _ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY: Final = (
     "application.user_profile.family_rows.ascendiente.fallecimiento.label"
@@ -203,6 +204,14 @@ def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
         ProfileFamilyLeaf(
             leaf="nif",
             label=tr(_ASCENDANT_NIF_LABEL_LOCALE_KEY),
+            help=None,
+            field_type=ProfileFieldType.STRING,
+            required=False,
+            choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="apellidos_nombre",
+            label=tr(_ASCENDANT_NAME_LABEL_LOCALE_KEY),
             help=None,
             field_type=ProfileFieldType.STRING,
             required=False,

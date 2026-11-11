@@ -3715,6 +3715,8 @@ application:
         no guarda para un ascendiente.
       ascendant_limit_unknown: El diseño de la declaración no indica un límite de
         ascendientes, así que la lista no se puede comprobar ni guardar.
+      ascendant_name_invalid: Los apellidos y el nombre del ascendiente %{row} no
+        pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
         sus letras y cifras.
       ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
@@ -3747,6 +3749,8 @@ application:
         almacena.
       descendant_limit_unknown: El diseño de la declaración no indica un límite de
         descendientes, así que la lista no se puede comprobar ni guardar.
+      descendant_name_invalid: Los apellidos y el nombre del descendiente %{row} no
+        pueden quedar en blanco y admiten como máximo %{limit} caracteres.
       descendant_nif_invalid: El NIF o NIE del descendiente %{row} no es válido; revisa
         sus letras y cifras.
       descendant_rows_over_limit: Una declaración incluye como máximo %{limit} descendientes
@@ -3801,6 +3805,8 @@ application:
         Campos disponibles: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: Apellidos y nombre del ascendiente (primero los apellidos)
         birth_date:
           label: Fecha de nacimiento
         convivientes:

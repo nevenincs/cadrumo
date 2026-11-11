@@ -2620,9 +2620,10 @@ cli:
             sobrescribe una copia de seguridad. Elige otro --output o mueve primero
             el archivo existente; no se ha leído ningún perfil.
       ascendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<número
-          de descendientes con los que convive el ascendiente>]. Repetible; NACIMIENTO
-          es obligatorio en cada fila.
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,APELLIDOS_NOMBRE=<apellidos
+          y nombre>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<número de descendientes
+          con los que convive el ascendiente>]. Repetible; NACIMIENTO es obligatorio
+          en cada fila.
         add_help: Añade uno o varios ascendientes al perfil activo, o declara con
           --none que no hay ninguno.
         help: Declara los ascendientes del contribuyente para la sección de familia
@@ -2630,9 +2631,9 @@ cli:
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           ascendiente(s).
         invalid_row: No se ha podido leer la fila de --ascendiente. Usa pares CLAVE=VALOR
-          con las claves NACIMIENTO, NIF, FALLECIMIENTO y CONVIVIENTES, cada una como
-          máximo una vez y con valor; el contexto del error indica la clave cuando
-          se puede identificar.
+          con las claves NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO y CONVIVIENTES,
+          cada una como máximo una vez y con valor; el contexto del error indica la
+          clave cuando se puede identificar.
         list_help: Lista los ascendientes declarados en el perfil activo y si el perfil
           declara que no hay ninguno.
         remove_help: Elimina un ascendiente por índice (base 0) del perfil activo.
@@ -2782,9 +2783,9 @@ cli:
             con --yes para eliminar.'
         yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repetible. Ejecuta `aeat config profile descendiente` sin subcomando para
-          introducirlos de forma guiada.
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<apellidos
+          y nombre>]. Repetible. Ejecuta `aeat config profile descendiente` sin subcomando
+          para introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
         ambiguous_relacion_advisory: El descendiente %{indices} declara meses de trabajo
           materno con la relación predeterminada. El registro no distingue a un hijo
@@ -3527,9 +3528,10 @@ cli:
       reason_help: Motivo en texto libre que se registra como notas del movimiento
         y como motivo de la decisión de clasificación (visible en `aeat app ledger
         view`), o con una decisión `--reject`.
-      recargo_amount_help: Recargo de equivalencia repercutido en este movimiento (art. 161
-        LIVA). En una compra solo se admite si el régimen de IVA del perfil es el recargo de
-        equivalencia; con la base y la cuota de IVA debe sumar el importe del movimiento
+      recargo_amount_help: Recargo de equivalencia repercutido en este movimiento
+        (art. 161 LIVA). En una compra solo se admite si el régimen de IVA del perfil
+        es el recargo de equivalencia; con la base y la cuota de IVA debe sumar el
+        importe del movimiento
       reject_apply_exclusive: '--reject no se puede combinar con --apply: `reject`
         registra una sugerencia rechazada, `apply` una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
