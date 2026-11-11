@@ -61,7 +61,7 @@ from .preconditions import (
     build_modelo_precondition_failure,
     build_modelo_precondition_failure_for_scenario,
 )
-from .reconciliation_sources import source_declaration_need
+from .reconciliation_sources import ReconciliationSourceNeed, source_declaration_need
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -644,14 +644,16 @@ def cross_period_door(
     declaration stands: create, calculate, verify or file it. Creating is
     offered only for a declaration the registry admits for that period and
     whose values are not already observed. A filed source whose values or
-    official evidence are missing is captured from the AEAT. A member fan-in
-    source, or any other blocker, names no command, as none settles it.
+    official evidence are missing is captured from the AEAT, and so is a
+    source whose value only the filer stated, unless its declaration is held
+    here. A member fan-in source, or any other blocker, names no command, as
+    none settles it.
     """
     requirement = evidence.requirement
     if not evidence.blockers or requirement.requires_member_fan_in:
         return _UNROUTED_SCENARIO, None
     first = evidence.blockers[0]
-    if first in _STANDING_ROUTED_BLOCKERS:
+    if first in _STANDING_ROUTED_BLOCKERS or first is CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE:
         need = source_declaration_need(
             requirement.source_modelo,
             requirement.period,
@@ -659,17 +661,45 @@ def cross_period_door(
             work_catalogue=work_catalogue,
             calculation_catalogue=calculation_catalogue,
         )
-        if need is not None:
-            if need.unit is not None or _declaration_creatable(evidence, operation=operation):
-                return need.door()
-            return _UNROUTED_SCENARIO, None
+        door = _standing_door(evidence, first, need, operation=operation)
+        if door is not None:
+            return door
     if first in _FILED_CAPTURE_BLOCKERS or first is CrossPeriodCleanStateBlocker.MISSING_OBSERVATION:
-        return _FILED_CAPTURE_SCENARIO, {
-            "modelos": requirement.source_modelo,
-            "period": requirement.period.registry_token,
-            "year": requirement.filing_year,
-        }
+        return _filed_capture_door(requirement)
     return _UNROUTED_SCENARIO, None
+
+
+def _standing_door(
+    evidence: CrossPeriodDependencyEvidence,
+    first: CrossPeriodCleanStateBlocker,
+    need: ReconciliationSourceNeed | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CrossPeriodDoor | None:
+    """The door where the source declaration stands, ``None`` to fall through.
+
+    A value only the filer stated moves on by where its declaration stands when
+    it is held here; one filed elsewhere, such as the prior-year Renta a
+    first-quarter pago fraccionado reads, is captured from the AEAT.
+    """
+    if first is CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE:
+        if need is not None and need.unit is not None:
+            return need.door()
+        return _filed_capture_door(evidence.requirement)
+    if need is None:
+        return None
+    if need.unit is not None or _declaration_creatable(evidence, operation=operation):
+        return need.door()
+    return _UNROUTED_SCENARIO, None
+
+
+def _filed_capture_door(requirement: CrossPeriodDependencyRequirement) -> CrossPeriodDoor:
+    """Capture the filed source declaration from the AEAT."""
+    return _FILED_CAPTURE_SCENARIO, {
+        "modelos": requirement.source_modelo,
+        "period": requirement.period.registry_token,
+        "year": requirement.filing_year,
+    }
 
 
 def _declaration_creatable(evidence: CrossPeriodDependencyEvidence, *, operation: PinnedAuthorityOperation) -> bool:
