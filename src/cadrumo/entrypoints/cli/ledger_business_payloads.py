@@ -32,6 +32,7 @@ from ...application.ledger.invoice_draft_payloads import (
     EvidenceDraftDiscrepancyPayload,
     EvidenceFieldAmbiguityCandidatePayload,
     EvidenceFieldProvenancePayload,
+    EvidenceFindingWordsPayload,
 )
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
@@ -599,6 +600,10 @@ class EvidenceReviewBlockerPayload(OutputSchema):
     reason: str
     field: str | None = None
     detail: str = ""
+    words: EvidenceFindingWordsPayload | None = None
+    #: The sentence served for ``words`` and the language it is in.
+    detail_words: str | None = None
+    detail_words_language: str | None = None
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
 
 

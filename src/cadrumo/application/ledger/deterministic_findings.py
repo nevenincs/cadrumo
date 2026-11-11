@@ -56,10 +56,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...domain.iva.regime_legend import RegimeLegend
 from .closure_findings import closure_findings
-from .invoice_draft_records import DraftDiscrepancyFinding
+from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 from .postal_shape_finding import postal_shape_findings
 from .regime_contradiction import regime_contradiction_finding
 
@@ -132,10 +132,7 @@ def _invoice_number_shape(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.INVOICE_NUMBER_UNNUMBERED,
             field="invoice_number",
-            detail=(
-                f"the invoice number read, {number!r}, contains no digit, so it cannot be the document's "
-                f"correlative number; it is likely a heading or label read in its place"
-            ),
+            words=FindingWords.of(DraftFindingWording.INVOICE_NUMBER_WITHOUT_DIGIT, number=number),
         ),
     )
 

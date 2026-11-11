@@ -1042,6 +1042,118 @@ application:
           aquí
         unnumbered_invoice: El número de factura leído no es un número
         unresolved_direction: No está claro qué parte emitió el documento
+    draft_finding:
+      breakdown_bases_disagree: Las bases por tipo suman {summed}, pero el documento
+        indica una base imponible de {base}. Son dos lecturas del mismo documento
+        y al menos una es errónea.
+      breakdown_cuotas_disagree: Las cuotas por tipo suman {summed}, pero el documento
+        indica una cuota de {cuota}. Son dos lecturas del mismo documento y al menos
+        una es errónea.
+      counterparty_territory_unknown: Este documento no establece ningún territorio
+        de IVA para {tax_id}. El país y el código postal no aclararon nada y no consta
+        ningún dato confirmado, así que el territorio es desconocido, no la península.
+      customer_postal_code_unreadable: El campo de código postal del destinatario
+        contiene «{printed}», que no es un código postal de cinco cifras, y el país
+        impreso no aclara dónde está establecido el destinatario. Su territorio de
+        IVA español queda sin determinar.
+      document_issued_confirmed_received: Este documento te sitúa como emisor, pero
+        se está confirmando como factura recibida. El sentido decide a qué declaración
+        informativa se lleva el registro y en qué lado, y la AEAT coteja entre sí
+        las declaraciones de ambas partes.
+      document_received_confirmed_issued: Este documento te sitúa como destinatario,
+        pero se está confirmando como factura emitida. El sentido decide a qué declaración
+        informativa se lleva el registro y en qué lado, y la AEAT coteja entre sí
+        las declaraciones de ambas partes.
+      every_identifier_failed: Todos los identificadores que el documento imprime
+        para la contraparte fallan su comprobación, así que la contraparte no puede
+        identificarse con este documento.
+      every_identifier_failed_own_unavailable: Todos los identificadores que el documento
+        imprime para la contraparte fallan su comprobación, así que la contraparte
+        no puede identificarse con este documento. Tu propio identificador no estaba
+        disponible para excluirlo.
+      facturae_corrective_without_reference: La clase de factura Facturae «{code}»
+        declara una factura rectificativa, pero el documento no indica qué factura
+        rectifica.
+      facturae_reference_without_corrective: El documento indica una factura que rectifica,
+        pero su clase de factura Facturae «{code}» no es rectificativa.
+      facturae_summary_unmodelled: La clase de factura Facturae «{code}» declara una
+        factura recapitulativa, que aquí no está admitida.
+      filer_profile_unresolvable: No se pudo leer ningún perfil de contribuyente,
+        así que tu propio territorio de IVA es desconocido. Sale de tu perfil ({fact})
+        y nunca se lee de una factura.
+      flat_cuota_not_rate_of_base: La cuota indicada {cuota} no es el {rate} % de
+        la base indicada {base} ({expected}). O se leyó mal una cifra, o la factura
+        aplica más de un tipo y falta el desglose por tipos. El modelo 303 declara
+        base y cuota por tipo, así que confirmarla declararía toda la base en el tipo
+        equivocado.
+      identity_readings_compete: Compiten {count} lecturas de {field} y ninguna puede
+        decidirse. Confirmar elegiría el identificador de un contribuyente real en
+        lugar del de otro.
+      invoice_number_without_digit: El número de factura leído, «{number}», no contiene
+        ninguna cifra, así que no puede ser el número de la factura. Seguramente se
+        leyó en su lugar un encabezado o una etiqueta.
+      lone_identifier_without_role: El identificador «{printed}» es válido, pero nada
+        en el documento lo vincula a la contraparte. Aceptarlo solo porque es el único
+        que queda podría nombrar a una entidad ajena que aparece en la página.
+      mention_expects_no_repercutido_line: El documento imprime la mención «{mention}»
+        ({provision}), que supone que no se repercute IVA, pero figuran un tipo y
+        una cuota. El documento se contradice, así que la categoría de IVA no puede
+        tomarse de ninguna de las dos partes.
+      mention_expects_repercutido_line: El documento imprime la mención «{mention}»
+        ({provision}), que supone un tipo y una cuota de IVA repercutidos, pero no
+        figura ninguno. El documento se contradice, así que la categoría de IVA no
+        puede tomarse de ninguna de las dos partes.
+      printed_breakdown_disagrees: Las cifras por tipo suman {summed}, pero el documento
+        imprime {printed}.
+      printed_iva_not_rate_of_base: El IVA impreso {amount} no es el {rate} de la
+        base impresa {base}. Las cifras se dejaron vacías en lugar de elegir una de
+        ellas.
+      printed_payable_not_closed: El importe a pagar impreso {payable} no es el total
+        menos la retención ({expected}). La retención se dejó vacía.
+      printed_recargo_not_rate_of_base: El recargo impreso {amount} no es el {rate}
+        de la base impresa {base}. Las cifras se dejaron vacías en lugar de elegir
+        una de ellas.
+      printed_retention_not_rate_of_base: La retención impresa {retention} no es el
+        {rate} de la base imponible ({expected}). El tipo se dejó vacío.
+      printed_total_not_closed: El total impreso {total} no es base más cuota más
+        recargo más suplidos ({computed}). Las cifras se dejaron vacías en lugar de
+        elegir una de ellas.
+      retention_not_rate_of_base: La retención indicada {retention} no es el {rate}
+        % de la base imponible ({expected}). Con cifras que no cuadran no se puede
+        deducir el importe realmente pagado.
+      several_identifiers_compete: '{count} identificadores podrían ser cada uno la
+        contraparte. Elegir uno por su posición sería adivinar.'
+      supplier_postal_code_unreadable: El campo de código postal del emisor contiene
+        «{printed}», que no es un código postal de cinco cifras, y el país impreso
+        no aclara dónde está establecido el emisor. Su territorio de IVA español queda
+        sin determinar.
+      tax_id_fails_check: El documento imprime «{printed}» como identificador fiscal,
+        pero no supera su carácter de control, así que no se aceptó como identidad
+        verificada.
+      tier_cuota_not_rate_of_base: El tipo del {rate} % indica una cuota de {cuota}
+        sobre una base de {base}, y debería ser {expected}. El modelo 303 declara
+        la cuota por tipo, así que este tipo declararía una cifra equivocada.
+      total_not_closed: El total impreso {total} no es igual a base más cuota más
+        recargo más suplidos ({computed}). Se leyó mal algún componente, o el documento
+        incluye uno que este borrador no puede representar.
+      unidentified_counterparty_territory_unknown: Este documento no establece ningún
+        territorio de IVA para la contraparte ni imprime su identificador. El país
+        y el código postal no aclararon nada y no consta ningún dato confirmado, así
+        que el territorio es desconocido, no la península.
+      value_in_other_party_block: El valor de {field} está impreso dentro del bloque
+        de la otra parte en este documento, no en el bloque al que se asignó. Puede
+        que los bloques de dirección se leyeran al revés, lo que situaría a ambas
+        partes en el territorio de IVA equivocado.
+      withheld_named_tax: El documento indica {amount} retenidos por el impuesto «{tax}»,
+        que su formato no identifica como IRPF, así que no se leyó como retención.
+        Indica la retención si lo es.
+      withheld_not_rate_of_base: La retención de {amount} no es el {rate} % de su
+        base indicada {base} ({expected}).
+      withheld_total_disagrees: El documento totaliza {stated} retenidos, pero sus
+        impuestos retenidos suman {summed}.
+      withheld_unnamed_tax: El documento indica {amount} retenidos sin nombrar el
+        impuesto, así que no se leyó como retención de IRPF. Indica la retención si
+        lo es.
     entry_options:
       deduction_fact_kind:
         domestic_current: Operaciones interiores corrientes

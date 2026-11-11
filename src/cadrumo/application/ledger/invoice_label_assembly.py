@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from .closure_findings import retention_figures_disagree, within_rounding_allowance
@@ -13,6 +13,7 @@ from .invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
+    FindingWords,
     InvoiceDraft,
     InvoiceDraftRateBreakdown,
 )
@@ -134,9 +135,13 @@ def _tier_reconciles(tier: InvoiceLabelTier, assembly: InvoiceLabelAssembly) -> 
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
                     field="iva_rate" if label == "iva" else "recargo_amount",
-                    detail=(
-                        f"the printed {label} {amount.anchor!r} is not {rate.anchor} of the printed base "
-                        f"{base.anchor!r}; the figures were left empty rather than one of them chosen"
+                    words=FindingWords.of(
+                        DraftFindingWording.PRINTED_IVA_NOT_RATE_OF_BASE
+                        if label == "iva"
+                        else DraftFindingWording.PRINTED_RECARGO_NOT_RATE_OF_BASE,
+                        amount=amount.anchor,
+                        rate=rate.anchor,
+                        base=base.anchor,
                     ),
                     expected=expected,
                     observed=amount.value,
@@ -271,7 +276,9 @@ def _record_breakdown_total(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
                     field=name,
-                    detail=f"the per-rate figures sum to {total} while the document prints {printed.anchor!r}",
+                    words=FindingWords.of(
+                        DraftFindingWording.PRINTED_BREAKDOWN_DISAGREES, summed=total, printed=printed.anchor
+                    ),
                     expected=total,
                     observed=printed.value,
                 ),
@@ -366,9 +373,8 @@ def _check_grand_total(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
             field="grand_total",
-            detail=(
-                f"the printed total {grand_total.anchor!r} is not base plus cuota plus recargo plus "
-                f"suplidos ({computed}); the figures were left empty rather than one of them chosen"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_TOTAL_NOT_CLOSED, total=grand_total.anchor, computed=computed
             ),
             expected=computed,
             observed=grand_total.value,
@@ -406,9 +412,11 @@ def _check_retention_rate(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
             field="retencion_amount",
-            detail=(
-                f"the printed retención {retention.anchor!r} is not {retention_rate.anchor} of the "
-                f"taxable base ({expected}); the rate was left empty"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_RETENTION_NOT_RATE_OF_BASE,
+                retention=retention.anchor,
+                rate=retention_rate.anchor,
+                expected=expected,
             ),
             expected=expected,
             observed=retention.value,
@@ -436,9 +444,8 @@ def _check_payable(
         DraftDiscrepancyFinding(
             kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
             field="retencion_amount",
-            detail=(
-                f"the printed amount payable {payable.anchor!r} is not the total less the retención "
-                f"({expected}); the retención was left empty"
+            words=FindingWords.of(
+                DraftFindingWording.PRINTED_PAYABLE_NOT_CLOSED, payable=payable.anchor, expected=expected
             ),
             expected=expected,
             observed=payable.value,

@@ -15,6 +15,7 @@ from cadrumo.adapters.outbound.llm.invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
+from cadrumo.application.ledger.confirmation_block_words import served_finding_words
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -57,7 +58,7 @@ def test_the_reading_stage_records_an_identifier_it_rejected(*, operation: Pinne
 
     assert draft.supplier_tax_id is None, "the unverifiable value must still be dropped"
     assert [f.kind for f in draft.discrepancies] == [DraftDiscrepancyKind.IDENTITY_UNVERIFIED]
-    assert _BAD_CHECKSUM_CIF in draft.discrepancies[0].detail, (
+    assert _BAD_CHECKSUM_CIF in (served_finding_words(draft.discrepancies[0].words)[0] or ""), (
         "the operator must be told which printed identifier failed, not merely that one did"
     )
 

@@ -14,11 +14,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.confirmation_gate import ConfirmationBlockReason
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.errors.error_codes import build_error_envelope
 from ...operations.error_detail import build_operation_error_detail
+from ..confirmation_block_words import served_finding_words
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
-from ..invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
+from ..invoice_draft_records import DraftDiscrepancyFinding, FindingWords, InvoiceDraft
 from .clean_invoice_draft_support import clean_invoice_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -34,7 +35,9 @@ def _blocked_draft() -> InvoiceDraft:
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
                     field="grand_total",
-                    detail=f"the total does not close: {_PRINTED_VALUE}",
+                    words=FindingWords.of(
+                        DraftFindingWording.TOTAL_NOT_CLOSED, total=_PRINTED_VALUE, computed=Decimal("121.00")
+                    ),
                     expected=Decimal("121.00"),
                     observed=Decimal("126.20"),
                 ),
@@ -53,7 +56,7 @@ def test_the_blocker_explanation_repeats_the_printed_value() -> None:
     """Control: without it, the absence asserted below would prove nothing."""
     (blocker,) = confirmation_blockers(_blocked_draft())
 
-    assert _PRINTED_VALUE in blocker.detail
+    assert _PRINTED_VALUE in (served_finding_words(blocker.words)[0] or "")
 
 
 def test_the_terminal_envelope_still_shows_the_blocker_explanation() -> None:

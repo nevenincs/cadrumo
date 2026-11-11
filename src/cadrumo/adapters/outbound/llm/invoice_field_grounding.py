@@ -45,11 +45,16 @@ from pydantic import BaseModel, Field
 from ....application.ledger.evidence_errors import (
     PurchaseInvoiceEvidenceReaderError,
 )
-from ....application.ledger.invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from ....application.ledger.invoice_draft_records import (
+    DraftDiscrepancyFinding,
+    FieldProvenance,
+    FindingWords,
+    InvoiceDraft,
+)
 from ....core.decimal.coercion import coerce_finite_european_decimal
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.decimal.printed_units import without_currency_unit
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
@@ -684,10 +689,7 @@ def _unverified_identity_findings(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
                 field=contract.field_name,
-                detail=(
-                    f"the document prints {transcribed.strip()!r} as this party's tax identifier, but it "
-                    f"fails its control-character check, so it was not accepted as a verified identity"
-                ),
+                words=FindingWords.of(DraftFindingWording.TAX_ID_FAILS_CHECK, printed=transcribed.strip()),
             ),
         )
     return tuple(findings)

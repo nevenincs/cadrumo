@@ -963,6 +963,7 @@
         "cadrumo.application.ledger.extraction_draft_repository",
         "cadrumo.application.ledger.extraction_draft_store",
         "cadrumo.application.ledger.filer_establishment",
+        "cadrumo.application.ledger.finding_words_projection",
         "cadrumo.application.ledger.fx_value_consistency",
         "cadrumo.application.ledger.grounded_reading",
         "cadrumo.application.ledger.grounding_anchor",

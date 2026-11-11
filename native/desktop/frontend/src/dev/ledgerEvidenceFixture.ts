@@ -39,6 +39,7 @@ import {
   decimal,
   read,
   ticketPage,
+  type SeedBlocker,
   type Spec,
 } from "./ledgerEvidenceSeed";
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
@@ -240,12 +241,18 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     drafted_at: string;
   }[] = [];
   const keyed = new Map<string, string>();
-  const blockerId = (blocker: Omit<ConfirmationBlocker, "blocker_id">) =>
+  const blockerId = (blocker: SeedBlocker) =>
     hex64(
       stable({
-        detail: blocker.detail ?? "",
+        detail: "",
         field: blocker.field ?? "",
         reason: blocker.reason,
+        words: {
+          params: Object.entries(blocker.params).sort(([a], [b]) =>
+            a.localeCompare(b),
+          ),
+          wording: blocker.wording,
+        },
       }),
     ).slice(0, 16);
 
@@ -260,6 +267,20 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       servedWords.confirmation_block[reason];
     const language = byLanguage[tools.language] ? tools.language : "en";
     return { words: byLanguage[language]!, language };
+  };
+
+  /** The sentence the backend serves explaining a finding, its values
+   * filled in, in the window's language or English where none is recorded. */
+  const findingWords = (blocker: SeedBlocker) => {
+    const byLanguage: Record<string, string> = (
+      servedWords.draft_finding as Record<string, Record<string, string>>
+    )[blocker.wording]!;
+    const language = byLanguage[tools.language] ? tools.language : "en";
+    const words = byLanguage[language]!.replace(
+      /\{(\w+)\}/g,
+      (placeholder, name: string) => blocker.params[name] ?? placeholder,
+    );
+    return { words, language };
   };
 
   function specReading(spec: Spec): Reading {
@@ -283,12 +304,23 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         raw_text_length: 1200 + spec.name.length,
         lines: [],
       },
-      blockers: (spec.blockers ?? []).map((blocker) => ({
-        blocker_id: blockerId(blocker),
-        reason_words: blockWords(blocker.reason).words,
-        reason_words_language: blockWords(blocker.reason).language,
-        ...blocker,
-      })),
+      blockers: (spec.blockers ?? []).map(
+        ({ wording, params, ...blocker }) => ({
+          blocker_id: blockerId({ wording, params, ...blocker }),
+          reason_words: blockWords(blocker.reason).words,
+          reason_words_language: blockWords(blocker.reason).language,
+          words: {
+            wording,
+            params: Object.entries(params).sort(([a], [b]) =>
+              a.localeCompare(b),
+            ),
+          },
+          detail_words: findingWords({ wording, params, ...blocker }).words,
+          detail_words_language: findingWords({ wording, params, ...blocker })
+            .language,
+          ...blocker,
+        }),
+      ),
       fallback: null,
       extractor: spec.media === "image" ? "vision:local" : "text_layer",
       drafted_at: now(),

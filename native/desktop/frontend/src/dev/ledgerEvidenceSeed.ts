@@ -44,7 +44,18 @@ export type Spec = {
   iva: string;
   total: string;
   provenance: FieldProvenance[];
-  blockers?: Omit<ConfirmationBlocker, "blocker_id">[];
+  blockers?: SeedBlocker[];
+};
+
+/** A finding the seed raises: its reason, the sentence that explains it and
+ * the values that sentence quotes, worded by the fixture from the backend's
+ * served words. */
+export type SeedBlocker = Pick<
+  ConfirmationBlocker,
+  "reason" | "field" | "candidates"
+> & {
+  wording: string;
+  params: Record<string, string>;
 };
 
 /** The picture of an invented ticket: what its reading read, printed where
@@ -141,7 +152,8 @@ export const DOCUMENTS: Spec[] = [
       {
         reason: "ambiguous_identity",
         field: "supplier_tax_id",
-        detail: "Two tax ids are printed on the ticket.",
+        wording: "identity_readings_compete",
+        params: { count: "2", field: "supplier_tax_id" },
         candidates: [
           { value: "B87000001", note: "top of the ticket" },
           { value: "B87000007", note: "footer" },
@@ -150,7 +162,8 @@ export const DOCUMENTS: Spec[] = [
       {
         reason: "closure_discrepancy",
         field: "grand_total",
-        detail: "Base plus IVA is 58.39; the ticket prints 58.40.",
+        wording: "total_not_closed",
+        params: { computed: "58.39", total: "58.40" },
         candidates: [],
       },
     ],
