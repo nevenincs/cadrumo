@@ -436,9 +436,6 @@ profile:
           label: Nombre d'ascendents
         convive_con_otro_progenitor:
           label: Conviu amb el pare o la mare d'algun fill de la llar
-        cotizaciones_ss_madre_2022:
-          label: Cotitzacions a la Seguretat Social de la mare després del naixement
-            (2022)
         cotizaciones_ss_madre_2024:
           label: Cotitzacions a la Seguretat Social de la mare (2024)
         descendants:

@@ -48,12 +48,6 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "identity.email" = "lucia.navarro@example.test"
 "contact.fiscal_address" = "Calle de la Ficción 12, 3.º B, 28039 Madrid"
 "contact.contact_person_phone" = "910000001"
-# The limit art. 81.2 LIRPF set on the guardería increment until the Ley 31/2022 reform: the mother's
-# cotizaciones y cuotas totales a la Seguridad Social devengadas after the birth (Manual práctico de
-# Renta 2022, cap. 18, "Límites de la deducción"). Only the edition at the support floor applies the limit, so
-# the leaf is keyed to the floor year. The daughter was born the year before, so the whole year counts; the
-# figure is the one the employer's certificate below records.
-"renta_family.cotizaciones_ss_madre_{floor}" = "2332.80"
 
 [[own_accounts]]
 label = "Cuenta nómina"
@@ -74,6 +68,11 @@ convivencia = "true"
 prorrata_minimo = "true"
 meses_madre_trabajo = "01;02;03;04;05;06;07;08;09;10;11;12"
 gastos_guarderia_mensuales = "01:220;02:220;03:220;04:220;05:220;06:220;07:220;09:220;10:220;11:220;12:220"
+# Until the Ley 31/2022 reform art. 81.2 LIRPF limited each child's guardería increment by the mother's
+# cotizaciones devengadas after the birth (Manual práctico de Renta 2022, cap. 18, "Límites de la
+# deducción"). The daughter was born the year before, so all of the year follows her birth; the figure is the
+# one the employer's certificate below records.
+cotizaciones_ss_madre = "2332.80"
 
 [[household.ascendants]]
 identity = "asalariada.madre"

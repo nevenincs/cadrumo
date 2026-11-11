@@ -78,3 +78,48 @@ Base liquidable general = 19840.00 + 3391.00 = 23231.00 (no reductions of the ba
 """
 legal_ref = ["ley-35-2006:art-57"]
 grounding = "verified"
+
+# Art. 23.2 LIRPF as worded on 31 December 2021 governs a replay whose return falls before
+# Ley 12/2023 took effect: one 60 % reduction whatever the contract (Manual Renta 2022 and 2023,
+# "se reducirá en un 60 por 100"). A provision-limited value replaces every plain value of the same
+# return in the years it governs, so the work-income and base figures are restated with it.
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-35-2006:art-23-2021"
+casillas = { "0596" = "2180.00" }
+concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+derivation = """
+Unchanged by the art. 23.2 wording: pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00,
+retención 2180.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+"""
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23-2021"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-35-2006:art-23-2021"
+concepts = { ingresos_integros_alquiler = "11400.00", gastos_ibi = "412.00", gastos_comunidad = "540.00", gastos_seguro = "186.00", gastos_reparacion = "240.00", amortizacion = "3240.00", gastos_deducibles = "4618.00", rendimiento_neto_alquiler = "6782.00", reduccion_art_23_2 = "4069.20", rendimiento_neto_reducido_alquiler = "2712.80" }
+derivation = """
+Ingresos, gastos and neto as in the plain value: 11400.00 - 4618.00 = 6782.00.
+Reducción 60 % (art. 23.2 as worded on 31-12-2021, a single rate for every dwelling lease) = 4069.20; reducido = 2712.80.
+"""
+legal_ref = ["ley-35-2006:art-23-2021", "rd-439-2007:art-14"]
+grounding = "unverified"
+reason = "Arithmetic and provision verified (art. 23 as worded in 2021 in the bundled corpus); the application-side inputs for amortisation have no located production operation for this year."
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-35-2006:art-23-2021"
+concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "22552.80" }
+derivation = """
+Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
+Base liquidable general = 19840.00 + 2712.80 = 22552.80 (no reductions of the base). Cuota is not asserted.
+"""
+legal_ref = ["ley-35-2006:art-57", "ley-35-2006:art-23-2021"]
+grounding = "verified"

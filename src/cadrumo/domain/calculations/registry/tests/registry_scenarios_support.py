@@ -466,6 +466,7 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
         inputs=inputs(
             {
                 "0083": Decimal("6172.50"),
+                "0100": Decimal("1"),
                 "0085": Decimal("365"),
                 "0102": Decimal("10000.00"),
                 "0104": Decimal("100.00"),
@@ -484,7 +485,6 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
                 "0146": Decimal("20.00"),
                 "0147": Decimal("10.00"),
                 "0148": Decimal("500.00"),
-                "0150": Decimal("1000.00"),
                 "0151": Decimal("250.00"),
                 "0152": Decimal("7000.00"),
                 "0153": Decimal("800.00"),
@@ -507,7 +507,10 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={
+            "renta-profile-tax-residence-ccaa": "madrid",
+            "renta-rental-reduccion-art-23-2-tier": "tier-50",
+        },
         relation_values={
             "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
@@ -656,8 +659,9 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
                 "0606": Decimal("130.00"),
                 # 0611 is computed from the maternity deduction the profile
                 # derives per descendant; it arrives through its binding below.
+                # 0613 is computed from the guardería increment the profile derives per
+                # descendant; it arrives through its binding below.
                 "0612": Decimal("10.00"),
-                "0613": Decimal("20.00"),
                 "0623": Decimal("30.00"),
                 "0624": Decimal("40.00"),
                 "0636": Decimal("50.00"),
@@ -689,6 +693,7 @@ def final_settlement_scenario() -> RegistryCalculationScenario:
             "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("20.00"),
             # 0596 takes the sum of the payee's work-payer certificates.
             "renta-retencion-soportada-trabajo": Decimal("40.00"),
             "renta-retencion-soportada-capital-mobiliario": Decimal("50.00"),

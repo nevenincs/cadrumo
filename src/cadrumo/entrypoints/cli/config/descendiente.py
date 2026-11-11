@@ -31,6 +31,7 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import typer
@@ -62,6 +63,11 @@ def _tri(value: bool | None) -> str:
 def _iso_or_dash(value: date | None) -> str:
     """Render an optional entry-event date for the text row, or a dash when absent."""
     return value.isoformat() if value is not None else "-"
+
+
+def _euros_or_dash(value: Decimal | None) -> str:
+    """Render an optional euro figure for the text row, or a dash when it was never stated."""
+    return "-" if value is None else str(value)
 
 
 def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
@@ -180,6 +186,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"segundo_ciclo_infantil_inicio_mes={descendant.segundo_ciclo_infantil_inicio_mes or '-'}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
+                    f"cotizaciones_ss_madre_euros={_euros_or_dash(descendant.cotizaciones_ss_madre_euros)}",
                     f"nif={descendant.nif or '-'}",
                     f"apellidos_nombre={descendant.apellidos_nombre or '-'}",
                 ),
@@ -229,6 +236,7 @@ def _emit_descendiente_list(
                 segundo_ciclo_infantil_inicio_mes=descendant.segundo_ciclo_infantil_inicio_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=descendant.gastos_guarderia_mensuales,
+                cotizaciones_ss_madre_euros=descendant.cotizaciones_ss_madre_euros,
                 nif=descendant.nif,
                 apellidos_nombre=descendant.apellidos_nombre,
             )

@@ -71,6 +71,7 @@ DESCENDANT_FLAG_KEYS: Mapping[str, str] = {
     "segundo_ciclo_infantil_inicio_mes": "SEGUNDO_CICLO_INFANTIL_INICIO_MES",
     "gastos_guarderia": "GASTOS_GUARDERIA",
     "gastos_guarderia_mensuales": "GASTOS_GUARDERIA_MENSUAL",
+    "cotizaciones_ss_madre": "COTIZACIONES_SS_MADRE",
     "nif": "NIF",
 }
 

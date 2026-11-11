@@ -389,10 +389,19 @@ class NoteGovernedAmountDeclaration(BaseModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     sheet: str = Field(min_length=1)
     published_content: str = Field(min_length=1)
-    """The pointer exactly as the ``Contenido`` cells of this run publish it."""
-    note_cell: str = Field(min_length=1)
-    """Where on this sheet the design defines the note the pointer names."""
-    note_statement: str = Field(min_length=1)
+    """The ``Contenido`` exactly as the cells of this run publish it.
+
+    Usually a bare pointer; it may also be a printed constant or enumeration,
+    with or without pointers, whose digits the design prints but whose scale
+    it leaves to the reading.
+    """
+    note_cell: str | None = Field(min_length=1)
+    """Where on this sheet the design defines the note the pointer names.
+
+    ``None`` exactly when the published content names no note, so a reading of
+    a note-free printed run cannot pretend to rest on a note.
+    """
+    note_statement: str | None = Field(min_length=1)
     """The note's text as read from that cell, so a later reviewer re-reads it."""
     integer_digits: int = Field(gt=0)
     decimal_digits: int = Field(gt=0)
@@ -432,13 +441,13 @@ class NoteGovernedAmountDeclaration(BaseModel):
     than defaulted so a declaration that asserts no domain says so explicitly
     instead of inheriting silence.
 
-    Members are spelled in WHOLE UNITS, unsigned and zero-canonical, because
-    that is the value the fixed-width codec settles against before it applies
-    the scale: ``"0"`` on a fifteen-and-two slot is the quantity zero, whose
-    wire form is the seventeen zero bytes the scale produces. A wire digit run
-    would read as minor units on a scaled slot and as units on an unscaled one,
-    so the two spellings would disagree by ``10 ** decimal_digits`` while
-    looking identical.
+    Members are spelled as the WIRE DIGIT RUN the slot prints, implied
+    decimals included, unsigned and zero-canonical, because that is what the
+    fixed-width codec compares after applying the slot's scale: ``"0"`` is the
+    quantity zero at any scale, and on a three-and-two Tipo % slot ``"50"`` is
+    ``0.50``, printed ``00050`` -- the spelling the design itself uses. One
+    spelling therefore serves scaled and unscaled slots without a hidden
+    ``10 ** decimal_digits`` between them.
 
     Deliberately NOT parsed out of ``note_statement``: the mandate is read by a
     person and recorded here, so a note whose Spanish a matcher would misread
@@ -477,6 +486,16 @@ class NoteGovernedAmountDeclaration(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _require_a_note_exactly_where_the_content_names_one(self) -> NoteGovernedAmountDeclaration:
+        names_a_note = "Nota" in self.published_content
+        if (self.note_cell is None) != (self.note_statement is None) or names_a_note == (self.note_cell is None):
+            raise ValueError(
+                "note_cell and note_statement are recorded together, and exactly when the published "
+                "content names a note",
+            )
+        return self
+
+    @model_validator(mode="after")
     def _require_a_domain_the_export_schema_can_carry(self) -> NoteGovernedAmountDeclaration:
         # The schema carries a closed domain on the unsigned scaled-amount shape
         # and on signed money, so a design that types a slot signed AND mandates
@@ -489,14 +508,73 @@ class NoteGovernedAmountDeclaration(BaseModel):
             value
             for value in self.mandated_values
             if not (value.isascii() and value.isdigit() and str(int(value)) == value)
-            or len(value) > self.integer_digits
+            or len(value) > self.integer_digits + self.decimal_digits
         )
         if invalid:
             raise ValueError(
-                f"mandated_values must be zero-canonical unsigned unit values of at most "
-                f"{self.integer_digits} digits; {invalid!r} are not",
+                f"mandated_values must be zero-canonical unsigned wire digit runs of at most "
+                f"{self.integer_digits + self.decimal_digits} digits; {invalid!r} are not",
             )
         return self
+
+
+_M303_2024_LATE_SHA256: Final = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
+_M303_NOTE_7: Final = (
+    "Nota 7 - Tributación exclusivamente a una Administración Foral: Todos los campos referenciados con la "
+    "Nota 7, en el caso de de tributación exclusivamente a una Administración Foral, se podrán cumplimentarán "
+    'con el valor "00000"'
+)
+
+
+def _m303_rate_percent(
+    source_ref: str,
+    source_sha256: str,
+    *,
+    published_content: str,
+    slot: str,
+    note_cell: str | None,
+    note_statement: str | None,
+    wire_values: str,
+    mandated_values: tuple[str, ...] | None = None,
+    printed_domain: bool = False,
+) -> NoteGovernedAmountDeclaration:
+    """Read one Modelo 303 DP30301 Tipo % slot as a percentage with two implied decimals."""
+    if printed_domain and mandated_values is not None:
+        domain = (
+            "The printed enumeration closes the slot's domain, and the Nota 7 the cell names adds the run "
+            "'00000' it states for filers taxed exclusively by a foral administration, so the domain is "
+            f"{mandated_values!r}."
+        )
+    elif mandated_values is not None:
+        domain = (
+            f"The note tabulates every admissible run, so its digit runs {mandated_values!r} close the slot's domain."
+        )
+    elif printed_domain:
+        domain = "The printed enumeration closes the slot's domain to exactly those runs."
+    else:
+        domain = "The registry's dated rate parameter supplies the rate, so no closed value domain is declared."
+    return NoteGovernedAmountDeclaration(
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        sheet="DP30301",
+        published_content=published_content,
+        note_cell=note_cell,
+        note_statement=note_statement,
+        integer_digits=3,
+        decimal_digits=2,
+        sign_policy=_UNSIGNED_SIGN_POLICY,
+        mandated_values=mandated_values,
+        evidence=(
+            f"DP30301!{slot} is a five-position Tipo 'Num' rate slot whose Contenido cell reads "
+            f"'{published_content}'. Its wire values are {wire_values}: five-digit percentages with two implied "
+            "decimals, the scale every Tipo % slot of the 2022 design states outright as '3 enteros y 2 "
+            "decimales' and the reviewed literal-rate render profile of this digest gives the sibling constants "
+            "00400, 01000, 02100, 00175, 00140 and 00520. Any note the cell points to settles which periods or "
+            f"filers carry the rate, not how its digits are written. {domain} Read as an unscaled integer the "
+            "slot printed a five percent rate as 00005, refused a seven-and-a-half percent one, and refused "
+            "every fractional recargo rate."
+        ),
+    )
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
@@ -677,6 +755,127 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                     ),
                 ),
             )
+        ),
+    ),
+    "aeat-dr-303-2023": (
+        _m303_rate_percent(
+            "aeat-dr-303-2023",
+            "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4",
+            published_content='Constante "00500". Nota 7',
+            slot="G37, Régimen general - Tipo % [154]",
+            note_cell="A127",
+            note_statement=_M303_NOTE_7,
+            wire_values="the printed constant '00500' (5%)",
+        ),
+        _m303_rate_percent(
+            "aeat-dr-303-2023",
+            "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4",
+            published_content='"00000", "00050", "00062"',
+            slot="G55, Recargo equivalencia - Tipo % [17]",
+            note_cell=None,
+            note_statement=None,
+            wire_values="the printed runs '00000', '00050' and '00062' (0%, 0,5%, 0,62%)",
+            printed_domain=True,
+        ),
+    ),
+    "aeat-dr-303-2024-early": (
+        _m303_rate_percent(
+            "aeat-dr-303-2024-early",
+            "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
+            published_content='Constante "00500". Nota 7',
+            slot="G37, Régimen general - Tipo % [154]",
+            note_cell="A127",
+            note_statement=_M303_NOTE_7,
+            wire_values="the printed constant '00500' (5%)",
+        ),
+        _m303_rate_percent(
+            "aeat-dr-303-2024-early",
+            "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
+            published_content='"00000", "00050", "00062"',
+            slot="G55, Recargo equivalencia - Tipo % [17]",
+            note_cell=None,
+            note_statement=None,
+            wire_values="the printed runs '00000', '00050' and '00062' (0%, 0,5%, 0,62%)",
+            printed_domain=True,
+        ),
+    ),
+    "aeat-dr-303-2024-late": (
+        _m303_rate_percent(
+            "aeat-dr-303-2024-late",
+            _M303_2024_LATE_SHA256,
+            published_content="Nota 8. Nota 7",
+            slot="G37, Régimen general - Tipo % [154]",
+            note_cell="A137",
+            note_statement=(
+                'Nota 8: Constante "00500" 09 y 3T de 2024; Constante "00750" A partir de 10 y 4T de 2024 '
+                "y ejercicios posteriores"
+            ),
+            wire_values="Nota 8's '00500' for 09 and 3T 2024 (5%) and '00750' from 10 and 4T 2024 (7,5%)",
+        ),
+        _m303_rate_percent(
+            "aeat-dr-303-2024-late",
+            _M303_2024_LATE_SHA256,
+            published_content="Nota 9. Nota 7",
+            slot="G55, Recargo equivalencia - Tipo % [17]",
+            note_cell="A142",
+            note_statement=(
+                'Nota 9: "00000", "00050" o "00062" 09 y 3T de 2024; Constante "00100" A partir de 10 y 4T '
+                "de 2024 y ejercicios posteriores"
+            ),
+            wire_values=(
+                "Nota 9's '00000', '00050' or '00062' for 09 and 3T 2024 (0%, 0,5%, 0,62%) and '00100' "
+                "from 10 and 4T 2024 (1%)"
+            ),
+            mandated_values=("0", "50", "62", "100"),
+        ),
+        _m303_rate_percent(
+            "aeat-dr-303-2024-late",
+            _M303_2024_LATE_SHA256,
+            published_content='Constante "00200". Nota 7. Nota 10',
+            slot="G86, Régimen general - Tipo % [166]",
+            note_cell="A147",
+            note_statement=(
+                "Nota 10: Todos los campos referenciados con la Nota 10, sólo se podrán cumplimentar a partir "
+                "de los periodos 10 y 4T de 2024 y ejercicios posteriores"
+            ),
+            wire_values="the printed constant '00200' (2%)",
+        ),
+        _m303_rate_percent(
+            "aeat-dr-303-2024-late",
+            _M303_2024_LATE_SHA256,
+            published_content='"00026", "00050". Nota 7. Nota 10',
+            slot="G89, Recargo equivalencia - Tipo % [169]",
+            note_cell="A134",
+            note_statement=_M303_NOTE_7,
+            wire_values="the printed runs '00026' and '00050' (0,26%, 0,5%)",
+            mandated_values=("0", "26", "50"),
+            printed_domain=True,
+        ),
+    ),
+    "aeat-dr-303-2025": (
+        _m303_rate_percent(
+            "aeat-dr-303-2025",
+            "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
+            published_content='"00050". Nota 7.',
+            slot="G89, Recargo equivalencia - Tipo % [169]",
+            note_cell="A134",
+            note_statement=_M303_NOTE_7,
+            wire_values="the printed run '00050' (0,5%)",
+            mandated_values=("0", "50"),
+            printed_domain=True,
+        ),
+    ),
+    "aeat-dr-303-2026": (
+        _m303_rate_percent(
+            "aeat-dr-303-2026",
+            "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
+            published_content='"00050". Nota 7.',
+            slot="G59, Recargo equivalencia - Tipo % [169]",
+            note_cell="A135",
+            note_statement=_M303_NOTE_7,
+            wire_values="the printed run '00050' (0,5%)",
+            mandated_values=("0", "50"),
+            printed_domain=True,
         ),
     ),
     "aeat-dr-390-2025": tuple(
