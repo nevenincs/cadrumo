@@ -1,0 +1,118 @@
+---
+tags:
+  - '#adr'
+  - '#modelo-100-xml-row-casilla-mapping'
+date: '2026-11-11'
+modified: '2026-11-11'
+body_schema: 'body-v2'
+body_hash: 'sha256:cdb5bf08ab6a4f9518f66a1a1a4f614b1bcab3af32f2786928d101974c839fdc'
+related:
+  - "[[2026-09-09-registry-edition-authoring-adr]]"
+  - "[[2026-11-02-desktop-renta-audit]]"
+---
+
+# `modelo-100-xml-row-casilla-mapping` adr: `XML dictionary rows resolve their casilla by printed number and declare it where the design repeats a number` | (**status:** `proposed`)
+
+## Problem Statement
+
+The XML dictionary exporter reads, for each official dictionary row, the registry casilla whose `id` equals the row's printed number. `_parse_xml_dictionary_line` stores the printed number as `XmlDictionaryEntry.casilla_id` (`src/cadrumo/domain/calculations/registry/export_xml_dictionary.py:106-128`), and the renderer reads `casilla_values.get(entry.casilla_id)` (`src/cadrumo/application/filing/export_xml_dictionary.py:543`). That is correct only while each printed number names one concept.
+
+AEAT's own dictionaries print one number on several rows. RESINGDEV (`/DatosEconomicos/Resultados/IngresoDevolucionRes/RESINGDEV`, "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695])", type N102, XSD `tipo_ImpNegativo`, `minOccurs="1"` inside an optional `IngresoDevolucionRes`) is printed [0695] in the 2020 to 2023 dictionaries, where 0695 is also the printed number of TCPP112 and TCNN112. From the 2024 dictionary on it is printed [0700]. The registry models 0695 as `max(0, 0670 - 0693)` (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/formulas/0001-declarations.toml:383-392`), so in 2022 and 2023 RESINGDEV receives the remainder of the spouse compensation instead of the result. A refund (0670 negative) yields 0, the zero-only optional block is pruned (`src/cadrumo/application/filing/export_xml_dictionary.py:616`), and the exported refund return has no `IngresoDevolucionRes` at all. A payable return renders the right amount only by coincidence: 0695 equals 0670 when 0693 is zero.
+
+The lane probe measured this through the real export. For 2022 and for 2023, a refund draft with 0670 = -14823.82 produced XML with no RESINGDEV. For 2024 the same draft produced RESINGDEV = -14859.88. The registry cannot fix it by declaring the member: two casillas with one number in one edition are refused unless `segmento` differs (`src/cadrumo/domain/calculations/registry/validate_revision_identity.py:199-221`). No existing mechanism maps a row to a different casilla. `dictionary_path_overrides` cannot: an `XmlDictionaryPathOverride` carries only a field id, a path and a reason (`src/cadrumo/domain/calculations/registry/schema_exports.py:853-875`), it is applied as a field-id to path map (`src/cadrumo/domain/calculations/registry/export_xml_dictionary.py:143`), the row keeps its printed number as the casilla it reads, and an override naming a field the dictionary does not carry is refused. Structural succession admits only split and merge between different identities (`src/cadrumo/domain/calculations/registry/casilla_structural_succession.py:38-42`).
+
+The exported file without the block is valid against its XSD, so no schema check can catch this. The defect is the mapping alone: the dictionary keys RESINGDEV by printed [0695] while its own text says "casilla [0670] o casilla [0695]", so the settlement result is read from 0695.
+
+## Considerations
+
+- `2026-09-09-registry-edition-authoring-adr` already rules that a printed box number is not an identity key within a modelo, that casillas chain across editions on `continuidad_id`, that box number comes only from the dedicated printed-number field, and that a member's claims about its own evidence are never inherited. This decision applies those rules to the XML export lane; it does not change them.
+- Casilla `id` and `number` are already separate fields (`src/cadrumo/domain/calculations/registry/schema_surfaces.py:344-401`). A number already changes across editions through `casilla_overrides` (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml:6448-6449`, CONVASDLG).
+- The registry already owns RESINGDEV as one lineage, `continuidad_id = "resultado-ingresar-o-devolver-irpf"`, but only from 2024 and under the edition-coloured id "0700" (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/casillas/0001-declarations.toml:27-37`; formula `renta-resultado-ingresar-o-devolver` at `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/0001-declarations.toml:3-20`). In 2022 the id "0700" belongs to a different lineage, M21CCBA (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/casillas/0001-declarations.toml:107-116`), removed in 2023 (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml:7504-7505`).
+- `2026-11-02-desktop-renta-audit` (findings `settlement-waived-refund-pre-2025` and `typed-0700-pre-2025`) records that revisions without a computed RESINGDEV settle from 0670 and ignore a waived refund. A computed RESINGDEV in every supported edition removes that split.
+- The export schema is closed by construction (`2026-09-09-registry-edition-authoring-adr`, Naming). A new field on the export layout model invalidates shipped generation manifests and is a coordinated migration.
+- The sweep in the Inventory section shows that, in every current XML edition, resolving a printed number through casilla `number` gives the same casilla as resolving it through casilla `id` for every row. Changing the lookup key therefore changes no row outside the declared targets.
+
+## Considered options
+
+- **Option 1, chosen: per-row casilla targets in the XML layout.** The layout declares, for a dictionary row whose printed number the edition's design repeats, which casilla that row reads, with the row's official evidence. One general mechanism; RESINGDEV becomes one member across editions. Cost: a new export-layout field (a schema migration) and a narrowed uniqueness check.
+- **Option 2, rejected: `segmento` as the XML block.** Give RESINGDEV `segmento = "IngresoDevolucionRes"` so the existing `(segmento, number)` check admits it. Rejected: `segmento` is AEAT record-segment metadata for multi-segment fixed-width modelos (`schema_surfaces.py:344-371`). Modelo 100 XML has no record segments, so the value would be invented. It also leaves the exporter keyed by id, so RESINGDEV would still need the id "0695", which TCPP112's casilla holds.
+- **Option 3, rejected: two linked members.** Author a member printed 0695 for 2022 and 2023, keep the 2024 "0700" member, and link them by a succession record. Rejected: structural succession admits only split and merge between different identities (`casilla_structural_succession.py:38-42`), and `2026-09-09-registry-edition-authoring-adr` forbids treating such a relationship as one chain. RESINGDEV is one concept with one legal basis (`ley-35-2006:art-97`) whose printed number changed. Two members would falsify its lineage and duplicate its formula.
+
+## Constraints
+
+These commitments bind. The Implementation outline may change within them.
+
+- **General mechanism.** The row-target declaration and the number-keyed lookup apply to every modelo with an `xml_dictionary` export layout. No code path, schema field, fact key or validator branches on Modelo 100 or on any modelo number.
+- **No year in any key or id.** No casilla id, row-target key, fact key, test constant or validator carries a year or an edition id. Years in tests come from the registry envelope.
+- **Declared where the design prints it, with evidence per row.** A row target is declared in the edition whose dictionary prints the row. Each target names the dictionary field id and the casilla id it reads, and cites the dictionary source id and line and the XSD source id and element that settle it. Like `continuidad_evidence`, this evidence is never inherited. A row target whose cited dictionary source is not the current `dictionary_source_ref` of the edition is refused at load, so each later edition whose dictionary still repeats the number states its own targets with its own evidence.
+- **Resolution rule.** A dictionary row resolves to the one casilla of the edition whose `number` equals the printed number, with `segmento` unset. A declared row target overrides that lookup for its row. A printed number held by more than one casilla in the edition, on a row with no declared target, is refused at registry build and at export. It is never resolved by order or by id.
+- **RESINGDEV is one member with continuity.** RESINGDEV is one casilla with the stable non-numeric id `RESINGDEV` and the existing lineage `continuidad_id = "resultado-ingresar-o-devolver-irpf"`. It is authored at the earliest edition inside the support envelope (the 2022 directory) with the settlement formula and `legal_refs = ["ley-35-2006:art-97"]`, printed `number = "0695"`. From the 2024 edition, `casilla_overrides` renumbers it to "0700" and states `continuidad_origin = "grounded"` with evidence from the 2023 and 2024 dictionary lines (`07-...-2023...properties:2294`, `08-...-2024...properties:2380`). The 2022 row states its origin against the 2021 edition, whose design prints the row (`05-...-2021...properties:2008`) but whose registry does not declare it.
+- **The duplicate-number check is relaxed only where a cited design row repeats the number.** `_emit_casilla_metadata_uniqueness_failures` admits a repeated `(segmento unset, number)` pair only when every casilla carrying it is the declared target of a distinct dictionary row in the XML layout of that edition, and row-target validation has confirmed that each cited row prints that number. Every other duplicate is refused as today.
+- **Untouched members.** Casilla 0695 (TCPP112, TCNN112) keeps its id, number and formula. The 2022 M21CCBA casilla "0700" keeps its id and number. The existing `xml.sign.*` and `xml.comunidad.*` declarations are out of scope.
+- **Editions below the floor.** The 2020 and 2021 dictionaries also print RESINGDEV [0695] (`04-...-2020...properties:1794`, `05-...-2021...properties:2008`). Those editions are below the support floor and refused at every grade, so this decision authors no targets there.
+
+## Implementation
+
+We will add per-row casilla targets to the XML dictionary export layout, resolve dictionary rows through casilla `number` instead of casilla `id`, narrow the duplicate-number refusal to declared repeated rows, and make RESINGDEV one member from the floor edition up.
+
+Outline (implementation hypotheses within the constraints):
+
+- **Schema.** In `src/cadrumo/domain/calculations/registry/schema_exports.py`, add a typed `XmlDictionaryRowTarget` (field id, casilla id, dictionary source id and line, XSD source id and element) beside `XmlDictionaryPathOverride`. Carry it on `ExportLayoutDefinition` as a sequence authored through the existing `family_overrides` on `export_layouts`, the shape the 2024 EXTRA path override uses (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml:8645-8655`). Republish the authority; this is a closed-schema change.
+- **Parser.** In `src/cadrumo/domain/calculations/registry/export_xml_dictionary.py`, `XmlDictionaryEntry` keeps the printed number and gains the resolved casilla id. `xml_dictionary_entries` applies row targets where it applies path overrides, so the renderer and `parse_export_payload` read one resolved row set. It refuses a target naming a field the dictionary does not carry (as `_assert_every_override_was_applied` does), a target whose cited source is not the dictionary of the layout, a target whose row does not print the number of its casilla, and an unresolved repeated number.
+- **Renderer and readers.** `src/cadrumo/application/filing/export_xml_dictionary.py:536-546` reads the resolved casilla id. Re-check every other `xml_dictionary_entries` caller for printed-number use: `src/cadrumo/application/filing/export_parity.py:224`, `src/cadrumo/application/filing/export_verification.py:354` and `:465`, and `src/cadrumo/adapters/outbound/aeat/sede/tests/test_skippable_casilla_reachability.py:47`.
+- **Validator.** Change `src/cadrumo/domain/calculations/registry/validate_revision_identity.py:199-221` as the uniqueness constraint states.
+- **Registry data.** In the 2022 directory, author casilla `RESINGDEV` (number 0695, computed, in the `ingreso_devolucion_res` section) and move formula `renta-resultado-ingresar-o-devolver` there, targeting `RESINGDEV`. Declare row targets in 2022 and in 2023: RESINGDEV to `RESINGDEV`, TCPP112 and TCNN112 to `0695`, each with its own dictionary line and XSD element. From 2024, add the `casilla_overrides` renumbering to 0700 and remove the 2023 targets. Delete the 2024 "0700" casilla and formula declarations. Rename "0700" to `RESINGDEV` in the 2024 and 2025 form layouts (`2024/form_layouts/0001-form-layout.toml:681` and `:3825`, `2025/form_layouts/0001-form-layout.toml:696`) and in the 2024 `casilla_positions` (`2024/revision.toml:7872-7874`). The placement of RESINGDEV on the 2022 and 2023 form layouts needs the BOE form for those years.
+- **Tests renamed in the same change.** The RESINGDEV literal "0700" in `src/cadrumo/application/modelo/tests/test_export_settlement_every_year_computing_the_settled_box.py:54`, `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py:52`, `src/cadrumo/application/modelo/tests/test_work_form_modelo_100_resultado.py:21`, `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_resultado_ingresar_o_devolver.py:40` and `dev/registry/tests/test_semantic_role_typo_twins_and_results.py:686`. Other "0700" literals name other concepts and stay: `src/cadrumo/adapters/inbound/borrador/tests/test_modelo_100_summary.py:50` (borrador pagos fraccionados) and the synthetic fixtures in `dev/registry/tests/test_cross_revision_drift.py`, `dev/registry/tests/test_casilla_fragment_naming.py`, `dev/registry/tests/test_revisions_coexist.py` and `dev/registry/conformance/tests/test_registry_schema_bindings_exports.py`.
+- **Mechanism tests.** On isolated fixtures: a repeated number without targets is refused; a target naming an absent field, a non-current dictionary source, or a row that does not print the number of the target casilla is refused; a declared repeat passes the uniqueness check; a layout fixture for a modelo other than 100 shows the mechanism is general.
+
+### Verification
+
+- **Settlement-result proof through the work-unit export.** Export through the work-unit path, which calls `export_draft` with `states_whole_return=True` (`_write_export_staging`, `src/cadrumo/application/modelo/export.py:569-592`). For every year from the envelope floor to the horizon, read from `filing_year_envelope()` and never from a list (`src/cadrumo/domain/calculations/registry/tests/authored_editions.py:70-84` shows the pattern), export two returns: a refund, and a payable return with an amount suspended by the spouse compensation (0693 above zero). In each, `IngresoDevolucionRes/RESINGDEV` is present and equals the value of the casilla that holds the settlement-result role (`settlement_roles.100`, resolved through `declaration_settlement_casilla_id`, `src/cadrumo/application/modelo/settlement_casilla.py:192-215`), read from the draft itself. TCPP112 and TCNN112 still read 0695. A year whose authority grade does not admit export asserts the typed refusal; no year is skipped.
+- **Registry gates.** `just check-registry`, `just check-registry-gate`, `just check-bindings` and `just test-registry`.
+- **No other row moves.** For every supported year, enumerated from the registry envelope, every dictionary row other than the declared targets resolves to the same casilla as before. A re-run of the Inventory sweep must report no new difference.
+
+## Inventory of repeated or mismatched dictionary rows
+
+Method: a read-only sweep covered every modelo whose authored registry declares an `xml_dictionary` export layout. For each edition it parsed the layout with the real parser (`xml_dictionary_entries` over `_parse_xml_dictionary_line`) and compared each row with the materialised casillas of that edition. It ran on the worktree sources of `lane/calc-renta` against published authority generation `e156755424b4`. Only Modelo 100 declares such a layout. Modelo 390 bundles XSDs but no dictionary and no XML layout. The "toma de datos" input dictionaries are not read by the exporter and were not swept.
+
+Result: no row in any edition prints a number that is not the id of the casilla it reads, and for every row `id` lookup and `number` lookup agree. Every finding is a printed number repeated within one dictionary. Line numbers are 2022 dictionary lines unless an edition is named.
+
+| Modelo | Editions | Rows | Printed | Casilla read today | Should read |
+| --- | --- | --- | --- | --- | --- |
+| 100 | 2020-2023 | RESINGDEV (2198) | 0695 | 0695 (`irpf_compensacion_conyuges_resto_ingresar`) | `RESINGDEV` (this decision, 2022 and 2023; 2020 and 2021 below the floor) |
+| 100 | 2020-2025 | TCPP112 (997), TCNN112 (999) | 0695 | 0695, routed by sign through `xml.sign.*` (`src/cadrumo/application/filing/export_xml_dictionary_modelo100.py:193-227`) | 0695 for TCPP112. TCNN112: unknown, needs grounding; its label is (0670 - 0694) negative, which the zero-floored 0695 formula never yields |
+| 100 | 2020-2025 | GPGRALG (699), GPGRALH (707) | 0420 | 0420 | unknown, needs grounding that the base-imponible row restates 0420 |
+| 100 | 2020-2025 | GPAHOG (703), GPAHOH (713) | 0424 | 0424 | unknown, needs grounding that the base-imponible row restates 0424 |
+| 100 | 2020-2025 | BIGRALH (712), BIGRALJ (771) | 0435 | 0435 | unknown, needs grounding (the 2020 BIGRALJ label says "traslade el importe de esta casilla") |
+| 100 | 2020-2025 | BIAHOH (733), BIAHOJ (782) | 0460 | 0460 | unknown, needs grounding (as 0435) |
+| 100 | 2020-2025 | SUMADEDAUT (866) and 15 per-comunidad rows: DEDAUTA, DEDAUTAR, DEDAUTPA, DEDAUTIB, DEDAUTCAN, DEDAUTCANT, DEDAUTCM, DEDAUTCL, DEDAUTCT, DEDAUTE, DEDAUTGA, DEDAUTM, DEDAUTMU, DEDAUTLR, DEDAUTVA | 0564 | 0564; non-resident blocks dropped through `xml.comunidad.*` (`src/cadrumo/application/filing/export_xml_dictionary_modelo100.py:94-190`) | unknown, needs grounding that the subtotal of the resident block equals 0564 |
+| 100 | 2020-2025 | CRETING (246), RET3 (895) | 0598 | 0598 (its role differs by edition) | unknown, needs grounding; CRETING sums [0153] in InmueblesRes, RET3 is retenciones por arrendamientos |
+| 100 | 2020-2023 | RESCOMP (981), RESDECCOMP (2200) | 0680 | 0680 | unknown, needs grounding (both labelled "Resultado de la declaracion complementaria") |
+| 100 | 2023-2025 | DED13E (2023: 882), IMPVEPC (2023: 1089) | 0607 | 0607 | unknown, needs grounding; IMPVEPC is the "15 por 100" detail row |
+| 100 | 2023-2025 | DED14E (2023: 883), IMPIPRE (2023: 1097) | 0608 | 0608 | unknown, needs grounding; IMPIPRE is the "15 por 100" detail row |
+| 100 | 2020 | IBANREC (2020: 888), SEPAREC (2020: 890) | 0687 | 0687 | unknown, needs grounding; an IBAN field and a SEPA field cannot share one value; below the floor |
+| 100 | 2020 | TCCC (2020: 896), TSEPA (2020: 898) | 0696 | 0696 | unknown, needs grounding; as 0687; below the floor |
+
+Under the uniqueness constraint none of these rows needs a target today, because each repeats a number held by one casilla. A row in this table needs a target only when grounding shows it must read a different casilla.
+
+## Rationale
+
+Option 1 is the only option that keeps one lineage per concept and one formula per amount, as `2026-09-09-registry-edition-authoring-adr` requires, while letting the registry carry the number AEAT actually printed. It puts the correction where the evidence is, the dictionary row and its XSD element, next to the existing path-override mechanism, so the renderer and the parser read one resolved row set. The path-override mechanism itself cannot carry it: an override re-points a row to another path and keeps the printed number as the casilla it reads. Keying the lookup on `number` completes the separation of identity from printed number that the registry schema already has, and the sweep shows it changes no other row today. Options 2 and 3 each invent a fact: a segment that does not exist, or a succession that did not happen.
+
+## Consequences
+
+- Refund returns and returns with a suspended amount for 2022 and 2023 state the settlement result in `IngresoDevolucionRes/RESINGDEV`. Settlement for those years reads a computed RESINGDEV through the same role as 2024 onward. This addresses the pre-2025 settlement findings of `2026-11-02-desktop-renta-audit` once the waived-refund branch is resolved; the formula keeps its `unresolved_outcome` for a waived refund, which now also applies to 2022 and 2023.
+- The export layout schema changes, so every published authority generation is rebuilt. Generations published before the change cannot decode the new layout, and older code cannot decode generations published after it.
+- Any consumer that treated a dictionary printed number as a casilla id moves to the resolved id. The callers named under Implementation are the known set.
+- Workbook and form-layout surfaces keyed on `(segmento, number)` see two casillas numbered 0695 in 2022 and 2023. `2026-06-03-modelo-export-workbook-parity-adr` asserts numbering parity; its grid must key on casilla id to tolerate a declared repeat. That ADR needs no wording change; implementation verifies the grid.
+- The file exported today without `IngresoDevolucionRes` is valid against its XSD. `IngresoDevolucionRes` is `minOccurs="0"` in every bundled Modelo 100 XSD (`27-...-2022...xsd:1564`) and RESINGDEV is required only inside it (`27-...-2022...xsd:2954`), so the XSD required-content check (`src/cadrumo/application/filing/export_xml_value_limits.py:349-372`) correctly did not refuse it. There is no XSD export defect. The defect is only the row-to-casilla mapping this decision fixes. Per the PRIME 23:09 ruling, any export-side required-element check belongs to LIFECYCLE.
+- Reconsider this decision if AEAT publishes a dictionary in which one row must read two casillas, or in which a repeated number has no XSD element to cite.
+
+## Evidence
+
+- Dictionaries under `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/`: RESINGDEV at `06-...-2022...properties:2198` [0695], `07-...-2023...properties:2294` [0695], `08-...-2024...properties:2380` [0700], `01-...-2025...properties:2524` [0700]. TCPP112 and TCNN112 at `06-...:997,999` and `07-...:1010,1012` [0695]. M21CCBA at `06-...:1202` [0700].
+- XSDs: RESINGDEV `minOccurs="1"` at `27-...-2022...xsd:2954`, `28-...-2023...xsd:3119`, `29-...-2024...xsd:3143`, `03-...-2025...xsd:3205`; its parent `IngresoDevolucionRes` is `minOccurs="0"` at `27-...:1564`, `28-...:1678`, `29-...:1808`, `03-...:1853`.
+- Path overrides: `XmlDictionaryPathOverride` (`src/cadrumo/domain/calculations/registry/schema_exports.py:853-875`), carried at `schema_exports.py:902`, applied as a field-id to path map at `src/cadrumo/domain/calculations/registry/export_xml_dictionary.py:143`, and refused for an undeclared field by `_assert_every_override_was_applied`.
+- Support envelope: `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml` (horizon 2026, four filing-grade years before it).
+- Lane probe through the real export: for 2022 and 2023, a refund with 0670 = -14823.82 exported no RESINGDEV; for 2024, RESINGDEV = -14859.88.
+- Governing decision: `2026-09-09-registry-edition-authoring-adr`. Related findings: `2026-11-02-desktop-renta-audit`.
