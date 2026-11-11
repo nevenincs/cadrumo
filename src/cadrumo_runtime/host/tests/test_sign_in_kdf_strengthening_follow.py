@@ -7,19 +7,23 @@ same application door the worker uses, and then let the real runtime decide:
 it retires the replaced incarnation, launches a worker bound to the committed
 generation, proves the same password there and admits the sign-in. An attempt
 cancelled meanwhile is not followed, and the replacement it committed stands.
+Custody replaced again while its successor is being retired ends only that
+attempt; the runtime keeps serving and a later sign-in is admitted.
 """
 
 from __future__ import annotations
 
 import sys
+import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import (
@@ -27,14 +31,20 @@ from cadrumo.application.user_profile.custody_ports import (
     unlock_profile_custody_password,
 )
 from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
-from cadrumo.application.user_profile.passphrase_rotation import strengthen_profile_password_kdf
+from cadrumo.application.user_profile.passphrase_rotation import (
+    rotate_profile_passphrase,
+    strengthen_profile_password_kdf,
+)
+from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.profile_access import ProfileStatus, SessionRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT
+from .. import profile_host
 from ..session_owner import ProfileWorkerSessionOwner
 from .served_runtime import connect_verified
 from .test_service_records import ServiceRecordRuntime, service_record_runtime
@@ -62,6 +72,19 @@ def _strengthen(root: Path, profile_id: UUID) -> None:
         profile_decode_context=profile_authority_contexts()[1],
         root=root,
     )
+
+
+def _rotate(root: Path, profile_id: UUID, current: str, new: str) -> None:
+    # The fixed point keeps an injected rotation inside the admission's retirement bound.
+    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+        rotate_profile_passphrase(
+            profile_id=profile_id,
+            current_passphrase=current,
+            new_passphrase=new,
+            new_passphrase_confirmation=new,
+            root=root,
+            profile_decode_context=profile_authority_contexts()[1],
+        )
 
 
 def _replace_during_first_proof(
@@ -138,3 +161,49 @@ def test_a_cancelled_attempt_is_not_followed_and_its_replacement_stands(
         assert proved == [before.password_generation]
         after = load_committed_profile_password_material(profile_id, root=root).envelope
         assert after.password_generation == before.password_generation + 1
+
+
+def test_custody_replaced_again_while_its_successor_is_retired_keeps_the_runtime_serving(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A second replacement landing between reading the successor and fencing it is retired on a later pass."""
+    with service_record_runtime(tmp_path) as runtime:
+        root, profile_id = runtime.root, runtime.other_profile_id
+        before = load_committed_profile_password_material(profile_id, root=root).envelope
+        interim = PROFILE_INPUT + "-Interim-7q"
+        proved = _replace_during_first_proof(
+            monkeypatch, profile_id, lambda: _rotate(root, profile_id, PROFILE_INPUT, interim)
+        )
+        revoke = profile_host.revoke_profile_sign_in
+        replaced_again: list[int] = []
+
+        def replace_again_first(custody: SignInGenerationCustody) -> object:
+            if custody.binding.profile_id == profile_id and not replaced_again:
+                replaced_again.append(custody.binding.custody_generation)
+                with profile_adapter_composition():
+                    _rotate(root, profile_id, interim, PROFILE_INPUT)
+            return revoke(custody)
+
+        monkeypatch.setattr(profile_host, "revoke_profile_sign_in", replace_again_first)
+
+        with pytest.raises(FrontendRefusedError) as refused:
+            _client(runtime).login_password(bytearray(PROFILE_INPUT.encode()))
+
+        assert refused.value.reason == AccessDenialCode.CUSTODY_CHANGED.value
+        assert replaced_again == [before.password_generation + 1]
+        status = runtime.human.session(
+            SessionRequest(
+                action="session_status",
+                request_id=uuid4(),
+                profile_id=runtime.profile_id,
+                session_id=runtime.person_session_id,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        assert isinstance(status, ProfileStatus) and status.status.denial is None
+        admitted = _client(runtime).login_password(bytearray(PROFILE_INPUT.encode()))
+        assert admitted.status.denial is None and admitted.status.session_id is not None
+        after = load_committed_profile_password_material(profile_id, root=root).envelope
+        assert after.password_generation == before.password_generation + 2
+        assert proved == [before.password_generation, after.password_generation]
+        assert runtime.profiles._profiles[profile_id].store.binding.custody_generation == after.password_generation
