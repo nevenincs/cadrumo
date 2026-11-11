@@ -15,7 +15,7 @@ from ......application.user_profile.custody_ports import (
 )
 from ......application.user_profile.kdf_strength import ProfileKdfStrength
 from ......core.config import override_settings
-from .. import kdf_supervision
+from .. import kdf_strengthening
 from ..kdf_strengthening import ProfileKdfPointRefusedError
 from ..kdf_supervision import ProfileCustodyKdfResources
 from ..records import ProfileCustodyEnvelope
@@ -95,7 +95,7 @@ def test_a_point_that_no_longer_fits_this_host_is_refused_without_a_custody_refu
     with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=False):
         committed = _committed(dek)
         monkeypatch.setattr(
-            kdf_supervision,
+            kdf_strengthening,
             "profile_kdf_resources",
             lambda: ProfileCustodyKdfResources(available_memory_bytes=96 * 1024 * 1024, cpu_count=1),
         )
