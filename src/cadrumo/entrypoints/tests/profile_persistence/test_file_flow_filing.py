@@ -27,6 +27,7 @@ from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetai
 from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.deadlines.effective_close import resolve_effective_filing_deadline
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -63,6 +64,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+
+_YEAR = filing_year_envelope().horizon
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -371,7 +374,7 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
 
 def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2026, period="3T")
+    work_unit = seed_work_unit(wu_repo, filing_year=_YEAR, period="3T")
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -763,8 +766,8 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
     from cadrumo.domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 
     _, _, fr_repo, _, _ = repos
-    q1 = Period.from_year_and_code(2025, "1T")
-    q2 = Period.from_year_and_code(2025, "2T")
+    q1 = Period.from_year_and_code(_YEAR, "1T")
+    q2 = Period.from_year_and_code(_YEAR, "2T")
     record_1 = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id="1" * 64,
@@ -775,7 +778,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         calculation_revision_id="2" * 64,
         bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=q1,
         filed_at=T1,
         filed_by="operator-A",
@@ -793,7 +796,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         calculation_revision_id="4" * 64,
         bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=q2,
         filed_at=T2,
         filed_by="operator-A",
@@ -825,7 +828,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     from cadrumo.domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 
     _, _, fr_repo, _, _ = repos
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     record_100 = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id="1" * 64,
@@ -836,7 +839,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         calculation_revision_id="2" * 64,
         bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("100"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         filed_at=T1,
         filed_by="operator-A",
@@ -854,7 +857,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         calculation_revision_id="4" * 64,
         bucket_id=_FILING_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         filed_at=T2,
         filed_by="operator-A",

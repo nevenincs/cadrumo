@@ -52,6 +52,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
@@ -113,8 +114,8 @@ _CASH_ELECTION_CASILLA: CasillaId = validated_casilla_id("0169")
 _CASH_ELECTION_XML_TAG = "E1ITEMP"
 _MODALIDAD_XML_TAG = "E1MED"
 _M100_RESULT_CASILLA: CasillaId = validated_casilla_id("0670")
-# An instant inside the 2024 annual return's filing window, so the window is not what refuses a split.
-_WITHIN_THE_FILING_WINDOW = datetime(2025, 6, 2, 12, 0, tzinfo=UTC)
+# An instant inside the annual return's filing window, so the window is not what refuses a split.
+_WITHIN_THE_FILING_WINDOW = datetime(YEAR + 1, 6, 2, 12, 0, tzinfo=UTC)
 # The payments on account that leave exactly one cent of this fixture's liability unpaid.
 _PAYMENTS_LEAVING_ONE_CENT = {
     "1T": Decimal("300.00"),
@@ -152,7 +153,9 @@ def _seed_profile(criterion: str, *stated: UserProfileFact) -> None:
                     UserProfileFact(path="identity.name", value="Annual"),
                     UserProfileFact(path="identity.surnames", value="Renta Tester"),
                     UserProfileFact(path="activities.description", value="design services"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(
+                        path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)
+                    ),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                     *dated,
                     *stated,
@@ -375,7 +378,7 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
                 bucket_id=BUCKET_ID, taxpayer_tax_id=TAX_ID, secure_objects=secure_objects
             ),
         )
-    # The split holds for the 2024 ejercicio too, so this return's refund is what refuses it, as nothing to pay.
+    # The split holds for the filed ejercicio too, so this return's refund is what refuses it, as nothing to pay.
     assert split.value.context is not None and split.value.context["reason"] == "nothing_to_pay"
     assert not (tmp_path / "split.xml").exists()
     assert _election_marks(payload) == (["1"] if marks else [])

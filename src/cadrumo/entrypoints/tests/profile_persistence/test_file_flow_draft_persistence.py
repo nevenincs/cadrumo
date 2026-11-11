@@ -22,6 +22,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
@@ -35,12 +36,14 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     verify_revision,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_a_verified_revision_leaves_its_approved_draft_in_the_store(repos: Repos) -> None:
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=_YEAR)
     drafts = ModeloDraftRepository(bucket_id=work_unit.bucket_id)
 
     assert tuple(drafts.iter_drafts()) == ()
@@ -81,7 +84,7 @@ def test_a_verified_revision_leaves_its_approved_draft_in_the_store(repos: Repos
 def test_re_verifying_the_same_revision_rewrites_one_row(repos: Repos) -> None:
     """``draft_id`` is a content address, so an unchanged draft is idempotent."""
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=_YEAR)
     drafts = ModeloDraftRepository(bucket_id=work_unit.bucket_id)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
@@ -126,7 +129,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
         from cadrumo.application.review.source_adapters import reviewed_against_current_state
 
         wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-        work_unit = seed_work_unit(wu_repo, filing_year=2024)
+        work_unit = seed_work_unit(wu_repo, filing_year=_YEAR)
         # A NON-empty bucket ledger is the whole point. The row is personal:
         # it changes the catalogue basis without supplying an unrecorded
         # business source that should correctly withhold verification.
@@ -192,13 +195,13 @@ def _seed_one_bucket_transaction(bucket_id: str) -> None:
     from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
     from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-    ingested_at = datetime(2024, 1, 2, tzinfo=UTC)
+    ingested_at = datetime(_YEAR, 1, 2, tzinfo=UTC)
     transaction = Transaction.model_validate(
         {
             "raw": RawTransaction(
                 provider_transaction_id="staleness-probe-1",
-                booked_date=date(2024, 1, 2),
-                value_date=date(2024, 1, 2),
+                booked_date=date(_YEAR, 1, 2),
+                value_date=date(_YEAR, 1, 2),
                 amount=Decimal("100.00"),
                 currency="EUR",
                 counterparty="Cliente SA",

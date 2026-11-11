@@ -44,6 +44,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import (
@@ -74,6 +75,8 @@ from .file_flow_test_support import calculation_ports_for_test
 from .m303_annual_ledger_support import M303_LEDGER_CUOTA, seed_m303_period_cuotas
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+#: The exercise every builder here files: the newest the registry supports.
+M303_YEAR = filing_year_envelope().horizon
 #: The quarterly Modelo 303 schedule needs the gran empresa condition (LIVA
 #: art. 121, RIVA art. 71) stated; these synthetic filers state it as a no.
 QUARTERLY_303_FILER_FACTS: dict[str, str] = {"censo.large_company": "false"}
@@ -108,16 +111,16 @@ def external_filing_observations(*, casilla_values, snapshot):
 
 
 def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
-    return published_authority_operation().snapshot("303", filing_year=2026, period=period).snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=M303_YEAR, period=period).snapshot_ref
 
 
 def blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
-    now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    now = datetime(M303_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC)
     source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, period),
+        target_year=M303_YEAR,
+        target_period=Period.from_year_and_code(M303_YEAR, period),
         target_registry_snapshot_ref=_m303_snapshot_ref(period),
         source_registry_snapshot_refs=(source_ref,),
         selected_authority="missing",
@@ -141,10 +144,10 @@ def blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaComp
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
                 amount=Decimal("800.00"),
-                source_locator="observation-envelope:303:2026:1T",
+                source_locator=f"observation-envelope:303:{M303_YEAR}:1T",
                 source_modelo="303",
-                source_filing_year=2026,
-                source_periods=(Period.from_year_and_code(2026, "1T"),),
+                source_filing_year=M303_YEAR,
+                source_periods=(Period.from_year_and_code(M303_YEAR, "1T"),),
                 registry_snapshot_refs=(source_ref,),
             ),
         ),
@@ -157,12 +160,12 @@ def filed_history_only_wallet_decision(
     taxpayer_nif: str,
     period: str = "2T",
 ) -> IvaCompensationReconciliationDecision:
-    now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    now = datetime(M303_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC)
     source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, period),
+        target_year=M303_YEAR,
+        target_period=Period.from_year_and_code(M303_YEAR, period),
         target_registry_snapshot_ref=_m303_snapshot_ref(period),
         source_registry_snapshot_refs=(source_ref,),
         selected_authority="filed_history",
@@ -179,10 +182,10 @@ def filed_history_only_wallet_decision(
             IvaCompensationAuthoritySource(
                 source_kind="filed_history_observation",
                 amount=Decimal("800.00"),
-                source_locator="observation-envelope:303:2026:1T",
+                source_locator=f"observation-envelope:303:{M303_YEAR}:1T",
                 source_modelo="303",
-                source_filing_year=2026,
-                source_periods=(Period.from_year_and_code(2026, "1T"),),
+                source_filing_year=M303_YEAR,
+                source_periods=(Period.from_year_and_code(M303_YEAR, "1T"),),
                 registry_snapshot_refs=(source_ref,),
             ),
         ),
@@ -191,11 +194,11 @@ def filed_history_only_wallet_decision(
 
 
 def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
-    now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    now = datetime(M303_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC)
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, period),
+        target_year=M303_YEAR,
+        target_period=Period.from_year_and_code(M303_YEAR, period),
         target_registry_snapshot_ref=_m303_snapshot_ref(period),
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
@@ -266,14 +269,14 @@ def seed_modelo_303_1t_clean_state(
         bucket_event_repository = BucketEventHistoryRepository(
             objects=secure_object_repository_for_bucket(bucket_id),
         )
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=M303_YEAR, period="2T")
     source_casilla_ids = sorted(
         {
             casilla_id
             for requirement in cross_period_dependency_requirements(snapshot)
             if requirement.source_modelo == "303"
-            and requirement.filing_year == 2026
-            and requirement.period == Period.from_year_and_code(2026, "1T")
+            and requirement.filing_year == M303_YEAR
+            and requirement.period == Period.from_year_and_code(M303_YEAR, "1T")
             for casilla_id in requirement.source_casilla_ids
         },
     )
@@ -282,27 +285,27 @@ def seed_modelo_303_1t_clean_state(
     values["iva.compensacion-disponible-fin-periodo"] = available_compensation
     values, source_headers = modelo_303_filed_disposition(
         values,
-        source_locator="modelo-303-2026-1T:declaration-type",
+        source_locator=f"modelo-303-{M303_YEAR}-1T:declaration-type",
     )
-    source_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
+    source_snapshot = published_authority_operation().snapshot("303", filing_year=M303_YEAR, period="1T")
     persist_justificante_metadata(
-        "JUST30320261T",
+        f"JUST303{M303_YEAR}1T",
         modelo="303",
-        filing_year=2026,
+        filing_year=M303_YEAR,
         period="1T",
-        captured_at=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+        captured_at=datetime(M303_YEAR, 5, 21, 11, 0, tzinfo=UTC),
         tax_id=taxpayer_tax_id,
     )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=M303_YEAR,
+        period=Period.from_year_and_code(M303_YEAR, "1T"),
         revision_id=source_snapshot.revision.id,
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),
-        clock=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
+        clock=datetime(M303_YEAR, 5, 21, 11, 0, tzinfo=UTC),
         operation=operation,
     )
     # Prior-1T filed history is a PRECONDITION of these wallet-gate tests, not
@@ -313,7 +316,7 @@ def seed_modelo_303_1t_clean_state(
     # persisted shape below mirrors exactly what that verb used to leave behind:
     # a PRESENTADO revision, a VIGENTE ModeloRecord carrying the justificante
     # reference, and the advanced work-unit pointers.
-    filed_at = datetime(2026, 5, 21, 11, 1, tzinfo=UTC)
+    filed_at = datetime(M303_YEAR, 5, 21, 11, 1, tzinfo=UTC)
     filed_by = "aeat-import-test"
     # This revision represents imported AEAT evidence. The validated observation
     # envelope below independently grounds the prior-period carry, so its amount
@@ -381,7 +384,7 @@ def seed_modelo_303_1t_clean_state(
                 status=ModeloRecordStatus.VIGENTE,
                 external_evidence=ExternalEvidence(
                     kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                    reference_id="JUST30320261T",
+                    reference_id=f"JUST303{M303_YEAR}1T",
                     imported_at=filed_at,
                 ),
             ),
@@ -404,23 +407,23 @@ def seed_modelo_303_1t_clean_state(
         CalculationObservationRepository().prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
-                filing_year=2026,
+                filing_year=M303_YEAR,
                 period="1T",
                 observations=registry_grounded_observations(
                     modelo="303",
-                    filing_year=2026,
+                    filing_year=M303_YEAR,
                     period="1T",
                     casilla_values=values,
                 ),
             ),
             source_kind="aeat_sede_justificante",
-            captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
+            captured_at=datetime(M303_YEAR, 5, 21, 11, 2, tzinfo=UTC),
             source_headers=source_headers,
             stamped_revision_id=source_snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "aeat_expediente_id": "EXP-303-2026-1T",
-                "aeat_justificante_csv": "JUST30320261T",
+                "aeat_expediente_id": f"EXP-303-{M303_YEAR}-1T",
+                "aeat_justificante_csv": f"JUST303{M303_YEAR}1T",
                 "authenticated_identity": taxpayer_tax_id,
             },
         )
@@ -449,7 +452,7 @@ def calculate_and_verify_modelo_303_revision(
     CalculationRevisionCatalogueRepository,
     BucketEventHistoryRepository,
 ]:
-    """Calculate one 2026 2T Modelo 303 revision and run the real verify gate over it.
+    """Calculate one 2T Modelo 303 (of the newest supported exercise) revision and run the real verify gate over it.
 
     The report is returned whatever it grants, so a caller can assert a refusal;
     the revision is reloaded after verification so it carries the state the
@@ -460,7 +463,7 @@ def calculate_and_verify_modelo_303_revision(
         tax_id=taxpayer_nif,
         profile_overrides={"identity.surnames": "Test Surnames", **QUARTERLY_303_FILER_FACTS},
     )
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=M303_YEAR, period="2T")
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
@@ -470,11 +473,11 @@ def calculate_and_verify_modelo_303_revision(
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
+        filing_year=M303_YEAR,
+        period=Period.from_year_and_code(M303_YEAR, "2T"),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
-        clock=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        clock=datetime(M303_YEAR, 5, 21, 12, 0, tzinfo=UTC),
         operation=operation,
     )
     binding_values = _modelo_303_engine_inputs()
@@ -513,9 +516,9 @@ def calculate_and_verify_modelo_303_revision(
                 reference="test:export-modelo-303-support",
                 operation=operation,
             ),
-            filing_period_date=date(2026, 6, 30),
+            filing_period_date=date(M303_YEAR, 6, 30),
             ports=_calculation_ports_481,
-            clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 1, tzinfo=UTC),
         ).revision
     seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
@@ -534,7 +537,7 @@ def calculate_and_verify_modelo_303_revision(
             actor="operator",
             workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
             settings=ready_clave_settings(taxpayer_nif),
-            clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
+            clock=datetime(M303_YEAR, 5, 21, 12, 2, tzinfo=UTC),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report

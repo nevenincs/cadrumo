@@ -36,6 +36,7 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -48,11 +49,13 @@ from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_sup
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "39000000-0000-4000-8000-000000000393"
-_T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 8, 14, 9, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 8, 14, 10, 0, tzinfo=UTC)
 _SUMMARY = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
 #: The sources a filer with no history states for itself: a figure nothing prior supplies is zero.
 _OPERATOR_STATED_SOURCES = frozenset({BindingSourceKind.MANUAL_INPUT, BindingSourceKind.PREVIOUS_FILING})

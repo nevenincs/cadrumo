@@ -59,13 +59,18 @@ from cadrumo.entrypoints.retencion_soportada_certificado_composition import (
     build_retencion_soportada_certificado_ports,
 )
 
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    open_ended_revision,
+)
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
-PROJECTION_YEAR = 2025
-_T0 = datetime(2026, 2, 2, 9, 0, tzinfo=UTC)
+PROJECTION_YEAR = newest_authored_edition("100")
+_T0 = datetime(PROJECTION_YEAR + 1, 2, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "59659659-0596-4596-8596-596596596596"
 _TAXPAYER_TAX_ID = "12345678Z"
-_M130_REVISION_ID = "2019-y-siguientes"
+_M130_REVISION_ID = str(open_ended_revision("130").id)
 ACTIVITY_ONLY = "actividad_economica"
 """Income categories that positively exclude every suffered-withholding credit class of Modelo 100."""
 
@@ -115,7 +120,9 @@ def _seed_profile(
     if not states_region:
         scenario_paths.add("tax_residence.ccaa")
     base_facts = (
-        *general_iva_profile_facts(tax_id=_TAXPAYER_TAX_ID, activity_start_date="2020-01-01"),
+        *general_iva_profile_facts(
+            tax_id=_TAXPAYER_TAX_ID, activity_start_date=date(filing_year_envelope().floor - 1, 1, 1).isoformat()
+        ),
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value=income_categories),
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
         UserProfileFact(path="renta_filing.declaration_type", value="1"),

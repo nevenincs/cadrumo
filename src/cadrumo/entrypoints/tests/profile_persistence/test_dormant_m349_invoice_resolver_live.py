@@ -28,6 +28,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.invoices.tests.modelo_349_invoice_facts import (
     M349_EXPECTED_IMPORTE,
@@ -50,8 +51,8 @@ pytestmark = [pytest.mark.hex_entrypoint]
 # ---------------------------------------------------------------------------
 
 _M349_BUCKET = "34900000-0000-4000-8000-000000000013"
-_M349_REVISION = "2020-y-siguientes"
-_M349_YEAR = 2026
+_M349_REVISION = str(open_ended_revision("349").id)
+_M349_YEAR = filing_year_envelope().horizon
 _M349_IMPORTE_CASILLA: CasillaId = validated_casilla_id("decl.importe-operaciones")
 _M349_IMPORTE_BINDING = "iva-349-declarante-importe-operaciones"
 _M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operadores")

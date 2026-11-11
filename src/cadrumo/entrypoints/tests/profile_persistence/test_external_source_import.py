@@ -31,6 +31,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_amendment_action_ports,
@@ -48,6 +49,8 @@ from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     Repos,
     repos,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["repos"]
 
@@ -151,9 +154,9 @@ def test_source_lexicals_refuse_dropped_casillas(repos: Repos) -> None:
         work_unit = create_work_unit(
             bucket_id=PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(open_ended_revision("130").id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T1,
@@ -183,9 +186,9 @@ def test_source_lexicals_refuse_value_shadowing(repos: Repos) -> None:
         work_unit = create_work_unit(
             bucket_id=PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(open_ended_revision("130").id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T1,
@@ -215,8 +218,8 @@ def test_source_payload_import_creates_exact_amendable_baseline(
     filing = _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id=reference_id,
             tax_id=TAX_ID,
@@ -246,7 +249,7 @@ def test_source_payload_import_creates_exact_amendable_baseline(
         IMPORT_INCOME_CASILLA: Decimal("1500.00"),
         IMPORT_EXPENSE_CASILLA: Decimal("300.0"),
     }
-    observed = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+    observed = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
     assert observed is not None
     assert observed.source_kind is ObservationSourceKind.AEAT_CSV_REGISTER
     assert observed.source_metadata["external_evidence_reference_id"] == reference_id
@@ -281,8 +284,8 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
         _import_external_filing_source(
             ExternalFilingBaselineSource(
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
                 evidence_reference_id="PARTIALCSV01",
                 tax_id=TAX_ID,
@@ -303,7 +306,7 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
     assert (
         CalculationObservationRepository().load_observation(
             "130",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(_YEAR, "1T"),
         )
         is None
     )
@@ -314,8 +317,8 @@ def test_csv_filing_refuses_tampered_observation_evidence_binding(repos: Repos) 
     filing = _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="TAMPERCSV001",
             tax_id=TAX_ID,
@@ -350,9 +353,9 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
         work_unit = create_work_unit(
             bucket_id=PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(open_ended_revision("130").id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T1,
@@ -360,7 +363,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
     _import_external_filing_source(
         ExternalFilingBaselineSource(
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=work_unit.period,
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="ROLLBACKBASE01",
@@ -389,7 +392,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
         _import_external_filing_source(
             ExternalFilingBaselineSource(
                 modelo="130",
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=work_unit.period,
                 evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
                 evidence_reference_id="ROLLBACKCSV01",
