@@ -26,8 +26,11 @@ from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 from cadrumo.domain.user_profile.values import UserProfileFact
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .....domain.iva.schema import InvoiceKind
 from .published_authority_support import published_authority_operation
+
+_YEAR = filing_year_envelope().horizon
 
 BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 
@@ -62,9 +65,9 @@ def m349_resolution(reader: InvoiceSourceCatalogueReader):
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=select_revision(modelo_349, filing_year=2026, period="1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision=select_revision(modelo_349, filing_year=_YEAR, period="1T"),
         ),
     )
 
@@ -95,9 +98,9 @@ def public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
         context=CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=modelo_revision("349", "2020-y-siguientes"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision=modelo_revision("349", revision_covering("349", _YEAR).id),
         ),
     )
     return tuple(row.clave_operacion for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow))
@@ -272,7 +275,7 @@ def clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
     return Invoice(  # ty: ignore[missing-argument]
         kind=kind,
         invoice_number="CLAVE/1",
-        issued_at=date(2026, 2, 1),
+        issued_at=date(_YEAR, 2, 1),
         counterparty_name="Contraparte UE",
         counterparty_tax_id="FR12345678901",
         counterparty_country="FR",
@@ -297,7 +300,7 @@ def m347_2026_context(bucket_id: str) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", revision_covering("347", _YEAR).id),
     )

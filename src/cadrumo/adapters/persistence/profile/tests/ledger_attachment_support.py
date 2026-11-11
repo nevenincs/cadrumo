@@ -17,8 +17,11 @@ from cadrumo.domain.attachments.service import (
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import BUCKET_ID, repositories
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["attachment_store", "seed_attachment", "seed_manual_transaction"]
 
@@ -37,7 +40,7 @@ def seed_attachment(secure_objects: SecureObjectRepository, *, pdf_bytes: bytes,
             source=AttachmentSource.LOCAL_FILE,
             source_reference="operator-evidence",
             mime_type="application/pdf",
-            captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 8, 1, tzinfo=UTC),
             bucket_id=BUCKET_ID,
         ),
     )
@@ -57,7 +60,7 @@ def seed_manual_transaction(secure_objects: SecureObjectRepository, *, idempoten
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",

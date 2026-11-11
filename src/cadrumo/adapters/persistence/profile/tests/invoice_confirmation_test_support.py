@@ -56,6 +56,7 @@ from .....application.ledger.preconditions import LedgerPreconditionCondition, l
 from .....core.config import Settings
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.regime_legend import RegimeLegend
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....inbound.einvoice.application_translation import translate_parsed_einvoice
@@ -87,6 +88,8 @@ from ..purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 BUCKET_ID = "29292929-2929-4929-8929-292929292929"
 EVIDENCE_CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
@@ -267,7 +270,7 @@ def make_svc(isolated_settings: Settings, objects: SecureObjectRepository) -> Pu
 
 def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     """Seed the filer profile the evidence draft path reads its territory from."""
-    clock = datetime(2026, 1, 1, tzinfo=UTC)
+    clock = datetime(_YEAR, 1, 1, tzinfo=UTC)
     facts = [UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001")]
     if tax_id is not None:
         facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))

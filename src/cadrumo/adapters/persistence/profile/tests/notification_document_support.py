@@ -43,6 +43,10 @@ from cadrumo.domain.attachments.protocols import AttachmentStoreProtocol
 from cadrumo.tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 if TYPE_CHECKING:
     from sqlalchemy import Connection
 
@@ -101,8 +105,8 @@ def read_row(*, certificado_id: str = CERT_READ) -> RemoteNotification:
         titular_nombre="PERSONA PRUEBA UNO",
         destinatario_nif="12345678Z",
         destinatario_nombre="PERSONA PRUEBA UNO",
-        fecha_emision=date(2026, 2, 3),
-        fecha_notificacion=date(2026, 2, 13),
+        fecha_emision=date(_YEAR, 2, 3),
+        fecha_notificacion=date(_YEAR, 2, 13),
         modo_notificacion="Comparecencia en sede electronica",
         leida=True,
         source_url=DETAIL_URL,

@@ -68,7 +68,11 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
-NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
+NOW = datetime(_YEAR, 8, 24, 12, tzinfo=UTC)
 
 
 OPERATION_ID = "1" * 64

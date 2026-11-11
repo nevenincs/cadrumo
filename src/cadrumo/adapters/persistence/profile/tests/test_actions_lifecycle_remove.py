@@ -23,12 +23,15 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     create_manual_row,
     purchase_invoice,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +53,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
@@ -60,7 +63,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
                 idempotency_key="remove-linked-row",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
     invoice_repository.save(
         build_invoice_catalogue(
@@ -78,7 +81,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         invoice_repository=invoice_repository,
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert removed.removed is True
@@ -124,7 +127,7 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
         dry_run=True,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert report.dry_run is True
@@ -148,7 +151,7 @@ def _attachment(store: AttachmentStore, index: int) -> str:
             sha256=hashlib.sha256(body).hexdigest(),
             mime_type="application/pdf",
             bytes_size=len(body),
-            captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 4, 9, 0, tzinfo=UTC),
             bucket_id=BUCKET_ID,
             captured_by="operator-A",
             source_command="aeat app ledger attach",
@@ -190,7 +193,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
@@ -200,7 +203,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
                 idempotency_key="remove-eight-attachments",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     removed = remove_manual_transaction(
@@ -212,7 +215,7 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
         reason="duplicate import",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert removed.removed is True
