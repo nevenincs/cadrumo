@@ -41,7 +41,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 from cadrumo_runtime.adapters.worker_authorization_client import WorkerAuthorizationClient
-from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost, worker_request_served
+from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost
+from cadrumo_runtime.host.worker_request_activity import worker_request_served
 
 from ..perf_measurement import wall_advisory_message
 from .test_operation_journal_inventory_benchmark import inventory_services, seed_settled_journal
