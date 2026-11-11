@@ -771,6 +771,8 @@ def _build_split_child_transaction(
             provider_name="ledger-split",
         ),
         raw_fields={"parent_transaction_id": parent.transaction_id, "split_index": str(index)},
+        # A part is still the statement's movement, so it keeps the reference the statement printed.
+        statement_reference=parent_raw.statement_reference,
     )
     return Transaction.model_validate(
         {
@@ -1005,6 +1007,7 @@ def build_merged_transaction(
             "split_group_id": split_group_id,
             "merged_child_count": str(len(sorted_child_ids)),
         },
+        statement_reference=parent_raw.statement_reference,
     )
     return Transaction.model_validate(
         {

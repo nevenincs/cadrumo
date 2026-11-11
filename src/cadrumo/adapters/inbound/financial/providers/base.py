@@ -869,8 +869,12 @@ def build_raw_transaction(
     counterparty: str | None,
     description: str,
     raw_fields: Mapping[str, str],
+    statement_reference: str | None,
 ) -> ParsedLedgerRow:
     """Create one :class:`ParsedLedgerRow` from a source-signed amount.
+
+    ``statement_reference`` is the reference the statement printed for the row,
+    or ``None`` when it printed none; a synthesized identifier never fills it.
 
     ``amount`` is the source-signed value as the parser read it. Its sign is
     consumed here to choose the
@@ -902,6 +906,7 @@ def build_raw_transaction(
             source_row_index=source_row_index,
         ),
         raw_fields=raw_fields,
+        statement_reference=statement_reference,
     )
     return ParsedLedgerRow(raw=raw, direction=direction)
 

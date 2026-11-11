@@ -3657,6 +3657,7 @@ cli:
       source: Origen
       split_group_id: id_grup_divisió
       stashed: Apartades
+      statement_reference: Referència de l'extracte
       taxable_base: Base imposable
       usage_ratio_id: Id de proporció d'ús
       valid: Vàlid

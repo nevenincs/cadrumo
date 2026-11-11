@@ -15,6 +15,7 @@ import pytest
 
 from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.transactions.enums import TransactionDirection
 from ......tests.inventory import FIXTURES_DIR
 from ..base import InvalidFinancialSourceError
@@ -407,3 +408,24 @@ def test_csv_provider_sniffs_delimiter_below_a_metadata_preamble(tmp_path: Path)
     validation = CsvProvider().validate_source(source)
 
     assert "delimiter=';'" in (validation.detected_dialect or "")
+
+
+def test_the_printed_reference_column_is_read_trimmed_and_absent_when_blank(tmp_path: Path) -> None:
+    """A Referencia cell is the statement's printed reference; a blank cell or no column means none."""
+    year = filing_year_envelope().horizon
+    printed = tmp_path / "con-referencia.csv"
+    printed.write_text(
+        f"Fecha;Concepto;Importe;Referencia\n02/01/{year};Recibo luz;-60,50;  0049-REF-184  \n03/01/{year};Venta;20,00;\n",
+        encoding="utf-8",
+    )
+    unprinted = tmp_path / "sin-referencia.csv"
+    unprinted.write_text(f"Fecha;Concepto;Importe\n02/01/{year};Recibo luz;-60,50\n", encoding="utf-8")
+
+    with_column = list(CsvProvider().ingest(printed))
+    without_column = list(CsvProvider().ingest(unprinted))
+
+    assert [row.raw.statement_reference for row in with_column] == ["0049-REF-184", None]
+    assert with_column[0].raw.provider_transaction_id == "0049-REF-184"
+    # A row without a printed reference keeps a synthesized provider id, never shown as a reference.
+    assert with_column[1].raw.provider_transaction_id.startswith("csv-provider-")
+    assert without_column[0].raw.statement_reference is None

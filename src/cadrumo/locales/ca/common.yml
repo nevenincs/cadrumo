@@ -3237,6 +3237,7 @@ desktop:
         unclassified: Classifica després
         under: A les parts els falten {amount} per al moviment.
       stage: Afegeix als canvis
+      statement_reference: Referència de l'extracte
       unread: No s'ha pogut llegir
       unsaved: 'Canvis: {count} · sense desar'
       unsaved_classification: → {classification} · sense desar

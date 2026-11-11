@@ -3621,6 +3621,7 @@ cli:
       source: Forrás
       split_group_id: Felosztási csoportazonosító
       stashed: Elrejtett
+      statement_reference: Kivonat hivatkozása
       taxable_base: Adóköteles alap
       usage_ratio_id: Használati arány azonosítója
       valid: Érvényes

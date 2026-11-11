@@ -119,6 +119,7 @@ class _ParsedOfxRow:
     """One OFX transaction's parsed fields, ready to project to a raw transaction."""
 
     transaction_id: str
+    statement_reference: str | None
     counterparty: str | None
     memo: str
     trntype: str
@@ -288,6 +289,7 @@ class OfxProvider(FinancialProvider):
                     counterparty=parsed.counterparty,
                     description=parsed.description,
                     raw_fields=raw_fields,
+                    statement_reference=parsed.statement_reference,
                 )
 
     def _parse_ofx_row(
@@ -304,8 +306,9 @@ class OfxProvider(FinancialProvider):
             InvalidFinancialSourceError: When the transaction cannot be parsed.
         """
         try:
-            transaction_id = _stripped_attr(transaction, "fitid")
-            if not transaction_id:
+            statement_reference = _stripped_attr(transaction, "fitid") or None
+            transaction_id = statement_reference
+            if transaction_id is None:
                 transaction_id = synthesize_transaction_id(
                     provider_name=f"{self.name}-{account_id or _UNNAMED_ACCOUNT}",
                     source_sha256=source_sha256,
@@ -330,6 +333,7 @@ class OfxProvider(FinancialProvider):
             ) from None
         return _ParsedOfxRow(
             transaction_id=transaction_id,
+            statement_reference=statement_reference,
             counterparty=counterparty,
             memo=memo,
             trntype=trntype,

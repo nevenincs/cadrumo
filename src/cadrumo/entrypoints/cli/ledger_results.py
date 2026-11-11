@@ -455,6 +455,7 @@ class TransactionPayload(OutputSchema):
     direction: NonEmptyStr
     counterparty: str = ""
     description: NonEmptyStr
+    statement_reference: str | None = None
     business_classification: NonEmptyStr
     business_pct: str | None = None
     category_id: str | None = None
@@ -799,6 +800,7 @@ class LedgerListRowPayload(OutputSchema):
     direction: str
     counterparty: str = ""
     description: str
+    statement_reference: str | None = None
     business_classification: str
     business_pct: str | None = None
     category_id: str | None = None

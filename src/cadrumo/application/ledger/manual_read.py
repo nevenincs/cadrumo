@@ -197,6 +197,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
+        statement_reference=raw.statement_reference,
         business_classification=transaction.business_classification.value,
         business_pct=_display_optional_decimal(transaction.business_pct),
         category_id=transaction.category_id,
