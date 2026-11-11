@@ -162,9 +162,47 @@ errors:
     certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
       de Situación Censal descargado de la Sede.
   context_labels:
+    accepted: aceptado
+    actual_value: valor real
     area: área
+    candidate: candidato
+    casilla_id: casilla
+    casilla_ids: casillas
+    casillas: casillas
+    count: recuento
+    currency: moneda
+    detail: detalle
+    ejercicio: ejercicio
     entry_count: número de entradas
+    expected: esperado
+    export_format: formato de exportación
+    field: campo
+    fields: campos
+    filing_period: periodo de presentación
+    filing_year: ejercicio de presentación
+    got: recibido
+    key: clave
+    kind: tipo
+    limit: límite
+    match_count: número de coincidencias
+    modelo: modelo
+    name: nombre
+    operation: operación
+    path: ruta
+    period: periodo
+    position: posición
+    profile: perfil
+    provider: proveedor
     reason: motivo
+    remedy: solución
+    revision: revisión
+    row: fila
+    section: sección
+    state: estado
+    status: estado
+    tax_year: ejercicio
+    value: valor
+    year: año
   error:
     canonical_tui_operation_outcome_unknown: 'La operación %{operation_id} se envió,
       pero su resultado es desconocido: puede que el cambio se haya guardado entero,
