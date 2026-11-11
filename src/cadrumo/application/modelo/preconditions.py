@@ -449,6 +449,17 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for member in ("ascendiente", "descendiente")
         for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
+    # The command that states which ledger entry books an inventory purchase, or that none does.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.inventory_purchase_ledger_row.stands",
+            f"{leaf}.inventory_purchase_ledger_row.{scenario}",
+            action_id="operator.ledger.inventory.movement.claim",
+        )
+        for scenario in ("unstated", "claim_refused")
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
     # No action: a settled prior-accrual Modelo 193 row needs an official
     # source for its payment-year amounts, which only the operator can obtain.
     *(

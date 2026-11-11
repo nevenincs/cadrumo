@@ -437,6 +437,9 @@ profile:
           label: Número de ascendientes
         convive_con_otro_progenitor:
           label: Convive con el padre o la madre de algún hijo del hogar
+        cotizaciones_ss_madre_2022:
+          label: Cotizaciones a la Seguridad Social de la madre tras el nacimiento
+            (2022)
         cotizaciones_ss_madre_2024:
           label: Cotizaciones a la Seguridad Social de la madre (2024)
         descendants:

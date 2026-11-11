@@ -66,9 +66,10 @@ _NOT_ACCRUING = frozenset({PlanFigureAbsence.PERIOD_ELAPSED, PlanFigureAbsence.B
 """Absences meaning the element has nothing left, as distinct from a figure that cannot be worked out."""
 
 
-def beyond_last_admitted_year(tax_year: int, last_admitted_year: int) -> bool:
-    """Whether a year lies past the last one the registry admits a claim for, so it is read only as projected."""
-    return tax_year > last_admitted_year
+def is_projected_year(tax_year: int, projection_coordinate: Callable[[int], int | None]) -> bool:
+    """Whether the support catalogue answers a year by carrying an earlier authored coordinate forward."""
+    coordinate = projection_coordinate(tax_year)
+    return coordinate is not None and coordinate != tax_year
 
 
 def _amount(value: Decimal) -> PublicDecimal:
@@ -87,7 +88,8 @@ class RegisterReadContext:
     forecast: ActivityAssetForecastOperation
     edition: Callable[[int], ActivityAssetEdition]
     admits_filing_year: Callable[[int], bool]
-    last_admitted_year: int
+    projection_coordinate: Callable[[int], int | None]
+    election_year: Callable[[ActivityAssetRevision], int]
     today: date
     minimum_bounds: DisposalBoundsReader
     class_labels: Callable[[DirectEstimationRegime, int], Mapping[str, str]]
@@ -448,8 +450,8 @@ def _list_row(revision: ActivityAssetRevision, context: RegisterReadContext) -> 
         pending_applies=not _left_service(revision, context.today),
         findings=_finding_counts(plan, claims, revision, context),
         default_claim_year=default_claim_year(plan, today=context.today),
-        years=tuple(year for year in readable if not beyond_last_admitted_year(year, context.last_admitted_year)),
-        projected_years=tuple(year for year in readable if beyond_last_admitted_year(year, context.last_admitted_year)),
+        years=tuple(year for year in readable if not is_projected_year(year, context.projection_coordinate)),
+        projected_years=tuple(year for year in readable if is_projected_year(year, context.projection_coordinate)),
         disposal=_list_disposal(revision),
     )
 

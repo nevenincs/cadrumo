@@ -280,6 +280,31 @@ def test_an_ascendant_without_a_name_is_refused_with_the_ascendant_door(operatio
         assert failure.verdict.action.action_id == "operator.profile.ascendiente"
 
 
+@pytest.mark.parametrize(
+    ("member", "door"),
+    [("descendiente", "operator.profile.descendiente"), ("ascendiente", "operator.profile.ascendiente")],
+)
+def test_a_row_without_a_birth_date_is_refused_with_the_door_of_its_member_kind(
+    operation: PinnedAuthorityOperation, member: str, door: str
+) -> None:
+    for year in _filing_years(operation):
+        facts = (
+            UserProfileFact(path=f"renta_family.{member}s_count", value="1"),
+            UserProfileFact(path=f"renta_family.{member}.0.apellidos_nombre", value="Navarro Gil Carmen"),
+            *((UserProfileFact(path=f"renta_family.{member}.0.nif", value=_NIF),) if member == "ascendiente" else ()),
+        )
+        revision = _revision(operation, year, _record(operation, *facts))
+
+        with pytest.raises(ModeloHouseholdRowFactUnstatedError) as refused:
+            _gate(operation, year, revision, "file")
+
+        assert _context(refused.value) == {"field": f"renta_family.{member}.birth_date", "count": "1"}
+        failure = refused.value.precondition_failure
+        assert failure is not None
+        assert failure.verdict.action is not None
+        assert failure.verdict.action.action_id == door
+
+
 def test_the_descendant_door_is_the_descendant_list_command() -> None:
     assert lookup_action("operator.profile.descendiente").target_command_key == "config.profile.descendiente.list"
 

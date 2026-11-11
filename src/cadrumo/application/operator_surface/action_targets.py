@@ -193,6 +193,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.classify", ("app", "ledger", "classify"), "LedgerClassifyResult", profile_bound_write=True),
     ActionTarget(
+        "ledger.inventory.movement.claim",
+        ("app", "ledger", "inventory", "movement", "claim"),
+        "InventoryLedgerChangeResult",
+        required_inputs=("actividad_id", "year", "correction_id", "movement_id", "ledger_row"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),
     ActionTarget(

@@ -1312,6 +1312,10 @@ errors:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,
       and, for a direct-debited second instalment, a Spanish account of yours.'
+    refused_modelo_inventory_purchase_ledger_row: 'The declaration stays refused:
+      a purchase of your inventory does not say which ledger entry books it, or names
+      one that does not match it. Say which entry books each purchase, or that none
+      does, then calculate again.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'The Modelo 303 cannot be calculated
       until the compensation carried from earlier periods has a source: record it
       in the IVA balance.'
