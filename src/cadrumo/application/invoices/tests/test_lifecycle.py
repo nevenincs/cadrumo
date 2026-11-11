@@ -27,7 +27,6 @@ from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoi
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..catalogue_lifecycle import (
     CatalogueInvoicePatch,
-    admit_catalogue_invoice_patch,
     resolve_catalogue_invoice,
     update_catalogue_invoice,
 )
@@ -258,28 +257,7 @@ def test_an_operation_date_added_without_its_role_is_refused_in_served_words_and
     assert refused.value.translated_message == rule_finding_words_key(
         InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH
     )
+    assert refused.value.context is not None
     assert refused.value.context["rule_finding_code"] == InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH.value
     assert creation_ports.invoice_repository.load().get(original.invoice_id) == original
     assert len(creation_ports.event_repository.load().events) == event_count
-
-
-def test_admitting_a_correction_reads_the_stored_invoice_and_refuses_what_its_update_would() -> None:
-    """The read-only admission answers the same refusal the guarded update would raise, before any write."""
-    creation_ports = in_memory_catalogue_creation_ports()
-    original = create_catalogue_invoice(invoice=_build("F-0143"), ports=creation_ports).invoice
-    ports = _lifecycle_ports(creation_ports)
-
-    with pytest.raises(InvoiceValidationError) as refused:
-        admit_catalogue_invoice_patch(
-            invoice_id=original.invoice_id,
-            patch=CatalogueInvoicePatch(operation_date=original.issued_at - timedelta(days=1)),
-            ports=ports,
-        )
-    admit_catalogue_invoice_patch(
-        invoice_id=original.invoice_id[:12], patch=CatalogueInvoicePatch(notes="a note"), ports=ports
-    )
-
-    assert refused.value.translated_message == rule_finding_words_key(
-        InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH
-    )
-    assert creation_ports.invoice_repository.load().get(original.invoice_id) == original

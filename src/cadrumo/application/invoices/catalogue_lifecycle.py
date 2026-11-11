@@ -271,19 +271,6 @@ def _admitted_correction(
     return corrected
 
 
-def admit_catalogue_invoice_patch(
-    *, invoice_id: str, patch: CatalogueInvoicePatch, ports: CatalogueLifecyclePorts
-) -> Invoice:
-    """Answer, without writing, whether the stored invoice admits ``patch``.
-
-    It raises the same refusal :func:`update_catalogue_invoice` would, so an
-    operation refuses a correction before it records any effect. The guarded
-    update re-admits against the catalogue it writes.
-    """
-    existing = resolve_catalogue_invoice(ports.invoice_repository.load(), invoice_id)
-    return _admitted_correction(existing, patch, ports, updated_at=now())
-
-
 def update_catalogue_invoice(
     *,
     bucket_id: str,
@@ -379,7 +366,6 @@ __all__ = [
     "CatalogueInvoicePatch",
     "CatalogueInvoiceRemoveResult",
     "CatalogueInvoiceUpdateResult",
-    "admit_catalogue_invoice_patch",
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
     "update_catalogue_invoice",
