@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import date
@@ -81,6 +82,8 @@ VERDICT_MEANING: dict[Verdict, str] = {
 GREEN = frozenset({Verdict.PASSED})
 """Verdicts a row is green at; a diff reports a row entering or leaving this set."""
 
+_STAGE_REFUSAL = re.compile(r"^(?:verify|export): \S+ \S+ (?P<code>[A-Z][A-Z0-9_]+)")
+"""A verify or export reason as the runner writes it: the stage, the operation, how it settled, its code."""
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
 _ANNUAL = "0A"
 
@@ -234,6 +237,11 @@ def classify(row: TableRow) -> Verdict:
         return Verdict.EXPECTED_REFUSAL
     passed = (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED)
     return Verdict.PASSED if passed else Verdict.FAIL
+
+
+def stage_refusal_codes(*reasons: str) -> set[str]:
+    """The codes the verify and export stages settled with, read from the reasons the runner wrote for them."""
+    return {match["code"] for reason in reasons if (match := _STAGE_REFUSAL.match(reason))}
 
 
 def is_unsupported(code: str) -> bool:

@@ -26,6 +26,7 @@ from ..rows import (
     read_rows,
     replay_horizons,
     select,
+    stage_refusal_codes,
     write_rows,
 )
 
@@ -236,3 +237,13 @@ def test_a_return_whose_period_has_not_ended_by_the_scenario_day_is_not_owed_yet
     )
     kept = ended([ended_quarter, open_quarter, last_year, this_year], today)
     assert kept == [ended_quarter, last_year]
+
+
+def test_a_refusal_the_export_or_verify_stage_settled_with_is_read_back_by_its_code() -> None:
+    export = "export: modelo.export refused REFUSED_MODELO_EXPORT_NAME_TOO_WIDE :: detail"
+    verify = "verify: modelo.work.verify failed INTEGRITY_STORAGE_VALIDATION"
+    findings = "verify: blocked; 2 findings; blocking: none"
+    assert stage_refusal_codes(export, verify, findings, "") == {
+        "REFUSED_MODELO_EXPORT_NAME_TOO_WIDE",
+        "INTEGRITY_STORAGE_VALIDATION",
+    }

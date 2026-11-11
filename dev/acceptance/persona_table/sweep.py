@@ -92,6 +92,7 @@ from .rows import (
     planned_rows,
     replay_horizons,
     select,
+    stage_refusal_codes,
     write_rows,
 )
 
@@ -231,6 +232,10 @@ def _run_return(
     export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
     calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
     reasons += [reason for reason in (verify_reason, export_reason) if reason]
+    if stated_refusal is not None and stated_refusal in stage_refusal_codes(verify_reason, export_reason):
+        return TableRow.from_plan(
+            plan, Stage.EXPECTED_REFUSAL, reason=" | ".join([verify_reason, export_reason])[:_REASON_LIMIT]
+        )
     return TableRow.from_plan(
         plan,
         calculate,
