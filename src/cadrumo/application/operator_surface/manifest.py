@@ -342,6 +342,16 @@ class ResolvedManifestActionProfile(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_exact_profile_resolution(self) -> ResolvedManifestActionProfile:
+        self._require_subject_identity()
+        self._require_alternative_identities()
+        action_reference = self.declaration.action
+        if action_reference is None:
+            self._require_no_recovery_shape()
+        else:
+            self._require_primary_action_identity(action_reference.action_id)
+        return self
+
+    def _require_subject_identity(self) -> None:
         subject_key = self.subject_leaf.live_leaf.subject_leaf_key
         if subject_key != self.declaration.subject_leaf_key:
             raise ValueError(
@@ -349,6 +359,7 @@ class ResolvedManifestActionProfile(BaseModel):
                 f"profile={self.declaration.subject_leaf_key}, live={subject_key}"
             )
 
+    def _require_alternative_identities(self) -> None:
         resolved_alternative_ids = tuple(item.action_id for item in self.resolved_alternative_actions)
         declared_alternative_ids = tuple(item.action_id for item in self.declaration.alternative_actions)
         if resolved_alternative_ids != declared_alternative_ids:
@@ -356,22 +367,20 @@ class ResolvedManifestActionProfile(BaseModel):
                 f"action-profile alternative identity mismatch: profile={declared_alternative_ids}, "
                 f"resolved={resolved_alternative_ids}"
             )
-        action_reference = self.declaration.action
-        if action_reference is None:
-            if self.resolved_action is not None:
-                raise ValueError("explicit no-recovery profiles cannot carry a resolved action")
-            if self.declaration.no_recovery_outcome is None:
-                raise ValueError("resolved profiles require an action or explicit no-recovery outcome")
-            return self
 
+    def _require_no_recovery_shape(self) -> None:
+        if self.resolved_action is not None:
+            raise ValueError("explicit no-recovery profiles cannot carry a resolved action")
+        if self.declaration.no_recovery_outcome is None:
+            raise ValueError("resolved profiles require an action or explicit no-recovery outcome")
+
+    def _require_primary_action_identity(self, action_id: str) -> None:
         if self.resolved_action is None:
-            raise ValueError(f"action profile has no resolved action: {action_reference.action_id}")
-        if self.resolved_action.action_id != action_reference.action_id:
+            raise ValueError(f"action profile has no resolved action: {action_id}")
+        if self.resolved_action.action_id != action_id:
             raise ValueError(
-                f"action-profile identity mismatch: profile={action_reference.action_id}, "
-                f"resolved={self.resolved_action.action_id}"
+                f"action-profile identity mismatch: profile={action_id}, resolved={self.resolved_action.action_id}"
             )
-        return self
 
 
 def _index_subject_rows[

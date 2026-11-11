@@ -7,9 +7,9 @@ import json
 import pytest
 
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
+from ..precondition_action_bindings import AlternativeActionArguments
 from ..preconditions import (
     ATTEST_PRIOR_VALUE_ACTION_ID,
-    AlternativeActionArguments,
     ModeloPreconditionFailure,
     build_modelo_precondition_failure_for_scenario,
 )

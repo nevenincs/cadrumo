@@ -28,7 +28,8 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ..preconditions import ATTEST_PRIOR_VALUE_ACTION_ID, AlternativeActionArguments
+from ..precondition_action_bindings import AlternativeActionArguments
+from ..preconditions import ATTEST_PRIOR_VALUE_ACTION_ID
 from ..verification_cross_period import CrossPeriodDoor, cross_period_door
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

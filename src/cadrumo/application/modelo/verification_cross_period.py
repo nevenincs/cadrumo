@@ -58,9 +58,9 @@ from ..calculations.cross_period_models import (
 from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
 from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloCrossPeriodCleanStateError
+from .precondition_action_bindings import AlternativeActionArguments
 from .preconditions import (
     ATTEST_PRIOR_VALUE_ACTION_ID,
-    AlternativeActionArguments,
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
     build_modelo_precondition_failure_for_scenario,
