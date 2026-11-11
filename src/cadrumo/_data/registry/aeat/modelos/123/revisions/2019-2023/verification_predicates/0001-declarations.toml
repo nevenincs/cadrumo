@@ -20,3 +20,21 @@ predicate_id = "modelo-123-2019-2023-base-declarada-cuando-rentas-positivas"
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+
+# Under-declaration advisory (no-silent-under-declaration). casilla 02 is the
+# base de retenciones e ingresos a cuenta and casilla 03 the retenciones e
+# ingresos a cuenta. Both are declared, not computed from each other, so a
+# positive base with a zero withholding is an observation about the filing
+# rather than an arithmetic identity. RIRPF art. 75 places every income the
+# base declares among the rents subject to withholding and art. 90 sets a
+# positive rate on that base; neither depends on the edition, so the guard is
+# authored here and the Orden HAC/56/2024 edition only renumbers its operands.
+#
+# ADVISORY, not BLOCKING. implies_nonzero holds trivially when the base is at
+# or below zero, so a quarter with no rentas never fires it.
+[[revisions."2019-2023".verification_predicates]]
+id = "implies-nonzero:base-total-implica-retenciones-total"
+predicate_id = "modelo-123-2019-2023-base-total-implica-retenciones-total"
+expression = 'implies_nonzero(["02", "03"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-75", "rd-439-2007:art-90", "ley-35-2006:art-101"]
