@@ -159,6 +159,15 @@ legal_refs = [
 ]
 source_refs = ["aeat-dr-193-2025"]
 
+[revisions.2025-y-siguientes.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
+
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = "modelo-193-gastos-reservado-76"
 offset = 76
@@ -244,7 +253,7 @@ legal_refs = [
 source_refs = ["aeat-dr-193-2025"]
 
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]
-contributor_legal_name = "gasto.nombre"
+party_filing_name = "gasto.nombre"
 contributor_tax_id = "gasto.nif"
 importe_gastos = "gasto.importe"
 representative_tax_id = "gasto.nif-representante"

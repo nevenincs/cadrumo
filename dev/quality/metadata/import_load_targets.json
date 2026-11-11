@@ -592,6 +592,7 @@
         "cadrumo.application.aggregation.withholding_filing_cadence",
         "cadrumo.application.aggregation.withholding_modelo_routing",
         "cadrumo.application.aggregation.withholding_observation_service",
+        "cadrumo.application.aggregation.withholding_party_names",
         "cadrumo.application.aggregation.withholding_producer",
         "cadrumo.application.aggregation.withholding_recognition",
         "cadrumo.application.aggregation.withholding_source",

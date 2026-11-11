@@ -161,6 +161,15 @@ source_refs = [
     "aeat-modelo-180-procedure",
 ]
 
+[revisions.2023-y-siguientes.export_layouts.records.fields.party_name]
+separator = " "
+natural_person = [
+    "primer_apellido",
+    "segundo_apellido",
+    "nombre",
+]
+entity = ["razon_social"]
+
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-perc-provincia"
 offset = 76
@@ -897,7 +906,7 @@ municipality = "perc.inmueble-municipio"
 municipality_code = "perc.inmueble-codigo-municipio"
 number_qualifier = "perc.inmueble-calificador-numero"
 number_type = "perc.inmueble-tipo-numeracion"
-perceptor_name = "perc.nombre"
+party_filing_name = "perc.nombre"
 perceptor_nif = "perc.nif"
 portal = "perc.inmueble-portal"
 postal_code = "perc.inmueble-codigo-postal"

@@ -7,6 +7,7 @@ from per-perceptor withholding observations into scalar values or row outputs.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -21,6 +22,8 @@ from ....core.filing_year import FourDigitYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
+from ...filing.declared_party_name import DeclaredPartyFilingName
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     optional_uppercase_alpha_code,
@@ -30,6 +33,8 @@ from .errors import RegistryValidationError
 from .form_codes import exceeds_form_bound, require_form_fit, require_form_width
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .ids import BindingId
+from .invoice_row_materialization import invoice_party_reference
+from .party_name_rows import RowValues, file_party_names
 from .schema_exports import ExportFieldDataType
 from .tax_id_format import require_spanish_tax_id_width
 from .withholding_observation_codes import (
@@ -43,18 +48,30 @@ if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
+    "PENDING_PERCEPTOR_NAME",
+    "PENDING_PERCEPTOR_NIF",
+    "DeclaredWithholdingParty",
     "WithholdingObservation",
     "WithholdingProvider",
     "resolve_retencion_clave",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
+    "withholding_party",
 ]
 
 # Row-field membership is authored by the selected revision bindings.  The
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
+
+#: The row field whose cell holds the perceptor's declared filing name rather than any text a source printed.
+_PARTY_FILING_NAME_ROW_FIELD: Final = "party_filing_name"
+
+#: The identifier the Modelo 193 design prescribes for a record whose payments are pending collection.
+PENDING_PERCEPTOR_NIF: Final = "999999999"
+#: The name the Modelo 193 design prescribes, literally, for that record; it names no party.
+PENDING_PERCEPTOR_NAME: Final = "VALORES PENDIENTE DE ABONO"
 WithholdingGrouping = Literal[
     "per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo", "per_source_allocation"
 ]
@@ -1198,9 +1215,60 @@ def _grouped_row_sum(
     return total
 
 
+@dataclass(frozen=True, slots=True)
+class DeclaredWithholdingParty:
+    """A perceptor as a withholding row names it, with the filing name declared for it.
+
+    ``country_code`` is empty when the source stated none; the declared name is
+    then looked up by the identifier's own prefix. This satisfies the party
+    protocol of :func:`~.party_name_rows.file_party_names` without adding a
+    stored field to :class:`WithholdingObservation`.
+    """
+
+    country_code: str
+    party_tax_id: str
+    party_handle: str | None
+    party_filing_name: DeclaredPartyFilingName | None
+
+
+def withholding_party(observation: WithholdingObservation) -> tuple[str, str]:
+    """Return the country (empty when unstated) and tax id a perceptor row is named by."""
+    return observation.country_code or "", observation.perceptor_tax_id
+
+
+def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the withholding bindings whose rows file a perceptor's name."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.WITHHOLDING
+        and _validated_withholding_selector(binding).row_field == _PARTY_FILING_NAME_ROW_FIELD
+    )
+
+
+def _is_prescribed_pending_record(row_observations: tuple[WithholdingObservation, ...]) -> bool:
+    """Whether the row is the Modelo 193 pending-collection record, whose name the design fixes."""
+    return all(
+        observation.perceptor_tax_id == PENDING_PERCEPTOR_NIF
+        and observation.perceptor_legal_name == PENDING_PERCEPTOR_NAME
+        and not _withholding_row_value_is_absent(observation.pendiente_flag)
+        for observation in row_observations
+    )
+
+
+def _party_reference(row_observations: tuple[WithholdingObservation, ...]) -> str:
+    """Return the reference one annual row carries in its name cell until the name is composed."""
+    country = _resolve_withholding_row_field(row_observations, row_field="country_code")
+    tax_id = _resolve_withholding_row_field(row_observations, row_field="perceptor_tax_id")
+    return invoice_party_reference("" if country is None else str(country), str(tax_id))
+
+
 def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
+    *,
+    parties: Iterable[DeclaredWithholdingParty] = (),
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
     """Resolve withholding row bindings through their declared annual grouping.
 
@@ -1214,11 +1282,18 @@ def resolve_withholding_binding_row_values(
     Unset facts remain absent.  Conflicting non-additive facts refuse before an
     export can choose a first or last observation arbitrarily.
 
+    A ``party_filing_name`` cell holds the name declared for the row's perceptor
+    among ``parties``, composed by the rule and width of the layout field that
+    files it; a perceptor with no such name leaves the cell absent, never blank
+    and never a name a source printed. ``party_name_refusals`` receives each
+    cell left without content.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    party_references: RowValues = {}
     for (grouping, _claves), members in _withholding_row_cohorts(revision).items():
         _sample_binding, sample_selector = members[0]
         scoped = tuple(_filter_withholding_observations(available, sample_selector))
@@ -1227,6 +1302,14 @@ def resolve_withholding_binding_row_values(
             row_field = selector.row_field
             if row_field is None:  # pragma: no cover - protected by selector validation
                 raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
+            if row_field == _PARTY_FILING_NAME_ROW_FIELD:
+                for row_index, row_observations in enumerate(rows, start=1):
+                    if _is_prescribed_pending_record(row_observations):
+                        # The design fixes this record's name to a literal that names no party.
+                        resolved[(binding.id, row_index)] = PENDING_PERCEPTOR_NAME
+                    else:
+                        party_references[(binding.id, row_index)] = _party_reference(row_observations)
+                continue
             if row_field not in WithholdingObservation.model_fields:
                 raise RegistryValidationError(
                     f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
@@ -1236,4 +1319,13 @@ def resolve_withholding_binding_row_values(
                 if value is None or _withholding_row_value_is_absent(value):
                     continue
                 resolved[(binding.id, row_index)] = value
+    resolved.update(
+        file_party_names(
+            revision,
+            party_references,
+            tuple(parties),
+            name_bindings=_party_name_bindings(revision),
+            refusals=party_name_refusals,
+        ),
+    )
     return resolved
