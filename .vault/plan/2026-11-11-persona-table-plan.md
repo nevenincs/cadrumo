@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:57297759c8cdab52666881dd582354db90db90b74fde014ca8e5a875d104f16f'
+body_hash: 'sha256:00cae51834284955f143abcf0759f823050b0a07660372507d58391dcc788bf5'
 ---
 
 <!-- RETIRED: S44 -->
@@ -84,6 +84,8 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S41` - Compute the donations deduction with Ley 49/2002 recurrence (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
 - [ ] `P02.S42` - Compute imputed property income for days a property is not let, on the rental property record (lane CALCULATORS); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, dev/fixtures/personas`.
 - [ ] `P02.S43` - Record the Modelo 202 obligation facts under 2026-11-11-modelo-202-obligation-adr: the art. 40.3 election as a dated three-state profile fact, the art. 40.2 base through binding modelo-202-cuota-base-ejercicio-anterior or else an attested prior value, the elected branch decided only by a current verified Modelo 202 calculation, and the first-year amendment to 2026-06-19-m202-first-period-attestation-adr (lane LIFECYCLE); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/_data/registry/aeat/modelos/202, src/cadrumo/application/modelo`.
+- [ ] `P02.S47` - Export a Modelo 100 property let under more than one contract in the ejercicio, with its nested Arrendamiento rows, where today it calculates and is blocked at export (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/filing, src/cadrumo/application/aggregation`.
+- [ ] `P02.S48` - Compute Modelo 100 furniture amortisation (0117) and the LIRPF art. 23.3 reduction (0151) from the property records, where today each is a served non-blocking limitation (lane CALC-RENTA, with LIFECYCLE for the XML layout); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation`.
 
 ### Phase `P03` - Desktop re-entry
 
