@@ -2527,18 +2527,18 @@ application:
       filed_observation_split_storage_context: El magatzem de l'historial de compensació
         d'IVA és una base de dades diferent de la d'observacions de càlcul
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
-      iva_wallet_amount_mismatch: 'La conciliació de la cartera de compensació d''IVA
-        està bloquejada per al Model 303: l''import de compensació anterior aportat
-        no coincideix amb el que manté l''autoritat de la cartera. Torna a executar
-        la conciliació o corregeix l''import aportat perquè hi coincideixi.'
-      iva_wallet_backend_casilla_conflict: L'entrada de casella del backend per a
-        la compensació prèvia del Model 303 entra en conflicte amb la decisió de conciliació
       input_required: 'Encara no es pot calcular el Model %{modelo} %{period} %{filing_year}:
         falta la dada %{binding} (casella %{boxes}). Indica-la i torna a calcular.
         No s''ha desat res.'
       input_required_unprinted: 'Encara no es pot calcular el Model %{modelo} %{period}
         %{filing_year}: falta la dada %{binding}. Indica-la i torna a calcular. No
         s''ha desat res.'
+      iva_wallet_amount_mismatch: 'La conciliació de la cartera de compensació d''IVA
+        està bloquejada per al Model 303: l''import de compensació anterior aportat
+        no coincideix amb el que manté l''autoritat de la cartera. Torna a executar
+        la conciliació o corregeix l''import aportat perquè hi coincideixi.'
+      iva_wallet_backend_casilla_conflict: L'entrada de casella del backend per a
+        la compensació prèvia del Model 303 entra en conflicte amb la decisió de conciliació
         de la cartera de compensació d'IVA.
       iva_wallet_blocked: 'La conciliació de la cartera de compensació d''IVA està
         bloquejada per al Model 303 (%{divergence}): %{reason}'
@@ -2665,6 +2665,19 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      previous_filing_unobserved: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la casella %{boxes} arrossega d''ella com la dada %{binding}. Una casella
+        que no mostra és desconeguda, no zero: registra aquesta declaració amb aquestes
+        caselles o indica tu l''import de la dada %{binding}, i torna a calcular.
+        No s''ha desat res.'
+      previous_filing_unobserved_unprinted: 'Encara no es pot calcular el Model %{modelo}
+        %{period} %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
+        que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
+        no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
+        de la dada %{binding}, i torna a calcular. No s''ha desat res.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
         import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
         ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
@@ -2737,19 +2750,6 @@ application:
       revision_pick_explicit_id_required: La selecció explícita de revisió requereix
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id només és
-      previous_filing_unobserved: 'Encara no es pot calcular el Model %{modelo} %{period}
-        %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
-        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
-        que la casella %{boxes} arrossega d''ella com la dada %{binding}. Una casella
-        que no mostra és desconeguda, no zero: registra aquesta declaració amb aquestes
-        caselles o indica tu l''import de la dada %{binding}, i torna a calcular.
-        No s''ha desat res.'
-      previous_filing_unobserved_unprinted: 'Encara no es pot calcular el Model %{modelo}
-        %{period} %{filing_year}: la declaració del Model %{source_modelo} de %{source_filing_year}
-        (%{source_period}) que tens desada no mostra les caselles %{source_boxes},
-        que la dada %{binding} arrossega d''ella. Una casella que no mostra és desconeguda,
-        no zero: registra aquesta declaració amb aquestes caselles o indica tu l''import
-        de la dada %{binding}, i torna a calcular. No s''ha desat res.'
         vàlid amb el selector de revisió explícita.
       source_owned_binding_override: Has introduït un valor en una casella que s'obté
         dels teus registres; treu-lo o corregeix el registre del qual prové.

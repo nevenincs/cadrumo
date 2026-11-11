@@ -2488,18 +2488,18 @@ application:
         más adatbázis, mint a számítási megfigyeléseké
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
-      iva_wallet_amount_mismatch: 'Az IVA-tárca egyeztetése blokkolva van a Modelo
-        303 esetén: a megadott korábbi kompenzációs összeg eltér a tárca hiteles összegétől.
-        Futtasd újra az egyeztetést, vagy javítsd a megadott összeget az egyezésig.'
-      iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának rovatbemenete
-        ütközik az IVA-tárca egyeztetési döntésével.
-      iva_wallet_blocked: 'Az IVA-tárca egyeztetése blokkolva van a Modelo 303 esetén
       input_required: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még nem
         számolható ki: hiányzik a(z) %{binding} adat (%{boxes}. mező). Add meg, majd
         számolj újra. Semmi nem lett mentve.'
       input_required_unprinted: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
         még nem számolható ki: hiányzik a(z) %{binding} adat. Add meg, majd számolj
         újra. Semmi nem lett mentve.'
+      iva_wallet_amount_mismatch: 'Az IVA-tárca egyeztetése blokkolva van a Modelo
+        303 esetén: a megadott korábbi kompenzációs összeg eltér a tárca hiteles összegétől.
+        Futtasd újra az egyeztetést, vagy javítsd a megadott összeget az egyezésig.'
+      iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának rovatbemenete
+        ütközik az IVA-tárca egyeztetési döntésével.
+      iva_wallet_blocked: 'Az IVA-tárca egyeztetése blokkolva van a Modelo 303 esetén
         (%{divergence}): %{reason}'
       iva_wallet_caller_binding_conflict: Az általad megadott érték a Modelo 303 előző
         kompenzációjához ütközik az IVA-tárca egyeztetési döntésével.
@@ -2623,6 +2623,20 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
+      previous_filing_unobserved: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
+        még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban (%{source_filing_year},
+        %{source_period}) nem szerepelnek a(z) %{source_boxes} mezők, amelyeket a(z)
+        %{boxes}. mező a(z) %{binding} adatként visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
+      previous_filing_unobserved_unprinted: 'A(z) %{modelo} %{period} %{filing_year}
+        nyomtatvány még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban
+        (%{source_filing_year}, %{source_period}) nem szerepelnek a(z) %{source_boxes}
+        mezők, amelyeket a(z) %{binding} adat visz tovább belőle. Egy mező, amely
+        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
+        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
+        lett mentve.'
       prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
         nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
         nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
@@ -2694,20 +2708,6 @@ application:
         %{eligible_states}.'
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
-      previous_filing_unobserved: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány
-        még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban (%{source_filing_year},
-        %{source_period}) nem szerepelnek a(z) %{source_boxes} mezők, amelyeket a(z)
-        %{boxes}. mező a(z) %{binding} adatként visz tovább belőle. Egy mező, amely
-        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
-        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
-        lett mentve.'
-      previous_filing_unobserved_unprinted: 'A(z) %{modelo} %{period} %{filing_year}
-        nyomtatvány még nem számolható ki: a tárolt Modelo %{source_modelo} bevallásodban
-        (%{source_filing_year}, %{source_period}) nem szerepelnek a(z) %{source_boxes}
-        mezők, amelyeket a(z) %{binding} adat visz tovább belőle. Egy mező, amely
-        nem szerepel, ismeretlen, nem nulla: rögzítsd azt a bevallást ezekkel a mezőkkel,
-        vagy add meg te a(z) %{binding} adat összegét, majd számolj újra. Semmi nem
-        lett mentve.'
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
         explicit revízió kiválasztóval érvényes.
       source_owned_binding_override: Olyan mezőbe írtál értéket, amely a nyilvántartásaidból

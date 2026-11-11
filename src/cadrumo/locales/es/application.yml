@@ -2528,18 +2528,18 @@ application:
       filed_observation_split_storage_context: El almacén del historial de compensación
         de IVA es una base de datos distinta de la de observaciones de cálculo
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
-      iva_wallet_amount_mismatch: 'La conciliación del saldo IVA está bloqueada para
-        el Modelo 303: el importe de compensación anterior aportado no coincide con
-        el que mantiene la autoridad de la cartera. Vuelve a ejecutar la conciliación
-        o corrige el importe aportado para que coincida.'
-      iva_wallet_backend_casilla_conflict: El valor de casilla del backend para la
-        compensación previa del Modelo 303 entra en conflicto con la decisión de conciliación
       input_required: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
         %{filing_year}: falta el dato %{binding} (casilla %{boxes}). Indícalo y vuelve
         a calcular. No se ha guardado nada.'
       input_required_unprinted: 'Todavía no se puede calcular el Modelo %{modelo}
         %{period} %{filing_year}: falta el dato %{binding}. Indícalo y vuelve a calcular.
         No se ha guardado nada.'
+      iva_wallet_amount_mismatch: 'La conciliación del saldo IVA está bloqueada para
+        el Modelo 303: el importe de compensación anterior aportado no coincide con
+        el que mantiene la autoridad de la cartera. Vuelve a ejecutar la conciliación
+        o corrige el importe aportado para que coincida.'
+      iva_wallet_backend_casilla_conflict: El valor de casilla del backend para la
+        compensación previa del Modelo 303 entra en conflicto con la decisión de conciliación
         de la cartera de IVA.
       iva_wallet_blocked: 'La conciliación del saldo IVA está bloqueada para el Modelo
         303 (%{divergence}): %{reason}'
@@ -2666,6 +2666,20 @@ application:
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
         como diferido antes de calcular.'
+      previous_filing_unobserved: 'Todavía no se puede calcular el Modelo %{modelo}
+        %{period} %{filing_year}: la declaración del Modelo %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tienes guardada no muestra las casillas %{source_boxes},
+        que la casilla %{boxes} arrastra de ella como el dato %{binding}. Una casilla
+        que no muestra es desconocida, no cero: registra esa declaración con esas
+        casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
+      previous_filing_unobserved_unprinted: 'Todavía no se puede calcular el Modelo
+        %{modelo} %{period} %{filing_year}: la declaración del Modelo %{source_modelo}
+        de %{source_filing_year} (%{source_period}) que tienes guardada no muestra
+        las casillas %{source_boxes}, que el dato %{binding} arrastra de ella. Una
+        casilla que no muestra es desconocida, no cero: registra esa declaración con
+        esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
         ningún importe de ejercicios anteriores que puedas declarar como no pendiente:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra
@@ -2738,20 +2752,6 @@ application:
       revision_pick_explicit_id_required: La selección explícita de revisión requiere
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
-      previous_filing_unobserved: 'Todavía no se puede calcular el Modelo %{modelo}
-        %{period} %{filing_year}: la declaración del Modelo %{source_modelo} de %{source_filing_year}
-        (%{source_period}) que tienes guardada no muestra las casillas %{source_boxes},
-        que la casilla %{boxes} arrastra de ella como el dato %{binding}. Una casilla
-        que no muestra es desconocida, no cero: registra esa declaración con esas
-        casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
-        No se ha guardado nada.'
-      previous_filing_unobserved_unprinted: 'Todavía no se puede calcular el Modelo
-        %{modelo} %{period} %{filing_year}: la declaración del Modelo %{source_modelo}
-        de %{source_filing_year} (%{source_period}) que tienes guardada no muestra
-        las casillas %{source_boxes}, que el dato %{binding} arrastra de ella. Una
-        casilla que no muestra es desconocida, no cero: registra esa declaración con
-        esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
-        No se ha guardado nada.'
         válido con el selector de revisión explícita.
       source_owned_binding_override: Has introducido un valor en una casilla que se
         obtiene de tus registros; quítalo o corrige el registro del que procede.

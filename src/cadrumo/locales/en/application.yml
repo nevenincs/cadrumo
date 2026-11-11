@@ -2402,18 +2402,18 @@ application:
       filed_observation_split_storage_context: The IVA compensation history store
         is a different database than the calculation observation store
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
-      iva_wallet_amount_mismatch: 'IVA wallet reconciliation is blocked for Modelo
-        303: the supplied prior-compensation amount disagrees with the amount the
-        wallet authority holds. Re-run the wallet reconciliation, or correct the supplied
-        amount to match it.'
-      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
       input_required: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
         yet: the input %{binding} (box %{boxes}) has no value. Supply it, then calculate
         again. Nothing was saved.'
       input_required_unprinted: 'Modelo %{modelo} %{period} %{filing_year} cannot
         be calculated yet: the input %{binding} has no value. Supply it, then calculate
         again. Nothing was saved.'
+      iva_wallet_amount_mismatch: 'IVA wallet reconciliation is blocked for Modelo
+        303: the supplied prior-compensation amount disagrees with the amount the
+        wallet authority holds. Re-run the wallet reconciliation, or correct the supplied
+        amount to match it.'
+      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
+        compensation conflicts with the IVA wallet reconciliation decision.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
       iva_wallet_caller_binding_conflict: The value you supplied for the Modelo 303
@@ -2533,6 +2533,18 @@ application:
         on version %{revision_id}: the modelo definitions declare a value source that
         no calculation resolver handles. Add a resolver or mark it as deferred before
         calculating.'
+      previous_filing_unobserved: 'Modelo %{modelo} %{period} %{filing_year} cannot
+        be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which box %{boxes}
+        carries from it as the input %{binding}. A box it does not show is unknown,
+        not zero: record that return with those boxes, or state the amount of the
+        input %{binding} yourself, then calculate again. Nothing was saved.'
+      previous_filing_unobserved_unprinted: 'Modelo %{modelo} %{period} %{filing_year}
+        cannot be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
+        (%{source_period}) does not show boxes %{source_boxes}, which the input %{binding}
+        carries from it. A box it does not show is unknown, not zero: record that
+        return with those boxes, or state the amount of the input %{binding} yourself,
+        then calculate again. Nothing was saved.'
       prior_carries_nothing_open: 'Modelo %{modelo} for %{filing_year} has no amount
         from earlier years left to state as not pending: each one already holds a
         value or your statement, or the declaration carries none. Nothing was changed.'
@@ -2602,18 +2614,6 @@ application:
         to your profile: %{reason} No declaration was created.'
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
-      previous_filing_unobserved: 'Modelo %{modelo} %{period} %{filing_year} cannot
-        be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
-        (%{source_period}) does not show boxes %{source_boxes}, which box %{boxes}
-        carries from it as the input %{binding}. A box it does not show is unknown,
-        not zero: record that return with those boxes, or state the amount of the
-        input %{binding} yourself, then calculate again. Nothing was saved.'
-      previous_filing_unobserved_unprinted: 'Modelo %{modelo} %{period} %{filing_year}
-        cannot be calculated yet: your stored Modelo %{source_modelo} for %{source_filing_year}
-        (%{source_period}) does not show boxes %{source_boxes}, which the input %{binding}
-        carries from it. A box it does not show is unknown, not zero: record that
-        return with those boxes, or state the amount of the input %{binding} yourself,
-        then calculate again. Nothing was saved.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
         --year %{year} separately and use a period token such as 0A, 1T, or 01.
       work_unit_already_discarded: The declaration is already discarded.
