@@ -261,9 +261,21 @@ def test_browser_handoff_names_match_the_external_agent_protocol() -> None:
     This reads declaration constants in the agent's interpreter, without
     constructing Settings, starting a login attempt or opening a browser.
     """
-    checkout = Path(os.environ["CADRUMO_DEV_AGENT_CHECKOUT"])
+    variable = "CADRUMO_DEV_AGENT_CHECKOUT"
+    named = os.environ.get(variable, "").strip()
+    if not named:
+        pytest.fail(
+            f"{variable} is not set: name the absolute path of a cadrumo-agent checkout synced with `uv sync`",
+            pytrace=False,
+        )
+    checkout = Path(named)
     interpreter = checkout / ".venv" / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
-    assert checkout.is_absolute() and interpreter.is_file(), "name a synced external agent checkout"
+    if not (checkout.is_absolute() and interpreter.is_file()):
+        pytest.fail(
+            f"{variable}={named} is not a synced cadrumo-agent checkout: name an absolute path whose "
+            f"{interpreter.relative_to(checkout).as_posix()} exists after `uv sync`",
+            pytrace=False,
+        )
     source = """
 import json
 from cadrumo_agent.cli._auth_browser import AUTH_BROWSER_PORT_ENV, AUTH_BROWSER_NONCE_ENV
