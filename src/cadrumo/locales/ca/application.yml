@@ -2440,6 +2440,72 @@ application:
       detail_row_identity_conflict: Una fila de detall que has introduït no coincideix
         amb la que donen els teus registres per al mateix declarat; corregeix-la o
         treu-la abans de calcular.
+      exonerado_390_attestation_applicable_unsupported: Aquí només es pot registrar
+        la declaració que el model 390 no és aplicable. Un model 390 que sí és aplicable
+        en el període %{period} de %{filing_year} no es registra per aquesta via.
+        No s'ha desat res.
+      exonerado_390_attestation_conflicting_assertions: Una altra atestació registrada
+        per al període %{period} de %{filing_year} contradiu aquesta, així que cap
+        no pot donar suport al model 303. No s'ha calculat res. Decideix quina declaració
+        preval abans de basar-te en una atestació d'aquest període.
+      exonerado_390_attestation_coordinate_unsupported: 'No es pot registrar prova
+        d''aplicabilitat del model 390 per al període %{period} de %{filing_year}:
+        només existeix per a un model 303 trimestral o mensual el disseny de registre
+        del qual declara els camps ordinaris de capçalera de la prova. No s''ha desat
+        res.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: L'atestació que has
+        indicat no coincideix amb el període %{period} de %{filing_year} i el perfil
+        actual, o diu que el model 390 sí és aplicable, així que no pot donar suport
+        a aquest model 303. No s'ha calculat res. Registra una atestació nova per
+        a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_not_attestation: L'adjunt que has indicat
+        no és una atestació d'aplicabilitat del model 390, així que no pot donar suport
+        al model 303 del període %{period} de %{filing_year}. No s'ha calculat res.
+        Registra una atestació per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_other_profile: L'atestació que has indicat
+        pertany a un altre perfil o té un altre SHA-256, així que no pot donar suport
+        al model 303 del període %{period} de %{filing_year}. No s'ha calculat res.
+        Registra una atestació nova per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_evidence_reference_invalid: L'identificador de l'adjunt
+        i el SHA-256 que has donat no formen una referència d'atestació vàlida, així
+        que no poden donar suport al model 303 del període %{period} de %{filing_year}.
+        No s'ha calculat res. Registra una atestació nova per a aquest període i fes
+        servir els valors que t'indiqui.
+      exonerado_390_attestation_evidence_unusable: L'atestació que has indicat no
+        es pot verificar des de la custòdia d'aquest perfil, així que no pot donar
+        suport al model 303 del període %{period} de %{filing_year}. No s'ha calculat
+        res. Registra una atestació nova per a aquest període i torna-ho a provar.
+      exonerado_390_attestation_incomplete_identity: Indica tant l'identificador de
+        l'adjunt com el seu SHA-256 de l'atestació d'aplicabilitat del model 390,
+        o cap dels dos. No s'ha calculat res.
+      exonerado_390_attestation_malformed_identity: 'L''identificador de l''adjunt
+        i el SHA-256 que has donat no són un parell d''identitat vàlid: cadascun té
+        64 caràcters hexadecimals i els dos són iguals. No s''ha calculat res. Indica
+        els valors que va donar l''atestació en registrar-se.'
+      exonerado_390_attestation_not_modelo_303_work_unit: La declaració %{work_unit_id}
+        no és un model 303, i l'atestació d'aplicabilitat del model 390 pertany a
+        un model 303. No s'ha desat res. Indica una declaració del model 303 o el
+        període.
+      exonerado_390_attestation_observation_timing: 'L''atestació d''aplicabilitat
+        del model 390 del període %{period} de %{filing_year} no es pot registrar:
+        només es pot observar després que acabi el període i no després del moment
+        en què es registra. No s''ha desat res. Registra-la de nou amb una hora d''observació
+        igual o posterior al final del període i que no sigui futura.'
+      exonerado_390_attestation_profile_bucket_invalid: L'identificador de perfil
+        que has indicat no és vàlid, així que no s'ha registrat cap atestació d'aplicabilitat
+        del model 390. No s'ha desat res.
+      exonerado_390_attestation_profile_not_current: L'atestació d'aplicabilitat del
+        model 390 necessita el perfil amb el qual has iniciat sessió, i el perfil
+        registrat no és aquest. No s'ha desat res. Comprova l'estat del perfil.
+      exonerado_390_attestation_stored_observation_timing: L'atestació d'aplicabilitat
+        del model 390 registrada per al període %{period} de %{filing_year} es va
+        observar en un moment que el seu període no permet, així que no pot donar
+        suport a aquest model 303. No s'ha calculat res. Registra una atestació nova
+        amb una hora d'observació vàlida i torna-ho a provar.
+      exonerado_390_attestation_unknown_attachment: L'atestació que has indicat no
+        consta en aquest perfil, així que no pot donar suport al model 303 del període
+        %{period} de %{filing_year}. No s'ha calculat res. Registra una atestació
+        nova per a aquest període i fes servir els valors que t'indiqui.
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió

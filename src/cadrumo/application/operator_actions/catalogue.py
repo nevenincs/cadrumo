@@ -757,6 +757,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.work.attest_m303_exonerado_390",
+            target_command_key="modelo.work.attest_m303_exonerado_390",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="observed_at",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="observed_at",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.verify",
             target_command_key="modelo.work.verify",
             argument_specifications=(

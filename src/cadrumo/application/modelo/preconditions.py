@@ -776,6 +776,67 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     *_iva_wallet_profiles("modelo.work.verify", _IVA_WALLET_REVISION_SCENARIOS),
     *_iva_wallet_profiles("modelo.work.file", _IVA_WALLET_REVISION_SCENARIOS),
     *_iva_wallet_profiles("modelo.export", _IVA_WALLET_REVISION_SCENARIOS),
+    # A calculation the note gate withholds an action from. A stale screen is
+    # put right by calculating again; a blocking note is read on the
+    # declaration's status; a filing recorded before screens existed has no
+    # action that clears it, so it is the operator's decision.
+    *(
+        profile
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export", "modelo.work.report")
+        for profile in (
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.screen_outdated",
+                action_id="operator.modelo.work.calculate",
+            ),
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.blocking_note",
+                action_id="operator.modelo.work.status",
+            ),
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.filed_before_grade_cap",
+            ),
+        )
+    ),
+    # An operator's Modelo 390 applicability attestation the application refuses
+    # to record or to rely on. Evidence that is unusable or observed at a time
+    # its period does not allow is replaced by recording a new attestation; the
+    # other causes lie in what the request names, which the operator decides,
+    # or in what this path cannot record at all.
+    *(
+        _profile(
+            "modelo.work.attest_m303_exonerado_390",
+            "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+            f"modelo.work.attest_m303_exonerado_390.evidence.{scenario_code}",
+            action_id="operator.modelo.work.attest_m303_exonerado_390",
+        )
+        for scenario_code in ("observation_timing", "evidence_unusable")
+    ),
+    _profile(
+        "modelo.work.attest_m303_exonerado_390",
+        "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+        "modelo.work.attest_m303_exonerado_390.evidence.profile_not_current",
+        action_id="operator.profile.status",
+    ),
+    *(
+        _profile(
+            "modelo.work.attest_m303_exonerado_390",
+            "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+            f"modelo.work.attest_m303_exonerado_390.evidence.{scenario_code}",
+        )
+        for scenario_code in ("identity_unusable", "target_wrong", "conflicting_assertions")
+    ),
+    _profile(
+        "modelo.work.attest_m303_exonerado_390",
+        "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+        "modelo.work.attest_m303_exonerado_390.evidence.request_unsupported",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
 )
 
 MODELO_PRECONDITION_PROFILE_REGISTRY: Mapping[tuple[str, str, str], ManifestActionProfile] = MappingProxyType(

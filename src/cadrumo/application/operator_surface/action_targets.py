@@ -240,6 +240,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "VerificationReportListResult",
     ),
     ActionTarget(
+        "modelo.work.attest_m303_exonerado_390",
+        ("app", "modelo", "work", "attest-m303-exonerado-390"),
+        "M303Exonerado390AttestationResult",
+        required_inputs=("year", "period", "observed_at"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.work.attest_prior_carries",
         ("app", "modelo", "work", "attest-prior-carries"),
         "WorkAttestPriorCarriesResult",
