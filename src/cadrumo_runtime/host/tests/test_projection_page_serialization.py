@@ -17,7 +17,7 @@ from cadrumo_client.contracts.projection_pages import (
     project_encoded_page,
 )
 
-from ..operation_host import projection_document
+from ..operation_projection_documents import projection_document
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

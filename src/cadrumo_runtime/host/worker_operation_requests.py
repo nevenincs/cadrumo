@@ -66,7 +66,8 @@ from cadrumo_runtime.contracts.profile_worker import (
 
 from ..adapters.worker_lease_transfer import read_worker_lease
 from ..adapters.worker_transport import WorkerChannel
-from .operation_host import ProfileWorkerOperationHost, worker_request_served
+from .operation_host import ProfileWorkerOperationHost
+from .worker_request_activity import worker_request_served
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 _LOGGER = get_logger(__name__)

@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import ContextVar, copy_context
 from datetime import UTC, datetime
+from functools import cache
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -62,12 +63,15 @@ if __name__ == "__main__":
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
 
-def _sandbox_instant() -> datetime:
+@cache
+def sandbox_instant() -> datetime:
     """The frozen instant: 1 April, 09:00 UTC, of the newest filing year the pinned authority supports.
 
     The isolated worker child carries no authority setting, so it reads the
     generation the sandbox published beside its storage; every other caller
-    reads the authority the parent process selected.
+    reads the authority the parent process selected. It is read on first use,
+    not at import, so the child's argument parser answers before that
+    generation exists.
     """
     if __name__ != "__main__":
         with bundled_indexed_authority().operation() as operation:
@@ -82,16 +86,12 @@ def _sandbox_instant() -> datetime:
         published.close()
 
 
-SANDBOX_INSTANT: datetime = _sandbox_instant()
-"""The canonical frozen instant for docs sequences and their profile workers."""
-
-
 class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
     """Pin the fixture clock in the host's separate connection threads too."""
 
     @override
     def _connection(self, channel: ByteChannel) -> None:
-        with frozen_clock(SANDBOX_INSTANT):
+        with frozen_clock(sandbox_instant()):
             super()._connection(channel)
 
 
@@ -208,7 +208,7 @@ def _worker_composition() -> Generator[None]:
                 cadrumo_live_tests_google="",
             ),
             recorded_export_version(root.parent),
-            frozen_clock(SANDBOX_INSTANT),
+            frozen_clock(sandbox_instant()),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             profile_adapter_composition(automation_secrets_store=_UnavailableSecretStore()),
         ):
@@ -255,7 +255,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
             capture_login=lambda channel: SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
             worker_script=WORKER_SCRIPT.get() or Path(__file__).resolve(),
-            wall_clock=lambda: SANDBOX_INSTANT,
+            wall_clock=sandbox_instant,
         )
         profiles.prepare_registry()
         server = _SequenceRuntimeTransportServer(
