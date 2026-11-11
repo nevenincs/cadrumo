@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:53a260538534a187a8e05de1eb86a07b58e331f7240dbdecda9ed5695e06ace7'
+body_hash: 'sha256:b28ba4cb48dfec3480fb6562edbb37d222d65ffbb2902a825e64ad9fef77a43a'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -239,7 +239,8 @@ Basis: the operator's ruling that local LLM use on the 16 GB reference machine i
 
 - **D5, server lifetime.** At manager start the selected engine's server is *dormant*: the manager's supervision is set up and the program is checked, but no server process runs. "Supervised for the manager's whole life" now means the supervision lives that long, not the process.
 - **D5, demand.** The server starts only on a demand. A demand is a manager IPC verb, and its only caller is the agent service, before cadrumo-agent extracts or classifies a document on a local lane. The verb goes through the manager's existing native peer admission: exact process and peer evidence, the agent-service role and invocation. A client-supplied ID grants nothing. The manager starts the server, waits for `/health`, and answers ready or a typed refusal. cadrumo-agent's admission and `make_resident` then load the model, as before. There is no second channel: no lease file, no environment flag, and no direct start by cadrumo-agent. When the agent service cannot reach the manager, the extraction or classification is refused with a reason the backend serves.
-- **D5, idle stop.** When the router has held no model for 5 minutes, the manager stops the server through its job (Windows) or process group (Linux, macOS), by its own process ID, back to dormant. A stop never unloads a model in use. Crash restart applies only while the server is demanded and not idle-stopped.
+- **D5, idle stop.** 5 minutes after the last live demand, the manager stops the server through its job (Windows) or process group (Linux, macOS), by its own process ID, back to dormant. A stop never unloads a model in use. Crash restart applies only while the server is demanded and not idle-stopped.
+- **D5, demand lease.** A demand is a lease the manager keeps in memory, never on disk. Only the admitted agent-service connection renews it, and only while a local-lane read runs. It lapses on its own when the service dies or stops renewing, so no lease outlives its connection's process. The idle stop never fires while a renewal is pending. (Refinement of 2026-11-11, recorded under the coordinator's acceptance of this amendment. Before it, the idle stop read: "When the router has held no model for 5 minutes".)
 - **D5, what never demands.** GUI launch, manager start, warm-up, status checks, readiness probes, settings pages and setup never start the server. Setup verifies the program without leaving a server running.
 - **Served state.** Dormant is a state of its own in the manager's published `ServerState` and in the local AI status the backend serves, with backend words meaning "starts when a document is read". It is never reported as `host_unreachable`, `program_not_running` or unchecked. `program_not_running` and `server_wait_expired` keep their meaning only for a demanded start that failed.
 - **Hypotheses, free to change within these constraints.** The verb's name and frame; whether the 5-minute window is a constant beside `PACE` or an environment declaration; and how the agent service learns that cadrumo-agent is about to read a document. Candidates for the last are a service hook on the local-lane run start, or cadrumo-agent asking its host before `make_resident`.
