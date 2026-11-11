@@ -53,7 +53,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
-_FILING_YEAR = 2024
 _ESTATAL_CASILLA: CasillaId = "0513"
 #: Annual period token for the Modelo 100 walk (named so the literal does not
 #: read as a credential to the security linter).
@@ -71,7 +70,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return published_authority_operation().snapshot("100", filing_year=_newest_authored_year(), period="0A").revision
 
 
 def _write(
@@ -103,7 +102,7 @@ def _source_diagnostics(
         casilla_values,
         modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
-        filing_year=_FILING_YEAR,
+        filing_year=_newest_authored_year(),
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
         prorrata_register_repository=repositories.prorrata_register,
@@ -125,7 +124,7 @@ def test_the_rentas_undeclared_advisory_reaches_the_coordinator() -> None:
     aggregate: exactly the state the collector fires on. If its call line were
     removed from the coordinator this set would not contain the kind.
     """
-    _write(DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)))
+    _write(DescendantInfo(birth_date=date(_newest_authored_year() - 10, 5, 1)))
     assert _RENTAS_UNDECLARED in _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
 
 
@@ -148,7 +147,7 @@ def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
     per-descendant answer, is the state it fires on.
     """
     _write(
-        DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)),
+        DescendantInfo(birth_date=date(_newest_authored_year() - 10, 5, 1)),
         marital_status=RentaMaritalStatus.CASADO.code,
         declaration_type="1",
     )
@@ -215,20 +214,22 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
 
 
 def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> None:
-    """Control for the case above, and it is the same collector on a different year.
+    """Control for the case above: the same authored revision, its settlement left computed.
 
-    2024 computes its settlement casillas, so the kind must NOT appear. Without
-    this the test above would pass against a collector that fired on every
-    revision, which would say nothing about the condition it claims to detect.
+    That edition computes its settlement casillas, so the kind must NOT appear.
+    Without this the test above would pass against a collector that fired on
+    every revision, which would say nothing about the condition it claims to
+    detect.
     """
-    revision = published_authority_operation().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    filing_year = _newest_authored_year()
+    revision = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
         modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
-        filing_year=2024,
+        filing_year=filing_year,
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
         prorrata_register_repository=repositories.prorrata_register,
@@ -250,7 +251,7 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
     """
     _write(
         DescendantInfo(
-            birth_date=date(_FILING_YEAR - 10, 5, 1),
+            birth_date=date(_newest_authored_year() - 10, 5, 1),
             rentas_anuales_euros=Decimal("0"),
             prorrata_minimo=False,
         ),
