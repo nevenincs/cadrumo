@@ -294,6 +294,15 @@ def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissi
     assert evidence["values"]["modelo"] == "303"
     assert evidence["values"]["period"] == "1T"
     assert evidence["values"]["year"] == _EXERCISE
+    # The door reclassifies the row the refusal names, with that row bound, so
+    # it runs as served rather than asking which movement is meant.
+    action = error["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.ledger_preflight.ready"
+    assert action["action"]["action_id"] == "operator.ledger.classify.movement"
+    assert action["action"]["target_command_key"] == "ledger.classify"
+    bound = {item["argument_name"]: item["value"] for item in action["argument_bindings"]}
+    assert bound == {"transaction_id": purchase_id}
+    assert action["missing_argument_names"] == []
 
 
 def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(

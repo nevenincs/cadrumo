@@ -352,6 +352,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.classify",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.classify.movement",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.classify.irpf_category",
             target_command_key="ledger.classify",
             argument_specifications=(

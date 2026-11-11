@@ -17,6 +17,7 @@ from cadrumo_client.contracts.command_program import CommandProgram
 from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....application.modelo.action_errors import ModeloProfileReadinessError
 from ....application.modelo.calculation_notes import note_record_verdict
+from ....application.modelo.calculation_preparation import ledger_preflight_precondition
 from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
@@ -310,6 +311,64 @@ def test_an_unclassified_m349_invoice_note_opens_the_live_invoice_update_with_th
     assert served.missing_argument_names == ("operation_type",)
     assert leaf.input_schema is not None
     assert set(leaf.input_schema.required_input_names) <= set(bound)
+
+
+def test_a_ledger_hold_naming_a_movement_opens_its_reclassification_with_the_movement_named(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    period = Period.from_year_and_code(envelope.horizon, "1T")
+    held = ledger_preflight_precondition(
+        work_unit_id="wu-0001",
+        modelo="303",
+        period=period,
+        transaction_id="tx-0001",
+        reason="inadmissible_deduction_classification",
+        names_movement=True,
+    )
+
+    served = resolve_recorded_precondition_action(held.verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.classify").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.classify.movement"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item for item in served.argument_bindings}
+    assert bound["transaction_id"].status is ActionArgumentStatus.RESOLVED
+    assert bound["transaction_id"].value == "tx-0001"
+    assert served.missing_argument_names == ()
+    assert leaf.input_schema is not None
+    assert set(leaf.input_schema.required_input_names) <= set(bound)
+
+
+def test_a_ledger_hold_over_the_whole_period_rechecks_that_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    period = Period.from_year_and_code(envelope.horizon, "2T")
+    held = ledger_preflight_precondition(
+        work_unit_id="wu-0001",
+        modelo="303",
+        period=period,
+        transaction_id="__period__",
+        reason="missing_prorrata",
+        names_movement=False,
+    )
+
+    served = resolve_recorded_precondition_action(held.verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.preflight").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.preflight"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item.value for item in served.argument_bindings}
+    assert bound == {"period": period.registry_token, "year": period.filing_year}
+    assert served.missing_argument_names == ()
+    assert "transaction_id" not in bound
 
 
 def test_a_real_missing_profile_facts_refusal_records_an_action_that_resolves_to_the_live_leaf(
