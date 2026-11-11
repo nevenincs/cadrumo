@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:371da413b14eb3e70af9215c98a7190cadfc290890d772b80c8cf7c118b501a7'
+body_hash: 'sha256:60eb447402077b8a20f28ff573a6e2326f03ce70be6d48f7f13dc49cd3429c1e'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -81,6 +81,16 @@ related:
 - `S04` `verify:` `prettier eslint tsc` -> `pass`
 - `S04` `verify:` `pytest dev/locales/tests` -> `pass`
 - `S04` `verify:` `branch_gate_delta` -> `pass`
+- `S05` `M` `native/application/src/provisioning/engine.rs`
+- `S05` `M` `native/application/src/provisioning/engine/tests.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S05` `M` `native/application/src/provisioning/activity.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S05` `verify:` `rustfmt --check` -> `pass`
+- `S05` `verify:` `branch_gate_delta` -> `pass`
 
 ## Notes
 
@@ -89,3 +99,4 @@ related:
 - `S03` cargo not run here (native builds root-only); pending DESKTOP manager.rust: ipc::windows `only_the_agent_service_a_desktop_started_may_demand_the_local_ai_server,` ipc `a_demand_carries_no_identity`
 - `S04` cargo and Playwright setup-words not run here (root-only); pending DESKTOP staged verification with S01-S06
 - `S03` coordinator review: parent must be the admitted desktop process (PID + creation time), not any desktop-image process; cargo pending DESKTOP staged verification
+- `S05` cargo, clippy and ctest pending: DESKTOP verifies staged in root; `llama_server::presentation` is left with only test callers `(live_package.rs,` `llama_server/tests.rs),` flagged for S06 reuse or removal
