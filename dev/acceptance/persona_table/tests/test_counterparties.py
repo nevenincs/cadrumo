@@ -84,7 +84,7 @@ def _fichero(modelo: str, period: str, rows: Sequence[Row]) -> tuple[ExportLayou
 
 def _identities() -> IdentityCatalogue:
     def identity(role: str, kind: IdentityKind, value: str, country: str | None = None) -> Identity:
-        return Identity(role=role, persona="p", kind=kind, value=value, legal_name=role, country=country)
+        return Identity(role=role, persona="p", kind=kind, value=value, razon_social=role, country=country)
 
     return IdentityCatalogue(
         identities=(

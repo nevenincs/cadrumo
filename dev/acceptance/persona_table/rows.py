@@ -30,6 +30,7 @@ from cadrumo.tests.personas import (
 )
 
 from .counterparties import is_compared
+from .unchecked import persona_at, unchecked_by_key
 
 
 class Stage(StrEnum):
@@ -67,6 +68,7 @@ class Verdict(StrEnum):
     UNSUPPORTED = "unsupported"
     NOT_RUN = "not-run"
     FLOOR_SOURCE = "floor-source"
+    UNCHECKED = "unchecked"
 
 
 VERDICT_MEANING: dict[Verdict, str] = {
@@ -82,6 +84,8 @@ VERDICT_MEANING: dict[Verdict, str] = {
     Verdict.NOT_RUN: "the persona could not be replayed for that year, or the runner itself failed",
     Verdict.FLOOR_SOURCE: "at this lowered horizon the floor dropped a record of the year before this return, "
     "and a stage refused; the row proves nothing either way",
+    Verdict.UNCHECKED: "every stage ended as a pass or an expected refusal, but the persona states values the table "
+    "does not compare (listed per row); the row is not a pass",
 }
 
 GREEN = frozenset({Verdict.PASSED})
@@ -109,6 +113,8 @@ class PlannedRow:
     sources: tuple[str, ...]
     floor_source_dropped: bool = False
     """Whether the return is of the floor year and the replay's floor dropped a history record of the year before."""
+    unchecked: tuple[str, ...] = ()
+    """The stated values of the return the table does not compare."""
 
     @property
     def key(self) -> tuple[str, str, int, str]:
@@ -134,6 +140,8 @@ class TableRow:
     reason: str = ""
     export_detail: str = ""
     floor_source_dropped: bool = False
+    unchecked: tuple[str, ...] = ()
+    """What the persona states for the return that the table cannot compare; see ``unchecked.unchecked_items``."""
     verdict: Verdict = field(init=False)
 
     def __post_init__(self) -> None:
@@ -172,12 +180,14 @@ class TableRow:
             reason=reason,
             export_detail=export_detail,
             floor_source_dropped=plan.floor_source_dropped,
+            unchecked=plan.unchecked,
         )
 
     def to_json(self) -> str:
         """One JSON line; the verdict is written for readers and re-derived on load."""
         data = asdict(self)
         data["sources"] = list(self.sources)
+        data["unchecked"] = list(self.unchecked)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     def to_baseline_json(self, horizon: int) -> str:
@@ -198,6 +208,8 @@ class TableRow:
         }
         if self.floor_source_dropped:
             data["floor_source_dropped"] = True
+        if self.unchecked:
+            data["unchecked"] = list(self.unchecked)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
     @classmethod
@@ -211,6 +223,7 @@ class TableRow:
                     raise ValueError(f"a baseline row's {name} token needs the registry horizon")
                 data[name] = _resolved(data[name], horizon)
         data["sources"] = tuple(data["sources"])
+        data["unchecked"] = tuple(data.get("unchecked", ()))
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
         return cls(**data)
@@ -236,20 +249,24 @@ _TERMINAL_VERDICTS = {
 
 
 def classify(row: TableRow) -> Verdict:
-    """The row's verdict: coverage first, then grounding, then the stages."""
+    """The row's verdict: coverage first, then grounding, then the stages, then what the table could not compare."""
     terminal = _TERMINAL_VERDICTS.get(row.calculate)
     if terminal is not None:
         return terminal
     if not row.has_values:
-        return Verdict.NO_ORACLE
+        return _unless_unchecked(row, Verdict.NO_ORACLE)
     if row.grounding == "unverified" or not row.sources:
         return Verdict.UNVERIFIED
     if row.calculate is Stage.EXPECTED_REFUSAL:
-        return Verdict.EXPECTED_REFUSAL
-    passed = (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED)
-    if passed:
-        return Verdict.PASSED
+        return _unless_unchecked(row, Verdict.EXPECTED_REFUSAL)
+    if (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED):
+        return _unless_unchecked(row, Verdict.PASSED)
     return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
+
+
+def _unless_unchecked(row: TableRow, verdict: Verdict) -> Verdict:
+    """``verdict``, or ``unchecked`` when the persona states values of the return the table does not compare."""
+    return Verdict.UNCHECKED if row.unchecked else verdict
 
 
 _REFUSING_STAGES = frozenset({Stage.REFUSED, Stage.INCOMPLETE, Stage.UNRESOLVED})
@@ -292,6 +309,7 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
     stated = _stated_values(persona, shifted)
+    unchecked = unchecked_by_key(in_force(persona.expectations.values, shifted))
     stated_only = set(stated) - _obligation_keys(persona, shifted, applicable=False)
     keys = _obligation_keys(persona, shifted, applicable=True) | _history_keys(persona, shifted) | stated_only
     return [
@@ -300,6 +318,7 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
             horizon,
             (modelo, year, period),
             stated.get((modelo, year, period), []),
+            unchecked=unchecked.get((modelo, year, period), ()),
             floor_source_dropped=year == shifted.floor and _history_dropped_before(persona, shifted, year - 1),
         )
         for modelo, year, period in sorted(keys, key=chain_order)
@@ -307,17 +326,55 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     ]
 
 
+def unchecked_items(persona: Persona, envelope: YearEnvelope, key: tuple[str, int | None, str]) -> tuple[str, ...]:
+    """The sorted items the persona states for return ``key`` (modelo, year, period) that are not compared.
+
+    ``envelope`` carries the replay horizon. Values are the in-force ones the planner takes, so a value a provision
+    replaces is not listed; a value stated ``not_sourced`` states no value and is not listed.
+    """
+    return unchecked_by_key(in_force(persona.expectations.values, envelope)).get(key, ())
+
+
+def with_unchecked(rows: Iterable[TableRow], envelope: YearEnvelope) -> list[TableRow]:
+    """``rows`` with their unchecked items read from the persona at each row's replay horizon.
+
+    A persona the catalogue no longer holds keeps the items its row was written with.
+    """
+    personas: dict[tuple[str, int], Persona | None] = {}
+    kept: list[TableRow] = []
+    for row in rows:
+        held = (row.persona, row.horizon)
+        if held not in personas:
+            personas[held] = _read_or_none(row.persona, row.horizon, envelope)
+        persona = personas[held]
+        if persona is None:
+            kept.append(row)
+            continue
+        shifted = dataclasses.replace(envelope, horizon=row.horizon)
+        items = unchecked_items(persona, shifted, (row.modelo, row.year, row.period))
+        kept.append(dataclasses.replace(row, unchecked=items))
+    return kept
+
+
+def _read_or_none(persona_id: str, horizon: int, envelope: YearEnvelope) -> Persona | None:
+    try:
+        return persona_at(persona_id, horizon, envelope)
+    except (PersonaCatalogueError, OSError):
+        return None
+
+
 def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, int | None, str], list[ExpectedValue]]:
     """The values in force per return, leaving out per-counterparty values the table cannot compare.
 
-    A return with only concepts maps to none.
+    A return with only concepts maps to none; a stated role is stated content even when it resolves to no casilla,
+    which the unchecked items then name.
     """
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
     for year, value in in_force(persona.expectations.values, envelope):
         if value.counterparty is not None and not is_compared(value):
             continue
         found = stated.setdefault((value.modelo, year, value.period), [])
-        if value.casillas or value.not_sourced or value.refusal is not None or is_compared(value):
+        if value.casillas or value.roles or value.not_sourced or value.refusal is not None or is_compared(value):
             found.append(value)
     return stated
 
@@ -358,6 +415,7 @@ def _planned(
     key: tuple[str, int, str],
     values: list[ExpectedValue],
     *,
+    unchecked: tuple[str, ...] = (),
     floor_source_dropped: bool = False,
 ) -> PlannedRow:
     modelo, year, period = key
@@ -371,6 +429,7 @@ def _planned(
         grounding=_grounding(values),
         sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
         floor_source_dropped=floor_source_dropped,
+        unchecked=unchecked,
     )
 
 
@@ -481,5 +540,7 @@ __all__ = [
     "read_rows",
     "replay_horizons",
     "select",
+    "unchecked_items",
+    "with_unchecked",
     "write_rows",
 ]
