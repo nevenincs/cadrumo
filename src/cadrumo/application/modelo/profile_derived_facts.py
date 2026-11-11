@@ -1044,12 +1044,11 @@ def inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    authored_year = snapshot_authored_year(snapshot)
     consumers = tuple(
         (key, limited)
         for key, limited in (
-            (f"renta_family.incremento_guarderia_{authored_year}", False),
-            (f"renta_family.incremento_guarderia_cotizaciones_{authored_year}", True),
+            ("renta_family.incremento_guarderia", False),
+            ("renta_family.incremento_guarderia_cotizaciones", True),
         )
         if key in declared_selectors
     )
