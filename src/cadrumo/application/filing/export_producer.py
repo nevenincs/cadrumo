@@ -89,7 +89,8 @@ class M303FilingLexicals:
     insolvency_judicial_order_date: str | None = None
     insolvency_filing_subtype: str | None = None
     exonerado_390_applicable: str | None = None
-    prorrata_transition_applicable: bool = False
+    prorrata_transition_applicable: bool | None = None
+    """Whether the period asks the prorrata election questions; ``None`` while the register is not read."""
 
 
 @dataclass(frozen=True)
@@ -1242,7 +1243,8 @@ def _m303_prorrata_election_lexicals(
     applicable: bool,
 ) -> tuple[str | None, str | None]:
     if not applicable:
-        return None, None
+        outside = _m303_outside_period()
+        return outside, outside
     return (
         yes_no(transition.transition == opcion_prorrata_transition()),
         yes_no(transition.transition == revocacion_prorrata_transition()),
@@ -1260,7 +1262,8 @@ def _m303_insolvency_lexicals(
 
 def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
     """Project the Modelo 303 filing lexicals into the foral prorrata election lexicals."""
-    value = yes_no(False) if m303_filing.prorrata_transition_applicable else None
+    applicable = m303_filing.prorrata_transition_applicable
+    value = None if applicable is None else yes_no(False) if applicable else _m303_outside_period()
     return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
 
 

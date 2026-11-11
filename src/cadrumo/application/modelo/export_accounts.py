@@ -49,6 +49,7 @@ from ...core.field_origin import FieldOrigin
 from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.payment_instalment_election import second_instalment_is_payable
+from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
@@ -67,6 +68,7 @@ from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
+from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.errors import (
     ModeloExportError,
 )
@@ -122,7 +124,7 @@ from .export_contracts import (
     ModeloExportCommand,
     ModeloExportEvidenceMissingError,
 )
-from .export_ports import ModeloExportPorts
+from .export_ports import M303ArrivalPorts, ModeloExportPorts
 from .export_preparation import (
     require_m303_regimen_simplificado_scope_matches_profile,
     resolve_m303_export_arrivals,
@@ -855,20 +857,47 @@ def _resolve_m303_filing_facts_for_export(
         raise ModeloExportEvidenceMissingError(
             f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
         )
-    prorrata_register_repository = export_ports.prorrata_register
+    filing_facts = resolve_m303_filing_facts_from_arrivals(
+        bucket_id=work_unit.bucket_id,
+        period=work_unit.period,
+        evidence=filing_instance_evidence,
+        arrivals=export_ports.m303_arrivals(),
+        operation=operation,
+    )
+    require_m303_regimen_simplificado_scope_matches_profile(
+        filing_facts=filing_facts,
+        workflow_profile=workflow_profile,
+    )
+    return filing_facts
+
+
+def resolve_m303_filing_facts_from_arrivals(
+    *,
+    bucket_id: str,
+    period: Period,
+    evidence: FilingInstanceEvidence,
+    arrivals: M303ArrivalPorts,
+    operation: PinnedAuthorityOperation,
+) -> M303FilingFacts:
+    """Fold the saved filing evidence with the ledger and register arrivals into the export's filing facts.
+
+    The export and the declaration's form both resolve a Modelo 303's period
+    facts here, so the form can show nothing the exported file does not carry.
+    """
+    prorrata_register_repository = arrivals.prorrata_register
     prorrata_register = require_prorrata_register_coordinates_current(
         prorrata_register_repository.load(),
         operation=operation,
     )
-    bienes_register = export_ports.bienes_inversion.load()
+    bienes_register = arrivals.bienes_inversion.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
-        bucket_id=work_unit.bucket_id,
-        period=work_unit.period,
+        bucket_id=bucket_id,
+        period=period,
         prorrata_register_repository=prorrata_register_repository,
-        transaction_repository=export_ports.transaction,
-        invoice_reader=export_ports.invoices,
+        transaction_repository=arrivals.transaction,
+        invoice_reader=arrivals.invoices,
         investment_asset_register=bienes_register,
-        investment_asset_profile_id=work_unit.bucket_id,
+        investment_asset_profile_id=bucket_id,
         operation=operation,
     )
     (
@@ -877,20 +906,20 @@ def _resolve_m303_filing_facts_for_export(
         regularisation_result,
         bienes_parameters,
     ) = resolve_m303_export_arrivals(
-        period=filing_instance_evidence.m303.period,
+        period=evidence.m303.period,
         prorrata_register=prorrata_register,
         iva_aggregation=iva_aggregation,
         bienes_register=bienes_register,
         operation=operation,
     )
-    filing_facts = resolve_m303_filing_facts(
-        evidence=filing_instance_evidence,
+    return resolve_m303_filing_facts(
+        evidence=evidence,
         supplier_regime=resolve_m303_supplier_regime_arrival(
-            period=work_unit.period,
+            period=period,
             iva_aggregation=iva_aggregation,
         ),
         prorrata_transition=resolve_m303_prorrata_transition_arrival(
-            period=work_unit.period,
+            period=period,
             prorrata_register=prorrata_register,
             operation=operation,
         ),
@@ -900,11 +929,6 @@ def _resolve_m303_filing_facts_for_export(
         regularisation_result=regularisation_result,
         bienes_parameters=bienes_parameters,
     )
-    require_m303_regimen_simplificado_scope_matches_profile(
-        filing_facts=filing_facts,
-        workflow_profile=workflow_profile,
-    )
-    return filing_facts
 
 
 def export_completeness_unverified(work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> bool:

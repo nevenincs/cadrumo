@@ -59,6 +59,20 @@ class OwnAccountRegisterReaderProtocol(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class M303ArrivalPorts:
+    """The repositories the Modelo 303 ledger and register arrivals are read from.
+
+    The export and the declaration's form resolve those arrivals through the
+    same function, so both take them from this one shape.
+    """
+
+    prorrata_register: ProrrataRegisterRepositoryProtocol
+    bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
+    transaction: TransactionCatalogueRepositoryProtocol
+    invoices: InvoiceCatalogueReader
+
+
+@dataclass(frozen=True, slots=True)
 class ModeloExportPorts:
     """Required persisted authorities for one Modelo export invocation.
 
@@ -97,6 +111,15 @@ class ModeloExportPorts:
     It is a property of the installed product, not of one command, so the
     composition root supplies it once for every entrypoint that exports.
     """
+
+    def m303_arrivals(self) -> M303ArrivalPorts:
+        """The bundle's authorities the Modelo 303 arrivals are read from."""
+        return M303ArrivalPorts(
+            prorrata_register=self.prorrata_register,
+            bienes_inversion=self.bienes_inversion,
+            transaction=self.transaction,
+            invoices=self.invoices,
+        )
 
 
 class ModeloExportPortsFactory(Protocol):

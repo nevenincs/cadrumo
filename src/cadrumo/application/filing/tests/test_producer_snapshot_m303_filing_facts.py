@@ -399,7 +399,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     }
 
 
-def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_period() -> None:
+def test_modelo_303_foral_note_5_prints_the_outside_period_code_in_prorrata_slots_before_final_period() -> None:
     period = Period.from_year_and_code(_YEAR, "1T")
     snapshot = _m303_foral_snapshot(
         prorrata_transition=M303ProrrataTransitionArrival(
@@ -409,8 +409,9 @@ def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_perio
 
     values = filing_producer_values(snapshot)
 
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] is None
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] is None
+    # DP30301 prints 0 for a question the period does not ask, the same bytes a blank slot zero-fills to.
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] == "0"
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] == "0"
 
 
 @pytest.mark.parametrize(

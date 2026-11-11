@@ -120,6 +120,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
     from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.calculation_actions import calculation_reconciliation_source_needs
+    from ..application.modelo.export_ports import M303ArrivalPorts
     from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
     from ..application.modelo.workbench_read import ModeloWorkbenchLedgerPorts, ModeloWorkbenchReadPorts
     from .adapter_composition_ports import build_borrador_100_snapshot_repository
@@ -143,6 +144,12 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         filings=ports.filing_repository,
         own_accounts=OwnAccountRepository(objects=objects),
         credit_resolutions=ports.credit_resolution_reader,
+        m303_arrivals=M303ArrivalPorts(
+            prorrata_register=ports.prorrata_register_repository,
+            bienes_inversion=ports.bienes_inversion_repository,
+            transaction=ports.transaction_repository,
+            invoices=ports.invoice_catalogue_read_ports.invoice_reader,
+        ),
         profile=lambda: load_modelo_work_profile(
             bucket_id=bucket_id,
             profile_decode_context=operation.profile_decode_context(),
