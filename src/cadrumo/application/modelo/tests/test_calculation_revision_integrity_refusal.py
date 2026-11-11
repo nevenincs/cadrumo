@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -23,10 +24,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _WORK_UNIT_ID = "f" * 64
 _CASILLA = "0001"
+_REVISION = open_ended_revision("303")
+_CREATED = datetime(_REVISION.valid_from.year, _REVISION.valid_from.month, _REVISION.valid_from.day, 10, tzinfo=UTC)
 
 
 def _revision_fields(**overrides: object) -> dict[str, object]:
-    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = _CREATED
     fields: dict[str, object] = {
         "calculation_revision_id": derive_calculation_revision_id(
             work_unit_id=_WORK_UNIT_ID,
@@ -38,7 +41,7 @@ def _revision_fields(**overrides: object) -> dict[str, object]:
         ),
         "work_unit_id": _WORK_UNIT_ID,
         "registry_snapshot_ref": RegistrySnapshotRef(
-            modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1T"
+            modelo="303", revision_id=_REVISION.id, modelo_year=_REVISION.valid_from.year, period="1T"
         ),
         "state": CalculationRevisionState.BORRADOR,
         "casilla_values": {},
@@ -69,7 +72,7 @@ def test_a_revision_that_still_validates_is_not_refused() -> None:
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"updated_at": datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)},
+        {"updated_at": _CREATED - timedelta(hours=1)},
         {"casilla_values": {_CASILLA: Decimal("1.00")}},
     ],
     ids=["updated_before_created", "values_without_observations"],
