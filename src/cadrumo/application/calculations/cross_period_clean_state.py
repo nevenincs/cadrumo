@@ -555,6 +555,29 @@ _ATTESTABLE_BINDING_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
 )
 
 
+def _attestable_requirements_by_binding(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[BindingId, list[CrossPeriodDependencyRequirement]]:
+    """Group the attestable-origin requirements under each scalar carry binding they feed."""
+    scalar_binding_ids = {
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.source in _ATTESTABLE_BINDING_SOURCES and binding.value.channel is not BindingValueChannel.ROW_SET
+    }
+    by_binding: dict[BindingId, list[CrossPeriodDependencyRequirement]] = {}
+    if not scalar_binding_ids:
+        return by_binding
+    for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years()):
+        if requirement.origin not in _ATTESTABLE_ORIGINS:
+            continue
+        for binding_id in requirement.origin_ids:
+            if binding_id in scalar_binding_ids:
+                by_binding.setdefault(binding_id, []).append(requirement)
+    return by_binding
+
+
 def attestable_carry_sources(
     snapshot: RegistrySnapshot,
     *,
@@ -571,20 +594,7 @@ def attestable_carry_sources(
     the sources, and a partial statement is not admitted. Row-set bindings stay
     sourced from records and are never offered.
     """
-    scalar_binding_ids = {
-        binding.id
-        for binding in snapshot.revision.bindings
-        if binding.source in _ATTESTABLE_BINDING_SOURCES and binding.value.channel is not BindingValueChannel.ROW_SET
-    }
-    if not scalar_binding_ids:
-        return {}
-    by_binding: dict[BindingId, list[CrossPeriodDependencyRequirement]] = {}
-    for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years()):
-        if requirement.origin not in _ATTESTABLE_ORIGINS:
-            continue
-        for binding_id in requirement.origin_ids:
-            if binding_id in scalar_binding_ids:
-                by_binding.setdefault(binding_id, []).append(requirement)
+    by_binding = _attestable_requirements_by_binding(snapshot, operation=operation)
     return {
         binding_id: tuple(requirements)
         for binding_id, requirements in by_binding.items()
