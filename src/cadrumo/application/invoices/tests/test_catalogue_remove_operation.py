@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -37,7 +38,10 @@ _DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000ab")
 _ACCESSES = (AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT, AccessAction.OBSERVE, AccessAction.RESULT)
 
 
-def _unreached_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
+def _unreached_ports(
+    *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+) -> CatalogueLifecyclePorts:
+    del mutation_writer
     raise AssertionError(f"access resolution reached invoice removal ports for {bucket_id}")
 
 
@@ -119,7 +123,10 @@ def test_remove_executor_refuses_foreign_active_profile_before_phase_or_factory(
     )
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_OTHER_PROFILE))
 
-    def unused_factory(*, bucket_id: str) -> CatalogueLifecyclePorts:
+    def unused_factory(
+        *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+    ) -> CatalogueLifecyclePorts:
+        del mutation_writer
         pytest.fail(f"foreign active profile reached invoice removal ports for {bucket_id}")
 
     with pytest.raises(ProfileAccessRefusedError) as refused:

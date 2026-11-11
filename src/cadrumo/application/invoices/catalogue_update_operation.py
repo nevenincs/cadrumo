@@ -19,6 +19,7 @@ from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..modelo.operation_shared import FirstWriteEffectAnnouncement
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -147,8 +148,10 @@ class InvoiceUpdateExecutor:
         await context.events.phase(INVOICE_UPDATE_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
+        writes = FirstWriteEffectAnnouncement(context, asyncio.get_running_loop())
+
         def update() -> InvoiceUpdateResult:
-            ports = self._factory(bucket_id=profile)
+            ports = self._factory(bucket_id=profile, mutation_writer=writes.write)
             updated = update_catalogue_invoice(
                 bucket_id=profile,
                 invoice_id=payload.invoice_id,
@@ -165,9 +168,10 @@ class InvoiceUpdateExecutor:
 
         async def commit() -> str:
             async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
+                # A correction refused before the first write leaves the effect
+                # at none; the first write journals that records may change.
                 result = await asyncio.to_thread(update)
-                await context.events.effect(OperationEffect.UPDATED)
+                await context.events.effect(OperationEffect.UPDATED if writes.began else OperationEffect.NONE)
                 return await context.operands.put(result, written_at=now())
 
         return await await_cancellation_complete(commit(), task_name="invoice-update-publication")

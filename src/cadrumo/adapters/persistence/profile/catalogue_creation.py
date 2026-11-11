@@ -349,6 +349,7 @@ def build_catalogue_lifecycle_ports(
     *,
     bucket_id: str,
     taxpayer_tax_id: SubjectTaxId | None = None,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> CatalogueLifecyclePorts:
     """Bind read, mutation, and audit adapters for one invoice bucket.
 
@@ -356,12 +357,18 @@ def build_catalogue_lifecycle_ports(
     scan decodes every stored calculation revision, and an M303 rectificativa
     cannot be decoded without it, so a bucket holding one refuses every invoice
     correction when the scan runs without.
+
+    ``mutation_writer`` admits every commit the bundle makes: the invoice, its
+    audit event and any other secure object all share one fenced repository.
     """
     normalized_bucket_id = bucket_id.strip()
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
-    invoice_repository, event_repository = _catalogue_repositories(bucket_id=normalized_bucket_id)
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
+    if mutation_writer is not None:
+        objects = objects.with_mutation_writer(mutation_writer)
+    invoice_repository = InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+    event_repository = BucketEventHistoryRepository(objects=objects)
     return CatalogueLifecyclePorts(
         read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
         invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),

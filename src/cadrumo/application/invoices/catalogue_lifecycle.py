@@ -34,7 +34,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -228,6 +228,49 @@ class CatalogueInvoiceUpdateResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
+def _registered_refusal(error: ValidationError) -> InvoiceValidationError | None:
+    """The invoice refusal a validator raised, which the validation failure carries as its cause."""
+    for detail in error.errors(include_url=False):
+        raised = (detail.get("ctx") or {}).get("error")
+        for candidate in (raised, getattr(raised, "__cause__", None)):
+            if isinstance(candidate, InvoiceValidationError):
+                return candidate
+    return None
+
+
+def _admitted_correction(
+    existing: Invoice, patch: CatalogueInvoicePatch, ports: CatalogueLifecyclePorts, *, updated_at: datetime
+) -> Invoice:
+    """Patch ``existing`` and admit the corrected record, or raise the refusal a person reads.
+
+    A rule the corrected record breaks raises its registered refusal, with the
+    rule's code and words, rather than the validation failure that carries it.
+    """
+    changes = patch.model_dump(exclude_unset=True)
+    if not changes:
+        raise InvoiceValidationError(
+            translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
+            context={"invoice_id": existing.invoice_id},
+        )
+
+    payload = existing.model_dump()
+    payload.update(changes)
+    # Carried explicitly, not by accident: the links are why this aggregate
+    # is the reconciliation authority, and an update that dropped them would
+    # sever a bidirectional binding the operator never asked to break.
+    payload["linked_transaction_ids"] = existing.linked_transaction_ids
+    payload["updated_at"] = updated_at
+    try:
+        corrected = Invoice.model_validate(payload, context=INVOICE_WRITE_ADMISSION)
+    except ValidationError as error:
+        refusal = _registered_refusal(error)
+        if refusal is None:
+            raise
+        raise refusal from error
+    _require_sealed_revisions_undisturbed(existing, corrected, ports)
+    return corrected
+
+
 def update_catalogue_invoice(
     *,
     bucket_id: str,
@@ -290,22 +333,7 @@ def update_catalogue_invoice(
                 context={"invoice_id": existing.invoice_id},
             )
 
-        changes = patch.model_dump(exclude_unset=True)
-        if not changes:
-            raise InvoiceValidationError(
-                translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
-                context={"invoice_id": existing.invoice_id},
-            )
-
-        payload = existing.model_dump()
-        payload.update(changes)
-        # Carried explicitly, not by accident: the links are why this aggregate
-        # is the reconciliation authority, and an update that dropped them would
-        # sever a bidirectional binding the operator never asked to break.
-        payload["linked_transaction_ids"] = existing.linked_transaction_ids
-        payload["updated_at"] = commit_time
-        corrected = Invoice.model_validate(payload, context=INVOICE_WRITE_ADMISSION)
-        _require_sealed_revisions_undisturbed(existing, corrected, ports)
+        corrected = _admitted_correction(existing, patch, ports, updated_at=commit_time)
 
         written.clear()
         written.append(corrected)
