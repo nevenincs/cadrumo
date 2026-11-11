@@ -24,12 +24,16 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import (
+    validate_m303_regimen_simplificado_annual_summary_target_revision,
+)
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.casilla_help import legal_ref_id_citation
+from cadrumo.application.modelo.m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
@@ -177,3 +181,41 @@ def test_a_revision_declaring_the_summary_binding_still_refuses_an_iva_filer_wit
     assert context is not None
     # The refusal cites the grounding through the one citation renderer, so the operator reads the article, not the id.
     assert legal_ref_id_citation("ley-37-1992:art-122") in str(context["profile_requirements"])
+
+
+def test_the_persisted_handoff_check_never_asks_a_filer_with_no_iva_composition_for_its_regime(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Verification, filing and export re-check the annual-summary handoff, which a Modelo 100 does not carry.
+
+    The regime's scope is read from the IVA profile; asking it of a salaried filer
+    refuses them, so the check asks only of a revision that declares the family.
+    """
+    _seed_profile(UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"))
+    result = _calculate("100", secure_objects)
+    work_unit = (
+        WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+        .load()
+        .work_units[result.revision.work_unit_id]
+    )
+    # The real judgement refuses this filer, so a check that asked it would refuse the Modelo 100.
+    with pytest.raises(ModeloProfileReadinessError):
+        m303_regimen_simplificado_annual_summary_applies(work_unit)
+    asked: list[bool] = []
+
+    def applies() -> bool:
+        asked.append(True)
+        return m303_regimen_simplificado_annual_summary_applies(work_unit)
+
+    with bundled_indexed_authority().operation() as operation:
+        validate_m303_regimen_simplificado_annual_summary_target_revision(
+            target_work_unit=work_unit,
+            target_revision=result.revision,
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
+            regimen_simplificado_applies=applies,
+            operation=operation,
+        )
+
+    assert asked == []
