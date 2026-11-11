@@ -89,6 +89,7 @@ from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -111,7 +112,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TAX_ID = "X0001500M"
 _BUCKET_ID = "30300000-0000-4000-8000-000000000033"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon - 1  # the next year must also be a supported one
 _LAST_PERIOD = "4T"
 _MID_PERIOD = "2T"
 #: REDEME-enrolled taxpayers file Modelo 303 MONTHLY, not quarterly (RD

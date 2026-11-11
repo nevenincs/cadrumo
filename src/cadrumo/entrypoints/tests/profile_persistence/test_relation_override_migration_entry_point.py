@@ -50,6 +50,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -60,12 +61,13 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "1d4f2a60-5c31-4b7e-8a2d-6e0f9c3b1a77"
+_YEAR = filing_year_envelope().horizon
 
 
 @cache
 def _snapshot() -> RegistrySnapshot:
     # Compiled on first use, not at import: collection must stay cheap.
-    return published_authority_operation().snapshot("303", filing_year=2026, period="1T")
+    return published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T")
 
 
 @cache
@@ -92,7 +94,7 @@ def _work_unit_id() -> str:
 
 
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
-_CREATED_AT = datetime(2026, 4, 2, 9, 0, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_YEAR, 4, 2, 9, 0, 0, tzinfo=UTC)
 _OVERRIDE_VALUE = "125.00"
 
 #: Read off the frozen join rather than restated, so a table edit cannot leave
@@ -164,7 +166,7 @@ def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
                     filing_year=_snapshot_ref().modelo_year,
                     period=_period(),
                     revision_id=_snapshot_ref().revision_id,
-                    name="303-2026-1T",
+                    name=f"303-{_YEAR}-1T",
                     created_at=_CREATED_AT,
                     updated_at=_CREATED_AT,
                 ),

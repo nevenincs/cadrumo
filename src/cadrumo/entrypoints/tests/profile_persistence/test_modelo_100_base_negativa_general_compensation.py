@@ -48,6 +48,11 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    newest_authored_editions,
+)
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -71,7 +76,7 @@ _MODELO = "100"
 _PROFILE_ID = "10010000-0000-4100-8100-000000000100"
 _BUCKET_ID = _PROFILE_ID
 _PERIOD = "0A"
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition(_MODELO)
 
 
 #: Anexo-C base-liquidable-general-negativa casillas (ejercicio-2024 origin).
@@ -90,7 +95,7 @@ _PRIOR_OLDER_REMAINDERS: tuple[CasillaId, ...] = tuple(validated_casilla_id(box)
 #: input that produces a positive base liquidable general before the Art. 50.3 carry.
 _TRABAJO_INGRESO: CasillaId = validated_casilla_id("0003")
 
-_CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(filing_year_envelope().horizon, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 def _seed_taxpayer_unit_profile() -> None:
@@ -243,7 +248,7 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
         assert _SAVINGS_BASE_ART_49_REF not in refs
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", newest_authored_editions(_MODELO, 2))
 def test_opening_and_applied_base_liquidable_casillas_cite_art50(filing_year: int) -> None:
     revision = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}

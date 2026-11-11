@@ -1,4 +1,4 @@
-"""Modelo 100 2025 credit casillas 0596, 0597 and 0603 through the real calculation and source mesh.
+"""Modelo 100 credit casillas 0596, 0597 and 0603 through the real calculation and source mesh.
 
 A payer certificate of work income credits 1.200,00 retención plus 300,00
 ingreso a cuenta, so casilla 0596 is 1.500,00 worked by hand. Capital mobiliario
@@ -53,6 +53,11 @@ from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.retencion_soportada_bindings import retencion_soportada_bindings
 from ....domain.calculations.registry.runtime_graph import expression_binding_refs
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -64,7 +69,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _TAXPAYER = "12345678Z"
 _PAYER = "B00000001"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PERIOD = "0A"
 _CATEGORIES = "taxpayer_type.irpf_income_categories"
 _CREDIT_CASILLAS = ("0596", "0597", "0603")
@@ -151,8 +156,8 @@ def _seed_profile(categories: str) -> None:
                     UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
                 )
             ),
-            created_at=datetime(2026, 4, 1, tzinfo=UTC),
-            updated_at=datetime(2026, 4, 1, tzinfo=UTC),
+            created_at=datetime(filing_year_envelope().horizon, 4, 1, tzinfo=UTC),
+            updated_at=datetime(filing_year_envelope().horizon, 4, 1, tzinfo=UTC),
             context=profile_creation_context_for_test(),
         ),
     )
@@ -170,7 +175,7 @@ def _attest_absent(objects: SecureObjectRepository, operation: PinnedAuthorityOp
                 ejercicio=_YEAR,
                 income_class=income_class,
                 note="Synthetic note: no payer withheld on this income.",
-                attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+                attested_at=datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC),
             ),
             ports=ports,
             expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
@@ -198,7 +203,7 @@ def _calculate(
         modelo="100",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
+        revision_id=str(revision_covering("100", _YEAR).id),
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
         ),

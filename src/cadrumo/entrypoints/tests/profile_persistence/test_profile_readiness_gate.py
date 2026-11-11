@@ -63,16 +63,24 @@ from cadrumo.domain.user_profile.values import (
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    revision_serving_period,
+)
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
-_M100_REVISION = "2025"
-_M130_REVISION = "2019-y-siguientes"
-_M200_REVISION = "2024"
-_M303_2025_REVISION = "2025"
-_M303_2026_REVISION = "2026-y-siguientes"
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
+_NOW = datetime(_YEAR, 6, 27, 12, 0, 0, tzinfo=UTC)
+_M100_REVISION = str(revision_covering("100", _PRIOR_YEAR).id)
+_M130_REVISION = str(open_ended_revision("130").id)
+_M200_REVISION = str(revision_covering("200", _YEAR).id)
+_M303_PRIOR_REVISION = str(revision_serving_period("303", _PRIOR_YEAR, "1T").id)
+_M303_OPEN_ENDED_REVISION = str(open_ended_revision("303").id)
 _DEFAULT_MODELO = Modelo("303")
 _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
 _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
@@ -143,7 +151,7 @@ def _store_profile_without_activity(bucket_id: str) -> None:
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="identity.name", value="Ready"),
                     UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(_PRIOR_YEAR, 1, 1)),
                 ),
                 without=("activities.",),
             ),
@@ -249,9 +257,9 @@ def _store_work_unit(
     *,
     bucket_id: str,
     modelo: Modelo = _DEFAULT_MODELO,
-    filing_year: int = 2025,
+    filing_year: int = _PRIOR_YEAR,
     period_code: str = "1T",
-    revision_id: str = _M303_2025_REVISION,
+    revision_id: str = _M303_PRIOR_REVISION,
 ) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
     modelo_code = modelo.value
@@ -320,9 +328,9 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision_id=_M303_2025_REVISION,
+                filing_year=_PRIOR_YEAR,
+                period=Period.from_year_and_code(_PRIOR_YEAR, "1T"),
+                revision_id=_M303_PRIOR_REVISION,
                 clock=_NOW,
                 operation=operation,
                 ports=WorkLifecyclePorts(
@@ -344,8 +352,8 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                filing_year=_PRIOR_YEAR,
+                period=Period.from_year_and_code(_PRIOR_YEAR, "1T"),
                 revision_id=_M130_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
@@ -364,7 +372,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
         )
         assert excinfo.value.context == {
             "modelo": Modelo("130").value,
-            "filing_year": 2025,
+            "filing_year": _PRIOR_YEAR,
             "period": "1T",
             "profile_requirements": expected_label,
         }
@@ -392,8 +400,8 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                filing_year=_PRIOR_YEAR,
+                period=Period.from_year_and_code(_PRIOR_YEAR, "1T"),
                 revision_id=_M130_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
@@ -418,9 +426,9 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2025,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision_id=_M303_2025_REVISION,
+                filing_year=_PRIOR_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
+                revision_id=_M303_PRIOR_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
@@ -432,10 +440,10 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
         assert excinfo.value.translated_message == "application.modelo.errors.work_unit_filing_year_period_mismatch"
         assert excinfo.value.context == {
             "modelo": Modelo("303").value,
-            "filing_year": 2025,
-            "period_year": 2026,
+            "filing_year": _PRIOR_YEAR,
+            "period_year": _YEAR,
             "period": "1T",
-            "revision_id": _M303_2025_REVISION,
+            "revision_id": _M303_PRIOR_REVISION,
             "filing_year_matches_period": False,
         }
         failure = excinfo.value.precondition_failure
@@ -462,8 +470,8 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
             create_work_unit(
                 bucket_id=_NONRESIDENT_PROFILE_ID,
                 modelo=Modelo("200").value,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "0A"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
                 revision_id=_M200_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
@@ -525,7 +533,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
             repository,
             bucket_id=_OPERATOR_PROFILE_ID,
             modelo=Modelo("100"),
-            filing_year=2025,
+            filing_year=_PRIOR_YEAR,
             period_code="0A",
             revision_id=_M100_REVISION,
         )
@@ -594,7 +602,7 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
             work_repository,
             bucket_id=_NONRESIDENT_PROFILE_ID,
             modelo=Modelo("200"),
-            filing_year=2026,
+            filing_year=_YEAR,
             period_code="0A",
             revision_id=_M200_REVISION,
         )
@@ -639,7 +647,7 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
             work_repository,
             bucket_id=_NONRESIDENT_PROFILE_ID,
             modelo=Modelo("100"),
-            filing_year=2025,
+            filing_year=_PRIOR_YEAR,
             period_code="0A",
             revision_id=_M100_REVISION,
         )
@@ -729,7 +737,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
 
 def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work_unit(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 5, 1))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with (
@@ -739,9 +747,9 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision_id=_M303_2026_REVISION,
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
+                revision_id=_M303_OPEN_ENDED_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
@@ -754,17 +762,17 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
         assert excinfo.value.context == {
             "bucket_id": _OPERATOR_PROFILE_ID,
             "modelo": "303",
-            "filing_year": 2026,
+            "filing_year": _YEAR,
             "period": "1T",
-            "activity_start_date": "2026-05-01",
-            "period_end_date": "2026-03-31",
+            "activity_start_date": date(_YEAR, 5, 1).isoformat(),
+            "period_end_date": date(_YEAR, 3, 31).isoformat(),
         }
         assert len(repository.load()) == 0
 
 
 def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work_unit(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 7, 15))
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
 
         with (
@@ -774,8 +782,8 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("130").value,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "2T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "2T"),
                 revision_id=_M130_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=repository,
@@ -785,31 +793,31 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
                 operation=operation,
             )
 
-        assert "Modelo 130 2026 2T is before" in str(excinfo.value)
+        assert f"Modelo 130 {_YEAR} 2T is before" in str(excinfo.value)
         assert "pre-activity period" in str(excinfo.value)
         assert excinfo.value.context == {
             "bucket_id": _OPERATOR_PROFILE_ID,
             "modelo": Modelo("130").value,
-            "filing_year": 2026,
+            "filing_year": _YEAR,
             "period": "2T",
-            "activity_start_date": "2026-07-15",
-            "period_end_date": "2026-06-30",
+            "activity_start_date": date(_YEAR, 7, 15).isoformat(),
+            "period_end_date": date(_YEAR, 6, 30).isoformat(),
         }
         assert len(repository.load()) == 0
 
 
 def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
             bucket_id=_OPERATOR_PROFILE_ID,
-            filing_year=2026,
+            filing_year=_YEAR,
             period_code="1T",
-            revision_id=_M303_2026_REVISION,
+            revision_id=_M303_OPEN_ENDED_REVISION,
         )
 
         with (
@@ -828,21 +836,21 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
                 clock=_NOW,
             )
 
-        assert "Modelo 303 2026 1T is before" in str(excinfo.value)
+        assert f"Modelo 303 {_YEAR} 1T is before" in str(excinfo.value)
         assert len(calculation_repository.load()) == 0
         assert wallet_repository.list_decisions() == ()
 
 
 def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 7, 15))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
             bucket_id=_OPERATOR_PROFILE_ID,
             modelo=Modelo("130"),
-            filing_year=2026,
+            filing_year=_YEAR,
             period_code="2T",
             revision_id=_M130_REVISION,
         )
@@ -865,7 +873,7 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
                 clock=_NOW,
             )
 
-        assert "Modelo 130 2026 2T is before" in str(calculate_exc.value)
+        assert f"Modelo 130 {_YEAR} 2T is before" in str(calculate_exc.value)
         assert len(calculation_repository.load()) == 1
 
 
@@ -892,9 +900,9 @@ def test_first_active_m303_period_allows_create_and_calculate(
         return build(pin)
 
     monkeypatch.setattr(preflight, "build_profile_grounding_index", counted)
-    period = Period.from_year_and_code(2026, period_code)
+    period = Period.from_year_and_code(_YEAR, period_code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
@@ -903,9 +911,9 @@ def test_first_active_m303_period_allows_create_and_calculate(
             work_unit = create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=period,
-                revision_id=_M303_2026_REVISION,
+                revision_id=_M303_OPEN_ENDED_REVISION,
                 ports=WorkLifecyclePorts(
                     work_unit_repository=work_repository,
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
@@ -941,14 +949,14 @@ def test_first_active_m303_period_allows_create_and_calculate(
 
 def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
-        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 5, 1))
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(_YEAR, 5, 1))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
         work_unit = _store_work_unit(
             work_repository,
             bucket_id=_OPERATOR_PROFILE_ID,
-            filing_year=2026,
+            filing_year=_YEAR,
             period_code="1T",
-            revision_id=_M303_2026_REVISION,
+            revision_id=_M303_OPEN_ENDED_REVISION,
         )
 
         with (
@@ -958,9 +966,9 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
             ensure_modelo_work_unit_for_active_target(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id=_M303_2026_REVISION,
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
+                registry_revision_id=_M303_OPEN_ENDED_REVISION,
                 name="renamed stale work",
                 actor="operator",
                 catalogue=work_repository.load(),
@@ -988,7 +996,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_ready_profile(
             _OPERATOR_PROFILE_ID,
-            activity_start_date=date(2025, 1, 1),
+            activity_start_date=date(_PRIOR_YEAR, 1, 1),
             setup_state=ProfileSetupState.INCOMPLETE,
         )
 
@@ -999,9 +1007,9 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
-                revision_id=_M303_2025_REVISION,
+                filing_year=_PRIOR_YEAR,
+                period=Period.from_year_and_code(_PRIOR_YEAR, "1T"),
+                revision_id=_M303_PRIOR_REVISION,
                 clock=_NOW,
                 operation=operation,
                 ports=WorkLifecyclePorts(
@@ -1055,9 +1063,9 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             repository,
             bucket_id=_OPERATOR_PROFILE_ID,
             modelo=Modelo("303"),
-            filing_year=2025,
+            filing_year=_PRIOR_YEAR,
             period_code="1T",
-            revision_id=_M303_2025_REVISION,
+            revision_id=_M303_PRIOR_REVISION,
         )
         record = load_test_profile_record(_OPERATOR_PROFILE_ID)
         _replace_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
@@ -1106,13 +1114,13 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
         facts=(
             UserProfileFact(
                 path="censo.activity_start_date",
-                value=date(2026, 1, 1),
-                valid_from=date(2026, 1, 1),
+                value=date(_YEAR, 1, 1),
+                valid_from=date(_YEAR, 1, 1),
             ),
             UserProfileFact(
                 path="censo.activity_start_date",
-                value=date(2020, 1, 1),
-                valid_from=date(2020, 1, 1),
+                value=date(_YEAR - 6, 1, 1),
+                valid_from=date(_YEAR - 6, 1, 1),
             ),
         ),
         created_at=_NOW,
@@ -1126,15 +1134,15 @@ def test_activity_start_reader_agrees_with_the_canonical_effective_projection() 
 
     Two readers of one effective-dated path must not disagree about which fact
     is in force. Declaration order is not the effective order: here the later
-    window is declared first, so a reverse scan returns the 2020 fact while
-    ``valid_from`` ordering returns the 2026 one.
+    window is declared first, so a reverse scan returns the older fact while
+    ``valid_from`` ordering returns the effective one.
     """
     record = _reversed_declaration_order_record()
 
     canonical = record_to_path_values(record)["censo.activity_start_date"]
     resolved = profile_activity_start_date(record)
 
-    assert resolved == date(2026, 1, 1)
+    assert resolved == date(_YEAR, 1, 1)
     assert resolved is not None
     assert resolved.isoformat() == canonical
 
@@ -1143,8 +1151,8 @@ def test_pre_activity_refusal_uses_the_effective_window_not_declaration_order() 
     """A period before the effective activity start is refused, not admitted.
 
     The reader decides whether a target period is pre-activity, so resolving the
-    wrong fact fails open: reading the superseded 2020 window would admit a 2021
-    period that the effective 2026 start puts before the activity ever began.
+    wrong fact fails open: reading the superseded window would admit an earlier
+    period that the effective start puts before the activity ever began.
     """
     record = _reversed_declaration_order_record()
 
@@ -1152,11 +1160,11 @@ def test_pre_activity_refusal_uses_the_effective_window_not_declaration_order() 
         record=record,
         bucket_id=_OPERATOR_PROFILE_ID,
         modelo=Modelo("303").value,
-        filing_year=2021,
-        period=Period.from_year_and_code(2021, "1T"),
+        filing_year=_YEAR - 5,
+        period=Period.from_year_and_code(_YEAR - 5, "1T"),
     )
 
     assert refusal is not None
     message, context = refusal
     assert "pre-activity period" in message
-    assert context["activity_start_date"] == "2026-01-01"
+    assert context["activity_start_date"] == date(_YEAR, 1, 1).isoformat()

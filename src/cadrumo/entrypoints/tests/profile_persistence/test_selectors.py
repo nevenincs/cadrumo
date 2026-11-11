@@ -61,11 +61,15 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUn
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
-_T0 = datetime(2026, 6, 4, 9, 0, 0, tzinfo=UTC)
-_P_2026_1T = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 6, 4, 9, 0, 0, tzinfo=UTC)
+_P_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_M130_REVISION = str(open_ended_revision("130").id)
 _SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000130"
 _REVISION_SELECTOR_PROFILE_ID = "13000000-0000-4000-8000-000000000131"
 _EXPLICIT_PROFILE_ID = "13000000-0000-4000-8000-000000000132"
@@ -100,8 +104,8 @@ def selector_repos(
 def _request(**overrides: object) -> ModeloWorkSelectorRequest:
     data: dict[str, object] = {
         "modelo": "130",
-        "filing_year": 2026,
-        "period": _P_2026_1T,
+        "filing_year": _YEAR,
+        "period": _P_Q1,
     }
     data.update(overrides)
     return ModeloWorkSelectorRequest.model_validate(data)
@@ -115,9 +119,9 @@ def _seed_work_unit(
     return create_work_unit(
         bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=wu_repo.bucket_id or _REVISION_SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
@@ -161,17 +165,17 @@ def _seed_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2026,
-            period=_P_2026_1T.registry_token,
+            revision_id=_M130_REVISION,
+            modelo_year=_YEAR,
+            period=_P_Q1.registry_token,
         ),
         state=state,
         input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
         casilla_values={_OUTPUT_CASILLA: output},
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=2026,
-            period=_P_2026_1T.registry_token,
+            filing_year=_YEAR,
+            period=_P_Q1.registry_token,
             casilla_values={_OUTPUT_CASILLA: output},
         ),
         created_at=created_at,
@@ -242,8 +246,8 @@ def test_visible_target_resolution_reports_absent_before_exact_creation(work_rep
     assert resolution.work_unit is None
     assert resolution.bucket_id == work_repo.bucket_id
     assert resolution.modelo == "130"
-    assert resolution.filing_year == 2026
-    assert resolution.period == _P_2026_1T
+    assert resolution.filing_year == _YEAR
+    assert resolution.period == _P_Q1
 
 
 def test_natural_target_resolution_retains_discarded_work_units_for_terminal_state_handling(
@@ -253,9 +257,9 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
@@ -306,14 +310,14 @@ def test_pure_selector_stays_on_captured_encrypted_catalogue_after_storage_mutat
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2026,
-            period=_P_2026_1T,
+            filing_year=_YEAR,
+            period=_P_Q1,
             revision_id="later-revision",
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=_P_2026_1T,
+        filing_year=_YEAR,
+        period=_P_Q1,
         revision_id="later-revision",
         name="stored after capture",
         created_at=_T0 + timedelta(minutes=1),
@@ -338,9 +342,9 @@ def test_visible_target_resolution_returns_single_active_work_unit(
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
@@ -432,16 +436,16 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
     )
 
     with pytest.raises(ModeloWorkSelectorContradictionError):
-        _select_captured_work_unit(work_repo, _request(work_unit_id=unit.work_unit_id, filing_year=2025))
+        _select_captured_work_unit(work_repo, _request(work_unit_id=unit.work_unit_id, filing_year=_YEAR - 1))
 
 
 def test_revision_conflict_refuses_before_exact_target_creation(
@@ -451,9 +455,9 @@ def test_revision_conflict_refuses_before_exact_target_creation(
     unit = create_work_unit(
         bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
@@ -464,7 +468,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(
 
     assert raised.value.requested_revision_id == "future-revision"
     assert raised.value.existing.work_unit_id == unit.work_unit_id
-    assert raised.value.existing.revision_id == "2019-y-siguientes"
+    assert raised.value.existing.revision_id == _M130_REVISION
 
 
 def test_visible_target_ambiguity_refuses_with_candidate_guidance(
@@ -475,9 +479,9 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(
     first = create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_P_Q1,
+        revision_id=_M130_REVISION,
         ports=build_work_lifecycle_ports(bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID),
         operation=operation,
         clock=_T0,
@@ -485,16 +489,16 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(
     second_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
+        filing_year=_YEAR,
+        period=_P_Q1,
         revision_id="manual-revision",
     )
     second = WorkUnit(
         work_unit_id=second_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=_P_2026_1T,
+        filing_year=_YEAR,
+        period=_P_Q1,
         revision_id="manual-revision",
         name="manual ambiguous unit",
         created_at=_T0 + timedelta(minutes=1),
@@ -508,7 +512,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(
     candidate_ids = {candidate.work_unit_id for candidate in raised.value.candidates}
     assert candidate_ids == {first.work_unit_id, second.work_unit_id}
     assert {candidate.revision_id for candidate in raised.value.candidates} == {
-        "2019-y-siguientes",
+        _M130_REVISION,
         "manual-revision",
     }
     assert all(candidate.short_work_unit_id == candidate.work_unit_id[-12:] for candidate in raised.value.candidates)
@@ -773,7 +777,7 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         },
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), current_draft))
-    address = ModeloWorkAddress(modelo="130", filing_year=2026, period=_P_2026_1T)
+    address = ModeloWorkAddress(modelo="130", filing_year=_YEAR, period=_P_Q1)
 
     catalogue = wu_repo.load()
     with calculation_ports_for_test(
