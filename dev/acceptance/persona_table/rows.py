@@ -16,7 +16,14 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope, YearToken
+from cadrumo.tests.personas import (
+    ExpectedValue,
+    Persona,
+    PersonaCatalogueError,
+    YearEnvelope,
+    YearToken,
+    filed_period_order,
+)
 
 
 class Stage(StrEnum):
@@ -70,6 +77,7 @@ GREEN = frozenset({Verdict.PASSED})
 """Verdicts a row is green at; a diff reports a row entering or leaving this set."""
 
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
+_ANNUAL = "0A"
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,7 +262,7 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
         for period in item.periods
     } | set(stated)
     rows = []
-    for modelo, year, period in sorted(keys, key=lambda key: (key[0], key[1] or 0, key[2])):
+    for modelo, year, period in sorted(keys, key=chain_order):
         if year is None:
             continue
         values = stated.get((modelo, year, period), [])
@@ -271,6 +279,21 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
             )
         )
     return rows
+
+
+def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
+    """The order a replay runs returns in: by year, each quarter before the annual returns, then by modelo.
+
+    A quarter is filed locally before the next one calculates, and an annual
+    summary (Modelo 180, 190, 390) or the annual Renta reads that year's filed
+    quarters, so every quarter of a year runs before any annual return of it.
+    """
+    modelo, year, period = key
+    try:
+        position = filed_period_order(period)
+    except ValueError:
+        position = filed_period_order(_ANNUAL) + 1
+    return (year or 0, position, modelo)
 
 
 def _grounding(values: Sequence[ExpectedValue]) -> str:
@@ -338,6 +361,7 @@ __all__ = [
     "Stage",
     "TableRow",
     "Verdict",
+    "chain_order",
     "classify",
     "is_unsupported",
     "latest_rows",

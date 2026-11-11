@@ -175,3 +175,16 @@ def test_every_return_with_stated_casillas_has_an_oracle_even_beside_concept_onl
                 key = (persona_id, value.modelo, value.year.resolve(envelope), value.period)
                 assert planned[key].has_values, key
                 assert set(value.legal_ref) <= set(planned[key].sources), key
+
+
+def test_a_replay_runs_each_quarter_before_the_annual_returns_of_its_year() -> None:
+    envelope = _envelope()
+    rows = planned_rows(_persona("traductora-profesional"), envelope.horizon, envelope)
+    order = [(row.year, row.modelo, row.period) for row in rows]
+    for year, modelo, period in order:
+        if period != "0A":
+            continue
+        annual_at = order.index((year, modelo, period))
+        quarters_at = [index for index, (other, _modelo, code) in enumerate(order) if other == year and code != "0A"]
+        assert all(index < annual_at for index in quarters_at), (modelo, year)
+    assert [period for (_year, modelo, period) in order if modelo == "111"][:4] == ["1T", "2T", "3T", "4T"]

@@ -29,6 +29,7 @@ from cadrumo.application.modelo.m303_attestation_operation import (
 from cadrumo.application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_calculation_contracts import (
@@ -43,6 +44,11 @@ from cadrumo.application.modelo.work_create_operation import (
     ModeloWorkCreateSuccess,
 )
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
+from cadrumo.application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
 from cadrumo.application.modelo.work_verification_contracts import (
     ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
@@ -280,6 +286,8 @@ def _run_return(
             subject=work_unit_id,
         )
         verify = Stage.PASSED if verified.granted_verificado_completo else Stage.INCOMPLETE
+        if verified.granted_verificado_completo:
+            reasons.append(_file_locally(world, work_unit_id, revision_id, verified))
         if verify is Stage.INCOMPLETE:
             reasons.append(
                 f"verify: {verified.completeness_status}; {verified.finding_count} findings; "
@@ -322,6 +330,34 @@ def _run_return(
         reason=" | ".join(reasons)[:_REASON_LIMIT],
         export_detail=export_detail,
     )
+
+
+def _file_locally(
+    world: PersonaWorld, work_unit_id: str, revision_id: str, verified: ModeloWorkVerifyPublicResultV2
+) -> str:
+    """File a verified return locally, so the next quarter and the year's annual returns build on it.
+
+    Local filing records a PRESENTADO revision whose AEAT status stays pending;
+    nothing is submitted. A refusal is reported in the row and leaves the chain
+    to show where it stops.
+    """
+    try:
+        run_operation(
+            world,
+            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+            ModeloWorkFileRequest(
+                approval=ModeloWorkFileApproval(
+                    calculation_revision_id=revision_id,
+                    verification_report_id=verified.verification_report_id,
+                ),
+                actor=PERSONA_ACTOR,
+            ),
+            ModeloWorkFilePublicResultV2,
+            subject=work_unit_id,
+        )
+    except PersonaMaterialisationError as error:
+        return f"file: {_short(error)}"
+    return "filed locally"
 
 
 def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
