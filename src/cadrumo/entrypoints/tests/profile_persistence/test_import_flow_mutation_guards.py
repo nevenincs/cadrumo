@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -43,6 +44,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -72,6 +74,8 @@ from .import_flow_support import (
 )
 
 __all__ = ["repos", "withholding_payer_repos"]
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -120,12 +124,12 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
     repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    period = Period.from_year_and_code(2026, "1T")
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T")
     work_unit = create_work_unit(
         bucket_id=PROFILE_ID,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
@@ -160,9 +164,9 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
     work_unit = create_work_unit(
         bucket_id=PROFILE_ID,
         modelo="111",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("111").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=T0,
         operation=operation,
@@ -171,7 +175,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
     replace_retencion_observations(
         RetencionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(PROFILE_ID)),
         modelo="111",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=work_unit.period,
         observations=[
             RetencionObservation(
@@ -182,7 +186,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("1000.00"),
                 retencion_amount=Decimal("150.00"),
-                accrued_on="2026-03-15",
+                accrued_on=date(_YEAR, 3, 15).isoformat(),
             )
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -394,21 +398,21 @@ _GUARD_INCOME_CASILLA = IMPORT_INCOME_CASILLA
 
 def _guard_work_unit(bucket_id: str) -> WorkUnit:
     """Build a valid M130 work unit owned by ``bucket_id``."""
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2019-y-siguientes",
+            revision_id=str(open_ended_revision("130").id),
         ),
         bucket_id=bucket_id,
-        name="130-2026-1T",
+        name=f"130-{_YEAR}-1T",
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=str(open_ended_revision("130").id),
         created_at=T0,
         updated_at=T0,
     )

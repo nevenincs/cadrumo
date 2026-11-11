@@ -55,6 +55,7 @@ from cadrumo.core.json_contract import NoticeSeverity
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -64,6 +65,8 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from .filed_capture_history_ports_support import SESSION_BUCKET_ID, filed_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_in() -> None:
@@ -81,39 +84,39 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
     collapsed everything to one row per modelo-year would not pass.
     """
     original_3t = prior_303_observation(
-        year=2024,
+        year=_YEAR,
         period="3T",
-        expediente_id="202430300000303C",
+        expediente_id=f"{_YEAR}30300000303C",
         pending_compensation=Decimal("300.00"),
-        presented_at=datetime(2024, 10, 18, 12, 5, 11, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 10, 18, 12, 5, 11, tzinfo=UTC),
     )
     amendment_3t = prior_303_observation(
-        year=2024,
+        year=_YEAR,
         period="3T",
-        expediente_id="202430300000505E",
+        expediente_id=f"{_YEAR}30300000505E",
         pending_compensation=Decimal("355.00"),
-        presented_at=datetime(2025, 3, 14, 11, 20, 36, tzinfo=UTC),
+        presented_at=datetime(_YEAR + 1, 3, 14, 11, 20, 36, tzinfo=UTC),
     )
     original_4t = prior_303_observation(
-        year=2024,
+        year=_YEAR,
         period="4T",
-        expediente_id="202430300000404D",
+        expediente_id=f"{_YEAR}30300000404D",
         pending_compensation=Decimal("400.00"),
-        presented_at=datetime(2025, 1, 27, 16, 42, 58, tzinfo=UTC),
+        presented_at=datetime(_YEAR + 1, 1, 27, 16, 42, 58, tzinfo=UTC),
     )
     amendment_4t = prior_303_observation(
-        year=2024,
+        year=_YEAR,
         period="4T",
-        expediente_id="202430300000606F",
+        expediente_id=f"{_YEAR}30300000606F",
         pending_compensation=Decimal("444.00"),
-        presented_at=datetime(2025, 3, 14, 11, 58, 9, tzinfo=UTC),
+        presented_at=datetime(_YEAR + 1, 3, 14, 11, 58, 9, tzinfo=UTC),
     )
     single_1t = prior_303_observation(
-        year=2024,
+        year=_YEAR,
         period="1T",
-        expediente_id="202430300000101A",
+        expediente_id=f"{_YEAR}30300000101A",
         pending_compensation=Decimal("100.00"),
-        presented_at=datetime(2024, 4, 22, 10, 14, 3, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 22, 10, 14, 3, tzinfo=UTC),
     )
     observations = (single_1t, original_3t, original_4t, amendment_3t, amendment_4t)
 
@@ -171,7 +174,7 @@ def test_persisted_source_metadata_carries_the_register_request_type_signal(tmp_
             observation,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
-        loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
 
     assert loaded is not None
     assert loaded.source_metadata["aeat_tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE
@@ -200,13 +203,13 @@ def test_persisted_source_metadata_omits_an_absent_request_type_rather_than_writ
             blank,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
-        blank_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        blank_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
     with secure_backend(tmp_path / "missing"):
         persist_filed_calculation_observation(
             missing,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
-        missing_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        missing_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
 
     assert blank_row is not None
     assert missing_row is not None
@@ -235,8 +238,8 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
             justificante_csvs=("CSV13020261T",),
         )
-        first = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
-        second = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        first = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
+        second = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
 
     assert first is not None
     assert second is not None
@@ -277,7 +280,7 @@ def test_a_receipt_reaches_its_filing_even_though_its_identifier_is_not_the_regi
     # DO NOT "tidy" these two into agreement. Their divergence is still the
     # premise: it is what makes the stamp below evidence that the identifier is
     # no longer consulted, rather than evidence that two equal values agreed.
-    register_expediente_id = "202613000000101A"
+    register_expediente_id = f"{_YEAR}13000000101A"
     receipt = parse_justificante_bytes(modelo_130_justificante_pdf_bytes())
     assert receipt.presentation_id is not None
     assert receipt.presentation_id.strip().casefold() != register_expediente_id.strip().casefold(), (
@@ -299,8 +302,8 @@ def test_a_receipt_reaches_its_filing_even_though_its_identifier_is_not_the_regi
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
 
@@ -342,8 +345,8 @@ def test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched
             .current_for(
                 bucket_id=bucket_id,
                 modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
 
@@ -412,11 +415,11 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
 
     # The four surviving axes are identical for both filings, so the predicate
     # returns True for each. Only the csv separates them.
-    for expediente_id in ("202630300000411A", "202630300000412B"):
+    for expediente_id in (f"{_YEAR}30300000411A", f"{_YEAR}30300000412B"):
         assert receipt.matches_filing_target(
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             tax_id="00000000T",
         ), f"the predicate must accept the receipt for {expediente_id}, or the two are already separable"
 
@@ -426,7 +429,7 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
 
         wrong_filing = stored_303_justificante_observation(
             store,
-            expediente_id="202630300000412B",
+            expediente_id=f"{_YEAR}30300000412B",
             captured_csv=other_filing_csv,
         )
         refused = enroll_filed_justificante_evidence(
@@ -438,8 +441,8 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
             .current_for(
                 bucket_id=bucket_id,
                 modelo="303",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
 
@@ -453,8 +456,8 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
             .current_for(
                 bucket_id=bucket_id,
                 modelo="303",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
             )
         )
 
@@ -489,7 +492,7 @@ def _unparsable_pdf_observation(store: FiledDeclaracionObservationStore) -> File
         modelo="130",
         pdf_bytes=b"%PDF-1.4 not a receipt",
         authenticated_identity="00000000T",
-        expediente_id="202613000000199Z",
+        expediente_id=f"{_YEAR}13000000199Z",
         captured_csv=MODELO_130_FIXTURE_CSV,
     )
 
@@ -512,7 +515,7 @@ def _filing_target_mismatch_observation(store: FiledDeclaracionObservationStore)
         modelo="303",
         pdf_bytes=modelo_130_justificante_pdf_bytes(),
         authenticated_identity="00000000T",
-        expediente_id="202630300000199Z",
+        expediente_id=f"{_YEAR}30300000199Z",
         captured_csv=MODELO_130_FIXTURE_CSV,
     )
 
@@ -639,7 +642,7 @@ def test_an_incomplete_prior_filing_observation_never_reaches_the_store(tmp_path
 
 def _filed_130_observation(
     *,
-    expediente_id: str = "13020260410ABCD1234EFGH5678",
+    expediente_id: str = f"130{_YEAR}0410ABCD1234EFGH5678",
     presented_at: datetime = CAPTURED_AT,
 ) -> FiledDeclaracionObservation:
     """One Modelo 130 filed observation that enrols as registry-grounded evidence.
@@ -650,8 +653,8 @@ def _filed_130_observation(
     would be indistinguishable here from a provenance divergence. Modelo 130
     exercises the same single stamping site with nothing else attached.
     """
-    period = Period.from_year_and_code(2026, "1T")
-    body = b"130-2026-1T-submitted-file"
+    period = Period.from_year_and_code(_YEAR, "1T")
+    body = f"130-{_YEAR}-1T-submitted-file".encode("ascii")
     external = Settings.external_constants().aeat
     declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
     artefact = FiledDeclaracionArtefact(
@@ -664,7 +667,7 @@ def _filed_130_observation(
     )
     return FiledDeclaracionObservation(
         modelo="130",
-        ejercicio=2026,
+        ejercicio=_YEAR,
         period=period,
         expediente_id=expediente_id,
         status="ALTA",
@@ -682,7 +685,7 @@ def _filed_130_observation(
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=registry_snapshot("130", 2026, "1T").snapshot_ref,
+        registry_snapshot_ref=registry_snapshot("130", _YEAR, "1T").snapshot_ref,
     )
 
 
@@ -706,7 +709,7 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
     this test being edited.
     """
     observation = _filed_130_observation()
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
 
     with secure_backend(tmp_path / "single"):
         single_finalization = finalize_filed_capture(
@@ -761,7 +764,7 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
-        row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
 
     assert row is not None
     assert row.source_metadata

@@ -89,6 +89,12 @@ from ....domain.calculations.registry.iva_wallet_carry_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     iva_wallet_owned_binding_ids_for_revision,
 )
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    open_ended_revision,
+    revision_serving_period,
+)
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -113,10 +119,12 @@ from .file_flow_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T1 = datetime(2026, 4, 10, 9, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 4, 11, 9, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
+_T1 = datetime(_YEAR, 4, 10, 9, 0, 0, tzinfo=UTC)
+_T2 = datetime(_YEAR, 4, 11, 9, 0, 0, tzinfo=UTC)
+_T3 = datetime(_YEAR, 4, 12, 9, 0, 0, tzinfo=UTC)
+_T4 = datetime(_YEAR, 7, 10, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 
@@ -173,9 +181,9 @@ def _seed_130(
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=clock,
         operation=operation,
@@ -197,8 +205,8 @@ def _seed_2t_130_income(repos_: FileFlowRepos) -> str:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
-                booked_date=date(2026, 5, 15),
-                value_date=date(2026, 5, 15),
+                booked_date=date(_YEAR, 5, 15),
+                value_date=date(_YEAR, 5, 15),
                 amount=_2T_INCOME,
                 direction=TransactionDirection.INCOMING,
                 counterparty="Cliente SA",
@@ -214,7 +222,7 @@ def _seed_2t_130_income(repos_: FileFlowRepos) -> str:
         )
     persisted = transactions.load().get(created.ref.transaction_id)
     assert persisted is not None
-    assert persisted.raw.value_date == date(2026, 5, 15)
+    assert persisted.raw.value_date == date(_YEAR, 5, 15)
     assert persisted.raw.amount == _2T_INCOME
     assert persisted.taxable_base == _2T_INCOME
     return persisted.transaction_id
@@ -295,8 +303,8 @@ def _seed_first_year_activity_profile(repos_: FileFlowRepos) -> None:
                 UserProfileFact(path="identity.surnames", value="Autonomo"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
-                UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
-                *cash_criterion_facts(2026),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1).isoformat()),
+                *cash_criterion_facts(_YEAR),
             )
         ),
         created_at=_T1,
@@ -318,7 +326,7 @@ def _seed_existing_303_activity_profile(repos_: FileFlowRepos) -> None:
                 UserProfileFact(path="identity.surnames", value="Company"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
-                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                UserProfileFact(path="censo.activity_start_date", value=date(1990, 1, 1).isoformat()),
             ),
             persona_id="sociedad-limitada",
         ),
@@ -329,7 +337,9 @@ def _seed_existing_303_activity_profile(repos_: FileFlowRepos) -> None:
     seed_test_profile_record(profile)
 
 
-def _seed_first_303_activity_profile(repos_: FileFlowRepos, *, activity_start_date: str = "2025-01-01") -> None:
+def _seed_first_303_activity_profile(
+    repos_: FileFlowRepos, *, activity_start_date: str = date(_YEAR, 1, 1).isoformat()
+) -> None:
     profile = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
@@ -466,14 +476,14 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     local_filing = fr_repo.load().current_for(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
     )
     assert local_filing is not None
     assert local_filing.aeat_accepted is False
     assert local_filing.external_evidence is None
     # Confirm the carry observation was persisted under the non-official source_kind.
-    stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+    stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(_YEAR, "1T"))
     assert stored is not None
     assert stored.source_kind == APP_FILING_SOURCE_KIND
 
@@ -510,7 +520,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), verificado_2t))
     revision_2t = verificado_2t
 
-    # Same-year scope: the same-year 1T (M130/2026) previous_filing
+    # Same-year scope: the same-year 1T (M130 same-year) previous_filing
     # dependency is admitted - its official-evidence-delta blockers are cleared (the row
     # is clean) and it carries the disclosing non-official-local-chain advisory. A
     # cross-YEAR dependency (the M100 prior-year minoración evidence) is NOT relaxed, so
@@ -525,15 +535,15 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     )
     assert verdict is not None
     same_year = [
-        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == _YEAR
     ]
-    assert same_year, "expected the same-year M130/2026 carry dependency"
+    assert same_year, "expected the same-year M130 same-year carry dependency"
     assert all(d.clean for d in same_year)
     assert all(d.non_official_local_chain_advisory for d in same_year)
     assert all(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers for d in same_year)
     assert has_non_official_local_chain(verdict)
     # The cross-YEAR dependency is NOT relaxed - the same-year scope is the safety boundary.
-    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
+    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != _YEAR]
     assert all(not d.non_official_local_chain_advisory for d in cross_year)
 
 
@@ -654,14 +664,13 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(
 
 
 @pytest.mark.parametrize(
-    ("period_code", "revision_id", "prior_year", "prior_period"),
-    (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
+    ("period_code", "prior_year", "prior_period"),
+    (("1T", _PRIOR_YEAR, "4T"), ("2T", _YEAR, "1T")),
 )
 def test_carry_resolver_excludes_303_iva_compensation_binding(
     repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
     period_code: str,
-    revision_id: str,
     prior_year: int,
     prior_period: str,
 ) -> None:
@@ -677,13 +686,14 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
     from ....application.calculations.multi_year import PreviousFilingSourceResolver
     from ....core.period import Period
 
+    revision_id = str(revision_serving_period("303", _YEAR, period_code).id)
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         revision_id=revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
@@ -691,13 +701,13 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
     )
     _persist_prior_303(CalculationObservationRepository(), filing_year=prior_year, period_code=prior_period)
 
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period_code)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period_code)
     assert snapshot.revision.id == revision_id
     context = CalculationSourceContext(
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         revision=snapshot.revision,
     )
     raw = PreviousFilingSourceResolver(
@@ -745,26 +755,26 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(
 
 
 @pytest.mark.parametrize(
-    ("period_code", "revision_id", "prior_year", "prior_period"),
-    (("1T", "2026-hasta-01-y-1t", 2025, "4T"), ("2T", "2026-y-siguientes", 2026, "1T")),
+    ("period_code", "prior_year", "prior_period"),
+    (("1T", _PRIOR_YEAR, "4T"), ("2T", _YEAR, "1T")),
 )
 def test_source_mesh_excludes_303_iva_compensation_relation_binding(
     repos: FileFlowRepos,
     operation: PinnedAuthorityOperation,
     period_code: str,
-    revision_id: str,
     prior_year: int,
     prior_period: str,
 ) -> None:
     """D3: relation-prefill must not bypass the IVA-wallet owner for M303 casilla 110."""
 
+    revision_id = str(revision_serving_period("303", _YEAR, period_code).id)
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         revision_id=revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository()),
         clock=_T4,
@@ -772,7 +782,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(
     )
     _persist_prior_303(CalculationObservationRepository(), filing_year=prior_year, period_code=prior_period)
 
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period_code)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period_code)
     assert snapshot.revision.id == revision_id
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -795,7 +805,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(
 def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
     """The wallet carve-out is scoped to the exact M303 revision coordinate."""
 
-    snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_authority_operation().snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
     assert (
         iva_wallet_owned_binding_ids_for_revision(
@@ -820,9 +830,9 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2025",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
         operation=operation,
@@ -859,9 +869,9 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2025",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
         operation=operation,
@@ -917,7 +927,7 @@ def _local_m303_observation(
     return observation, disposition
 
 
-def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 2025) -> None:
+def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = _PRIOR_YEAR) -> None:
     """Store a prior-period Modelo 303 observation the carry gate cannot interpret.
 
     Canonical writes refuse such a row, so it is the stored shape of a corrupted
@@ -935,7 +945,9 @@ def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 20
         result_disposition=disposition,
         stamped_revision_id=revision_id_for_observation(observation),
     )
-    repository.save(envelope.model_copy(update={"stamped_revision_id": "2026-y-siguientes"}))
+    repository.save(
+        envelope.model_copy(update={"stamped_revision_id": str(revision_serving_period("303", _YEAR, "2T").id)})
+    )
 
 
 def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
@@ -953,14 +965,14 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
     laundered into a zero on the compensación with no signal.
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    _seed_first_303_activity_profile(repos, activity_start_date="2026-01-01")
+    _seed_first_303_activity_profile(repos, activity_start_date=date(_YEAR, 1, 1).isoformat())
     _persist_unreadable_prior_303()
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2026-hasta-01-y-1t",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
         operation=operation,
@@ -997,7 +1009,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
 
 
 def _persist_prior_303(
-    repository: CalculationObservationRepository, *, filing_year: int = 2026, period_code: str = "1T"
+    repository: CalculationObservationRepository, *, filing_year: int = _YEAR, period_code: str = "1T"
 ) -> None:
     """Persist a prior-period 303 observation carrying the compensation carry casilla.
 
@@ -1065,16 +1077,16 @@ def test_first_filer_same_year_chain_is_fully_reachable(
         calculation_repository=cr_repo,
         verification_repository=VerificationReportCatalogueRepository(objects=bv_repo.secure_object_repository),
         justificante_repository=JustificanteRepository(objects=bv_repo.secure_object_repository),
-        activity_start_date=date(2026, 1, 1),
+        activity_start_date=date(_YEAR, 1, 1),
     )
     assert verdict is not None
-    # The cross-year M100/2025 minoración dep is suppressed (pre-activity).
-    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
+    # The cross-year M100 prior-year minoración dep is suppressed (pre-activity).
+    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != _YEAR]
     assert cross_year, "expected the cross-year M100 prior-year minoración dependency"
     assert all(d.suppressed_pre_activity for d in cross_year)
-    # The same-year M130/2026 dep is admitted with the disclosing advisory.
+    # The same-year M130 same-year dep is admitted with the disclosing advisory.
     same_year = [
-        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+        d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == _YEAR
     ]
     assert same_year and all(d.non_official_local_chain_advisory for d in same_year)
     # Both handled -> the verdict is clean -> the quarter is reachable.

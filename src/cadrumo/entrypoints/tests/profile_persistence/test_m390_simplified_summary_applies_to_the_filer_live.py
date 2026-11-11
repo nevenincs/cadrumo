@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -61,9 +62,9 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "39000000-0000-4000-8000-000000000392"
-_YEAR = 2025
-_T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
+_YEAR = filing_grade_exercises("390")[-1]
+_T0 = datetime(_YEAR + 1, 8, 14, 9, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR + 1, 8, 14, 10, 0, tzinfo=UTC)
 _SUMMARY = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
 _GENERAL_REGIME_303_TOTALS = (
     "iva.cuota-devengada-total",
@@ -94,7 +95,7 @@ def _seed_profile(*, iva_regime: str, composition: str, estimation_regime: str) 
                     UserProfileFact(path="iva.regime", value=iva_regime),
                     UserProfileFact(path="iva.m303_regime_composition", value=composition),
                     UserProfileFact(path="irpf.estimation_regime", value=estimation_regime),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(1990, 1, 1)),
                 )
             ),
             created_at=_T0,

@@ -67,15 +67,17 @@ from cadrumo.tests.env_scope import ready_clave_settings
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "d210d210-d210-4210-8210-d210d210d210"
-_CLOCK = datetime(2026, 7, 10, 10, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "0A")
-_DEVENGO_DATE = date(2025, 12, 31)
+_YEAR = filing_grade_exercises("210")[-1]
+_CLOCK = datetime(_YEAR, 7, 10, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
+_DEVENGO_DATE = date(_YEAR, 12, 31)
 __all__ = ["register_wizard_catalogue"]
 
 
@@ -112,8 +114,8 @@ def _create_income(
         result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=_BUCKET_ID,
-                booked_date=date(2025, 2, 15),
-                value_date=date(2025, 2, 15),
+                booked_date=date(_YEAR, 2, 15),
+                value_date=date(_YEAR, 2, 15),
                 amount=classification.gross_income_amount if classification is not None else Decimal("300.00"),
                 direction=TransactionDirection.INCOMING,
                 description=f"M210 income {label}",
@@ -211,11 +213,11 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
         work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
         CalculationRevisionCatalogueRepository(objects=runtime.repository)
         BucketEventHistoryRepository(objects=runtime.repository)
-        snapshot = published_authority_operation().snapshot("210", filing_year=2025, period="0A")
+        snapshot = published_authority_operation().snapshot("210", filing_year=_YEAR, period="0A")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
@@ -256,7 +258,9 @@ def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_
     the admitted source evidence; code ``03`` remains excluded from a code
     ``01`` calculation despite sharing the same conceptual general-rate path.
     """
-    revision = published_authority_operation().revision_with_export_layouts("210", "2025")
+    revision = published_authority_operation().revision_with_export_layouts(
+        "210", str(revision_covering("210", _YEAR).id)
+    )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
         event_repository = BucketEventHistoryRepository(objects=runtime.repository)
@@ -486,13 +490,13 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = published_authority_operation().snapshot("210", filing_year=2025, period="0A")
+        snapshot = published_authority_operation().snapshot("210", filing_year=_YEAR, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
@@ -541,7 +545,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
         code_35_work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
@@ -645,13 +649,13 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = published_authority_operation().snapshot("210", filing_year=2025, period="0A")
+        snapshot = published_authority_operation().snapshot("210", filing_year=_YEAR, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="210",
-            filing_year=2025,
+            filing_year=_YEAR,
             period=_PERIOD,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
