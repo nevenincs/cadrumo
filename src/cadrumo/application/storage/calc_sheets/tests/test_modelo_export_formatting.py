@@ -12,6 +12,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..engine import build_export_plan
@@ -19,9 +20,11 @@ from ..records import TabName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _m130_plan():
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
     return build_export_plan(snapshot)
 
 

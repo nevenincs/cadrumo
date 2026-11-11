@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from .....domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
@@ -16,13 +17,15 @@ from ..layout import plan_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _modelo_130_revision() -> ModeloRevision:
-    return published_revision("130", "2019-y-siguientes")
+    return published_revision("130", revision_covering("130", _YEAR).id)
 
 
 def test_missing_layout_address_raises_typed_error_without_raw_identifier() -> None:
-    layout = plan_layout(_modelo_130_revision(), bracket_filter_date=date(2025, 12, 31))
+    layout = plan_layout(_modelo_130_revision(), bracket_filter_date=date(_YEAR, 12, 31))
 
     with pytest.raises(CalcSheetsEngineError) as raised:
         layout.address_for("private-casilla-token")
@@ -68,7 +71,7 @@ def test_referenced_undeclared_layout_inputs_are_not_silently_skipped(
     )
 
     with pytest.raises(CalcSheetsEngineError) as raised:
-        plan_layout(malformed_revision, bracket_filter_date=date(2025, 12, 31))
+        plan_layout(malformed_revision, bracket_filter_date=date(_YEAR, 12, 31))
 
     error = raised.value
     assert str(error) == "layout reference is not declared by the revision"

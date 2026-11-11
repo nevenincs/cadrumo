@@ -16,6 +16,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.work_unit import WorkUnitState
@@ -63,10 +64,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_AS_OF = date(2025, 10, 1)
-_NOW = datetime(2025, 10, 1, 12, tzinfo=UTC)
-_THIRD = Period.from_year_and_code(2025, "3T")
-_FIRST = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_AS_OF = date(_YEAR, 10, 1)
+_NOW = datetime(_YEAR, 10, 1, 12, tzinfo=UTC)
+_THIRD = Period.from_year_and_code(_YEAR, "3T")
+_FIRST = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _work(modelo: str, period: Period, work: str) -> DeclarationsWorkspaceDeclarationRefV1:
@@ -107,9 +109,9 @@ def _due(modelo: str, period: Period) -> DeclarationsCalendarEntryRefV1:
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
-        opens_on=date(2025, 10, 1),
-        closes_on=date(2025, 10, 20),
-        adjusted_closes_on=date(2025, 10, 20),
+        opens_on=date(_YEAR, 10, 1),
+        closes_on=date(_YEAR, 10, 20),
+        adjusted_closes_on=date(_YEAR, 10, 20),
         shift_reason="unchanged",
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         evaluated_on=_AS_OF,
@@ -129,7 +131,7 @@ def _calendar(*entries: DeclarationsCalendarEntryRefV1) -> DeclarationsCalendarP
     return DeclarationsCalendarProjectionV1(
         as_of=_AS_OF,
         generated_at=_NOW,
-        query_range=OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         sources=tuple(
             DeclarationsCalendarSourceStateV1(
                 source=source,
@@ -192,13 +194,13 @@ def test_the_words_are_said_in_the_language_asked_for() -> None:
     result = _search("3rd quarter", language=OutputLanguage.EN)
 
     assert sorted(_addresses(result)) == [("130", "3T"), ("303", "3T")]
-    assert all(hit.period_words == "3rd quarter 2025" for hit in result.hits)
+    assert all(hit.period_words == f"3rd quarter {_YEAR}" for hit in result.hits)
     assert _search("3rd quarter", language=OutputLanguage.ES).hits == ()
 
 
 def test_a_work_ranks_before_a_declaration_that_is_only_due() -> None:
-    result = _search("303 3.er trimestre", due=(_due("303", Period.from_year_and_code(2025, "3T")),))
-    only_due = _search("303", due=(_due("303", Period.from_year_and_code(2025, "2T")),))
+    result = _search("303 3.er trimestre", due=(_due("303", Period.from_year_and_code(_YEAR, "3T")),))
+    only_due = _search("303", due=(_due("303", Period.from_year_and_code(_YEAR, "2T")),))
 
     assert [hit.kind for hit in result.hits] == [ModeloDeclarationsSearchHitKind.WORK]
     kinds = [hit.kind for hit in only_due.hits]

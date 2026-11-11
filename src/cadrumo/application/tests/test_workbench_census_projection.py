@@ -34,7 +34,7 @@ def test_census_observation_survives_workbench_transport(captured: bool) -> None
             identity=CensalObservationIdentity(apellidos_y_nombre="Synthetic taxpayer"),
             domicilio_fiscal=CensalObservationAddress(municipio="Synthetic municipality"),
             domicilio_notificacion=CensalObservationAddress(),
-            captured_at=datetime(2023, 6, 1, tzinfo=UTC),
+            captured_at=datetime(1980, 6, 1, tzinfo=UTC),
             source_url=AnyHttpUrl(SEDE_ROOT_URL_FIXTURE),
         )
         if captured

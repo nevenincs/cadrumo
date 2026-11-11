@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ..workbench import (
     WorkbenchDestinationAdmission,
@@ -38,6 +39,8 @@ from ..workbench import (
 #: keeps the test's lookup explicit without making either canonical spelling a
 #: dependency-direction requirement.
 workbench_module = import_module("..workbench", package=__package__)
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CALCULATION_REVISION_ID = "c" * 64
@@ -83,16 +86,16 @@ def _admission(
 def _modelo_address() -> WorkbenchModeloAddress:
     return WorkbenchModeloAddress(
         modelo=ModeloCode("303"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
     )
 
 
 def _revision_address() -> WorkbenchRevisionAddress:
     return WorkbenchRevisionAddress(
         modelo=ModeloCode("303"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         calculation_revision_id=_CALCULATION_REVISION_ID,
     )
 
@@ -100,8 +103,8 @@ def _revision_address() -> WorkbenchRevisionAddress:
 def _filing_address() -> WorkbenchFilingAddress:
     return WorkbenchFilingAddress(
         modelo=ModeloCode("303"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         filing_record_id=_FILING_RECORD_ID,
     )
 
@@ -320,14 +323,14 @@ def test_address_uses_canonical_modelo_and_matches_period_year() -> None:
     with pytest.raises((ValidationError, ValueError)):
         WorkbenchModeloAddress(
             modelo="30A",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
         )
     with pytest.raises(ValidationError, match="filing_year must match"):
         WorkbenchModeloAddress(
             modelo=ModeloCode("303"),
-            filing_year=2025,
-            period=Period.from_year_and_code(2024, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR - 1, "1T"),
         )
 
 
@@ -411,7 +414,7 @@ def test_opaque_identity_basis_is_required_only_for_multi_record_families() -> N
 def test_unicode_case_accent_and_address_search_are_normalized() -> None:
     service = WorkbenchSearchService([_document()])
     assert service.search(WorkbenchSearchRequest(query="  DÉCLARATION  ")).total_matches == 1
-    assert service.search(WorkbenchSearchRequest(query="modelo 303 2025 1t")).total_matches == 1
+    assert service.search(WorkbenchSearchRequest(query=f"modelo 303 {_YEAR} 1t")).total_matches == 1
 
 
 def test_permutation_determinism_and_bounded_total() -> None:

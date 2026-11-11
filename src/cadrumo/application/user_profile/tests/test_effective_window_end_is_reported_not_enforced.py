@@ -66,15 +66,15 @@ def test_a_closed_window_still_projects_its_value() -> None:
     merely noisy.
     """
 
-    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
+    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1), valid_to=date(1981, 12, 31))
 
     assert record_to_path_values(_record(expired))[_PATH] == "28001"
 
 
 def test_a_later_explicit_clear_does_not_resurface_an_older_dated_value() -> None:
     """Every canonical value projection honours the same latest clear."""
-    older = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1))
-    cleared = UserProfileFact(path=_PATH, value=None, valid_from=date(2021, 1, 1))
+    older = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1))
+    cleared = UserProfileFact(path=_PATH, value=None, valid_from=date(1982, 1, 1))
     record = _record(cleared, older)
     schema = published_profile_schema()
 
@@ -88,7 +88,7 @@ def test_a_later_explicit_clear_does_not_resurface_an_older_dated_value() -> Non
 def test_the_effective_facts_own_end_date_is_reported() -> None:
     """Nothing supersedes it, so the declared end never takes effect."""
 
-    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
+    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1), valid_to=date(1981, 12, 31))
 
     assert _PATH in _warned_paths(expired)
 
@@ -100,8 +100,8 @@ def test_an_end_date_a_later_fact_supersedes_is_not_reported() -> None:
     check that keyed on position rather than window would warn here.
     """
 
-    superseded = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
-    current = UserProfileFact(path=_PATH, value="08032", valid_from=date(2021, 1, 1))
+    superseded = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1), valid_to=date(1981, 12, 31))
+    current = UserProfileFact(path=_PATH, value="08032", valid_from=date(1982, 1, 1))
 
     assert _warned_paths(current, superseded) == set()
     assert record_to_path_values(_record(current, superseded))[_PATH] == "08032"
@@ -110,7 +110,7 @@ def test_an_end_date_a_later_fact_supersedes_is_not_reported() -> None:
 def test_a_fact_carrying_no_end_date_is_not_reported() -> None:
     """Anti-tautology guard: the check is not a blanket warning on every fact."""
 
-    open_ended = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1))
+    open_ended = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1))
 
     assert _warned_paths(open_ended) == set()
 
@@ -118,12 +118,12 @@ def test_a_fact_carrying_no_end_date_is_not_reported() -> None:
 def test_a_superseding_fact_that_itself_ends_is_reported() -> None:
     """The report follows the effective fact, not the count of facts at the path."""
 
-    earlier = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1))
+    earlier = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1))
     latest_but_ending = UserProfileFact(
         path=_PATH,
         value="08032",
-        valid_from=date(2021, 1, 1),
-        valid_to=date(2022, 12, 31),
+        valid_from=date(1982, 1, 1),
+        valid_to=date(1983, 12, 31),
     )
 
     assert _PATH in _warned_paths(earlier, latest_but_ending)
@@ -136,10 +136,10 @@ def test_the_message_names_the_declared_end_and_the_way_to_supersede_it() -> Non
     than as prose, so rewording the sentence does not fail this.
     """
 
-    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
+    expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(1980, 1, 1), valid_to=date(1981, 12, 31))
     report = ProfileValidationService(schema=published_profile_schema()).validate_facts(_PROFILE_ID, (expired,))
 
     message = next(issue.message for issue in report.issues if issue.code == EXPIRY_NOT_ENFORCED)
 
-    assert "2020-12-31" in message
+    assert "1981-12-31" in message
     assert "valid_from" in message

@@ -255,7 +255,7 @@ def test_live_api_key_cannot_decline_a_reviewed_request() -> None:
             published_authority=Availability.AVAILABLE,
         ),
     )
-    current = datetime(2026, 9, 27, 12, tzinfo=UTC)
+    current = datetime(1980, 9, 27, 12, tzinfo=UTC)
     scope = AccessScope(
         operations=frozenset({definition_id}),
         actions=frozenset(AccessAction),
