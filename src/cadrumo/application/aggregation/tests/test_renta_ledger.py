@@ -19,6 +19,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.categories.profile import CategoryProfile
 from ....domain.categories.proportionality import (
     CategoryCitation,
@@ -60,8 +61,9 @@ pytestmark = [
 ]
 
 
-_ANNUAL_2025 = renta_income_aggregation_period(2025, "0A")
-_Q1_2025 = renta_income_aggregation_period(2025, "1T")
+_YEAR = newest_authored_edition("100")
+_ANNUAL = renta_income_aggregation_period(_YEAR, "0A")
+_Q1 = renta_income_aggregation_period(_YEAR, "1T")
 _M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199", surface="_M100_ASESORIA_CASILLA")
 _M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
     "0203",
@@ -75,7 +77,7 @@ def _invoice(
     *,
     bucket_id: str = SECURE_OBJECTS_BUCKET_ID,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
-    issued_at: date = date(2025, 4, 1),
+    issued_at: date = date(_YEAR, 4, 1),
     grand_total: Decimal = Decimal("121.00"),
     linked_transaction_ids: tuple[str, ...] | None = None,
 ) -> Invoice:
@@ -122,8 +124,8 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
         TransactionCatalogue.from_transactions((mixed,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -155,8 +157,8 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
         TransactionCatalogue.from_transactions((active, archived, stashed)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -178,8 +180,8 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
         TransactionCatalogue.from_transactions((manual,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -222,8 +224,8 @@ def test_a_purchase_in_an_amortizable_category_deducts_nothing_whatever_its_valu
         TransactionCatalogue.from_transactions((purchase,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -250,8 +252,8 @@ def test_a_shared_use_line_or_vehicle_deducts_nothing_and_says_why(category_id: 
         TransactionCatalogue.from_transactions((shared,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -273,8 +275,8 @@ def test_an_exclusively_business_line_or_vehicle_deducts_in_full(category_id: st
         TransactionCatalogue.from_transactions((business,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -292,8 +294,8 @@ def test_an_annual_cap_holds_across_the_rows_of_the_year() -> None:
             f"premium-{month}",
             amount=Decimal("300.00"),
             category=SpendingCategory.from_registry("seguros_salud_autonomo"),
-            booked_date=date(2025, month, 1),
-            value_date=date(2025, month, 1),
+            booked_date=date(_YEAR, month, 1),
+            value_date=date(_YEAR, month, 1),
         )
         for month in (3, 9)
     )
@@ -302,8 +304,8 @@ def test_an_annual_cap_holds_across_the_rows_of_the_year() -> None:
         TransactionCatalogue.from_transactions(premiums),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -313,15 +315,15 @@ def test_an_annual_cap_holds_across_the_rows_of_the_year() -> None:
 
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     initial = ledger_expense_transaction("row-outside")
-    invoice = _invoice(initial.transaction_id, issued_at=date(2024, 12, 31))
+    invoice = _invoice(initial.transaction_id, issued_at=date(_YEAR - 1, 12, 31))
     linked = ledger_expense_transaction("row-outside", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -339,8 +341,8 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
         TransactionCatalogue.from_transactions((linked,)),
         build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -359,8 +361,8 @@ def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> N
         TransactionCatalogue.from_transactions((linked,)),
         build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -386,8 +388,8 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
         TransactionCatalogue.from_transactions((refund,)),
         build_invoice_catalogue((invoice,)),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.issues == ()
@@ -417,8 +419,8 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
         "row-caja-in-year",
         amount=Decimal("100.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
-        booked_date=date(2024, 12, 31),
-        value_date=date(2025, 1, 2),
+        booked_date=date(_YEAR - 1, 12, 31),
+        value_date=date(_YEAR, 1, 2),
         purchase_invoice_evidence_id=None,
     )
     # value_date in the prior year (caja), booked_date in-year (devengo would include).
@@ -426,8 +428,8 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
         "row-caja-out-of-year",
         amount=Decimal("100.00"),
         category=SpendingCategory.from_registry("gastos_bancarios"),
-        booked_date=date(2025, 1, 2),
-        value_date=date(2024, 12, 31),
+        booked_date=date(_YEAR, 1, 2),
+        value_date=date(_YEAR - 1, 12, 31),
         purchase_invoice_evidence_id=None,
     )
 
@@ -435,20 +437,20 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
         TransactionCatalogue.from_transactions((caja_in_year, caja_out_of_year)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     # Caja basis: only the row whose VALUE_DATE is in-year is aggregated, and the
     # observation's filing_date is that value_date (operation_date fallback).
     assert [observation.transaction_id for observation in result.observations] == [caja_in_year.transaction_id]
-    assert result.observations[0].filing_date == date(2025, 1, 2)
+    assert result.observations[0].filing_date == date(_YEAR, 1, 2)
     assert result.casilla_values == {_M100_GASTOS_FINANCIEROS_CASILLA: Decimal("100.00")}
     # The mirror row is excluded keyed on value_date — a devengo basis
-    # (booked_date 2025-01-02) would instead have INCLUDED it.
+    # (booked on the in-year date) would instead have INCLUDED it.
     assert [issue.transaction_id for issue in result.issues] == [caja_out_of_year.transaction_id]
     assert result.issues[0].reason is RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert "2024-12-31" in result.issues[0].detail
+    assert date(_YEAR - 1, 12, 31).isoformat() in result.issues[0].detail
 
 
 def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None:
@@ -463,8 +465,8 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
         TransactionCatalogue.from_transactions((usd_expense,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -485,8 +487,8 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
         TransactionCatalogue.from_transactions((zero_business,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
     )
 
     assert result.observations == ()
@@ -519,8 +521,8 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
                     url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
                     source_ref="aeat-renta-2025-manual-parte1",
-                    valid_from=date(2025, 1, 1),
-                    valid_to=date(2025, 12, 31),
+                    valid_from=date(_YEAR, 1, 1),
+                    valid_to=date(_YEAR, 12, 31),
                 ),
             ),
             notes=tr("Override territorial de prueba."),
@@ -540,14 +542,14 @@ def test_non_regional_category_profile_preserves_result_across_region() -> None:
     catalogue = TransactionCatalogue.from_transactions((row,))
 
     without_region = aggregate_renta_ledger_expenses(
-        catalogue, InvoiceCatalogue(), bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2025, profile_year=2025
+        catalogue, InvoiceCatalogue(), bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL, profile_year=_YEAR
     )
     with_region = aggregate_renta_ledger_expenses(
         catalogue,
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         residence_ccaa=CCAA.MADRID,
     )
 
@@ -577,8 +579,8 @@ def test_region_override_selected_when_residence_matches() -> None:
         TransactionCatalogue.from_transactions((row,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         residence_ccaa=CCAA.CANARIAS,
         region_category_overrides=overrides,
     )
@@ -605,8 +607,8 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
         TransactionCatalogue.from_transactions((row,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         residence_ccaa=None,
         region_category_overrides=overrides,
     )
@@ -680,8 +682,8 @@ def test_home_office_utility_bill_deducts_the_statutory_share_once(
         TransactionCatalogue.from_transactions((bill,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         usage_ratios=usage_ratios,
         profile_record=profile,
         operation=operation,
@@ -724,8 +726,8 @@ def test_a_40_of_100_m2_home_office_bill_deducts_12_per_cent_in_renta_though_its
         TransactionCatalogue.from_transactions((bill,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         usage_ratios=usage_ratios,
         profile_record=profile,
         operation=operation,
@@ -762,8 +764,8 @@ def test_operator_usage_ratio_on_a_dwelling_lease_applies_once(
         TransactionCatalogue.from_transactions((bill,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_ANNUAL_2025,
-        profile_year=2025,
+        period=_ANNUAL,
+        profile_year=_YEAR,
         usage_ratios={category: Decimal("0.25")},
         operation=operation,
     )

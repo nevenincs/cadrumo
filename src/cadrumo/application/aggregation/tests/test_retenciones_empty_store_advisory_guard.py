@@ -20,6 +20,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ..errors import RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..preconditions import AggregationPreconditionCondition
@@ -37,6 +38,9 @@ def _pinned_authority() -> Iterator[None]:
         yield
 
 
+_YEAR = filing_year_envelope().horizon
+_M180_EDITION = open_ended_revision("180")
+"""The edition whose shape the synthetic revision below reproduces."""
 _M180_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M180_RETENCIONES_LEGAL_REFS = (
     "ley-35-2006:art-99",
@@ -87,10 +91,10 @@ class _EmptyRetencionObservationRepository:
 
 def _m180_retenciones_revision() -> ModeloRevision:
     return ModeloRevision(
-        id="2023-y-siguientes",
-        localization_key="test.schema.revision.2023-y-siguientes.label",
-        valid_from=date(2023, 1, 1),
-        period_selector=PeriodSelector(year_from=2023, periods=("0A",)),
+        id=str(_M180_EDITION.id),
+        localization_key=f"test.schema.revision.{_M180_EDITION.id}.label",
+        valid_from=date(_M180_EDITION.valid_from.year, 1, 1),
+        period_selector=PeriodSelector(year_from=_M180_EDITION.valid_from.year, periods=("0A",)),
         legal_refs=_M180_RETENCIONES_LEGAL_REFS,
         source_refs=_M180_RETENCIONES_SOURCE_REFS,
         bindings=(
@@ -121,8 +125,8 @@ def test_resolver_empty_application_port_fails_before_silent_zero() -> None:
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="180",
-                filing_year=2024,
-                period=Period.from_year_and_code(2024, "0A"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
                 revision=_m180_retenciones_revision(),
             ),
         )
@@ -142,8 +146,8 @@ def _m180_context(revision: ModeloRevision) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="180",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision=revision,
     )
 

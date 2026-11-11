@@ -23,6 +23,7 @@ import pytest
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import Invoice
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -53,7 +54,7 @@ from .test_renta_rectificativa_income import resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PAID_ON = date(_YEAR, 2, 1)
 _REFUNDED_ON = date(_YEAR, 5, 1)
 _ZERO = Decimal("0")
