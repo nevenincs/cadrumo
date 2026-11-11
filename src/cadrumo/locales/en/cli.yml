@@ -4023,6 +4023,9 @@ cli:
         Check the overview status; an empty list here does not mean nothing is due.
       estimacion_objetiva_unset: Your profile does not yet record which income-tax
         assessment regime applies to your activity.
+      explain_deadline_windows_unavailable: The registry has no deadline windows for
+        modelo %{modelo} and year %{year}, so no lateness or schedule can be stated.
+        A missing late-filing warning here does not mean the filing is on time.
       gran_empresa_unset: Your profile does not yet record whether your turnover in
         the previous calendar year exceeded the large-company threshold, which decides
         whether you file monthly or quarterly.

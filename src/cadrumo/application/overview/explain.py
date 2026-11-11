@@ -595,6 +595,21 @@ def _known_filing_close(
     return max(deadline.closes_on for deadline in deadlines)
 
 
+def deadline_windows_unavailable(year: int, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the pinned registry holds no deadline windows for ``year``.
+
+    ``True`` only for the benign no-windows data gap, the state in which an
+    explanation's scheduling rationale and out-of-plazo warning are absent
+    because nothing is known, not because the filing is on time. Any other
+    schedule failure propagates.
+    """
+    try:
+        DeadlineEngine(authority=operation).deadline_windows(year)
+    except NoDeadlineWindowsError:
+        return True
+    return False
+
+
 def explain_out_of_plazo_warning(
     profile: TaxpayerProfile,
     *,

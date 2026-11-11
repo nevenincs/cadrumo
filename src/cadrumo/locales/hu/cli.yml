@@ -4251,6 +4251,10 @@ cli:
         hogy semmi sem esedékes.
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyi jövedelemadózási rendszer vonatkozik.
+      explain_deadline_windows_unavailable: A nyilvántartásban nincsenek határidők
+        a(z) %{modelo} modellhez és a(z) %{year}. évhez, ezért sem az ütemezés, sem
+        a késés nem állapítható meg. Ha itt nincs késedelmi figyelmeztetés, az nem
+        jelenti, hogy időben vagy.
       gran_empresa_unset: A profilodban még nem szerepel, hogy az előző naptári évi
         forgalmad meghaladta-e a nagyvállalati értékhatárt, ami eldönti, hogy havonta
         vagy negyedévente nyújtasz be bevallást.

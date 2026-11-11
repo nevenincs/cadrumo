@@ -4290,6 +4290,10 @@ cli:
         del resum; una llista buida aquí no vol dir que no venci res.
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
+      explain_deadline_windows_unavailable: El registre no té terminis per al model
+        %{modelo} i l'any %{year}, així que no es pot indicar ni el calendari ni si
+        vas tard. Que aquí falti l'avís de presentació fora de termini no vol dir
+        que estiguis dins del termini.
       gran_empresa_unset: Al teu perfil encara no consta si el teu volum d’operacions
         de l’any natural anterior va superar el llindar de gran empresa, cosa que
         decideix si presentes amb periodicitat mensual o trimestral.
