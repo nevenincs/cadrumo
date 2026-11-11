@@ -410,6 +410,7 @@
         "cadrumo.adapters.persistence.storage.custody.macos_keychain_policy",
         "cadrumo.adapters.persistence.storage.custody.macos_keychain_store",
         "cadrumo.adapters.persistence.storage.custody.macos_login_keychain",
+        "cadrumo.adapters.persistence.storage.custody.password_replacement_intent",
         "cadrumo.adapters.persistence.storage.custody.paths",
         "cadrumo.adapters.persistence.storage.custody.profile_password_codec",
         "cadrumo.adapters.persistence.storage.custody.records",
