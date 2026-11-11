@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..reconcile_casilla import (
     CasillaDivergenceKind,
@@ -40,7 +41,7 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 #: Publishes verification expectations at BOTH ``0.00`` and ``0.01``; the policy

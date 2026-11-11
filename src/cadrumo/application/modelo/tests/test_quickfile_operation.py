@@ -25,6 +25,7 @@ from ....core.operations import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...ledger.commit_fence import run_with_ledger_commit_fence
 from ...ledger.persistence_ports import LedgerPersistenceConflictError
 from ...operations.access_resolution import OperationAccessContext
@@ -46,6 +47,8 @@ from ..quickfile_operation_ports import QuickfileOperationPorts
 from ..quickfile_operation_projections import QuickfileProjection
 from .m036_operation_support import INSTANT, PROFILE_ID, Subject, policy_decision
 
+_EXERCISE = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -63,7 +66,7 @@ def _request(tmp_path: Path, *, profile_id: UUID = PROFILE_ID, bucket_id: UUID |
         profile_id=profile_id,
         bucket_id=bucket_id,
         modelo="130",
-        period=PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
+        period=PublicPeriod.from_period(Period.from_year_and_code(_EXERCISE, "1T")),
         output_path=str(tmp_path / "filing.txt"),
         actor="synthetic-human",
     )
@@ -80,8 +83,8 @@ def _halted() -> QuickfileProjection:
     error = WorkUnitNotFoundError("private exception text", context={"arbitrary": "private source evidence"})
     result = QuickfileResult(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_EXERCISE,
+        period=Period.from_year_and_code(_EXERCISE, "1T"),
         registry_revision_id="",
         stages=(
             QuickfileStageOutcome(
@@ -248,7 +251,7 @@ def test_worker_lifecycle_policy_requires_exact_admitted_period_and_current_scop
         AccessDenied,
     )
     changed_period = _request(tmp_path).model_copy(
-        update={"period": PublicPeriod.from_period(Period.from_year_and_code(2026, "2T"))}
+        update={"period": PublicPeriod.from_period(Period.from_year_and_code(_EXERCISE, "2T"))}
     )
     with pytest.raises(ProfileAccessRefusedError):
         registration.access_resolver(request.model_copy(update={"payload": changed_period}), context)

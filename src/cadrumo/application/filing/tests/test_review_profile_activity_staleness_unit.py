@@ -13,17 +13,24 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..draft_review import profile_activity_fingerprint
 from .filing_support import empty_profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_EXERCISE = filing_year_envelope().horizon
+_ACTIVITY_START = date(_EXERCISE, 1, 1).isoformat()
+_LATER_ACTIVITY_START = date(_EXERCISE, 6, 1).isoformat()
+
 
 def test_profile_activity_fingerprint_changes_when_a_fact_changes() -> None:
-    before = profile_activity_fingerprint({"censo.activity_start_date": "2024-01-01"})
-    after = profile_activity_fingerprint({"censo.activity_start_date": "2024-06-01"})
+    before = profile_activity_fingerprint({"censo.activity_start_date": _ACTIVITY_START})
+    after = profile_activity_fingerprint({"censo.activity_start_date": _LATER_ACTIVITY_START})
 
     assert before != after
 
@@ -37,7 +44,7 @@ def test_profile_activity_fingerprint_is_order_independent() -> None:
 
 def test_profile_activity_fingerprint_distinguishes_empty_from_populated() -> None:
     empty = profile_activity_fingerprint(None)
-    populated = profile_activity_fingerprint({"censo.activity_start_date": "2024-01-01"})
+    populated = profile_activity_fingerprint({"censo.activity_start_date": _ACTIVITY_START})
 
     assert empty != populated
     assert empty == empty_profile_activity_fingerprint()

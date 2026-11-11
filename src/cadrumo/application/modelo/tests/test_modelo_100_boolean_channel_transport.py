@@ -28,6 +28,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_expression import evaluate_expression
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
@@ -56,7 +57,7 @@ _ECONOMIC_ACTIVITY_BINDING = "renta-profile-has-economic-activity"
 _BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 
-def _snapshot(year: int = 2025) -> RegistrySnapshot:
+def _snapshot(year: int = newest_authored_edition("100")) -> RegistrySnapshot:
     return published_snapshot("100", filing_year=year, period="0A")
 
 

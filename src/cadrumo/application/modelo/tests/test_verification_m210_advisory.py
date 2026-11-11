@@ -35,6 +35,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -42,9 +43,12 @@ from ..verification_predicates import evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PREDICATE_ID = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
-_INMOBILIARIA_PREDICATE_ID = "modelo-210-2025-inmobiliaria-implica-base-imponible"
-_UE_RESIDENTE_PREDICATE_ID = "modelo-210-2025-ue-residente-requiere-residencia-ue-eee"
+#: The shipped ids read ``modelo-210-<stem>-<suffix>``; the stem names the edition that introduced
+#: the predicate, which a later revision carries forward unchanged, so each is found by its suffix.
+_M210_REVISION_ID = str(open_ended_revision("210").id)
+_PREDICATE_SUFFIX = "-rendimientos-integros-implica-base-imponible"
+_INMOBILIARIA_PREDICATE_SUFFIX = "-inmobiliaria-implica-base-imponible"
+_UE_RESIDENTE_PREDICATE_SUFFIX = "-ue-residente-requiere-residencia-ue-eee"
 _RENDIMIENTOS_INTEGROS: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="test_verification_m210_advisory",
@@ -61,8 +65,8 @@ _TIPO_RENTA: CasillaId = validated_casilla_id(
 
 def _m210_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 base-imponible silent-under-declaration advisory."""
-    revision = published_revision("210", "2025")
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _PREDICATE_ID)
+    revision = published_revision("210", _M210_REVISION_ID)
+    predicate = next(p for p in revision.verification_predicates if p.predicate_id.endswith(_PREDICATE_SUFFIX))
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
     return predicate
@@ -70,7 +74,7 @@ def _m210_advisory_predicate() -> VerificationPredicateDefinition:
 
 def test_m210_representante_fiscal_predicate_is_preserved_alongside_advisory() -> None:
     """The pre-existing BLOCKING_RULE representante-fiscal predicate stays untouched."""
-    revision = published_revision("210", "2025")
+    revision = published_revision("210", _M210_REVISION_ID)
     representante_fiscal = next(
         p for p in revision.verification_predicates if p.predicate_id == "m210-representante-fiscal-required"
     )
@@ -136,8 +140,10 @@ def test_m210_advisory_silent_when_no_rendimientos() -> None:
 
 def _m210_inmobiliaria_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 inmobiliaria-branch categorical-conditional advisory."""
-    revision = published_revision("210", "2025")
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _INMOBILIARIA_PREDICATE_ID)
+    revision = published_revision("210", _M210_REVISION_ID)
+    predicate = next(
+        p for p in revision.verification_predicates if p.predicate_id.endswith(_INMOBILIARIA_PREDICATE_SUFFIX)
+    )
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == ('casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])')
     return predicate
@@ -212,8 +218,10 @@ def _eea_irnr_profile() -> TaxpayerProfile:
 
 def _m210_ue_residente_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 ue_residente / EU-EEE residence cross-check advisory."""
-    revision = published_revision("210", "2025")
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _UE_RESIDENTE_PREDICATE_ID)
+    revision = published_revision("210", _M210_REVISION_ID)
+    predicate = next(
+        p for p in revision.verification_predicates if p.predicate_id.endswith(_UE_RESIDENTE_PREDICATE_SUFFIX)
+    )
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == (
         'casilla_equals_implies_profile_flag(["tipo_renta", "ue_residente", "ue_eee_status"])'

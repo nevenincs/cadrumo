@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
-from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -25,12 +24,12 @@ from ..metadata_read_operation import (
     build_modelo_metadata_registration,
 )
 from ..work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
-from .work_operation_support import first_quarter_unit
+from .work_operation_support import FIRST_QUARTER_PERIOD, first_quarter_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = FIRST_QUARTER_PERIOD
 
 
 def test_metadata_read_is_admitted_on_the_external_client_frontend_without_a_commit_door(

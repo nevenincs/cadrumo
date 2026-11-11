@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..reconcile_casilla import (
     CasillaDivergenceKind,
@@ -164,7 +165,7 @@ class TestExportExemptCasillasAreOutOfPdfScope:
         # a broad M303 revision was decomposed into four narrower revisions -- and
         # a literal key dies the moment that happens, on a test whose subject is
         # unrelated to the re-cut.
-        return published_snapshot("303", filing_year=2025, period="1T").revision
+        return published_snapshot("303", filing_year=filing_year_envelope().horizon, period="4T").revision
 
     def test_no_enrolled_casilla_is_both_exempt_and_extractable(self) -> None:
         """The predicate never excludes something the extractor can actually supply.

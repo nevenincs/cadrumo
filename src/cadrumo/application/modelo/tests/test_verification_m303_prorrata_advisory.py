@@ -48,6 +48,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -60,9 +61,9 @@ _PRORRATA_BINDING_SOURCE = "prorrata_regularizacion"
 _VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 _CASILLA_44: CasillaId = validated_casilla_id("44", surface="test casilla id")
 
-#: One filing year inside each shipped revision's serving window, used to reach
-#: the revision through the law-determined resolver rather than by literal id.
-_PROBE_FILING_YEARS: tuple[int, ...] = (2022, 2024)
+#: Every supported filing year, used to reach each serving revision through the
+#: law-determined resolver rather than by literal id.
+_PROBE_FILING_YEARS: tuple[int, ...] = filing_year_envelope().years
 
 
 @lru_cache
@@ -114,9 +115,7 @@ def test_the_revision_serving_each_probe_filing_year_carries_the_advisory() -> N
         reached.add(revision.id)
         assert _prorrata_predicates(revision), f"{filing_year} resolves to unguarded revision {revision.id}"
 
-    assert len(reached) == len(_PROBE_FILING_YEARS), (
-        "the probe years must reach distinct revisions or this check covers only one of them"
-    )
+    assert len(reached) > 1, "the probe years must reach several revisions or this check covers only one of them"
 
 
 def test_casilla_44_stays_binding_fed_rather_than_formula_fed_on_every_revision() -> None:

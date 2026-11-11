@@ -145,7 +145,9 @@ def test_vivienda_advisory_silent_for_construction_transitional_case() -> None:
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-        text_values: dict[CasillaId, str] = {_FECHA_CONSTRUCCION: "20/07/2013"}
+        text_values: dict[CasillaId, str] = {
+            _FECHA_CONSTRUCCION: date(_TRANSITIONAL_CUTOFF.year, 7, 20).strftime("%d/%m/%Y")
+        }
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
         assert findings == [], year
