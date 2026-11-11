@@ -1105,3 +1105,21 @@ required_text = [
     "gasto efectivo no subvencionado",
     "se calculará proporcionalmente al número de meses",
 ]
+[[revisions."2022".formulas]]
+id = "renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2-redaccion-2021"
+target_casilla_id = "0150"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [
+        { op = "multiply", args = [{ casilla_id = "0100" }, { casilla_id = "0149" }] },
+        { literal = "0" },
+    ] },
+    { op = "multiply", args = [{ casilla_id = "0149" }, { parameter = "renta-rental-reduccion-rate-tier-60" }] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["rendimiento neto positivo", "se reducirá en un 60 por 100"]

@@ -13,6 +13,7 @@ from cadrumo.core.atomic_write import hardened_staged_bytes_publication
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_form_layouts import (
@@ -258,7 +259,7 @@ def _reconcile_producer_field(
     layout: FormLayoutDefinition,
     referenced: set[tuple[str, str, str]],
 ) -> int:
-    changed = admit_note_signed_amount(old_field, new_field)
+    changed = admit_note_signed_amount(old_field, new_field) + admit_note_governed_scale(old_field, new_field)
     if old_field["kind"] == "computed" and new_field["kind"] == "casilla":
         _validate_marker_owner(old_field, new_field, address, before, layout, referenced)
         old_field.update(kind="casilla", casilla_id=new_field["casilla_id"], computed_key=None)
@@ -291,6 +292,43 @@ def admit_note_signed_amount(old_field: dict[str, object], new_field: dict[str, 
         return 0
     old_field.update(
         {key: new_field[key] for key in ("data_type", "decimals", "signed", "sign_position", "design_type")}
+    )
+    return 1
+
+
+def admit_note_governed_scale(old_field: dict[str, object], new_field: dict[str, object]) -> int:
+    """Admit an unscaled unsigned integer slot gaining the decimal scale a reviewed note reading states.
+
+    A rate slot printed as a note pointer or a noted constant was read as an
+    unscaled integer until its note was read. The form still reads the same slot
+    for the same casilla; only the wire scale of a nonzero value changes, which
+    the export publisher admits separately as source-pinned record drift.
+
+    A printed enumeration such as ``"00000", "00050", "00062"`` keeps its wire
+    digit runs at either scale, so the enumerated-digits policy that carried
+    them on the integer reading goes. The closed domain follows the reviewed
+    reading -- the ``00000`` a note admits for foral-only filers, or a note
+    table that closes a pointer slot -- because the form addresses the slot,
+    not its value list, and the export publisher admits the domain change
+    separately as source-pinned record drift.
+    """
+    if (
+        old_field["data_type"] != "integer"
+        or old_field["decimals"] is not None
+        or old_field["signed"] is not False
+        or old_field["value_policy"] not in (None, ExportValuePolicy.ENUMERATED_DIGITS.value)
+        or new_field["data_type"] != "decimal"
+        or new_field["signed"] is not False
+        or new_field["value_policy"] is not None
+        or not isinstance(new_field["decimals"], int)
+        or new_field["decimals"] <= 0
+    ):
+        return 0
+    old_field.update(
+        data_type="decimal",
+        decimals=new_field["decimals"],
+        value_policy=None,
+        allowed_values=new_field["allowed_values"],
     )
     return 1
 

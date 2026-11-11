@@ -525,10 +525,11 @@ offset = 225
 length = 5
 kind = "casilla"
 casilla_id = "154"
-data_type = "integer"
+data_type = "decimal"
 required = false
 padding = "left_zero"
 justification = "right"
+decimals = 2
 signed = false
 design_type = "Num"
 legal_refs = ["orden-eha-3786-2008:art-1"]
@@ -807,12 +808,19 @@ offset = 483
 length = 5
 kind = "casilla"
 casilla_id = "17"
-data_type = "integer"
+data_type = "decimal"
 required = false
 padding = "left_zero"
 justification = "right"
+decimals = 2
 signed = false
 design_type = "Num"
+allowed_values = [
+    "0",
+    "100",
+    "50",
+    "62",
+]
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late"]
 
@@ -1290,10 +1298,11 @@ offset = 974
 length = 5
 kind = "casilla"
 casilla_id = "166"
-data_type = "integer"
+data_type = "decimal"
 required = false
 padding = "left_zero"
 justification = "right"
+decimals = 2
 signed = false
 design_type = "Num"
 legal_refs = ["orden-eha-3786-2008:art-1"]
@@ -1337,14 +1346,15 @@ offset = 1013
 length = 5
 kind = "casilla"
 casilla_id = "169"
-data_type = "integer"
+data_type = "decimal"
 required = false
 padding = "left_zero"
 justification = "right"
+decimals = 2
 signed = false
 design_type = "Num"
-value_policy = "enumerated-digits"
 allowed_values = [
+    "0",
     "26",
     "50",
 ]
@@ -1371,19 +1381,6 @@ source_refs = ["aeat-dr-303-2024-late"]
 id = "m303-2024-late.dp30301.f086"
 offset = 1035
 length = 522
-kind = "filler"
-data_type = "text"
-required = false
-padding = "right_space"
-justification = "left"
-signed = false
-legal_refs = ["orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2024-late"]
-
-[[revisions.2024-desde-09-y-3t.export_layouts.records.fields]]
-id = "m303-2024-late.dp30301.f087"
-offset = 1557
-length = 13
 kind = "filler"
 data_type = "text"
 required = false
