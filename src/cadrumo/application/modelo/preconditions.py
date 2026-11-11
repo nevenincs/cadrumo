@@ -123,9 +123,9 @@ IVA_WALLET_OPENING_BALANCE_SCENARIOS: Final[frozenset[str]] = frozenset(
 
 Each says the period's carry has no usable recorded authority, which is exactly
 what declaring the opening balance supplies. A stale wallet, a divergence, or a
-reason that asks for an override or correction names a different wallet entry,
-so it keeps no action here rather than naming a command that would not settle
-it. The wallet gate's served step and these profiles' action read this one set.
+correction names a different wallet entry, so it keeps no action here rather
+than naming a command that would not settle it. The wallet gate's served step
+and these profiles' action read this one set.
 """
 
 IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
@@ -151,6 +151,7 @@ IVA_WALLET_OVERRIDE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.override
 
 
 def _iva_wallet_action_id(scenario_code: str) -> str | None:
+    """Name the catalogue action that settles one wallet refusal, or None when none does."""
     if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
         return IVA_WALLET_OPENING_BALANCE_ACTION_ID
     if scenario_code in IVA_WALLET_OVERRIDE_SCENARIOS:

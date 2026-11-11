@@ -43,6 +43,16 @@ pytestmark = [
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _BASELINE_INCOME = Decimal("1000.00")
 _CORRECTED_INCOME = Decimal("1100.00")
+_BASELINE_GASTOS = Decimal("250.00")
+# The imported filing records casilla values only; correcting box 01 reaches the
+# formulas that read these facts, so the amendment states them as the filer would.
+_UNRECORDED_BINDINGS = {
+    "modelo-130-estimacion-directa-modalidad": "directa_normal",
+    "modelo-130-actividad-economica-gastos-cumulative": str(_BASELINE_GASTOS),
+    "modelo-130-retenciones-agrarias": "0",
+    "modelo-130-volumen-ingresos-agrario": "0",
+    "irpf.previous_year_economic_activity_net_income": "20000.00",
+}
 
 
 def _amend_scope(client_id: UUID) -> AccessScope:
@@ -117,7 +127,7 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
             work_unit_id=unit.work_unit_id,
             casilla_values={
                 validated_casilla_id("01", surface="native amend synthetic baseline"): _BASELINE_INCOME,
-                validated_casilla_id("02", surface="native amend synthetic baseline"): Decimal("250.00"),
+                validated_casilla_id("02", surface="native amend synthetic baseline"): _BASELINE_GASTOS,
             },
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="SYNTHETIC-NATIVE-AMEND-M130-2025-1T",
@@ -150,7 +160,12 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
             "--reason",
             "under-reported turnover",
             "--set",
-            "01=1100.00",
+            f"01={_CORRECTED_INCOME}",
+            *(
+                flag
+                for binding_id, value in _UNRECORDED_BINDINGS.items()
+                for flag in ("--binding", f"{binding_id}={value}")
+            ),
         )
         assert result.exit_code == 0, result.output
         amendment = unwrap_cli_result(result)
@@ -183,3 +198,5 @@ def test_native_api_key_amends_synthetic_confirmed_filing_chain(
         assert revision_result.exit_code == 0, revision_result.output
         revision = unwrap_cli_result(revision_result)
         assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INCOME
+        # The stated expenses reach their bound casilla; directa normal adds no provision.
+        assert Decimal(revision["casilla_values"]["02"]) == _BASELINE_GASTOS
