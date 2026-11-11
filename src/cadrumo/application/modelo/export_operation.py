@@ -49,7 +49,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from .action_errors import ModeloOperationSubjectNotWorkUnitError
 from .calculation_report_export import (
     ModeloCalculationReportCommand,
     ModeloCalculationReportResult,
@@ -65,7 +64,6 @@ from .export_projection import (
     ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
-from .projection_next_steps import open_work_step
 from .review_package_signing_ports import ReviewPackageSigningKeypairCapabilityFactory
 from .work_export_contracts import ModeloExportRequest, ModeloExportSettledResult
 
@@ -80,6 +78,7 @@ from .operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     ModeloWorkVerifyProfileResolver,
     modelo_workspace_refresh_target_binding,
+    require_owning_work_unit_subject,
     resolve_active_workflow_profile,
     resolve_modelo_work_unit_refresh_target,
 )
@@ -156,36 +155,6 @@ def _project_modelo_export_result(result: BaseModel, terminal_receipt: Operation
     )
 
 
-def _require_owning_work_unit_subject(
-    subject_ref: str,
-    calculation_revision_id: str,
-    *,
-    active_bucket_id: str,
-    export_ports: ModeloExportPorts,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse an export whose subject is not the work unit owning the revision it names.
-
-    The contract's subject is that stored work unit, and the receipt is held to
-    it, so an export submitted under any other subject -- the revision id
-    itself, say -- would write its artefact and then never project. It is
-    refused before anything is written, with a door to the declaration that
-    owns the revision. A revision or work unit this profile cannot see is left
-    to the export service, which refuses it with its own typed error.
-    """
-    revision = export_ports.calculation.load(operation=operation).get(calculation_revision_id)
-    if revision is None or revision.work_unit_id == subject_ref:
-        return
-    unit = export_ports.work_unit.load().get(revision.work_unit_id)
-    if unit is None or unit.bucket_id != active_bucket_id:
-        return
-    raise ModeloOperationSubjectNotWorkUnitError(
-        translated_message="errors.refused.refused_modelo_operation_subject_not_work_unit",
-        context={"calculation_revision_id": calculation_revision_id, "work_unit_id": unit.work_unit_id},
-        next_step=open_work_step(unit),
-    )
-
-
 class ModeloExportExecutor:
     """Export one revision through the existing authority, locally only.
 
@@ -254,12 +223,15 @@ class ModeloExportExecutor:
                     operation=context.authority_operation,
                     mutation_writer=writes.call_writer,
                 )
-                _require_owning_work_unit_subject(
+                revision = export_ports.calculation.load(operation=context.authority_operation).get(
+                    payload.calculation_revision_id
+                )
+                require_owning_work_unit_subject(
                     request.subject_ref,
-                    payload.calculation_revision_id,
+                    owning_work_unit_id=None if revision is None else revision.work_unit_id,
+                    named_record=("calculation_revision_id", payload.calculation_revision_id),
                     active_bucket_id=active_bucket_id,
-                    export_ports=export_ports,
-                    operation=context.authority_operation,
+                    work_unit_repository=export_ports.work_unit,
                 )
                 if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
                     return ModeloExportSettledResult(
