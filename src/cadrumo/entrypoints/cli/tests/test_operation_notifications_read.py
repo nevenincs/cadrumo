@@ -29,15 +29,19 @@ from ....application.live.notifications_read_operation import (
     NotificationsSnapshotSummaryPublicV1,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_notifications_read as bridge
 from .. import operation_profile_operation as profile_operation
 from .operation_bridge_support import bind_profile_submission
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 3, 6, 7, 8, tzinfo=UTC)
 _SOURCE_URL = "https://sede.example/notifications"
 
 
@@ -71,7 +75,7 @@ def _show_projection() -> NotificationsShowPublicResultV1:
                 titular_nombre="Synthetic taxpayer",
                 destinatario_nif="X0001500M",
                 destinatario_nombre="Synthetic taxpayer",
-                fecha_emision=date(2025, 3, 6),
+                fecha_emision=date(_YEAR, 3, 6),
                 fecha_notificacion=None,
                 modo_notificacion=None,
                 leida=False,

@@ -23,6 +23,7 @@ from ...application.inventory.registered_requests import (
 from ...application.inventory.service import InventoryService
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -38,6 +39,8 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -99,7 +102,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     service.create(
         bucket_id=profile,
         actividad_id=actividad_id,
-        year=2026,
+        year=_YEAR,
         valuation_method="fifo",
         opening_stock=Decimal("100.00"),
         actor="conformance-seed",
@@ -128,7 +131,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         result = outcome.resolve_result(InventoryClosingAuthorityOperationProjection)
         assert result.outcome == "recorded" and result.record is not None
         assert result.record.profile_id == context.profile_id and result.record.changed
-        ledger = service.show(bucket_id=profile, actividad_id=actividad_id, year=2026)
+        ledger = service.show(bucket_id=profile, actividad_id=actividad_id, year=_YEAR)
         record = ledger.closing_authority_record
         assert record is not None
         assert record.decision.decision_id == facts.decision_id
@@ -146,7 +149,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     return ConformancePreparation(
         subject,
         InventoryClosingValueRecordRequest(
-            profile_id=context.profile_id, actividad_id=actividad_id, year=2026, facts=facts
+            profile_id=context.profile_id, actividad_id=actividad_id, year=_YEAR, facts=facts
         ),
         verify=verify_closing,
     )

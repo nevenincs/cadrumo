@@ -53,6 +53,11 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.contracts import RefusalCode
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
@@ -95,7 +100,7 @@ def test_public_query_schemas_compile_as_closed_registered_contracts() -> None:
 def test_unscoped_temporal_binding_selection_refuses_before_submission() -> None:
     """An as-of date needs a year so the authority cannot silently list nothing."""
     with pytest.raises(ValidationError):
-        ModeloBindingsListRequest(profile_id=uuid4(), as_of=date(2026, 1, 1))
+        ModeloBindingsListRequest(profile_id=uuid4(), as_of=date(_YEAR, 1, 1))
 
 
 def test_readiness_wire_round_trip_preserves_gaps_and_absent_ledger_verdict() -> None:
@@ -105,8 +110,8 @@ def test_readiness_wire_round_trip_preserves_gaps_and_absent_ledger_verdict() ->
         profile_id=str(profile_id),
         modelo="303",
         revision_id="303-2026",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         missing=(
             ProfilePreflightRequirement(
                 selector="identity.tax_id",
@@ -166,7 +171,7 @@ def test_inventory_wire_round_trip_keeps_every_bucket_and_provenance() -> None:
     report = DataInventoryChecklist(
         modelo="303",
         revision_id="303-2026",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
         required_manual=(row,),
         optional_manual=(),
@@ -218,7 +223,7 @@ def _requires_request() -> ModeloRequiresRequest:
     return ModeloRequiresRequest(
         profile_id=uuid4(),
         modelo="303",
-        period=PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
+        period=PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T")),
         language=OutputLanguage.CA,
     )
 
@@ -233,7 +238,7 @@ def _query_case(route: str) -> tuple[_QueryRequest, BaseModel]:
     if route == "requires":
         return request, _requires_projection(request)
     if route == "bindings_list":
-        listing = ModeloBindingsListRequest(profile_id=request.profile_id, modelo="303", year=2026, period_code="1T")
+        listing = ModeloBindingsListRequest(profile_id=request.profile_id, modelo="303", year=_YEAR, period_code="1T")
         return listing, ModeloBindingsListProjection(
             profile_id=listing.profile_id,
             authority_generation="a" * 64,
@@ -253,7 +258,7 @@ def _query_case(route: str) -> tuple[_QueryRequest, BaseModel]:
             authority_generation="a" * 64,
             modelo="303",
             revision="303-2026",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
             override_count=0,
             binding_count=0,
@@ -263,7 +268,7 @@ def _query_case(route: str) -> tuple[_QueryRequest, BaseModel]:
     readiness = ModeloReadinessOperationRequest(
         profile_id=request.profile_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=request.period,
         revision_id="303-2026",
         language=request.language,
@@ -272,7 +277,7 @@ def _query_case(route: str) -> tuple[_QueryRequest, BaseModel]:
         profile_id=str(request.profile_id),
         modelo="303",
         revision_id="303-2026",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=request.period.to_period(),
         profile_ready=True,
         per_operation_requirements_assessed=True,

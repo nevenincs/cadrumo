@@ -30,6 +30,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -38,10 +39,13 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_ALTA_ON = date(2026, 1, 12)
+_YEAR = filing_year_envelope().horizon
+
+
+_ALTA_ON = date(_YEAR, 1, 12)
 _ALTA_JUSTIFICANTE = "CONFORMANCE-036-ALTA-0001"
 _ALTA_NOTE = "Conformance alta filed at the sede"
-_MODIFICACION_ON = date(2026, 3, 2)
+_MODIFICACION_ON = date(_YEAR, 3, 2)
 _MODIFICACION_NOTE = "Conformance activity change filed in person"
 
 
@@ -220,7 +224,7 @@ def _retained_m036_prepare(context: ConformanceFamilyContext) -> ConformancePrep
     profile = str(context.profile_id)
     ports = build_m036_lifecycle_ports(bucket_id=profile)
     kind = context.definition.definition_id
-    declared_on = date(2026, 4, 1)
+    declared_on = date(_YEAR, 4, 1)
     if kind == "modelo.036.record":
         request = M036RecordRequest(
             profile_id=context.profile_id,

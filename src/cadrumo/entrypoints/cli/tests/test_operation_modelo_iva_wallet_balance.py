@@ -18,8 +18,12 @@ from ....application.modelo.iva_wallet_balance_operation import (
     ModeloIvaWalletBalanceRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_iva_wallet_balance as bridge
 from .operation_bridge_support import bind_profile_submission
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -30,12 +34,12 @@ _OPERATION_ID = "b" * 64
 def _projection() -> ModeloIvaWalletBalanceProjection:
     return ModeloIvaWalletBalanceProjection(
         profile_id=_PROFILE,
-        as_of_year=2024,
+        as_of_year=_YEAR,
         total_balance="500.00",
         active_balance="500.00",
         expired_balance="0.00",
         lot_count=1,
-        next_expiry_year=2028,
+        next_expiry_year=_YEAR + 4,
         unallocated_applied_amount="0.00",
     )
 
@@ -52,7 +56,7 @@ _bind = partial(
 def _read() -> bridge.ModeloIvaWalletBalanceRead:
     return bridge.read_modelo_iva_wallet_balance_for_cli(
         cast(typer.Context, cast(object, None)),
-        as_of_year=2024,
+        as_of_year=_YEAR,
     )
 
 
@@ -68,7 +72,7 @@ def test_bridge_submits_exact_profile_and_year_and_accepts_only_none_effect_rece
     assert bound_profiles == [_PROFILE]
     assert len(submitted) == 1
     request, options = submitted[0]
-    assert request == ModeloIvaWalletBalanceRequest(profile_id=_PROFILE, as_of_year=2024)
+    assert request == ModeloIvaWalletBalanceRequest(profile_id=_PROFILE, as_of_year=_YEAR)
     assert options["definition_id"] == MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
     assert options["result_type"] is ModeloIvaWalletBalanceProjection
@@ -88,7 +92,7 @@ def test_result_or_receipt_mismatch_refuses_with_operation_correlation(
     if mismatch == "profile":
         projection = projection.model_copy(update={"profile_id": UUID("33333333-3333-4333-8333-333333333333")})
     elif mismatch == "year":
-        projection = projection.model_copy(update={"as_of_year": 2025})
+        projection = projection.model_copy(update={"as_of_year": _YEAR - 1})
     elif mismatch == "effect":
         effect = OperationEffect.UPDATED
     elif mismatch == "terminal":

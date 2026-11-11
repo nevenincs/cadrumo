@@ -23,8 +23,12 @@ from ....application.modelo.reconciliation_list_operation import (
 )
 from ....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationVerdict
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_reconcile_commands as handler
 from .. import operation_modelo_reconciliation_list as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -45,7 +49,7 @@ def _row(work_unit_id: str = _WORK_A) -> ModeloReconciliationListEntryProjection
         verdict=ModeloReconciliationVerdict.MATCHES,
         diff_count=0,
         actor="synthetic-test-operator",
-        reconciled_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
+        reconciled_at=datetime(_YEAR, 3, 10, 12, tzinfo=UTC),
     )
 
 

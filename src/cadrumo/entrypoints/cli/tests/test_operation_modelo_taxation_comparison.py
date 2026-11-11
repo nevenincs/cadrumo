@@ -23,23 +23,27 @@ from ....application.modelo.taxation_comparison_operation import (
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from .. import operation_modelo_taxation_comparison as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR + 1, 4, 10, 9, 0, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
-_REVISION = "renta-test-2025"
+_REVISION = "renta-test-revision"
 
 
 def _unit(
     *,
     profile_id: UUID = _PROFILE,
     modelo: str = "100",
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     revision: str = _REVISION,
 ) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, "0A")
@@ -174,7 +178,7 @@ def test_bridge_uses_exact_metadata_selection_and_returns_correlated_projection(
     selected = _invoke(
         work_unit_id=unit.work_unit_id,
         modelo="100",
-        year=2025,
+        year=_YEAR,
         period="0A",
         revision=unit.revision_id,
         bucket_id=str(_PROFILE),
@@ -185,7 +189,7 @@ def test_bridge_uses_exact_metadata_selection_and_returns_correlated_projection(
         {
             "work_unit_id": unit.work_unit_id,
             "modelo": "100",
-            "year": 2025,
+            "year": _YEAR,
             "period": "0A",
             "revision": unit.revision_id,
             "bucket_id": str(_PROFILE),
@@ -226,7 +230,7 @@ def test_bridge_refuses_unmatched_projection_or_operation_receipt(
     elif case == "work_unit":
         changes["work_unit_id"] = "b" * 64
     elif case == "year":
-        changes["filing_year"] = 2026
+        changes["filing_year"] = _YEAR - 1
     elif case == "modelo":
         changes["modelo"] = "303"
     elif case == "revision":
@@ -249,7 +253,7 @@ def test_bridge_refuses_unmatched_projection_or_operation_receipt(
     )
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        _invoke(work_unit_id=unit.work_unit_id, modelo="100", year=2025, period="0A", revision=unit.revision_id)
+        _invoke(work_unit_id=unit.work_unit_id, modelo="100", year=_YEAR, period="0A", revision=unit.revision_id)
 
     assert len(metadata_reads) == 1
     assert len(submitted) == 1

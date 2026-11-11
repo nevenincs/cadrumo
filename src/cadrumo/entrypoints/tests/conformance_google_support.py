@@ -67,7 +67,7 @@ _ACCOUNT_EMAIL = "conformance-operator@example.invalid"
 _EXCHANGE_URI = "https://oauth2.googleapis.com/token"
 _SYNTHETIC_REFRESH_CREDENTIAL = "conformance-synthetic-refresh-credential"
 _SYNTHETIC_CLIENT_ID = "conformance-client.apps.googleusercontent.com"
-_ISSUED_AT = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
+_ISSUED_AT = datetime(1980, 4, 1, 9, 0, tzinfo=UTC)
 
 
 def _synthetic_metadata() -> OAuthMetadata:
@@ -265,7 +265,7 @@ GOOGLE_CONFORMANCE_FAMILY = ConformanceFamily(
     prepare=_prepare,
 )
 _RETAINED_GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
-_RETAINED_GOOGLE_TIME = datetime(2026, 4, 1, tzinfo=UTC)
+_RETAINED_GOOGLE_TIME = datetime(1980, 4, 1, tzinfo=UTC)
 _RETAINED_GOOGLE_METADATA = OAuthMetadata(
     account_email="conformance@example.invalid",
     granted_scopes=REQUIRED_SCOPES,

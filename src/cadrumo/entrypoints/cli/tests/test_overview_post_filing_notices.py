@@ -15,7 +15,11 @@ import pytest
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.post_filing_event import PostFilingEventKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..overview_rendering import overview_post_filing_event_notices
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -24,7 +28,7 @@ def _event(*, kind: PostFilingEventKind, reference_id: str) -> OverviewCalendarE
     return OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.MESSAGE,
         post_filing_kind=kind,
-        event_date=date(2025, 3, 12),
+        event_date=date(_YEAR, 3, 12),
         source="aeat_sede_notifications",
         summary="AEAT post-filing event",
         reference_id=reference_id,

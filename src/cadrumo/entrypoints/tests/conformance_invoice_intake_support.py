@@ -18,6 +18,7 @@ from ...application.invoices.catalogue_intake_contracts import (
 )
 from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -26,6 +27,9 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
+
+_YEAR = filing_year_envelope().horizon
+
 
 _COUNTERPARTY_NIF = "B00015016"
 _COUNTERPARTY_NAME = "Conformance Supplier"
@@ -47,10 +51,10 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         "\n".join(
             (
                 _BOOK_HEADER,
-                _book_row("IMP-2025-001", "2025-02-03", "100.00"),
-                _book_row("IMP-2025-002", "2025-02-10", "200.00"),
-                _book_row("IMP-2025-001", "2025-02-03", "100.00"),
-                _book_row("", "2025-02-17", "50.00"),
+                _book_row(f"IMP-{_YEAR}-001", date(_YEAR, 2, 3).isoformat(), "100.00"),
+                _book_row(f"IMP-{_YEAR}-002", date(_YEAR, 2, 10).isoformat(), "200.00"),
+                _book_row(f"IMP-{_YEAR}-001", date(_YEAR, 2, 3).isoformat(), "100.00"),
+                _book_row("", date(_YEAR, 2, 17).isoformat(), "50.00"),
             )
         )
         + "\n",
@@ -75,10 +79,10 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         assert set(projection.created_invoice_ids) == set(persisted)
 
         by_number = {invoice.invoice_number: invoice for invoice in persisted.values()}
-        assert set(by_number) == {"IMP-2025-001", "IMP-2025-002"}
+        assert set(by_number) == {f"IMP-{_YEAR}-001", f"IMP-{_YEAR}-002"}
         for number, issued, base, iva in (
-            ("IMP-2025-001", date(2025, 2, 3), Decimal("100.00"), Decimal("21.00")),
-            ("IMP-2025-002", date(2025, 2, 10), Decimal("200.00"), Decimal("42.00")),
+            (f"IMP-{_YEAR}-001", date(_YEAR, 2, 3), Decimal("100.00"), Decimal("21.00")),
+            (f"IMP-{_YEAR}-002", date(_YEAR, 2, 10), Decimal("200.00"), Decimal("42.00")),
         ):
             invoice = by_number[number]
             assert invoice.kind is InvoiceKind.RECEIVED
@@ -113,9 +117,9 @@ def _prepare_wizard(context: ConformanceFamilyContext) -> ConformancePreparation
 
         (invoice,) = InvoiceCatalogueRepository(bucket_id=bucket_id).load().invoices.values()
         assert invoice.kind is InvoiceKind.RECEIVED
-        assert invoice.invoice_number == "WIZ-2025-001"
+        assert invoice.invoice_number == f"WIZ-{_YEAR}-001"
         assert invoice.counterparty_tax_id == _COUNTERPARTY_NIF
-        assert invoice.issued_at == date(2025, 3, 4)
+        assert invoice.issued_at == date(_YEAR, 3, 4)
         # 250.00 at the 21% rate: 52.50 of IVA on a 302.50 total.
         assert (invoice.base_total, invoice.iva_total, invoice.grand_total) == (
             Decimal("250.00"),
@@ -131,8 +135,8 @@ def _prepare_wizard(context: ConformanceFamilyContext) -> ConformancePreparation
             kind=InvoiceKind.RECEIVED,
             counterparty_nif=_COUNTERPARTY_NIF,
             counterparty_name=_COUNTERPARTY_NAME,
-            invoice_number="WIZ-2025-001",
-            invoice_date="2025-03-04",
+            invoice_number=f"WIZ-{_YEAR}-001",
+            invoice_date=date(_YEAR, 3, 4).isoformat(),
             taxable_base="250.00",
             iva_rate="21",
             currency="EUR",

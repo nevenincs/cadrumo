@@ -22,6 +22,7 @@ from ...application.retencion_soportada_absence.results import (
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence, RetencionSoportadaAbsenceState
 from ..retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
 from .conformance_family_contract import (
@@ -32,7 +33,10 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_EJERCICIO = 2025
+_YEAR = filing_year_envelope().horizon
+
+
+_EJERCICIO = _YEAR - 1
 _CLASS = RetencionSoportadaClase.TRABAJO
 _NOTE = "No payer withheld on this class in the ejercicio."
 
@@ -46,7 +50,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         ejercicio=_EJERCICIO,
         income_class=_CLASS,
         note=_NOTE,
-        attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        attested_at=datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC),
     )
 
     def seed() -> str:
