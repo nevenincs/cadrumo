@@ -2424,6 +2424,11 @@ application:
         például amikor a fizetendő összeg egy részét a házastársad visszatérítésének
         terhére felfüggesztik, vagy lemondasz egy visszatérítésről. A Cadrumo az idei
         nyomtatvány maradékát még nem számolja ki.'
+      export_text_value_overflow: 'Semmi sem íródott ki: a(z) „%{field_value}” %{value_length}
+        karakter hosszú, az AEAT rekordterve viszont a(z) „%{record_type}” rekord
+        %{first_position}-%{last_position}. pozícióján csak %{field_length} karaktert
+        enged. A levágás más adatot vallana be. Javítsd ott, ahol rögzítetted, úgy,
+        ahogy az AEAT adózói nyilvántartásában (censo) szerepel, és exportálj újra.'
       export_unsupported: A Modelo %{modelo} nyomtatvány nem exportálható fichero-BOE
         fájlba, mert %{reason}. A számítás, az ellenőrzés és az általad őrzött benyújtási
         rekordok létezhetnek, de ez a parancs ehhez a nyomtatványhoz nem tud AEAT
