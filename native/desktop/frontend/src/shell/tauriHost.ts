@@ -336,6 +336,7 @@ export function tauriHost(): Host {
         call("desktop_setup_start", {
           item,
           resume: options.resume ?? false,
+          ...(options.reinstall ? { reinstall: true } : {}),
           ...(options.download ? { download: options.download } : {}),
         }),
       answer: (operationId, planDigest, decision) =>

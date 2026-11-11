@@ -91,7 +91,11 @@ function LocalAiElement({
         />
         <span className="min-w-0 wrap-anywhere">{itemName(t, row.item)}</span>
       </button>
-      {!expanded && <RowState row={row} />}
+      {/* The element's status is the program's: the models and whether the
+          engine answers are other facts, said where they are listed. */}
+      {!expanded && (
+        <RowState row={row} fact={t("desktop.setup.part_program")} />
+      )}
       {expanded && (
         <div id={contentId}>
           <LocalAi

@@ -115,7 +115,12 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
-from .custody.kdf_supervision import ProfileKdfPrewarm, calibrate_profile_kdf, unlock_profile_custody
+from .custody.kdf_supervision import (
+    ProfileKdfPrewarm,
+    calibrate_profile_kdf,
+    profile_kdf_at_fallback,
+    unlock_profile_custody,
+)
 from .custody.label_head_repository import ProfileLabelHeadRepository
 from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope
 from .custody.recovery import (
@@ -800,6 +805,10 @@ class _PersistenceProfileCustody:
         root: Path | None = None,
     ) -> ProfileCustodyPasswordMaterialPort:
         return load_committed_profile_password_material(profile_id, root=root)
+
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        material = load_committed_profile_password_material(profile_id, root=root)
+        return profile_kdf_at_fallback(material.envelope.kdf)
 
     def is_authentication_proof_failure(
         self,

@@ -10,6 +10,7 @@ import type {
   AgentProviderLane,
   AgentRecommendedCapability,
 } from "../../shell/agentSession";
+import type { ProviderAuthKind } from "@/components/settings/types";
 import { fixtureInstant } from "@/dev/fixtureDates";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
@@ -31,6 +32,7 @@ type DeclaredLane = Pick<
   | "executable"
   | "model_source"
 > & {
+  auth_kind: ProviderAuthKind;
   catalog_revision: string | null;
   native_controls: NonNullable<AgentProviderLane["catalog"]["native_controls"]>;
 };
@@ -43,6 +45,25 @@ const CAPABILITIES: AgentLaneCapability[] = [
   "pdf_reading",
 ];
 
+/** What each made-up lane is authenticated with, by `<provider>/<transport>`;
+ * a lane not named here takes a key. */
+const AUTH_KINDS: Record<string, ProviderAuthKind> = {
+  "gamma/cli": "provider_sign_in_only",
+  "beta/cli": "provider_sign_in_only",
+  "gateway/cli": "api_key_with_base_url",
+  "relay/cli": "api_key_with_base_url",
+  "local/api": "none",
+  "ollama/api": "none",
+  "llamacpp/api": "none",
+};
+
+/** What the made-up agent states `provider`'s `transport` lane is
+ * authenticated with. */
+export const fixtureAuthKind = (
+  provider: string,
+  transport: "api" | "cli",
+): ProviderAuthKind => AUTH_KINDS[`${provider}/${transport}`] ?? "api_key";
+
 const declare = (
   provider_id: string,
   transport: "api" | "cli",
@@ -51,6 +72,7 @@ const declare = (
 ): DeclaredLane => ({
   provider_id,
   transport,
+  auth_kind: fixtureAuthKind(provider_id, transport),
   display_name: `Example ${provider_id[0]?.toUpperCase()}${provider_id.slice(1)}`,
   execution_mode: `example-${transport}`,
   executable: true,
@@ -357,6 +379,7 @@ function lane(declared: DeclaredLane): AgentProviderLane {
     provider_id: declared.provider_id,
     transport: declared.transport,
     display_name: declared.display_name,
+    auth_kind: declared.auth_kind,
     execution_mode: declared.execution_mode,
     executable: declared.executable,
     model_source: declared.model_source,
@@ -519,6 +542,9 @@ export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
       provider: served.provider_id,
       transport: served.transport,
       display_name: served.display_name,
+      ...(served.auth_kind === undefined
+        ? {}
+        : { auth_kind: served.auth_kind }),
       recommended: served.catalog.recommended ?? {},
       models: (served.catalog.models ?? []).map((entry) => ({
         id: entry.model,

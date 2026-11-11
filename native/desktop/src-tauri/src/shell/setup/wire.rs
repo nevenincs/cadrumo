@@ -230,6 +230,7 @@ pub enum Failure {
     ProgramMissing,
     ProgramNotRunning,
     EngineProgramUnusable,
+    EnginePackageDamaged,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
@@ -245,6 +246,7 @@ pub enum Recovery {
     TryAgain,
     Resume,
     CheckAgain,
+    ReinstallEngineProgram,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -752,10 +754,12 @@ pub enum Action {
     Observe,
     Check(CheckMode),
     Verify(Option<Vec<String>>),
-    /// Setting up one item.
+    /// Setting up one item; with `reinstall`, the local AI with its program installed
+    /// afresh.
     Start {
         item: ItemId,
         resume: bool,
+        reinstall: bool,
         download: Option<ModelDownload>,
     },
     Answer {
@@ -802,12 +806,17 @@ pub fn verify_request(selected: Option<Vec<String>>) -> Result<Action, Applicati
 }
 
 /// Plans the setup of one item, or one explicitly requested catalogue model download.
+/// A reinstall is the local AI's alone, and is neither a resume nor a download.
 pub fn start_request(
     item: &str,
     resume: bool,
+    reinstall: bool,
     download: Option<ModelDownload>,
 ) -> Result<Action, ApplicationError> {
     let item = ItemId::parse(item).ok_or_else(invalid)?;
+    if reinstall && (item != ItemId::LocalAi || resume || download.is_some()) {
+        return Err(invalid());
+    }
     if let Some(download) = &download
         && (item != ItemId::LocalAi
             || !plain(&download.lane, NAME_LIMIT)
@@ -818,6 +827,7 @@ pub fn start_request(
     Ok(Action::Start {
         item,
         resume,
+        reinstall,
         download,
     })
 }
@@ -1024,11 +1034,12 @@ mod tests {
                 model: "synthetic-model:test".into(),
             })
         };
-        assert!(start_request("local_ai", false, request()).is_ok());
-        assert!(start_request("browser", false, request()).is_err());
+        assert!(start_request("local_ai", false, false, request()).is_ok());
+        assert!(start_request("browser", false, false, request()).is_err());
         assert!(
             start_request(
                 "local_ai",
+                false,
                 false,
                 Some(ModelDownload {
                     lane: "".into(),
@@ -1040,6 +1051,7 @@ mod tests {
         assert!(
             start_request(
                 "local_ai",
+                false,
                 false,
                 Some(ModelDownload {
                     lane: "synthetic_local_api".into(),
@@ -1059,15 +1071,41 @@ mod tests {
         assert!(check_request("deep").is_err());
         assert_eq!(verify_request(None).unwrap(), Action::Verify(None));
         assert_eq!(
-            start_request("local_ai", true, None).unwrap(),
+            start_request("local_ai", true, false, None).unwrap(),
             Action::Start {
                 item: ItemId::LocalAi,
                 resume: true,
+                reinstall: false,
                 download: None,
             }
         );
+        assert_eq!(
+            start_request("local_ai", false, true, None).unwrap(),
+            Action::Start {
+                item: ItemId::LocalAi,
+                resume: false,
+                reinstall: true,
+                download: None,
+            }
+        );
+        // A reinstall is the local AI's program alone: never the browser's, a resume or a
+        // model download.
+        assert!(start_request("browser", false, true, None).is_err());
+        assert!(start_request("local_ai", true, true, None).is_err());
+        assert!(
+            start_request(
+                "local_ai",
+                false,
+                true,
+                Some(ModelDownload {
+                    lane: "synthetic_local_api".into(),
+                    model: "synthetic-model:test".into(),
+                })
+            )
+            .is_err()
+        );
         for item in ["", "printer", "browser,local_ai", "google"] {
-            assert!(start_request(item, false, None).is_err(), "{item}");
+            assert!(start_request(item, false, false, None).is_err(), "{item}");
         }
         for selected in [
             vec![],

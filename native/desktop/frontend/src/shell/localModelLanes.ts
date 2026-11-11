@@ -6,7 +6,7 @@ import type {
   AgentRecommendedCapability,
   AgentTransport,
 } from "./agentSession";
-import { parseEngineHealth } from "./agentSession";
+import { parseAuthKind, parseEngineHealth } from "./agentSession";
 import type { Translate } from "./strings";
 
 // A local lane's model list: the models cadrumo-agent's catalog recommends
@@ -69,7 +69,8 @@ const understood = (transport: string): transport is AgentTransport =>
 export function catalogLanes(answer: AgentCatalogAnswer): CatalogLane[] {
   if (isDeclared(answer))
     return (answer.catalog.providers ?? []).flatMap((lane): CatalogLane[] => {
-      if (!understood(lane.transport)) return [];
+      if (!understood(lane.transport) || parseAuthKind(lane) === "malformed")
+        return [];
       const models = (lane.models ?? []).map((model): LaneModel => ({
         id: model.id,
         name: model.display_name,
@@ -93,6 +94,7 @@ export function catalogLanes(answer: AgentCatalogAnswer): CatalogLane[] {
     if (
       !understood(lane.transport) ||
       lane.model_source !== "catalog" ||
+      parseAuthKind(lane) === "malformed" ||
       parseEngineHealth(lane) === "malformed"
     )
       return [];

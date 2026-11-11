@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { LEDGER_PAGE_SIZE } from "../../src/shell/ledgerWindow";
+import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
 import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
@@ -13,8 +14,12 @@ const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
 // columns, the selection, and the keys. What it stages is checked by the
 // staging scenarios; here the grid shows stored values only.
 
-const open = (target: Page, extra = "") =>
-  target.goto(`/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`);
+async function open(target: Page, extra = "") {
+  await captureUnrecordedQuestions(target);
+  await target.goto(
+    `/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`,
+  );
+}
 
 const page = (target: Page) => target.locator(".ledger-page");
 const head = (target: Page) => target.locator(".pane-docs .pane-head");

@@ -20,6 +20,12 @@ the envelope digest and the password generation, so a bare envelope swap
 leaves a profile that authenticates under the new password and then cannot
 read its own record.
 
+Rotation is also the strengthening path. Every re-mint calibrates the
+key-derivation parameters afresh on the current host, so a profile enrolled at
+the fixed fallback point gains strength from one rotation. The new password may
+equal the current one: re-entering the same password re-calibrates on purpose,
+and it is accepted rather than refused.
+
 See Also:
     :func:`~cadrumo.application.user_profile.registration.register_profile_with_credentials`
         The creation door, which mints the first envelope this one replaces.

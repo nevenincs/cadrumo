@@ -171,6 +171,10 @@ pub enum QuickInspection {
     Damaged,
 }
 
+/// The folder beside `versions` that a retirement moves versions into before it removes
+/// them.
+const RETIRED: &str = "retired";
+
 /// Owner-resolved location. Construction and inspection never create directories.
 pub struct ComponentStore {
     root: PathBuf,
@@ -362,13 +366,73 @@ impl ComponentStore {
                 _ => {}
             }
         }
-        for tree in ["versions", "downloads", "staging"] {
+        for tree in ["versions", "downloads", "staging", RETIRED] {
             let path = directory.join(tree);
             if path.exists() {
                 remove_tree(&path, &directory)?;
             }
         }
         Ok(())
+    }
+
+    /// Retires every stored version of `artifact`'s archive under the writer lock, so no
+    /// inspection trusts its files and no acquisition reuses them: the first step of
+    /// installing the same version afresh. Each version folder is renamed from `versions`
+    /// into `retired`, the one the active pointer names first, and then the pointer and
+    /// the retired folders are removed. A rename is atomic, so a stop at any point leaves
+    /// either nothing changed or a pointer that names no stored version, which every
+    /// inspection reads as missing, and none of the retired files where an acquisition
+    /// looks for a version to reuse. The next acquisition or retirement removes what a
+    /// stop left in `retired`. Versions of another archive stay. The caller first stops
+    /// anything running from the component.
+    pub fn retire(&self, artifact: &Artifact) -> Result<(), Error> {
+        artifact.validate(&self.target)?;
+        let (directory, _writer) = self.writer(&artifact.id)?;
+        let retired = directory.join(RETIRED);
+        remove_retired(&retired, &directory)?;
+        let versions = directory.join("versions");
+        filesystem::refuse_links(&versions)?;
+        let prefix = format!("{}-", artifact.sha256);
+        let mut names: Vec<String> = match fs::read_dir(&versions) {
+            Ok(entries) => entries
+                .map(|entry| entry.map(|entry| entry.file_name()))
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .filter_map(|name| name.into_string().ok())
+                .filter(|name| name.starts_with(&prefix))
+                .collect(),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(e) => return Err(e.into()),
+        };
+        let pointer = directory.join("active.json");
+        filesystem::refuse_links(&pointer)?;
+        let named = filesystem::json_file::<ActivePointer>(&pointer)
+            .ok()
+            .map(|active| active.version.as_str().to_owned());
+        names.sort();
+        // The version the pointer names goes first: once it is renamed nothing is trusted.
+        if let Some(position) = named
+            .as_ref()
+            .and_then(|named| names.iter().position(|name| name == named))
+        {
+            let first = names.remove(position);
+            names.insert(0, first);
+        }
+        if !names.is_empty() {
+            filesystem::refuse_links(&retired)?;
+            fs::create_dir(&retired)?;
+            for name in &names {
+                let version = versions.join(name);
+                filesystem::refuse_links(&version)?;
+                fs::rename(&version, retired.join(name))?;
+            }
+            filesystem::sync_folder(&versions)?;
+        }
+        if named.is_some_and(|named| names.contains(&named)) {
+            fs::remove_file(&pointer)?;
+            filesystem::sync_folder(&directory)?;
+        }
+        remove_retired(&retired, &directory)
     }
 
     /// The component's folder, created if needed, with its writer lock held.
@@ -424,6 +488,7 @@ impl ComponentStore {
         let (directory, _writer) = self.writer(&artifact.id)?;
         let stage = directory.join("staging");
         remove_staging(&stage, &directory)?;
+        remove_retired(&directory.join(RETIRED), &directory)?;
         let next_pointer = directory.join("active.next.json");
         filesystem::refuse_links(&next_pointer)?;
         if next_pointer.exists() {
@@ -608,6 +673,15 @@ fn remove_staging(stage: &Path, owner: &Path) -> Result<(), Error> {
     filesystem::refuse_links(stage)?;
     if stage.exists() {
         remove_tree(stage, owner)?;
+    }
+    Ok(())
+}
+
+/// Removes what a retirement left in `retired`, a direct child of `owner`.
+fn remove_retired(retired: &Path, owner: &Path) -> Result<(), Error> {
+    filesystem::refuse_links(retired)?;
+    if retired.exists() {
+        remove_tree(retired, owner)?;
     }
     Ok(())
 }
@@ -1134,5 +1208,99 @@ mod tests {
             QuickInspection::Missing
         ));
         assert!(!directory.path().join("ollama/versions").exists());
+    }
+
+    #[test]
+    fn a_retired_version_is_never_trusted_or_reused_wherever_its_retirement_stopped() {
+        let bytes = packed(
+            ArchiveFormat::TarGz,
+            &tar_of(&[file("bin/ollama", b"refused program", 0o755)]),
+        );
+        let artifact = tar_artifact(&bytes, ArchiveFormat::TarGz);
+        let directory = tempfile::tempdir().unwrap();
+        let component = directory.path().join("ollama");
+        let store = ComponentStore::new(directory.path().into(), "fixture-target".into()).unwrap();
+        let opened = std::cell::Cell::new(0);
+        let provision = || {
+            store.provision(
+                &artifact,
+                || {
+                    opened.set(opened.get() + 1);
+                    Ok(std::io::Cursor::new(bytes.clone()))
+                },
+                &Cancellation::default(),
+            )
+        };
+        let versions = || -> Vec<String> {
+            let mut names: Vec<String> = fs::read_dir(component.join("versions"))
+                .unwrap()
+                .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+                .collect();
+            names.sort();
+            names
+        };
+        provision().unwrap();
+        assert_eq!(opened.get(), 1);
+        let installed = versions();
+        assert_eq!(installed, [format!("{}-0", artifact.sha256)]);
+
+        // A version of another archive is not this archive's to retire.
+        let other = component.join("versions").join("other-0");
+        fs::create_dir(&other).unwrap();
+
+        // A stop right after the first rename: the pointer is still in place and names a
+        // version no longer stored, so nothing is trusted and nothing is reused.
+        fs::create_dir(component.join(RETIRED)).unwrap();
+        fs::rename(
+            component.join("versions").join(&installed[0]),
+            component.join(RETIRED).join(&installed[0]),
+        )
+        .unwrap();
+        assert!(component.join("active.json").is_file());
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Missing
+        ));
+        assert!(matches!(
+            store.inspect(&artifact).unwrap().readiness,
+            Readiness::Missing(_)
+        ));
+        provision().unwrap();
+        assert_eq!(
+            opened.get(),
+            2,
+            "the retired bytes are fetched again, never reused"
+        );
+        assert!(
+            !component.join(RETIRED).exists(),
+            "the acquisition removes what the stop left"
+        );
+        assert!(matches!(
+            store.inspect_quick(&artifact).unwrap(),
+            QuickInspection::Active(_)
+        ));
+
+        // A whole retirement removes the pointer and the retired files with it, and a
+        // second one converges on the same state.
+        for _ in 0..2 {
+            store.retire(&artifact).unwrap();
+            assert!(matches!(
+                store.inspect_quick(&artifact).unwrap(),
+                QuickInspection::Missing
+            ));
+            assert!(!component.join("active.json").exists());
+            assert!(!component.join(RETIRED).exists());
+            assert_eq!(versions(), ["other-0"]);
+        }
+        provision().unwrap();
+        assert_eq!(opened.get(), 3);
+        assert_eq!(
+            versions(),
+            [format!("{}-0", artifact.sha256), "other-0".into()]
+        );
+        assert!(matches!(
+            store.inspect(&artifact).unwrap().readiness,
+            Readiness::Ready
+        ));
     }
 }

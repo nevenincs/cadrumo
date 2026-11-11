@@ -895,11 +895,15 @@ export interface HostCommands {
    * item's setup never refuses it.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
-   * without a second review; any other plan awaits an answer as usual. */
+   * without a second review; any other plan awaits an answer as usual.
+   * `reinstall` is the served reinstall of the local AI's program: its
+   * downloaded program is installed afresh, never with a resume or a
+   * download. */
   desktop_setup_start: {
     args: Authorized<{
       item: SetupItemId;
       resume: boolean;
+      reinstall?: boolean;
       download?: SetupModelDownload;
     }>;
     result: DesktopSetup;

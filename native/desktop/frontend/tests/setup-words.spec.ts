@@ -87,6 +87,8 @@ const FAILURES: SetupFailureCategory[] = [
   "memory_busy",
   "program_missing",
   "program_not_running",
+  "engine_program_unusable",
+  "engine_package_damaged",
   "interrupted",
   "needs_sign_in",
   "not_in_this_build",
@@ -99,6 +101,7 @@ const RECOVERIES: SetupRecovery[] = [
   "try_again",
   "resume",
   "check_again",
+  "reinstall_engine_program",
 ];
 const ITEMS: SetupItemKind[] = ["browser", "local_ai"];
 

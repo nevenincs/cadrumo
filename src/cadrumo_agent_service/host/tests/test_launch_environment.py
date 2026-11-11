@@ -28,6 +28,7 @@ from ..launch_environment import (
     HOSTED_ROOT_VARIABLE,
     LLAMACPP_BASE_URL_VARIABLE,
     LOCAL_ENGINE_VARIABLE,
+    NO_LOCAL_ENGINE,
     OLLAMA_BASE_URL_VARIABLE,
     PROGRAM_AEAT_VARIABLE,
     PROGRAM_PYTHON_VARIABLE,
@@ -471,7 +472,7 @@ def test_the_profiles_engine_reaches_the_agent_and_no_inherited_one(tmp_path: Pa
     assert environment[LOCAL_ENGINE_VARIABLE] == engine.value
 
 
-def test_an_unreadable_engine_record_names_no_engine_so_the_agent_refuses_rather_than_guess(tmp_path: Path) -> None:
+def test_an_unreadable_engine_record_names_no_engine_and_no_inherited_one(tmp_path: Path) -> None:
     environment = agent_launch_environment(
         storage_root=tmp_path / "storage",
         agent_root=tmp_path / "agent",
@@ -481,4 +482,4 @@ def test_an_unreadable_engine_record_names_no_engine_so_the_agent_refuses_rather
         received={LOCAL_ENGINE_VARIABLE: LocalEngine.OLLAMA.value},
         local_engine=None,
     )
-    assert LOCAL_ENGINE_VARIABLE not in environment
+    assert environment[LOCAL_ENGINE_VARIABLE] == NO_LOCAL_ENGINE

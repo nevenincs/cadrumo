@@ -3574,6 +3574,31 @@ desktop:
     no_rate: Nincs árfolyam
     no_rate_detail: 'Erre a napra nincs árfolyam: az EUR-érték nem ismert, és nem
       nulla.'
+    overview:
+      close: Áttekintés bezárása
+      group:
+        amounts: Összegek
+        links: Kapcsolatok
+        origin: Eredet
+        reading: Beolvasás
+        recorded: Amit a nyilvántartás rögzít
+      kind:
+        document: Dokumentum
+        invoice: Számla
+        movement: Tétel
+      no_reading: Nincs ellenőrzésre váró beolvasás
+      not_attached_here: Nincs csatolva ennek az időszaknak egyik tételéhez sem
+      not_linked: Nincs összekapcsolva
+      nothing_to_fix: Nincs javítanivaló
+      open_movement: Megnyitás a részletek panelen
+      open_record: Nyilvántartás megnyitása
+      read_only: Csak olvasható. Nyisd meg, ha módosítanál rajta.
+      reading_waiting: 'Beolvasva: {date}, ellenőrzésre vár'
+      reason: Indok
+      show: Áttekintés
+      state: Állapot
+      used_in: Felhasználva
+      used_nowhere: Egyik bevallásban sincs felhasználva
     paste:
       apply: Beillesztés · {count}
       blanks: Üres cellák
@@ -4806,6 +4831,7 @@ desktop:
   setup:
     action:
       check_again: Újraellenőrzés
+      reinstall_engine_program: Program újratelepítése
       resume: Folytatás
       set_up: Beállítás
       try_again: Újrapróbálás
@@ -4828,8 +4854,11 @@ desktop:
       cancelled: Leállítottad a beállítást.
       damaged_download: A letöltés sérült volt, ezért nem használható.
       disk_full: Nincs elég szabad hely a lemezen.
+      engine_package_damaged: A Cadrumóval érkezett helyi MI-program sérült, vagy
+        más számítógépre készült. A javításhoz javítsd vagy telepítsd újra a Cadrumót.
       engine_program_unusable: 'A helyi MI-program nem tudott elindulni: sérült, vagy
-        nem működik ezen a számítógépen. A helyi MI javítása újratelepíti.'
+        nem működik ezen a számítógépen. Az újratelepítés újra beállítja, a modelljeid
+        megmaradnak.'
       host_unreachable: A letöltési kiszolgáló nem érhető el. Ellenőrizd az internetkapcsolatodat,
         majd próbáld újra.
       interrupted: A beállítás a befejezés előtt megszakadt.

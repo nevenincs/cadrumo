@@ -44,6 +44,7 @@ from ..kdf_supervision import (
     calibrate_profile_kdf,
     fixed_profile_kdf_fallback,
     posix_memory_bytes,
+    profile_kdf_at_fallback,
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
@@ -928,3 +929,13 @@ def test_a_host_that_reports_no_page_counts_still_refuses(
     _sysconf_stub(monkeypatch, {"SC_PAGE_SIZE": 1}, {"SC_PAGE_SIZE": 4096})
 
     assert posix_memory_bytes() == 0
+
+
+def test_only_the_fixed_fallback_point_reads_as_at_the_fallback_whatever_the_salt() -> None:
+    salt = bytes(range(16))
+    stronger = [point for point in profile_kdf_grid(salt=salt) if point != fixed_profile_kdf_fallback(salt=salt)]
+
+    assert profile_kdf_at_fallback(fixed_profile_kdf_fallback(salt=salt))
+    assert profile_kdf_at_fallback(fixed_profile_kdf_fallback(salt=bytes([255] * 16)))
+    assert stronger
+    assert not any(profile_kdf_at_fallback(point) for point in stronger)

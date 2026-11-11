@@ -79,6 +79,8 @@ LLAMACPP_BASE_URL_VARIABLE: Final = "CADRUMO_AGENT_LLAMACPP_BASE_URL"
 LLAMACPP_BASE_URL: Final = f"http://{LLAMA_SERVER_ADDRESS}"
 LOCAL_ENGINE_VARIABLE: Final = "CADRUMO_AGENT_LOCAL_ENGINE"
 """The local engine the profile runs, whose keyless lane alone the agent's catalogue serves."""
+NO_LOCAL_ENGINE: Final = "none"
+"""The engine named where the profile's engine record cannot be read: the agent serves neither engine lane."""
 ADVERTISED_VARIABLES: Final = frozenset(
     {
         LOCAL_ENGINE_VARIABLE,
@@ -295,8 +297,8 @@ def agent_launch_environment(
     tools it starts are told that profile's folder, derived here and forwarded
     with the root, and never a folder of another profile. ``local_engine`` is
     the engine the profile runs, read from its engine record; ``None`` when that
-    record cannot be read, and then no engine is named, so the agent refuses to
-    start with ``local_engine_unset`` rather than serve either engine's lane.
+    record cannot be read, and then the agent is told ``none``: it starts and
+    serves neither engine's lane, and every other lane as before.
     """
     platform = sys.platform if sys_platform is None else sys_platform
     base = system_environment(received, sys_platform=platform)
@@ -336,6 +338,5 @@ def agent_launch_environment(
     environment[FORWARD_VARIABLE] = ",".join(forwarded)
     environment[OLLAMA_BASE_URL_VARIABLE] = OLLAMA_BASE_URL
     environment[LLAMACPP_BASE_URL_VARIABLE] = LLAMACPP_BASE_URL
-    if local_engine is not None:
-        environment[LOCAL_ENGINE_VARIABLE] = local_engine.value
+    environment[LOCAL_ENGINE_VARIABLE] = NO_LOCAL_ENGINE if local_engine is None else local_engine.value
     return environment

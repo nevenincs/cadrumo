@@ -40,13 +40,16 @@ from ...application.ledger.invoice_evidence_extract_operation import (
     build_ledger_evidence_extract_definition,
     build_ledger_evidence_extract_registration,
 )
+from ...application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
 )
 from ...application.operations.models import OperationRequest
+from ...application.operations.next_step import OperationChooseReadingModelStepV1
 from ...application.operations.registry import OperationRegistry
 from ...core.errors.error_codes import get_registered_error_code
+from ...core.i18n.render import tr
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
@@ -151,6 +154,17 @@ def _assert_refused_by_the_reader(
     return detail
 
 
+def _assert_serves_the_sentence_and_step_to_pick_a_model(detail: OperationErrorDetailV1) -> None:
+    """The refusal serves the sentence that tells the person to pick a model, and the step to the choice."""
+    language = detail.refusal_words_language
+    assert language is not None
+    assert detail.refusal_words == tr(NO_READING_MODEL_LOCALE_KEY, locale=language.value)
+    assert detail.refusal_words != tr(EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY, locale=language.value)
+    step = detail.next_step
+    assert isinstance(step, OperationChooseReadingModelStepV1)
+    assert step.words == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language.value)
+
+
 def test_a_text_read_refused_for_its_missing_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
@@ -166,6 +180,7 @@ def test_a_text_read_refused_for_its_missing_model_settles(
     assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
     assert verdict.action is None
+    assert detail.next_step is None, "a model that is installed nowhere is not a model left unpicked"
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
     assert service.runs == [], "a run was sent for a role whose model is not installed"
 
@@ -196,7 +211,7 @@ def test_a_text_read_with_no_selection_settles_naming_the_role_that_needs_one(
     with agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service:
         settled = _settle_and_read_detail(tmp_path, profile, operation, attachment_id, service)
 
-    detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
+    detail = _assert_refused_by_the_reader(settled, NO_READING_MODEL_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
@@ -206,6 +221,7 @@ def test_a_text_read_with_no_selection_settles_naming_the_role_that_needs_one(
     assert facts["role_selection_required"] is True
     assert verdict.action is None
     assert service.runs == []
+    _assert_serves_the_sentence_and_step_to_pick_a_model(detail)
 
 
 def test_a_read_on_an_off_host_lane_without_consent_refuses_and_sends_nothing(

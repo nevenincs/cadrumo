@@ -292,6 +292,18 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler_name="work_attest_m303_exonerado_390",
     ),
     _leaf(
+        "attest-prior-carries",
+        ".modelo_work_carry_attestation_cli",
+        (
+            a("work_unit_id", required=True),
+            o("confirmed", "--yes", FLAG_VALUE, help_name="attest_prior_carries_yes", flag=True),
+            _LANG,
+        ),
+        _CALC_WRITE,
+        ".modelo_work_carry_attestation_payloads",
+        "WorkAttestPriorCarriesResult",
+    ),
+    _leaf(
         "create",
         ".modelo_work_lifecycle_cli",
         (

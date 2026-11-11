@@ -49,7 +49,8 @@ class EvidenceBatchLabelReadingFallbackPayload(OutputSchema):
 
     Mirrors :class:`~cadrumo.application.ledger.invoice_draft_records.LabelReadingFallback`:
     the cause token, the draft fields the fill was to read and left empty, the
-    class of the refusal or failure and the precondition the refusal failed.
+    class of the refusal or failure, the precondition the refusal failed and the
+    agent's own refusal code.
     Machine facts only; nothing read from the document.
     """
 
@@ -57,6 +58,7 @@ class EvidenceBatchLabelReadingFallbackPayload(OutputSchema):
     unread_fields: list[str]
     reader_error_type: str
     failed_condition_id: str | None = None
+    refusal_code: str | None = None
 
 
 class EvidenceBatchItemPayload(OutputSchema):
