@@ -174,6 +174,37 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
             assert tuple(store.iter_manifests()) == ()
 
 
+@pytest.mark.parametrize(
+    ("observed_at", "captured_at"),
+    [
+        (_OBSERVED_AT, _OBSERVED_AT - timedelta(days=270)),
+        (_OBSERVED_AT - timedelta(days=1), _CAPTURED_AT),
+    ],
+    ids=["observed-after-the-capture-clock", "observed-before-the-period-ended"],
+)
+def test_admission_refuses_an_observation_outside_its_window_as_unadmissible_evidence(
+    tmp_path: Path, operation, observed_at: datetime, captured_at: datetime
+) -> None:
+    """The operator's observation instant is refused as their evidence, not reported as a custody integrity fault."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
+        with bound_test_profile_record(_BUCKET_ID):
+            store = AttachmentStore()
+
+            with pytest.raises(M303Exonerado390AttestationUnadmissibleError) as raised:
+                admit_m303_exonerado_390_applicability_attestation(
+                    bucket_id=_BUCKET_ID,
+                    request=_request(observed_at=observed_at),
+                    actor="operator:test",
+                    operation=operation,
+                    store=store,
+                    clock=lambda: captured_at,
+                )
+
+            assert dict(raised.value.context or {}).get("reason") == "observation_timing"
+            assert tuple(store.iter_manifests()) == ()
+
+
 def test_split_attachment_identifiers_refuse_malformed_or_conflicting_values() -> None:
     with pytest.raises(M303Exonerado390AttestationUnadmissibleError):
         m303_exonerado_390_filing_evidence_reference(attachment_id="not-a-digest", sha256="a" * 64)
