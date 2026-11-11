@@ -10,8 +10,10 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:14615037bb19bac3cd3bd91700fbb0186a4e85fa817b309ae46d63934b68aec0'
+body_hash: 'sha256:57297759c8cdab52666881dd582354db90db90b74fde014ca8e5a875d104f16f'
 ---
+
+<!-- RETIRED: S44 -->
 
 # `persona-table` plan
 
@@ -58,8 +60,8 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S31` - Satisfy a cross-period dependency whose source year lies below the support envelope by an explicit operator attestation shown on the verification report (lanes CALC-PAGOS and LIFECYCLE); `src/cadrumo/application/modelo/verification_cross_period.py, dev/fixtures/personas`.
 - [ ] `P01.S33` - Remove every dependence of a result on a particular year in registry authoring, production code and persona data, and add a gate for declarations that exist in one edition or one year only (all lanes; gate by ACCEPTANCE); `src/cadrumo/_data/registry, src/cadrumo/application, dev/registry, dev/fixtures/personas`.
 - [ ] `P01.S35` - Give Modelo 100 rental income a source: property and lease records, the inmueble rows 0100 to 0148 with their expenses and amortisation, and the art. 23.2 reduction in casilla 0150, so the landlord persona calculates, verifies and exports with its rental income asserted (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, dev/fixtures/personas/arrendador-jubilado`.
-- [ ] `P01.S44` - Refuse an export whose rendered XML lacks any element its selected XSD requires, by one general check over the whole tree for every modelo with an XML design, with a typed refusal and a door; the 2022 Modelo 100 refund return without its RESINGDEV block is refused before the registry fix and exports with it after (lane LIFECYCLE); `src/cadrumo/application/filing`.
-- [ ] `P01.S45` - Render the Modelo 100 refund-result field for every envelope year through a per-row field-to-casilla declaration on the XML layout, declared at the edition whose design prints it, one stable member continuing across the renumbering from 0695 to 0700, ADR first (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/domain/calculations/registry`.
+- [ ] `P01.S45` - State the Modelo 100 settlement result in RESINGDEV for every envelope year, refund and payable, through a per-row field-to-casilla declaration on the XML layout declared at the edition whose design prints it, one stable member continuing across the renumbering from 0695 to 0700, ADR first and saying why dictionary_path_overrides cannot express it (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/domain/calculations/registry`.
+- [ ] `P01.S46` - Make the table's export stage read the exported file back through the registry parser and compare each stated expected value the design carries, the Modelo 100 settlement result first (lane ACCEPTANCE); `dev/acceptance/persona_table`.
 
 ### Phase `P02` - Deferred backend scope
 
