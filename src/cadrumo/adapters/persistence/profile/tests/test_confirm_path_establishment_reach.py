@@ -45,6 +45,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.confirmation_block_words import served_finding_words
 from cadrumo.application.ledger.establishment_ladder import EstablishmentRung
 from cadrumo.core.config import Settings
 
@@ -251,4 +252,4 @@ def test_a_document_whose_paper_settles_nothing_reaches_the_review_gate(
     assert any("establishment" in item.reason.value for item in establishment.review_items)
     # The counterparty must be nameable from the item: an operator cannot answer
     # a question that does not say which entity it is about.
-    assert any(_SELLER_TAX_ID in item.detail for item in establishment.review_items)
+    assert any(_SELLER_TAX_ID in (served_finding_words(item.words)[0] or "") for item in establishment.review_items)

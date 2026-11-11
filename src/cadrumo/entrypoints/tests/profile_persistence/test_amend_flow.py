@@ -25,6 +25,7 @@ from sqlalchemy.engine import Engine
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.operator_action_enums import ActionArgumentStatus
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -69,6 +70,7 @@ from ....application.modelo.work_lifecycle import (
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
+from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
 from ....core.time.clock import MADRID_TZ
@@ -497,7 +499,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
     )
     assert locally_filed.external_evidence is None
 
-    with pytest.raises(AmendmentEvidenceMissingError), bundled_indexed_authority().operation() as operation:
+    with pytest.raises(AmendmentEvidenceMissingError) as refused, bundled_indexed_authority().operation() as operation:
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=locally_filed.filing_record_id,
@@ -507,6 +509,23 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
             actor="operator-A",
             clock=_T4,
         )
+
+    # A refusal with a door, not a fault: importing the AEAT justificante for
+    # this work unit is what makes the filing amendable. The work unit is known;
+    # the evidence kind and its reference are on the operator's justificante,
+    # so the door asks for them rather than being served unable to run.
+    assert get_registered_error_code(refused.value).category is ErrorCategory.REFUSED
+    verdict = refused.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "modelo.work.amend.external_evidence.present"
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.filing_record.import"
+    bound = {binding.argument_name: (binding.status, binding.value) for binding in verdict.argument_bindings}
+    assert bound == {
+        "evidence_kind": (ActionArgumentStatus.MISSING, None),
+        "evidence_reference_id": (ActionArgumentStatus.MISSING, None),
+        "work_unit_id": (ActionArgumentStatus.RESOLVED, work_unit.work_unit_id),
+    }
 
 
 def test_amend_refuses_when_baseline_already_superseded(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

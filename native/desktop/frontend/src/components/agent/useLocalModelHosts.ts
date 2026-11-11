@@ -16,11 +16,15 @@ export function useLocalModelHosts(
 ) {
   // Changes made to the lists in the settings, which the picker reads again.
   const [listChanges, setListChanges] = useState(0);
+  // Engine choices stored through the host: the agent serves other lanes
+  // once it runs under the engine chosen.
+  const [engineChanges, setEngineChanges] = useState(0);
   const localModelHost = useMemo((): LocalModelHost | null => {
     if (!ready) return null;
-    return localModelHostOf(session, () =>
-      setListChanges((count) => count + 1),
-    );
+    return localModelHostOf(session, (change) => {
+      setListChanges((count) => count + 1);
+      if (change === "engine") setEngineChanges((count) => count + 1);
+    });
   }, [session, ready]);
   const readingHost = useMemo((): ReadingModelHost | null => {
     if (!ready || !session?.localModels || !session.chooseReadingModel)
@@ -30,5 +34,5 @@ export function useLocalModelHosts(
       choose: session.chooseReadingModel.bind(session),
     };
   }, [session, ready]);
-  return { localModelHost, readingHost, listChanges };
+  return { localModelHost, readingHost, listChanges, engineChanges };
 }

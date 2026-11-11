@@ -21,12 +21,14 @@ from ....core.period import Period
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.invoices.business_premises import BusinessPremisesLease
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind, IvaCategory
+from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ...aggregation.source_mesh import (
     CalculationSourceContext,
@@ -34,6 +36,11 @@ from ...aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ...aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
+from ...modelo.bucket_unrouted_source_issues import unrouted_source_issues
+from ...modelo.calculation_note_gate import gate_refuses
+from ...modelo.calculation_notes import note_attention, note_record_verdict
+from ...modelo.printed_boxes import PrintedBoxes
+from ...modelo.work_form_findings import ModeloFormAttention
 from ..source_observations import intracommunity_clave, invoice_sources_for_revision
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
@@ -712,3 +719,130 @@ def test_m347_a_withheld_lease_stays_declared_because_art_34_1_d_has_the_landlor
 
     assert "m347-exclusion:withheld-issued-invoice" not in _advisory_refs(resolution)
     assert resolution.binding_values["modelo-347-declarante-numero-inmuebles"] == Decimal("1")
+
+
+def _m349_first_quarter_context() -> CalculationSourceContext:
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    year = envelope.horizon
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "349")
+    return CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="349",
+        filing_year=year,
+        period=Period.from_year_and_code(year, "1T"),
+        revision=select_revision(modelo, filing_year=year, period="1T"),
+    )
+
+
+def _zero_iva_eu_invoice(
+    context: CalculationSourceContext,
+    operation_type: IntracomOperationType | None,
+    *,
+    country: str = "DE",
+    tax_id: str = "DE123456789",
+    iva_total: Decimal = Decimal("0"),
+) -> Invoice:
+    """An imported issued invoice stating neither a category nor an operation type; by default zero IVA to Germany."""
+    base = Decimal("1000.00")
+    issued_at = date(context.filing_year, 1, 15)
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=InvoiceKind.ISSUED,
+            invoice_number="DE-1",
+            issued_at=issued_at,
+            counterparty_tax_id=tax_id,
+            currency="EUR",
+            grand_total=base + iva_total,
+        ),
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="DE-1",
+        issued_at=issued_at,
+        counterparty_name="EU Counterparty GmbH",
+        counterparty_tax_id=tax_id,
+        counterparty_country=country,
+        base_total=base,
+        iva_total=iva_total,
+        grand_total=base + iva_total,
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Consulting",
+                quantity=Decimal("1"),
+                unit_price=base,
+                subtotal=base,
+                iva_rate=IvaRate.from_registry("EXEMPT" if iva_total == 0 else "RATE_21"),
+                iva_amount=iva_total,
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+        operation_type=operation_type,
+    )
+
+
+def test_m349_names_an_eu_invoice_without_an_operation_type_and_withholds_filing_on_it() -> None:
+    """Zero IVA to an EU party reads as E or S alike, so the gap is named and the declaration is not clean."""
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=None)
+
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+
+    (finding,) = (item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified")
+    assert finding.fact is not None
+    assert finding.fact.sentence is CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED
+    assert finding.fact.row_refs == (invoice.invoice_id,)
+    assert dict(finding.fact.values)["invoice"] == "DE-1"
+    assert resolution.detail_rows == ()
+    # The note withholds checking, exporting and recording, and persists with the calculation.
+    assert note_attention(finding.reason, box=None) is ModeloFormAttention.BLOCKS
+    assert gate_refuses(finding.reason, finding.binding_source)
+    (issue,) = unrouted_source_issues((finding,), PrintedBoxes(numbers={}))
+    assert issue.reason == "m349_operation_unclassified"
+    assert issue.fact == finding.fact
+
+
+def test_m349_note_opens_the_invoice_update_with_the_operation_type_left_to_the_filer() -> None:
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=None)
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+    (finding,) = (item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified")
+
+    verdict = note_record_verdict(finding)
+
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.ledger.invoice.update.operation_type"
+    bound = {item.argument_name: item for item in verdict.argument_bindings}
+    assert bound["invoice_id"].value == invoice.invoice_id
+    assert verdict.missing_argument_names == ("operation_type",)
+
+
+def test_m349_declares_the_same_invoice_as_one_operator_once_its_operation_type_is_stated() -> None:
+    context = _m349_first_quarter_context()
+    invoice = _zero_iva_eu_invoice(context, operation_type=IntracomOperationType.S)
+
+    resolution = _resolver(build_invoice_catalogue([invoice])).resolve(context)
+
+    assert not [item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified"]
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    (row,) = resolution.detail_rows
+    assert isinstance(row, Modelo349OperadorRow)
+    assert row.clave_operacion == "S"
+
+
+@pytest.mark.parametrize(
+    ("country", "tax_id", "iva_total"),
+    [("ES", "B00015016", Decimal("0")), ("DE", "DE123456789", Decimal("210.00"))],
+    ids=("domestic-party", "iva-charged"),
+)
+def test_m349_raises_no_unclassified_note_for_an_invoice_that_is_no_intra_community_operation(
+    country: str, tax_id: str, iva_total: Decimal
+) -> None:
+    context = _m349_first_quarter_context()
+    other = _zero_iva_eu_invoice(context, None, country=country, tax_id=tax_id, iva_total=iva_total)
+
+    resolution = _resolver(build_invoice_catalogue([other])).resolve(context)
+
+    assert not [item for item in resolution.diagnostics if item.reason == "m349_operation_unclassified"]

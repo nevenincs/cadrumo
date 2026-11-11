@@ -163,7 +163,7 @@ def _existing_verification(
             require_verification_report_coordinates_current(
                 repos.verification.load(operation=operation), operation=operation
             ),
-            calculation_revision_id,
+            target,
         )
         if existing is not None:
             return ModeloVerificationResult(
@@ -307,6 +307,7 @@ def verify_modelo_revision_with_preconditions(
             work_profile=checked_profile,
             ledger_membership_ports=repos.ledger_membership_ports,
             evaluated_at=now,
+            work_unit_repository=repos.work_unit,
         )
     )
     # A registry-snapshot refusal already stands as a blocking finding, and

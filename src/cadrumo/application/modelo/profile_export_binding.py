@@ -30,6 +30,7 @@ from pydantic import ValidationError
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -40,17 +41,19 @@ from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevi
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
+from ...domain.deadlines.errors import ProfileError
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFactValue, compose_legal_full_name
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..filing.export_producer_m303 import M303ProfileLexicals, m303_profile_lexicals
 from ..filing.identity_contact_producer import identity_contact_producer_values
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
 # export shaping must not grow a second profile fact authority.
-from ..user_profile.projections import profile_fact_index
+from ..user_profile.projections import profile_fact_index, projection_for_taxpayer
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
 from .profile_derived_facts import inject_derived_cash_election_fact, inject_derived_estimation_modality_fact
@@ -555,6 +558,31 @@ def resolve_profile_identity_producer_values(
         identity=_taxpayer_identity_from_profile_facts(facts, schema=resolved_schema),
         contact=_declaration_contact_from_profile_facts(facts, schema=resolved_schema),
     )
+
+
+def resolve_m303_profile_lexicals(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    period: Period | None,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> M303ProfileLexicals:
+    """Read the declared Modelo 303 enrolment facts through the export's own lexical projection.
+
+    A profile that is absent, or whose IVA block is unclaimed or incomplete,
+    answers nothing: every lexical stays ``None`` and is never read as a no.
+    Export admission is what refuses such a profile and names the missing path.
+    """
+    record = _load_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    if not isinstance(record, UserProfileRecord):
+        return M303ProfileLexicals()
+    resolved_schema = operation.profile_schema() if schema is None else schema
+    try:
+        profile = projection_for_taxpayer(record, schema=resolved_schema)
+    except (ProfileError, UserProfileError):
+        return M303ProfileLexicals()
+    return m303_profile_lexicals(profile.iva, period)
 
 
 def _declaration_contact_from_profile_facts(

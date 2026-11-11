@@ -22,7 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
@@ -138,7 +138,11 @@ def test_the_role_failure_now_names_the_verification_failure_rather_than_the_exc
     )
 
     role = next(f for f in resolution.findings if f.kind is DraftDiscrepancyKind.ROLE_UNRESOLVED)
-    assert "failed verification" in role.detail
+    assert role.words is not None
+    assert role.words.wording in {
+        DraftFindingWording.EVERY_IDENTIFIER_FAILED,
+        DraftFindingWording.EVERY_IDENTIFIER_FAILED_OWN_UNAVAILABLE,
+    }
 
 
 def test_a_verified_but_unevidenced_lone_survivor_still_blocks(operation: PinnedAuthorityOperation) -> None:

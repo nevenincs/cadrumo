@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.confirmation_gate import ConfirmationBlockReason
-from ....core.draft_discrepancy import DraftDiscrepancyKind
+from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....domain.iva.schema import InvoiceKind
 from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
 from ..invoice_confirmation import with_direction_contradiction
@@ -69,9 +69,16 @@ def test_the_contradiction_names_both_directions_so_the_operator_can_judge_it() 
     """
     stamped = with_direction_contradiction(_draft(InvoiceKind.ISSUED), kind=InvoiceKind.RECEIVED)
 
-    detail = next(f.detail for f in stamped.discrepancies if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED)
-    assert InvoiceKind.ISSUED.value in detail
-    assert InvoiceKind.RECEIVED.value in detail
+    words = next(f.words for f in stamped.discrepancies if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED)
+    assert words is not None
+    assert words.wording is DraftFindingWording.DOCUMENT_ISSUED_CONFIRMED_RECEIVED
+    reversed_words = next(
+        f.words
+        for f in with_direction_contradiction(_draft(InvoiceKind.RECEIVED), kind=InvoiceKind.ISSUED).discrepancies
+        if f.kind is DraftDiscrepancyKind.DIRECTION_CONTRADICTED
+    )
+    assert reversed_words is not None
+    assert reversed_words.wording is DraftFindingWording.DOCUMENT_RECEIVED_CONFIRMED_ISSUED
 
 
 def test_an_agreeing_document_raises_nothing() -> None:

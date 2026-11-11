@@ -47,6 +47,7 @@ from .edit_admission import admit_modelo_edit_baseline
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditRefusedV1
 from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1
 from .edit_review_wording import edit_refusal_words
+from .export_ports import M303ArrivalPorts
 from .m303_exonerado_390_applicability_attestation import modelo_390_question_asked
 from .profile_readiness_gate import modelo_work_profile_preflight_report
 from .reconciliation_sources import (
@@ -119,6 +120,8 @@ class ModeloWorkbenchReadPorts:
     the to-do list names the profile details the readiness gate still asks for;
     ``ledger`` is the profile's ledger, read so the to-do list names the
     movement or period fact calculation would be refused for.
+    ``m303_arrivals`` are the ledger and register repositories a Modelo 303 period
+    facts are folded from, as its export folds them.
     ``reconciliation_sources`` reads where each declaration an annual summary
     sums stands, the same reader its calculation's refusal names them from.
     """
@@ -132,6 +135,7 @@ class ModeloWorkbenchReadPorts:
     filings: ModeloRecordCatalogueRepositoryProtocol | None = None
     own_accounts: OwnAccountRegisterReaderProtocol | None = None
     credit_resolutions: CreditResolutionReader | None = None
+    m303_arrivals: M303ArrivalPorts | None = None
     profile: Callable[[], ModeloWorkProfile | None] | None = None
     ledger: ModeloWorkbenchLedgerPorts | None = None
     reconciliation_sources: Callable[[WorkUnit, RegistrySnapshot], tuple[ReconciliationSourceNeed, ...]] | None = None
@@ -273,6 +277,7 @@ def read_modelo_workbench_form(
         activity_assets=ports.activity_assets,
         credit_resolutions=ports.credit_resolutions,
         transactions=None if ports.ledger is None else ports.ledger.transactions,
+        m303_arrivals=ports.m303_arrivals,
     )
     form = loaded.form
     head_id = form.calculation_revision_id
@@ -320,8 +325,9 @@ def _head_and_report(
     if head_id is None:
         return None, None
     head = ports.calculations.load(operation=operation).get(head_id)
-    report = granting_verification_report(ports.verifications.load(operation=operation), head_id)
-    return head, report
+    if head is None:
+        return None, None
+    return head, granting_verification_report(ports.verifications.load(operation=operation), head)
 
 
 def _ledger_hold(

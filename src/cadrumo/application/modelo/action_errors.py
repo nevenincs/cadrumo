@@ -30,7 +30,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -150,20 +150,29 @@ class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
 
 def amendment_evidence_missing_precondition(
     *,
+    subject_leaf_key: Literal["modelo.work.amend", "modelo.work.amend_wizard"],
     work_unit_id: str,
     filing_record_id: str,
 ) -> ModeloPreconditionFailure:
-    """Return the declared no-action refusal for an unattested amendment baseline."""
+    """Return the refusal for an amendment baseline AEAT has not attested.
+
+    An amendment corrects a declaration AEAT received, so its baseline needs the
+    imported justificante; the door is importing that evidence for the work unit.
+    The evidence kind and its reference are on the operator's justificante, so
+    the door asks for them.
+    """
     return build_modelo_precondition_failure_for_scenario(
-        subject_leaf_key="modelo.work.amend_wizard",
-        scenario_id="modelo.work.amend_wizard.external_evidence.missing",
-        evidence_id="modelo.work.amend_wizard.external_evidence",
+        subject_leaf_key=subject_leaf_key,
+        scenario_id=f"{subject_leaf_key}.external_evidence.missing",
+        evidence_id=f"{subject_leaf_key}.external_evidence",
         evidence_values={
             "work_unit_id": work_unit_id,
             "filing_record_id": filing_record_id,
             "external_evidence_present": False,
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": work_unit_id},
+        missing_action_arguments=("evidence_kind", "evidence_reference_id"),
     )
 
 

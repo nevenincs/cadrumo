@@ -21,7 +21,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -36,6 +36,7 @@ __all__ = [
     "DraftDiscrepancyFinding",
     "FieldAmbiguityCandidate",
     "FieldProvenance",
+    "FindingWords",
     "InvoiceDraft",
     "InvoiceDraftIdentityDocumentFields",
     "InvoiceDraftLine",
@@ -342,6 +343,29 @@ class FieldProvenance(BaseModel):
         return self
 
 
+class FindingWords(BaseModel):
+    """The catalogue sentence explaining one finding, and the values it quotes.
+
+    A finding stores which sentence explains it and the figures and printed text
+    that sentence names, never the sentence itself, so each surface renders it in
+    the operator's language.
+
+    Attributes:
+        wording: The sentence, one per explanation a check can give.
+        params: The quoted values by placeholder name, sorted by name.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    wording: DraftFindingWording
+    params: tuple[tuple[str, str], ...] = ()
+
+    @classmethod
+    def of(cls, wording: DraftFindingWording, **params: object) -> Self:
+        """Return the words for *wording* quoting *params*, each as its printed text."""
+        return cls(wording=wording, params=tuple(sorted((name, str(value)) for name, value in params.items())))
+
+
 class DraftDiscrepancyFinding(BaseModel):
     """One deterministic check the read document failed.
 
@@ -355,7 +379,10 @@ class DraftDiscrepancyFinding(BaseModel):
         kind: Which identity failed.
         field: The draft field the finding is about, or ``None`` when the
             finding is about a relationship between several.
-        detail: Operator-facing explanation naming the figures involved.
+        detail: An explanation stored before findings carried their words; empty
+            on every finding read since.
+        words: The catalogue sentence explaining the finding and the values it
+            quotes.
         expected: What the identity required, when the check is arithmetic.
         observed: What the document stated instead.
     """
@@ -365,6 +392,7 @@ class DraftDiscrepancyFinding(BaseModel):
     kind: DraftDiscrepancyKind
     field: str | None = None
     detail: str = ""
+    words: FindingWords | None = None
     expected: Decimal | None = None
     observed: Decimal | None = None
 
@@ -383,9 +411,7 @@ def facturae_invoice_class_findings(
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
-                detail=(
-                    f"Facturae InvoiceClass {declared.source_code!r} declares recapitulativa, which is not modelled"
-                ),
+                words=FindingWords.of(DraftFindingWording.FACTURAE_SUMMARY_UNMODELLED, code=declared.source_code),
             ),
         )
 
@@ -395,9 +421,11 @@ def facturae_invoice_class_findings(
         findings.append(
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED,
-                detail=(
-                    f"Facturae InvoiceClass {declared.source_code!r} and Corrective/InvoiceNumber "
-                    f"presence={carries_correction!r} disagree"
+                words=FindingWords.of(
+                    DraftFindingWording.FACTURAE_CORRECTIVE_WITHOUT_REFERENCE
+                    if declares_correction
+                    else DraftFindingWording.FACTURAE_REFERENCE_WITHOUT_CORRECTIVE,
+                    code=declared.source_code,
                 ),
             ),
         )

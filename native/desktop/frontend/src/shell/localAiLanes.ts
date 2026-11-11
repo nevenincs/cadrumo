@@ -16,16 +16,8 @@ import {
   catalogReadRetry,
 } from "./catalogReadPolicy";
 import { useAgentStatus } from "./agentLive";
-import {
-  catalogLanes,
-  lanesForEngine,
-  type CatalogLane,
-} from "./localModelLanes";
-import {
-  localModelHostOf,
-  useLocalEngine,
-  type LocalModelHost,
-} from "./localModels";
+import { catalogLanes, type CatalogLane } from "./localModelLanes";
+import { localModelHostOf, type LocalModelHost } from "./localModels";
 import type { ProviderSettings } from "./providerSettings";
 
 // The local AI's model lists outside the agent column: the lanes that need
@@ -68,6 +60,10 @@ export function useLocalAiLanes(
   const available = status?.state === "ready";
   const starting = status?.state === "starting";
   const [retries, setRetries] = useState(0);
+  // The agent serves other lanes once it runs under a newly chosen engine:
+  // an engine stored through the host reads the lanes again, as does the
+  // agent being ready again after it.
+  const [engineChanges, setEngineChanges] = useState(0);
   const request = useMemo(
     () => ({
       session,
@@ -77,8 +73,18 @@ export function useLocalAiLanes(
       available,
       again,
       retries,
+      engineChanges,
     }),
-    [session, providerSettings, reader, active, available, again, retries],
+    [
+      session,
+      providerSettings,
+      reader,
+      active,
+      available,
+      again,
+      retries,
+      engineChanges,
+    ],
   );
   const generation = useRef(0);
   // The work of the commit now reading, so the window's learning that the
@@ -223,13 +229,15 @@ export function useLocalAiLanes(
   const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo(
     (): LocalModelHost | null =>
-      available ? localModelHostOf(session ?? undefined) : null,
+      available
+        ? localModelHostOf(session ?? undefined, (change) => {
+            if (change === "engine") setEngineChanges((count) => count + 1);
+          })
+        : null,
     [session, available],
   );
-  const engine = useLocalEngine(host);
   return {
-    lanes:
-      read.kind === "ready" ? lanesForEngine(read.value, engine.value) : [],
+    lanes: read.kind === "ready" ? read.value : [],
     host,
     status:
       read.kind === "ready"

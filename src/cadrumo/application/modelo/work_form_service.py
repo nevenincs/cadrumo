@@ -31,6 +31,7 @@ See Also:
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Iterator, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING
@@ -38,6 +39,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.identity.bucket import BucketId
@@ -69,6 +71,14 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
+from ..filing.export_producer_m303 import (
+    M303_LEXICAL_PRODUCER_KEYS,
+    M303FilingLexicals,
+    M303ProfileLexicals,
+    m303_context_producer_values,
+    m303_evidence_lexicals,
+    m303_filing_lexicals,
+)
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
 from ..user_profile.projections import declared_redeme_enrolment, profile_path_values_for_bucket
 from .calculation_note_gate import (
@@ -81,8 +91,10 @@ from .caller_context import caller_context_of
 from .credit_resolution import load_credit_resolutions
 from .credit_resolution_repository import CreditResolutionReader
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
+from .export_accounts import resolve_m303_filing_facts_from_arrivals
+from .export_ports import M303ArrivalPorts
 from .profile_binding import resolve_profile_sourced_bindings
-from .profile_export_binding import resolve_profile_identity_producer_values
+from .profile_export_binding import resolve_m303_profile_lexicals, resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available
 from .taxation_comparison import revision_compares_taxation
 from .verification_report_facts import verification_sources_digest
@@ -269,24 +281,49 @@ def _current_profile_context_allowed(
 def _profile_context_values(
     layout: FormLayoutDefinition | None,
     snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
     lifecycle_state: CalculationRevisionState | None,
     *,
     bucket_id: BucketId,
     operation: PinnedAuthorityOperation,
+    m303_arrivals: M303ArrivalPorts | None,
 ) -> Mapping[FilingProducerKey, ModeloFormScalar]:
-    """Read current identity only for declared producer context on an open form."""
-    if layout is None or not _current_profile_context_allowed(layout, snapshot, lifecycle_state):
-        # These heads have no saved header identity. Today's profile cannot
-        # attest the identity or contact on a filed or abandoned declaration.
+    """Resolve the producer context a layout declares, as the export resolves it.
+
+    Current identity and enrolment facts come from the profile and only for an
+    open form; the filing answers saved on the revision come from the revision,
+    whatever its state. Nothing else is read.
+    """
+    if layout is None or layout.revision_id != snapshot.revision.id:
         return dict[FilingProducerKey, ModeloFormScalar]()
-    if not any(
-        isinstance(block, FormContextFieldBlock)
-        and resolve_form_context_field(snapshot.revision, block).producer_key is not None
-        for page in layout.pages
-        for section in page.sections
-        for block in section.blocks
-    ):
+    producers = {
+        producer
+        for block in _context_field_blocks(layout)
+        if (producer := resolve_form_context_field(snapshot.revision, block).producer_key) is not None
+    }
+    if not producers:
         return dict[FilingProducerKey, ModeloFormScalar]()
+    current = _current_profile_context_allowed(layout, snapshot, lifecycle_state)
+    values: dict[FilingProducerKey, ModeloFormScalar] = {}
+    if current:
+        values.update(_profile_identity_values(bucket_id=bucket_id, operation=operation))
+    if producers & M303_LEXICAL_PRODUCER_KEYS:
+        values.update(
+            _m303_context_values(
+                snapshot,
+                revision,
+                bucket_id=bucket_id,
+                operation=operation,
+                read_profile=current,
+                arrivals=m303_arrivals,
+            )
+        )
+    return values
+
+
+def _profile_identity_values(
+    *, bucket_id: BucketId, operation: PinnedAuthorityOperation
+) -> Mapping[FilingProducerKey, ModeloFormScalar]:
     try:
         return resolve_profile_identity_producer_values(bucket_id=str(bucket_id), operation=operation)
     except ProfileSchemaValidationError:
@@ -294,6 +331,46 @@ def _profile_context_values(
         # context. The form still opens and the header states no identity; the
         # export path is what refuses it and names the profile field to shorten.
         return dict[FilingProducerKey, ModeloFormScalar]()
+
+
+def _m303_context_values(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    *,
+    bucket_id: BucketId,
+    operation: PinnedAuthorityOperation,
+    read_profile: bool,
+    arrivals: M303ArrivalPorts | None,
+) -> Mapping[FilingProducerKey, ModeloFormScalar]:
+    """The Modelo 303 identification answers, through the export's own lexical projection.
+
+    The saved filing evidence supplies the filer's answers for this filing and
+    the profile the enrolments. With the arrival repositories the ledger and
+    register facts are folded in by the function the export folds them with;
+    without them, or when that fold refuses, those answers stay unknown and
+    export is what refuses and says why.
+    """
+    profile = (
+        resolve_m303_profile_lexicals(bucket_id=str(bucket_id), operation=operation, period=snapshot.filing_period)
+        if read_profile
+        else M303ProfileLexicals()
+    )
+    evidence = None if revision is None else revision.filing_instance_evidence
+    filing = M303FilingLexicals() if evidence is None else m303_evidence_lexicals(evidence.m303)
+    period = snapshot.filing_period
+    if evidence is not None and arrivals is not None and period is not None:
+        with contextlib.suppress(CadrumoError):
+            filing = m303_filing_lexicals(
+                resolve_m303_filing_facts_from_arrivals(
+                    bucket_id=str(bucket_id), period=period, evidence=evidence, arrivals=arrivals, operation=operation
+                )
+            )
+    values: dict[FilingProducerKey, ModeloFormScalar] = {}
+    for key, value in m303_context_producer_values(profile, filing).items():
+        if value is not None and not isinstance(value, str):
+            raise RegistryValidationError("form context producer value is not a supported scalar")
+        values[key] = value
+    return values
 
 
 def _needed_profile_bindings(
@@ -367,6 +444,7 @@ def load_modelo_work_form(
     activity_assets: ActivityAssetHistoryRepository | None = None,
     credit_resolutions: CreditResolutionReader | None = None,
     transactions: TransactionCatalogueRepositoryProtocol | None = None,
+    m303_arrivals: M303ArrivalPorts | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
@@ -390,6 +468,10 @@ def load_modelo_work_form(
     ``transactions`` is the profile's ledger, read only to tell whether the
     movements the last check read have changed since; without it the form
     never says the check is out of date.
+
+    ``m303_arrivals`` are the ledger and register repositories a Modelo 303 period
+    facts are folded from, exactly as its export folds them. Without them the
+    facts that come from those arrivals stay unknown on the form.
     """
     resolutions = (
         NO_SOURCE_DISAGREEMENT_RESOLUTIONS
@@ -449,7 +531,13 @@ def load_modelo_work_form(
         known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
         redeme=_redeme_enrolment(bucket_id),
         producer_values=_profile_context_values(
-            layout, snapshot, review.lifecycle_state, bucket_id=bucket_id, operation=operation
+            layout,
+            snapshot,
+            head,
+            review.lifecycle_state,
+            bucket_id=bucket_id,
+            operation=operation,
+            m303_arrivals=m303_arrivals,
         ),
         profile_binding_values=_profile_binding_context_values(
             layout, snapshot, head, review.lifecycle_state, bucket_id=bucket_id, operation=operation

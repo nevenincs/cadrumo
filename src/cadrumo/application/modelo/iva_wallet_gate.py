@@ -143,6 +143,7 @@ def _require_no_unproven_prior_amounts(
         },
         context={"divergence": str(decision.divergence), "reason": blocked_reason},
         carry_period=decision.target_period,
+        local_amount=decision.local_recurrence_amount,
         carry_revision=revision,
     )
 
@@ -418,6 +419,7 @@ def _persisted_decision_matching_revision(
             },
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
             carry_period=work_unit.period,
+            local_amount=decision.local_recurrence_amount,
             carry_revision=snapshot.revision,
         )
     if decision.target_period != work_unit.period:

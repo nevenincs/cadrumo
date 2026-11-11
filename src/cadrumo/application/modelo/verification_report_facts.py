@@ -14,6 +14,7 @@ from ...domain.calculations.registry.formula_runtime import RegistryCalculationU
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
@@ -22,6 +23,7 @@ from ...domain.modelos.verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
+from ...domain.modelos.verification_repository import revision_granting_reports
 from .m210_rate import resolve_m210_rate
 from .verification_finding_contracts import BLOCKED_VERDICT_KINDS, M210_UNRESOLVED_RATE_REASONS
 
@@ -72,20 +74,19 @@ def m210_unresolved_outcome_findings(
 
 def granting_verification_report(
     catalogue: VerificationReportCatalogue,
-    calculation_revision_id: CalculationRevisionId,
+    revision: CalculationRevision,
 ) -> VerificationReport | None:
-    """Return the granting verification report for a locked revision, or ``None``.
+    """Return the granting verification report that stands for ``revision``, or ``None``.
 
     Used by the idempotent re-verify no-op: a revision that has transitioned out
     of ``BORRADOR`` (``VERIFICADO_COMPLETO`` / ``PRESENTADO``) was granted
-    verification, so exactly one granting :class:`VerificationReport` exists for
-    it; ``None`` flags an inconsistent state (a non-draft revision with no
-    granting report) that the caller refuses rather than papering over.
+    verification, and its lock names the one granting
+    :class:`VerificationReport` that witnesses it; ``None`` flags an
+    inconsistent state (a non-draft revision whose lock no grant matches) that
+    the caller refuses rather than papering over.
     """
-    for report in catalogue.reports.values():
-        if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo:
-            return report
-    return None
+    grants = revision_granting_reports(catalogue, revision)
+    return grants[-1] if grants else None
 
 
 def verification_sources_digest(revision: CalculationRevision, catalogue: TransactionCatalogue) -> Hex64Str:

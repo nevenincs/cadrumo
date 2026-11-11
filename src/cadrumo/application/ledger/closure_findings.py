@@ -50,10 +50,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.percentage import fraction_of_percentage
 from ...domain.invoices.figures import retention_findings
-from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
+from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords, InvoiceDraft
 
 __all__ = [
     "ROUNDING_ALLOWANCE_PER_TERM",
@@ -117,11 +117,7 @@ def _total_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | Non
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
         field="grand_total",
-        detail=(
-            f"the printed total {draft.grand_total} does not equal base plus cuota plus recargo plus "
-            f"suplidos ({computed}); the document states a figure the components do not reach, so a "
-            f"component was misread or the document carries one this draft cannot represent"
-        ),
+        words=FindingWords.of(DraftFindingWording.TOTAL_NOT_CLOSED, total=draft.grand_total, computed=computed),
         expected=computed,
         observed=draft.grand_total,
     )
@@ -171,10 +167,11 @@ def _cash_closure_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
         field="retencion_amount",
-        detail=(
-            f"the stated retención {draft.retencion_amount} is not {draft.retencion_rate}% of the "
-            f"taxable base ({expected_retencion}); the cash actually paid cannot be derived from "
-            f"figures that disagree"
+        words=FindingWords.of(
+            DraftFindingWording.RETENTION_NOT_RATE_OF_BASE,
+            retention=draft.retencion_amount,
+            rate=draft.retencion_rate,
+            expected=expected_retencion,
         ),
         expected=expected_retencion,
         observed=draft.retencion_amount,
@@ -195,10 +192,12 @@ def _rate_consistency_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFin
             DraftDiscrepancyFinding(
                 kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
                 field="iva_breakdown",
-                detail=(
-                    f"the tier charged at {entry.iva_rate}% states a cuota of {entry.iva_amount} on a "
-                    f"base of {entry.taxable_base}, which should be {expected}; Modelo 303 declares "
-                    f"cuota devengada per tier, so this tier declares the wrong figure"
+                words=FindingWords.of(
+                    DraftFindingWording.TIER_CUOTA_NOT_RATE_OF_BASE,
+                    rate=entry.iva_rate,
+                    cuota=entry.iva_amount,
+                    base=entry.taxable_base,
+                    expected=expected,
                 ),
                 expected=expected,
                 observed=entry.iva_amount,
@@ -252,12 +251,12 @@ def _flat_rate_consistency_finding(draft: InvoiceDraft) -> DraftDiscrepancyFindi
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
         field="iva_rate",
-        detail=(
-            f"the stated cuota {draft.iva_amount} is not {draft.iva_rate}% of the stated base "
-            f"{draft.taxable_base} ({expected}); one flat rate cannot describe this document, so "
-            f"either a figure was misread or the invoice charges more than one rate and the "
-            f"per-rate split is missing -- Modelo 303 declares base and cuota devengada per tier, "
-            f"so confirming this would file the whole base under the wrong one"
+        words=FindingWords.of(
+            DraftFindingWording.FLAT_CUOTA_NOT_RATE_OF_BASE,
+            cuota=draft.iva_amount,
+            rate=draft.iva_rate,
+            base=draft.taxable_base,
+            expected=expected,
         ),
         expected=expected,
         observed=draft.iva_amount,
@@ -280,11 +279,7 @@ def _breakdown_base_finding(
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
         field="taxable_base",
-        detail=(
-            f"the per-rate bases sum to {summed} while the document states a flat taxable "
-            f"base of {draft.taxable_base}; these are two readings of one document and at "
-            f"least one is wrong"
-        ),
+        words=FindingWords.of(DraftFindingWording.BREAKDOWN_BASES_DISAGREE, summed=summed, base=draft.taxable_base),
         expected=summed,
         observed=draft.taxable_base,
     )
@@ -306,11 +301,7 @@ def _breakdown_iva_finding(
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT,
         field="iva_amount",
-        detail=(
-            f"the per-rate cuotas sum to {summed} while the document states a flat cuota "
-            f"of {draft.iva_amount}; these are two readings of one document and at least "
-            f"one is wrong"
-        ),
+        words=FindingWords.of(DraftFindingWording.BREAKDOWN_CUOTAS_DISAGREE, summed=summed, cuota=draft.iva_amount),
         expected=summed,
         observed=draft.iva_amount,
     )

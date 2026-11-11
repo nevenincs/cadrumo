@@ -68,6 +68,7 @@ from pydantic import BaseModel
 
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
+from ...core.draft_discrepancy import DraftFindingWording
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
@@ -96,6 +97,7 @@ from .confirmation_gate import ConfirmationBlocker, blocker_id
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
 from .filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+from .invoice_draft_records import FindingWords
 
 if TYPE_CHECKING:
     from datetime import date
@@ -150,7 +152,7 @@ class ConfirmedEstablishment(BaseModel):
         return self.counterparty.established
 
 
-def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
+def _review_item(*, field: str | None, detail: str = "", words: FindingWords | None = None) -> ConfirmationBlocker:
     """Return one establishment question in the review gate's own shape.
 
     Built with the gate's own id derivation rather than a second one, so an
@@ -159,10 +161,11 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
     """
     reason = ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
     return ConfirmationBlocker(
-        blocker_id=blocker_id(reason=reason, field=field, detail=detail),
+        blocker_id=blocker_id(reason=reason, field=field, detail=detail, words=words),
         reason=reason,
         field=field,
         detail=detail,
+        words=words,
     )
 
 
@@ -183,11 +186,7 @@ def confirm_establishment_filer_scope(
     if profile_record is None:
         return None, _review_item(
             field=FILER_POSTCODE_FACT_PATH,
-            detail=(
-                "no taxpayer profile was resolvable, so the filer's own IVA territory could not be "
-                f"established; it is a profile fact ({FILER_POSTCODE_FACT_PATH}) and is never read "
-                "off an invoice"
-            ),
+            words=FindingWords.of(DraftFindingWording.FILER_PROFILE_UNRESOLVABLE, fact=FILER_POSTCODE_FACT_PATH),
         )
     return resolve_filer_territorial_scope(profile_record=profile_record, operation=operation), None
 
@@ -214,16 +213,12 @@ def _counterparty_review_items(
         return (_review_item(field=field, detail=f"{naming}: {counterparty.registration_conflict.detail}"),)
     if counterparty.established:
         return ()
-    return (
-        _review_item(
-            field=field,
-            detail=(
-                f"{naming}: this document establishes no IVA territory for the counterparty. The "
-                "country and postal evidence settled nothing and no confirmed fact is on record, so "
-                "the territory is unknown rather than the mainland"
-            ),
-        ),
+    words = (
+        FindingWords.of(DraftFindingWording.UNIDENTIFIED_COUNTERPARTY_TERRITORY_UNKNOWN)
+        if tax_identifier is None
+        else FindingWords.of(DraftFindingWording.COUNTERPARTY_TERRITORY_UNKNOWN, tax_id=tax_identifier)
     )
+    return (_review_item(field=field, words=words),)
 
 
 def _resolved_supply_nature(

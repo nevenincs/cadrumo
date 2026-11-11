@@ -14,7 +14,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import {
   addedTo,
   engineRefusalWords,
-  heldBackByEngine,
   laneModelList,
   listRefusalWords,
   type CatalogLane,
@@ -411,7 +410,7 @@ function AddModel({
  * picker offers of the lane; the model the person picks there is the one the
  * agent and document reading run with. */
 export function LocalModels({
-  lane: offered,
+  lane,
   withEngine = false,
   host,
   locale,
@@ -434,9 +433,6 @@ export function LocalModels({
   const t = useStrings();
   const store = useProvisioning();
   const engine = useLocalEngine(host);
-  // The lane of the engine that is not selected is not offered.
-  const heldBack = offered !== null && heldBackByEngine(offered, engine.value);
-  const lane = heldBack ? null : offered;
   const { snapshot, retry, busy, outcomes, change } = useLocalModels(host);
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
@@ -602,7 +598,6 @@ export function LocalModels({
     }
   };
   const working = busy !== null || removing !== null;
-  if (heldBack && !withEngine) return null;
   return (
     <section data-slot="local-models" className="grid gap-2 pt-1">
       <h6 className="text-sm font-medium text-foreground">
