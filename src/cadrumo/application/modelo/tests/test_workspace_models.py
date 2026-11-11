@@ -10,6 +10,11 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...state_projection_models import ProjectionModeloReadiness
 from ..workspace_models import (
@@ -48,15 +53,17 @@ from ..workspace_models import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _DIGEST = "a" * 64
-_REVISION_ID = "2025-y-siguientes"
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_OTHER_REVISION_ID = "other-revision"
 
 
 def _target(*, revision_id: str = _REVISION_ID) -> ModeloWorkspaceResolvedTargetV1:
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="workspace-bucket",
         modelo="130",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         law_selected_revision_id=revision_id,
         review_status=RevisionReviewStatus.PENDING_REVIEW,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
@@ -230,7 +237,7 @@ def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None
     assert unavailable.baseline == baseline
     assert unavailable.contributors == contributors
     with pytest.raises(ValidationError, match="selected revision"):
-        _schema_facet(target, schema_identity, baseline, contributors, selected_revision_id="2024-y-siguientes")
+        _schema_facet(target, schema_identity, baseline, contributors, selected_revision_id=_OTHER_REVISION_ID)
     with pytest.raises(ValidationError, match="contract_version"):
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
             {
@@ -347,7 +354,7 @@ def test_a_locale_key_accepts_the_uppercase_segment_its_own_producer_emits() -> 
     every fixture and every enrolled surface used a numeric casilla id, where
     the two patterns agree.
     """
-    key = "modelo.schema.100.revision.2024.casilla.A.label"
+    key = f"modelo.schema.100.revision.{revision_covering('100', newest_authored_edition('100')).id}.casilla.A.label"
     record = ModeloWorkspaceLocalizedTextV1.model_validate(
         {
             "kind": "localized",
@@ -472,7 +479,7 @@ def test_workspace_projection_preserves_canonical_readiness_and_capability_coord
     assert projection.readiness is not None
     assert projection.readiness.per_operation_requirements_assessed is False
     assert all(capability.target == projection.target for capability in projection.capabilities)
-    mismatched_target = _target(revision_id="2024-y-siguientes")
+    mismatched_target = _target(revision_id=_OTHER_REVISION_ID)
     mismatched_capabilities = (
         projection.capabilities[0].model_copy(
             update={"target": mismatched_target, "selected_revision_id": mismatched_target.law_selected_revision_id}
@@ -499,7 +506,7 @@ def test_workspace_rejects_unbounded_localized_text_cursor_and_capability_revisi
             capability=ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
             disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
             target=target,
-            selected_revision_id="2024-y-siguientes",
+            selected_revision_id=_OTHER_REVISION_ID,
             producer_owner="workspace",
             producer="workspace.capability",
         )
@@ -585,7 +592,7 @@ def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
     alternatives = {
         "baseline": baseline.model_copy(update={"token": "b" * 64}),
         "contract_version": 2,
-        "selected_revision_id": "2024-y-siguientes",
+        "selected_revision_id": _OTHER_REVISION_ID,
         "schema_identity": schema_identity.model_copy(update={"schema_fingerprint": "b" * 64}),
         "facet": ModeloWorkspaceFacetName.PROVENANCE,
         "contributor_epoch_digest": "b" * 64,

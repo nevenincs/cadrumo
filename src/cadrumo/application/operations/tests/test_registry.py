@@ -510,7 +510,7 @@ def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -
         request=request(definition_id=definition_id, value=value),
         revision=3,
         lifecycle=OperationLifecycle.RUNNING,
-        updated_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
+        updated_at=datetime(1980, 8, 13, 20, tzinfo=UTC),
         event_cursor=9,
     )
 

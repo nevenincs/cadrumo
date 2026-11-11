@@ -7,6 +7,7 @@ import pytest
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_period_order
 
@@ -41,4 +42,6 @@ def test_modelo_390_annual_token_is_refused_rather_than_ordered(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with pytest.raises(RegistryValidationError, match="quarterly or monthly liquidation period"):
-        m303_annual_settlement_period_order(Period.from_year_and_code(2026, "0A"), authority=authority_operation)
+        m303_annual_settlement_period_order(
+            Period.from_year_and_code(filing_year_envelope().horizon, "0A"), authority=authority_operation
+        )

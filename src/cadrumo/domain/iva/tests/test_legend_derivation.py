@@ -26,6 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..legend_derivation import (
     LegendDerivation,
     LegendDerivationOutcome,
@@ -37,13 +38,15 @@ from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+
 
 # The one mention that fixes a category, per art. 6.1.m. Read from the table
 # rather than restated, so a change to the regulation's encoding reaches these
 # cases instead of leaving them asserting a value the table no longer carries.
 def _resolve_legends() -> tuple[RegimeLegend, ...]:
     with bundled_indexed_authority().operation() as operation:
-        return resolve_regime_legends(operation=operation, effective_date=date(2024, 1, 1))
+        return resolve_regime_legends(operation=operation, effective_date=date(_YEAR, 1, 1))
 
 
 _LEGENDS = _resolve_legends()

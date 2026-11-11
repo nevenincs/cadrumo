@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from html.parser import HTMLParser
 from pathlib import Path
@@ -14,6 +14,7 @@ import pypdfium2 as pdfium
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import normalise_corpus_text
@@ -224,7 +225,7 @@ def _prove_against_rate_change_notices(rate: IvaRateRecord, pct: str, texts: _Of
     return proven
 
 
-def _prove_against_your_europe(rate: IvaRateRecord, pct: str, texts: _OfficialTexts) -> bool:
+def _prove_against_your_europe(rate: IvaRateRecord, pct: str, texts: _OfficialTexts, snapshot_date: date) -> bool:
     """Check the current-rate cell; report whether it also grounds the effective start."""
     assert _YOUR_EUROPE_SOURCE in rate.source_refs
     country_code = _YOUR_EUROPE_CODES.get(rate.member_state, rate.member_state.value.upper())
@@ -235,7 +236,7 @@ def _prove_against_your_europe(rate: IvaRateRecord, pct: str, texts: _OfficialTe
         IvaRateKind("super_reduced"): 3,
     }[rate.kind]
     assert pct in cells[column].split(" / ")
-    return rate.effective_from >= date(2026, 7, 13)
+    return rate.effective_from >= snapshot_date
 
 
 def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
@@ -249,6 +250,8 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
             for rate in member_rates
         )
         texts = _load_official_texts()
+        snapshot_date = _authority_operation_for_test.source_reference(_YOUR_EUROPE_SOURCE).applies_from
+        assert snapshot_date is not None
 
         proven: set[tuple[EUMemberState, IvaRateKind, date]] = set()
         for rate in foreign_rates:
@@ -260,7 +263,11 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
                 initial_source_proven = True
             # A national notice can state a rate the EU summary leaves out, as Estonia's 13 is.
             cited_or_unproven = _YOUR_EUROPE_SOURCE in rate.source_refs or not initial_source_proven
-            if rate.effective_until is None and cited_or_unproven and _prove_against_your_europe(rate, pct, texts):
+            if (
+                rate.effective_until is None
+                and cited_or_unproven
+                and _prove_against_your_europe(rate, pct, texts, snapshot_date)
+            ):
                 initial_source_proven = True
 
             assert initial_source_proven, f"no official source proves {key} at its effective start"
@@ -270,74 +277,90 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
         assert proven == expected
 
 
+_ENGLISH_MONTHS = {
+    name: number
+    for number, name in enumerate(
+        (
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
+        ),
+        start=1,
+    )
+}
+
+
+def _notice_day(text: str, pattern: str) -> date:
+    """Read the day an official notice prints, from a pattern whose groups are day, month name, year."""
+    match = re.search(pattern, text)
+    assert match is not None, f"the official notice does not print {pattern!r}"
+    day, month, year = match.groups()
+    return date(int(year), _ENGLISH_MONTHS[month], int(day))
+
+
+def _notice_iso_day(text: str, pattern: str) -> date:
+    """Read the ISO day an official notice prints, from a pattern whose one group is that day."""
+    match = re.search(pattern, text)
+    assert match is not None, f"the official notice does not print {pattern!r}"
+    return date.fromisoformat(match.group(1))
+
+
+def _rate_changes(texts: _OfficialTexts) -> dict[str, date]:
+    """The first day of each new rate, as the bundled national notices print it."""
+    notices = texts.rate_change
+    one_day = timedelta(days=1)
+    return {
+        "EE": _notice_day(
+            notices["ee-emta-iva-rate-change-2025"],
+            r"from (\d{1,2}) (\w+) (\d{4}), the standard rate of vat in estonia",
+        ),
+        "RO": _notice_day(notices["ro-anaf-iva-rate-change-2025"], r"(\d{2}) (\w+) (\d{4}) 19% la 21%"),
+        "FI": _notice_day(
+            notices["fi-vero-iva-rate-change-2026"], r"up to (\d{1,2}) (\w+) (\d{4}), the reduced rate was 14%"
+        )
+        + one_day,
+        "LT": _notice_iso_day(notices["lt-vmi-iva-rate-change-2026"], r"nuo (\S+) lengvatinis 12 proc\."),
+    }
+
+
 def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
     """Date lookup switches exactly where the bundled national sources say it does."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        assert lookup_rate(
-            require_eu_member_state("EE"),
-            IvaRateKind("general"),
-            date(2025, 6, 30),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("22")
-        assert lookup_rate(
-            require_eu_member_state("EE"),
-            IvaRateKind("general"),
-            date(2025, 7, 1),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("24")
-        assert lookup_rate(
-            require_eu_member_state("RO"),
-            IvaRateKind("general"),
-            date(2025, 7, 31),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("19")
-        assert lookup_rate(
-            require_eu_member_state("RO"),
-            IvaRateKind("general"),
-            date(2025, 8, 1),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("21")
-        assert lookup_rate(
-            require_eu_member_state("RO"),
-            IvaRateKind("reduced"),
-            date(2025, 7, 31),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("9")
-        assert lookup_rate(
-            require_eu_member_state("RO"),
-            IvaRateKind("reduced"),
-            date(2025, 8, 1),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("11")
-        assert lookup_rate(
-            require_eu_member_state("FI"),
-            IvaRateKind("reduced"),
-            date(2025, 12, 31),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("14")
-        assert lookup_rate(
-            require_eu_member_state("FI"),
-            IvaRateKind("reduced"),
-            date(2026, 1, 1),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("13.5")
-        assert lookup_rate(
-            require_eu_member_state("LT"),
-            IvaRateKind("reduced"),
-            date(2025, 12, 31),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("9")
-        assert lookup_rate(
-            require_eu_member_state("LT"),
-            IvaRateKind("reduced"),
-            date(2026, 1, 1),
-            operation=_authority_operation_for_test,
-        ).pct == Decimal("12")
+        changes = _rate_changes(_load_official_texts())
+        day = timedelta(days=1)
+
+        def pct(member_state: str, kind: str, on_date: date) -> Decimal:
+            return lookup_rate(
+                require_eu_member_state(member_state),
+                IvaRateKind(kind),
+                on_date,
+                operation=_authority_operation_for_test,
+            ).pct
+
+        assert pct("EE", "general", changes["EE"] - day) == Decimal("22")
+        assert pct("EE", "general", changes["EE"]) == Decimal("24")
+        assert pct("RO", "general", changes["RO"] - day) == Decimal("19")
+        assert pct("RO", "general", changes["RO"]) == Decimal("21")
+        assert pct("RO", "reduced", changes["RO"] - day) == Decimal("9")
+        assert pct("RO", "reduced", changes["RO"]) == Decimal("11")
+        assert pct("FI", "reduced", changes["FI"] - day) == Decimal("14")
+        assert pct("FI", "reduced", changes["FI"]) == Decimal("13.5")
+        assert pct("LT", "reduced", changes["LT"] - day) == Decimal("9")
+        assert pct("LT", "reduced", changes["LT"]) == Decimal("12")
         with pytest.raises(IvaRateNotFoundError):
             lookup_published_rate(
                 require_eu_member_state("DE"),
                 IvaRateKind("general"),
-                date(2025, 6, 30),
+                changes["EE"] - day,
                 operation=_authority_operation_for_test,
             )
         for member_state in (
@@ -348,5 +371,8 @@ def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
         ):
             with pytest.raises(IvaRateNotFoundError):
                 lookup_published_rate(
-                    member_state, IvaRateKind("zero"), date(2026, 7, 13), operation=_authority_operation_for_test
+                    member_state,
+                    IvaRateKind("zero"),
+                    date(filing_year_envelope().horizon, 7, 13),
+                    operation=_authority_operation_for_test,
                 )

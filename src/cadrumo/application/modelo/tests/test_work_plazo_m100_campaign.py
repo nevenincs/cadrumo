@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -16,23 +17,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "e" * 64
 
-# Campaign windows: Orden HAC/265/2024, art. 8 (IRPF ejercicio 2023, 3 de abril a
-# 1 de julio de 2024) and Orden HAC/277/2026, art. 7 (IRPF ejercicio 2025, 8 de
-# abril a 30 de junio de 2026).
+# The renta campaign of an exercise closes on 30 June of the following year
+# (Reglamento del IRPF, art. 61.1 as the annual order applies it); a close that
+# falls on a weekend runs to the next business day. The expectation is computed
+# from that rule, so every exercise whose edition reaches filing grade is checked.
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "opens_on", "closes_on"),
-    (
-        (2023, date(2024, 4, 3), date(2024, 7, 1)),
-        (2025, date(2026, 4, 8), date(2026, 6, 30)),
-    ),
-)
-def test_m100_tax_year_work_unit_resolves_its_following_campaign_deadline(
-    filing_year: int,
-    opens_on: date,
-    closes_on: date,
-) -> None:
+def _campaign_close(filing_year: int) -> date:
+    nominal = date(filing_year + 1, 6, 30)
+    weekend_days_to_monday = 7 - nominal.weekday() if nominal.weekday() >= 5 else 0
+    return nominal + timedelta(days=weekend_days_to_monday)
+
+
+@pytest.mark.parametrize("filing_year", filing_grade_exercises("100"))
+def test_m100_tax_year_work_unit_resolves_its_following_campaign_deadline(filing_year: int) -> None:
+    closes_on = _campaign_close(filing_year)
+    reference_on = date(filing_year + 1, 5, 15)
     period = Period.from_year_and_code(filing_year, "0A")
     revision_id = published_snapshot(
         "100",
@@ -58,10 +58,10 @@ def test_m100_tax_year_work_unit_resolves_its_following_campaign_deadline(
         updated_at=created_at,
     )
 
-    posture = modelo_work_deadline_posture(work_unit, reference_on=opens_on)
+    posture = modelo_work_deadline_posture(work_unit, reference_on=reference_on)
 
     assert posture is not None
     assert posture.closes_on == closes_on
-    assert posture.days_remaining == (closes_on - opens_on).days
+    assert posture.days_remaining == (closes_on - reference_on).days
     assert posture.days_overdue is None
     assert posture.conditional_recargo_preview is None

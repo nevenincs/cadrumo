@@ -16,10 +16,13 @@ from ...calculations.registry.facts.atoms import TAGGED_FACT_ATOM_CONTEXT
 from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import calculation_revision_rendering as rendering
 from ..calculation_revision_rendering import CalculationRenderingSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +41,7 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
 
 def _saved(operation: PinnedAuthorityOperation) -> str:
     return CalculationRenderingSnapshot.capture(
-        operation.snapshot("303", filing_year=2026, period="1T"),
+        operation.snapshot("303", filing_year=_YEAR, period="1T"),
         authority_generation=operation.pin().logical_generation,
     ).model_dump_json()
 
@@ -167,7 +170,7 @@ def test_a_full_memo_keeps_its_entries_instead_of_evicting_them(
 ) -> None:
     first_saved = _saved(operation)
     second_saved = CalculationRenderingSnapshot.capture(
-        operation.snapshot("303", filing_year=2026, period="2T"),
+        operation.snapshot("303", filing_year=_YEAR, period="2T"),
         authority_generation=operation.pin().logical_generation,
     ).model_dump_json()
     budget = len(TypeAdapter(object).dump_json(json.loads(first_saved)["registry_snapshot"]))
