@@ -151,6 +151,7 @@ def test_each_ledger_change_command_names_its_operation_and_a_shared_result() ->
         ("app_ledger_inventory_restore", ("restore",), "ledger.inventory.restore"),
         ("app_ledger_inventory_movement_correct", ("movement", "correct"), "ledger.inventory.movement.correct"),
         ("app_ledger_inventory_movement_reverse", ("movement", "reverse"), "ledger.inventory.movement.reverse"),
+        ("app_ledger_inventory_movement_claim", ("movement", "claim"), "ledger.inventory.movement.claim"),
     ):
         assert rows[("app", "ledger", "inventory", *path)] == operation
         assert specs[key].result_schema.identity == operation

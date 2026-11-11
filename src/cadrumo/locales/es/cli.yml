@@ -357,6 +357,10 @@ cli:
           desde un fichero.
         authority_invalid: El objeto de autoridad de cierre no es válido para este
           registro de existencias.
+        claim_transaction_mismatch: Indica el identificador de 64 caracteres de la
+          transacción del libro con `--ledger-row claimed`, y solo entonces.
+        claimed_transaction_id_help: Transacción del libro que registra la compra;
+          indícala con `claimed` y solo entonces.
         closing_authority_record_help: Registrar atómicamente la autoridad acreditada
           del cierre de existencias
         closing_value_file_help: Archivo JSON con los datos del valor de cierre.
@@ -383,9 +387,15 @@ cli:
         inspect_help: Muestra un inventario con sus movimientos vigentes y su historial
           conservado.
         label_help: Nombre del inventario.
+        ledger_row_help: 'Lo que indicas de la compra respecto al libro: `claimed`
+          (nombra una transacción), `none` (ninguna transacción del libro la registra)
+          o `unstated`.'
         list_help: Lista los registros de existencias del perfil activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al registro
           de existencias
+        movement_claim_help: Indica qué transacción del libro registra una compra,
+          indica que ninguna lo hace o borra la indicación; una transacción reclamada
+          deja las casillas de gasto del libro.
         movement_correct_help: Sustituye un movimiento por otro corregido; el original
           se queda en el historial.
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)

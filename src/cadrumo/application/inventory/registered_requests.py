@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -60,6 +60,7 @@ INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.inventory.describe"
 INVENTORY_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.correct"
 INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.movement.correct"
 INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID = "ledger.inventory.movement.reverse"
+INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID = "ledger.inventory.movement.claim"
 INVENTORY_RETIRE_OPERATION_DEFINITION_ID = "ledger.inventory.retire"
 INVENTORY_RESTORE_OPERATION_DEFINITION_ID = "ledger.inventory.restore"
 
@@ -91,6 +92,7 @@ InventoryLedgerChangeOperationId = Literal[
     "correct",
     "movement.correct",
     "movement.reverse",
+    "movement.claim",
     "retire",
     "restore",
 ]
@@ -321,6 +323,20 @@ class InventoryMovementReverseRequest(InventoryLedgerChangeRequest):
 
     target_movement_id: str = Field(min_length=1, max_length=64)
     reason: InventoryCorrectionReason
+
+
+class InventoryMovementClaimRequest(InventoryLedgerChangeRequest):
+    """State which ledger transaction books one purchase, that none does, or clear the statement."""
+
+    movement_id: str = Field(min_length=1, max_length=64)
+    ledger_row: PurchaseLedgerRow
+    claimed_transaction_id: TransactionId | None = None
+
+    @model_validator(mode="after")
+    def _transaction_only_when_claimed(self) -> InventoryMovementClaimRequest:
+        if (self.ledger_row is PurchaseLedgerRow.CLAIMED) != (self.claimed_transaction_id is not None):
+            raise ValueError("a transaction is named exactly when the purchase claims one")
+        return self
 
 
 class InventoryRetireRequest(InventoryLedgerChangeRequest):
@@ -579,6 +595,7 @@ __all__ = [
     "INVENTORY_INSPECT_OPERATION_DEFINITION_ID",
     "INVENTORY_LIST_OPERATION_DEFINITION_ID",
     "INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID",
     "INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID",
     "INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID",
     "INVENTORY_NOT_FOUND_REFUSAL_CODE",
@@ -600,6 +617,7 @@ __all__ = [
     "InventoryLedgerChangeRequest",
     "InventoryListRequest",
     "InventoryMovementAddRequest",
+    "InventoryMovementClaimRequest",
     "InventoryMovementCorrectRequest",
     "InventoryMovementReverseRequest",
     "InventoryMutationOperationId",

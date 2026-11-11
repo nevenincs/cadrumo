@@ -225,6 +225,7 @@ _LOCAL_WRITES: Final = (
     "ledger.inventory.describe",
     "ledger.inventory.evidence.add",
     "ledger.inventory.movement.add",
+    "ledger.inventory.movement.claim",
     "ledger.inventory.movement.correct",
     "ledger.inventory.movement.reverse",
     "ledger.inventory.restore",
