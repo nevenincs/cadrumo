@@ -12,7 +12,7 @@ from ..idle_timeout import DEFAULT_IDLE_LOCK_MINUTES, IdleEvaluation, evaluate_i
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime(1980, 5, 14, 12, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
 

@@ -25,7 +25,7 @@ from cadrumo.domain.buckets.event import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EVIDENCE_BYTES = b"%PDF-1.7 invoice evidence \x00\xff bytes"
-_INSTANT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 def _seed_bucket_event(bucket_id: str) -> None:

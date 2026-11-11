@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TypedDict
 
@@ -37,8 +37,9 @@ from .digest_inventory import list_digests
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _STORE_LOGGER_NAME = "cadrumo.adapters.persistence.storage.secret_store.store"
 
-_SECRET_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
-_SECRET_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
+_SECRET_CREATED_AT = datetime(1980, 5, 28, 11, 55, 0, tzinfo=UTC)
+# Far-future expiry: 26663 days after creation, so no case reaches it.
+_SECRET_EXPIRES_AT = _SECRET_CREATED_AT + timedelta(days=26663)
 
 
 @pytest.fixture
@@ -93,7 +94,7 @@ def test_secret_record_validation_rejects_invalid_fields() -> None:
             "naive-created-at",
             {
                 "classification": SensitivityClass.SECRET,
-                "created_at": datetime(2026, 4, 27, 12, 0, 0),
+                "created_at": datetime(1980, 4, 27, 12, 0, 0),
             },
         ),
         (
@@ -148,8 +149,8 @@ class TestPutAndGet:
             value=b"sensitive-payload-strict",
             classification=SensitivityClass.SECRET,
             metadata={"issued_by": "test-suite", "scope": "full-record"},
-            created_at=datetime(2026, 5, 21, 11, 0, 0, tzinfo=UTC),
-            expires_at=datetime(2026, 5, 21, 12, 0, 0, tzinfo=UTC),
+            created_at=datetime(1980, 5, 21, 11, 0, 0, tzinfo=UTC),
+            expires_at=datetime(1980, 5, 21, 12, 0, 0, tzinfo=UTC),
         )
 
         store.put(record)

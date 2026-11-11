@@ -112,7 +112,7 @@ def test_apply_cotejo_refuses_an_adopted_value_at_a_path_the_schema_never_declar
                 adopted=(
                     UserProfileFact(
                         path=_UNDECLARED_CENSO_PATH,
-                        value="2024-03-01",
+                        value="1980-03-01",
                         source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                     ),
                 ),
@@ -149,7 +149,7 @@ def test_apply_cotejo_refuses_an_adopted_certificate_value_in_the_wrong_shape(tm
                 adopted=(
                     UserProfileFact(
                         path=_TYPED_CENSO_PATH,
-                        value="01/03/2024",
+                        value="01/03/1980",
                         source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                     ),
                 ),
@@ -181,7 +181,7 @@ def test_apply_cotejo_still_commits_a_valid_reconciliation_on_an_incomplete_prof
             adopted=(
                 UserProfileFact(
                     path=_TYPED_CENSO_PATH,
-                    value="2024-03-01",
+                    value="1980-03-01",
                     source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
                 ),
             ),
@@ -196,7 +196,7 @@ def test_apply_cotejo_still_commits_a_valid_reconciliation_on_an_incomplete_prof
         ).load(profile_id)
         assert record.record_revision == before + 1
         values = {fact.path: fact.value for fact in record.facts}
-        assert str(values[_TYPED_CENSO_PATH]) == "2024-03-01"
+        assert str(values[_TYPED_CENSO_PATH]) == "1980-03-01"
         assert values["censo.divergencia.0.artefact_value"] == "ALTA EN EL CENSO"
         adopted_fact = next(fact for fact in record.facts if fact.path == _TYPED_CENSO_PATH)
         assert adopted_fact.source == PROVENANCE_SOURCE_CENSO_ARTEFACT, (

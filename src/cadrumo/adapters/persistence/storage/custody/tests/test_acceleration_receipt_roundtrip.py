@@ -57,7 +57,7 @@ from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody, uncommitted_sign
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime(1980, 8, 14, 12, 0, 0, tzinfo=UTC)
 _IDLE_MINUTES = 15
 _ABSOLUTE_MINUTES = 240
 _EPOCH = "test-dek-epoch-1"
@@ -153,7 +153,7 @@ class TestSessionReceiptAad:
                 dek_epoch=_EPOCH,
                 login_id=RECEIPT_LOGIN_ID,
                 sign_in=_SIGN_IN,
-                issued_at=datetime(2026, 8, 14, 12, 0, 0),
+                issued_at=datetime(1980, 8, 14, 12, 0, 0),
                 idle_deadline=_NOW + timedelta(minutes=15),
                 absolute_deadline=_NOW + timedelta(minutes=240),
             )
@@ -285,7 +285,7 @@ outcome, dek = resume_profile_session_with_key(
     profile_id=profile_id,
     custody_generation=1,
     dek_epoch="test-dek-epoch-1",
-    now=datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC),
+    now=datetime(1980, 8, 14, 12, 0, 0, tzinfo=UTC),
 )
 try:
     finished.write_text("resumed" if outcome.resumed else f"refused:{outcome.refusal}", encoding="utf-8")
@@ -486,7 +486,7 @@ outcome, _ = resume_profile_session_with_key(
     profile_id=UUID(__import__('sys').argv[2]),
     custody_generation=1,
     dek_epoch='test-dek-epoch-1',
-    now=datetime.fromisoformat('2026-08-14T12:00:00+00:00'),
+    now=datetime.fromisoformat('1980-08-14T12:00:00+00:00'),
 )
 print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
 """
