@@ -49,7 +49,8 @@ from ...aggregation.m303_arrivals import (
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
-from ..export_producer import filing_producer_values, m303_filing_lexicals, m303_profile_lexicals
+from ..export_producer import filing_producer_values
+from ..export_producer_m303 import m303_filing_lexicals, m303_profile_lexicals
 from ..producer_snapshot import (
     FilingProducerSnapshot,
     FilingProducerSnapshotError,

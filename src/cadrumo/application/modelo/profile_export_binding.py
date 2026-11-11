@@ -47,7 +47,7 @@ from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..filing.export_producer import M303ProfileLexicals, m303_profile_lexicals
+from ..filing.export_producer_m303 import M303ProfileLexicals, m303_profile_lexicals
 from ..filing.identity_contact_producer import identity_contact_producer_values
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 

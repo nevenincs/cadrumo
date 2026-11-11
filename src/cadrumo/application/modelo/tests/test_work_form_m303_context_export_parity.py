@@ -92,13 +92,14 @@ from ..work_form_service import load_modelo_work_form
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "13000000-0000-4000-8000-000000000456"
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
 _TAX_ID = "12345678Z"
 _FIRST_PERIOD = "1T"
 _LAST_PERIOD = "4T"
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None
 _YEARS = _SUPPORT.years
+# The instant records are created at is the first day of the registry's own horizon year.
+_NOW = datetime(_SUPPORT.horizon, 1, 1, tzinfo=UTC)
 
 _IDENTITY_FACTS = {
     "identity.tax_id": _TAX_ID,

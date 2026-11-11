@@ -71,7 +71,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
-from ..filing.export_producer import (
+from ..filing.export_producer_m303 import (
     M303_LEXICAL_PRODUCER_KEYS,
     M303FilingLexicals,
     M303ProfileLexicals,
