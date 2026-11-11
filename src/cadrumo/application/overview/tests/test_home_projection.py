@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operator_actions.models import DeclaredNextAction
 from ..calendar_models import (
     OverviewAeatSubmissionState,
@@ -27,7 +28,8 @@ from ..home import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 2, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 9, 2, 10, 0, tzinfo=UTC)
 _AVAILABLE = HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=_NOW)
 _LOCKED = HomeZoneState(availability=HomeAvailability.LOCKED, reason_code="profile.locked")
 
@@ -35,9 +37,9 @@ _LOCKED = HomeZoneState(availability=HomeAvailability.LOCKED, reason_code="profi
 def _agenda_entry(
     *,
     modelo: str = "303",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "3T",
-    due_on: date = date(2026, 10, 20),
+    due_on: date = date(_YEAR, 10, 20),
 ) -> HomeAgendaEntry:
     return HomeAgendaEntry(
         modelo=modelo,
@@ -151,9 +153,9 @@ def _never_captured_projection(agenda: HomeAgendaEntry) -> HomeProjectionV1:
 def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
     agenda = HomeAgendaEntry(
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "3T"),
-        due_on=date(2026, 10, 20),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        due_on=date(_YEAR, 10, 20),
         period_state=OverviewPeriodState.DUE,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
         aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
@@ -168,8 +170,8 @@ def test_agenda_requires_chronological_order_and_preview_bound() -> None:
     def entry(due_on: date, period_code: str) -> HomeAgendaEntry:
         return HomeAgendaEntry(
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, period_code),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period_code),
             due_on=due_on,
             period_state=OverviewPeriodState.DUE,
             local_filing_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
@@ -186,7 +188,7 @@ def test_agenda_requires_chronological_order_and_preview_bound() -> None:
             ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
             agenda_state=_AVAILABLE,
             agenda_evidence_state=_AVAILABLE,
-            agenda=(entry(date(2026, 10, 21), "3T"), entry(date(2026, 10, 20), "2T")),
+            agenda=(entry(date(_YEAR, 10, 21), "3T"), entry(date(_YEAR, 10, 20), "2T")),
             messages_state=_AVAILABLE,
             messages_requiring_attention=0,
         )
@@ -199,7 +201,7 @@ def test_agenda_rejects_duplicate_natural_address_before_tui_rendering() -> None
         _projection(
             agenda=(
                 duplicate,
-                duplicate.model_copy(update={"due_on": date(2026, 10, 21)}),
+                duplicate.model_copy(update={"due_on": date(_YEAR, 10, 21)}),
             )
         )
 
@@ -207,9 +209,9 @@ def test_agenda_rejects_duplicate_natural_address_before_tui_rendering() -> None
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period_code"),
     (
-        ("130", 2026, "3T"),
-        ("303", 2027, "3T"),
-        ("303", 2026, "2T"),
+        ("130", _YEAR, "3T"),
+        ("303", _YEAR - 1, "3T"),
+        ("303", _YEAR, "2T"),
     ),
 )
 def test_agenda_accepts_a_distinct_natural_address(
@@ -233,8 +235,8 @@ def test_declaration_state_is_closed_and_period_year_must_match() -> None:
         HomeDeclarationResume(
             work_unit_id="a" * 64,
             modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2026, "3T"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR, "3T"),
             name="IVA third quarter",
             state=HomeDeclarationState.NEEDS_REVIEW,
         )
@@ -243,9 +245,9 @@ def test_declaration_state_is_closed_and_period_year_must_match() -> None:
 def test_never_captured_aeat_evidence_refuses_an_observed_submission() -> None:
     agenda = HomeAgendaEntry(
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "3T"),
-        due_on=date(2026, 10, 20),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "3T"),
+        due_on=date(_YEAR, 10, 20),
         period_state=OverviewPeriodState.DUE,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
         aeat_submission_state=OverviewAeatSubmissionState.ACCEPTED,

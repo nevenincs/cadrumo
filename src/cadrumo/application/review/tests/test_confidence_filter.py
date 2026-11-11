@@ -17,6 +17,7 @@ import pytest
 
 from ....core.config import Settings, override_settings
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -26,6 +27,8 @@ from ..operator import project_review_queue
 from .draft_review_test_support import draft_review_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 
@@ -44,8 +47,8 @@ def _build_settings(tmp_path: Path) -> Settings:
 def _raw(*, source_row_index: int) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=f"prov-{source_row_index}",
-        booked_date=date(2026, 4, 10),
-        value_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
+        value_date=date(_YEAR, 4, 10),
         amount=Decimal("12.34"),
         currency="EUR",
         counterparty=None,
@@ -55,7 +58,7 @@ def _raw(*, source_row_index: int) -> RawTransaction:
             source_sha256="a" * 64,
             source_row_index=source_row_index,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="csv",
         ),
         raw_fields={"Concepto": f"Row {source_row_index}"},
@@ -72,7 +75,7 @@ def _transaction(*, source_row_index: int, confidence: Decimal | None) -> Transa
         # classification state and must surface low-confidence decisions
         # regardless of disposition.
         "business_classification": BusinessClassification.BUSINESS,
-        "classified_at": datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        "classified_at": datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
         "classification_confidence": confidence,
     }
     return Transaction.model_validate(payload)

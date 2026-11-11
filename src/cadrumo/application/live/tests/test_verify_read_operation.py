@@ -66,7 +66,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 9, 29, 10, 30, tzinfo=UTC)
+_NOW = datetime(1980, 9, 29, 10, 30, tzinfo=UTC)
 _NIF = "B00015016"
 
 
@@ -308,9 +308,9 @@ def test_list_executor_preserves_service_filtering_and_capture_order(monkeypatch
     import cadrumo.application.live.verify_read_operation as operation
 
     observations = (
-        _observation("a" * 64, checked_at=datetime(2026, 9, 28, tzinfo=UTC)),
+        _observation("a" * 64, checked_at=datetime(1980, 9, 28, tzinfo=UTC)),
         _observation("b" * 64, surface=VerifySurface.TGVI),
-        _observation("c" * 64, checked_at=datetime(2026, 9, 29, tzinfo=UTC)),
+        _observation("c" * 64, checked_at=datetime(1980, 9, 29, tzinfo=UTC)),
     )
     persistence = _MemoryPersistence(observations)
     factory_buckets: list[str] = []

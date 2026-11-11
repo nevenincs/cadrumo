@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...ledger.models import LedgerStatusReport
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
 from ..pipeline_health import ModeloHealthRow, ModeloReadinessState, PipelineHealthReport
@@ -17,14 +18,16 @@ from ..pipeline_projection import PipelineHealthSnapshot, PipelineLedgerSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _report(*, bucket_id: str = str(_PROFILE), period: Period | None = _PERIOD) -> PipelineHealthReport:
     return PipelineHealthReport(
         bucket_id=bucket_id,
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         ledger=LedgerStatusReport(
             bucket_id=bucket_id,
@@ -88,7 +91,7 @@ def test_snapshot_rejects_unknown_shape_and_noncanonical_period() -> None:
     with pytest.raises(ValidationError):
         PipelineLedgerSnapshot.model_validate(snapshot.ledger.model_dump() | {"total_count": -1})
     with pytest.raises(ValidationError):
-        PipelineHealthSnapshot.model_validate(snapshot.model_dump() | {"period": {"filing_year": 2025, "code": "bad"}})
+        PipelineHealthSnapshot.model_validate(snapshot.model_dump() | {"period": {"filing_year": _YEAR, "code": "bad"}})
 
 
 def test_action_snapshot_preserves_decimal_integer_and_string_and_refuses_invalid_arguments() -> None:
@@ -102,7 +105,7 @@ def test_action_snapshot_preserves_decimal_integer_and_string_and_refuses_invali
                 source=ActionArgumentSource.VERDICT_CONTEXT,
                 source_key=name,
             )
-            for name, value in (("amount", Decimal("12.30")), ("year", 2025), ("modelo", "130"))
+            for name, value in (("amount", Decimal("12.30")), ("year", _YEAR), ("modelo", "130"))
         ),
     )
     snapshot = PipelineNextActionSnapshot.from_action(action)

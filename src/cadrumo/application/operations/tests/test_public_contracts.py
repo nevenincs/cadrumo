@@ -83,7 +83,7 @@ from ..subject_reference import OperationSubjectReferenceV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+_NOW = datetime(1980, 8, 24, 12, tzinfo=UTC)
 _OPERATION_ID = "1" * 64
 _INTERACTION_ID = "2" * 64
 _DIGEST = "3" * 64

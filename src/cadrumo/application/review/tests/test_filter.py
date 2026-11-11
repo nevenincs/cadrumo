@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.diagnostics import LedgerImportDiagnosticKind
@@ -22,6 +23,8 @@ from ..filter import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _REDACTED = "<redacted>"
 _STATUS_REDACTED = f"status={_REDACTED}"
@@ -93,7 +96,7 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
         [
             "status=pending",
             "period=1T",
-            "year=2026",
+            f"year={_YEAR}",
             "issue=gap",
             "import=import_003",
             "direction=outgoing",
@@ -101,7 +104,7 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
         ],
     )
     assert spec.status is LedgerReviewStatus.PENDING
-    assert spec.period == Period.from_year_and_code(2026, "1T")
+    assert spec.period == Period.from_year_and_code(_YEAR, "1T")
     assert spec.issue is LedgerImportDiagnosticKind.GAP
     assert spec.import_id == "import_003"
     assert spec.direction is TransactionDirection.OUTGOING
@@ -117,7 +120,7 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
     ]
 
 
-@pytest.mark.parametrize("clauses", (["period=1T"], ["year=2026"]))
+@pytest.mark.parametrize("clauses", (["period=1T"], [f"year={_YEAR}"]))
 def test_ledger_spec_requires_period_and_year_pairing(clauses: list[str]) -> None:
     """A bare ``period=`` token with no ``year=`` clause refuses (the pair travels together)."""
     with pytest.raises(FilterParseError):
@@ -127,7 +130,7 @@ def test_ledger_spec_requires_period_and_year_pairing(clauses: list[str]) -> Non
 @pytest.mark.parametrize("period_code", ("Q1", "quarter-1", "1P", "not-a-period"))
 def test_ledger_spec_rejects_non_filterable_period_values(period_code: str) -> None:
     with pytest.raises(FilterParseError) as exc:
-        LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])
+        LedgerReviewFilterSpec.from_strings([f"period={period_code}", f"year={_YEAR}"])
 
     assert exc.value.reason == "invalid-value-ledger-period"
     assert exc.value.safe_token == f"period={_REDACTED}"
@@ -298,7 +301,7 @@ def test_ledger_spec_is_frozen() -> None:
 
     spec = LedgerReviewFilterSpec.from_strings([])
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        spec.period = Period.from_year_and_code(2026, "1T")
+        spec.period = Period.from_year_and_code(_YEAR, "1T")
 
 
 def test_specs_reject_inconsistent_construction() -> None:
@@ -315,10 +318,10 @@ def test_specs_reject_inconsistent_construction() -> None:
     with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
         DeclaracionReviewFilterSpec(clauses=(), status=DeclaracionReviewStatus.PENDING)
 
-    clauses = parse_filter_clauses(["period=2T", "year=2026"])
+    clauses = parse_filter_clauses(["period=2T", f"year={_YEAR}"])
 
     with pytest.raises(ValueError, match=r"clauses\[period/year\] / period field disagree"):
         LedgerReviewFilterSpec(
             clauses=clauses,
-            period=Period.from_year_and_code(2026, "1T"),
+            period=Period.from_year_and_code(_YEAR, "1T"),
         )
