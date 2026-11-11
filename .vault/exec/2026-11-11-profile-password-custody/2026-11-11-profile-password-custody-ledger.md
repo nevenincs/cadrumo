@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:958071d928f1b2584dcdede17af06cc43a0ac604f1ab9f2eb04302d47c5bbaa6'
+body_hash: 'sha256:4d3ac389023b80207d0f1e3a236b008c93e136184ee19c5b1e057aa545b7d6d3'
 related:
   - "[[2026-11-11-profile-password-custody-plan]]"
 ---
@@ -47,3 +47,9 @@ related:
 - `S01` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
 - `S01` `verify:` `pytest custody/tests/test_kdf_background_yield.py test_kdf_supervision.py test_kdf_cancellation.py` -> `pass`
 - `S01` `by:` `PERF-CUSTODY`
+- `S02` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_strengthening_mint.py`
+- `S02` `verify:` `pytest custody rotation, replacement, crash-recovery, kdf supervision, background-yield and strengthening-mint tests` -> `pass`
+- `S02` `by:` `PERF-CUSTODY`
