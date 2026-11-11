@@ -440,7 +440,9 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     }
     legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
     refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
-    refusal_stages = {(value.modelo, value.period): value.refusal_stage for value in stated}
+    refusal_stages = {
+        (value.modelo, value.period): value.refusal_stage for value in stated if value.refusal is not None
+    }
     not_sourced = {
         (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
         for value in stated
