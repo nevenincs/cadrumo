@@ -56,6 +56,8 @@ _ERROR_CODE: Final = re.compile(r"(?:ERROR|REFUSED)(?:_[A-Z0-9]+)+")
 #: A calendar coverage advice the overview gives for a modelo it cannot place in a window.
 _CALENDAR_ADVICE: Final = ("applicable_window_missing", "applicability_undetermined")
 _YEAR_TOKEN = re.compile(r"(?P<anchor>horizon|floor)(?:(?P<sign>[+-])(?P<offset>[0-9]+))?")
+#: A year token braced inside a [fields] key, which names a profile leaf keyed by one filing year.
+_FIELD_KEY_YEAR = re.compile(r"\{(?P<token>[^{}]*)\}")
 _REVERSE_CHARGE_SUFFIX = "_reverse_charge"
 _IDENTITY_FIELDS = ("value", "name", "surnames", "legal_name")
 
@@ -1708,7 +1710,7 @@ def parse_persona(
             ProfileAnswer(question_id=key, value=_profile_value(key, value, f"{where} [profile].{key}", roles))
             for key, value in profile.items()
         ),
-        fields=tuple(FieldValue(path=key, value=cast(str, value)) for key, value in fields.items()),
+        fields=_stated_fields(fields, envelope, where),
         activities=tuple(activities),
         elections=tuple(elections),
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
@@ -1887,6 +1889,21 @@ def _dates(persona: Persona) -> list[PersonaDate]:
     found.extend(filing.presented for filing in persona.aeat_filings)
     found.extend(deadline.statutory_end for deadline in persona.expectations.deadlines)
     return found
+
+
+def _stated_fields(fields: _Table, envelope: YearEnvelope, where: str) -> tuple[FieldValue, ...]:
+    """Resolve the year token a [fields] key may carry; a leaf keyed to a year below the floor is not stated."""
+    stated: list[FieldValue] = []
+    for key, value in fields.items():
+        match = _FIELD_KEY_YEAR.search(key)
+        if match is None:
+            stated.append(FieldValue(path=key, value=cast(str, value)))
+            continue
+        token = YearToken.parse(match["token"], where=f"{where} [fields].{key}")
+        if token.precedes_floor(envelope):
+            continue
+        stated.append(FieldValue(path=_FIELD_KEY_YEAR.sub(str(token.resolve(envelope)), key), value=cast(str, value)))
+    return tuple(stated)
 
 
 def _check_years(persona: Persona, envelope: YearEnvelope) -> None:

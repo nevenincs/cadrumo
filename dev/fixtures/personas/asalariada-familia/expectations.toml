@@ -70,6 +70,8 @@ derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
 Guardería increment: 11 monthly fees of 220.00 = 2420.00 paid to an authorised escuela infantil, capped at 1000.00.
 The total 2200.00 is below the mother's cotizaciones 2332.80, so the cotización limit does not bind.
+For ejercicio 2022 the increment is also limited to the cotizaciones devengadas after the birth (Manual práctico de Renta 2022,
+cap. 18, "Límites de la deducción", a) and b); the worked case ends "Límite del incremento"); 1000.00 is below 2332.80, so 0613 is unchanged.
 """
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"
