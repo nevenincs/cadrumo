@@ -41,14 +41,14 @@ description = "Elegibilidad de la escala separada por anualidades por alimentos 
 legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
 
 [[derived_selectors]]
-pattern = "renta_family.incremento_guarderia_{filing_year}"
+pattern = "renta_family.incremento_guarderia"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente."
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
 
 [[derived_selectors]]
-pattern = "renta_family.incremento_guarderia_cotizaciones_{filing_year}"
+pattern = "renta_family.incremento_guarderia_cotizaciones"
 derived_from = ["renta_family.descendiente"]
 entry_surface = "aeat config profile descendiente"
 description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente, además, por las cotizaciones de la madre tras su nacimiento (art. 81.2 LIRPF hasta la Ley 31/2022)."

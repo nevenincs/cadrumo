@@ -35,20 +35,19 @@ from ..profile_derived_facts import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SELECTOR_PREFIX = "renta_family.incremento_guarderia_"
+_KEY = "renta_family.incremento_guarderia"
 
 
 def _declaring_edition() -> int:
-    """The newest authored Modelo 100 edition whose bindings declare the year-keyed increment selector."""
+    """The newest authored Modelo 100 edition whose bindings declare the increment selector."""
     declaring = authored_revisions_where(
         "100",
-        lambda revision: any(key.startswith(_SELECTOR_PREFIX) for key in declared_profile_selectors(revision)),
+        lambda revision: _KEY in declared_profile_selectors(revision),
     )
     return declaring[-1].valid_from.year
 
 
 _YEAR = _declaring_edition()
-_KEY = f"renta_family.incremento_guarderia_{_YEAR}"
 
 
 def _snapshot(year: int = _YEAR) -> RegistrySnapshot:
