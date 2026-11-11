@@ -33,7 +33,6 @@ from dev.corpus.record_design_inventory import (  # noqa: E402
     CURRENT_PAGE_KEYS,
     HISTORICAL_PAGE_KEYS,
     PAGES,
-    REQUIRED,
     RETRIEVED_AT,
     RequiredArtifact,
 )
@@ -60,6 +59,7 @@ from .record_design_policy import (  # noqa: E402
     MANIFEST_NAME,
     UNATTESTED_CORPUS_FILES,
 )
+from .record_design_required import REQUIRED  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 
