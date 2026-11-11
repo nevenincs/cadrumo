@@ -19,7 +19,7 @@ def test_rows_come_back_in_stored_order_with_only_the_leaves_they_state() -> Non
     rows = ascendant_rows_from_facts(
         {
             f"{_OBJECT}.1.birth_date": "1951-11-30",
-            f"{_OBJECT}.1.fallecimiento": "2025-02-01",
+            f"{_OBJECT}.1.fallecimiento": "1999-02-01",
             f"{_OBJECT}.0.birth_date": "1948-03-04",
             f"{_OBJECT}.0.nif": "12345678Z",
             f"{_OBJECT}.0.convivientes": "2",
@@ -29,7 +29,7 @@ def test_rows_come_back_in_stored_order_with_only_the_leaves_they_state() -> Non
 
     assert [_leaves(row) for row in rows] == [
         {"nif": "12345678Z", "birth_date": "1948-03-04", "convivientes": "2"},
-        {"birth_date": "1951-11-30", "fallecimiento": "2025-02-01"},
+        {"birth_date": "1951-11-30", "fallecimiento": "1999-02-01"},
     ]
 
 
@@ -47,7 +47,7 @@ def test_a_blank_value_a_foreign_leaf_and_a_foreign_object_are_not_a_row() -> No
             f"{_OBJECT}.0.birth_date": "   ",
             f"{_OBJECT}.0.nombre": "not a leaf an ascendant row states",
             f"{_OBJECT}.x.birth_date": "1948-03-04",
-            "renta_family.descendiente.0.birth_date": "2015-04-01",
+            "renta_family.descendiente.0.birth_date": "1985-04-01",
             "renta_family.ascendientes_count": "0",
         }
     )
