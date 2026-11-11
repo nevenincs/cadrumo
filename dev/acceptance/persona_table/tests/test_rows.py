@@ -163,3 +163,15 @@ def test_a_baseline_line_holds_year_tokens_and_reads_back_on_the_horizon() -> No
     assert (restored.key, restored.verdict, restored.horizon) == (row.key, row.verdict, row.horizon)
     with pytest.raises(ValueError, match="needs the registry horizon"):
         TableRow.from_json(line)
+
+
+def test_every_return_with_stated_casillas_has_an_oracle_even_beside_concept_only_values() -> None:
+    envelope = _envelope()
+    for persona_id in persona_ids():
+        persona = _persona(persona_id)
+        planned = {row.key: row for row in planned_rows(persona, envelope.horizon, envelope)}
+        for value in persona.expectations.values:
+            if value.casillas and value.counterparty is None:
+                key = (persona_id, value.modelo, value.year.resolve(envelope), value.period)
+                assert planned[key].has_values, key
+                assert set(value.legal_ref) <= set(planned[key].sources), key

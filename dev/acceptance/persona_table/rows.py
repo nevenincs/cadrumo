@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.tests.personas import Persona, PersonaCatalogueError, YearEnvelope, YearToken
+from cadrumo.tests.personas import ExpectedValue, Persona, PersonaCatalogueError, YearEnvelope, YearToken
 
 
 class Stage(StrEnum):
@@ -239,23 +239,25 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     ``envelope.floor..horizon`` is not a row of this replay.
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
-    values = {}
+    stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
     for value in persona.expectations.values:
         if value.counterparty is not None:
             continue
-        values[(value.modelo, _year(value.year, shifted), value.period)] = value
+        key = (value.modelo, _year(value.year, shifted), value.period)
+        found = stated.setdefault(key, [])
+        if value.casillas or value.not_sourced or value.refusal is not None:
+            found.append(value)
     keys = {
         (item.modelo, _year(item.year, shifted), period)
         for item in persona.expectations.obligations
         if item.applicable is True
         for period in item.periods
-    } | set(values)
+    } | set(stated)
     rows = []
     for modelo, year, period in sorted(keys, key=lambda key: (key[0], key[1] or 0, key[2])):
         if year is None:
             continue
-        value = values.get((modelo, year, period))
-        stated = value is not None and bool(value.casillas or value.not_sourced or value.refusal is not None)
+        values = stated.get((modelo, year, period), [])
         rows.append(
             PlannedRow(
                 persona=persona.id,
@@ -263,12 +265,22 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
                 year=year,
                 period=period,
                 horizon=horizon,
-                has_values=stated,
-                grounding=value.grounding if value is not None else "none",
-                sources=value.legal_ref if value is not None else (),
+                has_values=bool(values),
+                grounding=_grounding(values),
+                sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
             )
         )
     return rows
+
+
+def _grounding(values: Sequence[ExpectedValue]) -> str:
+    """The weakest grounding among the compared values; ``none`` when there is none."""
+    if not values:
+        return "none"
+    for grounding in ("unverified", "cited", "verified"):
+        if any(value.grounding == grounding for value in values):
+            return grounding
+    return values[0].grounding
 
 
 def _year(token: YearToken, envelope: YearEnvelope) -> int | None:
