@@ -58,7 +58,8 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
     ),
     "iva.regime": (
         _Cause.CONDITIONAL_RESCUE,
-        "Raised to required by iva_regime_required(values) in the keys validator: a filer with no "
+        "Owed only where schema_requirement_applies(path, values) says so, which the wizard status reads as its "
+        "enrolment gap: a filer with no "
         "IVA obligation legitimately declares none, so an unconditional wizard requirement would "
         "refuse them.",
     ),

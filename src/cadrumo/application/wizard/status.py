@@ -22,7 +22,7 @@ from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileRecord
 from ..operator_actions.models import DeclaredNextAction
 from ..state_projection_auth import build_auth_readiness_without_live_backend
-from ..user_profile.completeness import iva_regime_required
+from ..user_profile.completeness import IVA_REGIME_PATH, schema_requirement_applies
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
@@ -32,7 +32,7 @@ from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_v
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-_ENROLMENT_KEY = "iva.regime"
+_ENROLMENT_KEY = IVA_REGIME_PATH
 """Profile key whose presence flips an IVA-liable operator profile into
 ``ready-to-file``.
 
@@ -98,7 +98,7 @@ def build_wizard_status(
         missing_required = validation.missing_required
         profile_present_keys = validation.present_keys
         profile_total_keys = validation.total_keys
-        enrolment_required = iva_regime_required(values)
+        enrolment_required = schema_requirement_applies(_ENROLMENT_KEY, values)
         enrolment_value = (values.get(_ENROLMENT_KEY) or "").strip()
         enrolment_ready = not enrolment_required or bool(enrolment_value)
         if enrolment_required and not enrolment_ready:

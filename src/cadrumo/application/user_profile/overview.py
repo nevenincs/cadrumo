@@ -71,6 +71,7 @@ from .completeness import (
     pinned_registry_scope,
     profile_section_rows,
     profile_value_is_present,
+    schema_requirement_applies,
 )
 from .field_help import ProfileFieldEjercicioAnswer, profile_field_ejercicio_answers, profile_field_help
 from .projections import profile_schema_for_record, record_to_path_values
@@ -539,7 +540,7 @@ def _field_view(
         # is set here".
         value=MASKED_PLACEHOLDER if (masked and present) else raw,
         masked=masked,
-        required=field.required or path in conditionally_required,
+        required=(field.required and schema_requirement_applies(path, values)) or path in conditionally_required,
         field_type=field.type,
         country_options=() if field.code_list is None else code_lists.get(field.code_list, ()),
         choices=choices,
