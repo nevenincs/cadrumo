@@ -536,6 +536,7 @@
         "cadrumo.application.aggregation.iva_ledger",
         "cadrumo.application.aggregation.iva_ledger_apportionment",
         "cadrumo.application.aggregation.iva_ledger_classification",
+        "cadrumo.application.aggregation.iva_recargo_screen",
         "cadrumo.application.aggregation.iva_transaction",
         "cadrumo.application.aggregation.iva_transaction_projection",
         "cadrumo.application.aggregation.ledger_filing_snapshot",

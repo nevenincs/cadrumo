@@ -2431,6 +2431,9 @@ application:
         invoice_deduction_family_unresolved: 'the received invoice it pays does not
           show which deduction applies: classify the movement, for example as a current
           expense or as a bien de inversión'
+        invoice_recargo_not_declarable: 'an issued invoice records a recargo de equivalencia
+          that is not its base times the art. 161 rate for its VAT rate and date:
+          correct the invoice or issue a factura rectificativa'
         invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
           equivalencia over several VAT rates that differs from the sum of each rate''s
           recargo de equivalencia: correct the invoice''s recargo de equivalencia'

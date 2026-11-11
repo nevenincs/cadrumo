@@ -22,6 +22,11 @@ gap in OUR data, and reporting it as a mismatch would turn that gap into an
 accusation about the supplier's invoice. That case is the one most likely to be
 "fixed" later by someone who reads silence as an oversight, which is why it
 carries its own test rather than being covered incidentally.
+
+All of this concerns a received invoice, whose recargo the filer bore and no
+Modelo 303 casilla declares. An issued invoice's recargo is a charged cuota the
+law fixes, so off the published rate it is refused instead
+(``test_issued_invoice_recargo_follows_the_published_rate``).
 """
 
 from __future__ import annotations
@@ -226,7 +231,8 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction(
     assert diagnostics[0].reason == "invoice_recargo_departs_from_published_rate"
     # Advisory-asserted: the comparison is per invoice, not per casilla, so no
     # registry object is in reach to read art. 161's grounding off.
-    assert diagnostics[0].asserted_legal_refs == ("ley-37-1992:art-161",)
+    # The 5.2 % general pairing is art. 161 as RDL 20/2012 art. 23.Seis set it.
+    assert diagnostics[0].asserted_legal_refs == ("ley-37-1992:art-161", "real-decreto-ley-20-2012:art-23-seis")
 
 
 def test_the_advisory_is_not_a_refusal(operation: PinnedAuthorityOperation) -> None:

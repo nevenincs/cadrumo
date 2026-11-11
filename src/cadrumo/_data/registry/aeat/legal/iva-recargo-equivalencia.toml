@@ -46,3 +46,25 @@ required_text = [
     "adquisiciones intracomunitarias de bienes e importaciones",
     "artículo 84, apartado uno, número 2.º",
 ]
+
+
+[legal."real-decreto-ley-20-2012:art-23-seis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2012-9364-rdl-20-2012-art-23.html#a23"
+document_id = "BOE-A-2012-9364"
+article = "23.Seis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-9364"
+published_at = 2012-07-14
+effective_from = 2012-09-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-11
+reviewed_by = "agent-prepared-pending-operator"
+notes = """RDL 20/2012 art. 23, apartado Seis: da nueva redacción al art. 161 LIVA, con efectos desde el 1 de septiembre de 2012, y fija los tipos del recargo de equivalencia que acompañan a los tipos de IVA del 21 y del 10 por ciento: 5,2 y 1,4 por ciento. Mantiene el 0,50 por ciento del tipo super-reducido y el 1,75 por ciento de las labores del tabaco. La nota de modificación del texto consolidado del art. 161 cita este apartado como "art. 23.5"; el texto empaquetado del real decreto-ley lo numera Seis, y es el que se cita aquí. Entrada preparada por agente y fundamentada en el texto empaquetado leído directamente; no la ha revisado un operador humano."""
+required_text = [
+    "Seis. Se modifica el artículo 161",
+    "Con carácter general, el 5,2 por ciento",
+    "el 1,4 por ciento",
+    "Labores del Tabaco, el 1,75 por ciento",
+]

@@ -147,6 +147,7 @@ class LedgerPreflightIssueReason(StrEnum):
     INVOICE_CASH_ACCOUNTING_REGIME_UNMODELLED = "invoice_cash_accounting_regime_unmodelled"
     LINKED_MOVEMENT_CONTRADICTS_INVOICE = "linked_movement_contradicts_invoice"
     INVOICE_RECARGO_SPLIT_UNRESOLVED = "invoice_recargo_split_unresolved"
+    INVOICE_RECARGO_NOT_DECLARABLE = "invoice_recargo_not_declarable"
 
 
 class LedgerPreflightIssue(BaseModel):
@@ -418,6 +419,10 @@ _INVOICE_FINDING_DETAIL: Final[Mapping[str, str]] = MappingProxyType(
         LedgerPreflightIssueReason.INVOICE_RECARGO_SPLIT_UNRESOLVED.value: (
             "issued invoice {number} records one recargo de equivalencia over several IVA rates that differs "
             "from the sum of each rate's art. 161 recargo; correct the recargo on the invoice"
+        ),
+        LedgerPreflightIssueReason.INVOICE_RECARGO_NOT_DECLARABLE.value: (
+            "issued invoice {number} records a recargo de equivalencia that is not its base times the "
+            "art. 161 rate for its IVA rate and date; correct the invoice or issue a rectificativa"
         ),
     }
 )
@@ -991,6 +996,15 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: (
         "projection-path arithmetic contradiction screen between base, rate and cuota"
     ),
+    IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
+    ),
+    IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
+    ),
+    IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED: (
+        "projection-path screen of a charged recargo against the registry's dated art. 161 rate"
+    ),
     IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
         "projection-path screen reading the Axis-A component table for the declared category"
     ),
@@ -1042,6 +1056,11 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
         ),
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
         IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
+        IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
+        IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED: OperatorActionAxis.REVIEW_ADVISORY,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
             OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
         ),

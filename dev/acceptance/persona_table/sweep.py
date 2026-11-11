@@ -29,6 +29,7 @@ from cadrumo.application.modelo.m303_attestation_operation import (
 from cadrumo.application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_calculation_contracts import (
@@ -43,6 +44,11 @@ from cadrumo.application.modelo.work_create_operation import (
     ModeloWorkCreateSuccess,
 )
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
+from cadrumo.application.modelo.work_filing_contracts import (
+    ModeloWorkFileApproval,
+    ModeloWorkFilePublicResultV2,
+    ModeloWorkFileRequest,
+)
 from cadrumo.application.modelo.work_verification_contracts import (
     ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
@@ -203,72 +209,118 @@ def _run_return(
     if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
         return TableRow.from_plan(plan, Stage.HISTORY_FILED, verify=Stage.HISTORY_FILED)
     stated_refusal = next((value.refusal for value in values if value.refusal is not None), None)
-    period = PublicPeriod(filing_year=plan.year, code=plan.period)
     try:
-        created = settle_operation(
-            world,
-            MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
-            ModeloWorkCreateRequest(
-                profile_id=world.profile_id, modelo=plan.modelo, period=period, actor=PERSONA_ACTOR
-            ),
-        )
-        if not isinstance(created, ModeloWorkCreateProjection):
-            return TableRow.from_plan(plan, Stage.REFUSED, reason=f"create published {type(created).__name__}")
-        outcome = created.outcome
-        if not isinstance(outcome, ModeloWorkCreateSuccess):
-            reason = outcome.reason
-            return TableRow.from_plan(plan, Stage.REFUSED, reason=f"create refused: {reason}"[:_REASON_LIMIT])
-        work_unit_id = outcome.unit.work_unit_id
+        work_unit_id = _create(world, plan)
+        if isinstance(work_unit_id, TableRow):
+            return work_unit_id
+        calculated = _calculate(materialised, plan, work_unit_id)
+    except PersonaMaterialisationError as error:
+        return _refused(plan, stated_refusal, error)
+    calculate, reasons = _compare(values, stated_refusal, calculated)
+    revision_id = calculated.calculation_revision_id
+    verify, verify_reason = _verify(world, work_unit_id, revision_id)
+    export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
+    reasons += [reason for reason in (verify_reason, export_reason) if reason]
+    return TableRow.from_plan(
+        plan,
+        calculate,
+        verify=verify,
+        export=export,
+        reason=" | ".join(reasons)[:_REASON_LIMIT],
+        export_detail=export_detail,
+    )
+
+
+def _refused(plan: PlannedRow, stated_refusal: str | None, error: PersonaMaterialisationError) -> TableRow:
+    """The row of a return refused before it calculated: expected when the persona states that refusal."""
+    code = _code(error)
+    if stated_refusal is not None and stated_refusal == code:
+        return TableRow.from_plan(plan, Stage.EXPECTED_REFUSAL, reason=_short(error))
+    stage = Stage.UNSUPPORTED if is_unsupported(code) else Stage.REFUSED
+    return TableRow.from_plan(plan, stage, reason=_short(error))
+
+
+def _create(world: PersonaWorld, plan: PlannedRow) -> str | TableRow:
+    """The new work unit's id, or the row of a create that published no work unit."""
+    created = settle_operation(
+        world,
+        MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
+        ModeloWorkCreateRequest(
+            profile_id=world.profile_id,
+            modelo=plan.modelo,
+            period=PublicPeriod(filing_year=plan.year, code=plan.period),
+            actor=PERSONA_ACTOR,
+        ),
+    )
+    if not isinstance(created, ModeloWorkCreateProjection):
+        return TableRow.from_plan(plan, Stage.REFUSED, reason=f"create published {type(created).__name__}")
+    outcome = created.outcome
+    if not isinstance(outcome, ModeloWorkCreateSuccess):
+        return TableRow.from_plan(plan, Stage.REFUSED, reason=f"create refused: {outcome.reason}"[:_REASON_LIMIT])
+    return outcome.unit.work_unit_id
+
+
+def _calculate(
+    materialised: MaterialisedPersona, plan: PlannedRow, work_unit_id: str
+) -> ModeloWorkCalculatePublicResultV3:
+    """Calculate the work unit; a Modelo 303 carries its joint-return and annual-summary evidence."""
+    world = materialised.world
+    evidence = None
+    if plan.modelo == "303":
         last_period = max(
             (p for p in _owed_periods(materialised.persona, plan) if p.endswith("T")), default=plan.period
         )
-        calculated = run_operation(
-            world,
-            MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-            ModeloWorkCalculateRequest(
-                work_unit_id=work_unit_id,
-                actor=PERSONA_ACTOR,
-                ordinary_m303_filing_evidence=(
-                    _m303_evidence(
-                        world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
-                    )
-                    if plan.modelo == "303"
-                    else None
-                ),
-            ),
-            ModeloWorkCalculatePublicResultV3,
-            subject=work_unit_id,
+        evidence = _m303_evidence(
+            world, work_unit_id=work_unit_id, year=plan.year, period=plan.period, last_period=last_period
         )
-    except PersonaMaterialisationError as error:
-        code = _code(error)
-        if stated_refusal is not None and stated_refusal == code:
-            return TableRow.from_plan(plan, Stage.EXPECTED_REFUSAL, reason=_short(error))
-        stage = Stage.UNSUPPORTED if is_unsupported(code) else Stage.REFUSED
-        return TableRow.from_plan(plan, stage, reason=_short(error))
-    reasons: list[str] = []
-    got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    return run_operation(
+        world,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        ModeloWorkCalculateRequest(
+            work_unit_id=work_unit_id, actor=PERSONA_ACTOR, ordinary_m303_filing_evidence=evidence
+        ),
+        ModeloWorkCalculatePublicResultV3,
+        subject=work_unit_id,
+    )
+
+
+def _compare(
+    values: list[ExpectedValue], stated_refusal: str | None, calculated: ModeloWorkCalculatePublicResultV3
+) -> tuple[Stage, list[str]]:
+    """The calculate stage against the stated values, and the reasons it is not a plain pass."""
+    mismatches = _mismatches(values, calculated)
     if stated_refusal is not None:
-        calculate = Stage.REFUSAL_NOT_RAISED
-        reasons.append(f"stated refusal {stated_refusal} not raised")
+        calculate, reasons = Stage.REFUSAL_NOT_RAISED, [f"stated refusal {stated_refusal} not raised"]
     elif not values:
-        calculate = Stage.CALCULATED
+        calculate, reasons = Stage.CALCULATED, []
     else:
-        mismatches = [
-            f"c{casilla} exp {amount} got {got.get(casilla)}"
-            for value in values
-            for casilla, amount in value.casillas
-            if _decimal(got.get(casilla)) != _decimal(amount)
-        ]
         calculate = Stage.MISMATCH if mismatches else Stage.PASSED
-        if mismatches:
-            reasons.append("; ".join(mismatches))
-    unresolved = ", ".join(
+        reasons = ["; ".join(mismatches)] if mismatches else []
+    unresolved = _unresolved(calculated)
+    return calculate, reasons + ([f"unresolved: {unresolved}"] if unresolved else [])
+
+
+def _mismatches(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> list[str]:
+    """Each stated casilla the calculation does not equal."""
+    got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    return [
+        f"c{casilla} exp {amount} got {got.get(casilla)}"
+        for value in values
+        for casilla, amount in value.casillas
+        if _decimal(got.get(casilla)) != _decimal(amount)
+    ]
+
+
+def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
+    """The bindings and casillas the calculation left unresolved."""
+    return ", ".join(
         [f"binding {item.binding_id}" for item in calculated.unresolved_bindings]
         + [f"casilla {item.casilla_id} ({item.reason})" for item in calculated.unresolved_casillas]
     )
-    if unresolved:
-        reasons.append(f"unresolved: {unresolved}")
-    revision_id = calculated.calculation_revision_id
+
+
+def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[Stage, str]:
+    """The verify stage and its reason; a granted verification is then filed locally."""
     try:
         verified = run_operation(
             world,
@@ -277,18 +329,22 @@ def _run_return(
             ModeloWorkVerifyPublicResultV2,
             subject=work_unit_id,
         )
-        verify = Stage.PASSED if verified.granted_verificado_completo else Stage.INCOMPLETE
-        if verify is Stage.INCOMPLETE:
-            reasons.append(
-                f"verify: {verified.completeness_status}; {verified.finding_count} findings; "
-                f"blocking: {_blocking_findings(verified) or 'none'}"
-            )
     except PersonaMaterialisationError as error:
-        verify = Stage.REFUSED
-        reasons.append(f"verify: {_short(error)}")
+        return Stage.REFUSED, f"verify: {_short(error)}"
+    if verified.granted_verificado_completo:
+        return Stage.PASSED, _file_locally(world, work_unit_id, revision_id, verified)
+    return Stage.INCOMPLETE, (
+        f"verify: {verified.completeness_status}; {verified.finding_count} findings; "
+        f"blocking: {_blocking_findings(verified) or 'none'}"
+    )
+
+
+def _export(
+    world: PersonaWorld, plan: PlannedRow, exports: Path, work_unit_id: str, revision_id: str
+) -> tuple[Stage, str, str]:
+    """The export stage, what was written, and the reason it was not."""
     output = exports / f"{plan.persona}-{plan.modelo}-{plan.year}-{plan.period}.txt"
     output.parent.mkdir(parents=True, exist_ok=True)
-    export_detail = ""
     try:
         exported = settle_operation(
             world,
@@ -301,25 +357,40 @@ def _run_return(
             ),
             subject=work_unit_id,
         )
-        if isinstance(exported, ModeloExportPublicResultV3):
-            export = Stage.PASSED
-            export_detail = (
-                f"{exported.export_format}, {exported.byte_size} B, {exported.completeness}, {exported.evidence_status}"
-            )
-        else:
-            export = Stage.REFUSED
-            reasons.append(f"export: published {type(exported).__name__}, not ModeloExportPublicResultV3")
     except PersonaMaterialisationError as error:
-        export = Stage.REFUSED
-        reasons.append(f"export: {_short(error)}")
-    return TableRow.from_plan(
-        plan,
-        calculate,
-        verify=verify,
-        export=export,
-        reason=" | ".join(reasons)[:_REASON_LIMIT],
-        export_detail=export_detail,
-    )
+        return Stage.REFUSED, "", f"export: {_short(error)}"
+    if not isinstance(exported, ModeloExportPublicResultV3):
+        return Stage.REFUSED, "", f"export: published {type(exported).__name__}, not ModeloExportPublicResultV3"
+    detail = f"{exported.export_format}, {exported.byte_size} B, {exported.completeness}, {exported.evidence_status}"
+    return Stage.PASSED, detail, ""
+
+
+def _file_locally(
+    world: PersonaWorld, work_unit_id: str, revision_id: str, verified: ModeloWorkVerifyPublicResultV2
+) -> str:
+    """File a verified return locally, so the next quarter and the year's annual returns build on it.
+
+    Local filing records a PRESENTADO revision whose AEAT status stays pending;
+    nothing is submitted. A refusal is reported in the row and leaves the chain
+    to show where it stops.
+    """
+    try:
+        run_operation(
+            world,
+            MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+            ModeloWorkFileRequest(
+                approval=ModeloWorkFileApproval(
+                    calculation_revision_id=revision_id,
+                    verification_report_id=verified.verification_report_id,
+                ),
+                actor=PERSONA_ACTOR,
+            ),
+            ModeloWorkFilePublicResultV2,
+            subject=work_unit_id,
+        )
+    except PersonaMaterialisationError as error:
+        return f"file: {_short(error)}"
+    return "filed locally"
 
 
 def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:

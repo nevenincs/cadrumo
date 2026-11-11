@@ -22,6 +22,7 @@ from cadrumo.tests.personas import (
     PersonaCatalogueError,
     YearEnvelope,
     YearToken,
+    filed_period_order,
     values_in_force,
 )
 
@@ -77,6 +78,7 @@ GREEN = frozenset({Verdict.PASSED})
 """Verdicts a row is green at; a diff reports a row entering or leaving this set."""
 
 _UNSUPPORTED_MARKERS = ("UNSUPPORTED", "NOT_SUPPORTED")
+_ANNUAL = "0A"
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,23 +209,27 @@ def _resolved(text: str, horizon: int) -> int:
     return horizon + token.offset
 
 
+_TERMINAL_VERDICTS = {
+    Stage.NOT_RUN: Verdict.NOT_RUN,
+    Stage.HISTORY_FILED: Verdict.HISTORY_FILED,
+    Stage.UNSUPPORTED: Verdict.UNSUPPORTED,
+}
+"""Calculate stages that settle a row's verdict before its oracle is consulted."""
+
+
 def classify(row: TableRow) -> Verdict:
-    """The row's verdict: grounding and coverage first, then the stages."""
-    if row.calculate is Stage.NOT_RUN:
-        return Verdict.NOT_RUN
-    if row.calculate is Stage.HISTORY_FILED:
-        return Verdict.HISTORY_FILED
-    if row.calculate is Stage.UNSUPPORTED:
-        return Verdict.UNSUPPORTED
+    """The row's verdict: coverage first, then grounding, then the stages."""
+    terminal = _TERMINAL_VERDICTS.get(row.calculate)
+    if terminal is not None:
+        return terminal
     if not row.has_values:
         return Verdict.NO_ORACLE
     if row.grounding == "unverified" or not row.sources:
         return Verdict.UNVERIFIED
     if row.calculate is Stage.EXPECTED_REFUSAL:
         return Verdict.EXPECTED_REFUSAL
-    if row.calculate is Stage.PASSED and row.verify is Stage.PASSED and row.export is Stage.PASSED:
-        return Verdict.PASSED
-    return Verdict.FAIL
+    passed = (row.calculate, row.verify, row.export) == (Stage.PASSED, Stage.PASSED, Stage.PASSED)
+    return Verdict.PASSED if passed else Verdict.FAIL
 
 
 def is_unsupported(code: str) -> bool:
@@ -246,38 +252,64 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
     ``envelope.floor..horizon`` is not a row of this replay.
     """
     shifted = dataclasses.replace(envelope, horizon=horizon)
+    stated = _stated_values(persona, shifted)
+    keys = _owed_keys(persona, shifted) | set(stated)
+    return [
+        _planned(persona.id, horizon, (modelo, year, period), stated.get((modelo, year, period), []))
+        for modelo, year, period in sorted(keys, key=chain_order)
+        if year is not None
+    ]
+
+
+def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, int | None, str], list[ExpectedValue]]:
+    """The values in force per return, leaving out per-counterparty values; a return with only concepts maps to none."""
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
-    for year, value in in_force(persona.expectations.values, shifted):
+    for year, value in in_force(persona.expectations.values, envelope):
         if value.counterparty is not None:
             continue
-        key = (value.modelo, year, value.period)
-        found = stated.setdefault(key, [])
+        found = stated.setdefault((value.modelo, year, value.period), [])
         if value.casillas or value.not_sourced or value.refusal is not None:
             found.append(value)
-    keys = {
-        (item.modelo, _year(item.year, shifted), period)
+    return stated
+
+
+def _owed_keys(persona: Persona, envelope: YearEnvelope) -> set[tuple[str, int | None, str]]:
+    """The returns an obligation states applicable, with years resolved on ``envelope``."""
+    return {
+        (item.modelo, _year(item.year, envelope), period)
         for item in persona.expectations.obligations
         if item.applicable is True
         for period in item.periods
-    } | set(stated)
-    rows = []
-    for modelo, year, period in sorted(keys, key=lambda key: (key[0], key[1] or 0, key[2])):
-        if year is None:
-            continue
-        values = stated.get((modelo, year, period), [])
-        rows.append(
-            PlannedRow(
-                persona=persona.id,
-                modelo=modelo,
-                year=year,
-                period=period,
-                horizon=horizon,
-                has_values=bool(values),
-                grounding=_grounding(values),
-                sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
-            )
-        )
-    return rows
+    }
+
+
+def _planned(persona_id: str, horizon: int, key: tuple[str, int, str], values: list[ExpectedValue]) -> PlannedRow:
+    modelo, year, period = key
+    return PlannedRow(
+        persona=persona_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        horizon=horizon,
+        has_values=bool(values),
+        grounding=_grounding(values),
+        sources=tuple(dict.fromkeys(source for value in values for source in value.legal_ref)),
+    )
+
+
+def chain_order(key: tuple[str, int | None, str]) -> tuple[int, int, str]:
+    """The order a replay runs returns in: by year, each quarter before the annual returns, then by modelo.
+
+    A quarter is filed locally before the next one calculates, and an annual
+    summary (Modelo 180, 190, 390) or the annual Renta reads that year's filed
+    quarters, so every quarter of a year runs before any annual return of it.
+    """
+    modelo, year, period = key
+    try:
+        position = filed_period_order(period)
+    except ValueError:
+        position = filed_period_order(_ANNUAL) + 1
+    return (year or 0, position, modelo)
 
 
 def in_force(values: Sequence[ExpectedValue], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
@@ -351,6 +383,7 @@ __all__ = [
     "Stage",
     "TableRow",
     "Verdict",
+    "chain_order",
     "classify",
     "in_force",
     "is_unsupported",

@@ -2562,6 +2562,9 @@ application:
         invoice_deduction_family_unresolved: 'la factura rebuda que paga no indica
           quina deducció correspon: classifica el moviment, per exemple com a despesa
           corrent o com a bé d''inversió'
+        invoice_recargo_not_declarable: 'una factura emesa porta un recàrrec d''equivalència
+          que no és la seva base pel tipus de l''art. 161 per al seu tipus d''IVA
+          i data: corregeix la factura o emet una factura rectificativa'
         invoice_recargo_split_unresolved: 'una factura emesa porta un únic recàrrec
           d''equivalència sobre diversos tipus d''IVA que no coincideix amb la suma
           del recàrrec de cada tipus: corregeix el recàrrec de la factura'
