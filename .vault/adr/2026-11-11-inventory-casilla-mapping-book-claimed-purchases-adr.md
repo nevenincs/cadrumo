@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:76395df8db83c12de730a6a82ba2d3364a15981f2ef53ed7cbb7edcbef646df3'
+body_hash: 'sha256:e37bb23ceb6ff9160893a95c1ba70be9e5a178292c5addd88c775baab2e24631'
 related:
   - "[[2026-08-23-inventory-casilla-mapping-adr]]"
   - "[[2026-10-30-inventory-casilla-mapping-corrections-adr]]"
@@ -14,9 +14,11 @@ related:
   - "[[2026-11-11-recargo-equivalencia-source-of-truth-derived-cuota-adr]]"
 ---
 
-# `inventory-casilla-mapping` adr: `Merchandise purchases reach casilla 0181 through book-claimed ledger rows` | (**status:** `proposed`)
+# `inventory-casilla-mapping` adr: `Merchandise purchases reach casilla 0181 through book-claimed ledger rows` | (**status:** `accepted`)
 
-This record proposes an amendment to `2026-08-23-inventory-casilla-mapping-adr` and to `2026-10-30-inventory-casilla-mapping-corrections-adr`. Both accepted bodies stay in force until the operator authorizes this proposal. The proposed amendment texts are under Reconciliation at the end.
+Accepted 2026-11-11 by PRIME under the operator's delegation of ADR acceptance, confirmed by the operator that day. PRIME read the record in full and accepted it on four conditions: a single claim mechanism, a persisted link with additive defaults, a cited route from the IRPF rules to the accounting rule for acquisition cost, and unchanged trade-persona figures. It added the constraint on unlinked purchases under Constraints.
+
+This record amends `2026-08-23-inventory-casilla-mapping-adr` and `2026-10-30-inventory-casilla-mapping-corrections-adr`. Both now carry the amendment texts from Reconciliation.
 
 ## Problem Statement
 
@@ -83,6 +85,10 @@ Moving the amount is not enough. If an operator books the same purchase as an in
   - Missing substrate: a transaction without `taxable_base` and `iva_amount` cannot be compared and is refused.
 - At resolution, any refusal leaves the activity's inventory cohort unresolved with an actionable finding. It never withholds silently and never falls back to 0183.
 - The link is a claim fact, not a stock fact. It enters no valuation or projection fingerprint. Linking and unlinking are corrections with a `correction_id`, retained in history, and stay permitted after a closing authority. The claimed set enters the Modelo 100 calculation revision's recorded inputs, so a change makes an existing draft stale through the existing drift gate. Recargo is a stock fact and stays frozen under the 2026-10-30 rule.
+- Unlinked purchases are never read as outside the ledger:
+  - A `PURCHASE` movement with no `claimed_transaction_id`, in an activity and year that has ledger expense rows, raises a structured finding at Modelo 100 resolution. The finding blocks verification.
+  - It clears only when the operator links the movement or states explicitly, on the movement, that the purchase has no ledger row. The statement is a persisted typed fact with three states: linked, stated without a ledger row, and unstated. A blank is never read as "not in the ledger".
+  - Books without purchase movements are unaffected.
 - The scope covers every year of the registry support envelope, following the year rule. A projected year keeps its grade limits.
 
 ## Implementation
@@ -117,7 +123,7 @@ The claim keeps one owner per purchase, which rules out both double deduction an
 ## Consequences
 
 - Merchandise purchases reach 0181 once the operator books and links them. The total of gastos is unchanged; only the casilla changes.
-- An unlinked book purchase that is also a ledger row is still deducted twice. This decision provides the remedy, not detection.
+- An unlinked book purchase in an activity and year with ledger expense rows blocks verification until it is linked or stated as having no ledger row, so the same purchase cannot be deducted twice unnoticed.
 - Modelo 130 is unaffected.
 - Existing books load unchanged and keep their fingerprints.
 - The asset register's own writes are unchanged. A book claiming an asset-claimed row is refused at link time. An asset claim added later is refused at resolution.
@@ -125,11 +131,11 @@ The claim keeps one owner per purchase, which rules out both double deduction an
 
 ## Reconciliation
 
-Proposed amendment to `2026-08-23-inventory-casilla-mapping-adr`, to be appended as a dated section once authorized:
+Amendment to `2026-08-23-inventory-casilla-mapping-adr`, appended to that record on 2026-11-11:
 
 "Casilla 0181 remains sourced only from the inventory book. A ledger row that a purchase movement of the book claims is withheld from every Modelo 100 ledger expense destination, including 0183, through the shared register claim, and refuses on a missing transaction, a double claim or an amount mismatch, as `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr` states. In the constraint defining 0181, 'non-recoverable IVA' reads 'non-recoverable indirect taxes, namely non-recoverable IVA and recargo de equivalencia (PGC NRV 10ª.1, LIVA art. 154)'."
 
-Proposed amendment to `2026-10-30-inventory-casilla-mapping-corrections-adr`, to be appended once authorized:
+Amendment to `2026-10-30-inventory-casilla-mapping-corrections-adr`, appended to that record on 2026-11-11:
 
 "A purchase movement's ledger link is a claim fact. It enters no valuation or fingerprint, and linking or unlinking remains permitted after a closing authority, as a correction with a `correction_id` retained in history. A change to the claimed set makes a Modelo 100 draft stale through the drift gate. A purchase's recargo de equivalencia is a stock fact."
 
@@ -137,8 +143,8 @@ No edit is needed to `2026-08-23-amortization-casilla-mapping-adr` or the assets
 
 ## Open questions
 
-- A transaction in a currency other than EUR: its tax substrate is in the native currency. This proposal refuses it as a link target until an FX rule for the comparison is decided.
+- A transaction in a currency other than EUR: its tax substrate is in the native currency. This decision refuses it as a link target until an FX rule for the comparison is decided.
 - One purchase invoice split across two activities' books: refused here as a double claim. Whether a split claim with a summed amount check is lawful and needed is not grounded.
 - Freight or similar attributable costs booked as their own ledger rows: they enter `total_acquisition_cost` and also route to a ledger casilla. Whether attributable components should carry their own claims is undecided. Until then, the operator states such costs in only one place.
-- Detection of an unlinked duplicate (a book purchase with a matching unlinked ledger row) as a non-blocking finding is not decided.
-- The NRV 10ª text was read from BOE online, not from a bundled corpus copy. Bundling RD 1514/2007 would let the citation be pinned by file and line.
+- The NRV 10ª text was read from BOE online, not from a bundled corpus copy. Bundling RD 1514/2007 is not part of this decision.
+- The questions above stay refusals as written.
