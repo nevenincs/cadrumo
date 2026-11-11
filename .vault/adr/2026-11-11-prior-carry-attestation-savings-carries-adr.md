@@ -5,9 +5,10 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f76b97f25523c61b49c85543c0cc73f8cdf78bc817c759ca5dccc3afc57e10e3'
+body_hash: 'sha256:4381278c190805c702efb6139728dffd04014729eac999c0a349c2270b977dea'
 related:
   - "[[2026-11-08-prior-carry-attestation-adr]]"
+  - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
 # `prior-carry-attestation` adr: `negative savings balances pending from earlier ejercicios` | (**status:** `proposed`)
