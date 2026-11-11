@@ -2790,6 +2790,16 @@ application:
         érték hiányzik.'
       cross_period_activity_start_missing: A Modelo %{target_modelo} bevalláshoz (%{target_filing_year},
         %{target_period} időszak) meg kell adni, mikor kezdte meg a tevékenységét.
+      cross_period_dependency_attestation_conflict: A Modelo %{source_modelo} (%{source_filing_year},
+        %{source_period} időszak) esetén %{value} összeget adtál meg, de most már
+        létezik hozzá bevallás más összeggel. Ennek a bevallásnak (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) azt kell követnie, ezért
+        add meg újra az összeget, vagy vond vissza a megadásodat.
+      cross_period_dependency_operator_attested: A Cadrumo nem tárol bevallást a Modelo
+        %{source_modelo} (%{source_filing_year}, %{source_period} időszak) számára,
+        ezért a(z) %{value} összeg, amelyet ez a bevallás (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) átvesz belőle, az általad
+        megadott érték. Őrizd meg a korábbi bevallást bizonyítékként.
       cross_period_dependency_unclean: Ez a bevallás a Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) adatait használja, és abban még megoldatlan problémák
         vannak. Előbb ott oldd meg őket.
@@ -3269,6 +3279,7 @@ application:
           be a rovatodba, majd számolj újra.
         check_profile_value: Nézd át ezt az értéket a profilodban, javítsd, ha hibás,
           majd számolj újra.
+        check_stated_figure: Ellenőrizd az általad megadott összeget a korábbi bevallásoddal.
         compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
           újra.
         correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz

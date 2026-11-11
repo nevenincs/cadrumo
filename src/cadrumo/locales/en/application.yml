@@ -2683,6 +2683,16 @@ application:
         are missing.'
       cross_period_activity_start_missing: Modelo %{target_modelo} for %{target_filing_year},
         period %{target_period}, needs the date your activity started.
+      cross_period_dependency_attestation_conflict: You stated %{value} for modelo
+        %{source_modelo} of %{source_filing_year}, period %{source_period}, but a
+        declaration for it now exists with another figure. This declaration (modelo
+        %{target_modelo} for %{target_filing_year}, period %{target_period}) must
+        follow that declaration, so state the figure again or remove your statement.
+      cross_period_dependency_operator_attested: Cadrumo holds no declaration of modelo
+        %{source_modelo} for %{source_filing_year}, period %{source_period}, so the
+        figure %{value} that this declaration (modelo %{target_modelo} for %{target_filing_year},
+        period %{target_period}) takes from it is the one you stated. Keep that earlier
+        declaration as your evidence.
       cross_period_dependency_unclean: This declaration uses figures from modelo %{source_modelo}
         for %{source_filing_year}, period %{source_period}, and that declaration still
         has open issues. Resolve them there first.
@@ -3144,6 +3154,7 @@ application:
           it in its box, then calculate again.
         check_profile_value: Check that value in your profile, correct it if it is
           wrong, then calculate again.
+        check_stated_figure: Check the figure you stated against your earlier declaration.
         compare_figures: Compare the figures, correct the one that is wrong, then
           calculate again.
         correct_and_recalculate: Correct what it describes, then calculate and check

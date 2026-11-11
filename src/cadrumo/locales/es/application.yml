@@ -2832,6 +2832,16 @@ application:
         la declaración relacionada.'
       cross_period_activity_start_missing: El modelo %{target_modelo} de %{target_filing_year},
         periodo %{target_period}, necesita la fecha en que empezó tu actividad.
+      cross_period_dependency_attestation_conflict: Indicaste %{value} para el modelo
+        %{source_modelo} de %{source_filing_year}, periodo %{source_period}, pero
+        ahora existe una declaración suya con otra cifra. Esta declaración (modelo
+        %{target_modelo} de %{target_filing_year}, periodo %{target_period}) debe
+        seguir a aquella, así que indica la cifra de nuevo o retira tu indicación.
+      cross_period_dependency_operator_attested: Cadrumo no tiene ninguna declaración
+        del modelo %{source_modelo} de %{source_filing_year}, periodo %{source_period},
+        así que la cifra %{value} que esta declaración (modelo %{target_modelo} de
+        %{target_filing_year}, periodo %{target_period}) toma de ella es la que indicaste
+        tú. Conserva esa declaración anterior como justificante.
       cross_period_dependency_unclean: Esta declaración usa datos del modelo %{source_modelo}
         de %{source_filing_year}, periodo %{source_period}, y esa declaración aún
         tiene incidencias pendientes. Resuélvelas allí primero.
@@ -3315,6 +3325,7 @@ application:
           en su casilla y vuelve a calcular.
         check_profile_value: Revisa ese valor en tu perfil, corrígelo si está mal
           y vuelve a calcular.
+        check_stated_figure: Comprueba la cifra que indicaste con tu declaración anterior.
         compare_figures: Compara las cifras, corrige la que esté mal y vuelve a calcular.
         correct_and_recalculate: Corrige lo que indica y vuelve a calcular y comprobar.
         declare_asset_again: Vuelve a declarar ese bien en esta declaración.
