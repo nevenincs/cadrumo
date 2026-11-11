@@ -65,6 +65,19 @@ as_of = { year = "horizon", month = 2, day = 16 }
 description = "Programación y análisis informático"
 iae_epigraph = "763"
 
+# He sells his own programming and analysis work and holds no mercaderías or
+# materias primas, so his activity holds no existencias: the book opens at
+# zero, records no movement and closes on its movements at zero. The Modelo
+# 100 rows of the stock variation and the purchases of existencias (casillas
+# 0177, 0181 and 0182) read it as zero on his statement, never by default.
+[[inventory]]
+activity = "programacion-informatica"
+year = "horizon-1"
+valuation_method = "fifo"
+opening_stock = "0.00"
+closing_stock = "0.00"
+statement = "La actividad de programación y análisis informático no mantuvo existencias en ningún momento del ejercicio ni al cierre del anterior."
+
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"
 value = "devengo"

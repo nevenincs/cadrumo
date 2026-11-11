@@ -1214,6 +1214,36 @@ application:
           tu.'
       next_step:
         choose_reading_model: Triar un model de lectura
+      structured:
+        fact:
+          currency: Moneda
+          customer_name: Destinatari
+          customer_tax_id: NIF del destinatari
+          grand_total: Total de la factura
+          invoice_date: Data d'expedició
+          invoice_number: Número de factura
+          invoice_series: Sèrie
+          iva_amount: Quota d'IVA
+          recargo_amount: Recàrrec d'equivalència
+          rectifies_invoice_number: Factura rectificada
+          regime_legend: Menció que figura a la factura
+          retencion_amount: Retenció
+          retencion_rate: Tipus de retenció
+          suplidos_amount: Suplerts
+          supplier_name: Emissor
+          supplier_tax_id: NIF de l'emissor
+          taxable_base: Base imposable
+        line:
+          description: Descripció
+          iva_amount: Quota d'IVA
+          iva_rate: Tipus d'IVA
+          quantity: Quantitat
+          taxable_base: Base imposable
+          unit_price: Preu unitari
+        title:
+          xml_cii: Factura electrònica CII
+          xml_facturae: Factura electrònica Facturae
+          xml_ubl: Factura electrònica UBL
     periods:
       served:
         annual: Any
@@ -2434,6 +2464,11 @@ application:
         com quan se suspèn una part de l''import a ingressar a càrrec de la devolució
         del teu cònjuge o renuncies a una devolució. Cadrumo encara no calcula el
         romanent per al model d''aquest exercici.'
+      export_text_value_overflow: 'No s''ha escrit res: «%{field_value}» té %{value_length}
+        caràcters i el disseny de registre de l''AEAT només n''admet %{field_length}
+        a les posicions %{first_position}-%{last_position} del registre «%{record_type}».
+        Retallar-lo declararia una altra dada. Corregeix aquesta dada on la vas registrar,
+        tal com figura al cens de l''AEAT, i torna a exportar.'
       export_unsupported: El model %{modelo} no es pot exportar a fichero-BOE perquè
         %{reason}. El càlcul, la comprovació i els registres de presentació que deses
         poden existir, però aquesta ordre no pot produir un fitxer per pujar a l'AEAT
@@ -3683,6 +3718,8 @@ application:
         no guarda per a un ascendent.
       ascendant_limit_unknown: El disseny de la declaració no indica cap límit d'ascendents,
         així que la llista no es pot comprovar ni desar.
+      ascendant_name_invalid: Els cognoms i el nom de l'ascendent %{row} no poden
+        quedar en blanc i admeten com a màxim %{limit} caràcters.
       ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
       ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
@@ -3715,6 +3752,8 @@ application:
         emmagatzema.
       descendant_limit_unknown: El disseny de la declaració no indica cap límit de
         descendents, així que la llista no es pot comprovar ni desar.
+      descendant_name_invalid: Els cognoms i el nom del descendent %{row} no poden
+        quedar en blanc i admeten com a màxim %{limit} caràcters.
       descendant_nif_invalid: El NIF o NIE del descendent %{row} no és vàlid; revisa'n
         les lletres i xifres.
       descendant_rows_over_limit: Una declaració inclou com a màxim %{limit} descendents
@@ -3770,6 +3809,8 @@ application:
         Camps disponibles: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: Cognoms i nom de l'ascendent (primer els cognoms)
         birth_date:
           label: Data de naixement
         convivientes:

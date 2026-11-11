@@ -100,7 +100,7 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
-        # The RIRPF art. 109.1 coverage fact is three-state, and the subject
+        # The RIRPF arts. 109.2 to 109.4 coverage fact is three-state, and the subject
         # here is the estimation-regime axis alone: this autónomo states that
         # the exception does not hold, so an unanswered coverage fact cannot
         # be what decides Modelo 130.

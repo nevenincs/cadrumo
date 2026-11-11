@@ -426,6 +426,8 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert terminal_step.details.filing_window.value == "future"
     assert terminal_step.precondition_verdict is not None
     assert terminal_step.precondition_verdict.failed_condition_id == "workflow.deadline.filing_window_open"
+    assert terminal_step.precondition_verdict.action is not None
+    assert terminal_step.precondition_verdict.action.action_id == "operator.modelo.export"
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,

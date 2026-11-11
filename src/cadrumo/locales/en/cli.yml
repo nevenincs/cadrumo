@@ -270,6 +270,8 @@ cli:
         page_number_help: Page to draw, counting from 1.
         page_output_failed: Could not write the page image to {path}.
         page_output_help: PNG file to write the page to.
+        page_structured_invoice: This document is a structured e-invoice and has no
+          page to draw; open it in the window to read its facts.
         pull_actor_help: Your name or label.
         pull_id_help: Transaction id in your records.
         remove_help: Delete purchase invoice evidence
@@ -2432,17 +2434,19 @@ cli:
             a backup is never overwritten. Choose another --output or move the existing
             file first; no profile was read.
       ascendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number
-          of descendants the ascendant lives with>]. Repeatable; NACIMIENTO is required
-          in every row.
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,APELLIDOS_NOMBRE=<surnames
+          and name>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number of descendants
+          the ascendant lives with>]. Repeatable; NACIMIENTO is required in every
+          row.
         add_help: Add one or more ascendants to the active profile, or state with
           --none that there are none.
         help: Declare the taxpayer's ascendants for the Modelo 100 household section.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           ascendant(s).
         invalid_row: The --ascendiente row could not be read. Use KEY=VALUE pairs
-          with the keys NACIMIENTO, NIF, FALLECIMIENTO and CONVIVIENTES, each at most
-          once and with a value; the error context names the key when it can be identified.
+          with the keys NACIMIENTO, NIF, APELLIDOS_NOMBRE, FALLECIMIENTO and CONVIVIENTES,
+          each at most once and with a value; the error context names the key when
+          it can be identified.
         list_help: List the ascendants declared on the active profile and whether
           the profile states there are none.
         remove_help: Remove one ascendant by 0-based index from the active profile.
@@ -2584,9 +2588,9 @@ cli:
           preflight: 'Preflight only: nothing was deleted. Re-run with --yes to delete.'
         yes_help: Explicitly confirm the deletion
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
-          Repeatable. Run `aeat config profile descendiente` with no subcommand to
-          enter these guided.
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|guarda_y_custodia_judicial][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX][,APELLIDOS_NOMBRE=<surnames
+          and name>]. Repeatable. Run `aeat config profile descendiente` with no subcommand
+          to enter these guided.
         add_help: Add one or more descendants to the active profile.
         ambiguous_relacion_advisory: Descendant %{indices} declares months of maternal
           work under the default relationship. The record cannot distinguish a child
@@ -3272,9 +3276,10 @@ cli:
       reason_help: Free-text reason recorded as the transaction notes and as the reason
         behind the classification decision (visible on `aeat app ledger view`), or
         with a `--reject` decision.
-      recargo_amount_help: Recargo de equivalencia charged on this movement (LIVA art. 161).
-        On a purchase it is taken only when the profile's IVA regime is the recargo de
-        equivalencia; with the base and the IVA amount it must make up the movement's amount
+      recargo_amount_help: Recargo de equivalencia charged on this movement (LIVA
+        art. 161). On a purchase it is taken only when the profile's IVA regime is
+        the recargo de equivalencia; with the base and the IVA amount it must make
+        up the movement's amount
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit

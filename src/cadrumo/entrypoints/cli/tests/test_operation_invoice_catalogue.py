@@ -27,7 +27,7 @@ from ....application.invoices.catalogue_read_operation import (
     InvoiceViewRefusal,
     InvoiceViewSuccess,
 )
-from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
@@ -62,7 +62,7 @@ def _record() -> tuple[Invoice, CatalogueInvoiceSnapshot]:
         currency="EUR",
         rate_provider=exchange_rate_provider(),
     )
-    return invoice, CatalogueInvoiceSnapshot.from_invoice(invoice)
+    return invoice, CatalogueInvoiceSnapshot.from_invoice(invoice, documents=InvoiceDocumentIndex.from_manifests(()))
 
 
 def _client(monkeypatch: pytest.MonkeyPatch) -> None:

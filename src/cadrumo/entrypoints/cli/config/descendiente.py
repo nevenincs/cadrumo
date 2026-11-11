@@ -181,6 +181,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
                     f"nif={descendant.nif or '-'}",
+                    f"apellidos_nombre={descendant.apellidos_nombre or '-'}",
                 ),
             ),
         )
@@ -229,6 +230,7 @@ def _emit_descendiente_list(
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=descendant.gastos_guarderia_mensuales,
                 nif=descendant.nif,
+                apellidos_nombre=descendant.apellidos_nombre,
             )
             for index, descendant in enumerate(descendientes)
         ],

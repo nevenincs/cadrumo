@@ -185,6 +185,7 @@ def test_unrelated_invoice_update_preserves_the_nested_lease_and_stable_identity
         event_repository=creation_ports.event_repository,
         audit_commit=creation_ports.audit_commit,
         sealed_revisions=_NoSealedRevisions(),
+        documents=creation_ports.documents,
     )
 
     updated = update_catalogue_invoice(
@@ -210,6 +211,7 @@ def test_stale_invoice_baseline_refuses_before_catalogue_and_audit_mutation() ->
         event_repository=creation_ports.event_repository,
         audit_commit=creation_ports.audit_commit,
         sealed_revisions=_NoSealedRevisions(),
+        documents=creation_ports.documents,
     )
     first = update_catalogue_invoice(
         bucket_id=_BUCKET_ID,
@@ -240,6 +242,7 @@ def _lifecycle_ports(creation_ports: CatalogueCreationPorts) -> CatalogueLifecyc
         event_repository=creation_ports.event_repository,
         audit_commit=creation_ports.audit_commit,
         sealed_revisions=_NoSealedRevisions(),
+        documents=creation_ports.documents,
     )
 
 

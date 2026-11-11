@@ -20,8 +20,6 @@ from ..application.operations.contract_manifest import (
 )
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from ..application.live.filed_history_operation import (
         FiledHistoryCompositionFactory,
         FiledHistoryProviderPreflight,
@@ -97,20 +95,14 @@ def _filed_capture_source(
 ) -> tuple[FiledHistoryCompositionFactory, FiledHistoryProviderPreflight]:
     """The live-state composition and provider check a filed capture reads its register through.
 
-    Without an injected register the capture reads the AEAT Sede after checking
-    the profile's provider credentials. An injected register stands in for the
-    authenticated site, so there is no credential to check; every persistence,
-    receipt and reconciliation port stays the production one.
+    The register transport and its provider check come from the composition
+    inputs; every persistence, receipt and reconciliation port stays the
+    production one.
     """
-    from .live_state_composition import compose_live_state, preflight_filed_history_provider
+    from .live_state_composition import compose_live_state
 
-    if inputs.filed_data_port is None:
-        return compose_live_state, preflight_filed_history_provider
-    return partial(compose_live_state, filed_data_port=inputs.filed_data_port), _recorded_register_needs_no_provider
-
-
-def _recorded_register_needs_no_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    del profile_id, operation
+    register = inputs.filed_capture_register
+    return partial(compose_live_state, filed_data_port_factory=register.port_factory), register.provider_preflight
 
 
 def compose_live_filed_single_capture_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

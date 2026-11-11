@@ -10,7 +10,7 @@ subclasses.
 from __future__ import annotations
 
 from logging import Logger
-from typing import NoReturn
+from typing import ClassVar, NoReturn
 
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 
@@ -48,6 +48,28 @@ class ModeloExportPriorDomiciliationElectionRequiredError(ModeloExportError):
     The page-three marker is the operator's per-filing choice, so an export
     that carries none refuses before any byte is written instead of guessing
     one.
+    """
+
+
+class ModeloExportValueOverflowError(ModeloExportError):
+    """Refused: a value is wider than its slot in the official record design.
+
+    The file would only be writable by cutting the value, which would declare
+    something else, so nothing is written. The value is put right where it was
+    recorded.
+    """
+
+    # The text that did not fit is the filer's own content (a counterparty's
+    # name); only the in-process envelope may show it, never a kept record.
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
+
+
+class ModeloExportProducerFactsRefusedError(ModeloExportError):
+    """Refused: the facts the file states about the filer or the filing are incomplete.
+
+    Identity, account and model facts the export needs to form its producer
+    snapshot are missing or contradict each other. They are the filer's to
+    supply, so this is a refusal rather than a failure to write.
     """
 
 
@@ -96,6 +118,8 @@ __all__ = [
     "ModeloError",
     "ModeloExportError",
     "ModeloExportManifestError",
+    "ModeloExportProducerFactsRefusedError",
+    "ModeloExportValueOverflowError",
     "ModeloValidationError",
     "raise_catalogue_integrity_error",
 ]

@@ -37,6 +37,7 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
 from ....domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
 from ....domain.modelos.work_unit import WorkUnit
+from ..storage.attachment import AttachmentStore
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from .buckets import BucketEventHistoryRepository
 from .catalogue_reads import build_invoice_catalogue_read_ports
@@ -313,15 +314,17 @@ class CatalogueSealedRevisionReaderAdapter:
         return tuple(sealed)
 
 
-def _catalogue_repositories(*, bucket_id: str) -> tuple[InvoiceCatalogueRepository, BucketEventHistoryRepository]:
-    """Bind local invoice and audit storage without resolving an outbound provider."""
+def _catalogue_repositories(
+    *, bucket_id: str
+) -> tuple[InvoiceCatalogueRepository, BucketEventHistoryRepository, AttachmentStore]:
+    """Bind local invoice, audit and document storage without resolving an outbound provider."""
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
     invoice_repository = InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
     event_repository = BucketEventHistoryRepository(objects=objects)
-    return invoice_repository, event_repository
+    return invoice_repository, event_repository, AttachmentStore(objects=objects, bucket_id=normalized_bucket_id)
 
 
 def build_catalogue_creation_ports(
@@ -332,7 +335,7 @@ def build_catalogue_creation_ports(
     """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
     from ....application.exchange_rate_provider import exchange_rate_provider
 
-    invoice_repository, event_repository = _catalogue_repositories(bucket_id=bucket_id)
+    invoice_repository, event_repository, documents = _catalogue_repositories(bucket_id=bucket_id)
     return CatalogueCreationPorts(
         invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
         event_repository=CatalogueCreationEventRepositoryAdapter(repository=event_repository),
@@ -342,6 +345,7 @@ def build_catalogue_creation_ports(
             commit=commit,
         ),
         rate_provider=CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider()),
+        documents=documents,
     )
 
 
@@ -385,6 +389,7 @@ def build_catalogue_lifecycle_ports(
                 m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
             ),
         ),
+        documents=AttachmentStore(objects=objects, bucket_id=normalized_bucket_id),
     )
 
 

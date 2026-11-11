@@ -33,7 +33,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import CatalogueInvoicePatch, update_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 
 INVOICE_UPDATE_OPERATION_DEFINITION_ID = "ledger.invoice.update"
 
@@ -162,7 +162,9 @@ class InvoiceUpdateExecutor:
             return InvoiceUpdateResult(
                 profile_id=payload.profile_id,
                 invoice_id=payload.invoice_id,
-                invoice=CatalogueInvoiceSnapshot.from_invoice(updated.invoice),
+                invoice=CatalogueInvoiceSnapshot.from_invoice(
+                    updated.invoice, documents=InvoiceDocumentIndex.read(ports.documents)
+                ),
                 bucket_event_ids=updated.bucket_event_ids,
             )
 

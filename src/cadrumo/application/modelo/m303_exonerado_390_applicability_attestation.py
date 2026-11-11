@@ -92,12 +92,16 @@ def admit_m303_exonerado_390_applicability_attestation(
     _require_ordinary_not_applicable_request(request, operation=operation)
     profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
     captured_at = validate_utc_aware(clock())
-    _require_observation_timing(
+    if not _observation_timing_holds(
         observed_at=request.observed_at,
         captured_at=captured_at,
         period=request.period,
         current_at=captured_at,
-    )
+    ):
+        raise M303Exonerado390AttestationUnadmissibleError(
+            "Modelo 390 applicability can be observed only after its period ends and not after it is captured",
+            context={"reason": "observation_timing", "period": request.period.registry_token},
+        )
     attestation = M303Exonerado390ApplicabilityAttestation(
         schema_version=1,
         role="m303_exonerado_390_applicability",
@@ -249,6 +253,16 @@ def _require_ordinary_coordinate(*, filing_year: int, period: Period, operation:
         )
 
 
+def _observation_timing_holds(
+    *,
+    observed_at: datetime,
+    captured_at: datetime,
+    period: Period,
+    current_at: datetime,
+) -> bool:
+    return not (observed_at > current_at or observed_at > captured_at or observed_at.date() < period.end_date)
+
+
 def _require_observation_timing(
     *,
     observed_at: datetime,
@@ -256,7 +270,9 @@ def _require_observation_timing(
     period: Period,
     current_at: datetime,
 ) -> None:
-    if observed_at > current_at or observed_at > captured_at or observed_at.date() < period.end_date:
+    if not _observation_timing_holds(
+        observed_at=observed_at, captured_at=captured_at, period=period, current_at=current_at
+    ):
         raise AttachmentValidationError("Modelo 390 applicability observation timing is invalid")
 
 

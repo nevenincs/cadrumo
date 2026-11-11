@@ -27,6 +27,7 @@ from .family_types import (
     MinimoDescendientesThresholds,
     coerce_iso_date_field,
 )
+from .household_person_name import require_household_person_name
 
 
 class DescendantRecordFields(BaseModel):
@@ -52,6 +53,7 @@ class DescendantRecordFields(BaseModel):
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
+    apellidos_nombre: str | None = None
 
     @field_validator("discapacidad_grado")
     @classmethod
@@ -60,6 +62,12 @@ class DescendantRecordFields(BaseModel):
         if value is not None and value not in accepted_descendant_disability_grades():
             raise ValueError("discapacidad_grado must be a grade the governed catalogue accepts")
         return value
+
+    @field_validator("apellidos_nombre")
+    @classmethod
+    @pydantic_validation_boundary
+    def _collapse_apellidos_nombre(cls, value: str | None) -> str | None:
+        return require_household_person_name(value)
 
 
 class DescendantRecordBase(DescendantRecordFields):
@@ -226,6 +234,9 @@ class DescendantRecordBase(DescendantRecordFields):
         all — see :meth:`meets_non_income_conditions`.
     nif
         Optional NIF/NIE; validated for shape when present.
+    apellidos_nombre
+        Optional surnames and name, surnames first, whitespace collapsed; held to the
+        design's length inside an authority scope.
     """
 
     @field_validator(

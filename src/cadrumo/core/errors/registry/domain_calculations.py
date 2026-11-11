@@ -98,6 +98,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.FixedWidthValueOverflowError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_FIXED_WIDTH_VALUE_OVERFLOW",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.GovernedFactNotApplicableError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_GOVERNED_FACT_NOT_APPLICABLE",

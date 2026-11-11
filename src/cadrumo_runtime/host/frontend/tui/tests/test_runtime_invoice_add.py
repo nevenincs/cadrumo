@@ -12,7 +12,6 @@ import pytest
 from pydantic import BaseModel
 from textual.widgets import Button, Input, Static
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
@@ -43,6 +42,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -215,6 +215,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         grand_total_eur=None,
         referencia_catastral=None,
         settlement_amount=PublicDecimal(decimal="106.00"),
+        documents=(),
     )
 
 

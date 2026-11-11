@@ -39,6 +39,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.contribuyente.household_person_name import household_person_name_limit
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact, UserProfileRecord
 
@@ -143,7 +144,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
 
     mutation = world.replace(
         _row(nif="12345678z", birth_date="1948-03-04", convivientes="2"),
-        _row(nif=_NIE, birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)),
+        _row(nif=_NIE, apellidos_nombre=" Ibáñez  Roca Carmen ", birth_date="1951-11-30", fallecimiento=_dated(1, 2, 1)),
         _row(birth_date="1940-01-01"),
     )
 
@@ -155,6 +156,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
         f"{_OBJECT}.0.birth_date": "1948-03-04",
         f"{_OBJECT}.0.convivientes": "2",
         f"{_OBJECT}.1.nif": _NIE,
+        f"{_OBJECT}.1.apellidos_nombre": "Ibáñez Roca Carmen",
         f"{_OBJECT}.1.birth_date": "1951-11-30",
         f"{_OBJECT}.1.fallecimiento": _dated(1, 2, 1),
         f"{_OBJECT}.2.birth_date": "1940-01-01",
@@ -164,6 +166,7 @@ def test_a_set_is_stored_as_rows_with_its_count_and_served_back(world: _World) -
     assert [row.row_index for row in rows] == ["0", "1", "2"]
     assert {fact.leaf: fact.value for fact in rows[1].facts} == {
         "nif": _NIE,
+        "apellidos_nombre": "Ibáñez Roca Carmen",
         "birth_date": "1951-11-30",
         "fallecimiento": _dated(1, 2, 1),
     }
@@ -245,7 +248,8 @@ def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> 
         ({"birth_date": "1948-03-04", "convivientes": "11"}, 1),
         ({"birth_date": "1948-03-04", "convivientes": "-1"}, 1),
         ({"birth_date": "1948-03-04", "convivientes": "two"}, 1),
-        ({"birth_date": "1948-03-04", "apellidos_nombre": "Ana"}, 1),
+        ({"birth_date": "1948-03-04", "apellidos_nombre": " 	 "}, 1),
+        ({"birth_date": "1948-03-04", "apellidos_nombre": "Roca " * 40}, 1),
         ({"birth_date": "1948-03-04", "discapacidad_clave": "1"}, 1),
     ],
 )
@@ -279,6 +283,24 @@ def test_a_refused_value_leaves_no_chained_exception_carrying_what_was_typed(
 
     assert refused.value.__cause__ is None
     assert refused.value.__context__ is None
+
+
+def test_a_name_up_to_the_design_length_is_stored_and_one_past_it_is_refused_unechoed(world: _World) -> None:
+    limit = household_person_name_limit(authority=world.operation)
+    at_limit = "R" * limit
+    world.replace(_row(birth_date="1948-03-04", apellidos_nombre=at_limit))
+    assert world.facts()[f"{_OBJECT}.0.apellidos_nombre"] == at_limit
+    before = world.record()
+
+    with pytest.raises(UserProfileValidationError) as refused:
+        world.replace(_row(birth_date="1948-03-04", apellidos_nombre=at_limit + "R"))
+
+    assert refused.value.context == {"row": 1, "limit": limit}
+    assert refused.value.__cause__ is None and refused.value.__context__ is None
+    detail = build_operation_error_detail(refused.value)
+    assert detail is not None and detail.refusal_words is not None
+    assert str(limit) in detail.refusal_words and at_limit not in detail.refusal_words
+    assert world.record().content_digest == before.content_digest
 
 
 def test_a_refusal_names_the_row_by_position(world: _World) -> None:

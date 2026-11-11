@@ -52,7 +52,7 @@ from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from .catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError, select_catalogue_invoice_id
 from .inspection_read_ports import InvoiceInspectionReadPortsFactory
 
@@ -241,9 +241,10 @@ class InvoiceCatalogueReadExecutor:
             catalogue = ports.invoices.load_authenticated()
             if any(bucket_id != profile for bucket_id in catalogue.attributed_bucket_ids()):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            documents = InvoiceDocumentIndex.read(ports.documents)
             if isinstance(payload, InvoiceListRequest):
-                return _capture_invoice_list(payload, catalogue)
-            return _capture_invoice_view(payload, catalogue)
+                return _capture_invoice_list(payload, catalogue, documents)
+            return _capture_invoice_view(payload, catalogue, documents)
 
     async def execute(
         self, request: OperationRequest[InvoiceListRequest | InvoiceViewRequest], context: OperationExecutorContext
@@ -271,21 +272,30 @@ class InvoiceCatalogueReadExecutor:
         return await await_cancellation_complete(capture(), task_name="invoice-catalogue-read")
 
 
-def _capture_invoice_list(payload: InvoiceListRequest, catalogue: StoredInvoiceCatalogue) -> InvoiceListResult:
+def _capture_invoice_list(
+    payload: InvoiceListRequest, catalogue: StoredInvoiceCatalogue, documents: InvoiceDocumentIndex
+) -> InvoiceListResult:
     return InvoiceListResult(
         profile_id=payload.profile_id,
         kind=payload.kind,
-        invoices=tuple(CatalogueInvoiceSnapshot.from_invoice(row) for row in catalogue.values(kind=payload.kind)),
+        invoices=tuple(
+            CatalogueInvoiceSnapshot.from_invoice(row, documents=documents)
+            for row in catalogue.values(kind=payload.kind)
+        ),
     )
 
 
-def _capture_invoice_view(payload: InvoiceViewRequest, catalogue: StoredInvoiceCatalogue) -> InvoiceViewResult:
+def _capture_invoice_view(
+    payload: InvoiceViewRequest, catalogue: StoredInvoiceCatalogue, documents: InvoiceDocumentIndex
+) -> InvoiceViewResult:
     try:
         invoice_id = select_catalogue_invoice_id(catalogue.invoice_ids(), payload.invoice_id)
     except InvoiceLookupRefusedError as exc:
         outcome: InvoiceViewOutcome = InvoiceViewRefusal(reason=exc.reason, candidate_ids=exc.candidate_ids)
     else:
-        outcome = InvoiceViewSuccess(invoice=CatalogueInvoiceSnapshot.from_invoice(catalogue.require(invoice_id)))
+        outcome = InvoiceViewSuccess(
+            invoice=CatalogueInvoiceSnapshot.from_invoice(catalogue.require(invoice_id), documents=documents)
+        )
     return InvoiceViewResult(profile_id=payload.profile_id, invoice_id=payload.invoice_id, outcome=outcome)
 
 

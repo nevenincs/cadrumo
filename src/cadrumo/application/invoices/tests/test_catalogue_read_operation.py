@@ -52,7 +52,7 @@ from ..catalogue_read_operation import (
     project_invoice_list_result,
     project_invoice_view_result,
 )
-from ..catalogue_read_projection import CatalogueInvoiceSnapshot
+from ..catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ..catalogue_selection import InvoiceLookupRefusalReason
 from ..inspection_read_ports import InvoiceInspectionReadPorts
 
@@ -164,7 +164,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         currency="EUR",
         rate_provider=exchange_rate_provider(),
     )
-    return CatalogueInvoiceSnapshot.from_invoice(invoice)
+    return CatalogueInvoiceSnapshot.from_invoice(invoice, documents=InvoiceDocumentIndex.from_manifests(()))
 
 
 def test_registration_uses_independent_closed_request_and_result_schemas() -> None:

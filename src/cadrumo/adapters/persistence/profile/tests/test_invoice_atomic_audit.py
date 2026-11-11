@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.catalogue_creation import (
     build_catalogue_lifecycle_ports,
 )
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.catalogue_creation_ports import (
@@ -121,6 +122,7 @@ def test_event_revision_race_retries_without_losing_either_event(tmp_path: Path)
                 event_repository=events,
             ),
             rate_provider=base_ports.rate_provider,
+            documents=base_ports.documents,
         )
 
         result = create_catalogue_invoice(
@@ -150,6 +152,7 @@ def _ports_with_stale_event_revision(
             event_repository=_StaleEventRevisionRepository(event_repository),
         ),
         rate_provider=recorded_ecb_rate_provider(),
+        documents=AttachmentStore(bucket_id=_BUCKET_ID),
     )
 
 

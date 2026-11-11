@@ -48,6 +48,7 @@ from ...domain.calculations.registry.descendant_relacion_catalogue import (
 )
 from ...domain.calculations.registry.entity_type import entity_type_natural_person_token
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
+from ...domain.contribuyente.household_person_name import collapsed_person_name, household_person_name_limit_in_scope
 from ..flows.definition import (
     FlowChoice,
     FlowCondition,
@@ -99,6 +100,7 @@ _ALTA_POSTERIOR_NACIMIENTO_MES_PAGE_ID = "alta-posterior-nacimiento-mes"
 _GASTOS_GUARDERIA_PAGE_ID = "gastos-guarderia"
 _GASTOS_GUARDERIA_MENSUALES_PAGE_ID = "gastos-guarderia-mensuales"
 _NIF_PAGE_ID = "nif"
+_APELLIDOS_NOMBRE_PAGE_ID = "apellidos-nombre"
 
 #: Per-descendant page ids in walk order (consumed by the fact projection).
 DESCENDANT_PAGE_IDS: tuple[str, ...] = (
@@ -119,10 +121,14 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _GASTOS_GUARDERIA_PAGE_ID,
     _GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
     _NIF_PAGE_ID,
+    _APELLIDOS_NOMBRE_PAGE_ID,
 )
 
 #: Registered id of the per-answer descendant-NIF validator.
 DESCENDANT_NIF_VALIDATOR_ID = "descendant-nif"
+
+#: Registered id of the per-answer descendant surnames-and-name length validator.
+DESCENDANT_NAME_VALIDATOR_ID = "descendant-apellidos-nombre"
 
 #: Registered id of the per-answer descendant meses-madre-trabajo range validator.
 DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
@@ -210,6 +216,8 @@ _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia
 _GASTOS_MENSUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.prompt"
 _GASTOS_MENSUALES_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.help"
 _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
+_APELLIDOS_NOMBRE_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.apellidos-nombre.prompt"
+NAME_TOO_LONG_LOCALE_KEY = "wizard.setup.descendientes.apellidos-nombre.too_long"
 
 # Verdict message keys minted for the constraint guards below (the range,
 # sign, and entry-event refusals). Reused generic keys were checked
@@ -260,6 +268,24 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
 
 
 register_answer_validator(DESCENDANT_NIF_VALIDATOR_ID, _validate_descendant_nif)
+
+
+def _validate_descendant_name(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Hold a stated surnames and name to the length the declaration's design admits.
+
+    The name is optional at entry, so a blank answer passes; the declaration's own
+    check names a counted descendant without one. The length is measured after the
+    whitespace collapse the official type applies, and the verdict carries only the
+    page id and the bound, never the typed name.
+    """
+    collapsed = collapsed_person_name(canonical)
+    limit = household_person_name_limit_in_scope()
+    if collapsed is None or limit is None or len(collapsed) <= limit:
+        return ValidationVerdict.passed()
+    return ValidationVerdict.failed(NAME_TOO_LONG_LOCALE_KEY, page_id=page.id, limit=limit)
+
+
+register_answer_validator(DESCENDANT_NAME_VALIDATOR_ID, _validate_descendant_name)
 
 
 def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
@@ -680,6 +706,7 @@ __all__ = [
     "DESCENDANT_GASTOS_VALIDATOR_ID",
     "DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID",
     "DESCENDANT_MESES_VALIDATOR_ID",
+    "DESCENDANT_NAME_VALIDATOR_ID",
     "DESCENDANT_NIF_VALIDATOR_ID",
     "DESCENDANT_PAGE_IDS",
     "attach_descendant_group",
@@ -905,5 +932,13 @@ def _descendant_maternity_pages() -> tuple[FlowPage, ...]:
             required=False,
             answer_type=str,
             answer_validator_ids=(DESCENDANT_NIF_VALIDATOR_ID,),
+        ),
+        FlowPage(
+            id=_APELLIDOS_NOMBRE_PAGE_ID,
+            widget=FlowWidgetKind.TEXT,
+            prompt=locale_copy_ref(_APELLIDOS_NOMBRE_PROMPT_LOCALE_KEY),
+            required=False,
+            answer_type=str,
+            answer_validator_ids=(DESCENDANT_NAME_VALIDATOR_ID,),
         ),
     )

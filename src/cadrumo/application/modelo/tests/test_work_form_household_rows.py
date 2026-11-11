@@ -318,7 +318,12 @@ def test_each_incomplete_group_is_one_finding_not_one_per_box(operation: PinnedA
 def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsewhere(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    child = DescendantInfo(birth_date=_CHILD_BIRTH, convive_con_contribuyente=True, nif="12345678Z")
+    child = DescendantInfo(
+        birth_date=_CHILD_BIRTH,
+        convive_con_contribuyente=True,
+        nif="12345678Z",
+        apellidos_nombre="Ortega Navarro Pablo",
+    )
     revision = _calculated(operation, _record(*_descendant_facts(operation, (child,))))
 
     group = _group(operation, revision, "hijo-rows")
@@ -328,8 +333,8 @@ def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsew
     (cells,) = _cells(group)
     assert cells["NIFDLG"] == "12345678Z"
     assert cells["FNACDLG"] == _CHILD_BIRTH.isoformat()
-    # No stored leaf states the name or the official disability clave, so those cells stay unknown.
-    assert cells["APENOMDLG"] is None
+    assert cells["APENOMDLG"] == "Ortega Navarro Pablo"
+    # No stored leaf states the official disability clave, so that cell stays unknown.
     assert cells["MINUSDLG"] is None
     assert cells["FALLDLG"] is None
     assert _group(operation, revision, "ascendiente-rows").rows_known is False

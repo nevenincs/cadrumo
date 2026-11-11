@@ -153,7 +153,7 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
             ("engine", "application.workflow.steps.auth_certificate_load_failed", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.auth_provider_unavailable", "no_recovery_verdict"),
             ("deadline_decisions", "application.workflow.steps.deadline_closed", "no_recovery_verdict"),
-            ("deadline_decisions", "application.workflow.steps.deadline_future", "no_recovery_verdict"),
+            ("deadline_decisions", "application.workflow.steps.deadline_future", "_window_not_yet_open_verdict"),
             ("engine", "application.workflow.steps.draft_build_failed", "_conditional_action_verdict"),
             ("engine", "application.workflow.steps.draft_identity_mismatch", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.draft_not_ready", "_conditional_action_verdict"),

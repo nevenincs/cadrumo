@@ -23,7 +23,11 @@ from cadrumo.domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_simplificada_token,
     irpf_estimation_regime_objetiva_token,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    projected_exercise,
+    supported_exercises_with_projection,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -36,7 +40,10 @@ from ....core.aggregation import (
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ....domain.calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_first_filing_year
+from ....domain.calculations.registry.inventory_anexo_d_applicability import (
+    inventory_anexo_d_applies,
+    resolve_inventory_anexo_d_first_filing_year,
+)
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -630,8 +637,8 @@ def test_a_book_with_no_recorded_closing_value_is_not_ready_rather_than_tampered
     assert diagnostic.remedy is not None
 
 
-def test_a_book_with_no_stock_closed_on_its_movements_projects_proven_zero_variation_and_purchases() -> None:
-    year = newest_authored_edition("100")
+def _closed_no_stock_ledger(year: int) -> InventoryLedger:
+    """A book opened with no stock and closed on its movements, on the taxpayer's statement that none was held."""
     fresh = _fresh_ledger(year)
     statement = _ref("no-stock-statement")
     record = build_closing_authority_record(
@@ -656,7 +663,11 @@ def test_a_book_with_no_stock_closed_on_its_movements_projects_proven_zero_varia
         source_command="ledger.inventory.closing-value.record",
         now=datetime(year + 1, 1, 10, tzinfo=UTC),
     )
-    closed = fresh.model_copy(update={"closing_authority_record": record})
+    return fresh.model_copy(update={"closing_authority_record": record})
+
+
+def test_a_book_with_no_stock_closed_on_its_movements_projects_proven_zero_variation_and_purchases() -> None:
+    closed = _closed_no_stock_ledger(newest_authored_edition("100"))
     repository = _InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(closed,)))
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
@@ -670,6 +681,68 @@ def test_a_book_with_no_stock_closed_on_its_movements_projects_proven_zero_varia
         ("inventory-0181", 1): Decimal("0.00"),
         ("inventory-0182", 1): Decimal("0.00"),
     }
+
+
+def _published_inventory_years(operation: PinnedAuthorityOperation) -> tuple[tuple[int, ModeloRevision], ...]:
+    """Every supported Modelo 100 exercise, projected one included, whose published revision holds the rows."""
+    years = []
+    for year in supported_exercises_with_projection("100"):
+        if not inventory_anexo_d_applies(filing_year=year, authority=operation):
+            continue
+        revision = published_snapshot("100", filing_year=year, period="0A").revision
+        if any(binding.source is BindingSourceKind.INVENTORY for binding in revision.bindings):
+            years.append((year, revision))
+    return tuple(years)
+
+
+def test_every_year_with_the_rows_keeps_stated_none_zero_unanswered_refused_and_held_stock_computed(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Through the published revision of each year: a book closed at zero, no book, and a book with stock.
+
+    The variation and the purchases rest on the existencias iniciales and finales the taxpayer states, so a
+    book with no stock proves the zero rows, while a missing book leaves them unanswered with a remedy that
+    sends the operator to the book rather than reading them as zero.
+    """
+    years = _published_inventory_years(operation)
+    assert years, "the registry authors the Anexo D inventory rows for at least one supported year"
+    for year, revision in years:
+        inventory_ids = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY}
+        context = _context(revision, year=year)
+
+        stated_none = InventorySourceResolver(
+            inventory_repository=_InventoryLedgerRepositoryScenario(
+                InventoryLedgerDocument(ledgers=(_closed_no_stock_ledger(year),))
+            )
+        ).resolve(context)
+        unanswered = InventorySourceResolver(inventory_repository=_InventoryLedgerRepositoryScenario()).resolve(context)
+        held = InventorySourceResolver(
+            inventory_repository=_InventoryLedgerRepositoryScenario(
+                InventoryLedgerDocument(ledgers=(inventory_ledger("alpha", year=year),))
+            )
+        ).resolve(context)
+
+        assert stated_none.unresolved_binding_ids == (), year
+        assert stated_none.diagnostics == (), year
+        assert set(stated_none.row_binding_values.values()) == {Decimal("0.00")}, year
+        assert {binding_id for binding_id, _row in stated_none.row_binding_values} == inventory_ids, year
+
+        assert unanswered.row_binding_values == {}, year
+        assert set(unanswered.unresolved_binding_ids) == inventory_ids, year
+        (refusal,) = unanswered.diagnostics
+        assert refusal.reason == "source_domain_not_ready", year
+        assert "missing_activity_ledgers" in refusal.message, year
+        assert "inventory book" in (refusal.remedy or ""), year
+
+        # Opening 100.00 plus one purchase at 100.00 closing on movements at 200.00: the increase and the
+        # purchases are each 100.00 and nothing decreased.
+        assert held.unresolved_binding_ids == (), year
+        assert held.diagnostics == (), year
+        assert sorted(held.row_binding_values.values()) == [
+            Decimal("0.00"),
+            Decimal("100.00"),
+            Decimal("100.00"),
+        ], year
 
 
 @pytest.mark.parametrize("actividad_id", [" alpha", "alpha ", "alpha\ncontrol"])

@@ -47,6 +47,7 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
             segundo_ciclo_infantil_inicio_mes=9,
             gastos_guarderia_mensuales=(GuarderiaMonthSpend(month=1, amount_euros=50),),
             nif="12345678Z",
+            apellidos_nombre="Ortega Navarro Pablo",
         )
         stored = {
             path.removeprefix("renta_family.descendiente.0."): value
@@ -64,8 +65,8 @@ def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
 
 _ASCENDANT_OBJECT = "renta_family.ascendiente"
 _ASCENDANT_COUNT = "renta_family.ascendientes_count"
-# The Modelo 100 bindings read these two leaves from the object, but nothing can store them yet.
-_BOUND_WITHOUT_STORED_LEAF = frozenset({"apellidos_nombre", "discapacidad_clave"})
+# The Modelo 100 bindings read this leaf from the object, but nothing can store it yet.
+_BOUND_WITHOUT_STORED_LEAF = frozenset({"discapacidad_clave"})
 
 
 def _ascendant_group(
@@ -95,6 +96,8 @@ def test_ascendant_leaves_are_those_the_form_reads_from_the_object_that_a_row_ca
     assert by_leaf["fallecimiento"].field_type is ProfileFieldType.DATE and not by_leaf["fallecimiento"].required
     assert by_leaf["convivientes"].field_type is ProfileFieldType.INTEGER
     assert by_leaf["nif"].field_type is ProfileFieldType.STRING
+    assert by_leaf["apellidos_nombre"].field_type is ProfileFieldType.STRING
+    assert not by_leaf["apellidos_nombre"].required
     assert all(leaf.label and not leaf.choices for leaf in group.leaves)
 
 
@@ -115,12 +118,13 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
         {
             _ASCENDANT_COUNT: "2",
             f"{_ASCENDANT_OBJECT}.0.nif": "12345678Z",
+            f"{_ASCENDANT_OBJECT}.0.apellidos_nombre": "Ibáñez Roca Carmen",
             f"{_ASCENDANT_OBJECT}.0.birth_date": "1950-02-03",
             f"{_ASCENDANT_OBJECT}.0.convivientes": "2",
             f"{_ASCENDANT_OBJECT}.1.birth_date": "1948-07-09",
             f"{_ASCENDANT_OBJECT}.1.fallecimiento": "  ",
             # A leaf nothing stores, and a descendant row, are not ascendant facts.
-            f"{_ASCENDANT_OBJECT}.1.apellidos_nombre": "Someone",
+            f"{_ASCENDANT_OBJECT}.1.discapacidad_clave": "1",
             "renta_family.descendiente.0.birth_date": "1980-01-01",
         }
     )
@@ -130,6 +134,7 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
     assert (first.row_index, second.row_index) == ("0", "1")
     assert [(fact.leaf, fact.value) for fact in first.facts] == [
         ("nif", "12345678Z"),
+        ("apellidos_nombre", "Ibáñez Roca Carmen"),
         ("birth_date", "1950-02-03"),
         ("convivientes", "2"),
     ]

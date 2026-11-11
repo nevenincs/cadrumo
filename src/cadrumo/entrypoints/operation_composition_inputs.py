@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     from ..application.ledger.participation_read import TransactionParticipationIndexRepositoryFactory
     from ..application.ledger.read_ports import LedgerReadPortsFactory
     from ..application.ledger.rule_repository import LedgerClassificationRuleRepositoryFactory
-    from ..application.live.filed_data_ports import FiledDataCapturePort
     from ..application.live.notification_documents import NotificationDocumentService
     from ..application.live.notification_ports import NotificationsPorts
     from ..application.live.sede_view_ports import SedeViewStreamOpener
@@ -83,6 +82,7 @@ if TYPE_CHECKING:
     from ..core.identity_check_verdict import IdentityCheckVerdictValue
     from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .live_state_composition import FiledRegisterSource
 
 
 def supplied[T](value: T | None, default: T) -> T:
@@ -314,10 +314,9 @@ class OperationCompositionInputs:
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None
     execution_caller_reader: OperationExecutionCallerReader | None = None
     connectivity_probe: ConnectivityProbePort | None = None
-    #: The AEAT register the single and bulk filed captures read; ``None`` reads the AEAT Sede.
-    #: A recorded register stands in for the authenticated site, so no provider credential is checked
-    #: before it is read, while every persistence, receipt and reconciliation step stays the production one.
-    filed_data_port: FiledDataCapturePort | None = None
+    #: The register the single and bulk filed captures read and the check run before reading it;
+    #: ``None`` reads the AEAT Sede after checking the profile's provider credentials.
+    filed_register: FiledRegisterSource | None = None
     sede_view_stream_opener: SedeViewStreamOpener | None = None
     #: The capture memory list-shaped reads share for the session's profile; ``None`` shares none.
     #: Its owner closes it when a session ends, which only a composition that hears of that may promise.
@@ -334,6 +333,13 @@ class OperationCompositionInputs:
         from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
         return self.operator_scope_ports or build_operator_scope_ports()
+
+    @cached_property
+    def filed_capture_register(self) -> FiledRegisterSource:
+        """The injected filed register or the AEAT Sede."""
+        from .live_state_composition import AEAT_SEDE_FILED_REGISTER
+
+        return self.filed_register or AEAT_SEDE_FILED_REGISTER
 
     @cached_property
     def auth_ports(self) -> AuthOperationPorts:

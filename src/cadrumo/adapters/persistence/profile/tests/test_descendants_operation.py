@@ -11,6 +11,7 @@ leaving the record untouched.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -41,6 +42,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.contribuyente.household_person_name import household_person_name_limit
 from cadrumo.domain.user_profile.errors import UserProfileValidationError
 from cadrumo.domain.user_profile.values import UserProfileRecord
 
@@ -252,7 +254,7 @@ def test_the_design_limit_is_accepted_and_one_more_is_refused(world: _World) -> 
         ({"birth_date": _dated(11, 4, 3), "rentas_anuales": "-5"}, 1),
         ({"birth_date": _dated(11, 4, 3), "relacion": "cousin"}, 1),
         ({"birth_date": _dated(11, 4, 3), "alta_posterior_nacimiento_mes": "13"}, 1),
-        ({"birth_date": _dated(11, 4, 3), "apellidos_nombre": "Ana"}, 1),
+        ({"birth_date": _dated(11, 4, 3), "apellidos_nombre": " 	 "}, 1),
         ({"birth_date": _dated(11, 4, 3), "custodia_compartida": "false"}, 1),
         ({"birth_date": _dated(11, 4, 3), "nif": _WRONG_LETTER_NIF}, 1),
         ({"birth_date": _dated(11, 4, 3), "nif": _ENTITY_NIF}, 1),
@@ -291,6 +293,28 @@ def test_a_refused_value_leaves_no_chained_exception_carrying_what_was_typed(
     assert refused.value.__context__ is None
 
 
+def test_a_name_is_stored_collapsed_up_to_the_design_length_and_refused_one_past_it(world: _World) -> None:
+    limit = household_person_name_limit(authority=world.operation)
+    at_limit = "N" * limit
+    elder, younger = (date.today() - timedelta(days=days) for days in (3700, 3300))
+    world.replace(
+        _row(birth_date=elder.isoformat(), apellidos_nombre="  Ortega   Navarro	Pablo "),
+        _row(birth_date=younger.isoformat(), apellidos_nombre=at_limit),
+    )
+
+    assert world.facts()[f"{DESCENDANT_OBJECT_PATH}.0.apellidos_nombre"] == "Ortega Navarro Pablo"
+    assert world.facts()[f"{DESCENDANT_OBJECT_PATH}.1.apellidos_nombre"] == at_limit
+    _, rows = world.served()
+    assert ("apellidos_nombre", "Ortega Navarro Pablo") in [(fact.leaf, fact.value) for fact in rows[0].facts]
+    before = world.record()
+
+    with pytest.raises(UserProfileValidationError) as refused:
+        world.replace(_row(birth_date=elder.isoformat(), apellidos_nombre=at_limit + "N"))
+
+    assert refused.value.context == {"row": 1, "limit": limit}
+    assert world.record().content_digest == before.content_digest
+
+
 def test_a_refusal_names_the_row_by_position(world: _World) -> None:
     with pytest.raises(UserProfileValidationError) as refused:
         world.replace(_row(birth_date=_dated(11, 4, 3)), _row(birth_date=_dated(10, 4, 3)), _row(convivencia="true"))
@@ -306,7 +330,7 @@ def test_every_refusal_serves_a_sentence_in_the_workers_language_and_never_echoe
     attempts = (
         (_row(birth_date=_dated(11, 4, 3), convivencia=typed), ("2",)),
         (_row(convivencia="true"), ("2",)),
-        (_row(birth_date=_dated(11, 4, 3), apellidos_nombre=typed), ("2",)),
+        (_row(birth_date=_dated(11, 4, 3), apellidos_nombre=typed * 10), ("2",)),
     )
     sentences: set[str] = set()
     with override_settings(cadrumo_output_language=language.value):

@@ -484,7 +484,7 @@ def _autonomo_simplificada() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_simplificada"),
         iva_regime=IVARegime("GENERAL"),
-        # RIRPF art. 109.1 is a three-state fact: this autónomo states that the
+        # RIRPF arts. 109.2 to 109.4 is a three-state fact: this autónomo states that the
         # 70 per cent coverage exception does not hold, which is what leaves the
         # pago fraccionado due. Unanswered, Modelo 130 is INCOMPLETE, not due.
         art109_activity_income_withholding_ge_70pct=False,

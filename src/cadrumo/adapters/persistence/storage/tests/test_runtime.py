@@ -16,8 +16,9 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import OutputLanguage
 from .....core.secure_object_write import SecureObjectWrite
+from .....core.time.clock import frozen_clock
 from ..bucket.directory_layout import bucket_paths
-from ..errors import StorageValidationError
+from ..errors import SessionExpiredError, StorageValidationError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
@@ -580,11 +581,6 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
     cases = (
         (None, StorageRuntimeReadinessCode.NO_ACTIVE_SESSION),
         (_session(_BUCKET_B_ID), StorageRuntimeReadinessCode.SESSION_CHANGED),
-        (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
-        (
-            _session(_BUCKET_A_ID, opened_at=datetime(1980, 1, 1, tzinfo=UTC), idle_minutes=5),
-            StorageRuntimeReadinessCode.SESSION_EXPIRED,
-        ),
     )
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
 
@@ -598,5 +594,27 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
             pytest.raises(StorageValidationError) as raised,
         ):
             runtime.secure_object_repository()
+        assert raised.value.context is not None
+        assert raised.value.context["readiness_code"] == match.value
+
+
+def test_runtime_repository_factory_refuses_an_ended_session_as_expired(tmp_path: Path) -> None:
+    """A session that ended is the operator's to reopen, as the secure-object repository reports it."""
+    cases = (
+        (_sealed_session(_BUCKET_A_ID), StorageRuntimeReadinessCode.SESSION_SEALED),
+        (
+            _session(_BUCKET_A_ID, opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
+            StorageRuntimeReadinessCode.SESSION_EXPIRED,
+        ),
+    )
+    settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
+
+    for replacement_session, match in cases:
+        with activate_session(_session(_BUCKET_A_ID)):
+            runtime = inspect_storage_runtime(settings, now=_NOW)
+
+        with activate_session(replacement_session), frozen_clock(_NOW), pytest.raises(SessionExpiredError) as raised:
+            runtime.secure_object_repository()
+        assert not isinstance(raised.value, StorageValidationError)
         assert raised.value.context is not None
         assert raised.value.context["readiness_code"] == match.value
