@@ -312,8 +312,10 @@ impl Server {
                     ));
                 };
                 let request = decode(&bytes)?;
-                if matches!(request, Request::SuccessorReady { .. })
-                    && peer.identity.image != self.manager
+                // Only Windows hosts an agent service that may demand the local AI server.
+                if matches!(request, Request::DemandLocalAi { .. })
+                    || (matches!(request, Request::SuccessorReady { .. })
+                        && peer.identity.image != self.manager)
                 {
                     return Err(io::ErrorKind::PermissionDenied.into());
                 }

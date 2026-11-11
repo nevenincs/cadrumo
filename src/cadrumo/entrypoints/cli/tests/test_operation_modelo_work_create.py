@@ -23,6 +23,7 @@ from ....application.modelo.work_create_operation import (
     ModeloWorkCreateSuccess,
 )
 from ....application.operations.public_period import PublicPeriod
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
@@ -142,7 +143,12 @@ def test_valid_refusal_preserves_receipt_and_bounded_reason(monkeypatch: pytest.
     projection = ModeloWorkCreateProjection(
         profile_id=_PROFILE,
         period=PublicPeriod.from_period(_PERIOD),
-        outcome=ModeloWorkCreateRefusal(modelo="303", reason="the profile is outside the declared taxpayer scope"),
+        outcome=ModeloWorkCreateRefusal(
+            modelo="303",
+            reason="the profile is outside the declared taxpayer scope",
+            refusal_words="Modelo 303 does not apply: " + "the profile is outside the declared taxpayer scope",
+            refusal_words_language=OutputLanguage.EN,
+        ),
     )
     _bind(
         monkeypatch,
@@ -218,7 +224,12 @@ def test_mismatched_success_preserves_bad_receipt_as_refusal(monkeypatch: pytest
 
 @pytest.mark.parametrize("altered", ["profile", "period", "modelo", "code", "effect", "allow", "terminal"])
 def test_malformed_refusal_never_becomes_success(monkeypatch: pytest.MonkeyPatch, altered: str) -> None:
-    outcome = ModeloWorkCreateRefusal(modelo="303", reason="not applicable")
+    outcome = ModeloWorkCreateRefusal(
+        modelo="303",
+        reason="not applicable",
+        refusal_words="Modelo 303 does not apply: " + "not applicable",
+        refusal_words_language=OutputLanguage.EN,
+    )
     projection = ModeloWorkCreateProjection(
         profile_id=_PROFILE, period=PublicPeriod.from_period(_PERIOD), outcome=outcome
     )

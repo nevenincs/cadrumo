@@ -5,9 +5,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import StringConstraints, ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.auth.apoderado_text import ApoderadoNotes
 from cadrumo_client.commands.payloads import (
     ApoderadoCheckResult,
     ApoderadoClearResult,
@@ -225,8 +226,13 @@ class TestApoderadoEnvelopeContractParity:
             self._status(catalogue_version="")
 
     def test_notes_and_represented_identity_stay_bounded(self) -> None:
+        # The bound is the notes type's own, so this tracks it rather than a copy that goes stale.
+        (constraint,) = (item for item in ApoderadoNotes.__metadata__ if isinstance(item, StringConstraints))
+        bound = constraint.max_length
+        assert bound is not None
+        assert self._configure(notes="x" * bound).notes == "x" * bound
         with pytest.raises(ValidationError):
-            self._configure(notes="x" * 501)
+            self._configure(notes="x" * (bound + 1))
         with pytest.raises(ValidationError):
             self._configure(represented_nif="x" * 17)
         with pytest.raises(ValidationError):

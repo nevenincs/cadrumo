@@ -188,9 +188,9 @@ A draft collects its supporting documents when you check it, so an invoice attac
 
 Use the local calendar to see what may be due for the active profile. On a fresh
 profile, first declare that your income comes from an economic activity, the
-fact that decides Modelo 130. Then pass `--allow-incomplete` so the agenda runs
-before every profile fact is filled in. The last command explains why Modelo 130
-applies:
+fact that decides Modelo 130. The agenda runs before every profile fact is
+filled in, and lists the facts still unanswered as warnings. The last command
+explains why Modelo 130 applies:
 
 ```{cli-sequence} quickstart-agenda
 :verify: Confirm the agenda and the Modelo 130 explanation read back.

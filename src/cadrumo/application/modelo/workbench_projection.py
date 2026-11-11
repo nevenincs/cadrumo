@@ -412,6 +412,7 @@ class PublicModeloWorkForm(BaseModel):
     compares_taxation: bool = False
     compares_borrador: bool = False
     offers_iva_wallet: bool = False
+    verification_out_of_date: bool = False
     filing: ModeloFormFiling | None
     last_export: ModeloFormExport | None
     edit_closure: ModeloFormEditClosure | None

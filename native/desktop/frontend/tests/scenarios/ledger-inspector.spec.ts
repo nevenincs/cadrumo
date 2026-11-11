@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
 import { fixtureYear } from "../../src/dev/fixtureDates";
+import { fixtureLedger } from "../../src/dev/fixtures/ledger";
 
 /** The year of the scenario ledger's date, whose periods the scenarios open. */
 const scenarioYear = fixtureYear;
@@ -300,6 +301,58 @@ test("jumping to a section scrolls to it and focuses its heading", async ({
   await expect(body(target).locator(".ledger-provenance")).toContainText(
     "extracto-",
   );
+});
+
+test("Details shows the reference the statement printed, and says when it printed none", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1920, height: 900 });
+  await openLedger(target);
+  const digits = (text: string) => text.replace(/\D/g, "");
+  // Each grid row is matched to its fixture movement by description and
+  // amount, so the reference the panel shows is the one that movement holds.
+  const movements = fixtureLedger().movements.map(({ transaction }) => ({
+    description: transaction.description,
+    amount: digits(transaction.amount),
+    reference: transaction.statement_reference,
+  }));
+  const notStated = label("desktop.ledger.inspector.not_stated");
+  const seen = new Set<string>();
+  const rows = dataRows(target);
+  for (let at = 0; at < 40 && seen.size < 2; at += 1) {
+    const row = rows.nth(at);
+    const description = (await cellOf(row, "description").innerText()).trim();
+    const amount = digits(await cellOf(row, "amount").innerText());
+    const matches = movements.filter(
+      (item) => item.description === description && item.amount === amount,
+    );
+    if (matches.length !== 1) continue;
+    const expected = matches[0]!.reference;
+    await cellOf(row, "status").click();
+    if (!(await panel(target).isVisible()))
+      await target.keyboard.press("Alt+KeyI");
+    await expect(panel(target).locator(".ledger-inspector h2")).toContainText(
+      description,
+    );
+    await jumpTo(
+      target,
+      "details",
+      label("desktop.ledger.inspector.section.details"),
+    );
+    await expect(
+      body(target)
+        .getByRole("term")
+        .filter({
+          hasText: label("desktop.ledger.inspector.statement_reference"),
+        }),
+    ).toBeVisible();
+    await expect(
+      body(target).locator(".ledger-statement-reference"),
+    ).toHaveText(expected ?? notStated);
+    seen.add(expected === null ? "none" : "printed");
+  }
+  // Both a printed reference and a statement that printed none were shown.
+  expect([...seen].sort()).toEqual(["none", "printed"]);
 });
 
 test("classifying from the inspector goes through the one command and stages it", async ({

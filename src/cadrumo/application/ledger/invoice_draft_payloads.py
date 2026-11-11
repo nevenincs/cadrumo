@@ -67,6 +67,13 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     note: str = ""
 
 
+class EvidenceFindingWordsPayload(OutputSchema):
+    """Which sentence explains a finding and the values it quotes. Mirrors FindingWords."""
+
+    wording: str
+    params: list[tuple[str, str]] = []
+
+
 class EvidenceDraftDiscrepancyPayload(OutputSchema):
     """One deterministic check the read document failed."""
 
@@ -75,6 +82,10 @@ class EvidenceDraftDiscrepancyPayload(OutputSchema):
     detail: str = ""
     expected: str | None = None
     observed: str | None = None
+    words: EvidenceFindingWordsPayload | None = None
+    #: The sentence served for ``words`` and the language it is in.
+    detail_words: str | None = None
+    detail_words_language: str | None = None
 
 
 class EvidenceStructuredInvoiceClassPayload(OutputSchema):
@@ -139,6 +150,7 @@ __all__ = [
     "EvidenceExtractResult",
     "EvidenceFieldAmbiguityCandidatePayload",
     "EvidenceFieldProvenancePayload",
+    "EvidenceFindingWordsPayload",
     "EvidenceLabelReadingFallbackPayload",
     "EvidenceStructuredInvoiceClassPayload",
 ]

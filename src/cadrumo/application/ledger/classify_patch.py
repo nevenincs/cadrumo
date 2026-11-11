@@ -36,6 +36,7 @@ from .models import (
     BulkClassifyRow,
     ManualLedgerTransactionPatch,
 )
+from .recargo_regime import require_recargo_regime_for_purchase
 
 # The CSV columns that carry a value single classification also takes; the rest of the
 # columns are the row's identity, its classification and the usage ratio.
@@ -78,7 +79,7 @@ def _resolve_manual_field_value(
         return None
     if field_name == "business_classification":
         return BusinessClassification(value)
-    if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount"}:
+    if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount", "recargo_amount"}:
         return _manual_decimal_value(field_name, value)
     return _resolve_manual_authority_value(field_name, value, current=current, operation=operation)
 
@@ -235,6 +236,14 @@ def build_manual_classification_patch(
     patch_values = resolve_classification_patch_values(
         payload.patch, payload.patch_fields, current=current, operation=operation
     )
+    if "recargo_amount" in patch_values:
+        require_recargo_regime_for_purchase(
+            bucket_id=bucket_id,
+            direction=current.direction,
+            recargo_amount=cast(Decimal | None, patch_values["recargo_amount"]),
+            effective_date=current.raw.booked_date,
+            operation=operation,
+        )
     classification = _resolve_m210_classification(
         payload,
         bucket_id=bucket_id,

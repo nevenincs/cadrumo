@@ -88,6 +88,7 @@ from .verification_report_facts import (
     build_verification_report,
     classify_verification_outcome,
     granting_verification_report,
+    verification_sources_digest,
 )
 from .verification_repository_ports import VerificationRepositoryBundle
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
@@ -162,7 +163,7 @@ def _existing_verification(
             require_verification_report_coordinates_current(
                 repos.verification.load(operation=operation), operation=operation
             ),
-            calculation_revision_id,
+            target,
         )
         if existing is not None:
             return ModeloVerificationResult(
@@ -204,7 +205,7 @@ def _prepare_verification_profile(
         work_unit_repository=repos.work_unit,
         calculation_repository=repos.calculation,
         filing_repository=repos.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies_to_profile(
             taxpayer_profile_for_work(profile),
         ),
         operation=operation,
@@ -306,6 +307,7 @@ def verify_modelo_revision_with_preconditions(
             work_profile=checked_profile,
             ledger_membership_ports=repos.ledger_membership_ports,
             evaluated_at=now,
+            work_unit_repository=repos.work_unit,
         )
     )
     # A registry-snapshot refusal already stands as a blocking finding, and
@@ -327,6 +329,7 @@ def verify_modelo_revision_with_preconditions(
         granted=granted,
         actor=actor,
         run_at=now,
+        source_transactions_digest=verification_sources_digest(target, repos.transaction.load()),
     )
 
     return _finish_verification(

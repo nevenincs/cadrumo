@@ -12,8 +12,9 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts
 from cadrumo.application.ledger.classification_category_resolution import IvaCategoryResolution
+from cadrumo.application.ledger.closure_findings import closure_findings
 from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment
-from cadrumo.application.ledger.confirmation_gate import ConfirmationBlocker
+from cadrumo.application.ledger.confirmation_gate import ConfirmationBlocker, confirmation_blockers
 from cadrumo.application.ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
 from cadrumo.application.ledger.establishment_ladder import (
     CounterpartyEstablishment,
@@ -32,8 +33,10 @@ from cadrumo.application.ledger.invoice_draft_records import (
     LabelReadingFallbackCause,
 )
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
+    ConfirmationBlockerProjectionV1,
     ConfirmedEstablishmentProjectionV1,
     CounterpartyEstablishmentProjectionV1,
+    DraftDiscrepancyProjectionV1,
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
     LabelReadingFallbackProjectionV1,
@@ -46,10 +49,13 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationSchemaBindingV1
 from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
 from cadrumo.core.classifier_input_source import ClassifierInputSource
+from cadrumo.core.config import override_settings
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason
-from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -57,6 +63,7 @@ from cadrumo.domain.iva.supply_nature import SupplyNature
 
 from ....domain.iva.classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
+from .clean_invoice_draft_support import clean_invoice_draft
 
 _YEAR = filing_year_envelope().horizon
 
@@ -363,3 +370,40 @@ def test_public_dto_graphs_bind_to_closed_operation_schemas() -> None:
             schema_version=1,
             model_type=model,
         )
+
+
+@pytest.mark.parametrize("language", [language.value for language in OutputLanguage])
+def test_a_finding_and_its_blocker_serve_their_explanation_in_the_operator_language(language: str) -> None:
+    """The real closure check's finding reaches a frontend worded in the output language, quoting its figures."""
+    draft = clean_invoice_draft().model_copy(update={"grand_total": Decimal("126.20")})
+    (finding,) = closure_findings(draft)
+    (blocker,) = confirmation_blockers(draft.model_copy(update={"discrepancies": (finding,)}))
+
+    with override_settings(cadrumo_output_language=language):
+        served = DraftDiscrepancyProjectionV1.from_finding(finding)
+        served_blocker = ConfirmationBlockerProjectionV1.from_blocker(blocker)
+
+    expected = tr(
+        "application.ledger.draft_finding.total_not_closed", locale=language, total="126.20", computed="121.00"
+    )
+    assert served.words is not None
+    assert served.words.wording is DraftFindingWording.TOTAL_NOT_CLOSED
+    assert served.detail_words == expected
+    assert served.detail_words_language is OutputLanguage(language)
+    assert served_blocker.detail_words == expected
+    assert served.detail == served_blocker.detail == ""
+    assert "126.20" in expected
+    assert "121.00" in expected
+
+
+def test_the_spanish_explanation_is_not_the_english_one() -> None:
+    """Without this, a catalogue that copied English into Spanish would pass the test above."""
+    draft = clean_invoice_draft().model_copy(update={"grand_total": Decimal("126.20")})
+    (finding,) = closure_findings(draft)
+
+    worded: dict[str, str | None] = {}
+    for language in (OutputLanguage.EN, OutputLanguage.ES):
+        with override_settings(cadrumo_output_language=language.value):
+            worded[language.value] = DraftDiscrepancyProjectionV1.from_finding(finding).detail_words
+
+    assert worded["es"] != worded["en"]

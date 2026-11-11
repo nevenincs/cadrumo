@@ -1013,6 +1013,7 @@ export function draftRow(draft: Draft): LedgerRow {
       classification_reason: "",
       classification_confidence: null,
       source_jurisdiction: null,
+      statement_reference: null,
       value_in_eur: null,
       fx_rate: null,
       created_at: "",

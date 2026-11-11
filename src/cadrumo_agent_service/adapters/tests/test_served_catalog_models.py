@@ -39,10 +39,13 @@ def _entry(model: str, **overrides: Any) -> dict[str, Any]:
     return entry
 
 
-def _document(*models: object, provider: str = "local", transport: str = "api") -> dict[str, Any]:
+def _document(
+    *models: object, provider: str = "local", transport: str = "api", health: object | None = None
+) -> dict[str, Any]:
     record = {
         "provider_id": provider,
         "transport": transport,
+        **({} if health is None else {"health": health}),
         "catalog": {"schema_version": 2, "models": list(models), "recommended": {}},
         "background_requests": {"text": "proven", "image": "proven", "pdf": "unsupported", "options": []},
     }
@@ -86,6 +89,40 @@ def test_whether_the_lane_s_server_holds_each_model_is_read_and_an_unstated_one_
         ("synthetic-installed:1", True),
         ("synthetic-absent:1", False),
         ("synthetic-unstated:1", None),
+    ]
+
+
+def _engine(state: str) -> dict[str, Any]:
+    if state == "running":
+        return {"engine": {"engine": "llamacpp", "state": "running", "reason": None, "door": None}}
+    return {"engine": {"engine": "llamacpp", "state": state, "reason": "not_reachable", "door": "local_ai_setup"}}
+
+
+def test_a_server_the_agent_did_not_read_holds_nothing_known_and_keeps_its_models_facts() -> None:
+    document = _document(
+        _entry("synthetic-held:1"), _entry("synthetic-absent:1", installed=False), health=_engine("not_running")
+    )
+
+    entries = ServedCatalogModels(lambda: document).lane_models("local", "api")
+
+    assert entries is not None
+    assert [(entry.id, entry.installed, entry.vision, entry.size_bytes) for entry in entries] == [
+        ("synthetic-held:1", None, True, 2_000),
+        ("synthetic-absent:1", None, True, 2_000),
+    ]
+
+
+def test_a_server_the_agent_read_says_what_it_holds() -> None:
+    document = _document(
+        _entry("synthetic-held:1"), _entry("synthetic-absent:1", installed=False), health=_engine("running")
+    )
+
+    entries = ServedCatalogModels(lambda: document).lane_models("local", "api")
+
+    assert entries is not None
+    assert [(entry.id, entry.installed) for entry in entries] == [
+        ("synthetic-held:1", True),
+        ("synthetic-absent:1", False),
     ]
 
 

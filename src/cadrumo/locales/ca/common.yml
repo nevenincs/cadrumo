@@ -95,6 +95,19 @@ aggregation:
         no estableix res, i la seva identificació a efectes d'IVA no pot respondre-hi.
       missing_counterparty_identification_state: Una operació intracomunitària requereix
         l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
+      recargo_departs_from_published_rate: El recàrrec d'equivalència %{declared}
+        repercutit sobre la base %{base} al tipus d'IVA del %{rate} no coincideix
+        amb el %{recargo_rate} que la llei associa a aquest tipus el %{date} (%{provision}),
+        que dona %{expected}. Corregeix la fila o emet una factura rectificativa.
+      recargo_rate_unmodelled: 'El recàrrec d''equivalència %{declared} repercutit
+        al tipus d''IVA del %{rate} el %{date} no es pot comprovar: el registre no
+        publica cap tipus de recàrrec per a aquest tipus d''IVA en aquesta data. Queda
+        sense resoldre fins que es publiqui el tipus.'
+      recargo_tobacco_rung_unsupported: El recàrrec d'equivalència %{declared} sobre
+        la base %{base} correspon al tipus de les labors del tabac, del %{recargo_rate}
+        (%{provision}), que el 303 declara en la seva pròpia línia. Aquesta línia
+        encara no està suportada, de manera que la fila queda sense resoldre en lloc
+        de declarar-se al recàrrec general.
       rectification_consumed_more_than_once: Un apunt d'IVA ja corregit només es pot
         rectificar una vegada.
       sectorized_apportionment_duplicate_sectors: El repartiment sectoritzat d'IVA
@@ -3237,6 +3250,7 @@ desktop:
         unclassified: Classifica després
         under: A les parts els falten {amount} per al moviment.
       stage: Afegeix als canvis
+      statement_reference: Referència de l'extracte
       unread: No s'ha pogut llegir
       unsaved: 'Canvis: {count} · sense desar'
       unsaved_classification: → {classification} · sense desar
@@ -3825,6 +3839,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Criteri de caixa
       invoice_category_contradicted: Categoria IVA
       invoice_deduction_family_unresolved: Deducció
+      invoice_recargo_not_declarable: Recàrrec
       invoice_recargo_split_unresolved: Recàrrec
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Classificació
@@ -3852,6 +3867,8 @@ desktop:
         amb factures
       invoice_category_contradicted: La categoria d'IVA no encaixa amb el país
       invoice_deduction_family_unresolved: La factura no indica quina deducció correspon
+      invoice_recargo_not_declarable: El recàrrec no és el tipus legal sobre la seva
+        base
       invoice_recargo_split_unresolved: El recàrrec no es reparteix entre els seus
         tipus d'IVA
       linked_movement_contradicts_invoice: No coincideix amb la seva factura
@@ -4783,6 +4800,7 @@ desktop:
     search: Cerca dades del perfil
     search_placeholder: Cerca
     sections: Seccions
+    setup_completed_notice: La configuració del teu perfil és completa.
     signed_out: Inicia sessió per veure i editar el teu perfil.
     title: El teu perfil
     unavailable: No s’ha pogut carregar el teu perfil. Actualitza per tornar-ho a
@@ -4947,6 +4965,7 @@ desktop:
     progress_label: Progrés de {name}
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
+    ready_dormant: A punt. Es posa en marxa quan es llegeix un document.
     refused_browser_not_removed: Cadrumo no ha pogut eliminar el navegador. Torna'l
       a comprovar i prova-ho una altra vegada.
     refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.

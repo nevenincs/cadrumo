@@ -6,6 +6,7 @@ This module uses :class:`InvoiceCatalogue`, the profile's invoice catalogue.
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from decimal import Decimal
 from typing import ClassVar
 
 from ...core.aggregation import (
@@ -27,6 +28,7 @@ from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecomp
 from ...domain.invoices.models import Invoice
 from ...domain.iva.establishment import SPAIN_COUNTRY_CODE
 from ...domain.iva.schema import InvoiceKind
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -169,6 +171,7 @@ def _invoice_resolution_from_observations(
             bucket_invoices=catalogue_invoices,
             resolver_id=resolver_id,
         )
+        diagnostics += _m349_unclassified_operation_diagnostics(source_invoices, resolver_id=resolver_id)
     diagnostics += m347_role_fact_advisories(
         source_invoices,
         context=context,
@@ -391,6 +394,67 @@ def _m349_incoherent_verdict(
 
 
 M349_CLAVE_INFERRED_REASON = "m349_clave_inferred_from_category"
+
+
+def _m349_operation_unclassified(invoice: Invoice) -> bool:
+    """Return whether this invoice is an operation with another member state whose clave no record states.
+
+    A party in another member state, a tax id to declare it under and no cuota
+    is the shape every Modelo 349 operation takes, and it is equally the shape
+    of an exempt supply of goods (clave E) and of a service the recipient
+    self-assesses (clave S), or on the received side of an acquisition of goods
+    (A) or of services (I). With neither an operation type nor an IVA category
+    the record cannot tell them apart, so the clave stays unknown rather than
+    guessed. A foreign-currency invoice without a euro value is reported by its
+    own reason, and a record without a tax id is a factura simplificada no
+    informativa declares.
+    """
+    return (
+        invoice.operation_type is None
+        and invoice.iva_category is None
+        and invoice.counterparty_tax_id is not None
+        and invoice.counterparty_country != SPAIN_COUNTRY_CODE
+        and invoice.counterparty_eu_member_state is not None
+        and invoice.iva_total == Decimal("0")
+        and not is_unconverted_foreign_invoice(invoice)
+    )
+
+
+def _m349_unclassified_operation_diagnostics(
+    source_invoices: Sequence[Invoice],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one blocking note per invoice of the period whose Modelo 349 operation no record states.
+
+    One per invoice, unlike the inferred-clave disclosure, because each names a
+    record the filer must put right before the recapitulativa is complete: an
+    operation left out of it is an under-declaration, so the declaration must
+    never read as one with no operators while such an invoice exists. Each note
+    carries its invoice so it opens where the operation type is stated.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="m349_operation_unclassified",
+            source_kind=invoice_source_kind(invoice),
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            fact=CalculationNoteFact.of(
+                CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED,
+                rows=(invoice.invoice_id,),
+                invoice=invoice.invoice_number,
+                party=f"{invoice.counterparty_name} ({invoice.counterparty_tax_id})",
+            ),
+            message=(
+                f"invoice {invoice.invoice_number!r} has a counterparty in {invoice.counterparty_country} and no "
+                "cuota, but states neither an operation type nor an IVA category, so its Modelo 349 clave is "
+                "unknown and the operation is NOT declared"
+            ),
+            remedy="Set the invoice's operation type, then calculate again.",
+        )
+        for invoice in sorted(source_invoices, key=lambda item: (item.issued_at, item.invoice_number, item.invoice_id))
+        if _m349_operation_unclassified(invoice)
+    )
 
 
 def _clave_was_inferred_as_entrega(invoice: Invoice) -> bool:

@@ -461,6 +461,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota",
         "modelo-390-volumen-entregas-intracomunitarias-base",
         "modelo-390-volumen-exportaciones-exentas-base",
+        "modelo-390-volumen-regimen-general-base",
         # AIC (adquisiciones intracomunitarias) rate-specific box layer -- see
         # civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml.
         "modelo-390-iva-aic-bienes-tipo-0-base",

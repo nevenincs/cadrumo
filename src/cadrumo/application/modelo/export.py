@@ -42,6 +42,7 @@ from __future__ import annotations
 import functools
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
+from pathlib import Path
 
 from ...core.atomic_write import StagedPublication
 from ...core.export_layout_format import ExportLayoutFormat
@@ -366,7 +367,15 @@ def _stage_publish_and_record_export(
     mutation_writer: Callable[[Callable[[], None]], None] | None,
     emit_event: Callable[..., BucketEvent],
 ) -> tuple[DeclaracionExportResult, BucketEvent]:
-    """Write the export to staging, record its event, then publish the staged file and check it against the receipt."""
+    """Write the export to staging, publish it, check it against the receipt, then record its event.
+
+    The event states that a file was exported, and the declaration's form reads
+    it as the file the operator is to file. It is therefore recorded only once
+    the file is on the operator's path with the receipt's bytes. A publication
+    refused because the path became occupied leaves no event. When the event
+    cannot be recorded, the file this export just published is withdrawn, so
+    no unrecorded fichero is left behind.
+    """
     sink = export_sink(command)
     with sink.staged() as staged:
         receipt = _write_export_staging(
@@ -380,14 +389,48 @@ def _stage_publish_and_record_export(
             schema_provider=schema_provider,
             mutation_writer=mutation_writer,
         )
-        event = emit_event(receipt=receipt)
         if mutation_writer is None:
             sink.publish(staged)
         else:
             mutation_writer(lambda: sink.publish(staged))
 
     assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
+    try:
+        event = emit_event(receipt=receipt)
+    except BaseException:
+        _withdraw_unrecorded_export(receipt, artifact_path=command.output_path, mutation_writer=mutation_writer)
+        raise
     return receipt, event
+
+
+def _withdraw_unrecorded_export(
+    receipt: DeclaracionExportResult,
+    *,
+    artifact_path: Path,
+    mutation_writer: Callable[[Callable[[], None]], None] | None,
+) -> None:
+    """Remove the file this export published, while it still holds the receipt's bytes.
+
+    Bytes that no longer match the receipt are not this export's to remove and
+    stay on the path.
+    """
+
+    def withdraw() -> None:
+        try:
+            assert_export_artifact_matches_receipt(receipt, artifact_path=artifact_path)
+        except FilingExportError:
+            return
+        artifact_path.unlink()
+
+    try:
+        if mutation_writer is None:
+            withdraw()
+        else:
+            mutation_writer(withdraw)
+    except OSError:
+        # The event failure being raised is the outcome the caller acts on, and
+        # the operation already settles its effect as unknown after a write began.
+        return
 
 
 def _settlement_values_for_export(
@@ -950,7 +993,7 @@ def _prepare_modelo_export(
         work_unit_repository=export_ports.work_unit,
         calculation_repository=export_ports.calculation,
         filing_repository=export_ports.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies(work_unit),
         operation=operation,
     )
     raise_if_ledger_export_evidence_missing(revision)
@@ -1028,10 +1071,12 @@ def export_modelo_revision(
     decision provenance, and cross-period clean state. It then rebuilds and
     approves a transient :class:`~domain.filing.schema.ModeloDraft`, builds one typed
     filing producer snapshot, serializes through
-    ``cadrumo.application.filing.export_draft``, appends ``MODELO_EXPORTED`` to
-    the bucket-event-history catalogue, and finally publishes the staged
-    artefact onto the operator's path. Any write, event, or publication failure
-    discards the staged cleartext artefact before raising.
+    ``cadrumo.application.filing.export_draft``, publishes the staged artefact
+    onto the operator's path, checks it against the receipt, and only then
+    appends ``MODELO_EXPORTED`` to the bucket-event-history catalogue. A write or
+    publication failure discards the staged cleartext artefact before raising
+    and records no event; an event failure withdraws the published file while
+    it still holds the receipt's bytes.
 
     When ``payload_consumer`` is supplied the validated fichero bytes are handed
     to it in memory instead and no file is written: ``command.output_path``

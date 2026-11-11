@@ -978,6 +978,111 @@ application:
           here
         unnumbered_invoice: The invoice number read is not a number
         unresolved_direction: It is not clear which party issued the document
+    draft_finding:
+      breakdown_bases_disagree: The per-rate bases sum to {summed}, but the document
+        states a taxable base of {base}. These are two readings of one document, and
+        at least one is wrong.
+      breakdown_cuotas_disagree: The per-rate cuotas sum to {summed}, but the document
+        states a cuota of {cuota}. These are two readings of one document, and at
+        least one is wrong.
+      counterparty_territory_unknown: This document establishes no IVA territory for
+        {tax_id}. The country and postal code settled nothing and no confirmed fact
+        is on record, so the territory is unknown rather than the mainland.
+      customer_postal_code_unreadable: The recipient's postal code field holds "{printed}",
+        which is not a five-digit postal code, and the printed country does not settle
+        where the recipient is established. Its Spanish IVA territory stays undetermined.
+      document_issued_confirmed_received: This document shows you as the issuer, but
+        it is being confirmed as a received invoice. The direction decides which informative
+        return the record feeds and on which side, and the AEAT matches both parties'
+        returns against each other.
+      document_received_confirmed_issued: This document shows you as the recipient,
+        but it is being confirmed as an issued invoice. The direction decides which
+        informative return the record feeds and on which side, and the AEAT matches
+        both parties' returns against each other.
+      every_identifier_failed: Every identifier the document prints for the counterparty
+        failed its check, so the counterparty cannot be identified from this document.
+      every_identifier_failed_own_unavailable: Every identifier the document prints
+        for the counterparty failed its check, so the counterparty cannot be identified
+        from this document. Your own identifier was not available to exclude.
+      facturae_corrective_without_reference: The Facturae invoice class "{code}" declares
+        a corrective invoice, but the document names no invoice it corrects.
+      facturae_reference_without_corrective: The document names an invoice it corrects,
+        but its Facturae invoice class "{code}" is not corrective.
+      facturae_summary_unmodelled: The Facturae invoice class "{code}" declares a
+        summary invoice, which is not supported here.
+      filer_profile_unresolvable: No taxpayer profile could be read, so your own IVA
+        territory is unknown. It comes from your profile ({fact}) and is never read
+        from an invoice.
+      flat_cuota_not_rate_of_base: The stated cuota {cuota} is not {rate}% of the
+        stated base {base} ({expected}). Either a figure was misread or the invoice
+        charges more than one rate and the per-rate split is missing. Modelo 303 declares
+        base and cuota per rate, so confirming this would file the whole base under
+        the wrong one.
+      identity_readings_compete: '{count} readings of {field} compete and none can
+        be decided. Confirming would choose one real taxpayer''s identifier over another''s.'
+      invoice_number_without_digit: The invoice number read, "{number}", contains
+        no digit, so it cannot be the document's invoice number. It is likely a heading
+        or label read in its place.
+      lone_identifier_without_role: The identifier "{printed}" is valid, but nothing
+        on the document ties it to the counterparty. Accepting it only because it
+        is the one left could name an unrelated entity that happens to appear on the
+        page.
+      mention_expects_no_repercutido_line: The document prints the mention "{mention}"
+        ({provision}), which expects no charged IVA, but a rate and cuota are printed.
+        The document disagrees with itself, so the IVA category cannot be taken from
+        either side.
+      mention_expects_repercutido_line: The document prints the mention "{mention}"
+        ({provision}), which expects a charged IVA rate and cuota, but none is printed.
+        The document disagrees with itself, so the IVA category cannot be taken from
+        either side.
+      printed_breakdown_disagrees: The per-rate figures sum to {summed}, but the document
+        prints {printed}.
+      printed_iva_not_rate_of_base: The printed IVA {amount} is not {rate} of the
+        printed base {base}. The figures were left empty rather than one of them chosen.
+      printed_payable_not_closed: The printed amount payable {payable} is not the
+        total less the retención ({expected}). The retención was left empty.
+      printed_recargo_not_rate_of_base: The printed recargo {amount} is not {rate}
+        of the printed base {base}. The figures were left empty rather than one of
+        them chosen.
+      printed_retention_not_rate_of_base: The printed retención {retention} is not
+        {rate} of the taxable base ({expected}). The rate was left empty.
+      printed_total_not_closed: The printed total {total} is not base plus cuota plus
+        recargo plus suplidos ({computed}). The figures were left empty rather than
+        one of them chosen.
+      retention_not_rate_of_base: The stated retención {retention} is not {rate}%
+        of the taxable base ({expected}). The cash actually paid cannot be derived
+        from figures that disagree.
+      several_identifiers_compete: '{count} identifiers could each be the counterparty.
+        Choosing one by its position would be a guess.'
+      supplier_postal_code_unreadable: The issuer's postal code field holds "{printed}",
+        which is not a five-digit postal code, and the printed country does not settle
+        where the issuer is established. Its Spanish IVA territory stays undetermined.
+      tax_id_fails_check: The document prints "{printed}" as a tax identifier, but
+        it fails its check character, so it was not accepted as a verified identity.
+      tier_cuota_not_rate_of_base: The rate {rate}% states a cuota of {cuota} on a
+        base of {base}, which should be {expected}. Modelo 303 declares cuota per
+        rate, so this rate would declare the wrong figure.
+      total_not_closed: The printed total {total} does not equal base plus cuota plus
+        recargo plus suplidos ({computed}). A component was misread, or the document
+        carries one this draft cannot represent.
+      unidentified_counterparty_territory_unknown: This document establishes no IVA
+        territory for the counterparty, and prints no identifier for it. The country
+        and postal code settled nothing and no confirmed fact is on record, so the
+        territory is unknown rather than the mainland.
+      value_in_other_party_block: The value in {field} is printed inside the other
+        party's block on this document, not inside the block it was assigned to. The
+        address blocks may have been read the wrong way round, which would place both
+        parties in the wrong IVA territory.
+      withheld_named_tax: The document states {amount} withheld for the tax "{tax}",
+        which its format does not identify as IRPF, so it was not read as a retención.
+        State the retención if it is one.
+      withheld_not_rate_of_base: The withheld {amount} is not {rate}% of its stated
+        base {base} ({expected}).
+      withheld_total_disagrees: The document totals {stated} withheld, but its withheld
+        taxes sum to {summed}.
+      withheld_unnamed_tax: The document states {amount} withheld without naming the
+        tax, so it was not read as an IRPF retención. State the retención if it is
+        one.
     entry_options:
       deduction_fact_kind:
         domestic_current: Domestic purchases, current goods
@@ -1521,6 +1626,11 @@ application:
           the invoice's VAT category, and it may be another type.
         what_to_do: Check the operation type on those invoices in your records and
           set it if it differs.
+      m349_operation_unclassified:
+        what: An invoice with a party in another EU country and no VAT does not say
+          which intra-community operation it records, so the EU sales listing leaves
+          it out.
+        what_to_do: Open the invoice and set its operation type, then calculate again.
       missing_transaction_evidence:
         what: A movement that carries VAT has no invoice or document attached.
         what_to_do: Attach the invoice or receipt to that movement in your records.
@@ -1777,6 +1887,8 @@ application:
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       m347_provincia_unrecorded: 'Declared parties without a province code: {parties}.'
       m347_provincia_unstated: The province of {party}'s tax domicile is missing.
+      m349_operation_unclassified: Invoice {invoice} with {party} does not say which
+        intra-community operation it records.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
@@ -2319,6 +2431,9 @@ application:
         invoice_deduction_family_unresolved: 'the received invoice it pays does not
           show which deduction applies: classify the movement, for example as a current
           expense or as a bien de inversión'
+        invoice_recargo_not_declarable: 'an issued invoice records a recargo de equivalencia
+          that is not its base times the art. 161 rate for its VAT rate and date:
+          correct the invoice or issue a factura rectificativa'
         invoice_recargo_split_unresolved: 'an issued invoice carries one recargo de
           equivalencia over several VAT rates that differs from the sum of each rate''s
           recargo de equivalencia: correct the invoice''s recargo de equivalencia'
@@ -2386,6 +2501,10 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
+      prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: it carries figures from the return for %{unfiled_period}, which has not
+        been filed. File %{unfiled_period} first, then calculate again. Nothing was
+        saved.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
         %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the
@@ -2438,6 +2557,8 @@ application:
       source_owned_binding_override: You entered a value in a box that comes from
         your records; remove it or correct the record it comes from.
       verification_report_not_found: No check report found with id=%{verification_report_id}.
+      work_create_not_applicable: 'Modelo %{modelo} does not apply to you according
+        to your profile: %{reason} No declaration was created.'
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass

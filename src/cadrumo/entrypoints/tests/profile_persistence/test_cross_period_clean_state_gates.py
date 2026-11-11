@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
@@ -45,13 +45,18 @@ from ....application.calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
 from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
-from ....application.modelo.verification_cross_period import cross_period_clean_state_findings
+from ....application.modelo.verification_cross_period import (
+    cross_period_clean_state_findings,
+    require_cross_period_clean_state,
+)
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -642,3 +647,159 @@ def test_verify_fails_closed_when_profile_records_no_activity_start_date(tmp_pat
     finding = fail_closed_findings[0]
     assert finding.severity.value == "blocking"
     assert "next_action" not in finding.model_dump(mode="json")
+
+
+def _seed_303_first_quarter(
+    repositories: _FixtureRepositories,
+    *,
+    filing_year: int,
+    state: CalculationRevisionState | None,
+    operation: PinnedAuthorityOperation,
+) -> WorkUnit:
+    """Create the 1T Modelo 303 the 390 reads, with a head calculation in ``state`` when one is given."""
+    period = Period.from_year_and_code(filing_year, "1T")
+    unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+        revision_id=operation.snapshot("303", filing_year=filing_year, period="1T").revision.id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=repositories.work_units, bucket_event_repository=repositories.events
+        ),
+        clock=_CLOCK,
+        operation=operation,
+    )
+    if state is None:
+        return unit
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    verified = state is CalculationRevisionState.VERIFICADO_COMPLETO
+    repositories.calculations.save(
+        upsert_calculation_revision(
+            repositories.calculations.load(),
+            CalculationRevision(
+                calculation_revision_id=revision_id,
+                work_unit_id=unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=unit.modelo,
+                    revision_id=unit.revision_id,
+                    modelo_year=unit.filing_year,
+                    period=period.registry_token,
+                ),
+                state=state,
+                casilla_values={},
+                created_at=_CLOCK,
+                updated_at=_CLOCK,
+                verified_at=_CLOCK if verified else None,
+                verified_by="test-operator" if verified else None,
+                filing_instance_evidence=None,
+                source_provenance=(),
+            ),
+        )
+    )
+    unit = unit.model_copy(update={"current_calculation_revision_id": revision_id})
+    repositories.work_units.save(upsert_work_unit(repositories.work_units.load(), unit))
+    return unit
+
+
+def _filing_door(
+    repositories: _FixtureRepositories, *, operation: PinnedAuthorityOperation
+) -> tuple[PreconditionVerdict, dict[str, object]]:
+    """Refuse filing the 390 through the real clean-state gate and return its verdict and bound action facts."""
+    (target,) = (unit for unit in repositories.work_units.load().values() if str(unit.modelo) == "390")
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as refused:
+        require_cross_period_clean_state(
+            target,
+            observation_repository=repositories.observations,
+            filing_repository=repositories.filings,
+            calculation_repository=repositories.calculations,
+            verification_repository=repositories.reports,
+            justificante_repository=JustificanteRepository(),
+            taxpayer_tax_id=str(workflow_profile().tax_id),
+            activity_start_date=date(target.filing_year - 1, 1, 1),
+            subject_leaf_key="modelo.work.file",
+            operation=operation,
+            work_unit_repository=repositories.work_units,
+        )
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    return verdict, {item.argument_name: item.value for item in verdict.argument_bindings}
+
+
+def _seeded_390(objects: SecureObjectRepository) -> tuple[_FixtureRepositories, int]:
+    repositories = _fixture_repositories(objects)
+    _persist_390_draft(work_unit_repository=repositories.work_units, calculation_repository=repositories.calculations)
+    (target,) = repositories.work_units.load().values()
+    return repositories, target.filing_year
+
+
+def test_filing_a_390_whose_first_quarter_303_does_not_exist_offers_to_create_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.work.create"
+    assert bound == {"modelo": "303", "period": "1T", "year": filing_year}
+
+
+@pytest.mark.parametrize(
+    ("state", "action_id"),
+    [
+        (None, "operator.modelo.work.calculate"),
+        (CalculationRevisionState.BORRADOR, "operator.modelo.work.verify"),
+        (CalculationRevisionState.VERIFICADO_COMPLETO, "operator.modelo.work.file"),
+    ],
+)
+def test_filing_a_390_moves_its_first_quarter_303_on_by_where_it_stands(
+    tmp_path: Path,
+    state: CalculationRevisionState | None,
+    action_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+        first_quarter = _seed_303_first_quarter(repositories, filing_year=filing_year, state=state, operation=operation)
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == action_id
+    assert bound == {"work_unit_id": first_quarter.work_unit_id}
+
+
+def test_filing_a_390_whose_filed_first_quarter_lacks_its_aeat_record_captures_it(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A 303 filed on a CSV register entry with no justificante is settled by capturing it, not by redoing it."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _store_ready_profile_record()
+        repositories, filing_year = _seeded_390(profile.repository)
+        _seed_303_cross_period_sources(
+            work_unit_repository=repositories.work_units,
+            calculation_repository=repositories.calculations,
+            filing_repository=repositories.filings,
+            observation_repository=repositories.observations,
+            bucket_event_repository=repositories.events,
+            csv_periods={"1T"},
+            operation=operation,
+        )
+
+        verdict, bound = _filing_door(repositories, operation=operation)
+
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.live.filed.pull"
+    assert bound == {"modelos": "303", "period": "1T", "year": filing_year}

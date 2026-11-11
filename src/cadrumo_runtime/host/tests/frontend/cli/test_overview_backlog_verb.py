@@ -70,7 +70,6 @@ def test_backlog_renders_envelope_with_explicit_window() -> None:
             _WINDOW_FROM,
             "--to",
             _WINDOW_TO,
-            "--allow-incomplete",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -93,7 +92,6 @@ def test_backlog_json_preserves_exact_modelo_303_quarterly_coordinates(year: int
             f"{year}-01-01",
             "--to",
             f"{year + 1}-02-28",
-            "--allow-incomplete",
         ],
     )
 
@@ -194,7 +192,7 @@ def test_backlog_renders_despite_work_unit_load_failure(authority_operation: Pin
     _persist_invalid_work_unit_catalogue_payload(authority_operation)
 
     result = _invoke(
-        ["app", "overview", "backlog", "--from", _WINDOW_FROM, "--to", _WINDOW_TO, "--allow-incomplete"],
+        ["app", "overview", "backlog", "--from", _WINDOW_FROM, "--to", _WINDOW_TO],
     )
     assert result.exit_code == 0, result.output
     assert "late_count\t" in result.output

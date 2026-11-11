@@ -12,6 +12,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....core.external_constants import OutputLanguage
 from ....core.operations import (
     OperationEffect,
     OperationFrontendProjection,
@@ -164,7 +165,12 @@ def test_terminal_projector_distinguishes_success_reuse_rename_and_refusal() -> 
     refusal = ModeloWorkCreateResult(
         profile_id=_PROFILE,
         period=_PERIOD,
-        outcome=ModeloWorkCreateRefusal(modelo="303", reason="taxpayer category excludes this form"),
+        outcome=ModeloWorkCreateRefusal(
+            modelo="303",
+            reason="taxpayer category excludes this form",
+            refusal_words="Modelo 303 does not apply: " + "taxpayer category excludes this form",
+            refusal_words_language=OutputLanguage.EN,
+        ),
     )
     projected = project_modelo_work_create_result(
         refusal, _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE)

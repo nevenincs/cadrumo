@@ -25,6 +25,7 @@ from sqlalchemy.engine import Engine
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.core.operator_action_enums import ActionArgumentStatus
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -510,15 +511,21 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
         )
 
     # A refusal with a door, not a fault: importing the AEAT justificante for
-    # this work unit is what makes the filing amendable.
+    # this work unit is what makes the filing amendable. The work unit is known;
+    # the evidence kind and its reference are on the operator's justificante,
+    # so the door asks for them rather than being served unable to run.
     assert get_registered_error_code(refused.value).category is ErrorCategory.REFUSED
     verdict = refused.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "modelo.work.amend.external_evidence.present"
     assert verdict.action is not None
     assert verdict.action.action_id == "operator.modelo.filing_record.import"
-    bound = {binding.argument_name: binding.value for binding in verdict.argument_bindings}
-    assert bound == {"work_unit_id": work_unit.work_unit_id}
+    bound = {binding.argument_name: (binding.status, binding.value) for binding in verdict.argument_bindings}
+    assert bound == {
+        "evidence_kind": (ActionArgumentStatus.MISSING, None),
+        "evidence_reference_id": (ActionArgumentStatus.MISSING, None),
+        "work_unit_id": (ActionArgumentStatus.RESOLVED, work_unit.work_unit_id),
+    }
 
 
 def test_amend_refuses_when_baseline_already_superseded(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

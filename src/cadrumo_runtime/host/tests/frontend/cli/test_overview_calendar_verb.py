@@ -131,10 +131,11 @@ def test_calendar_rejects_invalid_invocation(args: list[str]) -> None:
 
 def test_calendar_renders_entries_for_q1_window() -> None:
     """A valid Q1 window over the minimal profile yields the entries
-    header lines plus zero-or-more entry rows. With profile incomplete
-    warnings present the verb still refuses without --allow-incomplete."""
+    header lines plus zero-or-more entry rows. The minimal profile leaves
+    facts unanswered; they arrive as warnings beside the rows rather than
+    refusing the calendar."""
 
-    result_strict = _invoke(
+    result = _invoke(
         [
             "app",
             "overview",
@@ -145,32 +146,14 @@ def test_calendar_renders_entries_for_q1_window() -> None:
             date(_YEAR, 3, 31).isoformat(),
         ],
     )
-    # Minimal profile triggers completeness warnings; strict mode refuses.
-    if result_strict.exit_code != 0:
-        result_lax = _invoke(
-            [
-                "app",
-                "overview",
-                "calendar",
-                "--from",
-                date(_YEAR, 1, 1).isoformat(),
-                "--to",
-                date(_YEAR, 3, 31).isoformat(),
-                "--allow-incomplete",
-            ],
-        )
-        assert result_lax.exit_code == 0, result_lax.output
-        assert f"from\t{date(_YEAR, 1, 1).isoformat()}" in result_lax.output
-        assert f"to\t{date(_YEAR, 3, 31).isoformat()}" in result_lax.output
-        assert "entries\t" in result_lax.output
-    else:
-        # Profile was complete (unusual for minimal profile) — strict
-        # mode rendered the calendar; assert the same anchors.
-        assert f"from\t{date(_YEAR, 1, 1).isoformat()}" in result_strict.output
-        assert f"to\t{date(_YEAR, 3, 31).isoformat()}" in result_strict.output
+    assert result.exit_code == 0, result.output
+    assert "from\t2026-01-01" in result.output
+    assert "to\t2026-03-31" in result.output
+    assert "entries\t" in result.output
+    assert "warning\t" in result.output
 
 
-def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
+def test_calendar_warns_of_profile_derived_enrolment_without_live_censo() -> None:
     result = _invoke(
         [
             "app",
@@ -183,10 +166,10 @@ def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
         ],
     )
 
-    assert result.exit_code != 0, result.output
+    assert result.exit_code == 0, result.output
     assert "censo.enrolment_unverified" in result.output
 
-    lax = _invoke(
+    as_json = _invoke(
         [
             "--format",
             "json",
@@ -197,14 +180,13 @@ def test_calendar_blocks_profile_derived_enrolment_without_live_censo() -> None:
             date(_YEAR, 1, 1).isoformat(),
             "--to",
             date(_YEAR, 3, 31).isoformat(),
-            "--allow-incomplete",
         ],
     )
-    assert lax.exit_code == 0, lax.output
-    warnings = json.loads(lax.output)["result"]["warnings"]
+    assert as_json.exit_code == 0, as_json.output
+    warnings = json.loads(as_json.output)["result"]["warnings"]
     censo_warning = next(warning for warning in warnings if warning["code"] == "censo.enrolment_unverified")
     assert censo_warning["affected_modelos"]
-    entries = json.loads(lax.output)["result"]["entries"]
+    entries = json.loads(as_json.output)["result"]["entries"]
     assert any(entry["censo_enrolment_state"] == "unverified" for entry in entries)
 
 
@@ -222,7 +204,6 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
             date(_YEAR, 1, 1).isoformat(),
             "--to",
             date(_YEAR, 3, 31).isoformat(),
-            "--allow-incomplete",
         ],
     )
 
@@ -255,7 +236,6 @@ def test_calendar_json_preserves_exact_modelo_303_quarterly_coordinates(year: in
             f"{year}-01-01",
             "--to",
             f"{year + 1}-02-28",
-            "--allow-incomplete",
         ],
     )
 
@@ -283,7 +263,6 @@ def test_calendar_states_that_no_aeat_history_was_ever_captured() -> None:
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
 
@@ -324,7 +303,6 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
                 from_date.isoformat(),
                 "--to",
                 to_date.isoformat(),
-                "--allow-incomplete",
             ],
         )
         assert result.exit_code == 0, result.output
@@ -375,7 +353,6 @@ def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
         date(min(supported_years.years), 1, 1).isoformat(),
         "--to",
         date(max(supported_years.years), 12, 31).isoformat(),
-        "--allow-incomplete",
     ]
     text_result = _invoke(["app", "overview", "calendar", *window])
     assert text_result.exit_code == 0, text_result.output
@@ -468,7 +445,6 @@ def test_calendar_degrades_when_local_filing_evidence_store_is_unreadable(
             date(_YEAR, 1, 1).isoformat(),
             "--to",
             date(_YEAR, 3, 31).isoformat(),
-            "--allow-incomplete",
             *extra_args,
         ],
     )
@@ -579,7 +555,6 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
 
@@ -596,7 +571,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
     assert filing_event["justificante_verified"] is False
 
 
-def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
+def test_calendar_warns_of_an_unverified_aeat_filing() -> None:
     stamp_calendar_enrolment_from_censo()
     ExpedientesService(ports=build_expedientes_ports(bucket_id=PRIMARY_PROFILE_ID)).capture(
         bucket_id=PRIMARY_PROFILE_ID,
@@ -617,7 +592,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
         ),
     )
 
-    strict = _invoke(
+    text = _invoke(
         [
             "app",
             "overview",
@@ -629,10 +604,10 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
         ],
     )
 
-    assert strict.exit_code != 0, strict.output
-    assert "filing.justificante_unverified" in strict.output
+    assert text.exit_code == 0, text.output
+    assert "filing.justificante_unverified" in text.output
 
-    lax = _invoke(
+    as_json = _invoke(
         [
             "--format",
             "json",
@@ -643,11 +618,10 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
-    assert lax.exit_code == 0, lax.output
-    warnings = json.loads(lax.output)["result"]["warnings"]
+    assert as_json.exit_code == 0, as_json.output
+    warnings = json.loads(as_json.output)["result"]["warnings"]
     warning = next(item for item in warnings if item["code"] == "filing.justificante_unverified")
     assert warning["affected_modelos"] == ["303"]
     fix_action = warning["fix_action"]
@@ -660,7 +634,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
     }
 
 
-def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
+def test_calendar_warns_of_conflicting_aeat_evidence_references() -> None:
     stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
@@ -690,7 +664,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         ),
     )
 
-    strict = _invoke(
+    text = _invoke(
         [
             "app",
             "overview",
@@ -702,10 +676,10 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         ],
     )
 
-    assert strict.exit_code != 0, strict.output
-    assert "filing.aeat_evidence_conflict" in strict.output
+    assert text.exit_code == 0, text.output
+    assert "filing.aeat_evidence_conflict" in text.output
 
-    lax_json = _invoke(
+    as_json = _invoke(
         [
             "--format",
             "json",
@@ -716,11 +690,10 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
-    assert lax_json.exit_code == 0, lax_json.output
-    result = json.loads(lax_json.output)["result"]
+    assert as_json.exit_code == 0, as_json.output
+    result = json.loads(as_json.output)["result"]
     entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == f"{_YEAR} 1T")
     assert entry["local_filing_state"] == "external_baseline_imported"
     assert entry["aeat_submission_state"] == "accepted"
@@ -735,23 +708,10 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         "period": "1T",
     }
 
-    lax_text = _invoke(
-        [
-            "app",
-            "overview",
-            "calendar",
-            "--from",
-            date(_YEAR, 4, 1).isoformat(),
-            "--to",
-            date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
-        ],
-    )
-    assert lax_text.exit_code == 0, lax_text.output
-    assert f"aeat_conflict_refs={remote_ref},{local_ref}" in lax_text.output
+    assert f"aeat_conflict_refs={remote_ref},{local_ref}" in text.output
 
 
-def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_references() -> None:
+def test_calendar_all_profiles_warns_of_conflicting_aeat_evidence_references() -> None:
     stamp_calendar_enrolment_from_censo()
     local_ref = "LOCAL-LIVE-CAPTURE-CSV"
     remote_ref = "12345678901234567890"
@@ -781,7 +741,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         ),
     )
 
-    strict = _invoke(
+    text = _invoke(
         [
             "app",
             "overview",
@@ -794,10 +754,10 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         ],
     )
 
-    assert strict.exit_code != 0, strict.output
-    assert "filing.aeat_evidence_conflict" in strict.output
+    assert text.exit_code == 0, text.output
+    assert "filing.aeat_evidence_conflict" in text.output
 
-    lax = _invoke(
+    as_json = _invoke(
         [
             "--format",
             "json",
@@ -809,14 +769,13 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
             "--to",
             date(_YEAR, 4, 30).isoformat(),
             "--all-profiles",
-            "--allow-incomplete",
         ],
     )
-    assert lax.exit_code == 0, lax.output
+    assert as_json.exit_code == 0, as_json.output
     # The all-profiles payload is a per-profile SUMMARY, so it reports that the
     # profile carries a warning; the warning's own fields are read from the
     # single-profile call below, which is where that detail now lives.
-    profile = json.loads(lax.output)["result"]["profiles"][0]
+    profile = json.loads(as_json.output)["result"]["profiles"][0]
     assert profile["warning_count"] >= 1, profile
 
     single = _invoke(
@@ -830,7 +789,6 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
     assert single.exit_code == 0, single.output
@@ -839,7 +797,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
     assert warning["affected_modelos"] == ["303"]
 
 
-def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante() -> None:
+def test_calendar_warns_of_an_imported_csv_register_without_justificante() -> None:
     stamp_calendar_enrolment_from_censo()
     csv = "CSVREG-303-2025-1T"
     record = modelo_record_with_external_justificante(
@@ -850,7 +808,7 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
         repo = ModeloRecordCatalogueRepository(bucket_id=PRIMARY_PROFILE_ID)
         repo.save(upsert_filing_record(repo.load(), record))
 
-    strict = _invoke(
+    text = _invoke(
         [
             "app",
             "overview",
@@ -862,10 +820,10 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
         ],
     )
 
-    assert strict.exit_code != 0, strict.output
-    assert "filing.justificante_unverified" in strict.output
+    assert text.exit_code == 0, text.output
+    assert "filing.justificante_unverified" in text.output
 
-    lax = _invoke(
+    as_json = _invoke(
         [
             "--format",
             "json",
@@ -876,11 +834,10 @@ def test_calendar_strict_mode_refuses_imported_csv_register_without_justificante
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
-    assert lax.exit_code == 0, lax.output
-    result = json.loads(lax.output)["result"]
+    assert as_json.exit_code == 0, as_json.output
+    result = json.loads(as_json.output)["result"]
     entry = next(item for item in result["entries"] if item["modelo"] == "303" and item["period"] == f"{_YEAR} 1T")
     assert entry["local_filing_state"] == "external_baseline_imported"
     assert entry["aeat_submission_state"] == "accepted"
@@ -915,7 +872,6 @@ def test_calendar_text_output_names_verified_aeat_evidence() -> None:
             date(_YEAR, 4, 1).isoformat(),
             "--to",
             date(_YEAR, 4, 30).isoformat(),
-            "--allow-incomplete",
         ],
     )
 
@@ -952,8 +908,8 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
 
     Two profiles are registered; the flag must emit a `profile` header
     line for each one. The test does not assert specific obligation rows
-    because the minimal fixture leaves the taxpayer model undeclared;
-    --allow-incomplete is required to get any output at all.
+    because the minimal fixture leaves the taxpayer model undeclared, and
+    the survey names each profile whether or not its calendar can be derived.
     """
 
     with open_test_profile_session("22222222-2222-4222-8222-222222222222"):
@@ -969,7 +925,6 @@ def test_all_profiles_flag_iterates_every_registered_profile() -> None:
             "--to",
             date(_YEAR, 3, 31).isoformat(),
             "--all-profiles",
-            "--allow-incomplete",
         ],
     )
     assert result.exit_code == 0, result.output

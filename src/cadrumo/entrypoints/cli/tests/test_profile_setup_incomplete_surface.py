@@ -52,7 +52,6 @@ _CALENDAR = (
     "--to",
     date(_YEAR, 3, 31).isoformat(),
     "--all-profiles",
-    "--allow-incomplete",
 )
 
 

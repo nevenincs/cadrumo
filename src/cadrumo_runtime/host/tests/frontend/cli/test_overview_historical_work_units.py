@@ -167,7 +167,6 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
             date(_FLOOR, 1, 1).isoformat(),
             "--to",
             date(_FLOOR + 1, 12, 31).isoformat(),
-            "--allow-incomplete",
         ],
     )
 
@@ -188,7 +187,6 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
@@ -224,7 +222,6 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             "app",
             "overview",
             "backlog",
-            "--allow-incomplete",
         ],
     )
 
@@ -243,7 +240,6 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
             date(_FLOOR, 1, 1).isoformat(),
             "--to",
             date(_FLOOR, 12, 31).isoformat(),
-            "--allow-incomplete",
         ],
     )
 

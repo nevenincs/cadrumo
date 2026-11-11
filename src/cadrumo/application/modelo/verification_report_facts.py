@@ -7,11 +7,14 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
@@ -20,11 +23,13 @@ from ...domain.modelos.verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
+from ...domain.modelos.verification_repository import revision_granting_reports
 from .m210_rate import resolve_m210_rate
 from .verification_finding_contracts import BLOCKED_VERDICT_KINDS, M210_UNRESOLVED_RATE_REASONS
 
 if TYPE_CHECKING:
-    pass
+    from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.transactions.models import TransactionCatalogue
 
 
 def m210_unresolved_outcome_findings(
@@ -69,20 +74,36 @@ def m210_unresolved_outcome_findings(
 
 def granting_verification_report(
     catalogue: VerificationReportCatalogue,
-    calculation_revision_id: CalculationRevisionId,
+    revision: CalculationRevision,
 ) -> VerificationReport | None:
-    """Return the granting verification report for a locked revision, or ``None``.
+    """Return the granting verification report that stands for ``revision``, or ``None``.
 
     Used by the idempotent re-verify no-op: a revision that has transitioned out
     of ``BORRADOR`` (``VERIFICADO_COMPLETO`` / ``PRESENTADO``) was granted
-    verification, so exactly one granting :class:`VerificationReport` exists for
-    it; ``None`` flags an inconsistent state (a non-draft revision with no
-    granting report) that the caller refuses rather than papering over.
+    verification, and its lock names the one granting
+    :class:`VerificationReport` that witnesses it; ``None`` flags an
+    inconsistent state (a non-draft revision whose lock no grant matches) that
+    the caller refuses rather than papering over.
     """
-    for report in catalogue.reports.values():
-        if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo:
-            return report
-    return None
+    grants = revision_granting_reports(catalogue, revision)
+    return grants[-1] if grants else None
+
+
+def verification_sources_digest(revision: CalculationRevision, catalogue: TransactionCatalogue) -> Hex64Str:
+    """The digest of what a check of ``revision`` reads from the ledger, as it stands now.
+
+    It covers each source movement whole, its evidence included, naming one that
+    is gone as absent, and the ledger anchor the calculation last took, so a
+    change to a movement or a new calculation over them both move it.
+    """
+    movements: dict[str, object] = {}
+    for transaction_id in sorted(revision.source_transaction_ids):
+        movement = catalogue.get(transaction_id)
+        movements[transaction_id] = None if movement is None else movement.model_dump(mode="json")
+    anchor = revision.ledger_filing_snapshot
+    return content_hash_hex(
+        {"movements": movements, "anchor": None if anchor is None else anchor.model_dump(mode="json")}
+    )
 
 
 def build_verification_report(
@@ -96,6 +117,7 @@ def build_verification_report(
     granted: bool,
     actor: str,
     run_at: datetime,
+    source_transactions_digest: Hex64Str | None,
 ) -> VerificationReport:
     """Build the immutable, content-addressed verification report."""
     frozen_findings = tuple(findings)
@@ -116,6 +138,7 @@ def build_verification_report(
         run_at=run_at,
         verified_by=verified_by,
         granted_verificado_completo=granted,
+        source_transactions_digest=source_transactions_digest,
     )
 
 

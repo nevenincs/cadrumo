@@ -44,7 +44,6 @@ class OverviewReadRequest(CredentialFreeOperationRequest):
     modelo: ModeloCodeText | None = None
     year: FilingYear | None = None
     verbose: bool | None = None
-    allow_incomplete: bool | None = None
     show_suppressed: bool | None = None
     all_profiles: bool | None = None
 
@@ -61,9 +60,9 @@ def _reject_irrelevant_query_fields(request: OverviewReadRequest) -> None:
     common = {"profile_id", "kind", "output_language"}
     allowed = {
         OverviewReadKind.STATUS: {"period", "verbose"},
-        OverviewReadKind.CALENDAR: {"from_date", "to_date", "allow_incomplete", "show_suppressed", "all_profiles"},
-        OverviewReadKind.AGENDA: {"as_of", "horizon_days", "allow_incomplete"},
-        OverviewReadKind.BACKLOG: {"from_date", "to_date", "allow_incomplete"},
+        OverviewReadKind.CALENDAR: {"from_date", "to_date", "show_suppressed", "all_profiles"},
+        OverviewReadKind.AGENDA: {"as_of", "horizon_days"},
+        OverviewReadKind.BACKLOG: {"from_date", "to_date"},
         OverviewReadKind.EXPLAIN: {"modelo", "year"},
         OverviewReadKind.PREPARE: {"modelo", "period"},
     }[request.kind]

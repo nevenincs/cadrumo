@@ -56,6 +56,7 @@ export function movement(
     classification_reason: "",
     classification_confidence: null,
     source_jurisdiction: null,
+    statement_reference: null,
     value_in_eur: null,
     fx_rate: null,
     created_at: fixtureInstant(10, 5, "08:00:00Z"),

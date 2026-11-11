@@ -72,6 +72,10 @@ def _create_profile() -> None:
             "identity.surnames": "Operadora",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "activities.description": "consultoria intracomunitaria",
+            # Intracommunity trader whose declarable operations total 28,700 EUR, far below the
+            # 50,000 EUR cadence threshold, so Modelo 349 is declared quarterly.
+            "iva.does_intracomunitario": "true",
+            "iva.intracommunity_operations_exceed_50000_eur": "false",
         },
     )
 

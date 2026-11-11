@@ -214,7 +214,7 @@ def _discrepancy_rows(
                 "tui.ledger.evidence.draft.finding",
                 kind=row.kind.value,
                 field=shown(row.field),
-                detail=shown(row.detail),
+                detail=shown(row.detail_words or row.detail),
                 expected=amount(row.expected),
                 observed=amount(row.observed),
             )

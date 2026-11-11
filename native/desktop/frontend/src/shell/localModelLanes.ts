@@ -1,4 +1,4 @@
-import type { AgentLocalEngine, AgentLocalModels } from "../ipc/contract";
+import type { AgentLocalModels } from "../ipc/contract";
 import { isDeclared } from "./agentCatalog";
 import type {
   AgentCatalogAnswer,
@@ -155,29 +155,6 @@ export function laneModelList(
     )
     .map((id) => ({ model: entry(id), added: true }));
   return [...recommended, ...extra];
-}
-
-/** Whether `lane` is a local engine's lane that is not the one selected: its
- * provider is one of the engines the service offers. With no readable engine
- * nothing is held back. */
-export function heldBackByEngine(
-  lane: Pick<CatalogLane, "provider">,
-  engine: AgentLocalEngine | null,
-): boolean {
-  return (
-    engine?.state === "readable" &&
-    engine.choices.engine.some((offered) => offered === lane.provider) &&
-    lane.provider !== engine.engine
-  );
-}
-
-/** The lanes with the unselected engine's lane left out; every other lane
- * is unchanged. */
-export function lanesForEngine<T extends Pick<CatalogLane, "provider">>(
-  lanes: readonly T[],
-  engine: AgentLocalEngine | null,
-): T[] {
-  return lanes.filter((lane) => !heldBackByEngine(lane, engine));
 }
 
 /** Why a change to a list was not made, in words. */

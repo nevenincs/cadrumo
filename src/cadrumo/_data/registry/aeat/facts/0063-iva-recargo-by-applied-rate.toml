@@ -3,13 +3,13 @@ fact_id = "iva-recargo-by-applied-rate"
 family = "mapping"
 
 [[fact.variants]]
-variant_id = "iva-recargo.0.21.1993-01-01"
+variant_id = "iva-recargo.0.21.2012-09-01"
 selectors = [
   { name = "applied_rate", value_type = "decimal", value = "0.21" },
 ]
 date_axis = "devengo_date"
-valid_from = 1993-01-01
-legal_refs = ["ley-37-1992:art-161"]
+valid_from = 2012-09-01
+legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-20-2012:art-23-seis"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [fact.variants.payload]
@@ -20,13 +20,13 @@ entries = [
 ]
 
 [[fact.variants]]
-variant_id = "iva-recargo.0.10.1993-01-01"
+variant_id = "iva-recargo.0.10.2012-09-01"
 selectors = [
   { name = "applied_rate", value_type = "decimal", value = "0.10" },
 ]
 date_axis = "devengo_date"
-valid_from = 1993-01-01
-legal_refs = ["ley-37-1992:art-161"]
+valid_from = 2012-09-01
+legal_refs = ["ley-37-1992:art-161", "real-decreto-ley-20-2012:art-23-seis"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [fact.variants.payload]

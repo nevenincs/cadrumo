@@ -116,11 +116,12 @@ test("the output language reaches the chrome and the documentation", async ({
   ).toHaveAttribute("lang", "es");
 });
 
-test("the palette's first section is the documentation's while a query searches it", async ({
+test("the palette's last section is the documentation's while a query searches it", async ({
   page: target,
 }) => {
-  // The packaged acceptance run reads documentation results from the first
-  // section; an action that matches the same query must never stand there.
+  // Actions are listed before the capped documentation, and the
+  // documentation's section stays last, present with or without results; the
+  // packaged acceptance run reads documentation results from it.
   await open(target, "empty");
   await target
     .getByRole("navigation", { name: label("desktop.rail.label") })
@@ -132,8 +133,8 @@ test("the palette's first section is the documentation's while a query searches 
     .fill(label("desktop.rail.logs"));
   const sections = palette.locator(".palette-results > section");
   await expect(sections).toHaveCount(2);
-  await expect(sections.first().getByRole("option")).toHaveCount(0);
-  await expect(sections.last().getByRole("option").first()).toContainText(
+  await expect(sections.first().getByRole("option").first()).toContainText(
     label("desktop.rail.logs"),
   );
+  await expect(sections.last().getByRole("option")).toHaveCount(0);
 });

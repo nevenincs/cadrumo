@@ -158,10 +158,21 @@ export type DraftDiscrepancyKind =
   | "invoice_class_contradicted"
   | "invoice_number_unnumbered";
 
+/** The sentence explaining a finding and the values it quotes, as stored. */
+export type FindingWords = {
+  wording: string;
+  params?: [string, string][];
+};
+
 export type DraftDiscrepancy = {
   kind: DraftDiscrepancyKind;
   field?: string | null;
   detail?: string;
+  /** Which sentence explains it and the values it quotes, that sentence as
+   * the backend serves it, and the language it is in. */
+  words?: FindingWords | null;
+  detail_words?: string | null;
+  detail_words_language?: string | null;
   expected?: PublicDecimal | null;
   observed?: PublicDecimal | null;
 };
@@ -263,6 +274,11 @@ export type ConfirmationBlocker = {
   reason_words_language?: string | null;
   field?: string | null;
   detail?: string;
+  /** Which sentence explains it and the values it quotes, that sentence as
+   * the backend serves it, and the language it is in. */
+  words?: FindingWords | null;
+  detail_words?: string | null;
+  detail_words_language?: string | null;
   candidates?: AmbiguityCandidate[];
 };
 

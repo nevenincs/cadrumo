@@ -270,6 +270,10 @@ pub(super) fn lifecycle_context(fact: LifecycleFact, context: &mut BTreeMap<Stri
             field(context, "local_ai_engine", engine);
             field(context, "lifecycle_reason", reason);
         }
+        LocalAiServer { engine, change } => {
+            field(context, "local_ai_engine", engine);
+            field(context, "local_ai_server_change", change);
+        }
         SupervisorEnded { result } => {
             let encoded = serde_json::to_value(result).expect("closed outcome serializes");
             context.insert("supervisor_outcome".into(), encoded["outcome"].clone());

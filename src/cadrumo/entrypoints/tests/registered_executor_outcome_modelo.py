@@ -68,6 +68,7 @@ from ...application.modelo.work_create_operation import (
 )
 from ...application.modelo.work_inventory_operation import ModeloWorkListProjection, ModeloWorkListRequest
 from ...application.modelo.work_review_contracts import ModeloWorkReviewProjection, ModeloWorkReviewRequest
+from ...application.operations.error_detail import served_words_language
 from ...application.operations.public_period import PublicPeriod
 from ...core.external_constants import OutputLanguage
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -122,6 +123,11 @@ def assert_modelo_work_create_outcome(ctx: ExecutorOutcome) -> None:
     assert isinstance(result.outcome, ModeloWorkCreateRefusal)
     assert result.outcome.modelo == ctx.payload.modelo == "202"
     assert result.outcome.reason
+    # The words a frontend shows are served, in the language they name, and say
+    # which modelo was refused and why.
+    assert result.outcome.refusal_words_language is served_words_language()
+    assert "202" in result.outcome.refusal_words
+    assert result.outcome.reason in result.outcome.refusal_words
     assert WorkUnitCatalogueRepository().load().work_units == {}
 
 

@@ -481,8 +481,13 @@ export const UserProfilePage = memo(function UserProfilePage({
     data.setup_state !== "complete" &&
     missing.size === 0 &&
     data.valid;
+  // A completed setup is said so: the page's own state changes quietly, and
+  // the action leaves with it. A save not sent leaves its reason on the page.
   const completeSetup = () => {
-    if (data) void profile.save(data, { kind: "complete" });
+    if (!data) return;
+    void profile.save(data, { kind: "complete" }).then((completed) => {
+      if (completed) onNotice(t("desktop.profile.setup_completed_notice"));
+    });
   };
   // How a step is answered, kept on a ref so the ask is answered once per ask
   // rather than on every redraw the page's own handlers are rebuilt in.
@@ -547,15 +552,19 @@ export const UserProfilePage = memo(function UserProfilePage({
           ),
         ]
       : []),
-    action(
-      "complete",
-      t("desktop.profile.complete"),
-      "selectAll",
-      completeSetup,
-      {
-        enabled: () => completeReady,
-      },
-    ),
+    // Once the setup is complete there is nothing left to finish, so the
+    // action leaves the page's menu and the palette with it.
+    ...(data?.setup_state === "complete"
+      ? []
+      : [
+          action(
+            "complete",
+            t("desktop.profile.complete"),
+            "selectAll",
+            completeSetup,
+            { enabled: () => completeReady },
+          ),
+        ]),
     action(
       "refresh",
       t("desktop.profile.action.refresh"),

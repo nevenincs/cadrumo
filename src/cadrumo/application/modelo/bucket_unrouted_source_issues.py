@@ -28,6 +28,8 @@ def _durable_invoice_source_reason(diagnostic: CalculationSourceDiagnostic) -> _
         return "source_domain_not_ready"
     if diagnostic.reason == "invoice_reverse_charge_cuota_not_derivable":
         return "invoice_reverse_charge_cuota_not_derivable"
+    if diagnostic.reason == "m349_operation_unclassified":
+        return "m349_operation_unclassified"
     if diagnostic.reason == "ledger_amortization_row_unregistered":
         return "ledger_amortization_row_unregistered"
     if diagnostic.reason == "activity_asset_foral_territory":
@@ -180,6 +182,7 @@ _DurableSourceIssueReason = Literal[
     "unhandled_binding_source",
     "source_domain_not_ready",
     "invoice_reverse_charge_cuota_not_derivable",
+    "m349_operation_unclassified",
     "ledger_amortization_row_unregistered",
     "activity_asset_foral_territory",
     "activity_asset_residence_unresolved",

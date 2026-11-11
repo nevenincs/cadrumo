@@ -53,6 +53,7 @@ from datetime import date
 from functools import cache
 from threading import Lock
 from typing import TYPE_CHECKING, TypedDict
+from weakref import ReferenceType, WeakKeyDictionary, ref
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -95,6 +96,7 @@ from ....domain.modelos.calculation_revision_rendering import (
 from ....domain.modelos.errors import raise_catalogue_integrity_error
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.crypto.encrypted_columns import secure_object_key_digest
+from ..storage.master_key.active_session import current_active_bucket_session
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import (
     MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE,
@@ -103,6 +105,9 @@ from ..storage.secure_object_namespaces import (
 from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from sqlalchemy.engine import Engine
+
+    from ..storage.master_key.bucket_session import BucketSession
     from ..storage.sql.secure_object_records import SecureObjectRecord
     from ..storage.sql.secure_objects import SecureObjectRepository
 
@@ -159,7 +164,8 @@ class _ValidationInputs:
     so a validation is never reused under another authority reader or
     governed-fact source; the parent authorities by value, as read for this
     call. The result is held by one repository, which composition builds for
-    each operation's ports.
+    each operation's ports, and by :class:`_SessionValidatedCatalogues` for the
+    later operations of the same bucket session.
     """
 
     revision_id: str
@@ -191,6 +197,47 @@ class _ValidatedCatalogue:
     inputs: _ValidationInputs
     catalogue: CalculationRevisionCatalogue
     referenced_digests: tuple[str, ...]
+
+
+class _SessionValidatedCatalogues:
+    """The catalogue last validated under each open bucket session, for every operation it serves.
+
+    Composition builds a repository for each operation's ports, so a
+    repository's own memory never outlives one action, and every action of one
+    command decoded the same row again. An entry here serves a later operation
+    only while the same unsealed session is current and the store is the same
+    engine, and only when every validation input matches as it does for a
+    repository's own memory. It holds no more than the session's decrypted
+    data and is released with the session object.
+    """
+
+    def __init__(self) -> None:
+        self._held: WeakKeyDictionary[BucketSession, tuple[ReferenceType[Engine], _ValidatedCatalogue]] = (
+            WeakKeyDictionary()
+        )
+        self._lock = Lock()
+
+    def held(self, engine: Engine) -> _ValidatedCatalogue | None:
+        """Return the catalogue validated under the current session on ``engine``, if any."""
+        session = current_active_bucket_session()
+        if session is None or session.sealed:
+            return None
+        with self._lock:
+            entry = self._held.get(session)
+        if entry is None or entry[0]() is not engine:
+            return None
+        return entry[1]
+
+    def remember(self, engine: Engine, validated: _ValidatedCatalogue) -> None:
+        """Hold ``validated`` for the current session on ``engine``, replacing what it held."""
+        session = current_active_bucket_session()
+        if session is None or session.sealed:
+            return
+        with self._lock:
+            self._held[session] = (ref(engine), validated)
+
+
+_SESSION_VALIDATED_CATALOGUES = _SessionValidatedCatalogues()
 
 
 class _StoredRendering(TypedDict, total=False):
@@ -396,7 +443,8 @@ class CalculationRevisionCatalogueRepository:
         _catalogue_phase("load_validation_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         payload_digest = sha256_hex(record.payload)
-        held = self._last_validated
+        engine = self._objects.engine
+        held = self._held_validation(engine)
         referenced = (
             held.referenced_digests
             if held is not None and held.inputs.payload_digest == payload_digest
@@ -427,9 +475,16 @@ class CalculationRevisionCatalogueRepository:
             self._last_validated = _ValidatedCatalogue(
                 inputs=inputs, catalogue=catalogue, referenced_digests=referenced
             )
+            _SESSION_VALIDATED_CATALOGUES.remember(engine, self._last_validated)
         _catalogue_phase("load_validation_end")
         _OVERRIDE_FREE_PAYLOADS.remember(record.payload, catalogue)
         return catalogue, record.revision_id
+
+    def _held_validation(self, engine: Engine) -> _ValidatedCatalogue | None:
+        """This repository's last validation, else the one an earlier operation left with the session."""
+        if self._last_validated is not None:
+            return self._last_validated
+        return _SESSION_VALIDATED_CATALOGUES.held(engine)
 
     def _verified_rendering_bodies(self, digests: tuple[str, ...]) -> dict[str, SavedRenderingBody]:
         """Load and verify the stored body of every referenced rendering digest.

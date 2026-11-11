@@ -670,6 +670,7 @@ def assemble_modelo_work_review(
         calculation_revision_id=None if revision is None else revision.calculation_revision_id,
         lifecycle_state=None if revision is None else revision.state,
         verification_outcome=None if verification is None else verification.completeness_status,
+        verification_sources_digest=None if verification is None else verification.source_transactions_digest,
         progress=_work_progress(snapshot=snapshot, rows=rows, verification=verification),
         casillas=rows,
         findings=findings,

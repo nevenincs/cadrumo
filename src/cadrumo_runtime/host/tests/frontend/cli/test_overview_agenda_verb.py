@@ -48,7 +48,7 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
     horizon, and the four cohort headers."""
 
     result = _invoke(
-        ["app", "overview", "agenda", "--date", _APRIL_15, "--allow-incomplete"],
+        ["app", "overview", "agenda", "--date", _APRIL_15],
     )
     assert result.exit_code == 0, result.output
     assert f"as_of\t{_APRIL_15}" in result.output
@@ -72,7 +72,6 @@ def test_agenda_json_preserves_exact_modelo_303_quarterly_coordinates(year: int)
             f"{year}-02-01",
             "--horizon",
             "365",
-            "--allow-incomplete",
         ],
     )
 
@@ -130,7 +129,6 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
             _JANUARY_1,
             "--horizon",
             "7",
-            "--allow-incomplete",
         ],
     )
     wide = _invoke(
@@ -142,7 +140,6 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
             _JANUARY_1,
             "--horizon",
             "180",
-            "--allow-incomplete",
         ],
     )
     assert narrow.exit_code == 0, narrow.output

@@ -31,6 +31,7 @@ from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
+from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -257,10 +258,10 @@ def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissi
 
     ``domestic_investment`` names a bien de inversión and requires a reciprocal
     register asset identity the row does not carry, so the deduction has no
-    authority. The refusal must name the ledger row and the typed reason: before
-    the readiness gate existed this reached the operator as an internal outbound
-    payload-boundary defect naming a model class, which says nothing about which
-    field to correct.
+    authority. The ledger preflight, the earliest owner of that check, refuses with
+    its registered refusal before any aggregate is built. It must name the ledger
+    row and the typed reason, so the person knows which field to correct, and no
+    calculated cuota is reached.
     """
 
     def seed(bucket_id: str) -> str:
@@ -272,15 +273,36 @@ def test_work_calculate_refuses_a_purchase_whose_declared_deduction_is_inadmissi
 
         refused = _calculate(session, work_unit_id, *joint_return_options(joint_return_elected=True))
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
-    assert error["code"] == "ERROR_MODELO_AGGREGATION_BINDING", refused.output
+    assert error["code"] == "REFUSED_MODELO_LEDGER_PREFLIGHT_BLOCKED", refused.output
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification", refused.output
-    assert context["transaction_id"] == purchase_id
-    assert "investment_asset_id" in context["detail"]
+    # The words name the movement the person knows by date, description and signed
+    # amount; its identity is the refusal evidence the open-movement door is bound
+    # to, never the rendered context.
+    assert context["movement_description"] == f"ledger row ordinary-{_EXERCISE}-purchase"
+    assert context["movement_date"] == f"15 feb {_EXERCISE}"
+    assert context["movement_amount"] == "\u221260,50\u00a0\u20ac"
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == purchase_id
+    assert evidence["values"]["reason_code"] == "inadmissible_deduction_classification"
+    assert evidence["values"]["work_unit_id"] == work_unit_id
+    assert evidence["values"]["modelo"] == "303"
+    assert evidence["values"]["period"] == "1T"
+    assert evidence["values"]["year"] == _EXERCISE
+    # The door reclassifies the row the refusal names, with that row bound, so
+    # it runs as served rather than asking which movement is meant.
+    action = error["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.ledger_preflight.ready"
+    assert action["action"]["action_id"] == "operator.ledger.classify.movement"
+    assert action["action"]["target_command_key"] == "ledger.classify"
+    bound = {item["argument_name"]: item["value"] for item in action["argument_bindings"]}
+    assert bound == {"transaction_id": purchase_id}
+    assert action["missing_argument_names"] == []
 
 
 def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(

@@ -27,6 +27,7 @@ LedgerClassifyPatchField = Literal[
     "taxable_base",
     "iva_rate",
     "iva_amount",
+    "recargo_amount",
     "irpf_category",
     "m210_income_classification",
     "iva_category",
@@ -46,6 +47,7 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "taxable_base",
         "iva_rate",
         "iva_amount",
+        "recargo_amount",
         "irpf_category",
         "m210_income_classification",
         "iva_category",
@@ -91,6 +93,7 @@ class LedgerClassifyPatch(BaseModel):
     taxable_base: LedgerClassifyDecimalText | None = None
     iva_rate: LedgerClassifyDecimalText | None = None
     iva_amount: LedgerClassifyDecimalText | None = None
+    recargo_amount: LedgerClassifyDecimalText | None = None
     irpf_category: LedgerClassifyLongText | None = None
     iva_category: LedgerClassifyShortText | None = None
     deduction_fact_kind: LedgerClassifyShortText | None = None
@@ -113,7 +116,7 @@ class LedgerClassifyPatch(BaseModel):
             raise ValueError("ledger classify cannot assign a pipeline-owned disposition")
         return classification.value
 
-    @field_validator("business_pct", "taxable_base", "iva_rate", "iva_amount")
+    @field_validator("business_pct", "taxable_base", "iva_rate", "iva_amount", "recargo_amount")
     @classmethod
     def _canonical_decimal_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:

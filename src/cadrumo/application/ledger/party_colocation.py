@@ -70,7 +70,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.models import STRICT_FROZEN_CONFIG
 from .grounding_anchor import printed_excerpt_occurs_in_text
 from .party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
@@ -388,7 +388,7 @@ def party_attribution_findings(
     # Call-time import for the cycle-break reason the sibling checks use: the
     # draft module reaches the parsers and the reading package, so binding it at
     # module scope would make this leaf pay for all of it.
-    from .invoice_draft_records import DraftDiscrepancyFinding
+    from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 
     return tuple(
         DraftDiscrepancyFinding(
@@ -398,12 +398,7 @@ def party_attribution_findings(
             # told where the value was printed relative to the headings, which
             # is checkable against the page; telling them "the parties are
             # swapped" would assert a conclusion the document does not settle.
-            detail=(
-                f"the value in {field} is printed inside the other party's block on this document, "
-                f"and not inside the block the reader assigned it to; the address blocks may have "
-                f"been read the wrong way round, which would place both parties in the wrong IVA "
-                f"territory"
-            ),
+            words=FindingWords.of(DraftFindingWording.VALUE_IN_OTHER_PARTY_BLOCK, field=field),
         )
         for field in resolution.contradicted_fields
     )

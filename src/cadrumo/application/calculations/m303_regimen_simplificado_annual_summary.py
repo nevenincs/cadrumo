@@ -10,7 +10,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import ClassVar
 
@@ -487,10 +487,15 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    regimen_simplificado_applies: bool,
+    regimen_simplificado_applies: Callable[[], bool],
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Fail closed when a persisted M390 handoff no longer re-resolves exactly.
+
+    ``regimen_simplificado_applies`` is asked only of a revision that declares
+    the annual-summary requirement: the regime's scope is read from the IVA
+    profile, which a filer of a modelo without that family, such as an
+    employee's Modelo 100, need not hold.
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
@@ -513,7 +518,10 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
-        regimen_simplificado_applies=regimen_simplificado_applies,
+        regimen_simplificado_applies=(
+            m303_regimen_simplificado_annual_summary_requirement(snapshot.revision) is not None
+            and regimen_simplificado_applies()
+        ),
         operation=operation,
     ).validate_persisted_target_revision(
         target_work_unit=target_work_unit,

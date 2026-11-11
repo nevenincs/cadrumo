@@ -102,7 +102,6 @@ def test_overview_calendar_refuses_cleanly_on_a_retired_custody_member() -> None
         "--to",
         date(_YEAR, 3, 31).isoformat(),
         "--all-profiles",
-        "--allow-incomplete",
     )
     # Admit the fixture's runtime while custody is valid, so the later refusal
     # crosses the command boundary rather than the fixture's initial join.

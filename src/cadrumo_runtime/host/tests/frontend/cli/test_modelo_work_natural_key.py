@@ -336,11 +336,20 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["calculation_revision_id"] == calculation_revision_id
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
+    # The quarter reads the previous ejercicio's Renta (RIRPF art. 110.3), which
+    # this profile has neither observed nor started, so the door creates it.
     finding_action = payload["findings"][0]["action"]
-    assert finding_action["action"] is None
-    assert finding_action["conditionality"] == "not_applicable"
+    source = finding_action["evidence"][0]["values"]
+    assert (source["source_modelo"], source["period"]) == ("100", "0A")
+    assert finding_action["action"]["action_id"] == "operator.modelo.work.create"
+    assert {binding["argument_name"]: binding["value"] for binding in finding_action["argument_bindings"]} == {
+        "modelo": "100",
+        "period": "0A",
+        "year": source["year"],
+    }
+    assert finding_action["conditionality"] == "immediate"
     assert finding_action["missing_argument_names"] == []
-    assert finding_action["no_recovery_outcome"] == "operator_decision"
+    assert finding_action["no_recovery_outcome"] is None
     assert "next_action" not in payload["findings"][0]
 
     # The shared-spine contract: a verify carrying a blocking finding must NOT

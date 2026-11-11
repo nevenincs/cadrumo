@@ -3,11 +3,14 @@
 //! The supervisor runs the server of one [`Supervised`] program: the Ollama program the
 //! engine installs, or the llama-server the package carries. An [`EngineProgram`] holds
 //! only the selected engine's program, so the other engine's server is never started.
-//! While that program is set
-//! up, the supervisor keeps a server running from it on its fixed address. A server that
-//! ends without being asked to, or fails to start, is started again after a backoff that
+//! The server runs only on demand. Until its owner calls [`ServerSupervisor::demand`]
+//! it is [`ServerState::Dormant`] and no process runs. A demand is a lease: the server
+//! runs from the set-up program on its fixed address until [`IDLE_STOP`] after the last
+//! demand, then it is stopped and dormant again. While demanded, a server that ends
+//! without being asked to, or fails to start, is started again after a backoff that
 //! doubles up to a ceiling, until too many restarts fall inside one window and
-//! supervision fails until a retry. A program change an engine asks for through the
+//! supervision fails until a retry. A server that ends when no demand is live is not
+//! started again. A program change an engine asks for through the
 //! [`lease`](super::lease) stops the server and holds every start off until the change is
 //! over. A server whose program asks for a fresh start, as llama-server does once the
 //! models in the store have changed, is stopped and started again at once, outside the
@@ -34,6 +37,10 @@ use std::{
     net::SocketAddr,
     time::{Duration, Instant, SystemTime},
 };
+
+/// How long one demand keeps the server running: the server is stopped this long after
+/// the last demand, unless another demand renews it first.
+pub const IDLE_STOP: Duration = Duration::from_secs(5 * 60);
 
 /// The restart backoff and the crash-loop ceiling.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -74,6 +81,8 @@ impl RestartPolicy {
 pub enum ServerState {
     /// The program is not set up, so no server is run.
     NotSetUp,
+    /// The program is set up and no demand is live, so no server runs until one is.
+    Dormant,
     /// An engine changes the program or asks to; no server runs until it is done.
     Held,
     /// The server runs and answered with the pinned version when it started.
@@ -91,6 +100,20 @@ pub enum ServerState {
     /// the owner is started again with a setting the engine can use.
     ProxyRefused,
 }
+
+/// A change of whether the server runs, with its cause, for the owner's log.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServerChange {
+    /// A live demand started the server, or started it again after it ended.
+    StartedOnDemand,
+    /// The last demand lapsed, so the running server was stopped.
+    IdleStopped,
+    /// The server ended while no demand was live, so it was not started again.
+    EndedWithoutDemand,
+}
+
+/// The most changes kept for the owner between two reads; older ones are dropped.
+const CHANGES_KEPT: usize = 16;
 
 /// File facts that change whenever a program is set up or removed: a program found not
 /// set up is looked at again only once they change.
@@ -269,6 +292,13 @@ pub struct ServerSupervisor<P: Supervised = Program> {
     environment: Environment,
     policy: RestartPolicy,
     restarts: VecDeque<Instant>,
+    /// How long a demand keeps the server running.
+    idle_stop: Duration,
+    /// The moment the latest demand lapses; none before the first. Kept in memory only, so
+    /// no demand outlives this supervisor.
+    demanded_until: Option<Instant>,
+    /// Changes not yet read by the owner, oldest first.
+    changes: VecDeque<ServerChange>,
     state: ServerState,
     not_set_up: Option<SetUpStamp>,
     proxy: Option<ProxySettings>,
@@ -312,6 +342,9 @@ impl<P: Supervised> ServerSupervisor<P> {
             environment,
             policy: RestartPolicy::default(),
             restarts: VecDeque::new(),
+            idle_stop: IDLE_STOP,
+            demanded_until: None,
+            changes: VecDeque::new(),
             state: ServerState::NotSetUp,
             not_set_up: None,
             proxy,
@@ -324,6 +357,37 @@ impl<P: Supervised> ServerSupervisor<P> {
     pub fn with_policy(mut self, policy: RestartPolicy) -> Self {
         self.policy = policy;
         self
+    }
+
+    /// The same supervisor with demands that keep the server running for `idle_stop`
+    /// instead of [`IDLE_STOP`].
+    pub fn with_idle_stop(mut self, idle_stop: Duration) -> Self {
+        self.idle_stop = idle_stop;
+        self
+    }
+
+    /// Demands the server at `now`, or renews a live demand: the next poll starts it
+    /// when it does not run, and it keeps running until the idle stop after this demand.
+    pub fn demand(&mut self, now: Instant) {
+        let until = now + self.idle_stop;
+        self.demanded_until = Some(self.demanded_until.map_or(until, |held| held.max(until)));
+    }
+
+    /// Whether a demand is live at `now`.
+    fn demanded(&self, now: Instant) -> bool {
+        self.demanded_until.is_some_and(|until| now < until)
+    }
+
+    /// The changes since the last read, oldest first.
+    pub fn take_changes(&mut self) -> Vec<ServerChange> {
+        self.changes.drain(..).collect()
+    }
+
+    fn changed(&mut self, change: ServerChange) {
+        if self.changes.len() == CHANGES_KEPT {
+            self.changes.pop_front();
+        }
+        self.changes.push_back(change);
     }
 
     pub fn state(&self) -> ServerState {
@@ -344,18 +408,21 @@ impl<P: Supervised> ServerSupervisor<P> {
         &self.program
     }
 
-    /// The moment a scheduled restart is due, when one is.
+    /// The moment a look is next due: a scheduled restart, or the idle stop of a running
+    /// server.
     pub fn next_due(&self) -> Option<Instant> {
         match self.state {
             ServerState::Restarting { at } => Some(at),
+            ServerState::Running => self.demanded_until,
             _ => None,
         }
     }
 
     /// Looks once and acts once: notices an ended server, a requested program change, a
-    /// server its program wants started again, or a newly set-up program, and starts,
-    /// stops or schedules accordingly.
+    /// server its program wants started again, a lapsed demand, or a newly set-up program,
+    /// and starts, stops or schedules accordingly. Only a live demand starts a server.
     pub fn poll(&mut self, now: Instant) -> ServerState {
+        let demanded = self.demanded(now);
         match self.state {
             ServerState::Stopped | ServerState::Failed => return self.state,
             ServerState::Restarting { at } if now < at => return self.state,
@@ -370,11 +437,25 @@ impl<P: Supervised> ServerSupervisor<P> {
             if server.exited() {
                 // Reaps it, removes its record and gives the lease up.
                 self.program.halt();
+                if !demanded {
+                    // Nobody needs it: a server that ends while no demand is live,
+                    // stopped by its process ID or crashed, stays down.
+                    self.changed(ServerChange::EndedWithoutDemand);
+                    self.state = ServerState::Dormant;
+                    return self.state;
+                }
                 return self.failed_start(now);
             }
             if self.program.change_requested() {
                 self.program.halt();
                 self.state = ServerState::Held;
+                return self.state;
+            }
+            if !demanded {
+                // The idle stop: the last demand has lapsed.
+                self.program.halt();
+                self.changed(ServerChange::IdleStopped);
+                self.state = ServerState::Dormant;
                 return self.state;
             }
             if !self.program.restart_due() {
@@ -394,6 +475,10 @@ impl<P: Supervised> ServerSupervisor<P> {
             return self.state;
         }
         self.not_set_up = None;
+        if !demanded {
+            self.state = ServerState::Dormant;
+            return self.state;
+        }
         let started = self.program.serve(
             self.address,
             self.containment.as_ref(),
@@ -403,6 +488,7 @@ impl<P: Supervised> ServerSupervisor<P> {
         match started {
             Ok(()) => {
                 self.last_start_failure = None;
+                self.changed(ServerChange::StartedOnDemand);
                 self.state = ServerState::Running;
             }
             Err(LocalAiError::Engine(Error::Busy)) => self.state = ServerState::Held,

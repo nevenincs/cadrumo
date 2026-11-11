@@ -27,17 +27,19 @@ VAT regime, IRPF/Renta facts, withholding obligations, and other enrollment
 details. You maintain those facts manually in the profile; see [Maintain Modelo
 036 census facts in your profile](censo-update.md).
 
-If a profile is still incomplete, a command may stop and name the missing facts.
-Fix the profile first. To see partial results before the profile is complete,
-add `--allow-incomplete` where the command accepts it (`agenda`, `backlog`, and
-`calendar`).
+If a profile has not answered a fact an obligation depends on, `agenda`,
+`backlog` and `calendar` still run. They list each unanswered fact as a warning
+that names the profile edit answering it, and report the obligations that fact
+decides as undetermined instead of listing them as due. A command stops only
+when the profile does not yet say what kind of taxpayer it is, and then names
+the missing facts.
 
 The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you [choose another language](profile-setup.md#choose-the-output-language).
 
 ## What are my filing obligations?
 
-Start with the agenda. It ranks obligations around a reference date, showing what is due today, what is coming up in the next two weeks, and what is already overdue. Pass `--allow-incomplete` on a profile whose census facts are not yet fully filled in, change the reference date with `--date`, and widen the upcoming window with `--horizon` (the default is 14 days). The example profile is a self-employed taxpayer whose income comes from an economic activity. On 1 April the next deadline is the first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week window. Profile facts that are still unset appear as warnings that name the modelos they affect:
+Start with the agenda. It ranks obligations around a reference date, showing what is due today, what is coming up in the next two weeks, and what is already overdue. Change the reference date with `--date`, and widen the upcoming window with `--horizon` (the default is 14 days). The example profile is a self-employed taxpayer whose income comes from an economic activity. On 1 April the next deadline is the first-quarter Modelo 130, due on 20 April. From 15 April, the Modelo 130 and Modelo 303 for that quarter both fall inside the two-week window. Profile facts that are still unset appear as warnings that name the modelos they affect:
 
 ```{cli-sequence} filing-calendar-agenda
 :verify: Confirm the agenda ranks obligations around each reference date.
@@ -88,14 +90,12 @@ Both dates are required in `YYYY-MM-DD` format. The calendar applies national
 public holidays and business-day shifts before printing deadlines. It does not
 check regional or local holidays, so confirm a deadline that falls near one.
 
-The calendar is stricter than `agenda` and `backlog`: it also refuses while a
-profile check is unresolved, such as `censo.enrolment_unverified`. That check
-reports that your census-backed enrollment facts are declared by you, not
-confirmed by AEAT; AEAT publishes no read-only census view the tool could
-confirm them against. Review the profile facts (see [Maintain Modelo 036 census
-facts in your profile](censo-update.md)) and add `--allow-incomplete` to print a
-provisional calendar. Provisional entries are marked
-`censo_enrolment=unverified`. Add `--all-profiles` to include every registered
+The calendar also warns while a profile check is unresolved, such as
+`censo.enrolment_unverified`. That check reports that your census-backed
+enrollment facts are declared by you, not confirmed by AEAT; AEAT publishes no
+read-only census view the tool could confirm them against. Review the profile
+facts (see [Maintain Modelo 036 census facts in your profile](censo-update.md)).
+Entries that rest on those facts are marked `censo_enrolment=unverified`. Add `--all-profiles` to include every registered
 profile instead of only the [active
 profile](profile-setup.md#what-the-active-profile-means), or `--show-suppressed`
 to inspect obligations Cadrumo normally filters out:

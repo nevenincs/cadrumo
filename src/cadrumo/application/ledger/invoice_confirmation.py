@@ -60,7 +60,7 @@ from pydantic import BaseModel, ValidationError
 
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings, load_settings
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.hex import Hex16Str
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -110,7 +110,7 @@ from .evidence_reference import find_bytes_bearing_evidence_record, refuse_refer
 from .invoice_confirmation_ports import InvoiceConfirmationPorts
 from .invoice_draft_extraction import extract_invoice_draft_from_evidence
 from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
-from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, FindingWords, InvoiceDraft
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -246,11 +246,10 @@ def with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> I
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.DIRECTION_CONTRADICTED,
                     field="suggested_kind",
-                    detail=(
-                        f"this document places the filer on the side that makes it {suggested.value}, but it "
-                        f"is being confirmed as {kind.value}. Direction decides which informativa the record "
-                        f"feeds and on which side, and AEAT reconciles the two counterparties' declarations "
-                        f"against each other"
+                    words=FindingWords.of(
+                        DraftFindingWording.DOCUMENT_ISSUED_CONFIRMED_RECEIVED
+                        if suggested is InvoiceKind.ISSUED
+                        else DraftFindingWording.DOCUMENT_RECEIVED_CONFIRMED_ISSUED
                     ),
                 ),
             ),

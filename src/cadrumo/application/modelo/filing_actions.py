@@ -239,7 +239,7 @@ def _load_filing_context(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies_to_profile(
             taxpayer_profile_for_work(profile),
         ),
         operation=operation,
@@ -696,6 +696,7 @@ def _require_filing_preconditions(
         target_revision=target,
         subject_leaf_key="modelo.work.file",
         operation=operation,
+        work_unit_repository=ports.work_unit_repository,
     )
 
 

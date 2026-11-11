@@ -106,6 +106,9 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
         IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
+        IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE,
+        IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED,
+        IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
         IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
@@ -136,7 +139,14 @@ _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
 
 # Reasons whose detail carries the row's own figures, worded in the filer's language. The figures reach the
 # operator in the live diagnostic only: the persisted issue replaces the message by a fixed marker.
-_IVA_SELECTED_SCOPE_FIGURE_REASONS = frozenset({IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE})
+_IVA_SELECTED_SCOPE_FIGURE_REASONS = frozenset(
+    {
+        IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
+        IvaLedgerAggregationIssueReason.RECARGO_DEPARTS_FROM_PUBLISHED_RATE,
+        IvaLedgerAggregationIssueReason.RECARGO_RATE_UNMODELLED,
+        IvaLedgerAggregationIssueReason.RECARGO_TOBACCO_RUNG_UNSUPPORTED,
+    }
+)
 
 
 def _selected_scope_iva_evidence_language(issue: IvaLedgerAggregationIssue) -> OutputLanguage | None:

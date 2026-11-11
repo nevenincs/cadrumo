@@ -98,6 +98,19 @@ aggregation:
       missing_counterparty_identification_state: Una operación intracomunitaria requiere
         el Estado miembro en el que la contraparte está identificada a efectos del
         IVA.
+      recargo_departs_from_published_rate: El recargo de equivalencia %{declared}
+        repercutido sobre la base %{base} al tipo de IVA del %{rate} no coincide con
+        el %{recargo_rate} que la ley asocia a ese tipo el %{date} (%{provision}),
+        que da %{expected}. Corrige la fila o emite una factura rectificativa.
+      recargo_rate_unmodelled: 'El recargo de equivalencia %{declared} repercutido
+        al tipo de IVA del %{rate} el %{date} no se puede comprobar: el registro no
+        publica ningún tipo de recargo para ese tipo de IVA en esa fecha. Queda sin
+        resolver hasta que se publique el tipo.'
+      recargo_tobacco_rung_unsupported: El recargo de equivalencia %{declared} sobre
+        la base %{base} corresponde al tipo de las labores del tabaco, del %{recargo_rate}
+        (%{provision}), que el 303 declara en su propia línea. Esa línea aún no está
+        soportada, así que la fila queda sin resolver en lugar de declararse en el
+        recargo general.
       rectification_consumed_more_than_once: Un apunte de IVA ya corregido solo puede
         rectificarse una vez.
       sectorized_apportionment_duplicate_sectors: El reparto sectorizado de IVA declara
@@ -3241,6 +3254,7 @@ desktop:
         unclassified: Clasificar después
         under: A las partes les faltan {amount} para el movimiento.
       stage: Añadir a los cambios
+      statement_reference: Referencia del extracto
       unread: No se pudo leer
       unsaved: 'Cambios: {count} · sin guardar'
       unsaved_classification: → {classification} · sin guardar
@@ -3830,6 +3844,7 @@ desktop:
       invoice_cash_accounting_regime_unmodelled: Criterio de caja
       invoice_category_contradicted: Categoría IVA
       invoice_deduction_family_unresolved: Deducción
+      invoice_recargo_not_declarable: Recargo
       invoice_recargo_split_unresolved: Recargo
       linked_movement_contradicts_invoice: Factura
       missing_business_classification: Clasificación
@@ -3857,6 +3872,7 @@ desktop:
         con facturas
       invoice_category_contradicted: La categoría de IVA no encaja con el país
       invoice_deduction_family_unresolved: La factura no indica qué deducción corresponde
+      invoice_recargo_not_declarable: El recargo no es el tipo legal sobre su base
       invoice_recargo_split_unresolved: El recargo no se reparte entre sus tipos de
         IVA
       linked_movement_contradicts_invoice: No coincide con su factura
@@ -4789,6 +4805,7 @@ desktop:
     search: Buscar datos del perfil
     search_placeholder: Buscar
     sections: Secciones
+    setup_completed_notice: La configuración de tu perfil está completa.
     signed_out: Inicia sesión para ver y editar tu perfil.
     title: Tu perfil
     unavailable: No se ha podido cargar tu perfil. Actualiza para volver a intentarlo.
@@ -4951,6 +4968,7 @@ desktop:
     progress_label: Progreso de {name}
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
+    ready_dormant: Listo. Se pone en marcha cuando se lee un documento.
     refused_browser_not_removed: Cadrumo no ha podido quitar el navegador. Compruébalo
       de nuevo e inténtalo otra vez.
     refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.

@@ -328,12 +328,39 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.invoice.update.operation_type",
+            target_command_key="ledger.invoice.update",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="invoice_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="operation_type",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="operation_type",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.classify",
             target_command_key="ledger.classify",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.classify.movement",
+            target_command_key="ledger.classify",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="transaction_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="transaction_id",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.classify.irpf_category",
@@ -408,6 +435,16 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="modelo.filing_record.import",
             argument_specifications=(
                 ActionArgumentBindingSpecification(
+                    argument_name="evidence_kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_reference_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_reference_id",
+                ),
+                ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="work_unit_id",
@@ -477,7 +514,7 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="amount",
-                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="amount",
                 ),
                 ActionArgumentBindingSpecification(

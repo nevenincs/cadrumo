@@ -49,6 +49,7 @@ from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import (
     OperationEffect,
     OperationFrontendProjection,
@@ -151,7 +152,12 @@ def _refusal_result(*, profile_id: UUID = _PROFILE, period: Period = _PERIOD) ->
     return ModeloWorkCreateProjection(
         profile_id=profile_id,
         period=PublicPeriod.from_period(period),
-        outcome=ModeloWorkCreateRefusal(modelo="303", reason="taxpayer category excludes this form"),
+        outcome=ModeloWorkCreateRefusal(
+            modelo="303",
+            reason="taxpayer category excludes this form",
+            refusal_words="Modelo 303 does not apply: " + "taxpayer category excludes this form",
+            refusal_words_language=OutputLanguage.EN,
+        ),
     )
 
 

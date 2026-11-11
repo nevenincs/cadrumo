@@ -101,10 +101,11 @@ def refusal_requirements(
     operation: PinnedAuthorityOperation,
     taxpayer: TaxpayerProfile,
     taxpayer_model_declared: bool,
-    warning_codes: tuple[str, ...],
 ) -> tuple[str, ...]:
-    """Render the existing selector guidance with the worker's retained authority.
+    """Name the selectors an undeclared taxpayer model lacks, with the worker's retained authority.
 
+    A declared model refuses nothing: its unanswered facts reach the reader as
+    warnings and undetermined coverage, so it has no requirement to name.
     ``taxpayer`` is a :class:`TaxpayerProfile`.
     """
     from ..application.user_profile.preflight import (
@@ -112,15 +113,14 @@ def refusal_requirements(
         format_profile_selector_requirements,
     )
 
-    if not taxpayer_model_declared:
-        if taxpayer.entity_type is None:
-            selectors = ("taxpayer.entity_type",)
-        elif taxpayer.entity_type == entity_type_natural_person_token() and not taxpayer.irpf_income_categories:
-            selectors = ("taxpayer.irpf_income_categories",)
-        else:
-            selectors = ()
+    if taxpayer_model_declared:
+        return ()
+    if taxpayer.entity_type is None:
+        selectors: tuple[str, ...] = ("taxpayer.entity_type",)
+    elif taxpayer.entity_type == entity_type_natural_person_token() and not taxpayer.irpf_income_categories:
+        selectors = ("taxpayer.irpf_income_categories",)
     else:
-        selectors = warning_codes
+        selectors = ()
     if not selectors:
         return ()
     return format_profile_selector_requirements(
@@ -352,7 +352,6 @@ class _OverviewReadPorts:
                     operation=operation,
                     taxpayer=taxpayer,
                     taxpayer_model_declared=calendar.taxpayer_model_declared,
-                    warning_codes=tuple(warning.code for warning in calendar.warnings),
                 ),
             )
         return _calendar_profile_survey(
@@ -384,7 +383,6 @@ class _OverviewReadPorts:
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=agenda.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in agenda.warnings),
             ),
         )
 
@@ -416,7 +414,6 @@ class _OverviewReadPorts:
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=report.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in report.warnings),
             ),
         )
 
@@ -563,7 +560,6 @@ def _calendar_profile_survey(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=calendar.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in calendar.warnings),
             )
             if active is not None and calendar is not None
             else ()

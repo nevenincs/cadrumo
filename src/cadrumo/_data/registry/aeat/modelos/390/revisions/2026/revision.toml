@@ -2,12 +2,16 @@
 predecessor = "2025"
 reviewed_against = "2025"
 casilla_source_refs = ["boe-modelo-390-2026-form"]
-# Applicability-grade edition for ejercicio 2026, authored from the form Orden
-# HAC/27/2026 approves: its articulo tercero replaces anexo I of Orden
-# EHA/3111/2009 with its own anexo IV, and its disposicion final unica, punto 2,
-# applies that form for the first time to the declaracion-resumen anual of
-# ejercicio 2026. The form is bundled as the whole BOE disposicion
-# (boe-modelo-390-2026-form, BOE-A-2026-1761, anexo IV at pages 18-26).
+binding_source_refs = ["aeat-dr-390-2026"]
+# Edition for ejercicio 2026, authored from the form Orden HAC/27/2026
+# approves and from AEAT's own diseno de registro for it. Its articulo tercero
+# replaces anexo I of Orden EHA/3111/2009 with its own anexo IV, and its
+# disposicion final unica, punto 2, applies that form for the first time to the
+# declaracion-resumen anual of ejercicio 2026. The form is bundled as the whole
+# BOE disposicion (boe-modelo-390-2026-form, BOE-A-2026-1761, anexo IV at pages
+# 18-26); the design is AEAT's "390 - Ejercicio 2026 y siguientes" workbook
+# (aeat-dr-390-2026), which the 300-399 record-design index lists as the only
+# current Modelo 390 design, having moved "Ejercicio 2025" to its historical page.
 #
 # WHAT THE FORM CHANGES, measured against the 2025 edition's box inventory: every
 # numbered box of the 2025 diseno is still printed, and one box is new -- [112],
@@ -17,21 +21,30 @@ casilla_source_refs = ["boe-modelo-390-2026-form"]
 # results: "Resultado de la liquidacion (84 + 659 - 85 - 112)" and "(92 + 659 -
 # 93 - 112)". The preamble states the purpose: the declaracion-resumen must be
 # presentable when the pago a cuenta of Orden HAC/1495/2025 (modelo 319) was
-# deducted during the year. Page 1 also gains a SI/NO mark for that right; this
-# registry models page-1 marks only inside the export layout, which is not
-# authored for this edition, so the mark has no member here.
+# deducted during the year. Page 1 also gains a SI/NO mark for that right.
 #
-# WHY APPLICABILITY AND NOT FILING. AEAT has not published the ejercicio-2026
-# diseno de registro: its record-design index for modelos 300-399 (page updated
-# 04/02/2026, read 2026-09-30) lists "390 - Ejercicio 2025" only. Without that
-# design there is no generated export layout, so the 2025 layout is NOT carried
-# into 2026 (see cleared_families): serving the replaced layout at filing grade
-# would be the silently wrong answer. Filing grade returns only when AEAT's 2026
-# design is captured and a layout is generated from it.
+# WHAT THE DESIGN CHANGES, measured against aeat-dr-390-2025 through the
+# project's record-design parser: page 1 gains that mark as a one-character
+# field at position 133 ("1" Si, "2" No), so every later page-1 position moves
+# by one and the record grows by one byte; page 6 gains box [112] at position 81
+# in apartado 7 and again at position 225 in apartado 8, so the rest of the page
+# moves by seventeen and then thirty-four; page 7 widens each of the five
+# prorrata "Codigo CNAE [114]" fields from three to four characters (still
+# CNAE-2025), moving every later page-7 position. The other pages are unchanged.
+# The page bindings below move with those positions; the export layout is
+# generated from the design.
+#
+# WHY CALCULATION AND NOT FILING. The edition was held at applicability while
+# no 2026 design existed to generate a layout from; the design is now captured
+# and the layout generated from it, and the formulas carry box [112] into the
+# results, so the edition computes its amounts. Filing grade asserts every
+# family is resolved, and extraction_profiles is not: the filed-declaracion
+# profile anchors on a filed 2025 PDF, no 2026 declaracion has been filed yet to
+# ground new anchors (see cleared_families), so filing waits for one.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
-reviewed_at = 2026-09-30
-authority_grade = "applicability"
+reviewed_at = 2026-11-11
+authority_grade = "calculation"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
 period_selector = { years = [2026], periods = ["0A"] }
@@ -48,21 +61,12 @@ orden_aplicabilidad = [
 ]
 source_refs = [
     "boe-modelo-390-2026-form",
+    "aeat-dr-390-2026",
     "aeat-modelo-390-procedure",
     "boe-modelo-390-2009-form",
 ]
 family_storage_baseline = "2025"
-scoped_families = ["verification_expectations", "completeness_manifest", "export_layouts", "workbook_parity_refs"]
-
-[[revisions."2026".cleared_families]]
-family = "export_layouts"
-cause = "not_authored_for_this_edition"
-reason = "AEAT has not published the ejercicio-2026 diseno de registro for modelo 390 (its 300-399 index lists ejercicio 2025 only), so no layout can be generated for this edition, and the 2025 layout is not adopted: Orden HAC/27/2026 anexo IV adds box [112] and a page-1 mark that layout does not carry."
-
-[[revisions."2026".cleared_families]]
-family = "workbook_parity_refs"
-cause = "not_authored_for_this_edition"
-reason = "Workbook parity pairs this edition with the AEAT diseno de registro workbook that governs it; the ejercicio-2026 workbook is not published, and the 2025 workbook's parity does not speak for the 2026 form."
+scoped_families = ["verification_expectations", "completeness_manifest", "workbook_parity_refs"]
 
 [[revisions."2026".cleared_families]]
 family = "extraction_profiles"
@@ -71,9 +75,9 @@ reason = "The declaracion PDF profile anchors on box positions of the filed 2025
 
 [revisions."2026".family_dispositions.projection_endpoints]
 reason = """
-A projection endpoint admits one typed filing endpoint that an export record REPEATS. This edition carries no export layout at all (cleared: AEAT's ejercicio-2026 diseno de registro is unpublished), and the 2025 layout it would otherwise follow declares no record with repeat = 'projection_rows' either, so there is no repeated endpoint for the family to admit."""
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This edition's export layout (generated-modelo-390-2026-fichero, generated from aeat-dr-390-2026) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit."""
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "orden-hac-27-2026:art-tercero"]
-source_refs = ["boe-modelo-390-2026-form", "aeat-modelo-390-procedure"]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-390-2026", "aeat-modelo-390-procedure"]
 
 [revisions."2026".family_dispositions.parameters]
 reason = """
@@ -95,8 +99,8 @@ fields = {closes_on = 2027-02-01, filing_year = 2026, opens_on = 2027-01-01, per
 [[revisions."2026".family_overrides]]
 family = "constructs"
 selector = {revision = "2025", id = "modelo-390-iva-resumen-anual"}
-sequence_additions = {casilla_ids = ["iva.anual.pago-cuenta-carburantes-deposito-fiscal"], deadline_windows = ["modelo-390-2026-0a"], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form", "boe-modelo-390-2026-printed-calculations"]}
-sequence_removals = {application_links = [2, 9], deadline_windows = [0], export_layouts = [0], extraction_profiles = [0], workbook_parity_refs = [0],source_refs = [2]}
+sequence_additions = {casilla_ids = ["iva.anual.pago-cuenta-carburantes-deposito-fiscal"], deadline_windows = ["modelo-390-2026-0a"], export_layouts = ["generated-modelo-390-2026-fichero"], legal_refs = ["orden-hac-27-2026:art-tercero"], source_refs = ["boe-modelo-390-2026-form", "boe-modelo-390-2026-printed-calculations", "aeat-dr-390-2026"]}
+sequence_removals = {application_links = [2], deadline_windows = [0], export_layouts = [0], extraction_profiles = [0], source_refs = [2]}
 
 # Box [86] gains the new deduction exactly as the form prints it: "Resultado de
 # la liquidacion (84 + 659 - 85 - 112)".
@@ -116,8 +120,8 @@ replacement_id = "boe-modelo-390-2026-form"
 sequence_additions = {casillas = [{casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal", number = "112"}], source_refs = ["boe-modelo-390-2026-form"]}
 sequence_removals = {source_refs = [0]}
 
-# The export and extractor surfaces go with the families that back them: this
-# edition carries no export layout and no declaracion-PDF profile.
+# The extractor surface goes with the declaracion-PDF profile this edition does
+# not carry.
 [[revisions."2026".family_overrides]]
 family = "formulas"
 
@@ -271,15 +275,402 @@ source_ref = "boe-modelo-390-2026-printed-calculations"
 required_text = ["Total bases y cuotas IVA"]
 [[revisions."2026".family_removals]]
 family = "application_links"
-selector = {revision = "2025", id = "modelo-390-export"}
-
-[[revisions."2026".family_removals]]
-family = "application_links"
 selector = {revision = "2025", id = "modelo-390-extractor"}
 
 [[revisions."2026".family_removals]]
 family = "constructs"
 selector = {revision = "2025", id = "modelo-390-printed-disclosure-arithmetic-2025"}
+
+# Workbook parity pairs this edition with the design workbook that governs it.
+[[revisions."2026".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2025", id = "modelo-390-dr"}
+fields = {fixture_id = "modelo-390-2026-record-design-layout", workbook_source = "aeat-dr-390-2026"}
+sequence_additions = {source_refs = ["aeat-dr-390-2026"]}
+sequence_removals = {source_refs = [0]}
+
+# Page bindings at the positions aeat-dr-390-2026 moves: page 1 after the new
+# position-133 mark, and page 7 after each prorrata CNAE code widens to four.
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-codigo-cnae"}
+fields = {provider = {length = 4}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-importe-de-operaciones"}
+fields = {provider = {offset = 244}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion"}
+fields = {provider = {offset = 261}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-tipo-de-prorrata"}
+fields = {provider = {offset = 278}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-1-porcentaje-de-prorrata"}
+fields = {provider = {offset = 279}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-actividad-desarrollada"}
+fields = {provider = {offset = 284}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-codigo-cnae"}
+fields = {provider = {offset = 324, length = 4}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-importe-de-operaciones"}
+fields = {provider = {offset = 328}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion"}
+fields = {provider = {offset = 345}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-tipo-de-prorrata"}
+fields = {provider = {offset = 362}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-2-porcentaje-de-prorrata"}
+fields = {provider = {offset = 363}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-actividad-desarrollada"}
+fields = {provider = {offset = 368}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-codigo-cnae"}
+fields = {provider = {offset = 408, length = 4}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-importe-de-operaciones"}
+fields = {provider = {offset = 412}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion"}
+fields = {provider = {offset = 429}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-tipo-de-prorrata"}
+fields = {provider = {offset = 446}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-3-porcentaje-de-prorrata"}
+fields = {provider = {offset = 447}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-actividad-desarrollada"}
+fields = {provider = {offset = 452}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-codigo-cnae"}
+fields = {provider = {offset = 492, length = 4}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-importe-de-operaciones"}
+fields = {provider = {offset = 496}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion"}
+fields = {provider = {offset = 513}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-tipo-de-prorrata"}
+fields = {provider = {offset = 530}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-4-porcentaje-de-prorrata"}
+fields = {provider = {offset = 531}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-actividad-desarrollada"}
+fields = {provider = {offset = 536}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-codigo-cnae"}
+fields = {provider = {offset = 576, length = 4}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-importe-de-operaciones"}
+fields = {provider = {offset = 580}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion"}
+fields = {provider = {offset = 597}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-tipo-de-prorrata"}
+fields = {provider = {offset = 614}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_7.prorratas-5-porcentaje-de-prorrata"}
+fields = {provider = {offset = 615}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.devengo-sustitutiva"}
+fields = {provider = {offset = 134}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.devengo-sustitutiva-por-rectificacion-de-cuotas"}
+fields = {provider = {offset = 135}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-principal"}
+fields = {provider = {offset = 149}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-principal"}
+fields = {provider = {offset = 189}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-principal"}
+fields = {provider = {offset = 192}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-1a"}
+fields = {provider = {offset = 196}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-1a"}
+fields = {provider = {offset = 236}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-1o"}
+fields = {provider = {offset = 239}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-2a"}
+fields = {provider = {offset = 243}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-2a"}
+fields = {provider = {offset = 283}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-2o"}
+fields = {provider = {offset = 286}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-3a"}
+fields = {provider = {offset = 290}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-3a"}
+fields = {provider = {offset = 330}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-3o"}
+fields = {provider = {offset = 333}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-4a"}
+fields = {provider = {offset = 337}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-4a"}
+fields = {provider = {offset = 377}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-4o"}
+fields = {provider = {offset = 380}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-a-actividades-otras-5a"}
+fields = {provider = {offset = 384}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-b-codigo-de-actividad-otras-5a"}
+fields = {provider = {offset = 424}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-c-epigrafe-i-a-e-otras-5o"}
+fields = {provider = {offset = 427}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-d-declaracion-anual-operac-con-terceras-personas"}
+fields = {provider = {offset = 431}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-nif"}
+fields = {provider = {offset = 432}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.datos-estadisticos-declaracion-conjunta-razon-social"}
+fields = {provider = {offset = 441}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nif"}
+fields = {provider = {offset = 478}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-apellidos-y-nombre-razon-social"}
+fields = {provider = {offset = 487}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-calle-pza-avda"}
+fields = {provider = {offset = 567}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-nombre-de-la-via-publica"}
+fields = {provider = {offset = 569}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-numero"}
+fields = {provider = {offset = 586}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-esc"}
+fields = {provider = {offset = 591}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-piso"}
+fields = {provider = {offset = 593}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-prta"}
+fields = {provider = {offset = 595}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-telefono"}
+fields = {provider = {offset = 597}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-municipio"}
+fields = {provider = {offset = 606}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-provincia"}
+fields = {provider = {offset = 626}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-fisicas-comunid-bienes-represent-codigo-postal"}
+fields = {provider = {offset = 641}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-1-nombre-y-apellidos"}
+fields = {provider = {offset = 646}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-1-nif"}
+fields = {provider = {offset = 726}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-1-fecha-poder-ddmmaaaa"}
+fields = {provider = {offset = 735}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-1-notaria"}
+fields = {provider = {offset = 743}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-2-nombre-y-apellidos"}
+fields = {provider = {offset = 755}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-2-nif"}
+fields = {provider = {offset = 835}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-2-fecha-poder-ddmmaaaa"}
+fields = {provider = {offset = 844}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-2-notaria"}
+fields = {provider = {offset = 852}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-3-nombre-y-apellidos"}
+fields = {provider = {offset = 864}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-3-nif"}
+fields = {provider = {offset = 944}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-3-fecha-poder-ddmmaaaa"}
+fields = {provider = {offset = 953}}
+
+[[revisions."2026".family_overrides]]
+family = "bindings"
+selector = {revision = "2025", id = "modelo-390.page_1.representante-personas-juridicas-represent-3-notaria"}
+fields = {provider = {offset = 961}}
+
 [[revisions."2026".lineage_attestations]]
 family = "casillas"
 continuidad_id = "iva-anual-repercutido-recargo-tipo-0-26-base"
