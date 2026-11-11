@@ -39,7 +39,7 @@ Aggregate facts stored::
   renta_family.descendientes_count               int count
 
 No Art. 81.2 guardería aggregate is stored here. The increment the 0613 formula
-reads (``renta_family.incremento_guarderia_{year}``) is a DERIVED path: the
+reads (``renta_family.incremento_guarderia``) is a DERIVED path: the
 calculate-time injector recomputes it from the per-child spend above, through the
 canonical record, so the annual figure and the monthly map are weighed by the same
 Art. 81.2 month rules, and overwrites whatever the index holds, so an operator's
