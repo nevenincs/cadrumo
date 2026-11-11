@@ -158,6 +158,8 @@ def amendment_evidence_missing_precondition(
 
     An amendment corrects a declaration AEAT received, so its baseline needs the
     imported justificante; the door is importing that evidence for the work unit.
+    The evidence kind and its reference are on the operator's justificante, so
+    the door asks for them.
     """
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=subject_leaf_key,
@@ -170,6 +172,7 @@ def amendment_evidence_missing_precondition(
         },
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
         action_argument_values={"work_unit_id": work_unit_id},
+        missing_action_arguments=("evidence_kind", "evidence_reference_id"),
     )
 
 

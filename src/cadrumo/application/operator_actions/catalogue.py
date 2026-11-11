@@ -424,6 +424,16 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="modelo.filing_record.import",
             argument_specifications=(
                 ActionArgumentBindingSpecification(
+                    argument_name="evidence_kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_kind",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_reference_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_reference_id",
+                ),
+                ActionArgumentBindingSpecification(
                     argument_name="work_unit_id",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="work_unit_id",
