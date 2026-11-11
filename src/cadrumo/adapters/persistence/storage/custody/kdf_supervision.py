@@ -145,6 +145,10 @@ class ProfileKdfYieldedError(CadrumoError):
     """Signal that background KDF work gave the permit way to a waiting or running unlock."""
 
 
+class ProfileKdfPointRefusedError(CadrumoError):
+    """Signal that a supplied KDF point would not strengthen the envelope it replaces."""
+
+
 type _CalibrationStop = Literal["total_deadline_exhausted", "launch_budget_exhausted", "launch_retry_failed"]
 
 
@@ -344,6 +348,53 @@ def profile_kdf_meets_fallback_floor(parameters: ProfileCustodyKdfParameters) ->
         parameters.memory_mib >= floor.memory_mib
         and parameters.memory_mib * parameters.iterations >= floor.memory_mib * floor.iterations
     )
+
+
+def profile_kdf_strictly_stronger(
+    candidate: ProfileCustodyKdfParameters, committed: ProfileCustodyKdfParameters
+) -> bool:
+    """Return whether ``candidate`` costs strictly more than ``committed`` without using less memory.
+
+    Cost is memory times passes, the same measure the fallback floor uses;
+    lanes only spread that work and never count as strength.
+    """
+    return (
+        candidate.memory_mib >= committed.memory_mib
+        and candidate.memory_mib * candidate.iterations > committed.memory_mib * committed.iterations
+    )
+
+
+def profile_kdf_strengthening_point(
+    *,
+    memory_mib: int,
+    iterations: int,
+    parallelism: int,
+    salt: bytes,
+    committed: ProfileCustodyKdfParameters,
+) -> ProfileCustodyKdfParameters:
+    """Return the grid point for a measured strength under ``salt``, refusing any that would not strengthen.
+
+    Raises:
+        ProfileKdfPointRefusedError: The point is off the grid, below the
+            fallback floor, or not strictly stronger than ``committed``.
+        ProfileCustodyRefusedError: The point does not fit this host.
+    """
+    wanted = (memory_mib, iterations, parallelism)
+    point = next(
+        (
+            parameters
+            for parameters in profile_kdf_grid(salt=salt)
+            if (parameters.memory_mib, parameters.iterations, parameters.parallelism) == wanted
+        ),
+        None,
+    )
+    if point is None:
+        raise ProfileKdfPointRefusedError("the supplied KDF point is not on the custody grid")
+    if not profile_kdf_meets_fallback_floor(point) or not profile_kdf_strictly_stronger(point, committed):
+        raise ProfileKdfPointRefusedError("the supplied KDF point does not strengthen the committed envelope")
+    if not profile_kdf_is_eligible(point, resources=profile_kdf_resources()):
+        raise resource_refusal()
+    return point
 
 
 def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> ProfileCustodyKdfCalibration:
@@ -1082,6 +1133,7 @@ __all__ = [
     "ProfileCustodyKdfCalibration",
     "ProfileCustodyKdfResources",
     "ProfileCustodyUnlock",
+    "ProfileKdfPointRefusedError",
     "ProfileKdfPrewarm",
     "ProfileKdfYieldedError",
     "calibrate_profile_kdf",
@@ -1093,6 +1145,8 @@ __all__ = [
     "profile_kdf_lease",
     "profile_kdf_meets_fallback_floor",
     "profile_kdf_resources",
+    "profile_kdf_strengthening_point",
+    "profile_kdf_strictly_stronger",
     "profile_password_wrap_aad",
     "unlock_profile_custody",
     "unlock_profile_custody_password_material",

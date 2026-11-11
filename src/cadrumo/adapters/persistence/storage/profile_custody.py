@@ -7,6 +7,7 @@ Core types:
 
 from __future__ import annotations
 
+import base64
 import os
 from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, closing, contextmanager
@@ -43,6 +44,7 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyRegistrationMaterial,
     ProfileCustodySecureObjectNamespace,
     ProfileCustodyUnlockPort,
+    ProfileKdfStrength,
 )
 from ....application.user_profile.custody_record_ports import (
     ProfileCustodyCapsuleLabelPort,
@@ -119,7 +121,10 @@ from .custody.filesystem_primitives import ensure_profile_custody_local_director
 from .custody.kdf_supervision import (
     ProfileKdfPrewarm,
     calibrate_profile_kdf,
+    calibrate_profile_kdf_in_background,
     profile_kdf_at_fallback,
+    profile_kdf_strengthening_point,
+    profile_kdf_strictly_stronger,
     unlock_profile_custody,
 )
 from .custody.label_head_repository import ProfileLabelHeadRepository
@@ -651,7 +656,18 @@ class _PersistenceProfileCustody:
         dek_epoch: str,
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength | None = None,
     ) -> ProfileCustodyRegistrationMaterial:
+        if strength is not None:
+            return self._strengthened_registration_material(
+                profile_id=profile_id,
+                password=password,
+                dek=dek,
+                dek_epoch=dek_epoch,
+                salt=salt,
+                predecessor=predecessor,
+                strength=strength,
+            )
         # Each calibration sample and the wrap run in a fresh contained child.
         # A spare scoped to this one mint is launched between samples, never
         # during a timed one, and is contained before the mint returns.
@@ -671,6 +687,51 @@ class _PersistenceProfileCustody:
                 )
         sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def _strengthened_registration_material(
+        self,
+        *,
+        profile_id: UUID,
+        password: str,
+        dek: bytes,
+        dek_epoch: str,
+        salt: bytes,
+        predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength,
+    ) -> ProfileCustodyRegistrationMaterial:
+        """Mint ``predecessor``'s successor at a measured point, checked again here rather than trusted."""
+        if predecessor is None:
+            raise ValueError("a measured KDF point only strengthens an existing password envelope")
+        committed = _substrate_handle(predecessor, ProfileCustodyEnvelope, "password envelope")
+        kdf = profile_kdf_strengthening_point(
+            memory_mib=strength.memory_mib,
+            iterations=strength.iterations,
+            parallelism=strength.parallelism,
+            salt=salt,
+            committed=committed.kdf,
+        )
+        envelope = create_profile_custody_password_envelope(
+            profile_id=profile_id,
+            password=password,
+            dek=dek,
+            dek_epoch=dek_epoch,
+            kdf=kdf,
+            password_generation=committed.password_generation + 1,
+            previous_envelope_digest=committed.self_digest,
+        )
+        sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
+        return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def measure_stronger_password_kdf(self, profile_id: UUID, *, root: Path | None = None) -> ProfileKdfStrength | None:
+        committed = load_committed_profile_password_material(profile_id, root=root).envelope.kdf
+        if not profile_kdf_at_fallback(committed):
+            return None
+        measured = calibrate_profile_kdf_in_background(salt=base64.b64decode(committed.salt_b64))
+        if measured is None or not profile_kdf_strictly_stronger(measured, committed):
+            return None
+        return ProfileKdfStrength(
+            memory_mib=measured.memory_mib, iterations=measured.iterations, parallelism=measured.parallelism
+        )
 
     def create_recovery_enrollment_material(
         self,
