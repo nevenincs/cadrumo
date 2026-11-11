@@ -404,6 +404,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.filing_record.import",
+            target_command_key="modelo.filing_record.import",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.filing_record.list",
             target_command_key="modelo.filing_record.list",
             argument_specifications=(

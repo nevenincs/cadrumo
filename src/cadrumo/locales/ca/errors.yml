@@ -319,9 +319,6 @@ errors:
     error_llm: S'ha produït un error en el model de llenguatge.
     error_modelo_aggregation_binding: Les vinculacions d'agregació derivades del contenidor
       entren en conflicte amb les dades indicades.
-    error_modelo_amendment_evidence_missing: No es pot complementar una declaració
-      que no té evidència oficial importada. Importa primer el justificant de la declaració
-      original.
     error_modelo_amendment_target_state: No es pot complementar una declaració que
       no està en estat vigent; ja ha estat substituïda per una de posterior.
     error_modelo_calculation_registry_unavailable: No s'ha pogut resoldre la instantània
@@ -1359,6 +1356,9 @@ errors:
       Aporta els registres que declara la rectificació (només els afegits en una complementària,
       el conjunt corregit complet en una substitutiva) o un conjunt buit per declarar
       que no n'hi ha cap.
+    refused_modelo_amendment_evidence_missing: No es pot complementar una declaració
+      que no té evidència oficial importada. Importa primer el justificant de la declaració
+      original.
     refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
       no està legalment disponible per al període de declaració resolt. El conjunt
       de tipus acceptats figura en el context de l'error.

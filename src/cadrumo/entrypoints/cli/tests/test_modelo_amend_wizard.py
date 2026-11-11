@@ -65,7 +65,6 @@ from cadrumo.application.modelo.work_unit_repository import work_unit_catalogue_
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.flows import FlowMode
-from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
@@ -105,14 +104,17 @@ __all__ = ["isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
-def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None:
-    """No exact import/re-file catalogue action exists for this amendment baseline refusal."""
-    failure = amendment_evidence_missing_precondition(work_unit_id="a" * 64, filing_record_id="b" * 64)
+def test_amend_wizard_missing_evidence_offers_the_justificante_import() -> None:
+    """An unattested amendment baseline is opened by importing its AEAT evidence for the same work unit."""
+    failure = amendment_evidence_missing_precondition(
+        subject_leaf_key="modelo.work.amend_wizard", work_unit_id="a" * 64, filing_record_id="b" * 64
+    )
 
     verdict = failure.verdict
-    assert verdict.action is None
-    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
-    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.filing_record.import"
+    assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {"work_unit_id": "a" * 64}
+    assert verdict.no_recovery_outcome is None
 
 
 _TAX_ID = "12345678Z"

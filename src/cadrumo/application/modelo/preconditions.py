@@ -197,10 +197,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.readiness.export_layout.unrenderable",
         action_id="operator.modelo.describe",
     ),
-    _profile(
-        "modelo.work.amend_wizard",
-        "modelo.work.amend_wizard.external_evidence.present",
-        "modelo.work.amend_wizard.external_evidence.missing",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.external_evidence.present",
+            f"{leaf}.external_evidence.missing",
+            action_id="operator.modelo.filing_record.import",
+        )
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
     ),
     _profile(
         "modelo.work.wizard",
