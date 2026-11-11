@@ -675,7 +675,7 @@ def _declared_party_name_refusal(
             "named": False,
         },
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        missing_action_arguments=("tax_identifier", "country_code"),
+        missing_action_arguments=("tax_identifier", "country_code", "kind"),
     )
     return ModeloExportDeclaredPartyNameError(context=context, precondition_verdict=failure.verdict)
 

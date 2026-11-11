@@ -185,5 +185,5 @@ def test_a_party_name_slot_without_a_filing_name_refuses_with_the_counterparty_f
     assert verdict is not None
     assert verdict.action is not None
     assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
-    assert set(verdict.missing_argument_names) == {"tax_identifier", "country_code"}
+    assert set(verdict.missing_argument_names) == {"tax_identifier", "country_code", "kind"}
     assert party not in verdict.model_dump_json()

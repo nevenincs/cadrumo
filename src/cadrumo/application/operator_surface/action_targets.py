@@ -193,6 +193,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("ledger.classify", ("app", "ledger", "classify"), "LedgerClassifyResult", profile_bound_write=True),
     ActionTarget(
+        "ledger.counterparty.filing_name",
+        ("app", "ledger", "counterparty", "filing-name"),
+        "CounterpartyFilingNameResult",
+        required_inputs=("tax_identifier", "kind"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.inventory.movement.claim",
         ("app", "ledger", "inventory", "movement", "claim"),
         "InventoryLedgerChangeResult",

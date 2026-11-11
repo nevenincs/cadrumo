@@ -377,6 +377,11 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="country_code",
                 ),
+                ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
             ),
         ),
         ActionCatalogueEntry(
