@@ -11,6 +11,7 @@ follows it onto the successor generation and proves it again there.
 
 from __future__ import annotations
 
+import contextvars
 import logging
 import time
 from collections.abc import Callable
@@ -241,7 +242,12 @@ class ProfileWorkerHumanLogin:
             if self._kdf_closed or self._kdf_measuring or self._kdf_strength is not None:
                 return
             self._kdf_measuring = True
-        Thread(target=self._measure_stronger_kdf, name="profile-kdf-measurement", daemon=True).start()
+        # The measurement reaches custody through the adapters composed for this
+        # worker, which a bare thread does not inherit.
+        context = contextvars.copy_context()
+        Thread(
+            target=context.run, args=(self._measure_stronger_kdf,), name="profile-kdf-measurement", daemon=True
+        ).start()
 
     def _measure_stronger_kdf(self) -> None:
         strength: ProfileKdfStrength | None = None

@@ -376,8 +376,10 @@ def profile_kdf_strengthening_point(
 
     Raises:
         ProfileKdfPointRefusedError: The point is off the grid, below the
-            fallback floor, or not strictly stronger than ``committed``.
-        ProfileCustodyRefusedError: The point does not fit this host.
+            fallback floor, not strictly stronger than ``committed``, or no
+            longer fits this host. A strengthening is optional, so a host
+            that cannot run the measured point keeps the committed envelope
+            and writes nothing.
     """
     wanted = (memory_mib, iterations, parallelism)
     point = next(
@@ -393,7 +395,7 @@ def profile_kdf_strengthening_point(
     if not profile_kdf_meets_fallback_floor(point) or not profile_kdf_strictly_stronger(point, committed):
         raise ProfileKdfPointRefusedError("the supplied KDF point does not strengthen the committed envelope")
     if not profile_kdf_is_eligible(point, resources=profile_kdf_resources()):
-        raise resource_refusal()
+        raise ProfileKdfPointRefusedError("the supplied KDF point does not fit this host")
     return point
 
 
@@ -431,8 +433,12 @@ def calibrate_profile_kdf_in_background(
     point, background work has a committed envelope already and nothing to
     gain from the fallback, so every failure to confirm a point, including
     giving the permit way to a waiting unlock before a sample, abandons the
-    measurement. The search reads only the public salt and grid.
+    measurement. The search reads only the public salt and grid. A host that
+    declines to measure at enrolment declines here as well, so the fallback
+    stays until an operator's own host measures.
     """
+    if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
+        return None
     resources = profile_kdf_resources()
     candidates = tuple(
         parameters

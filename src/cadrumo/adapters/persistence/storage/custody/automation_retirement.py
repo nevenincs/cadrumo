@@ -13,17 +13,23 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from .....application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from .automation_control_storage import AutomationControlStorage
 from .automation_crypto import (
+    MAX_CONTROL_BYTES,
     canonical_record,
+    parse_record,
 )
 from .automation_records import (
     AutomationRetirementIntent,
+    ProfileGlobalLockRecord,
 )
 from .automation_secret_store import native_automation_secret_store
 from .filesystem import (
     profile_custody_root_lock,
+    read_optional_profile_custody_local_record,
     write_profile_custody_local_record,
 )
 from .filesystem_primitives import anchor_directory
+
+_PROFILE_LOCK = "profile-lock.json"
 
 
 def retire_profile_automation(
@@ -66,12 +72,15 @@ def retire_profile_automation(
 
 
 def profile_automation_enrolled(*, root: Path, profile_id: UUID) -> bool:
-    """Return whether any local installation holds automation custody records for ``profile_id``.
+    """Report whether a custody transition of this profile would retire anything the person relies on.
 
     A hosted profile's directory exists, empty, before anything is enrolled,
-    and completed retirement clears it again; any record in it means custody
-    is enrolled or still being retired, which a custody transition would
-    retire. A malformed installation entry counts as well, so a caller that
+    and completed retirement clears it again. An unlocked profile-lock record
+    is left behind by locking and unlocking without any enrollment; retiring
+    it loses nothing. Any other record means custody is enrolled, being
+    published or denied, still being retired, or a lock the person holds,
+    which a custody transition would retire or clear. An unreadable lock
+    record and a malformed installation entry count as well, so a caller that
     must not retire custody declines rather than guesses.
     """
     with profile_custody_root_lock(root):
@@ -96,7 +105,15 @@ def _holds_records(directory: Path) -> bool:
         return False
     if not directory.is_dir() or directory.is_symlink():
         return True
-    return any(directory.iterdir())
+    return any(entry.name != _PROFILE_LOCK or not _unlocked(entry) for entry in directory.iterdir())
+
+
+def _unlocked(record: Path) -> bool:
+    try:
+        raw = read_optional_profile_custody_local_record(record, maximum_bytes=MAX_CONTROL_BYTES)
+        return raw is not None and not parse_record(ProfileGlobalLockRecord, raw).globally_locked
+    except (AutomationCustodyError, OSError):
+        return False
 
 
 def _retire_profile_directories(

@@ -20,6 +20,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.automation_crypto import canonical_record
+from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
+from cadrumo.adapters.persistence.storage.custody.automation_records import ProfileGlobalLockRecord
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.password_replacement_intent import (
     profile_password_replacement_intent_path,
@@ -173,6 +176,41 @@ def test_an_empty_automation_directory_does_not_hold_strengthening_off(tmp_path:
         (storage_root / ".automation-v1" / str(uuid4()) / str(profile_id)).mkdir(parents=True)
         assert _strengthen(profile_id)
         assert _point(profile_id) == (64, 4, 1)
+
+
+def _lock_record(root: Path, profile_id: UUID, installation_id: UUID, *, locked: bool) -> bytes:
+    binding = current_automation_profile_binding(
+        profile_id=profile_id, installation_id=installation_id, os_owner_id="sign-in-strengthening-owner", root=root
+    )
+    return canonical_record(ProfileGlobalLockRecord(binding=binding, generation=1, globally_locked=locked))
+
+
+@pytest.mark.parametrize(
+    ("lock", "held_off"),
+    [("locked", True), ("unlocked", False), ("unreadable", True)],
+)
+def test_a_profile_lock_holds_strengthening_off_only_while_the_person_holds_it(
+    tmp_path: Path, lock: str, held_off: bool
+) -> None:
+    """Retirement clears the lock record, so a held or unreadable lock must survive; an unlocked one loses nothing."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        profile_id = _register()
+        before = load_committed_profile_password_material(profile_id).envelope
+        installation_id = uuid4()
+        directory = storage_root / ".automation-v1" / str(installation_id) / str(profile_id)
+        directory.mkdir(parents=True)
+        record = (
+            b"{}"
+            if lock == "unreadable"
+            else _lock_record(storage_root, profile_id, installation_id, locked=lock == "locked")
+        )
+        (directory / "profile-lock.json").write_bytes(record)
+
+        assert _strengthen(profile_id) is not held_off
+
+        after = load_committed_profile_password_material(profile_id).envelope
+        assert (after == before) is held_off
+        assert _point(profile_id) == (_FALLBACK if held_off else (64, 4, 1))
 
 
 def _crash_instead(monkeypatch: pytest.MonkeyPatch, step: str) -> None:

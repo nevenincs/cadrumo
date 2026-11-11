@@ -89,12 +89,14 @@ def settle_login_attempt(
     attempt: PendingProfileLogin, *, deadline: float, guard: RLockType, pending_logins: dict[UUID, PendingProfileLogin]
 ) -> bool:
     """Cancel and join the original proof owner, retaining unfinished cleanup."""
-    acquired = attempt.host.guard.acquire(timeout=max(0.0, deadline - time.monotonic()))
+    # A password attempt can move to its successor host; release the guard it took.
+    guard_held = attempt.host.guard
+    acquired = guard_held.acquire(timeout=max(0.0, deadline - time.monotonic()))
     if acquired:
         try:
             attempt.control.cancel()
         finally:
-            attempt.host.guard.release()
+            guard_held.release()
     if attempt.thread is not None and attempt.thread.ident is not None:
         attempt.thread.join(timeout=max(0.0, deadline - time.monotonic()))
     if not attempt.finished.is_set() or (attempt.thread is not None and attempt.thread.is_alive()):
@@ -295,8 +297,7 @@ class ProfileConnectionLoginMixin:
             return changed
         context, request, connection = pending.context, pending.request, pending.connection
         successor = self._host(request.profile_id, context)
-        before = replaced.store.binding.custody_generation
-        if successor.store.binding.custody_generation not in {before, before + 1}:
+        if successor.store.binding.custody_generation != replaced.store.binding.custody_generation + 1:
             return changed
         with successor.guard:
             with self._guard:
@@ -328,7 +329,8 @@ class ProfileConnectionLoginMixin:
             pending = self._pending_logins.get(context.connection_id)
         if pending is None or not login_claim_matches(pending, context, request):
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        with pending.host.guard:
+        host = pending.host
+        with host.guard:
             if request.action == "profile_login_cancel":
                 pending.control.cancel()
             if pending.finished.is_set():
@@ -336,9 +338,7 @@ class ProfileConnectionLoginMixin:
                 if result is None:
                     return AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
                 if isinstance(result, ProfileStatus) and result.status.session_id is not None:
-                    current = self._status(
-                        pending.connection, pending.host, request.request_id, result.status.session_id
-                    )
+                    current = self._status(pending.connection, host, request.request_id, result.status.session_id)
                     if isinstance(current, AccessDenied):
                         return current
                     return result.model_copy(update={"request_id": request.request_id, "status": current.status})

@@ -15,7 +15,8 @@ from ......application.user_profile.custody_ports import (
     unlock_profile_custody_password,
 )
 from ......core.config import override_settings
-from ..kdf_supervision import ProfileKdfPointRefusedError
+from .. import kdf_supervision
+from ..kdf_supervision import ProfileCustodyKdfResources, ProfileKdfPointRefusedError
 from ..records import ProfileCustodyEnvelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -82,6 +83,30 @@ def test_a_point_that_would_not_strengthen_is_refused(tmp_path: Path, strength: 
                 salt=token_bytes(16),
                 predecessor=committed,
                 strength=strength,
+            )
+
+
+def test_a_point_that_no_longer_fits_this_host_is_refused_without_a_custody_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Memory measured earlier may be gone at sign-in; the strengthening is then skipped, not failed."""
+    dek = token_bytes(32)
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=False):
+        committed = _committed(dek)
+        monkeypatch.setattr(
+            kdf_supervision,
+            "profile_kdf_resources",
+            lambda: ProfileCustodyKdfResources(available_memory_bytes=96 * 1024 * 1024, cpu_count=1),
+        )
+        with pytest.raises(ProfileKdfPointRefusedError, match="does not fit this host"):
+            create_profile_custody_registration_material(
+                profile_id=_PROFILE_ID,
+                password=_CREDENTIAL,
+                dek=dek,
+                dek_epoch=_EPOCH,
+                salt=token_bytes(16),
+                predecessor=committed,
+                strength=ProfileKdfStrength(memory_mib=128, iterations=3, parallelism=1),
             )
 
 
