@@ -56,6 +56,7 @@ from .operator_action_enums import ActionArgumentStatus
 from .output_rendering import jsonable_output_payload
 from .precondition_action_invariants import (
     PreconditionActionIdentity,
+    PreconditionAlternativeAction,
     PreconditionEvidence,
     PreconditionOutcomeInvariant,
 )
@@ -198,8 +199,14 @@ class ResolvedActionArgument(ActionArgumentResolution):
     model_config = _STRICT_FROZEN_CONFIG
 
 
+class ResolvedAlternativeAction(PreconditionAlternativeAction[ResolvedActionReference, ResolvedActionArgument]):
+    """One further resolved recovery action, offered after the primary one, that clears the same condition."""
+
+
 class ResolvedPreconditionAction(
-    PreconditionOutcomeInvariant[ActionConditionEvidence, ResolvedActionReference, ResolvedActionArgument],
+    PreconditionOutcomeInvariant[
+        ActionConditionEvidence, ResolvedActionReference, ResolvedActionArgument, ResolvedAlternativeAction
+    ],
 ):
     """A resolved precondition verdict projected for a machine consumer.
 
@@ -638,6 +645,7 @@ __all__ = [
     "OutputSchemaError",
     "ResolvedActionArgument",
     "ResolvedActionReference",
+    "ResolvedAlternativeAction",
     "ResolvedNoticeAction",
     "ResolvedPreconditionAction",
     "SchemaEnvelope",

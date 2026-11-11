@@ -387,6 +387,43 @@ def declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     )
 
 
+def derived_selector_name(stem: str, *, authored_year: int, declared_selectors: frozenset[str]) -> str:
+    """Return the profile selector a revision declares for the derived fact ``stem``.
+
+    The registry names a derived selector ``<stem>_<exercise>``. A revision
+    that inherits a binding from an earlier edition carries that edition's
+    exercise in the name, so asking only for the revision's own authored year
+    would miss a declaration the law applies to this year too. The selector the
+    revision authored for its own year wins; otherwise the one year-suffixed
+    selector of this ``stem`` the revision declares is used. With no usable
+    declaration the authored-year name is returned, which no binding consumes.
+    """
+    own = f"{stem}_{authored_year}"
+    if own in declared_selectors:
+        return own
+    prefix = f"{stem}_"
+    inherited = sorted(
+        selector
+        for selector in declared_selectors
+        if selector.startswith(prefix) and selector[len(prefix) :].isdecimal()
+    )
+    return inherited[0] if len(inherited) == 1 else own
+
+
+def derived_selector_for_snapshot(
+    snapshot: RegistrySnapshot,
+    stem: str,
+    declared_selectors: frozenset[str] | None = None,
+) -> str:
+    """Return the selector ``snapshot``'s revision declares for the derived fact ``stem``.
+
+    ``declared_selectors`` defaults to the selectors the revision's profile
+    bindings name. See :func:`derived_selector_name` for the choice.
+    """
+    declared = declared_profile_selectors(snapshot.revision) if declared_selectors is None else declared_selectors
+    return derived_selector_name(stem, authored_year=snapshot_authored_year(snapshot), declared_selectors=declared)
+
+
 def renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
@@ -662,8 +699,8 @@ def inject_derived_minimo_descendientes_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot_authored_year(snapshot)}"
-    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot_authored_year(snapshot)}"
+    estatal_key = derived_selector_for_snapshot(snapshot, "renta_family.descendientes_minimos_aggregate")
+    autonomico_key = derived_selector_for_snapshot(snapshot, "renta_family.descendientes_minimos_aggregate_autonomico")
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -804,8 +841,11 @@ def inject_derived_anualidades_eligibility_facts(
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{snapshot_authored_year(snapshot)}"
-    if key not in declared_profile_selectors(snapshot.revision):
+    declared_selectors = declared_profile_selectors(snapshot.revision)
+    key = derived_selector_for_snapshot(
+        snapshot, "renta_family.anualidades_sin_minimo_descendientes", declared_selectors
+    )
+    if key not in declared_selectors:
         return
     thresholds = resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
@@ -1044,12 +1084,11 @@ def inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    authored_year = snapshot_authored_year(snapshot)
     consumers = tuple(
         (key, limited)
         for key, limited in (
-            (f"renta_family.incremento_guarderia_{authored_year}", False),
-            (f"renta_family.incremento_guarderia_cotizaciones_{authored_year}", True),
+            ("renta_family.incremento_guarderia", False),
+            ("renta_family.incremento_guarderia_cotizaciones", True),
         )
         if key in declared_selectors
     )

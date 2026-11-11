@@ -457,13 +457,15 @@ def _render_precondition_action_text(
     :class:`ResolvedPreconditionAction` schema names, not independently authored
     recovery labels, and nested values use deterministic JSON so condition
     evidence and binding provenance cannot be flattened into ambiguous prose.
+    The ordered alternative actions add one line after the primary action's
+    lines, only when the verdict offers any.
 
     """
     lines = [text.rstrip("\n")]
     if command is not None:
         lines.append(f"  command: {command}")
     action_document = action.model_dump(mode="json")
-    for field_name in (
+    field_names = (
         "failed_condition_id",
         "evidence",
         "action",
@@ -471,7 +473,10 @@ def _render_precondition_action_text(
         "missing_argument_names",
         "conditionality",
         "no_recovery_outcome",
-    ):
+    )
+    if action.alternative_actions:
+        field_names = (*field_names, "alternative_actions")
+    for field_name in field_names:
         value = json.dumps(
             action_document[field_name],
             ensure_ascii=False,

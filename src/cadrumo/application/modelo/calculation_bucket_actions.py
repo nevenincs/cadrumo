@@ -32,7 +32,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
 )
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer, ValueAttestation
 from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceIssue,
 )
@@ -692,6 +692,7 @@ def _caller_operator_layer(
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
     attested_binding_ids: tuple[BindingId, ...],
+    value_attestations: Mapping[BindingId, ValueAttestation],
 ) -> CalculationOperatorLayer:
     """Project the validated caller tier of one run onto the persisted operator layer.
 
@@ -710,6 +711,7 @@ def _caller_operator_layer(
             **dict(enum_binding_values or {}),
         },
         attested_binding_ids=attested_binding_ids,
+        value_attestations=dict(value_attestations),
     )
 
 
@@ -771,6 +773,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     record_operator_layer: bool = False,
     attested_binding_ids: tuple[BindingId, ...] = (),
+    value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     binding_values: Mapping[BindingId, Decimal] | None = None,
@@ -824,6 +827,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 text_casilla_inputs=text_casilla_inputs,
                 enum_binding_values=enum_binding_values,
                 attested_binding_ids=attested_binding_ids,
+                value_attestations=value_attestations or {},
             )
             if record_operator_layer
             else None

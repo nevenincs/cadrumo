@@ -489,6 +489,7 @@ def build_overview_explain(
     applicability = derive_modelo_applicability(
         year_profile,
         modelo_id,
+        reference_date=date(resolved_year, 12, 31),
         operation=operation,
         ledger_payer_facts=ledger_payer_facts,
     )

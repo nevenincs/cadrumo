@@ -2544,6 +2544,12 @@ application:
         például amikor a fizetendő összeg egy részét a házastársad visszatérítésének
         terhére felfüggesztik, vagy lemondasz egy visszatérítésről. A Cadrumo az idei
         nyomtatvány maradékát még nem számolja ki.'
+      export_text_unrepresentable_character: 'Semmi sem íródott ki: a(z) „%{field_value}”
+        a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
+        rekordterve a(z) „%{record_type}” rekord %{first_position}-%{last_position}.
+        pozícióján nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.
+        Javítsd ott, ahol rögzítetted, úgy, ahogy az AEAT adózói nyilvántartásában
+        (censo) szerepel, és exportálj újra.'
       export_text_value_overflow: 'Semmi sem íródott ki: a(z) „%{field_value}” %{value_length}
         karakter hosszú, az AEAT rekordterve viszont a(z) „%{record_type}” rekord
         %{first_position}-%{last_position}. pozícióján csak %{field_length} karaktert
@@ -2930,9 +2936,24 @@ application:
         érték hiányzik.'
       cross_period_activity_start_missing: A Modelo %{target_modelo} bevalláshoz (%{target_filing_year},
         %{target_period} időszak) meg kell adni, mikor kezdte meg a tevékenységét.
+      cross_period_dependency_attestation_conflict: A Modelo %{source_modelo} (%{source_filing_year},
+        %{source_period} időszak) esetén %{value} összeget adtál meg, de most már
+        létezik hozzá bevallás más összeggel. Ennek a bevallásnak (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) azt kell követnie, ezért
+        add meg újra az összeget, vagy vond vissza a megadásodat.
+      cross_period_dependency_operator_attested: Az alkalmazás nem tárol bevallást
+        a Modelo %{source_modelo} (%{source_filing_year}, %{source_period} időszak)
+        számára, ezért a(z) %{value} összeg, amelyet ez a bevallás (Modelo %{target_modelo},
+        %{target_filing_year}, %{target_period} időszak) átvesz belőle, az általad
+        megadott érték. Őrizd meg a korábbi bevallást bizonyítékként.
       cross_period_dependency_unclean: Ez a bevallás a Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) adatait használja, és abban még megoldatlan problémák
         vannak. Előbb ott oldd meg őket.
+      cross_period_dependency_unclean_attestable: Ez a nyilatkozat a(z) %{source_modelo}
+        modell %{source_filing_year} évi, %{source_period} időszakának adataiból dolgozik,
+        és az a nyilatkozat még nyitott hibákat tartalmaz. Először ott oldd meg őket,
+        vagy ha nem rögzíted itt azt a bevallást, add meg az értékét a `aeat app modelo
+        work attest-prior-value <munkaegység> <binding> <érték>` paranccsal.
       cross_period_first_year_fractional_suppression: A Modelo %{source_modelo} (%{source_filing_year},
         %{source_period} időszak) nem vonatkozik rád, mert a tevékenységed %{activity_start_date}
         napon kezdődött.
@@ -3409,6 +3430,7 @@ application:
           be a rovatodba, majd számolj újra.
         check_profile_value: Nézd át ezt az értéket a profilodban, javítsd, ha hibás,
           majd számolj újra.
+        check_stated_figure: Ellenőrizd az általad megadott összeget a korábbi bevallásoddal.
         compare_figures: Hasonlítsd össze a számokat, javítsd ki a hibásat, majd számolj
           újra.
         correct_and_recalculate: Javítsd ki, amit leír, majd számolj és ellenőrizz

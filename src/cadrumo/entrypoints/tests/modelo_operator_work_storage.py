@@ -196,6 +196,8 @@ class SeededOperatorWork:
             operation=self.operation,
             operation_contracts=production_operation_registry().public_contract_set,
             issued_at=issued_at,
+            observation_repository=self.ports.observation_repository,
+            filing_catalogue=self.ports.filing_repository.load(),
         )
 
     def renew(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
@@ -206,6 +208,8 @@ class SeededOperatorWork:
             calculation_catalogue=self.ports.calculation_repository.load(),
             operation=self.operation,
             operation_contracts=production_operation_registry().public_contract_set,
+            observation_repository=self.ports.observation_repository,
+            filing_catalogue=self.ports.filing_repository.load(),
         )
 
     def sibling(self, period_code: str) -> SeededOperatorWork:

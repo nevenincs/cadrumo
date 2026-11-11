@@ -16,7 +16,10 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCodeText
+from ...domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ..calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
@@ -43,7 +46,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
-from .verification_cross_period import cross_period_expected_member_sets_from_profile
+from .verification_cross_period import cross_period_expected_member_sets_from_profile, operator_value_attestations
 
 MODELO_DEPENDENCY_OPERATION_DEFINITION_ID = "modelo.work.dependencies"
 
@@ -161,6 +164,35 @@ def _require_dependency_profile_ports(ports: DependencyReadPorts, profile_id: st
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
+def _declaration_revision(
+    snapshot: RegistrySnapshot,
+    *,
+    modelo: str,
+    period: Period,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    ports: DependencyReadPorts,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision | None:
+    """The current calculation of the declaration these coordinates address, when one is kept.
+
+    Its operator layer holds the figures the filer stated for earlier returns, so
+    the dependency read judges an attested dependency exactly as verification does.
+    """
+    unit = work_catalogue.get(
+        derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+        )
+    )
+    if unit is None or unit.state is WorkUnitState.DESCARTADO or unit.current_calculation_revision_id is None:
+        return None
+    return ports.repositories.calculation.load(operation=operation).get(unit.current_calculation_revision_id)
+
+
 class ModeloDependencyExecutor:
     """Evaluate canonical clean state without opening a new public authority."""
 
@@ -183,6 +215,18 @@ class ModeloDependencyExecutor:
             snapshot = operation.reading_snapshot(
                 payload.modelo, filing_year=payload.filing_year, period=payload.period.code
             )
+            work_catalogue = repositories.work_unit.load()
+            attestations = operator_value_attestations(
+                _declaration_revision(
+                    snapshot,
+                    modelo=payload.modelo,
+                    period=payload.period.to_period(),
+                    bucket_id=profile_id,
+                    work_catalogue=work_catalogue,
+                    ports=ports,
+                    operation=operation,
+                )
+            )
             verdict = evaluate_cross_period_clean_state(
                 snapshot,
                 operation=operation,
@@ -197,6 +241,8 @@ class ModeloDependencyExecutor:
                 activity_start_date=ports.profile.activity_start_date,
                 taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(ports.profile),
                 m111_no_retenciones_periods=ports.m111_no_retenciones_periods,
+                operator_value_attestations=attestations,
+                work_catalogue=work_catalogue,
             )
             allowed = dependency_access_periods(payload, operation)
             if verdict.bucket_id != profile_id or any(

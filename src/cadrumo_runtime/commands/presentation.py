@@ -19,7 +19,7 @@ from cadrumo_client.contracts.command_program import CommandProgram
 if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
     from cadrumo.application.operator_surface.manifest import OperatorSurfaceReconciliation
-    from cadrumo.core.json_contract import Notice, ResolvedPreconditionAction
+    from cadrumo.core.json_contract import Notice, ResolvedActionReference, ResolvedPreconditionAction
 
 
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
@@ -47,22 +47,30 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
         runtime_nodes[command_key] = node
         return _runtime_action_target_reconciliation(RUNTIME_COMMAND_GRAPH, command_key)
 
+    def with_executable(action: ResolvedActionReference) -> ResolvedActionReference:
+        node = runtime_nodes.get(action.target_command_key)
+        if node is not None:
+            return action.model_copy(update={"cli_path": node.path})
+        target = next(item for item in ACTION_TARGETS if item.command_key == action.target_command_key)
+        cli_path = action.cli_path
+        if cli_path is None:
+            cli_path = (target.program.executable_name,)
+        elif not cli_path or cli_path[0] != target.program.executable_name:
+            cli_path = (target.program.executable_name, *cli_path)
+        return action.model_copy(update={"cli_path": cli_path})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
     if resolved.action is None:
         return resolved
-    node = runtime_nodes.get(resolved.action.target_command_key)
-    if node is not None:
-        cli_path = node.path
-        action = resolved.action.model_copy(update={"cli_path": cli_path})
-        return resolved.model_copy(update={"action": action})
-    target = next(item for item in ACTION_TARGETS if item.command_key == resolved.action.target_command_key)
-    cli_path = resolved.action.cli_path
-    if cli_path is None:
-        cli_path = (target.program.executable_name,)
-    elif not cli_path or cli_path[0] != target.program.executable_name:
-        cli_path = (target.program.executable_name, *cli_path)
-    action = resolved.action.model_copy(update={"cli_path": cli_path})
-    return resolved.model_copy(update={"action": action})
+    return resolved.model_copy(
+        update={
+            "action": with_executable(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_executable(item.action)})
+                for item in resolved.alternative_actions
+            ),
+        }
+    )
 
 
 def _runtime_action_target_reconciliation(graph: CommandSpecGraph, command_key: str) -> OperatorSurfaceReconciliation:

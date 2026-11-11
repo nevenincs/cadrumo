@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -31,7 +32,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer, ValueAttestation
 from ...domain.modelos.row_models import ModeloDetailRow
 from .calculate_input import resolve_binding_overrides
 
@@ -117,6 +118,7 @@ class CallerContextCalculationInputs:
     binding_values: dict[BindingId, Decimal]
     enum_binding_values: dict[BindingId, str]
     attested_binding_ids: tuple[BindingId, ...]
+    value_attestations: Mapping[BindingId, ValueAttestation]
     detail_rows: tuple[ModeloDetailRow, ...]
     filing_instance_evidence: FilingInstanceEvidence | None
     m210_official_tipo_renta_code: str | None
@@ -150,6 +152,7 @@ def caller_context_calculation_inputs(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         attested_binding_ids=layer.attested_binding_ids,
+        value_attestations=layer.value_attestations,
         detail_rows=context.detail_rows,
         filing_instance_evidence=context.filing_instance_evidence,
         m210_official_tipo_renta_code=context.m210_official_tipo_renta_code,

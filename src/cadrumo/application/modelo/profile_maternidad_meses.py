@@ -20,10 +20,10 @@ from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.projections import profile_fact_index
 from .profile_derived_facts import (
+    derived_selector_for_snapshot,
     family_fact_context,
     renta_family_profile_from_facts,
     resolved_minimo_descendientes_thresholds,
-    snapshot_authored_year,
 )
 
 if TYPE_CHECKING:
@@ -253,7 +253,7 @@ def inject_derived_deduccion_maternidad_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.deduccion_maternidad_{snapshot_authored_year(snapshot)}"
+    key = derived_selector_for_snapshot(snapshot, "renta_family.deduccion_maternidad", declared_selectors)
     if key not in declared_selectors:
         return
 

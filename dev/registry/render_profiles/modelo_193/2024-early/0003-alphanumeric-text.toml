@@ -1,0 +1,16 @@
+schema_version = 1
+fragment_id = "0003-alphanumeric-text"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "193"
+design_epoch = "2024-early"
+source_ref = "aeat-dr-193-2024"
+source_sha256 = "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b"
+
+[[alphanumeric_text_rules]]
+rule_kind = "alphanumeric_text"
+alphanumeric_text = "upper_unaccented"
+official_statement = "Todos los campos alfanuméricos/alfabéticos ajustados a la izquierda y rellenos de blancos por la derecha, en mayúsculas, sin caracteres especiales y sin vocales acentuadas, excepto que se especifique lo contrario en la descripción del campo."
+justification = "The design states this once for every alphanumeric and alphabetic field of its records, and names the language's own letters Ñ and Ç in ISO-8859-1. None of its field descriptions mentions minúsculas or acentuadas, so no field states otherwise."

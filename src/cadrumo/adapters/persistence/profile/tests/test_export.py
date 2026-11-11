@@ -38,6 +38,7 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
 from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
+    M303FilingEvidenceError,
     ModeloCrossPeriodCleanStateError,
     ModeloRevisionNotSealedError,
 )
@@ -59,7 +60,6 @@ from cadrumo.domain.modelos.calculation_repository import (
     CalculationRevisionPersistenceError,
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.errors import ModeloExportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -366,7 +366,7 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
         )
         output = tmp_path / "modelo-303.txt"
 
-        with pytest.raises(ModeloExportError) as exc_info:
+        with pytest.raises(M303FilingEvidenceError) as exc_info:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=calc_rev_id,
@@ -378,10 +378,8 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
                 operation=_authority_operation_for_test,
             )
 
-        assert isinstance(exc_info.value.context, dict)
-        # The cause is identified by its registered error type, not by prose: the
-        # producer now carries a declared precondition failure instead of a
-        # sentence this assertion could match on.
-        assert exc_info.value.context["cause_type"] == "M303FilingEvidenceError"
+        # The refusal reaches the operator with its own code and declared precondition
+        # failure rather than a generic export failure naming it as a cause.
+        assert exc_info.value.precondition_failure is not None
         assert not output.exists()
         assert not output.with_name(output.name + ".tmp").exists()

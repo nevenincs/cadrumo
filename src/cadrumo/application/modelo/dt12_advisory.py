@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_absence import AbsentCasillaReading
-from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -35,9 +35,10 @@ def resolve_dt12_verification_mapping(
     *,
     operation: PinnedAuthorityOperation,
     fact_id: str,
+    effective_date: date,
 ) -> ResolvedMappingFact:
-    """Resolve one DT12 verification mapping fact dated at the selected revision's end."""
-    effective_date = getattr(revision, "valid_to", None) or today_madrid()
+    """Resolve one DT12 verification mapping fact dated at the caller's filing coordinate."""
+    del revision
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=fact_id,
@@ -69,6 +70,7 @@ def dt12_reduccion_advisory_finding(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     operation: PinnedAuthorityOperation,
+    effective_date: date,
 ) -> ModeloVerificationFinding | None:
     """Warn when large trabajo income has no DT 12ª reduction declaration.
 
@@ -94,7 +96,10 @@ def dt12_reduccion_advisory_finding(
     ingreso_value = AbsentCasillaReading.ADVISORY_TRIGGER_OPERAND.read(casilla_values, ingreso_id)
     reduccion_value = AbsentCasillaReading.ADVISORY_GAP_OPERAND.read(casilla_values, reduccion_id)
     declaration = resolve_dt12_verification_mapping(
-        revision, operation=operation, fact_id="lirpf-dt12-reduction-verification-mapping"
+        revision,
+        operation=operation,
+        fact_id="lirpf-dt12-reduction-verification-mapping",
+        effective_date=effective_date,
     )
     if ingreso_value <= _declared_threshold(declaration) or reduccion_value != Decimal(0):
         return None

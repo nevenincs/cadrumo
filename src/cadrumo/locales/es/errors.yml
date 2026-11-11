@@ -657,6 +657,80 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
+    calculation_revision_amendment_metadata_unpaired: Registra una rectificación sin
+      su motivo, o un motivo sin su rectificación. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_closed_rows_disagree: Sus filas de registro cerradas no concuerdan
+      con sus valores de vinculación guardados. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_closed_rows_foreign: Sus filas de registro cerradas pertenecen
+      a otra unidad de trabajo o a otra instantánea del registro. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_handoff_outputs_disagree: 'Los valores de su traspaso al
+      resumen anual difieren de las casillas del modelo 390 que contiene: %{casilla_ids}.
+      La aplicación escribió este registro ella misma, así que se alteró o se dañó,
+      y ningún cambio en tus datos lo repara.'
+    calculation_revision_handoff_outputs_missing: 'Su traspaso al resumen anual nombra
+      casillas del modelo 390 que el cálculo no contiene: %{casilla_ids}. La aplicación
+      escribió este registro ella misma, así que se alteró o se dañó, y ningún cambio
+      en tus datos lo repara.'
+    calculation_revision_handoff_target_mismatch: Su traspaso al resumen anual del
+      modelo 303 apunta a un cálculo distinto del que lo contiene. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_identity_mismatch: Su identificador guardado %{calculation_revision_id}
+      no es el derivado de sus entradas (%{derived_id}). La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_lifecycle_order: Se actualizó por última vez (%{updated_at})
+      antes de crearse (%{created_at}). La aplicación escribió este registro ella
+      misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_observations_missing: Contiene valores de casillas pero ninguna
+      de las observaciones de las que proceden. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_observations_projection_mismatch: Sus valores de casillas
+      difieren de lo que dan sus observaciones. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_operator_layer_cleared_overlap: 'Fija y a la vez borra las
+      mismas casillas: %{casilla_ids}. La aplicación escribió este registro ella misma,
+      así que se alteró o se dañó, y ningún cambio en tus datos lo repara.'
+    calculation_revision_rectificativa_context_missing: Es una rectificativa pero
+      no se comprobó contra la presentación que corrige. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_row_identity_without_value: Una identidad de origen de fila
+      guardada no tiene ningún valor de fila detrás. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_index_mismatch: La posición de una casilla de fila difiere
+      de la de su fila de origen %{row_index} de %{binding_id}. La aplicación escribió
+      este registro ella misma, así que se alteró o se dañó, y ningún cambio en tus
+      datos lo repara.
+    calculation_revision_row_source_identity_absent: La fila %{row_index} de %{binding_id}
+      no tiene identidad de origen guardada. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_identity_mismatch: La identidad de origen guardada
+      para la fila %{row_index} de %{binding_id} difiere de la que registra su casilla.
+      La aplicación escribió este registro ella misma, así que se alteró o se dañó,
+      y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_shared: La fila %{row_index} de %{binding_id}
+      alimenta más de una casilla de fila. La aplicación escribió este registro ella
+      misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_source_value_not_decimal: El valor guardado de la fila
+      %{row_index} de %{binding_id} no es un número. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    calculation_revision_row_value_mismatch: El valor de una casilla de fila difiere
+      de su fila de origen %{row_index} de %{binding_id}. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_row_values_provenance_mismatch: Los valores de sus casillas
+      de fila y su procedencia cubren filas distintas. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
+    calculation_revision_secure_row_fields_missing: Su copia guardada no tiene los
+      campos de filas que toda copia así debe llevar. La aplicación escribió este
+      registro ella misma, así que se alteró o se dañó, y ningún cambio en tus datos
+      lo repara.
     canonical_actividad_asset_history_persistence: No se pudo reabrir con seguridad
       el historial cifrado de activos.
     canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas
@@ -714,6 +788,22 @@ errors:
       NIE ni CIF español válido.
     integrity_justificante_verification: La verificación del justificante con la AEAT
       no se pudo completar.
+    integrity_modelo_export_field_unrenderable: 'No se ha escrito nada: el campo %{field_id}
+      (casilla %{casilla_id}) no se puede escribir a partir de su valor, porque el
+      diseño de registro oficial que lleva la aplicación y ese valor no concuerdan.
+      El defecto está en el diseño de exportación, no en tus datos, así que cambiar
+      tus datos no lo arregla.'
+    integrity_modelo_export_field_unrenderable_no_casilla: 'No se ha escrito nada:
+      el campo %{field_id} no se puede escribir a partir de su valor, porque el diseño
+      de registro oficial que lleva la aplicación y ese valor no concuerdan. El defecto
+      está en el diseño de exportación, no en tus datos, así que cambiar tus datos
+      no lo arregla.'
+    integrity_modelos_calculation_revision: El cálculo guardado se contradice a sí
+      mismo, así que no se puede aplicar nada de él. La aplicación escribió este registro
+      ella misma, así que se alteró o se dañó, y ningún cambio en tus datos lo repara.
+    integrity_modelos_operator_layer: Los valores del operador guardados para este
+      cálculo se contradicen. La aplicación los escribió ella misma, así que el registro
+      se ha alterado o dañado y no se puede aplicar nada de él.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
@@ -776,6 +866,14 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    operator_layer_attestation_kinds_conflict: El registro guardado declara el enlace
+      %{binding_id} a la vez sin importe y con un importe declarado. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
+    operator_layer_value_attestation_not_canonical: La declaración de valor guardada
+      para el enlace %{binding_id} no contiene un importe decimal canónico. La aplicación
+      escribió ese registro ella misma, así que se ha alterado o dañado y el cálculo
+      no puede usarlo.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
     windows_credential_record: La credencial de Windows no cumple el formato requerido
@@ -1413,6 +1511,10 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo
+      %{field_id} contiene el carácter «%{character}» (%{code_point}), que el diseño
+      de registro de la AEAT no permite escribir. Quitarlo o sustituirlo declararía
+      otro dato. Corrige ese dato donde lo registraste y vuelve a exportar.'
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve

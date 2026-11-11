@@ -8,25 +8,34 @@ still say how to settle it: capture the filed Renta from the AEAT.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_selected_for,
+)
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
-from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ..verification_cross_period import cross_period_door
+from ..precondition_action_bindings import AlternativeActionArguments
+from ..preconditions import ATTEST_PRIOR_VALUE_ACTION_ID
+from ..verification_cross_period import CrossPeriodDoor, cross_period_door
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000130"
+_NOW = datetime(1980, 9, 21, 10, 0, tzinfo=UTC)
 _PRIOR_YEAR = filing_year_envelope().horizon - 2
 
 
@@ -46,7 +55,7 @@ def _prior_renta_evidence(*blockers: CrossPeriodCleanStateBlocker) -> CrossPerio
     )
 
 
-def _door(evidence: CrossPeriodDependencyEvidence) -> tuple[str, dict[str, str | int] | None]:
+def _door(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodDoor:
     with bundled_indexed_authority().operation() as operation:
         return cross_period_door(
             evidence,
@@ -65,10 +74,194 @@ def test_a_prior_year_figure_only_the_filer_stated_is_captured_from_the_aeat() -
         )
     )
 
-    assert door == ("filed_evidence_missing", {"modelos": "100", "period": "0A", "year": _PRIOR_YEAR})
+    assert door == CrossPeriodDoor("filed_evidence_missing", {"modelos": "100", "period": "0A", "year": _PRIOR_YEAR})
 
 
 def test_a_blocker_nothing_settles_still_names_no_door() -> None:
     door = _door(_prior_renta_evidence(CrossPeriodCleanStateBlocker.FILING_KIND_DISAGREEMENT))
 
-    assert door == ("unclean", None)
+    assert door == CrossPeriodDoor("unclean", None)
+
+
+def _attest_target() -> WorkUnit:
+    year = filing_year_envelope().floor
+    period = Period.from_year_and_code(year, "1T")
+    revision_id = _revision_governing("130", year)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID, modelo="130", filing_year=year, period=period, revision_id=revision_id
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="130",
+        filing_year=year,
+        period=period,
+        revision_id=revision_id,
+        name="Pagos fraccionados",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+
+
+def _revision_governing(modelo_id: str, year: int) -> str:
+    return next(
+        str(revision.id) for revision in reversed(authored_revisions(modelo_id)) if revision.valid_from.year <= year
+    )
+
+
+def _outside_envelope_evidence(*blockers: CrossPeriodCleanStateBlocker) -> CrossPeriodDependencyEvidence:
+    year = filing_year_envelope().floor - 1
+    return CrossPeriodDependencyEvidence(
+        requirement=_prior_renta_evidence().requirement.model_copy(
+            update={
+                "filing_year": year,
+                "period": Period.from_year_and_code(year, "0A"),
+                "source_outside_envelope": True,
+            }
+        ),
+        blockers=blockers,
+    )
+
+
+def _door_for(
+    evidence: CrossPeriodDependencyEvidence,
+    target: WorkUnit | None,
+    *,
+    work_catalogue: WorkUnitCatalogue | None = None,
+) -> CrossPeriodDoor:
+    with bundled_indexed_authority().operation() as operation:
+        return cross_period_door(
+            evidence,
+            bucket_id=_BUCKET_ID,
+            work_catalogue=WorkUnitCatalogue() if work_catalogue is None else work_catalogue,
+            calculation_catalogue=CalculationRevisionCatalogue(),
+            operation=operation,
+            target=target,
+        )
+
+
+@pytest.mark.parametrize(
+    "blocker",
+    [CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE, CrossPeriodCleanStateBlocker.MISSING_OBSERVATION],
+)
+def test_a_source_the_envelope_refuses_names_the_statement_of_its_figure_as_the_way_on(
+    blocker: CrossPeriodCleanStateBlocker,
+) -> None:
+    target = _attest_target()
+
+    door = _door_for(_outside_envelope_evidence(blocker), target)
+
+    assert door == CrossPeriodDoor("attest_prior_value", _statement_facts(target))
+
+
+def test_a_source_the_envelope_refuses_names_no_door_without_the_declaration_it_would_be_stated_on() -> None:
+    door = _door_for(_outside_envelope_evidence(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE), None)
+
+    assert door[0] != "attest_prior_value"
+
+
+def test_a_source_the_envelope_admits_keeps_the_door_it_had() -> None:
+    door = _door_for(
+        _prior_renta_evidence(
+            CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,
+            CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD,
+        ),
+        _attest_target(),
+    )
+
+    assert door == CrossPeriodDoor("filed_evidence_missing", {"modelos": "100", "period": "0A", "year": _PRIOR_YEAR})
+
+
+def _statement_facts(target: WorkUnit) -> dict[str, str | int]:
+    return {
+        "work_unit_id": target.work_unit_id,
+        "modelo": "130",
+        "year": target.filing_year,
+        "period": "1T",
+        "binding_id": "irpf.previous_year_economic_activity_net_income",
+    }
+
+
+def _statement_after(target: WorkUnit) -> tuple[AlternativeActionArguments, ...]:
+    return (
+        AlternativeActionArguments(
+            action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+            action_argument_values=_statement_facts(target),
+            missing_action_arguments=("value",),
+        ),
+    )
+
+
+def _admitted(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodDependencyEvidence:
+    return evidence.model_copy(update={"attestation_admitted": True})
+
+
+def test_an_absent_earlier_return_the_filer_may_state_offers_its_creation_then_the_statement() -> None:
+    target = _attest_target()
+
+    door = _door_for(_admitted(_prior_renta_evidence(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)), target)
+
+    assert door == CrossPeriodDoor(
+        "source_absent_attestable",
+        {"modelo": "100", "period": "0A", "year": _PRIOR_YEAR},
+        _statement_after(target),
+    )
+
+
+def test_a_filed_earlier_return_the_filer_may_state_offers_its_capture_then_the_statement() -> None:
+    target = _attest_target()
+
+    door = _door_for(_admitted(_prior_renta_evidence(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)), target)
+
+    assert door == CrossPeriodDoor(
+        "filed_evidence_missing_attestable",
+        {"modelos": "100", "period": "0A", "year": _PRIOR_YEAR},
+        _statement_after(target),
+    )
+
+
+def test_a_source_outside_the_envelope_keeps_the_statement_as_its_only_door() -> None:
+    target = _attest_target()
+
+    door = _door_for(_admitted(_outside_envelope_evidence(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)), target)
+
+    assert door == CrossPeriodDoor("attest_prior_value", _statement_facts(target))
+
+
+def test_an_absent_earlier_return_whose_statement_is_not_admitted_offers_only_its_creation() -> None:
+    door = _door_for(_prior_renta_evidence(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION), _attest_target())
+
+    assert door == CrossPeriodDoor("source_absent", {"modelo": "100", "period": "0A", "year": _PRIOR_YEAR})
+
+
+def test_a_held_earlier_return_names_its_own_work_and_no_statement() -> None:
+    period = Period.from_year_and_code(_PRIOR_YEAR, "0A")
+    revision_id = str(revision_selected_for("100", _PRIOR_YEAR, "0A").id)
+    source = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID, modelo="100", filing_year=_PRIOR_YEAR, period=period, revision_id=revision_id
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=_PRIOR_YEAR,
+        period=period,
+        revision_id=revision_id,
+        name="Renta",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+
+    door = _door_for(
+        _admitted(_prior_renta_evidence(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)),
+        _attest_target(),
+        work_catalogue=WorkUnitCatalogue(work_units={source.work_unit_id: source}),
+    )
+
+    assert door.alternative_actions == ()
+    assert door.action_argument_values == {"work_unit_id": source.work_unit_id}
+    assert not door.scenario.endswith("_attestable")
+
+
+def test_an_admitted_statement_needs_the_declaration_it_would_be_stated_on() -> None:
+    door = _door_for(_admitted(_prior_renta_evidence(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)), None)
+
+    assert door == CrossPeriodDoor("source_absent", {"modelo": "100", "period": "0A", "year": _PRIOR_YEAR})

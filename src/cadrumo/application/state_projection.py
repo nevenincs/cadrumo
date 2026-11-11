@@ -330,6 +330,7 @@ def _modelo_profile_refusal(
             record=record,
             bucket_id=bucket_id,
             modelo=request.modelo,
+            filing_year=request.filing_year,
             operation=operation,
         )
     )

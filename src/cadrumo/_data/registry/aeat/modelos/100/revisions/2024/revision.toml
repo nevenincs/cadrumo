@@ -9784,7 +9784,6 @@ sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
 selector = {revision = "2023", id = "renta-profile-incremento-guarderia"}
-fields = {provider = {profile_key = "renta_family.incremento_guarderia_2024"}}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "Límite del incremento"]}], source_refs = ["aeat-renta-2024-manual-parte1", "aeat-dr-100-2024-dictionary"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 

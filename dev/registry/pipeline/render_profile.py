@@ -221,5 +221,7 @@ def _append_optional_digest_fields(profile: RenderProfile, digest_payload: dict[
             rule.model_dump(mode="json")
             for rule in sorted(profile.telematic_transport_choice_rules, key=lambda item: anchor_key(item.anchor))
         ]
+    if profile.alphanumeric_text_rule is not None:
+        digest_payload["alphanumeric_text_rule"] = profile.alphanumeric_text_rule.model_dump(mode="json")
     if profile.empty_rule_assertion is not None:
         digest_payload["empty_rule_assertion"] = profile.empty_rule_assertion

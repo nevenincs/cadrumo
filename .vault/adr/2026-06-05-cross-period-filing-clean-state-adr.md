@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-08-15'
-body_hash: 'sha256:7ed728906f6b5f50c4ff576079f355ecd17b9ab0356480c91f7e8cb3f4c9fef2'
+modified: '2026-11-11'
+body_hash: 'sha256:0ee1b891b57b4d12da0b26c70861ab9921ee8352e466715bd90fef3ba035a6cb'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'
@@ -139,6 +139,31 @@ This decision creates a common enforcement point for Modelo 390, Modelo 303 cont
 Modelo 200 and 202 prior-year or prior-period dependencies, informative annual
 summaries, retention summaries, and Modelo 353 group aggregation. It also prevents
 future models from bypassing the same rule by adding a new permissive source resolver.
+
+## Amendment 2026-11-11: operator-attested value for a source outside the support envelope
+
+Accepted 2026-11-11 by PRIME under the operator's delegation; the full record is
+`2026-11-11-cross-period-filing-clean-state-out-of-envelope-attestation-adr`.
+
+A `previous_filing_binding` requirement on the decimal channel whose source filing year
+the pinned `SupportedFilingYearsCatalogue` does not admit can never be proven by a clean
+upstream filing, because the product refuses to hold that return. For such a requirement
+only, an explicit operator attestation of the value (`ATTEST_PRIOR_VALUE`, persisted as
+`value_attestations` on the revision's operator layer) yields clean evidence of kind
+`operator_attested_outside_envelope`, and verification reports the non-blocking finding
+`cross_period_dependency_operator_attested`. A blank binding or a plain override without
+attestation still blocks. Every in-envelope dependency, including one whose return is not
+in the application, keeps the rule above unchanged, and the all-zero exemption is
+unaffected.
+
+Widened the same day on the operator's own decision ("registry is projected, yes attestation
+is enough"): the attestation satisfies any decimal-channel `previous_filing_binding` or
+scalar relation-prefill dependency whose upstream return the application does not hold (no
+work unit, filing record or captured observation), inside or outside the envelope. In the
+envelope the existing doors stay and the attest action is served beside them. A present
+source still governs, and a conflicting attestation is refused with a blocking finding. Row
+channels stay sourced from records. The clean evidence kind is
+`operator_attested_absent_upstream`.
 
 ## Codification candidates
 

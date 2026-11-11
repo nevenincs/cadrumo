@@ -73,6 +73,7 @@ DESCENDANT_FLAG_KEYS: Mapping[str, str] = {
     "gastos_guarderia_mensuales": "GASTOS_GUARDERIA_MENSUAL",
     "cotizaciones_ss_madre": "COTIZACIONES_SS_MADRE",
     "nif": "NIF",
+    "apellidos_nombre": "APELLIDOS_NOMBRE",
 }
 
 #: Profile schema paths the profile edit takes as a dedicated on/off option rather than as a wizard answer.

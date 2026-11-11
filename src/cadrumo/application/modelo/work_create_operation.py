@@ -298,6 +298,7 @@ class ModeloWorkCreateExecutor:
             )
             applicability = modelo_work_create_applicability_refusal(
                 payload.modelo,
+                filing_year=period.filing_year,
                 allow_not_applicable=payload.allow_not_applicable,
                 record=profile.record,
                 operation=operation,

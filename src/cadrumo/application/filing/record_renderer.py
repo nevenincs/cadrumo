@@ -26,6 +26,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import (
     FilingExportRequiredRecordAbsentError,
+    FilingExportUnrepresentableCharacterError,
     FilingExportValidationError,
     FilingExportValueOverflowError,
 )
@@ -224,7 +225,7 @@ def _render_record_bytes(
             source_digests=source_digests,
             clave_scope=clave_scope,
         )
-    except FilingExportValueOverflowError as exc:
+    except (FilingExportValueOverflowError, FilingExportUnrepresentableCharacterError) as exc:
         # The slot knows its field; only the record knows which design record it is.
         raise exc.in_record(record.record_type) from exc
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
@@ -389,8 +390,8 @@ def _raise_duplicate_projection_addresses(addresses: tuple[object, ...], *, mess
 
 def _expected_projection_fields(
     contexts: tuple[FilingRecordRenderContext, ...],
-) -> dict[ProjectionAddress, ExportFieldDefinition]:
-    expected_fields: dict[ProjectionAddress, ExportFieldDefinition] = {}
+) -> dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]]:
+    expected_fields: dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]] = {}
     for context in contexts:
         for field in context.record.fields:
             if field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:
@@ -398,7 +399,7 @@ def _expected_projection_fields(
             address = (context.record.id, context.occurrence, field.projection_ref)
             if address in expected_fields:
                 raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
-            expected_fields[address] = field
+            expected_fields[address] = (context.record, field)
     return expected_fields
 
 
@@ -415,11 +416,14 @@ def _require_exact_projection_addresses(
 
 
 def _validate_projection_values(
-    expected_fields: dict[ProjectionAddress, ExportFieldDefinition],
+    expected_fields: dict[ProjectionAddress, tuple[ExportRecordDefinition, ExportFieldDefinition]],
     values: dict[ProjectionAddress, object],
 ) -> None:
-    for address, field in expected_fields.items():
-        format_field(field, values[address])
+    for address, (record, field) in expected_fields.items():
+        try:
+            format_field(field, values[address], record=record)
+        except (FilingExportValueOverflowError, FilingExportUnrepresentableCharacterError) as exc:
+            raise exc.in_record(record.record_type) from exc
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:

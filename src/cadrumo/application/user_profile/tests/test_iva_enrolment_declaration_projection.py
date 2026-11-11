@@ -27,6 +27,7 @@ from ....domain.calculations.registry.applicability_payer_facts import (
     resolve_payer_fact,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ..projections import projection_for_taxpayer
 from .payer_fact_record_support import IVA_ENROLMENT_GATED_MODELOS, iva_enrolment_record
 
@@ -38,7 +39,12 @@ _MODELOS = tuple(sorted(IVA_ENROLMENT_GATED_MODELOS))
 def _verdicts(operation: PinnedAuthorityOperation, *, answer: bool | None) -> dict[str, ApplicabilityVerdict]:
     record = iva_enrolment_record(operation, answer=answer)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    return {modelo: derive_modelo_applicability(profile, modelo, operation=operation).verdict for modelo in _MODELOS}
+    return {
+        modelo: derive_modelo_applicability(
+            profile, modelo, operation=operation, reference_date=latest_period_end()
+        ).verdict
+        for modelo in _MODELOS
+    }
 
 
 def test_an_unanswered_enrolment_leaves_every_gated_modelo_incomplete(

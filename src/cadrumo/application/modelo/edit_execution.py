@@ -57,9 +57,17 @@ from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.filing.schema import ModeloScalar
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO, CalculationOperatorLayer
+from ...domain.modelos.calculation_revision_operator_layer import (
+    ATTESTED_ZERO,
+    AttestedSource,
+    CalculationOperatorLayer,
+    ValueAttestation,
+)
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ..calculations.cross_period_clean_state import attestable_carry_sources
+from ..calculations.cross_period_models import CrossPeriodDependencyRequirement
 from .action_errors import ModeloClearedCasillaSourceFedError
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
@@ -67,6 +75,7 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
+    ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
@@ -190,6 +199,7 @@ class _OperatorState:
     binding_overrides: dict[BindingId, str]
     cleared_casilla_ids: set[CasillaId] = field(default_factory=set)
     attested_binding_ids: set[BindingId] = field(default_factory=set)
+    value_attestations: dict[BindingId, ValueAttestation] = field(default_factory=dict)
 
     @classmethod
     def from_context(cls, context: CalculationCallerContext) -> _OperatorState:
@@ -200,6 +210,7 @@ class _OperatorState:
             binding_overrides=dict(layer.binding_overrides),
             cleared_casilla_ids=set(context.cleared_casilla_ids),
             attested_binding_ids=set(layer.attested_binding_ids),
+            value_attestations=dict(layer.value_attestations),
         )
 
     def operator_sets(self, casilla_id: CasillaId) -> bool:
@@ -215,6 +226,7 @@ class _OperatorState:
             text_casilla_inputs=dict(sorted(self.text_casilla_inputs.items())),
             binding_overrides=dict(sorted(self.binding_overrides.items())),
             attested_binding_ids=tuple(sorted(self.attested_binding_ids)),
+            value_attestations=dict(sorted(self.value_attestations.items())),
         )
 
 
@@ -284,17 +296,62 @@ def _apply_scalar_intents(
     return None
 
 
+def _attest_prior_value(
+    state: _OperatorState,
+    intent: ModeloBindingEditIntentV1,
+    *,
+    sources: tuple[CrossPeriodDependencyRequirement, ...] | None,
+    grammar: ModeloEditValueGrammarV1 | None,
+    tax_id_format: SpanishTaxIdFormat | None,
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Record the operator's stated figure for a scalar carry whose earlier filings the application does not hold.
+
+    The value takes the same path as an override; the operator layer also names
+    every earlier filing it stands in for. A binding with a held source, or a
+    row-set binding, is not attestable, however the baseline came to offer it.
+    """
+    binding_id = intent.address.binding_id
+    if sources is None or len(sources) == 0 or grammar is None or grammar.channel is not ModeloEditValueChannel.DECIMAL:
+        return _domain_refusal(
+            ModeloEditRefusalCode.DISALLOWED_INTENT,
+            address=intent.address,
+            facts=("upstream_source_held",),
+            condition="state a figure only for a carry the application holds no earlier source for",
+        )
+    value = channel_value(intent.value, address=intent.address, grammar=grammar, tax_id_format=tax_id_format)
+    if isinstance(value, ModeloEditParseRefusalV1):
+        return _parse_refusal(value)
+    state.binding_overrides[binding_id] = value
+    first, *rest = sources
+    state.value_attestations[binding_id] = ValueAttestation(
+        source_modelo=first.source_modelo,
+        source_filing_year=first.filing_year,
+        source_period=first.period.registry_token,
+        further_sources=tuple(
+            AttestedSource(
+                source_modelo=item.source_modelo,
+                source_filing_year=item.filing_year,
+                source_period=item.period.registry_token,
+            )
+            for item in rest
+        ),
+    )
+    return None
+
+
 def _apply_binding_intents(
     state: _OperatorState,
     submission: ModeloEditSubmissionV1,
     *,
     tax_id_format: SpanishTaxIdFormat | None,
+    attestable_sources: Mapping[BindingId, tuple[CrossPeriodDependencyRequirement, ...]],
 ) -> ModeloEditExecutionNoEffectV1 | None:
     """Apply every binding intent to the operator state, refusing the first invalid one."""
     for intent in submission.binding_intents:
         binding_id = intent.address.binding_id
         # Whatever the intent, an earlier statement on the binding gives way to it.
         state.attested_binding_ids.discard(binding_id)
+        state.value_attestations.pop(binding_id, None)
         if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
             state.binding_overrides.pop(binding_id, None)
             continue
@@ -303,6 +360,17 @@ def _apply_binding_intents(
             state.attested_binding_ids.add(binding_id)
             continue
         grammar = modelo_edit_address_grammar(submission.baseline, intent.address)
+        if intent.kind is ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE:
+            refusal = _attest_prior_value(
+                state,
+                intent,
+                sources=attestable_sources.get(binding_id),
+                grammar=grammar,
+                tax_id_format=tax_id_format,
+            )
+            if refusal is not None:
+                return refusal
+            continue
         if grammar is None:
             return _parse_refusal(
                 ModeloEditParseRefusalV1(address=intent.address, reason=ModeloEditParseReason.ADDRESS_NOT_WRITABLE)
@@ -584,6 +652,7 @@ def _execute_modelo_edit(
             cleared_casilla_ids=replay.cleared_casilla_ids,
             record_operator_layer=True,
             attested_binding_ids=replay.attested_binding_ids,
+            value_attestations=replay.value_attestations,
             binding_values=replay.binding_values,
             enum_binding_values=replay.enum_binding_values,
             detail_rows=replay.detail_rows,
@@ -609,6 +678,8 @@ def _prepare_edit(
     *,
     head: CalculationRevision | None,
     operation: PinnedAuthorityOperation,
+    ports: CalculationActionPorts,
+    work_catalogue: WorkUnitCatalogue,
 ) -> _PreparedEdit | ModeloEditExecutionNoEffectV1:
     """Apply the intents to the head's caller context under the baseline's authority revision."""
     baseline = submission.baseline
@@ -634,7 +705,18 @@ def _prepare_edit(
     tax_id_format = runtime_tax_id_format(authority=operation)
     refusal = _apply_scalar_intents(
         state, submission, head=head, tax_id_format=tax_id_format
-    ) or _apply_binding_intents(state, submission, tax_id_format=tax_id_format)
+    ) or _apply_binding_intents(
+        state,
+        submission,
+        tax_id_format=tax_id_format,
+        attestable_sources=attestable_carry_sources(
+            snapshot,
+            operation=operation,
+            observation_repository=ports.observation_repository,
+            filing_catalogue=ports.filing_repository.load(),
+            work_catalogue=work_catalogue,
+        ),
+    )
     if refusal is not None:
         return refusal
     detail_rows = reconstruct_detail_rows(
@@ -689,7 +771,9 @@ def apply_modelo_edit(
         if baseline.current_calculation_revision_id is not None
         else None
     )
-    prepared = _prepare_edit(submission, head=head, operation=ports.operation)
+    prepared = _prepare_edit(
+        submission, head=head, operation=ports.operation, ports=ports, work_catalogue=work_catalogue
+    )
     if isinstance(prepared, ModeloEditExecutionNoEffectV1):
         return prepared
     return _execute_modelo_edit(

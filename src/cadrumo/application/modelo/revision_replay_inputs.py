@@ -442,6 +442,7 @@ def _not_applicable_relation_zero_inputs(
             workflow_profile=workflow_profile,
             active_relation_ids=active_relation_ids,
             existing_relation_ids=existing_relation_ids,
+            source_filing_year=snapshot.filing_year,
             operation=operation,
         )
     }
@@ -462,12 +463,18 @@ def _not_applicable_relation_zero_ids(
     workflow_profile: TaxpayerProfile,
     active_relation_ids: frozenset[RelationId],
     existing_relation_ids: frozenset[RelationId],
+    source_filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[RelationId, ...]:
     if not conditional_on_economic_activity:
         return ()
     try:
-        applicability = derive_modelo_applicability(workflow_profile, source_modelo, operation=operation)
+        applicability = derive_modelo_applicability(
+            workflow_profile,
+            source_modelo,
+            reference_date=date(source_filing_year, 12, 31),
+            operation=operation,
+        )
     except (TypeError, ValueError):
         return ()
     if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:

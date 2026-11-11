@@ -19,6 +19,7 @@ from .pydantic_error_detail import validation_error_detail
 from .render_profile_model import RenderProfile
 from .render_profile_model_base import RenderProfileDesignIdentity
 from .render_profile_rules import (
+    AlphanumericTextRule,
     LiteralNumericRule,
     RenderProfileFragment,
     SignedMonetaryCompositeRule,
@@ -139,6 +140,7 @@ def _compile_fragments(fragments: Iterable[RenderProfileFragment]) -> RenderProf
         signed_composite_rules=_compile_signed_composite_rules(ordered),
         literal_numeric_rules=_compile_literal_numeric_rules(ordered),
         telematic_transport_choice_rules=_compile_telematic_transport_rules(ordered),
+        alphanumeric_text_rule=_compile_alphanumeric_text_rule(ordered),
         empty_rule_assertion=empty_assertion,
     )
 
@@ -172,6 +174,15 @@ def _compile_telematic_transport_rules(
     fragments: tuple[RenderProfileFragment, ...],
 ) -> tuple[TelematicTransportChoiceRule, ...]:
     return tuple(rule for fragment in fragments for rule in fragment.telematic_transport_choice_rules)
+
+
+def _compile_alphanumeric_text_rule(
+    fragments: tuple[RenderProfileFragment, ...],
+) -> AlphanumericTextRule | None:
+    rules = tuple(rule for fragment in fragments for rule in fragment.alphanumeric_text_rules)
+    if len(rules) > 1:
+        raise RegistryValidationError("render profile states more than one alphanumeric text rule for one design")
+    return rules[0] if rules else None
 
 
 def _ordered_profile_fragments(fragments: Iterable[RenderProfileFragment]) -> tuple[RenderProfileFragment, ...]:

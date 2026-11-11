@@ -10,12 +10,15 @@ evidence.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from cadrumo.application.operator_actions.catalogue import ActionCatalogue
 from cadrumo.application.operator_surface.errors import OperatorSurfaceContractError
 from cadrumo.application.operator_surface.manifest import (
     OperatorSurfaceReconciliation,
+    ReconciledOperatorLeaf,
     ResolvedCatalogueAction,
     ResolvedManifestActionProfile,
     resolve_action_catalogue,
@@ -151,22 +154,37 @@ def _resolve_manifest_action_profiles(
         if subject_leaf is None:
             diagnostics.append(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
             continue
-        action: ResolvedCatalogueAction | None = None
-        if profile.action is not None:
-            action = action_by_id.get(profile.action.action_id)
-            if action is None:
-                diagnostics.append(f"unknown manifest action-profile action identity: {profile.action.action_id}")
-                continue
-        resolved.append(
-            ResolvedManifestActionProfile(
-                declaration=profile,
-                subject_leaf=subject_leaf,
-                resolved_action=action,
-            )
-        )
+        unknown = _unknown_offered_action_ids(profile, action_by_id)
+        if unknown:
+            diagnostics.extend(f"unknown manifest action-profile action identity: {action_id}" for action_id in unknown)
+            continue
+        resolved.append(_join_profile(profile, subject_leaf, action_by_id))
     if diagnostics:
         raise OperatorSurfaceContractError("manifest_action_profiles", reason="; ".join(diagnostics))
     return ManifestActionResolution(catalogue_actions=catalogue_actions, profiles=tuple(resolved))
+
+
+def _unknown_offered_action_ids(
+    profile: ManifestActionProfile,
+    action_by_id: Mapping[str, ResolvedCatalogueAction],
+) -> tuple[str, ...]:
+    """Return offered action ids that the resolved catalogue does not contain."""
+    offered = (*(() if profile.action is None else (profile.action,)), *profile.alternative_actions)
+    return tuple(item.action_id for item in offered if item.action_id not in action_by_id)
+
+
+def _join_profile(
+    profile: ManifestActionProfile,
+    subject_leaf: ReconciledOperatorLeaf,
+    action_by_id: Mapping[str, ResolvedCatalogueAction],
+) -> ResolvedManifestActionProfile:
+    """Join one declaration to its live subject and every action it offers."""
+    return ResolvedManifestActionProfile(
+        declaration=profile,
+        subject_leaf=subject_leaf,
+        resolved_action=None if profile.action is None else action_by_id[profile.action.action_id],
+        resolved_alternative_actions=tuple(action_by_id[item.action_id] for item in profile.alternative_actions),
+    )
 
 
 def production_leaf_condition_scenario_matrix() -> LeafConditionScenarioMatrix:

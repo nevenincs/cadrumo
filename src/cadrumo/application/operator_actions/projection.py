@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -23,7 +23,13 @@ from ..operations.public_scalar import (
     restore_facts,
     restore_scalar,
 )
-from .models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from .models import (
+    ActionArgumentBinding,
+    ActionReference,
+    AlternativeRecoveryAction,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 
 
 class ConditionEvidenceSnapshot(BaseModel):
@@ -100,8 +106,43 @@ class ActionArgumentSnapshot(BaseModel):
         return self
 
 
+class AlternativeActionSnapshot(BaseModel):
+    """One further recovery action of a verdict, in the order it is offered."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action_id: NamespacedId
+    argument_bindings: tuple[ActionArgumentSnapshot, ...] = ()
+    missing_argument_names: tuple[str, ...] = ()
+    conditionality: ActionConditionality
+
+    @classmethod
+    def from_alternative(cls, alternative: AlternativeRecoveryAction) -> Self:
+        """Copy one canonical alternative and its arguments."""
+        return cls(
+            action_id=alternative.action.action_id,
+            argument_bindings=tuple(
+                ActionArgumentSnapshot.from_argument(item) for item in alternative.argument_bindings
+            ),
+            missing_argument_names=alternative.missing_argument_names,
+            conditionality=alternative.conditionality,
+        )
+
+    def to_alternative(self) -> AlternativeRecoveryAction:
+        """Restore the canonical alternative and its derived conditionality."""
+        return AlternativeRecoveryAction(
+            action=ActionReference(action_id=self.action_id),
+            argument_bindings=tuple(item.to_argument() for item in self.argument_bindings),
+            missing_argument_names=self.missing_argument_names,
+            conditionality=self.conditionality,
+        )
+
+
 class PreconditionVerdictSnapshot(BaseModel):
-    """Typed action evidence needed by the existing CLI action resolver."""
+    """Typed action evidence needed by the existing CLI action resolver.
+
+    ``alternative_actions`` is left out of the serialized snapshot when empty,
+    so a verdict without alternatives keeps the bytes it was stored with.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     failed_condition_id: NamespacedId
@@ -111,6 +152,7 @@ class PreconditionVerdictSnapshot(BaseModel):
     missing_argument_names: tuple[str, ...] = ()
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None = None
+    alternative_actions: tuple[AlternativeActionSnapshot, ...] = Field(default=(), exclude_if=lambda value: not value)
 
     @classmethod
     def from_verdict(cls, verdict: PreconditionVerdict) -> Self:
@@ -123,6 +165,9 @@ class PreconditionVerdictSnapshot(BaseModel):
             missing_argument_names=verdict.missing_argument_names,
             conditionality=verdict.conditionality,
             no_recovery_outcome=verdict.no_recovery_outcome,
+            alternative_actions=tuple(
+                AlternativeActionSnapshot.from_alternative(item) for item in verdict.alternative_actions
+            ),
         )
 
     def to_verdict(self) -> PreconditionVerdict:
@@ -135,6 +180,7 @@ class PreconditionVerdictSnapshot(BaseModel):
             missing_argument_names=self.missing_argument_names,
             conditionality=self.conditionality,
             no_recovery_outcome=self.no_recovery_outcome,
+            alternative_actions=tuple(item.to_alternative() for item in self.alternative_actions),
         )
 
     @model_validator(mode="after")

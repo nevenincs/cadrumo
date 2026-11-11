@@ -21,6 +21,7 @@ import pytest
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import latest_period_end
 from ..projections import projection_for_taxpayer
 from .payer_fact_record_support import (
     NON_RESIDENT_CATEGORY,
@@ -44,7 +45,12 @@ def _verdicts(
 ) -> dict[str, ApplicabilityVerdict]:
     record = residency_record(operation, token=token)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    return {modelo: derive_modelo_applicability(profile, modelo, operation=operation).verdict for modelo in modelos}
+    return {
+        modelo: derive_modelo_applicability(
+            profile, modelo, operation=operation, reference_date=latest_period_end()
+        ).verdict
+        for modelo in modelos
+    }
 
 
 def test_an_unanswered_residency_leaves_every_residency_decided_modelo_incomplete(
@@ -107,7 +113,9 @@ def test_the_incomplete_residency_verdict_states_the_taxpayer_model_is_undeclare
     record = residency_record(operation, token=None)
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
 
-    applicability = derive_modelo_applicability(profile, NON_RESIDENT_ONLY_MODELO, operation=operation)
+    applicability = derive_modelo_applicability(
+        profile, NON_RESIDENT_ONLY_MODELO, operation=operation, reference_date=latest_period_end()
+    )
 
     assert applicability.verdict is ApplicabilityVerdict.INCOMPLETE
     assert applicability.failure is not None

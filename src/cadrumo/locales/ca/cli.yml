@@ -1722,6 +1722,12 @@ cli:
           del canvi; amb --yes registra cada import com un 0 que has declarat, diferent
           d'una xifra escrita.
         attest_prior_carries_yes_help: Confirma la declaració i registra-la a l'autoliquidació
+        attest_prior_value_help: Indica la xifra que una declaració pren d'una declaració
+          anterior que l'aplicació no desa, com el Model 100 de l'any passat presentat
+          en un altre lloc. Mostra el valor i la comprovació del canvi; amb --yes
+          registra la xifra com a declarada per tu per a aquella declaració, diferent
+          d'una xifra escrita. Es rebutja si la declaració anterior està desada, perquè
+          llavors se segueix aquella declaració.
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament

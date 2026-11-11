@@ -363,7 +363,12 @@ def _registry_not_applicable_source_modelos(
     excluded: set[str] = set()
     for modelo in sorted(economic_activity_conditional_source_modelos(snapshot)):
         try:
-            verdict = derive_modelo_applicability(taxpayer, modelo, operation=operation).verdict
+            verdict = derive_modelo_applicability(
+                taxpayer,
+                modelo,
+                reference_date=date(context.filing_year, 12, 31),
+                operation=operation,
+            ).verdict
         except (TypeError, ValueError, RegistryValidationError):
             continue
         if verdict is ApplicabilityVerdict.NOT_APPLICABLE:
