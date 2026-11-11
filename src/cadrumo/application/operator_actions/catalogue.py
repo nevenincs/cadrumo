@@ -328,6 +328,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.invoice.update.operation_type",
+            target_command_key="ledger.invoice.update",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="invoice_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="invoice_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="operation_type",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="operation_type",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.evidence.review.list",
             target_command_key="ledger.evidence.review.list",
         ),
@@ -404,6 +420,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.filing_record.import",
+            target_command_key="modelo.filing_record.import",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="work_unit_id",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="work_unit_id",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.filing_record.list",
             target_command_key="modelo.filing_record.list",
             argument_specifications=(
@@ -457,6 +484,37 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
                     argument_name="period",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="period",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.override",
+            target_command_key="modelo.iva_wallet.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_locator",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_locator",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="reason",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="reason",
                 ),
             ),
         ),

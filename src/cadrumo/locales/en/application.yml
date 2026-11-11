@@ -1521,6 +1521,11 @@ application:
           the invoice's VAT category, and it may be another type.
         what_to_do: Check the operation type on those invoices in your records and
           set it if it differs.
+      m349_operation_unclassified:
+        what: An invoice with a party in another EU country and no VAT does not say
+          which intra-community operation it records, so the EU sales listing leaves
+          it out.
+        what_to_do: Open the invoice and set its operation type, then calculate again.
       missing_transaction_evidence:
         what: A movement that carries VAT has no invoice or document attached.
         what_to_do: Attach the invoice or receipt to that movement in your records.
@@ -1777,6 +1782,8 @@ application:
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       m347_provincia_unrecorded: 'Declared parties without a province code: {parties}.'
       m347_provincia_unstated: The province of {party}'s tax domicile is missing.
+      m349_operation_unclassified: Invoice {invoice} with {party} does not say which
+        intra-community operation it records.
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
         as a current expense, and its description reads like a long-term asset.
       prior_filing_unrecorded: To calculate box {box}, record your Modelo {modelo}
@@ -2386,6 +2393,10 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
+      prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: it carries figures from the return for %{unfiled_period}, which has not
+        been filed. File %{unfiled_period} first, then calculate again. Nothing was
+        saved.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
         %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the

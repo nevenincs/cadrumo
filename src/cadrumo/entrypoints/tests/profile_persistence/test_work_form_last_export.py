@@ -7,16 +7,22 @@ declaration never exported states no export; one exported from its current
 calculation states that file as current; once a newer calculation becomes the
 declaration's current one, the same file is still stated, naming the older
 calculation, and no longer current.
+
+The event is recorded only for a file that reached the operator's path: a
+publication refused because the path became occupied states no export, and a
+file whose event could not be recorded is withdrawn rather than left unstated.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
@@ -28,11 +34,13 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
+from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
+from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -186,3 +194,85 @@ def test_an_export_of_an_earlier_calculation_reads_back_as_no_longer_current(
     assert form.last_export.calculation_revision_id == exported_revision_id
     assert form.last_export.current is False
     assert form.last_export.exported_at == _EXPORTED_AT
+
+
+def _export_to(
+    output_path: Path,
+    ports: ModeloExportPorts,
+    calculation_revision_id: str,
+    operation: PinnedAuthorityOperation,
+    *,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+) -> None:
+    export_modelo_revision(
+        ModeloExportCommand(calculation_revision_id=calculation_revision_id, output_path=output_path, actor="operator"),
+        workflow_profile=export_taxpayer_profile().model_copy(update={"activity_start_date": _ACTIVITY_START}),
+        export_ports=ports,
+        clock=_EXPORTED_AT,
+        operation=operation,
+        mutation_writer=mutation_writer,
+    )
+
+
+def _export_events(bucket_id: str, ports: ModeloExportPorts) -> list[object]:
+    return list(ports.bucket_event.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,)))
+
+
+def test_a_file_another_writer_put_on_the_path_during_export_states_no_export(
+    isolated_backend: None, tmp_path: Path
+) -> None:
+    output_path = tmp_path / "declaration.txt"
+    other_bytes = b"written by another program"
+    writes: list[str] = []
+
+    def occupy_the_path_before_publication(write: Callable[[], None]) -> None:
+        # The first admitted write fills the staging file; the second publishes it.
+        writes.append("write")
+        if len(writes) == 2:
+            output_path.write_bytes(other_bytes)
+        write()
+
+    with bundled_indexed_authority().operation() as operation:
+        bucket_id = seed_profile()
+        ports = modelo_export_ports_for_test(bucket_id=bucket_id)
+        work_unit_id, revision_id = _seed(bucket_id, _FIRST_INPUTS)
+        _make_current(ports, work_unit_id, revision_id)
+        with pytest.raises(ModeloExportOutputPathError):
+            _export_to(output_path, ports, revision_id, operation, mutation_writer=occupy_the_path_before_publication)
+        events = _export_events(bucket_id, ports)
+        form = _form(bucket_id, ports, operation)
+
+    assert len(writes) == 2
+    assert events == []
+    assert form.last_export is None
+    assert output_path.read_bytes() == other_bytes
+
+
+def test_a_published_file_whose_export_could_not_be_recorded_is_withdrawn(
+    isolated_backend: None, tmp_path: Path
+) -> None:
+    output_path = tmp_path / "declaration.txt"
+
+    class EventStoreUnavailableError(OSError):
+        pass
+
+    def refuse_the_event_write(_write: Callable[[], None]) -> None:
+        raise EventStoreUnavailableError("event history could not be written")
+
+    with bundled_indexed_authority().operation() as operation:
+        bucket_id = seed_profile()
+        ports = modelo_export_ports_for_test(bucket_id=bucket_id)
+        work_unit_id, revision_id = _seed(bucket_id, _FIRST_INPUTS)
+        _make_current(ports, work_unit_id, revision_id)
+        failing_ports = modelo_export_ports_for_test(
+            bucket_id=bucket_id,
+            bucket_event=BucketEventHistoryRepository(mutation_writer=refuse_the_event_write),
+        )
+        with pytest.raises(EventStoreUnavailableError):
+            _export_to(output_path, failing_ports, revision_id, operation)
+        events = _export_events(bucket_id, ports)
+        form = _form(bucket_id, ports, operation)
+
+    assert not output_path.exists()
+    assert events == []
+    assert form.last_export is None

@@ -125,6 +125,8 @@ class ProfileLoginCandidate:
 
     outcome: ProfileLoginOutcome
     session: ProfileBucketSessionPort = field(repr=False)
+    proven_envelope_digest: str | None = None
+    """Self-digest of the password envelope a password proof opened; ``None`` for a resumed receipt."""
     _publish_receipt: (
         Callable[[str, ProfileAccessBinding, ProfileSignInGenerationPort, Callable[[bytearray], None] | None], bool]
         | None
@@ -408,6 +410,7 @@ def authenticate_profile_candidate(
                 closed_previous_bucket_id=None,
             ),
             session=candidate.session,
+            proven_envelope_digest=candidate.material.envelope.self_digest,
             _publish_receipt=lambda login_id, binding, sign_in, retain_sealing_key: _persist_candidate_receipt(
                 candidate,
                 storage_root=storage_root,

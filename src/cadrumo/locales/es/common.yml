@@ -4790,6 +4790,7 @@ desktop:
     search: Buscar datos del perfil
     search_placeholder: Buscar
     sections: Secciones
+    setup_completed_notice: La configuración de tu perfil está completa.
     signed_out: Inicia sesión para ver y editar tu perfil.
     title: Tu perfil
     unavailable: No se ha podido cargar tu perfil. Actualiza para volver a intentarlo.

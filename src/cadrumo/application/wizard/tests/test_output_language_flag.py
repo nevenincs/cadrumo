@@ -17,13 +17,13 @@ no test doubles.
 
 from __future__ import annotations
 
-import click
 import pytest
 import typer
 
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
+from ....core.cli_value_parsers import CliChoice
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
@@ -43,8 +43,8 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
     """
     info = SETUP_OPTION_INFOS["output-language"]
     assert isinstance(info, typer.models.OptionInfo)
-    choice = info.click_type
-    assert isinstance(choice, click.Choice), type(choice).__name__
+    choice = info.parser
+    assert isinstance(choice, CliChoice), type(choice).__name__
     assert tuple(choice.choices) == tuple(SUPPORTED_OUTPUT_LANGUAGES)
 
 

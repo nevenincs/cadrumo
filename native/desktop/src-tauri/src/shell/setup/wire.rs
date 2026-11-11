@@ -58,7 +58,7 @@ pub enum Refusal {
 }
 
 /// What a removal deletes from this computer.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Removal {
     /// The browser for the tax agency website.
@@ -369,6 +369,9 @@ pub struct Row {
     pub recovery_action_id: Option<String>,
     pub version: Option<String>,
     pub size_bytes: Option<u64>,
+    /// The removals the row offers, in the order they are listed; the window offers
+    /// no other.
+    pub removals: Vec<Removal>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -592,6 +595,15 @@ impl Row {
             && (self.stale_reason.is_none() || self.state == State::Stale)
             && (self.blocked_reason.is_none() || self.state == State::Blocked)
             && (self.failure.is_none() || self.state == State::Failed)
+            && self
+                .removals
+                .iter()
+                .all(|removal| removal.item().as_str() == self.item)
+            && self
+                .removals
+                .iter()
+                .enumerate()
+                .all(|(index, removal)| !self.removals[..index].contains(removal))
     }
 }
 
@@ -889,7 +901,7 @@ mod tests {
             "item": "browser", "kind": "browser", "mode": "quick", "state": "absent",
             "stale_reason": null, "blocked_reason": null, "failure": null, "recovery": "set_up",
             "recovery_action_id": "operator.provision.browser",
-            "version": null, "size_bytes": 180000000,
+            "version": null, "size_bytes": 180000000, "removals": [],
         })
     }
 
@@ -952,8 +964,17 @@ mod tests {
 
     #[test]
     fn a_value_outside_a_closed_set_or_a_bound_is_a_host_failure() {
-        let cases: [Case; 18] = [
+        let cases: [Case; 21] = [
             ("unknown state", |s| s["rows"][0]["state"] = json!("broken")),
+            ("another item's removal", |s| {
+                s["rows"][0]["removals"] = json!(["local_ai_program"])
+            }),
+            ("a removal twice", |s| {
+                s["rows"][0]["removals"] = json!(["browser", "browser"])
+            }),
+            ("unknown removal", |s| {
+                s["rows"][0]["removals"] = json!(["everything"])
+            }),
             ("a word", |s| {
                 s["rows"][0]["sentence"] = json!("Not set up yet.")
             }),

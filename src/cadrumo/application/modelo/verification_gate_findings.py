@@ -79,10 +79,12 @@ from .invoice_drift_gate import invoice_drift_findings
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
 from .ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
-from .preconditions import ModeloPreconditionFailure
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .verification_cross_period import (
+    CrossPeriodDoor,
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
+    cross_period_door_reader,
     cross_period_expected_member_sets_from_profile,
     registry_modality_finding,
     zero_value_previous_filing_binding_ids,
@@ -103,6 +105,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
+    from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from .work_profile import ModeloWorkProfile
 
 
@@ -280,6 +283,7 @@ def _append_cross_period_findings(
     work_unit: WorkUnit,
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    door_of: Callable[[CrossPeriodDependencyEvidence], CrossPeriodDoor],
 ) -> None:
     def _observe_cross_period_finding(
         finding: ModeloVerificationFinding,
@@ -300,13 +304,14 @@ def _append_cross_period_findings(
             )
             return
         requirement = evidence.requirement
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.cross_period_dependency.clean",
-            scenario_id="modelo.work.verify.cross_period_dependency.unclean",
+        scenario, action_argument_values = door_of(evidence)
+        failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.verify",
+            scenario_id=f"modelo.work.verify.cross_period_dependency.{scenario}",
             evidence_id="modelo.work.verify.cross_period_dependency",
             evidence_values={
+                "calculation_revision_id": target.calculation_revision_id,
+                "work_unit_id": target.work_unit_id,
                 "source_modelo": requirement.source_modelo,
                 "year": requirement.filing_year,
                 "period": requirement.period.registry_token,
@@ -315,6 +320,7 @@ def _append_cross_period_findings(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            action_argument_values=action_argument_values,
         )
 
     findings.extend(
@@ -701,6 +707,7 @@ def collect_verification_gate_findings(
     ledger_membership_ports: LedgerMembershipPorts,
     evaluated_at: datetime | None = None,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -771,10 +778,21 @@ def collect_verification_gate_findings(
         work_unit,
         findings,
         failures_by_finding_id,
+        cross_period_door_reader(
+            bucket_id=work_unit.bucket_id,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            calculation_catalogue=calculation_catalogue,
+            operation=operation,
+        ),
     )
     _append_ledger_evidence_findings(
         target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
     )
+    # A refused registry snapshot is the verdict: the gates below read that same
+    # snapshot, so they would only raise the refusal again instead of reporting it.
+    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
+        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
     _append_invoice_source_document_findings(
         target,
         work_unit,
@@ -788,8 +806,6 @@ def collect_verification_gate_findings(
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.
-    if any(failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()):
-        return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
     findings.extend(
         _ledger_snapshot_findings(
             target=target,

@@ -22,7 +22,7 @@ from cadrumo_client.contracts.command_ports import CommandNodeKind
 _FLOAT = ValueContract(DeferredTarget("builtins", "float"))
 _STATE = ValueContract(
     DeferredTarget("...application.review.enums", "ReviewState", __package__),
-    parser=DeferredTarget(".review_commands", "parse_review_state", __package__),
+    parser=DeferredTarget(".common", "parse_review_state", __package__),
 )
 
 

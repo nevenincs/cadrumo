@@ -9,6 +9,15 @@ from pathlib import Path
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.contribuyente.inventory.closing_foundations import (
+    InventoryClosingAuthority,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingDecisionEvidenceRole,
+    PriorClosingContinuityEvidence,
+    fingerprint_prior_authoritative_closing,
+)
+from cadrumo.domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -171,5 +180,66 @@ def m100_activity_expense_transaction(
             "iva_amount": iva_amount,
             "classified_at": datetime(_YEAR, 3, 15, 12, 0, tzinfo=UTC),
             "classified_by": "manual",
+        },
+    )
+
+
+def zero_stock_inventory_ledger(actividad_id: str, *, year: int) -> InventoryLedger:
+    """Return the complete activity book of a filer who held no existencias at either end of ``year``.
+
+    The book has no opening stock and no movement, and its closing decision carries the
+    prior year's zero close as continuity evidence, so the Anexo D rows resolve to zero.
+    """
+    continuity = (
+        PriorClosingContinuityEvidence(
+            reference=FilingEvidenceReference(reference=f"prior-{actividad_id}"), content_digest="f" * 64
+        ),
+    )
+    prior_fingerprint = fingerprint_prior_authoritative_closing(
+        actividad_id=actividad_id,
+        filing_year=year - 1,
+        authoritative_closing_value=Decimal("0.00"),
+        authoritative_source_fingerprint="e" * 64,
+        evidence=continuity,
+    )
+    return InventoryLedger.model_validate(
+        {
+            "actividad_id": actividad_id,
+            "year": year,
+            "valuation_method": ValuationMethod.FIFO,
+            "opening_stock": Decimal("0.00"),
+            "period_movements": (),
+            "closing_authority_record": {
+                "decision": {
+                    "decision_id": f"decision-{actividad_id}",
+                    "actividad_id": actividad_id,
+                    "filing_year": year,
+                    "authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
+                    "physical_observation_id": None,
+                    "physical_observation_fingerprint": None,
+                    "reason": "No existencias held.",
+                    "actor": "manual",
+                    "source_command": "synthetic-test-seed",
+                    "decided_at": datetime(year + 1, 1, 2, tzinfo=UTC),
+                    "evidence": (
+                        InventoryClosingDecisionEvidence(
+                            reference=FilingEvidenceReference(reference=f"decision-{actividad_id}"),
+                            role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                            content_digest="d" * 64,
+                        ),
+                    ),
+                },
+                "physical_observation": None,
+                "prior_closing_link": {
+                    "actividad_id": actividad_id,
+                    "current_filing_year": year,
+                    "prior_filing_year": year - 1,
+                    "prior_authoritative_closing_value": Decimal("0.00"),
+                    "current_opening_value": Decimal("0.00"),
+                    "prior_authoritative_source_fingerprint": "e" * 64,
+                    "prior_authoritative_closing_fingerprint": prior_fingerprint,
+                    "evidence": continuity,
+                },
+            },
         },
     )

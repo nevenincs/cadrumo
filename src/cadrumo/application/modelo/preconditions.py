@@ -123,13 +123,40 @@ IVA_WALLET_OPENING_BALANCE_SCENARIOS: Final[frozenset[str]] = frozenset(
 
 Each says the period's carry has no usable recorded authority, which is exactly
 what declaring the opening balance supplies. A stale wallet, a divergence, or a
-reason that asks for an override or correction names a different wallet entry,
-so it keeps no action here rather than naming a command that would not settle
-it. The wallet gate's served step and these profiles' action read this one set.
+correction names a different wallet entry, so it keeps no action here rather
+than naming a command that would not settle it. The wallet gate's served step
+and these profiles' action read this one set.
 """
 
 IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
 """The catalogue action that declares the opening balance of a period's carry."""
+
+IVA_WALLET_OVERRIDE_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {
+        "filed_history_requires_override",
+        "local_recurrence_requires_override",
+        "stale_wallet_local_recurrence_requires_override",
+    },
+)
+"""The wallet refusals an explicit taxpayer override of the period's carry is the way out of.
+
+Each says the carry rests on the taxpayer's own records alone, with no current
+AEAT wallet behind it, so it is carried only once the taxpayer states the amount
+and the evidence for it. The amount those records give is known, so the action
+names it; the reason and the evidence are the taxpayer's to supply.
+"""
+
+IVA_WALLET_OVERRIDE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.override"
+"""The catalogue action that records an explicit taxpayer override of a period's carry."""
+
+
+def _iva_wallet_action_id(scenario_code: str) -> str | None:
+    """Name the catalogue action that settles one wallet refusal, or None when none does."""
+    if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+        return IVA_WALLET_OPENING_BALANCE_ACTION_ID
+    if scenario_code in IVA_WALLET_OVERRIDE_SCENARIOS:
+        return IVA_WALLET_OVERRIDE_ACTION_ID
+    return None
 
 
 def _iva_wallet_profiles(
@@ -141,11 +168,34 @@ def _iva_wallet_profiles(
             subject_leaf_key,
             f"{subject_leaf_key}.iva_wallet.ready",
             f"{subject_leaf_key}.iva_wallet.{scenario_code}",
-            action_id=IVA_WALLET_OPENING_BALANCE_ACTION_ID
-            if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS
-            else None,
+            action_id=_iva_wallet_action_id(scenario_code),
         )
         for scenario_code in scenario_codes
+    )
+
+
+# Where an earlier declaration stands names the work that moves it on.
+_SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
+    ("source_absent", "operator.modelo.work.create"),
+    ("source_uncalculated", "operator.modelo.work.calculate"),
+    ("source_unverified", "operator.modelo.work.verify"),
+    ("source_unfiled", "operator.modelo.work.file"),
+)
+
+
+def _cross_period_door_profiles(subject_leaf_key: str) -> tuple[ManifestActionProfile, ...]:
+    """An unclean source routed by its first blocker: its own work, or its capture once filed."""
+    return tuple(
+        _profile(
+            subject_leaf_key,
+            f"{subject_leaf_key}.cross_period_dependency.clean",
+            f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+            action_id=action_id,
+        )
+        for scenario, action_id in (
+            *_SOURCE_STANDING_DOORS,
+            ("filed_evidence_missing", "operator.live.filed.pull"),
+        )
     )
 
 
@@ -197,10 +247,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.readiness.export_layout.unrenderable",
         action_id="operator.modelo.describe",
     ),
-    _profile(
-        "modelo.work.amend_wizard",
-        "modelo.work.amend_wizard.external_evidence.present",
-        "modelo.work.amend_wizard.external_evidence.missing",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.external_evidence.present",
+            f"{leaf}.external_evidence.missing",
+            action_id="operator.modelo.filing_record.import",
+        )
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard")
     ),
     _profile(
         "modelo.work.wizard",
@@ -361,6 +415,18 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
     ),
+    # A carry from an earlier period of the same ejercicio is read from that
+    # period's filed return; where that return stands names the work that
+    # moves it on.
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.prior_filing.sources_filed",
+            f"modelo.work.calculate.prior_filing.{scenario}",
+            action_id=action_id,
+        )
+        for scenario, action_id in _SOURCE_STANDING_DOORS
+    ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
@@ -465,6 +531,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.file.cross_period_dependency.clean",
         "modelo.work.file.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.file"),
     _profile(
         "modelo.work.file",
         "modelo.work.file.activity_start_date.present",
@@ -650,6 +717,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.cross_period_dependency.clean",
         "modelo.work.verify.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.verify"),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",
@@ -826,6 +894,8 @@ def build_modelo_work_file_unverified_revision_failure(
 __all__ = [
     "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
     "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
+    "IVA_WALLET_OVERRIDE_ACTION_ID",
+    "IVA_WALLET_OVERRIDE_SCENARIOS",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

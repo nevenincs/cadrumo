@@ -7,6 +7,7 @@ Core types:
 
 from __future__ import annotations
 
+import base64
 import os
 from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, closing, contextmanager
@@ -56,6 +57,7 @@ from ....application.user_profile.custody_record_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
 )
+from ....application.user_profile.kdf_strength import ProfileKdfStrength
 from ....application.user_profile.proof_cancellation import ProfileProofCancellation
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
@@ -74,7 +76,7 @@ from .bucket.output_language_hint import (
 from .bucket.sealed_archive_reader import read_sealed_archive
 from .bucket.sealed_archive_writer import write_sealed_archive
 from .crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
-from .custody.automation_retirement import retire_profile_automation
+from .custody.automation_retirement import profile_automation_enrolled, retire_profile_automation
 from .custody.capsule import (
     ProfileCustodyRecoveryMaterial,
     install_committed_profile_custody_recovery_envelope,
@@ -116,9 +118,11 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
+from .custody.kdf_strengthening import profile_kdf_strengthening_point, profile_kdf_strictly_stronger
 from .custody.kdf_supervision import (
     ProfileKdfPrewarm,
     calibrate_profile_kdf,
+    calibrate_profile_kdf_in_background,
     profile_kdf_at_fallback,
     unlock_profile_custody,
 )
@@ -651,7 +655,18 @@ class _PersistenceProfileCustody:
         dek_epoch: str,
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength | None = None,
     ) -> ProfileCustodyRegistrationMaterial:
+        if strength is not None:
+            return self._strengthened_registration_material(
+                profile_id=profile_id,
+                password=password,
+                dek=dek,
+                dek_epoch=dek_epoch,
+                salt=salt,
+                predecessor=predecessor,
+                strength=strength,
+            )
         # Each calibration sample and the wrap run in a fresh contained child.
         # A spare scoped to this one mint is launched between samples, never
         # during a timed one, and is contained before the mint returns.
@@ -671,6 +686,51 @@ class _PersistenceProfileCustody:
                 )
         sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def _strengthened_registration_material(
+        self,
+        *,
+        profile_id: UUID,
+        password: str,
+        dek: bytes,
+        dek_epoch: str,
+        salt: bytes,
+        predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength,
+    ) -> ProfileCustodyRegistrationMaterial:
+        """Mint ``predecessor``'s successor at a measured point, checked again here rather than trusted."""
+        if predecessor is None:
+            raise ValueError("a measured KDF point only strengthens an existing password envelope")
+        committed = _substrate_handle(predecessor, ProfileCustodyEnvelope, "password envelope")
+        kdf = profile_kdf_strengthening_point(
+            memory_mib=strength.memory_mib,
+            iterations=strength.iterations,
+            parallelism=strength.parallelism,
+            salt=salt,
+            committed=committed.kdf,
+        )
+        envelope = create_profile_custody_password_envelope(
+            profile_id=profile_id,
+            password=password,
+            dek=dek,
+            dek_epoch=dek_epoch,
+            kdf=kdf,
+            password_generation=committed.password_generation + 1,
+            previous_envelope_digest=committed.self_digest,
+        )
+        sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
+        return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
+
+    def measure_stronger_password_kdf(self, profile_id: UUID, *, root: Path | None = None) -> ProfileKdfStrength | None:
+        committed = load_committed_profile_password_material(profile_id, root=root).envelope.kdf
+        if not profile_kdf_at_fallback(committed):
+            return None
+        measured = calibrate_profile_kdf_in_background(salt=base64.b64decode(committed.salt_b64))
+        if measured is None or not profile_kdf_strictly_stronger(measured, committed):
+            return None
+        return ProfileKdfStrength(
+            memory_mib=measured.memory_mib, iterations=measured.iterations, parallelism=measured.parallelism
+        )
 
     def create_recovery_enrollment_material(
         self,
@@ -791,6 +851,9 @@ class _PersistenceProfileCustody:
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         return retire_profile_automation(root=root, profile_id=profile_id, secrets_store=self.automation_secrets_store)
+
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        return profile_automation_enrolled(root=root, profile_id=profile_id)
 
     def replace_password_envelope(
         self,

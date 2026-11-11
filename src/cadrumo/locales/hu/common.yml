@@ -4757,6 +4757,7 @@ desktop:
     search: Profiladatok keresése
     search_placeholder: Keresés
     sections: Szakaszok
+    setup_completed_notice: A profilod beállítása kész.
     signed_out: Jelentkezz be a profilod megtekintéséhez és szerkesztéséhez.
     title: A profilod
     unavailable: Nem sikerült betölteni a profilodat. Frissíts az újrapróbálkozáshoz.

@@ -280,6 +280,17 @@ def revision_covering(modelo_id: str, exercise: int) -> RevisionSelectionMetadat
     return revision
 
 
+def revision_selected_for(modelo_id: str, exercise: int, period: str) -> ModeloRevision:
+    """Return the revision the product selects to calculate ``period`` of ``exercise``.
+
+    Unlike ``revision_covering`` this also answers for an exercise no edition authors,
+    where the registry carries the nearest authored edition across it at calculation
+    grade, because it asks the same resolver the product does.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        return operation.revision_for_context(modelo_id, filing_year=exercise, period=period)
+
+
 def revision_serving_period(modelo_id: str, exercise: int, period: str) -> RevisionSelectionMetadata:
     """Return the one authored revision that serves ``period`` of ``exercise``.
 

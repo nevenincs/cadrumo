@@ -546,3 +546,15 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         )
         assert exc_info.value.context is not None
         assert exc_info.value.context["divergence"] == "wallet_missing"
+        # The refusal's door is the override of 2T's carry, prefilled with the
+        # amount the locally filed 1T left available.
+        verdict = exc_info.value.precondition_failure.verdict
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+        bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+        assert bound == {
+            "filing_year": work_unit_2t.period.filing_year,
+            "period": work_unit_2t.period.registry_token,
+            "amount": history.available_end_amount,
+        }
+        assert set(verdict.missing_argument_names) == {"reason", "evidence_locator"}

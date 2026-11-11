@@ -169,6 +169,15 @@ CalculationSourceDiagnosticReason = Literal[
     # separating the two. Raised only when the bucket also holds an importation,
     # so it cannot fire on a taxpayer for whom "E" is the only available clave.
     "m349_clave_inferred_from_category",
+    # An invoice with a counterparty in another member state and no cuota, which
+    # states neither an operation type nor an IVA category. Zero IVA towards an
+    # EU party reads equally as an exempt supply of goods (clave E) and as a
+    # service the recipient self-assesses (clave S), and on the received side as
+    # an acquisition of goods or of services, so no clave can be read from the
+    # record and none is guessed. The operation is withheld from the
+    # recapitulativa, and this reason makes the withholding a gap the filer puts
+    # right rather than a declaration that reads as one with no operators.
+    "m349_operation_unclassified",
     # An invoice denominated in a foreign currency with no resolved euro rate,
     # withheld from an informativa because its euro value is unknown. Excluding
     # the AMOUNT is correct -- declaring the foreign face value as euro would

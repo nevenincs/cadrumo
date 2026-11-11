@@ -7,7 +7,7 @@ resolution rules and the structural patch contract independent of storage.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import cast
 
@@ -18,12 +18,18 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
+from ....domain.invoices.rule_findings import InvoiceRuleFindingCode, rule_finding_words_key
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice, update_catalogue_invoice
+from ..catalogue_creation_ports import CatalogueCreationPorts
+from ..catalogue_lifecycle import (
+    CatalogueInvoicePatch,
+    resolve_catalogue_invoice,
+    update_catalogue_invoice,
+)
 from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
@@ -221,4 +227,37 @@ def test_stale_invoice_baseline_refuses_before_catalogue_and_audit_mutation() ->
         )
 
     assert creation_ports.invoice_repository.load().get(original.invoice_id) == first.invoice
+    assert len(creation_ports.event_repository.load().events) == event_count
+
+
+def _lifecycle_ports(creation_ports: CatalogueCreationPorts) -> CatalogueLifecyclePorts:
+    return CatalogueLifecyclePorts(
+        read_ports=cast(InvoiceCatalogueReadPorts, object()),
+        invoice_repository=creation_ports.invoice_repository,
+        event_repository=creation_ports.event_repository,
+        audit_commit=creation_ports.audit_commit,
+        sealed_revisions=_NoSealedRevisions(),
+    )
+
+
+def test_an_operation_date_added_without_its_role_is_refused_in_served_words_and_writes_nothing() -> None:
+    """LIVA art. 75 needs the role the date answers; a correction cannot add the date alone."""
+    creation_ports = in_memory_catalogue_creation_ports()
+    original = create_catalogue_invoice(invoice=_build("F-0142"), ports=creation_ports).invoice
+    event_count = len(creation_ports.event_repository.load().events)
+
+    with pytest.raises(InvoiceValidationError) as refused:
+        update_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            invoice_id=original.invoice_id,
+            patch=CatalogueInvoicePatch(operation_date=original.issued_at - timedelta(days=1)),
+            ports=_lifecycle_ports(creation_ports),
+        )
+
+    assert refused.value.translated_message == rule_finding_words_key(
+        InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH
+    )
+    assert refused.value.context is not None
+    assert refused.value.context["rule_finding_code"] == InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH.value
+    assert creation_ports.invoice_repository.load().get(original.invoice_id) == original
     assert len(creation_ports.event_repository.load().events) == event_count

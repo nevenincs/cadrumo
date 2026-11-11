@@ -11,6 +11,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from cadrumo.application.modelo.casilla_help import legal_ref_id_citation
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -387,7 +388,9 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
     message = payload["error"]["message"]
     assert "Fiscal representative NIF" in message
     assert "Fiscal representative name" in message
-    assert "trlirnr-rdleg-5-2004:art-10" in message
+    # The provision is cited in readable words, never as the registry's legal-reference token.
+    assert legal_ref_id_citation("trlirnr-rdleg-5-2004:art-10") in message
+    assert "trlirnr-rdleg-5-2004:art-10" not in message
     assert "REFUSED_CLI_VALIDATION_BOUNDARY" not in result.output
     assert "Traceback" not in result.output
 

@@ -50,7 +50,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA,
 )
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -107,7 +107,7 @@ def _resolve_caller_supplied_prior_compensation(
     if decision is None:
         return None
     if decision_is_missing_local_authority(decision):
-        _require_no_unproven_prior_amounts(decision, supplied_amounts)
+        _require_no_unproven_prior_amounts(decision, supplied_amounts, revision=snapshot.revision)
         return None
     if decision_has_concrete_zero_authority(decision):
         decision = _accept_only_zero_supplied_amounts(decision, supplied_amounts)
@@ -126,6 +126,8 @@ def _resolve_caller_supplied_prior_compensation(
 def _require_no_unproven_prior_amounts(
     decision: IvaCompensationReconciliationDecision,
     supplied_amounts: tuple[Decimal, ...],
+    *,
+    revision: ModeloRevision,
 ) -> None:
     if not any(amount != Decimal("0") for amount in supplied_amounts):
         return
@@ -141,6 +143,8 @@ def _require_no_unproven_prior_amounts(
         },
         context={"divergence": str(decision.divergence), "reason": blocked_reason},
         carry_period=decision.target_period,
+        local_amount=decision.local_recurrence_amount,
+        carry_revision=revision,
     )
 
 
@@ -285,6 +289,9 @@ def require_persisted_iva_compensation_decision_for_work_unit(
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
             evidence_values={"persisted_decision_present": False},
             carry_period=work_unit.period,
+            carry_revision=(
+                snapshot or registry_snapshot_for_work_unit(work_unit, subject_leaf_key="modelo.work.calculate")
+            ).revision,
         )
     if persisted != supplied_decision:
         raise_iva_wallet_precondition(
@@ -380,9 +387,10 @@ def _persisted_decision_matching_revision(
     if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     profile_values = profile_path_values_for_bucket(work_unit.bucket_id)
+    snapshot = registry_snapshot_for_work_unit(work_unit, subject_leaf_key=subject_leaf_key, operation=operation)
     decision = persisted_decision_for_calculation(
         work_unit,
-        snapshot=registry_snapshot_for_work_unit(work_unit, subject_leaf_key=subject_leaf_key, operation=operation),
+        snapshot=snapshot,
         operation=operation,
         repository=repository,
         observation_repository=observation_repository,
@@ -397,6 +405,7 @@ def _persisted_decision_matching_revision(
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
             evidence_values={"persisted_decision_present": False},
             carry_period=work_unit.period,
+            carry_revision=snapshot.revision,
         )
     if decision.blocked:
         blocked_reason, blocked_message = blocked_iva_wallet_refusal(decision)
@@ -410,6 +419,8 @@ def _persisted_decision_matching_revision(
             },
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
             carry_period=work_unit.period,
+            local_amount=decision.local_recurrence_amount,
+            carry_revision=snapshot.revision,
         )
     if decision.target_period != work_unit.period:
         raise_iva_wallet_precondition(

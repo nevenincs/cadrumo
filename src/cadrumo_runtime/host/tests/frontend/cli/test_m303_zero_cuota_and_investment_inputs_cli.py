@@ -37,6 +37,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -514,13 +515,17 @@ def test_a_reta_quota_without_its_iva_substrate_still_blocks_the_quarter(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "missing_taxable_base"
-    assert context["transaction_id"] == bare
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == bare
 
 
 def test_the_declared_substrate_unblocks_the_same_row(request: pytest.FixtureRequest) -> None:
@@ -594,13 +599,17 @@ def test_a_deduction_claimed_on_the_exempt_premium_is_refused_by_the_cli(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification"
-    assert context["transaction_id"] == premium
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == premium
 
 
 def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
@@ -627,11 +636,14 @@ def test_an_asset_identity_on_an_ordinary_deduction_is_refused(
 
     refused = _calculate_1t()
 
-    assert refused.exit_code == 1, refused.output
+    assert refused.exit_code == get_error_exit_code(ErrorCategory.REFUSED), refused.output
     error = require_error_document(refused.output)["error"]
     assert isinstance(error, dict)
     context = error["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "inadmissible_deduction_classification"
-    assert context["transaction_id"] == purchase
-    assert "investment_asset_id" in context["detail"]
+    # The words name the movement by date, description and amount; its identity is the
+    # refusal evidence the open-movement door is bound to, never the rendered context.
+    assert "transaction_id" not in context
+    (evidence,) = error["action"]["evidence"]
+    assert evidence["values"]["transaction_id"] == purchase

@@ -90,6 +90,9 @@ export type SetupRow = {
   recovery_action_id: string | null;
   version: string | null;
   size_bytes: number | null;
+  /** The removals the row offers, in the order they are listed; the window
+   * offers no other. */
+  removals: readonly SetupRemoval[];
 };
 
 /** A status read or a full check this window started. A settled check has

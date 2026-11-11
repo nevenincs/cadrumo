@@ -184,6 +184,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         "ledger.evidence.review.list", ("app", "ledger", "evidence", "review", "list"), "EvidenceReviewListResult"
     ),
     ActionTarget(
+        "ledger.invoice.update",
+        ("app", "ledger", "invoice", "update"),
+        "CatalogueInvoiceUpdatePayload",
+        required_inputs=("invoice_id",),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.link",
         ("app", "ledger", "link"),
         "LedgerLinkResult",
@@ -197,12 +204,26 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("modelo.bindings.list", ("app", "modelo", "bindings", "list"), "ModeloBindingsListResult"),
     ActionTarget("modelo.casillas", ("app", "modelo", "casillas"), "ModeloCasillasResult", required_inputs=("modelo",)),
     ActionTarget("modelo.describe", ("app", "modelo", "describe"), "ModeloDescribeResult", required_inputs=("modelo",)),
+    ActionTarget(
+        "modelo.filing_record.import",
+        ("app", "modelo", "filing-record", "import"),
+        "FilingRecordImportResult",
+        required_inputs=("work_unit_id", "evidence_kind", "evidence_reference_id"),
+        profile_bound_write=True,
+    ),
     ActionTarget("modelo.filing_record.list", ("app", "modelo", "filing-record", "list"), "ModeloRecordListResult"),
     ActionTarget(
         "modelo.iva_wallet.seed",
         ("app", "modelo", "iva-wallet", "seed"),
         "IvaWalletSeedResult",
         required_inputs=("filing_year", "period", "amount"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
+        "modelo.iva_wallet.override",
+        ("app", "modelo", "iva-wallet", "override"),
+        "IvaWalletOverrideResult",
+        required_inputs=("filing_year", "period", "amount", "reason", "evidence_locator"),
         profile_bound_write=True,
     ),
     ActionTarget(

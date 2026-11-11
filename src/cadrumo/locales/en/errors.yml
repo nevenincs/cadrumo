@@ -300,8 +300,6 @@ errors:
     error_llm: A language-model error occurred.
     error_modelo_aggregation_binding: The bucket-derived aggregation bindings conflict
       with the input provided.
-    error_modelo_amendment_evidence_missing: A filing cannot be amended without imported
-      official evidence. Import the original filing receipt first.
     error_modelo_amendment_target_state: A filing not in the current state cannot
       be amended; it has already been superseded by a later one.
     error_modelo_calculation_registry_unavailable: The registry snapshot for the work
@@ -737,6 +735,10 @@ errors:
       not match its contract.
     canonical_operation_financial_operand_custody: The financial operand custody transition
       order was violated.
+    canonical_profile_kdf_background_yielded: Background key-derivation work stepped
+      aside for a sign-in.
+    canonical_profile_kdf_strengthening_point_refused: A measured key-derivation setting
+      cannot strengthen this profile's password protection.
     canonical_schema_resolution: The command schema projection is incomplete.
     canonical_structured_invoice_read: The structured invoice could not be read by
       the selected reader.
@@ -1252,6 +1254,8 @@ errors:
       the amendment declares - only the added ones for a complementaria, the full
       corrected set for a sustitutiva - or an empty set to declare that there are
       none.
+    refused_modelo_amendment_evidence_missing: A filing cannot be amended without
+      imported official evidence. Import the original filing receipt first.
     refused_modelo_amendment_kind_not_permitted: The requested amendment kind is not
       legally available for the resolved filing period. The accepted kind set is listed
       in the error context.

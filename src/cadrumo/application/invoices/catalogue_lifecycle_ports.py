@@ -5,6 +5,7 @@ This module uses :class:`CalculationRevision`, the saved calculation revision.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -40,8 +41,15 @@ class CatalogueLifecyclePorts:
 class CatalogueLifecyclePortsFactory(Protocol):
     """Construct the complete invoice lifecycle bundle for one bucket."""
 
-    def __call__(self, *, bucket_id: str) -> CatalogueLifecyclePorts:
-        """Return all lifecycle capabilities bound to ``bucket_id``."""
+    def __call__(
+        self, *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+    ) -> CatalogueLifecyclePorts:
+        """Return all lifecycle capabilities bound to ``bucket_id``.
+
+        ``mutation_writer``, when given, admits every commit those capabilities
+        make, so an operation can journal a possible effect only once a write
+        is about to begin.
+        """
         ...
 
 

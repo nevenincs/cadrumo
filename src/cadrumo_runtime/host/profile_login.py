@@ -1,18 +1,30 @@
-"""Nonselecting human-proof candidates for an immutable profile worker."""
+"""Nonselecting human-proof candidates for an immutable profile worker.
+
+A profile whose password envelope holds the fixed fallback KDF point is
+strengthened here, at a person's password sign-in. After one such sign-in the
+worker measures a stronger point in the background, with no secret, and holds it
+for its own lifetime. A later password sign-in with no other live session
+re-wraps the same data key under that point with the password the attempt
+already holds, then refuses the attempt as custody changed, so the runtime
+follows it onto the successor generation and proves it again there.
+"""
 
 from __future__ import annotations
 
+import contextvars
+import logging
 import time
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, field
 from datetime import timedelta
-from threading import RLock
+from threading import Lock, RLock, Thread
 from typing import Final
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import refresh_profile_session_with_key
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from cadrumo.adapters.persistence.storage.custody.kdf_strengthening import ProfileKdfPointRefusedError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import ProfileKdfPrewarm
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
@@ -20,9 +32,16 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
+from cadrumo.application.user_profile.kdf_strength import ProfileKdfStrength
 from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, authenticate_profile_candidate
+from cadrumo.application.user_profile.passphrase_rotation import (
+    measure_profile_custody_stronger_password_kdf,
+    strengthen_profile_password_kdf,
+)
 from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.errors.failure_report import log_boundary_failure
+from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
@@ -115,6 +134,12 @@ class ProfileWorkerHumanLogin:
         # person's sign-in.
         self._kdf_prewarm = ProfileKdfPrewarm()
         self._kdf_prewarm.refill()
+        # A measured point carries no secret and names no profile; it lives
+        # only as long as this worker and is spent by one strengthening attempt.
+        self._kdf_measurement_lock = Lock()
+        self._kdf_strength: ProfileKdfStrength | None = None
+        self._kdf_measuring = False
+        self._kdf_closed = False
 
     def authenticate(
         self, password: bytearray, *, timeout_deadline: float | None = None, attempt_id: UUID | None = None
@@ -137,9 +162,16 @@ class ProfileWorkerHumanLogin:
                         )
                     )
                 cancellation.raise_if_cancelled()
+                if self._strengthened(candidate, password):
+                    # The proof opened the envelope this attempt just replaced.
+                    # The runtime retires this worker's binding and proves the
+                    # same attempt again on the successor generation.
+                    self.cancel()
+                    raise ProfileAccessRefusedError(AccessDenialCode.CUSTODY_CHANGED)
                 identity = uuid4()
                 self._candidate = identity, candidate, now() + timedelta(minutes=5), time.monotonic() + 300
                 self._candidate_attempt = attempt_id
+                self._measure_stronger_kdf_later(candidate)
                 return identity, candidate.outcome
             except ProfileLoginThrottledError as error:
                 self.cancel()
@@ -164,6 +196,80 @@ class ProfileWorkerHumanLogin:
             except BaseException:
                 self.cancel()
                 raise
+
+    def _strengthened(self, candidate: ProfileLoginCandidate, password: bytearray) -> bool:
+        """Spend a held stronger point on this proven password; report whether custody may have changed.
+
+        Strengthening ends every session on the old generation, so it waits for
+        a sign-in with no other live session. A point the mint refuses changes
+        nothing. Any other failure may have left a replacement in flight, which
+        the next unlock settles, so it is reported as a change and the attempt
+        is proved again rather than bound to a generation that may be gone.
+        """
+        with self._kdf_measurement_lock:
+            strength, digest = self._kdf_strength, candidate.proven_envelope_digest
+            if strength is None or digest is None:
+                return False
+        if self.custody.live_sessions() or self._pending:
+            return False
+        with self._kdf_measurement_lock:
+            self._kdf_strength = None
+        profile_id = self.custody.identity.binding.profile_id
+        try:
+            return strengthen_profile_password_kdf(
+                profile_id=profile_id,
+                password=password.decode("utf-8"),
+                dek=candidate.session.dek,
+                proven_envelope_digest=digest,
+                strength=strength,
+                profile_decode_context=self.decode(),
+                root=self.custody.root,
+            )
+        except ProfileKdfPointRefusedError as error:
+            log_boundary_failure(_log, "profile_kdf_strengthening_refused", error, level=logging.WARNING)
+            return False
+        except (CadrumoError, OSError) as error:
+            log_boundary_failure(_log, "profile_kdf_strengthening_failed", error, level=logging.WARNING)
+            return True
+
+    def _measure_stronger_kdf_later(self, candidate: ProfileLoginCandidate) -> None:
+        """After a password proof, measure a stronger point in the background unless one is held or running."""
+        if candidate.proven_envelope_digest is None:
+            return
+        with self._kdf_measurement_lock:
+            if self._kdf_closed or self._kdf_measuring or self._kdf_strength is not None:
+                return
+            self._kdf_measuring = True
+        # The measurement reaches custody through the adapters composed for this
+        # worker, which a bare thread does not inherit.
+        context = contextvars.copy_context()
+        Thread(
+            target=context.run, args=(self._measure_stronger_kdf,), name="profile-kdf-measurement", daemon=True
+        ).start()
+
+    def _measure_stronger_kdf(self) -> None:
+        strength: ProfileKdfStrength | None = None
+        try:
+            strength = measure_profile_custody_stronger_password_kdf(
+                self.custody.identity.binding.profile_id, root=self.custody.root
+            )
+        except (CadrumoError, OSError) as error:
+            log_boundary_failure(_log, "profile_kdf_measurement_failed", error, level=logging.WARNING)
+        finally:
+            with self._kdf_measurement_lock:
+                self._kdf_measuring = False
+                if not self._kdf_closed:
+                    self._kdf_strength = strength
+        if strength is not None:
+            diagnostic_event(
+                _log,
+                "profile_kdf_stronger_point_held",
+                fields={
+                    "memory_mib": strength.memory_mib,
+                    "iterations": strength.iterations,
+                    "parallelism": strength.parallelism,
+                },
+            )
 
     def register_attempt(self, attempt_id: UUID) -> None:
         """Install at most one exact proof owner before its protected frame is sent."""
@@ -421,6 +527,8 @@ class ProfileWorkerHumanLogin:
 
     def close(self) -> None:
         """Release all candidate and pending-receipt proof without closing admitted leases."""
+        with self._kdf_measurement_lock:
+            self._kdf_closed, self._kdf_strength = True, None
         self.cancel_all_attempts()
         with self._lock:
             for session_id in tuple(self._sealing_keys):

@@ -137,7 +137,6 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
     inside an authority operation; the parser must only carry the string.
     """
     from typer._click.core import Context
-    from typer._click.types import StringParamType
 
     from ...tests.cli_runner import cadrumo_click_command
 
@@ -152,5 +151,4 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
         command = child
     parameter = next(parameter for parameter in command.params if parameter.name == "fiscal_residency")
 
-    assert isinstance(parameter.type, StringParamType)
-    assert parameter.type.convert(token, parameter, context) == token
+    assert parameter.process_value(context, token) == token

@@ -732,6 +732,9 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
         thread,
         time::Duration,
     };
+    // Below the 128 MiB a launch reads of a manager executable: a larger image is refused
+    // before a byte is read, and discovery would settle at once on the older version.
+    const HASHED_MANAGER: u64 = 120 * 1024 * 1024;
     let fixture = Fixture::new();
     let prefix = fixture.prefix("active verification");
     let older = fixture.version(&prefix, "1.0.0");
@@ -743,7 +746,7 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
         .write(true)
         .open(member.under(&newest))
         .unwrap();
-    payload.set_len(512 * 1024 * 1024).unwrap();
+    payload.set_len(HASHED_MANAGER).unwrap();
     let cancellation = Arc::new(Cancellation::default());
     let worker_token = cancellation.clone();
     let image = member.under(&older);
@@ -760,12 +763,12 @@ fn cancellation_during_candidate_verification_propagates_through_both_fallbacks(
             contract.discover_cancellable(&image, &registered, &worker_token)
         });
         ready.recv_timeout(Duration::from_secs(5)).unwrap();
-        // Discovery verifies the manager image, not every package member. Extend
-        // that image without replacing its binary header to keep verification
-        // active. This handshake precedes discover, so hashing entry is not
-        // independently observed. The reader unit test proves the exact chunk
-        // boundary; this integration exercises both public fallback layers.
-        thread::sleep(Duration::from_millis(20));
+        // Discovery verifies the newest version's manager image first, reading and hashing
+        // every byte of it, which outlasts this handshake by far; whether the cancel lands
+        // before or during that read, the check after it stops discovery, and neither the
+        // older version nor the registered prefix is taken instead. The reader unit test
+        // proves the exact chunk boundary; this integration exercises both public
+        // fallback layers.
         cancellation.cancel();
         worker.join().unwrap()
     });

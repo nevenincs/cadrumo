@@ -20,16 +20,21 @@ import {
 import { IvaWalletDialog } from "./IvaWalletDialog";
 import { useIvaWalletBalance } from "./ivaWalletRead";
 
+/** A refusal's opening-balance door, taken `count` times, naming the period
+ * whose closing balance the refused carry reads. That period is the one the
+ * backend served, which can precede the declaration on screen. */
+export type OpeningBalanceAsk = { count: number; period: LedgerPeriod };
+
 export function IvaWallet({
   period,
   locale,
-  openingBalanceAsked = 0,
+  openingBalanceAsk = null,
 }: {
   period: LedgerPeriod;
   locale: string;
-  /** Counts the times a refusal's opening-balance door was taken; each rise
-   * opens the balance entry. Zero while none was. */
-  openingBalanceAsked?: number;
+  /** The opening-balance door as last taken; each rise of its count opens
+   * the balance entry at its period. Null while none was. */
+  openingBalanceAsk?: OpeningBalanceAsk | null;
 }) {
   const scope = useModeloWriteScope();
   const t = useStrings();
@@ -46,7 +51,7 @@ export function IvaWallet({
       <WalletBalance
         period={period}
         locale={locale}
-        openingBalanceAsked={openingBalanceAsked}
+        openingBalanceAsk={openingBalanceAsk}
       />
     </ModeloWriteScope>
   );
@@ -55,11 +60,11 @@ export function IvaWallet({
 function WalletBalance({
   period,
   locale,
-  openingBalanceAsked,
+  openingBalanceAsk,
 }: {
   period: LedgerPeriod;
   locale: string;
-  openingBalanceAsked: number;
+  openingBalanceAsk: OpeningBalanceAsk | null;
 }) {
   const t = useStrings();
   const { port, holds, hold, owner } = useModeloOperation();
@@ -69,11 +74,18 @@ function WalletBalance({
   const year = parsed.kind === "value" ? parsed.value : null;
   const { read, reload } = useIvaWalletBalance(port, holds, year);
   const [managing, setManaging] = useState(false);
+  // The period the balance entry opens at: the one a refusal's door served,
+  // or the declaration's own when the person opens it themselves.
+  const [entryPeriod, setEntryPeriod] = useState(period);
   // A refusal's door asked for the opening-balance entry. It opens unless an
   // operation of this declaration is running, which is what holds the button.
+  // Each taking of the door is a new ask, so the same door opens it again.
   useEffect(() => {
-    if (openingBalanceAsked > 0 && !hold) setManaging(true);
-  }, [openingBalanceAsked, hold]);
+    if (openingBalanceAsk && openingBalanceAsk.count > 0 && !hold) {
+      setEntryPeriod(openingBalanceAsk.period);
+      setManaging(true);
+    }
+  }, [openingBalanceAsk, hold]);
   const amount = (value: string) =>
     formatAmount(locale, value, { currency: "EUR" });
   const values =
@@ -144,7 +156,10 @@ function WalletBalance({
         <Button
           variant="secondary"
           disabled={!!hold}
-          onClick={() => setManaging(true)}
+          onClick={() => {
+            setEntryPeriod(period);
+            setManaging(true);
+          }}
         >
           {t("workspace.modelo.iva_wallet.manage")}
         </Button>
@@ -174,7 +189,7 @@ function WalletBalance({
         ))}
       {managing && (
         <IvaWalletDialog
-          period={period}
+          period={entryPeriod}
           locale={locale}
           onClose={() => setManaging(false)}
         />

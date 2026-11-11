@@ -42,7 +42,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--scope",),
                 value=ValueContract(
                     DeferredTarget("...domain.iva.schema", "IvaTerritorialScope", __package__),
-                    click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
+                    parser=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
                 ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.scope_help"),
@@ -61,7 +61,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--identification-state",),
                 value=ValueContract(
                     DeferredTarget("...domain.iva.schema", "EUMemberState", __package__),
-                    click_type=DeferredTarget(".common", "EU_MEMBER_STATE_CHOICE", __package__),
+                    parser=DeferredTarget(".common", "EU_MEMBER_STATE_CHOICE", __package__),
                 ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.identification_state_help"),
@@ -105,7 +105,7 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 declarations=("--evidenced-scope",),
                 value=ValueContract(
                     DeferredTarget("...domain.iva.schema", "IvaTerritorialScope", __package__),
-                    click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
+                    parser=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
                 ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.evidenced_scope_help"),

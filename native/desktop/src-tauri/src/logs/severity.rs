@@ -59,7 +59,8 @@ pub fn level(event: &Event) -> Level {
             ServiceFact::EnvironmentResolved { .. } => Level::Debug,
             ServiceFact::AgentReady { .. }
             | ServiceFact::ManagerInstallationCompleted { .. }
-            | ServiceFact::SetupAdmissionRead { .. } => Level::Info,
+            | ServiceFact::SetupAdmissionRead { .. }
+            | ServiceFact::PersonRestore { .. } => Level::Info,
             _ => Level::Debug,
         };
     }

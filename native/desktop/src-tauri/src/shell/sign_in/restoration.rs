@@ -472,6 +472,35 @@ mod tests {
         assert_eq!(attempts, 2);
     }
     #[test]
+    fn a_lapsed_sign_in_is_never_presented_again_whichever_way_it_is_refused() {
+        // After an idle lapse the stored sign-in is refused, by the receipt or
+        // by the runtime's admission. Either way the person signs in again:
+        // the window neither retries nor holds a session in the meantime.
+        for refused in [
+            Failed::resume(ResumeRefusal::Receipt("expired_idle".into())),
+            Failed::runtime(Refusal::Denied {
+                code: "session_expired".into(),
+                sign_in: None,
+                holder_operation_id: None,
+                recovery_remaining_seconds: None,
+            }),
+        ] {
+            let mut restoration = Restoration::default();
+            let observed = observed();
+            let mut attempts = 0;
+            for _ in 0..3 {
+                let result: cadrumo_application::error::application::Result<()> = restoration
+                    .attempt(&observed, || {
+                        attempts += 1;
+                        Err(refused.clone())
+                    });
+                assert!(result.is_err());
+            }
+            assert_eq!(attempts, 1);
+            assert!(restoration.refusal(&observed).is_some());
+        }
+    }
+    #[test]
     fn a_transient_failure_permits_a_later_successful_restoration() {
         let mut restoration = Restoration::default();
         let observed = observed();
