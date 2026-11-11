@@ -15,7 +15,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...calculations.cross_period_models import (
@@ -80,18 +80,25 @@ def test_a_blocker_nothing_settles_still_names_no_door() -> None:
 def _attest_target() -> WorkUnit:
     year = filing_year_envelope().floor
     period = Period.from_year_and_code(year, "1T")
+    revision_id = _revision_governing("130", year)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET_ID, modelo="130", filing_year=year, period=period, revision_id="2019-y-siguientes"
+            bucket_id=_BUCKET_ID, modelo="130", filing_year=year, period=period, revision_id=revision_id
         ),
         bucket_id=_BUCKET_ID,
         modelo="130",
         filing_year=year,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=revision_id,
         name="Pagos fraccionados",
         created_at=_NOW,
         updated_at=_NOW,
+    )
+
+
+def _revision_governing(modelo_id: str, year: int) -> str:
+    return next(
+        str(revision.id) for revision in reversed(authored_revisions(modelo_id)) if revision.valid_from.year <= year
     )
 
 

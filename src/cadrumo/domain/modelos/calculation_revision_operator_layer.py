@@ -150,9 +150,7 @@ class CalculationOperatorLayer(BaseModel):
     attested_binding_ids: tuple[BindingId, ...] = ()
     value_attestations: Mapping[BindingId, ValueAttestation] = Field(default_factory=dict)
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_channel_unique_canonical_values(self) -> CalculationOperatorLayer:
+    def _require_casilla_channels_canonical(self) -> None:
         overlapping = sorted(set(self.decimal_casilla_inputs).intersection(self.text_casilla_inputs))
         if overlapping:
             raise ModeloValidationError(
@@ -164,6 +162,8 @@ class CalculationOperatorLayer(BaseModel):
                 raise ModeloValidationError(
                     f"operator layer decimal input for casilla {casilla_id!r} is not a canonical decimal string",
                 )
+
+    def _require_attested_bindings_hold_zero(self) -> tuple[BindingId, ...]:
         attested = self.attested_binding_ids
         if list(attested) != sorted(set(attested)):
             raise ModeloValidationError("operator layer attested bindings must be unique and sorted")
@@ -172,6 +172,13 @@ class CalculationOperatorLayer(BaseModel):
                 raise ModeloValidationError(
                     f"operator layer attested binding {binding_id!r} must hold the attested zero override",
                 )
+        return attested
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_channel_unique_canonical_values(self) -> CalculationOperatorLayer:
+        self._require_casilla_channels_canonical()
+        attested = self._require_attested_bindings_hold_zero()
         for binding_id in self.value_attestations:
             raw = self.binding_overrides.get(binding_id)
             parsed = None if raw is None else try_parse_canonical_decimal(raw)
