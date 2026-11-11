@@ -8,7 +8,7 @@ from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.errors import FixedWidthValueOverflowError, RegistryValidationError
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -19,7 +19,7 @@ from ...domain.calculations.registry.fixed_width_codec import (
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportError, FilingExportValidationError
+from ...domain.filing.errors import FilingExportError, FilingExportValidationError, FilingExportValueOverflowError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
@@ -571,9 +571,20 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
 
 
 def format_field(field: ExportFieldDefinition, value: object) -> str:
-    """Render one value through the field's fixed-width codec, as a filing export refusal on failure."""
+    """Render one value through the field's fixed-width codec, as a filing export refusal on failure.
+
+    A value wider than its slot is refused as that slot's overflow, never cut to fit.
+    """
     try:
         return render_fixed_width_export_field(field, value)
+    except FixedWidthValueOverflowError as exc:
+        raise FilingExportValueOverflowError(
+            field_id=field.id,
+            first_position=field.offset,
+            field_length=exc.field_length,
+            rendered=exc.rendered,
+            data_type=field.data_type.value,
+        ) from exc
     except RegistryValidationError as exc:
         raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc
 

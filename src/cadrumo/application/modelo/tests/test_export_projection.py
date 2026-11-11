@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -14,12 +15,14 @@ from cadrumo.application.modelo.export_contracts import (
     ModeloIvaWalletDecisionProvenance,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
+from ....application.operations.error_detail import build_operation_error_detail
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from ....application.operations.operation_definition import OperationDefinition
 from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
-from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -27,13 +30,15 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.errors import FilingExportValidationError, FilingExportValueOverflowError
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ....domain.modelos.errors import ModeloExportError
+from ....domain.modelos.errors import ModeloExportError, ModeloExportValueOverflowError
 from ...filing.errors import ModeloApplicationError
+from ...filing.record_field_renderer import format_field
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
 from ..export import export_write_failure
 from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
@@ -107,6 +112,75 @@ def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> Non
 
     assert failure.translated_message == "application.modelo.errors.export_draft_write_failed"
     assert failure.context == {"calculation_revision_id": "revision-1", "cause": "a layout invariant broke"}
+
+
+def _m347_declarado_record() -> ExportRecordDefinition:
+    """The shipped Modelo 347 counterparty record, as the published registry serves it."""
+    snapshot = published_snapshot("347", filing_year=_FILING_YEAR, period="0A")
+    records = [
+        record
+        for layout in snapshot.revision.export_layouts
+        for record in layout.records
+        if record.record_type == "declarado"
+    ]
+    assert len(records) == 1
+    return records[0]
+
+
+def _m347_declarado_field(record: ExportRecordDefinition, *, binding: str) -> ExportFieldDefinition:
+    fields = [field for field in record.fields if field.binding == binding]
+    assert len(fields) == 1
+    return fields[0]
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_a_counterparty_name_wider_than_its_record_slot_is_refused_naming_it(locale: str) -> None:
+    """DR347 type-2 record, positions 36-75: "APELLIDOS Y NOMBRE, RAZON SOCIAL O DENOMINACION DEL DECLARADO".
+
+    The design gives the name forty positions and states no abbreviation rule,
+    so a longer name is refused, never cut, and the refusal names it.
+    """
+    record = _m347_declarado_record()
+    field = _m347_declarado_field(record, binding="modelo-347-contraparte-row-nombre")
+    assert (field.offset, field.length) == (36, 40)
+    name = "Comunidad de Propietarios Calle Ficticia 12"
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    with pytest.raises(FilingExportValueOverflowError) as overflow:
+        format_field(field, name)
+    failure = export_write_failure(command, overflow.value.in_record(record.record_type))
+
+    assert isinstance(failure, ModeloExportValueOverflowError)
+    registered = get_registered_error_code(failure)
+    assert (registered.code, registered.category) == ("REFUSED_MODELO_EXPORT_VALUE_OVERFLOW", ErrorCategory.REFUSED)
+    message = resolve_error_message(failure, locale=locale)
+    for shown in (name, "36-75", "declarado", str(len(name)), "40"):
+        assert shown in message
+    detail = build_operation_error_detail(failure)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
+    assert detail.refusal_words is not None
+    assert name in detail.refusal_words
+
+
+def test_an_amount_wider_than_its_record_slot_is_refused_by_its_slot_alone() -> None:
+    record = _m347_declarado_record()
+    money = next(field for field in record.fields if field.data_type == "money")
+    length = money.length
+    assert length is not None
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    with pytest.raises(FilingExportValueOverflowError) as overflow:
+        format_field(money, Decimal("1" + "0" * length))
+    failure = export_write_failure(command, overflow.value.in_record(record.record_type))
+
+    assert isinstance(failure, ModeloExportValueOverflowError)
+    assert get_registered_error_code(failure).code == "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW"
+    assert failure.context is not None
+    assert "field_value" not in failure.context
+    message = resolve_error_message(failure, locale="es")
+    assert money.id in message
+    assert str(length) in message
 
 
 def _canonical_receipt(

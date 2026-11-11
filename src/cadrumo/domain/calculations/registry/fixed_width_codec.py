@@ -13,7 +13,7 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
-from .errors import RegistryValidationError
+from .errors import FixedWidthValueOverflowError, RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyWireValue,
@@ -421,7 +421,7 @@ def pad_fixed_width_text(
 ) -> str:
     """Apply the canonical padding contract to already-rendered text."""
     if len(value) > length:
-        raise RegistryValidationError(f"fixed-width value exceeds length {length}")
+        raise FixedWidthValueOverflowError(rendered=value, field_length=length)
     if padding is ExportPadding.NONE:
         if justification is not ExportJustification.NONE:
             raise RegistryValidationError("no-padding fixed-width value requires no justification")
@@ -695,7 +695,7 @@ def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -
 def _render_with_reserved_sign(field: ExportField, digits: str, *, negative: bool, length: int) -> str:
     magnitude_width = length - 1
     if len(digits) > magnitude_width:
-        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
     magnitude = digits.rjust(magnitude_width, "0")
     if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
         return "0" * length if not digits.strip("0") else "N" + magnitude
@@ -724,7 +724,7 @@ def _render_signed_digits(field: ExportField, digits: str, *, negative: bool, le
 def _render_displacing_marker(field: ExportField, digits: str, *, marker: str, negative: bool, length: int) -> str:
     magnitude_width = length - 1 if negative else length
     if len(digits) > magnitude_width:
-        raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
     return (marker if negative else "") + digits.rjust(magnitude_width, "0")
 
 
@@ -752,6 +752,8 @@ def _pad(field: ExportField, value: str) -> str:
             padding=field.padding,
             justification=field.justification,
         )
+    except FixedWidthValueOverflowError as exc:
+        raise FixedWidthValueOverflowError(rendered=exc.rendered, field_length=length, field_id=field.id) from exc
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"export field {field.id!r}: {exc}") from exc
 
