@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:040d9528d35266a85986411cb1f6a8e744fb88a038611a6feee9704f2de87a8b'
+body_hash: 'sha256:0f3c5947e80a7c0577213adabd30cd836bdeb75ad173b6184a9bf4121c3b0b93'
 related:
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
   - "[[2026-11-08-prior-carry-attestation-adr]]"
@@ -15,13 +15,15 @@ related:
   - '[[2026-11-08-prior-carry-attestation-reference]]'
 ---
 
-# `cross-period-filing-clean-state` adr: `operator-attested value for a dependency outside the support envelope` | (**status:** `proposed`)
+# `cross-period-filing-clean-state` adr: `operator-attested value for a dependency outside the support envelope` | (**status:** `accepted`)
+
+Accepted 2026-11-11 by PRIME under the operator's delegation (confirmed 2026-11-11), after reading it in full: the envelope mark comes from the pinned catalogue and no in-envelope dependency is loosened; it reuses the prior-carry attestation path on the operator layer; `value_attestations` is persisted on `CalculationOperatorLayer` with stored identities unchanged when empty. Accepted as written. The amendment is applied to `2026-06-05-cross-period-filing-clean-state-adr` as its dated 2026-11-11 section.
 
 ## Problem Statement
 
 `2026-06-05-cross-period-filing-clean-state-adr` blocks every filing-grade cross-period dependency until a clean upstream filing proves it. When the source year lies below the floor of `src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml`, the product refuses to hold that return, so the proof can never exist. A Modelo 130 at the floor year reads `irpf.previous_year_economic_activity_net_income` from the Modelo 100 of year minus one (`src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/0001-declarations.toml:55-59`). The operator can enter the figure as an override (`src/cadrumo/application/modelo/edit_admission.py:190-247`), but verification still raises `cross_period_dependency_unclean` (`src/cadrumo/application/modelo/verification_cross_period.py:385-395`). The requirement builder applies no envelope check (`src/cadrumo/application/calculations/cross_period_clean_state.py:66-94`, `:783-805`). The create door is closed below the floor (`src/cadrumo/application/modelo/verification_cross_period.py:705-724`). The only exemption is an all-zero override (`:241-256`). The declaration can never be sealed or exported.
 
-This record proposes an amendment to `2026-06-05-cross-period-filing-clean-state-adr`. It is kept separate until the operator authorizes it. The accepted text stays unchanged meanwhile.
+This record amends `2026-06-05-cross-period-filing-clean-state-adr`, which carries the amendment as a dated section.
 
 ## Considerations
 
@@ -38,7 +40,7 @@ This record proposes an amendment to `2026-06-05-cross-period-filing-clean-state
 
 ## Constraints
 
-- Coordinator ruling of 2026-11-11 (PRIME, under the operator's delegation) authorizes this proposal. It applies only once the operator accepts it.
+- Coordinator ruling of 2026-11-11 (PRIME, under the operator's delegation) decided it, and PRIME accepted this record the same day.
 - Scope is limited to `previous_filing_binding` requirements on the decimal channel whose source filing year the envelope does not admit.
 - An in-envelope source year whose return is not in the application stays blocked as today. Its create door and blockers are unchanged.
 - A blank binding, or a plain `SET_OVERRIDE_VALUE` without attestation, does not satisfy the dependency.
