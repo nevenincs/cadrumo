@@ -3014,6 +3014,7 @@ cli:
     missing_option: Missing option
     missing_parameter: Missing parameter
     not_valid_integer: is not a valid integer.
+    not_valid_number: is not a valid number.
     panel:
       arguments: Arguments
       commands: Commands
@@ -3022,6 +3023,7 @@ cli:
     path_not_found: the path '{path}' does not exist or is not a readable file.
     try_for_help: Try [blue]'{command_path} {help_option}'[/] for help.
     usage_prefix: 'Usage: '
+    value_not_accepted: is not an accepted value.
   ledger:
     account:
       errors:

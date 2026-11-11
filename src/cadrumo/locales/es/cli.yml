@@ -3255,6 +3255,7 @@ cli:
     missing_option: Falta la opción
     missing_parameter: Falta el parámetro
     not_valid_integer: no es un entero válido.
+    not_valid_number: no es un número válido.
     panel:
       arguments: Argumentos
       commands: Comandos
@@ -3263,6 +3264,7 @@ cli:
     path_not_found: la ruta '{path}' no existe o no es un archivo legible.
     try_for_help: Prueba [blue]'{command_path} {help_option}'[/] para obtener ayuda.
     usage_prefix: 'Uso: '
+    value_not_accepted: no es un valor aceptado.
   ledger:
     account:
       errors:
