@@ -36,6 +36,7 @@ from ..flows.copy import register_copy_source
 from ..flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .binding_readiness import profile_resolvable_binding_ids
 from .registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
+from .work_missing_input import ModeloWorkMissingInputError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -215,11 +216,19 @@ def modelo_work_wizard_follow_up_step(
     unit: WorkUnit,
     operation: PinnedAuthorityOperation,
 ) -> ModeloWorkWizardStep | None:
-    """Convert a recognised missing calculation input into one extra question."""
+    """Convert a recognised missing calculation input into one extra question.
+
+    A classified missing input names its binding as a typed fact, because a
+    refusal worded for the filer (an unstated prior carry) keeps registry
+    binding ids out of its context; only an unclassified engine refusal is read
+    from its context.
+    """
+    grounding_lookup = _binding_grounding_lookup(unit, operation=operation)
+    if isinstance(error, ModeloWorkMissingInputError):
+        return _binding_step(error.binding_id, grounding_lookup)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return None
     context = error.context or {}
-    grounding_lookup = _binding_grounding_lookup(unit, operation=operation)
     if error.translated_message == "errors.calc.relation_value_missing":
         relation_id = context.get("relation_id")
         if not isinstance(relation_id, str):
@@ -241,6 +250,12 @@ def modelo_work_wizard_follow_up_step(
     binding_id = context.get("binding_id")
     if not isinstance(binding_id, str):
         return None
+    return _binding_step(binding_id, grounding_lookup)
+
+
+def _binding_step(
+    binding_id: str, grounding_lookup: dict[str, tuple[tuple[str, ...], tuple[str, ...]]]
+) -> ModeloWorkWizardStep:
     legal_refs, source_refs = grounding_lookup.get(binding_id, ((), ()))
     return ModeloWorkWizardStep(
         channel="binding",
