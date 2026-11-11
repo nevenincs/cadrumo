@@ -202,27 +202,39 @@ def _m390(year: int) -> ModeloRevision:
     return _snapshot("390", year, "0A").revision
 
 
+_DOMESTIC_REGIMEN_GENERAL: Final = frozenset(
+    {"domestic_general", "domestic_reduced", "domestic_super_reduced", "domestic_zero"}
+)
+
+
+def _is_regimen_general_base_rung(selector: LedgerIvaProvider) -> bool:
+    return (
+        str(selector.flow_direction) == "repercutido"
+        and str(selector.fact) == "base_amount_sum"
+        and {str(category) for category in selector.categories} <= _DOMESTIC_REGIMEN_GENERAL
+        and IvaLedgerObservationRole.SETTLEMENT in selector.observation_roles
+    )
+
+
 def _m303_regimen_general_base_bindings(revision: ModeloRevision) -> tuple[str, ...]:
     """The quarterly return's bound regimen-general base rungs, read from its own selectors."""
-    domestic = {"domestic_general", "domestic_reduced", "domestic_super_reduced", "domestic_zero"}
-    bound = {
-        str(casilla.binding)
-        for casilla in revision.casillas
-        if casilla.input_kind is InputKind.BOUND and casilla.binding is not None
-    }
-    rungs: list[str] = []
-    for binding in revision.bindings:
-        selector = binding.provider
-        if str(binding.id) not in bound or not isinstance(selector, LedgerIvaProvider):
-            continue
-        if (
-            str(selector.flow_direction) == "repercutido"
-            and str(selector.fact) == "base_amount_sum"
-            and {str(category) for category in selector.categories} <= domestic
-            and IvaLedgerObservationRole.SETTLEMENT in selector.observation_roles
-        ):
-            rungs.append(str(binding.id))
-    return tuple(rungs)
+    bound = {str(casilla.binding) for casilla in revision.casillas if casilla.input_kind is InputKind.BOUND}
+    return tuple(
+        str(binding.id)
+        for binding in revision.bindings
+        if str(binding.id) in bound
+        and isinstance(binding.provider, LedgerIvaProvider)
+        and _is_regimen_general_base_rung(binding.provider)
+    )
+
+
+def _quarterly_303_base(year: int, quarter: int, rows: Iterable[_Row]) -> Decimal:
+    """One quarter's Modelo 303 regimen-general bases, through that quarter's own revision."""
+    revision = _snapshot("303", year, f"{quarter}T").revision
+    rungs = _m303_regimen_general_base_bindings(revision)
+    assert rungs, f"Modelo 303 {year} {quarter}T binds no regimen-general base rung"
+    resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (row.observation for row in rows)))
+    return sum((resolved.get(rung, Decimal("0")) for rung in rungs), Decimal("0"))
 
 
 @pytest.mark.parametrize("year", _YEARS)
@@ -233,13 +245,9 @@ def test_box_99_equals_the_summed_quarterly_303_bases(year: int) -> None:
     expected = _regimen_general_base(annual_rows)
 
     annual = dict(resolve_ledger_iva_aggregation_binding_values(_m390(year), (row.observation for row in annual_rows)))
-    quarterly_total = Decimal("0")
-    for quarter, rows in quarterly.items():
-        revision = _snapshot("303", year, f"{quarter}T").revision
-        rungs = _m303_regimen_general_base_bindings(revision)
-        assert rungs, f"Modelo 303 {year} {quarter}T binds no regimen-general base rung"
-        resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (row.observation for row in rows)))
-        quarterly_total += sum((resolved.get(rung, Decimal("0")) for rung in rungs), Decimal("0"))
+    quarterly_total = sum(
+        (_quarterly_303_base(year, quarter, rows) for quarter, rows in quarterly.items()), Decimal("0")
+    )
 
     assert quarterly_total == expected
     assert annual[_BINDING] == expected
