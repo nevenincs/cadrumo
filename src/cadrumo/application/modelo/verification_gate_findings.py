@@ -86,6 +86,7 @@ from .verification_cross_period import (
     cross_period_clean_state_verdict_for_work_unit,
     cross_period_door_reader,
     cross_period_expected_member_sets_from_profile,
+    operator_value_attestations,
     registry_modality_finding,
     zero_value_previous_filing_binding_ids,
 )
@@ -767,6 +768,8 @@ def collect_verification_gate_findings(
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
         workflow_profile=workflow_profile,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
+        operator_value_attestations=operator_value_attestations(target),
+        work_unit_repository=work_unit_repository,
         operation=operation,
     )
 
@@ -784,6 +787,7 @@ def collect_verification_gate_findings(
             calculation_repository=calculation_repository,
             calculation_catalogue=calculation_catalogue,
             operation=operation,
+            target=work_unit,
         ),
     )
     _append_ledger_evidence_findings(

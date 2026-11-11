@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
@@ -65,6 +65,7 @@ from ...domain.calculations.registry.schema_scalars import (
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_operator_layer import ValueAttestation
 from ...domain.modelos.dt12_reduccion import (
     Dt12WindowEligibility,
     compute_dt12_reduccion_plan_pensiones,
@@ -219,6 +220,8 @@ class WorkCalculateInputBundle:
     """
     attested_binding_ids: tuple[BindingId, ...] = ()
     """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
+    value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict)
+    """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
 
     @classmethod
     def build(
@@ -238,6 +241,7 @@ class WorkCalculateInputBundle:
         cleared_casilla_ids: tuple[CasillaId, ...] = (),
         record_operator_layer: bool = False,
         attested_binding_ids: tuple[BindingId, ...] = (),
+        value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -265,6 +269,7 @@ class WorkCalculateInputBundle:
             cleared_casilla_ids=cleared_casilla_ids,
             record_operator_layer=record_operator_layer,
             attested_binding_ids=attested_binding_ids,
+            value_attestations=dict(value_attestations or {}),
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -368,6 +373,7 @@ def calculate_modelo_work_revision(
         cleared_casilla_ids=inputs.cleared_casilla_ids,
         record_operator_layer=inputs.record_operator_layer,
         attested_binding_ids=inputs.attested_binding_ids,
+        value_attestations=inputs.value_attestations,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),

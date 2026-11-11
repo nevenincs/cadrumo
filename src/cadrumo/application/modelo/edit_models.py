@@ -131,11 +131,17 @@ class ModeloEditBindingIntentKind(StrEnum):
     ``ATTEST_NO_AMOUNT`` records the operator's statement that a carry from an
     earlier filing holds no amount: an override of zero the operator layer marks
     attested, kept apart from a zero typed. Either other intent withdraws it.
+    ``ATTEST_PRIOR_VALUE`` records the operator's statement of a carry's value
+    where no supported earlier filing can supply it, because the earlier
+    filing's year lies outside the support envelope: the value stays the
+    override and the operator layer names the earlier filing it stands in
+    for. Any other intent on the binding withdraws it.
     """
 
     SET_OVERRIDE_VALUE = "set_override_value"
     REMOVE_OVERRIDE = "remove_override"
     ATTEST_NO_AMOUNT = "attest_no_amount"
+    ATTEST_PRIOR_VALUE = "attest_prior_value"
 
 
 class ModeloEditNonWritableReason(StrEnum):
@@ -795,6 +801,8 @@ class ModeloBindingEditIntentV1(EditModel):
     ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE`` or
     ``ATTEST_NO_AMOUNT``: withdrawing an override, and stating that a carry
     holds no amount, are expressed by absence of a value, not a typed zero.
+    ``SET_OVERRIDE_VALUE`` and ``ATTEST_PRIOR_VALUE`` require one, so a blank
+    statement of a figure is refused here.
     """
 
     address: ModeloEditBindingAddressV1
@@ -803,10 +811,14 @@ class ModeloBindingEditIntentV1(EditModel):
 
     @model_validator(mode="after")
     def _require_value_only_for_set_override(self) -> ModeloBindingEditIntentV1:
-        if self.kind is ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is None:
-            raise ValueError("SET_OVERRIDE_VALUE binding intent requires a typed value")
-        if self.kind is not ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is not None:
-            raise ValueError("only SET_OVERRIDE_VALUE may carry a binding intent value")
+        carries_value = self.kind in {
+            ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+            ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE,
+        }
+        if carries_value and self.value is None:
+            raise ValueError(f"{self.kind.name} binding intent requires a typed value")
+        if not carries_value and self.value is not None:
+            raise ValueError("only SET_OVERRIDE_VALUE and ATTEST_PRIOR_VALUE may carry a binding intent value")
         return self
 
 

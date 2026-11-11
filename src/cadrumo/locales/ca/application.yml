@@ -2916,6 +2916,16 @@ application:
         declaració relacionada.'
       cross_period_activity_start_missing: El model %{target_modelo} de %{target_filing_year},
         període %{target_period}, necessita la data en què va començar la teva activitat.
+      cross_period_dependency_attestation_conflict: Vas indicar %{value} per al model
+        %{source_modelo} de %{source_filing_year}, període %{source_period}, però
+        ara n'existeix una declaració amb una altra xifra. Aquesta declaració (model
+        %{target_modelo} de %{target_filing_year}, període %{target_period}) ha de
+        seguir aquella, així que indica la xifra de nou o retira la teva indicació.
+      cross_period_dependency_operator_attested: Cadrumo no té cap declaració del
+        model %{source_modelo} de %{source_filing_year}, període %{source_period},
+        així que la xifra %{value} que aquesta declaració (model %{target_modelo}
+        de %{target_filing_year}, període %{target_period}) en pren és la que vas
+        indicar tu. Conserva aquella declaració anterior com a justificant.
       cross_period_dependency_unclean: Aquesta declaració fa servir dades del model
         %{source_modelo} de %{source_filing_year}, període %{source_period}, i aquella
         declaració encara té incidències pendents. Resol-les allà primer.
@@ -3398,6 +3408,8 @@ application:
           a la seva casella i torna a calcular.
         check_profile_value: Revisa aquest valor al teu perfil, corregeix-lo si és
           incorrecte i torna a calcular.
+        check_stated_figure: Comprova la xifra que vas indicar amb la teva declaració
+          anterior.
         compare_figures: Compara les xifres, corregeix la que estigui malament i torna
           a calcular.
         correct_and_recalculate: Corregeix el que indica i torna a calcular i comprovar.

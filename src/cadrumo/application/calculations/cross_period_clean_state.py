@@ -17,19 +17,23 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
+from decimal import Decimal
 from typing import Final, NamedTuple
 
+from ...core.aggregation import BindingSourceKind
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.period import Period, is_filing_period_token
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import (
@@ -41,6 +45,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.verification_report import VerificationReportCatalogue
+from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .cross_period_dependency_evaluation import evaluate_requirement
 from .cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -53,6 +58,7 @@ from .cross_period_models import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenance,
     NoPriorObligationProvenanceKind,
+    OperatorAttestedValue,
     period_strictly_before_activity_start,
 )
 from .m111_no_retenciones import is_m111_no_retenciones_period
@@ -63,8 +69,18 @@ from .per_grupo_member_keys import per_grupo_member_requirement_keys
 from .verification_report_gate import require_verification_report_coordinates_current
 
 
-def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
+def cross_period_dependency_requirements(
+    snapshot: RegistrySnapshot,
+    *,
+    support: SupportedFilingYearsCatalogue | None = None,
+) -> tuple[CrossPeriodDependencyRequirement, ...]:
     """Return the dependency records for ``snapshot``.
+
+    Each previous-filing record is marked ``source_outside_envelope`` when the
+    support envelope refuses its source filing year; the mark never removes a
+    record, so the dependency inventory is the same whatever the envelope.
+    ``support`` is the pinned operation's catalogue; omitted, the snapshot's own
+    pinned catalogue decides, and a snapshot that carries none marks nothing.
 
     Derives
     :class:`~application.calculations.cross_period_models.CrossPeriodDependencyRequirement`
@@ -82,7 +98,11 @@ def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[Cr
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
-        for item in _requirements_from_previous_filing(requirement, snapshot=snapshot):
+        for item in _requirements_from_previous_filing(
+            requirement,
+            snapshot=snapshot,
+            support=snapshot.supported_filing_years if support is None else support,
+        ):
             requirements.setdefault(item.key, item)
     for requirement in relation_source_requirements(
         snapshot.revision,
@@ -493,6 +513,163 @@ def _zero_value_previous_filing_requirements(
     )
 
 
+def upstream_source_absent(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    work_catalogue: WorkUnitCatalogue,
+) -> bool:
+    """Whether the application holds no source at all for ``requirement``.
+
+    A source is held when a work unit, a filing record or a captured observation
+    exists for its modelo, filing year and period. Edit admission and clean-state
+    evaluation both decide through here, so they cannot disagree.
+    """
+    layers = observation_repository.load_observation_layers(requirement.source_modelo, requirement.period)
+    if layers.official is not None or layers.pending_local is not None:
+        return False
+    if any(
+        str(record.modelo) == requirement.source_modelo
+        and record.filing_year == requirement.filing_year
+        and record.period == requirement.period
+        for record in filing_catalogue.records.values()
+    ):
+        return False
+    return not any(
+        str(unit.modelo) == requirement.source_modelo
+        and unit.filing_year == requirement.filing_year
+        and unit.period == requirement.period
+        for unit in work_catalogue.work_units.values()
+    )
+
+
+def attestable_previous_filing_sources(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    work_catalogue: WorkUnitCatalogue,
+) -> dict[BindingId, CrossPeriodDependencyRequirement]:
+    """Return, per binding, the previous-filing requirement the application holds no source for.
+
+    Only such a carry can take the operator's stated figure. Where a source
+    exists the dependency follows it, so nothing is offered.
+    """
+    if not any(binding.source is BindingSourceKind.PREVIOUS_FILING for binding in snapshot.revision.bindings):
+        return {}
+    return {
+        binding_id: requirement
+        for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years())
+        if requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+        and upstream_source_absent(
+            requirement,
+            observation_repository=observation_repository,
+            filing_catalogue=filing_catalogue,
+            work_catalogue=work_catalogue,
+        )
+        for binding_id in requirement.origin_ids
+    }
+
+
+def attestable_previous_filing_binding_ids(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    work_catalogue: WorkUnitCatalogue,
+) -> frozenset[BindingId]:
+    """Return the bindings an operator may state a figure for."""
+    return frozenset(
+        attestable_previous_filing_sources(
+            snapshot,
+            operation=operation,
+            observation_repository=observation_repository,
+            filing_catalogue=filing_catalogue,
+            work_catalogue=work_catalogue,
+        )
+    )
+
+
+def _stated_values_for(
+    requirement: CrossPeriodDependencyRequirement,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
+) -> tuple[OperatorAttestedValue, ...]:
+    """Return the figures the operator stated for every origin binding of ``requirement``, or none.
+
+    An attestation counts only for the source filing it names.
+    """
+    if (
+        operator_value_attestations is None
+        or len(operator_value_attestations) == 0
+        or requirement.origin is not CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+    ):
+        return ()
+    stated = tuple(operator_value_attestations.get(origin_id) for origin_id in requirement.origin_ids)
+    if all(
+        item is not None
+        and item.source_modelo == requirement.source_modelo
+        and item.source_filing_year == requirement.filing_year
+        and item.source_period == requirement.period.registry_token
+        for item in stated
+    ):
+        return tuple(item for item in stated if item is not None)
+    return ()
+
+
+def _attestation_conflicts(
+    requirement: CrossPeriodDependencyRequirement,
+    stated: tuple[OperatorAttestedValue, ...],
+    observation_repository: CalculationObservationRepositoryProtocol,
+) -> tuple[OperatorAttestedValue, ...]:
+    """Return the stated figures that differ from the observation that now exists for the source."""
+    layers = observation_repository.load_observation_layers(requirement.source_modelo, requirement.period)
+    effective = layers.effective
+    if effective is None or len(stated) != 1:
+        return ()
+    observed = [
+        observation.value
+        for observation in effective.observation.observations
+        if observation.casilla_id in requirement.source_casilla_ids
+    ]
+    if not observed:
+        return ()
+    try:
+        differs = Decimal(stated[0].value) != Decimal(str(observed[0]))
+    except ArithmeticError:
+        return stated
+    return stated if differs else ()
+
+
+def _operator_attested_disposition(
+    evidence: CrossPeriodDependencyEvidence,
+    stated: tuple[OperatorAttestedValue, ...],
+    *,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_catalogue: ModeloRecordCatalogue,
+    work_catalogue: WorkUnitCatalogue,
+) -> CrossPeriodDependencyEvidence:
+    """Clean on the stated figure while no source exists; otherwise the source decides.
+
+    A source that has since appeared with a different value is a conflict, never
+    resolved in favour of the attestation.
+    """
+    requirement = evidence.requirement
+    if upstream_source_absent(
+        requirement,
+        observation_repository=observation_repository,
+        filing_catalogue=filing_catalogue,
+        work_catalogue=work_catalogue,
+    ):
+        return CrossPeriodDependencyEvidence(requirement=requirement, operator_attested_absent_upstream=stated)
+    conflicts = _attestation_conflicts(requirement, stated, observation_repository)
+    if conflicts:
+        return evidence.model_copy(update={"operator_attestation_conflict": conflicts})
+    return evidence
+
+
 def _m111_no_retenciones_requirements(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
@@ -522,9 +699,10 @@ def _clean_state_requirement_scope(
     not_applicable_source_modelos: frozenset[str] | None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
 ) -> _CleanStateRequirementScope:
     """Derive and disposition registry requirements before loading observations."""
-    all_requirements = cross_period_dependency_requirements(snapshot)
+    all_requirements = cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years())
     non_filer_modelos = cross_period_clean_state_non_filer_modelos(
         snapshot,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
@@ -534,6 +712,11 @@ def _clean_state_requirement_scope(
         _requirements_outside_non_filer_modelos(all_requirements, non_filer_modelos),
         activity_start_date=activity_start_date,
     )
+    attested_keys = {
+        requirement.key
+        for requirement in partition.in_scope
+        if _stated_values_for(requirement, operator_value_attestations)
+    }
     return _CleanStateRequirementScope(
         not_applicable=_not_applicable_dependencies(all_requirements, non_filer_modelos),
         partition=partition,
@@ -543,9 +726,13 @@ def _clean_state_requirement_scope(
             activity_start_date=activity_start_date,
             target_filing_year=snapshot.filing_year,
         ),
-        zero_value_previous_filing=_zero_value_previous_filing_requirements(
-            partition.in_scope,
-            zero_value_previous_filing_binding_ids,
+        zero_value_previous_filing=tuple(
+            requirement
+            for requirement in _zero_value_previous_filing_requirements(
+                partition.in_scope,
+                zero_value_previous_filing_binding_ids,
+            )
+            if requirement.key not in attested_keys
         ),
         m111_no_retenciones=_m111_no_retenciones_requirements(
             partition.in_scope,
@@ -568,6 +755,8 @@ def _evaluate_in_scope_dependencies(
         CrossPeriodExpectedMemberSet,
     ],
     target_filing_year: int,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None,
+    work_catalogue: WorkUnitCatalogue,
 ) -> tuple[CrossPeriodDependencyEvidence, ...]:
     """Evaluate only requirements that were not explicitly scoped out."""
     suppressed_keys = {
@@ -596,6 +785,15 @@ def _evaluate_in_scope_dependencies(
                 (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
             ),
         )
+        stated = _stated_values_for(requirement, operator_value_attestations)
+        if stated:
+            evidence = _operator_attested_disposition(
+                evidence,
+                stated,
+                observation_repository=observation_repository,
+                filing_catalogue=repositories.filing_catalogue,
+                work_catalogue=work_catalogue,
+            )
         dependencies.append(relax_same_year_local_chain(evidence, target_filing_year=target_filing_year))
     return tuple(dependencies)
 
@@ -672,6 +870,8 @@ def evaluate_cross_period_clean_state(
     not_applicable_source_modelos: frozenset[str] | None = None,
     zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
+    operator_value_attestations: Mapping[str, OperatorAttestedValue] | None = None,
+    work_catalogue: WorkUnitCatalogue | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a clean-state verdict.
 
@@ -725,6 +925,17 @@ def evaluate_cross_period_clean_state(
     Modelo 111 filing obligation existed for a source period because no rentas
     subject to withholding/ingreso a cuenta were paid. It scopes out only those
     exact M111 periods; nonzero and unknown periods remain fully evaluated.
+
+    ``operator_value_attestations`` carries, per binding id, the figure the
+    operator stated for an earlier filing. It satisfies a previous-filing
+    dependency only while the application holds no source for it (no work unit
+    in ``work_catalogue``, no filing record, no observation), whether the source
+    year is inside the support envelope or not, and only when every origin
+    binding of the requirement is attested for that very source. The requirement
+    then yields a clean row of kind ``operator_attested_absent_upstream``. Where
+    a source exists the dependency follows it as before; a source whose value
+    differs from the recorded figure is a conflict that blocks. A plain override
+    or a blank binding never satisfies it.
     """
     repositories = _load_clean_state_repositories(
         operation=operation,
@@ -746,6 +957,7 @@ def evaluate_cross_period_clean_state(
         not_applicable_source_modelos=not_applicable_source_modelos,
         zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        operator_value_attestations=operator_value_attestations,
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
@@ -763,6 +975,8 @@ def evaluate_cross_period_clean_state(
                 taxpayer_tax_id=taxpayer_tax_id,
                 expected_member_sets_by_key=expected_member_sets_by_key,
                 target_filing_year=snapshot.filing_year,
+                operator_value_attestations=operator_value_attestations,
+                work_catalogue=WorkUnitCatalogue() if work_catalogue is None else work_catalogue,
             ),
             activity_start_date=activity_start_date,
         ),
@@ -784,6 +998,7 @@ def _requirements_from_previous_filing(
     requirement: RegistryFoldRequirement,
     *,
     snapshot: RegistrySnapshot,
+    support: SupportedFilingYearsCatalogue | None,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
     grouped_keys = per_grupo_member_requirement_keys(
         snapshot.revision,
@@ -803,6 +1018,7 @@ def _requirements_from_previous_filing(
         legal_refs=requirement.legal_refs,
         source_refs=requirement.source_refs,
         requires_member_fan_in=(requirement.source_modelo, requirement.filing_year, source_period) in grouped_keys,
+        source_outside_envelope=support is not None and not support.admits_filing_year(requirement.filing_year),
     )
 
 
@@ -829,8 +1045,11 @@ def _expected_member_sets_by_key(
 
 
 __all__ = [
+    "attestable_previous_filing_binding_ids",
+    "attestable_previous_filing_sources",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
     "partition_cross_period_requirements_by_activity_start",
+    "upstream_source_absent",
 ]

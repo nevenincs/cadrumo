@@ -16,9 +16,10 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
-from ...core.period import Period
+from ...core.period import Period, RegistrySelectorPeriodCode
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
+    BindingId,
     LegalRefId,
     RevisionId,
     SourceRefId,
@@ -280,6 +281,12 @@ class CrossPeriodDependencyRequirement(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     requires_member_fan_in: bool = False
+    source_outside_envelope: bool = Field(default=False, exclude=True)
+    """Whether the pinned support envelope refuses ``filing_year``, so no return for it can be held.
+
+    Derived from the authority generation the requirement was built under, never
+    declared by the registry, so it is not part of the requirement's serialized form.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -376,6 +383,18 @@ class CrossPeriodDependencyInventory(BaseModel):
         return tuple(sorted({source_modelo for item in self.items for source_modelo in item.source_modelos}))
 
 
+class OperatorAttestedValue(BaseModel):
+    """One figure the operator stated for an earlier filing the product cannot hold."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    binding_id: BindingId
+    value: str = Field(min_length=1)
+    source_modelo: str = Field(min_length=1, max_length=16)
+    source_filing_year: FilingYear
+    source_period: RegistrySelectorPeriodCode
+
+
 class CrossPeriodDependencyEvidence(BaseModel):
     """Observed filing-state evidence for one dependency requirement.
 
@@ -437,6 +456,18 @@ class CrossPeriodDependencyEvidence(BaseModel):
     positive value would be a taxpayer benefit. A nonzero carry still requires the
     prior filing evidence.
     """
+    operator_attested_absent_upstream: tuple[OperatorAttestedValue, ...] = ()
+    """Non-blocking evidence: the operator stated the figure of a source the application holds nothing of.
+
+    One entry per origin binding of the requirement. No work unit, filing record or
+    observation exists for the source, so no filing can prove the figure; it rests
+    on the operator's word and is reported as such rather than as proof.
+    """
+    operator_attestation_conflict: tuple[OperatorAttestedValue, ...] = ()
+    """Blocking evidence: the operator's recorded figure differs from the source that has since appeared.
+
+    The dependency follows the source; the attestation is never preferred to it.
+    """
     m111_no_retenciones_no_obligation_advisory: bool = False
     """Non-blocking advisory: an M111 source period was explicitly attested as no-obligation.
 
@@ -472,9 +503,14 @@ class CrossPeriodDependencyEvidence(BaseModel):
         return value
 
     @property
+    def operator_attested_absent_upstream_advisory(self) -> bool:
+        """True when this dependency is clean on the operator's stated figure for a source the application lacks."""
+        return bool(self.operator_attested_absent_upstream)
+
+    @property
     def clean(self) -> bool:
-        """Report whether this dependency carries no blockers."""
-        return not self.blockers
+        """Report whether this dependency carries no blockers and no conflicting attestation."""
+        return not self.blockers and not self.operator_attestation_conflict
 
     @property
     def suppressed_pre_activity(self) -> bool:

@@ -21,6 +21,12 @@ operator typed: its override is zero and the binding is named in
 :attr:`CalculationOperatorLayer.attested_binding_ids`, so verification can tell a
 statement that nothing is pending from a figure entered and from a value missing.
 A layer stored before attestations existed names none, which means none was made.
+
+A figure the operator states for a carry whose source filing lies outside the
+support envelope is kept apart from both: the value stays in ``binding_overrides``
+and :attr:`CalculationOperatorLayer.value_attestations` names the source filing
+the statement stands in for, so verification can tell a figure stated for a
+return that cannot be held from one merely typed.
 """
 
 from __future__ import annotations
@@ -34,7 +40,9 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.period import RegistrySelectorPeriodCode
 from ..calculations.registry.ids import BindingId
 from ..identifiers import canonical_decimal_string
 from .errors import ModeloValidationError
@@ -44,6 +52,30 @@ ATTESTED_ZERO: Final = canonical_decimal_string(Decimal(0))
 
 OPERATOR_LAYER_IDENTITY_KEY: Final = "operator_layer"
 """The revision-identity payload key the layer contributes when it is present."""
+
+
+class ValueAttestation(BaseModel):
+    """The earlier filing an operator-stated carry value stands in for.
+
+    Attributes:
+        source_modelo: The modelo of the earlier filing the carry would be read from.
+        source_filing_year: The filing year of that earlier filing.
+        source_period: The registry period token of that earlier filing.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: str = Field(min_length=1, max_length=16)
+    source_filing_year: FilingYear
+    source_period: RegistrySelectorPeriodCode
+
+    def identity_payload(self) -> dict[str, object]:
+        """Return the projection the revision identity hashes."""
+        return {
+            "source_modelo": self.source_modelo,
+            "source_filing_year": self.source_filing_year,
+            "source_period": self.source_period,
+        }
 
 
 class CalculationOperatorLayer(BaseModel):
@@ -61,6 +93,10 @@ class CalculationOperatorLayer(BaseModel):
         attested_binding_ids: The bindings whose override is the operator's
             statement that they hold no amount, rather than a zero typed, in
             sorted order; each holds :data:`ATTESTED_ZERO` in ``binding_overrides``.
+        value_attestations: The bindings whose canonical decimal override is
+            the operator's stated figure for an earlier filing the product cannot
+            hold, keyed by binding id, each naming that filing. A binding is never
+            both here and in ``attested_binding_ids``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -69,6 +105,7 @@ class CalculationOperatorLayer(BaseModel):
     text_casilla_inputs: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
     attested_binding_ids: tuple[BindingId, ...] = ()
+    value_attestations: Mapping[BindingId, ValueAttestation] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -92,6 +129,17 @@ class CalculationOperatorLayer(BaseModel):
                 raise ModeloValidationError(
                     f"operator layer attested binding {binding_id!r} must hold the attested zero override",
                 )
+        for binding_id in self.value_attestations:
+            raw = self.binding_overrides.get(binding_id)
+            parsed = None if raw is None else try_parse_canonical_decimal(raw)
+            if parsed is None or canonical_decimal_string(parsed) != raw:
+                raise ModeloValidationError(
+                    f"operator layer value-attested binding {binding_id!r} must hold a canonical decimal override",
+                )
+            if binding_id in attested:
+                raise ModeloValidationError(
+                    f"operator layer binding {binding_id!r} cannot be both attested as no amount and value-attested",
+                )
         return self
 
     @property
@@ -106,8 +154,9 @@ class CalculationOperatorLayer(BaseModel):
     def identity_payload(self) -> dict[str, object]:
         """Return the order-canonical projection the revision identity hashes.
 
-        Attested bindings are named only when there are any, so a layer that
-        attests nothing keeps the identity it had before attestations existed.
+        Attested bindings and value attestations are named only when there are
+        any, so a layer that attests nothing keeps the identity it had before
+        attestations existed.
         """
         payload: dict[str, object] = {
             "decimal_casilla_inputs": dict(sorted(self.decimal_casilla_inputs.items())),
@@ -116,7 +165,12 @@ class CalculationOperatorLayer(BaseModel):
         }
         if self.attested_binding_ids:
             payload["attested_binding_ids"] = list(self.attested_binding_ids)
+        if self.value_attestations:
+            payload["value_attestations"] = {
+                binding_id: attestation.identity_payload()
+                for binding_id, attestation in sorted(self.value_attestations.items())
+            }
         return payload
 
 
-__all__ = ["ATTESTED_ZERO", "OPERATOR_LAYER_IDENTITY_KEY", "CalculationOperatorLayer"]
+__all__ = ["ATTESTED_ZERO", "OPERATOR_LAYER_IDENTITY_KEY", "CalculationOperatorLayer", "ValueAttestation"]
