@@ -72,3 +72,12 @@ tipo_actividad = "A03"
 question = "irpf-activity-income-imputation-criterion"
 value = "cobros_y_pagos"
 year = "horizon"
+
+# A synthetic titular account (checksum-valid, not a real bank) designated for a
+# Modelo 100 refund: AEAT pays a refund by transfer to the account the taxpayer
+# states as held in the return (Manual Renta, devolución; art. 132.1 RGAT).
+[[own_accounts]]
+label = "Cuenta principal"
+holding = "titular"
+iban = "ES8700000000000000000007"
+designations = [{ role = "refund", modelo = "100" }]

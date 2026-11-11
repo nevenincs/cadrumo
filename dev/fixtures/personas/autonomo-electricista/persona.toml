@@ -122,3 +122,12 @@ modelo = "303"
 year = "horizon-1"
 periods = ["1T", "2T", "3T", "4T"]
 iva_compensation_carried_in = "0.00"
+
+# A synthetic titular account (checksum-valid, not a real bank) designated for a
+# Modelo 100 refund: AEAT pays a refund by transfer to the account the taxpayer
+# states as held in the return (Manual Renta, devolución; art. 132.1 RGAT).
+[[own_accounts]]
+label = "Cuenta principal"
+holding = "titular"
+iban = "ES7100000000000000000004"
+designations = [{ role = "refund", modelo = "100" }]
