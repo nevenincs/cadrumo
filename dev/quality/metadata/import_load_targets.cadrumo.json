@@ -387,6 +387,7 @@
         "cadrumo.adapters.persistence.storage.custody.kdf_cancellation",
         "cadrumo.adapters.persistence.storage.custody.kdf_codec",
         "cadrumo.adapters.persistence.storage.custody.kdf_file_lease",
+        "cadrumo.adapters.persistence.storage.custody.kdf_lease_waiters",
         "cadrumo.adapters.persistence.storage.custody.kdf_lease_worker",
         "cadrumo.adapters.persistence.storage.custody.kdf_operations",
         "cadrumo.adapters.persistence.storage.custody.kdf_process",
