@@ -304,11 +304,13 @@ period = "2T"
 year = "horizon-1"
 casillas = { "01" = "21400.00", "02" = "3287.30", "03" = "18112.70", "04" = "3622.54", "05" = "1275.27", "06" = "600.00", "07" = "1747.27" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
-derivation = "01 = 9300.00 + 2200 + 2400 + 7500; gastos = 2334.00; provisión = 953.30; 06 = 270.00 + 330.00 cumulative; 07 = 3622.54 - 1275.27 - 600.00."
+derivation = """
+01 = 9300.00 + 2200 + 2400 + 7500; gastos = 2334.00; provisión = 953.30; 06 = 270.00 + 330.00 cumulative; 07 = 3622.54 - 1275.27 - 600.00.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -322,11 +324,11 @@ The same income and gastos as the value above; only the provision differs. LIRPF
 quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage to 7 % "durante el
 período impositivo 2023", so in a year that provision governs: provisión = 7 % of (21400.00 - 2334.00) = 7 % of 19066.00 = 1334.62, under the 2000.00 cap.
 02 = 2334.00 + 1334.62 = 3668.62; 03 = 17731.38; 04 = 20 % of 03 = 3546.28; 05 = the earlier quarters' 07 under the same rate = 1242.74; 06 = 600.00; 07 = 04 - 05 - 06 = 1703.54.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 
 [[values]]
@@ -335,11 +337,13 @@ period = "3T"
 year = "horizon-1"
 casillas = { "01" = "28600.00", "02" = "4755.95", "03" = "23844.05", "04" = "4768.81", "05" = "3022.54", "06" = "780.00", "07" = "966.27" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
-derivation = "01 = 21400.00 + 1200 + 6000; gastos = 3501.00; provisión = 1254.95; 05 = 1275.27 + 1747.27; 06 = 780.00 cumulative."
+derivation = """
+01 = 21400.00 + 1200 + 6000; gastos = 3501.00; provisión = 1254.95; 05 = 1275.27 + 1747.27; 06 = 780.00 cumulative.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -353,11 +357,11 @@ The same income and gastos as the value above; only the provision differs. LIRPF
 quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage to 7 % "durante el
 período impositivo 2023", so in a year that provision governs: provisión = 7 % of (28600.00 - 3501.00) = 7 % of 25099.00 = 1756.93, under the 2000.00 cap.
 02 = 3501.00 + 1756.93 = 5257.93; 03 = 23342.07; 04 = 20 % of 03 = 4668.41; 05 = the earlier quarters' 07 under the same rate = 2946.28; 06 = 780.00; 07 = 04 - 05 - 06 = 942.13.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 
 [[values]]
@@ -366,11 +370,13 @@ period = "4T"
 year = "horizon-1"
 casillas = { "01" = "41200.00", "02" = "6922.10", "03" = "34277.90", "04" = "6855.58", "05" = "3988.81", "06" = "1005.00", "07" = "1861.77" }
 parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
-derivation = "01 = 28600.00 + 3100 + 1500 + 8000; gastos = 5118.00 (incl. curso 450.00); provisión = 5 % of 36082.00 = 1804.10 (under the cap); 05 = 3022.54 + 966.27; 06 = 1005.00."
+derivation = """
+01 = 28600.00 + 3100 + 1500 + 8000; gastos = 5118.00 (incl. curso 450.00); provisión = 5 % of 36082.00 = 1804.10 (under the cap); 05 = 3022.54 + 966.27; 06 = 1005.00.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 [[values]]
 modelo = "130"
@@ -384,11 +390,11 @@ The same income and gastos as the value above; only the provision differs. LIRPF
 quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage to 7 % "durante el
 período impositivo 2023", so in a year that provision governs: provisión = 7 % of 36082.00 = 2525.74, capped at the 2000.00 annual limit of LIRPF art. 30.2.4.ª, which DA 56.ª keeps.
 02 = 5118.00 + 2000.00 = 7118.00; 03 = 34082.00; 04 = 20 % of 03 = 6816.40; 05 = the earlier quarters' 07 under the same rate = 3888.41; 06 = 1005.00; 07 = 04 - 05 - 06 = 1922.99.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
 """
 legal_ref = ["rd-439-2007:art-30", "ley-35-2006:da-56", "rd-439-2007:art-110"]
 grounding = "verified"
-reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses, naming the unfiled earlier quarter its carry waits on; these figures are what the filed earlier quarters would carry forward."
-refusal = "REFUSED_MODELO_PRIOR_PERIOD_UNFILED"
 
 
 [[values]]
