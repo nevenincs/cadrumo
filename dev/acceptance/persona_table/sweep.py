@@ -106,6 +106,7 @@ YEARS_ENV = "PERSONA_TABLE_YEARS"
 
 _SETTLED = re.compile(r"^(?P<definition>\S+) settled (?P<condition>\S+) \((?P<code>[^)]*)\)")
 _REASON_LIMIT = 900
+_CALCULATED = frozenset({Stage.PASSED, Stage.CALCULATED})
 
 
 def _listed(name: str) -> tuple[str, ...]:
@@ -233,24 +234,23 @@ def _run_return(
     world = materialised.world
     if filing_key(plan.modelo, plan.year, plan.period) in materialised.filings:
         return TableRow.from_plan(plan, Stage.HISTORY_FILED, verify=Stage.HISTORY_FILED)
-    stated_refusal = next((value.refusal for value in values if value.refusal is not None), None)
+    stating = next((value for value in values if value.refusal is not None), None)
+    at_calculate = _refusal_at_calculate(stating)
     try:
         work_unit_id = _create(world, plan)
         if isinstance(work_unit_id, TableRow):
             return work_unit_id
         calculated = _calculate(materialised, plan, work_unit_id)
     except PersonaMaterialisationError as error:
-        return _refused(plan, stated_refusal, error)
-    calculate, reasons = _compare(values, stated_refusal, calculated)
+        return _refused(plan, at_calculate, error)
+    calculate, reasons = _compare(values, at_calculate, calculated)
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
     calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
     reasons += [reason for reason in (verify_reason, export_reason) if reason]
-    if stated_refusal is not None and stated_refusal in stage_refusal_codes(verify_reason, export_reason):
-        return TableRow.from_plan(
-            plan, Stage.EXPECTED_REFUSAL, reason=" | ".join([verify_reason, export_reason])[:_REASON_LIMIT]
-        )
+    stage_reasons = {"verify": verify_reason, "export": export_reason}
+    calculate = _at_stated_stage(stating, calculate, reasons, stage_reasons)
     return TableRow.from_plan(
         plan,
         calculate,
@@ -259,6 +259,31 @@ def _run_return(
         reason=" | ".join(reasons)[:_REASON_LIMIT],
         export_detail=export_detail,
     )
+
+
+def _refusal_at_calculate(stating: ExpectedValue | None) -> str | None:
+    """The stated refusal when the persona states it at calculate, else none."""
+    return stating.refusal if stating is not None and stating.refusal_stage == "calculate" else None
+
+
+def _at_stated_stage(
+    stating: ExpectedValue | None, calculate: Stage, reasons: list[str], stage_reasons: dict[str, str]
+) -> Stage:
+    """The calculate stage once a refusal stated at verify or export is checked against that stage alone.
+
+    The refusal is expected only when the calculation completed and the stated stage settled with the stated
+    code. A completed calculation whose stated stage did not refuse so is a refusal not raised, and the reason
+    leads ``reasons``.
+    """
+    if stating is None or stating.refusal is None or stating.refusal_stage == "calculate":
+        return calculate
+    if calculate not in _CALCULATED:
+        return calculate
+    stage_reason = stage_reasons[stating.refusal_stage]
+    if stating.refusal in stage_refusal_codes(stage_reason):
+        return Stage.EXPECTED_REFUSAL
+    reasons.insert(0, f"stated refusal {stating.refusal} not raised at {stating.refusal_stage}")
+    return Stage.REFUSAL_NOT_RAISED
 
 
 def _refused(plan: PlannedRow, stated_refusal: str | None, error: PersonaMaterialisationError) -> TableRow:

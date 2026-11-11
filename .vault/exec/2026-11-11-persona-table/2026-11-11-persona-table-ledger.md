@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:932fbf0528559c83bbe4c8d5dca146a777a1390e6e40ac2689d0ef8847f6212c'
+body_hash: 'sha256:17a5283e4c395dafaaf7953fe794da2589e68372ef7bafabb182fd2ed7e9a50b'
 related:
   - "[[2026-11-11-persona-table-plan]]"
 ---
@@ -59,6 +59,18 @@ related:
 - `S06` `M` `dev/fixtures/personas`
 - `S06` `verify:` `persona table at feature/tui 3049eaae80 (train t3)` -> `pass`
 - `S06` `by:` `ACCEPTANCE`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100`
+- `S07` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
+- `S07` `by:` `ACCEPTANCE`
+- `S08` `M` `src/cadrumo/application/aggregation`
+- `S08` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
+- `S08` `by:` `ACCEPTANCE`
+- `S10` `M` `src/cadrumo/application/filing`
+- `S10` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
+- `S10` `by:` `ACCEPTANCE`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347`
+- `S13` `verify:` `persona table at feature/tui 83cea4b998 (train t6)` -> `pass`
+- `S13` `by:` `ACCEPTANCE`
 
 ## Notes
 
@@ -68,3 +80,7 @@ related:
 - `S04` Modelo 130 1T green 2023-2025 for every persona and alta-reciente 2022-2026; the floor year 2022 is floor-source (prior-year Renta below the envelope), carried by S31
 - `S05` every Modelo 130 row above the floor year passes with stated, sourced casillas (53 pass)
 - `S06` Modelo 111 16/16, 115 16/16, 180 4/4, 190 4/4 green
+- `S07` Modelo 100 2024 calculates for all seven M100 personas (six green; minorista red only at export, refund account, S11)
+- `S08` Modelo 100 2023-2025 calculate and verify pass for every 130 persona after its quarters are filed
+- `S10` Modelo 100 2023-2025 verify passes for every persona, asalariada-familia's descendants included (0166 and names served)
+- `S13` 390 20/20, 349 16/16, 347 12/12 green; fontanero 347 4/4 expected-refusal `REFUSED_MODELO_EXPORT_VALUE_OVERFLOW` at export

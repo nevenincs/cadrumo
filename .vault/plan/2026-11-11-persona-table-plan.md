@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:1e7a6e1bc79a0058e015e44d9a011be51a2d3e8368717c0069e134767b67d880'
+body_hash: 'sha256:a7b0fec86619d7cef9b87bb6d65b4903c445b1a3be2207d5f56cd30d76414b65'
 ---
 
 # `persona-table` plan
@@ -43,13 +43,13 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [x] `P01.S04` - Clear the cross-period dependency that blocks first-quarter Modelo 130 verification for every persona and year (lanes LIFECYCLE and CALC-PAGOS, cause P1); `src/cadrumo/application/modelo/verification_cross_period.py, dev/fixtures/personas`.
 - [x] `P01.S05` - Ground the Modelo 130 gastos de dificil justificacion percentage for each year in the official text and make expectation and calculation agree (lane CALC-PAGOS, cause P2); `src/cadrumo/_data/registry/aeat/modelos/130, dev/fixtures/personas`.
 - [x] `P01.S06` - Make every Modelo 111, 115, 180 and 190 row pass calculate, verify and export (lane CALC-PAGOS); `src/cadrumo/_data/registry/aeat/modelos/111, src/cadrumo/_data/registry/aeat/modelos/115, src/cadrumo/_data/registry/aeat/modelos/180, src/cadrumo/_data/registry/aeat/modelos/190, src/cadrumo/application/aggregation`.
-- [ ] `P01.S07` - Make Modelo 100 calculate for 2024 for every persona by correcting formula 0613 (lane CALC-RENTA, cause R1); `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas`.
-- [ ] `P01.S08` - Resolve Modelo 100 box 0604 and the boxes derived from it once Modelo 130 quarters are filed (lane CALC-RENTA, cause R2); `src/cadrumo/application/aggregation, src/cadrumo/_data/registry/aeat/modelos/100`.
+- [x] `P01.S07` - Make Modelo 100 calculate for 2024 for every persona by correcting formula 0613 (lane CALC-RENTA, cause R1); `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas`.
+- [x] `P01.S08` - Resolve Modelo 100 box 0604 and the boxes derived from it once Modelo 130 quarters are filed (lane CALC-RENTA, cause R2); `src/cadrumo/application/aggregation, src/cadrumo/_data/registry/aeat/modelos/100`.
 - [ ] `P01.S09` - Resolve the Modelo 100 inventory bindings behind boxes 0177, 0181 and 0182 (lane CALC-RENTA, cause R3); `src/cadrumo/domain/contribuyente/inventory, src/cadrumo/_data/registry/aeat/modelos/100`.
-- [ ] `P01.S10` - Supply the Modelo 100 XML content the official schema requires, starting with descendant and ascendant names (lane CALC-RENTA, cause R4); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/filing`.
+- [x] `P01.S10` - Supply the Modelo 100 XML content the official schema requires, starting with descendant and ascendant names (lane CALC-RENTA, cause R4); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/filing`.
 - [ ] `P01.S11` - Settle from the official rule whether a Modelo 100 refund needs a stated account, and make the persona data or the refusal conform (lane CALC-RENTA, cause R5); `src/cadrumo/application/modelo, dev/fixtures/personas`.
 - [ ] `P01.S12` - Assert Modelo 303 values on live calculations and make the export of every 303 quarter succeed, filed quarters included (lane CALC-IVA, cause I1); `src/cadrumo/_data/registry/aeat/modelos/303, src/cadrumo/application/filing/producer_snapshot.py`.
-- [ ] `P01.S13` - Make every Modelo 390, 349 and 347 row pass, with a typed refusal when no Modelo 347 is due (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/_data/registry/aeat/modelos/349, src/cadrumo/_data/registry/aeat/modelos/347, src/cadrumo/application/filing/record_renderer.py`.
+- [x] `P01.S13` - Make every Modelo 390, 349 and 347 row pass, with a typed refusal when no Modelo 347 is due (lane CALC-IVA); `src/cadrumo/_data/registry/aeat/modelos/390, src/cadrumo/_data/registry/aeat/modelos/349, src/cadrumo/_data/registry/aeat/modelos/347, src/cadrumo/application/filing/record_renderer.py`.
 - [ ] `P01.S14` - Make recargo de equivalencia and prorrata rows pass, with the recargo rate facts and the 303 election fields grounded in official text (lane CALC-IVA); `src/cadrumo/domain/iva, src/cadrumo/_data/registry/aeat/modelos/303`.
 - [ ] `P01.S15` - Make an export after a granted verification always end in a written file or a typed refusal (lane LIFECYCLE, cause L1); `src/cadrumo/application/modelo/export.py`.
 - [ ] `P01.S16` - Add a gate that fails when a modelo operation refusal or error code has no door or no served words, then fix what it finds (lane LIFECYCLE); `src/cadrumo/application/modelo, src/cadrumo/core/errors`.
@@ -68,6 +68,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S22` - Serve every word, tax fact and capability from backend operations so that no surface authors them; `src/cadrumo/application`.
 - [ ] `P02.S23` - Import datos fiscales and reconcile Modelo 100 credits against them, once the operator supplies a specimen; `src/cadrumo/adapters/inbound, src/cadrumo/application/live`.
 - [ ] `P02.S24` - Finish moving login, session, access and custody authority from the tax package into the runtime package; `src/cadrumo/application/user_profile, src/cadrumo_runtime`.
+- [ ] `P02.S32` - Re-land the test year-literal clean-up with test years derived from a closed year, proving the runtime-host tests in root (reverted 2026-11-11 as 25d6f78646; batch 0ca3be17c7 is in history); `src, dev/quality`.
 
 ### Phase `P03` - Desktop re-entry
 
