@@ -379,6 +379,65 @@ def _apply_oldest_first(lots: list[WalletLot], *, quarter: str, amount: Decimal)
             left = money(left - take)
 
 
+def _open_balance(lots: Sequence[WalletLot]) -> Decimal:
+    return money(sum((lot.remaining for lot in lots), ZERO))
+
+
+def _work_quarter(lots: list[WalletLot], entry: QuarterCuotas, *, refunded: bool) -> Modelo303Quarter:
+    """Work one autoliquidacion against the wallet, applying the balance oldest lot first and opening a new lot."""
+    box_27, box_45 = money(entry.devengada), money(entry.deducible)
+    box_46 = money(box_27 - box_45)
+    box_64 = box_46
+    box_110 = _open_balance(lots)
+    box_78 = min(box_110, max(box_64, ZERO))
+    _apply_oldest_first(lots, quarter=entry.quarter, amount=box_78)
+    box_87 = money(box_110 - box_78)
+    box_69 = money(box_64 - box_78)
+    if box_69 < ZERO and not refunded:
+        lots.append(WalletLot(entry.quarter, money(-box_69), ()))
+    return Modelo303Quarter(
+        quarter=entry.quarter,
+        box_27=box_27,
+        box_45=box_45,
+        box_46=box_46,
+        box_64=box_64,
+        box_110=box_110,
+        box_78=box_78,
+        box_87=box_87,
+        box_69=box_69,
+        credit_at_end=_open_balance(lots),
+    )
+
+
+def _last_period_amount(last_result: Decimal, election: LastPeriodElection, wanted: LastPeriodElection) -> Decimal:
+    """The negative last-period result, as a positive amount, when the taxpayer made the ``wanted`` election."""
+    return money(-last_result) if last_result < ZERO and election is wanted else ZERO
+
+
+def _annual_summary(
+    results: Sequence[Modelo303Quarter], lots: Sequence[WalletLot], *, last: str, election: LastPeriodElection
+) -> Modelo390Year:
+    """The annual summary the year's quarters and the remaining wallet determine."""
+    last_result = results[-1].box_69
+    box_47 = money(sum((row.box_27 for row in results), ZERO))
+    box_64 = money(sum((row.box_45 for row in results), ZERO))
+    box_65 = money(box_47 - box_64)
+    box_84 = box_65
+    box_85 = money(sum((amount for lot in lots if lot.origin == PRIOR_YEAR for _quarter, amount in lot.applied), ZERO))
+    return Modelo390Year(
+        box_47=box_47,
+        box_64=box_64,
+        box_65=box_65,
+        box_84=box_84,
+        box_85=box_85,
+        box_86=money(box_84 - box_85),
+        box_95=money(sum((row.box_69 for row in results if row.box_69 > ZERO), ZERO)),
+        box_97=_last_period_amount(last_result, election, LastPeriodElection.COMPENSAR),
+        box_98=_last_period_amount(last_result, election, LastPeriodElection.DEVOLVER),
+        box_662=money(sum((lot.remaining for lot in lots if lot.origin not in {PRIOR_YEAR, last}), ZERO)),
+    )
+
+
 def run_year(
     quarters: Sequence[QuarterCuotas],
     *,
@@ -397,56 +456,14 @@ def run_year(
     lots: list[WalletLot] = []
     if opening_prior_year_credit != ZERO:
         lots.append(WalletLot(PRIOR_YEAR, money(opening_prior_year_credit), ()))
-    results: list[Modelo303Quarter] = []
     last = quarters[-1].quarter
-    for entry in quarters:
-        box_27, box_45 = money(entry.devengada), money(entry.deducible)
-        box_46 = money(box_27 - box_45)
-        box_64 = box_46
-        box_110 = money(sum((lot.remaining for lot in lots), ZERO))
-        box_78 = min(box_110, max(box_64, ZERO))
-        _apply_oldest_first(lots, quarter=entry.quarter, amount=box_78)
-        box_87 = money(box_110 - box_78)
-        box_69 = money(box_64 - box_78)
-        refunded = entry.quarter == last and last_period_election is LastPeriodElection.DEVOLVER
-        if box_69 < ZERO and not refunded:
-            lots.append(WalletLot(entry.quarter, money(-box_69), ()))
-        results.append(
-            Modelo303Quarter(
-                quarter=entry.quarter,
-                box_27=box_27,
-                box_45=box_45,
-                box_46=box_46,
-                box_64=box_64,
-                box_110=box_110,
-                box_78=box_78,
-                box_87=box_87,
-                box_69=box_69,
-                credit_at_end=money(sum((lot.remaining for lot in lots), ZERO)),
-            )
+    results = [
+        _work_quarter(
+            lots, entry, refunded=entry.quarter == last and last_period_election is LastPeriodElection.DEVOLVER
         )
-    last_result = results[-1].box_69
-    box_47 = money(sum((row.box_27 for row in results), ZERO))
-    box_64 = money(sum((row.box_45 for row in results), ZERO))
-    box_65 = money(box_47 - box_64)
-    box_84 = box_65
-    box_85 = money(sum((amount for lot in lots if lot.origin == PRIOR_YEAR for _quarter, amount in lot.applied), ZERO))
-    annual = Modelo390Year(
-        box_47=box_47,
-        box_64=box_64,
-        box_65=box_65,
-        box_84=box_84,
-        box_85=box_85,
-        box_86=money(box_84 - box_85),
-        box_95=money(sum((row.box_69 for row in results if row.box_69 > ZERO), ZERO)),
-        box_97=money(-last_result)
-        if last_result < ZERO and last_period_election is LastPeriodElection.COMPENSAR
-        else ZERO,
-        box_98=money(-last_result)
-        if last_result < ZERO and last_period_election is LastPeriodElection.DEVOLVER
-        else ZERO,
-        box_662=money(sum((lot.remaining for lot in lots if lot.origin not in {PRIOR_YEAR, last}), ZERO)),
-    )
+        for entry in quarters
+    ]
+    annual = _annual_summary(results, lots, last=last, election=last_period_election)
     return YearOutcome(quarters=tuple(results), annual=annual, wallet=tuple(lots))
 
 

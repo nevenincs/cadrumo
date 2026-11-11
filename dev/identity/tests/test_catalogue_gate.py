@@ -21,6 +21,8 @@ from ..catalogue_gate import (
     CATALOGUE_PATH,
     CatalogueError,
     ConventionViolation,
+    _pool_range,
+    _shape,
     classify,
     in_gate_scope,
     parse_catalogue,
@@ -253,3 +255,33 @@ def test_the_nif_pool_edges_admit_the_last_member_and_refuse_the_next_value(tmp_
         ConventionViolation.OFF_CONVENTION
     ]
     assert _violations(tmp_path, "src/pkg/tests/test_j.py", _nif(1000)) == [ConventionViolation.OFF_CONVENTION]
+
+
+@pytest.mark.parametrize(
+    ("value", "shape"),
+    [
+        ("00000001R", "nif"),
+        ("X0000001A", "nie"),
+        ("K0000001A", "prefixed_nif"),
+        ("A0000001B", "cif"),
+        ("A00000012", "cif"),
+        ("0000000", None),
+        ("AB000001A", None),
+    ],
+)
+def test_an_identifier_shape_is_read_from_its_leading_character_and_control(value: str, shape: str | None) -> None:
+    assert _shape(value) == shape
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        {"kind": "zz", "first": 1, "last": 2},
+        {"kind": "nif", "first": 3, "last": 2},
+        {"kind": "nif", "first": 1, "last": 2, "letters": "A"},
+        {"kind": "nie", "first": 1, "last": 2},
+    ],
+)
+def test_a_malformed_pool_range_is_refused(table: dict[str, object]) -> None:
+    with pytest.raises(CatalogueError):
+        _pool_range(table, "ranges")

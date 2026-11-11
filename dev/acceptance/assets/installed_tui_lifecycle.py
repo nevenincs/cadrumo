@@ -53,89 +53,9 @@ async def exercise_method_asset_lifecycle(
     *, pilot: Any, progress: Callable[[str], None], acquisition_transaction_id: str
 ) -> dict[str, object]:
     """Create, correct, forecast, claim, and hand off one public asset lifecycle."""
-    await set_public_input(
-        pilot=pilot,
-        selector="#asset-id",
-        value=METHOD_ASSET_ID,
-        stage="asset_creation",
-    )
-    await set_public_input(
-        pilot=pilot,
-        selector="#asset-revision-json",
-        value=method_revision_json(
-            acquisition_transaction_id=acquisition_transaction_id, in_service_year=_method_filing_year()
-        ),
-        stage="asset_creation",
-    )
-    await set_public_input(
-        pilot=pilot,
-        selector="#asset-name",
-        value="Method element",
-        stage="asset_creation",
-    )
-    creation_action = await activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
-    created = await wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix=f"created\t{METHOD_ASSET_ID}\trevisions=1",
-        stage="asset_creation",
-        transition=creation_action,
-    )
-    if created != f"created\t{METHOD_ASSET_ID}\trevisions=1":
-        raise InstalledAssetTuiError(
-            "installed TUI asset creation returned an unexpected public result",
-            stage="asset_creation",
-        )
-    progress("asset_created")
-    first_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection")
-
-    inspection_action = await activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_inspection")
-    inspected = await wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
-        stage="asset_inspection",
-        transition=inspection_action,
-    )
-    if inspected != f"asset\t{METHOD_ASSET_ID}\trevisions=1":
-        raise InstalledAssetTuiError(
-            "installed TUI asset inspection returned an unexpected public result",
-            stage="asset_inspection",
-        )
-    progress("asset_inspected")
-    if await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection") != first_revision_id:
-        raise InstalledAssetTuiError(
-            "installed TUI inspection did not retain its public current revision identity",
-            stage="asset_inspection",
-        )
-
-    await set_public_input(
-        pilot=pilot,
-        selector="#asset-revision-json",
-        value=method_correction_json(
-            supersedes_revision_id=first_revision_id,
-            acquisition_transaction_id=acquisition_transaction_id,
-            in_service_year=_method_filing_year(),
-        ),
-        stage="asset_correction",
-    )
-    correction_action = await activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
-    corrected = await wait_for_asset_result(
-        pilot=pilot,
-        expected_prefix=f"corrected\t{METHOD_ASSET_ID}\trevisions=2",
-        stage="asset_correction",
-        transition=correction_action,
-    )
-    if corrected != f"corrected\t{METHOD_ASSET_ID}\trevisions=2":
-        raise InstalledAssetTuiError(
-            "installed TUI asset correction returned an unexpected public result",
-            stage="asset_correction",
-        )
-    corrected_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_correction")
-    if corrected_revision_id == first_revision_id:
-        raise InstalledAssetTuiError(
-            "installed TUI correction did not advance the public immutable revision identity",
-            stage="asset_correction",
-        )
-    progress("asset_corrected")
+    first_revision_id = await _create_method_asset(pilot, progress, acquisition_transaction_id)
+    await _inspect_method_asset(pilot, progress, first_revision_id)
+    await _correct_method_asset(pilot, progress, acquisition_transaction_id, first_revision_id)
 
     await set_public_input(
         pilot=pilot,
@@ -202,6 +122,104 @@ async def exercise_method_asset_lifecycle(
         "inspection_revision_identity_exposed": True,
         "filing_handoff_control_exposed": True,
     }
+
+
+async def _create_method_asset[T](
+    pilot: Pilot[T], progress: Callable[[str], None], acquisition_transaction_id: str
+) -> str:
+    """Create the asset through the rendered public controls; return its first public revision identity."""
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-id",
+        value=METHOD_ASSET_ID,
+        stage="asset_creation",
+    )
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-revision-json",
+        value=method_revision_json(
+            acquisition_transaction_id=acquisition_transaction_id, in_service_year=_method_filing_year()
+        ),
+        stage="asset_creation",
+    )
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-name",
+        value="Method element",
+        stage="asset_creation",
+    )
+    creation_action = await activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
+    created = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix=f"created\t{METHOD_ASSET_ID}\trevisions=1",
+        stage="asset_creation",
+        transition=creation_action,
+    )
+    if created != f"created\t{METHOD_ASSET_ID}\trevisions=1":
+        raise InstalledAssetTuiError(
+            "installed TUI asset creation returned an unexpected public result",
+            stage="asset_creation",
+        )
+    progress("asset_created")
+    first_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection")
+    return first_revision_id
+
+
+async def _inspect_method_asset[T](pilot: Pilot[T], progress: Callable[[str], None], first_revision_id: str) -> None:
+    """Inspect the created asset and require the current revision identity to stay the first one."""
+    inspection_action = await activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_inspection")
+    inspected = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
+        stage="asset_inspection",
+        transition=inspection_action,
+    )
+    if inspected != f"asset\t{METHOD_ASSET_ID}\trevisions=1":
+        raise InstalledAssetTuiError(
+            "installed TUI asset inspection returned an unexpected public result",
+            stage="asset_inspection",
+        )
+    progress("asset_inspected")
+    if await wait_for_current_revision_id(pilot=pilot, stage="asset_inspection") != first_revision_id:
+        raise InstalledAssetTuiError(
+            "installed TUI inspection did not retain its public current revision identity",
+            stage="asset_inspection",
+        )
+
+
+async def _correct_method_asset[T](
+    pilot: Pilot[T], progress: Callable[[str], None], acquisition_transaction_id: str, first_revision_id: str
+) -> None:
+    """Correct the asset and require the correction to advance the public revision identity."""
+    await set_public_input(
+        pilot=pilot,
+        selector="#asset-revision-json",
+        value=method_correction_json(
+            supersedes_revision_id=first_revision_id,
+            acquisition_transaction_id=acquisition_transaction_id,
+            in_service_year=_method_filing_year(),
+        ),
+        stage="asset_correction",
+    )
+    correction_action = await activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
+    corrected = await wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix=f"corrected\t{METHOD_ASSET_ID}\trevisions=2",
+        stage="asset_correction",
+        transition=correction_action,
+    )
+    if corrected != f"corrected\t{METHOD_ASSET_ID}\trevisions=2":
+        raise InstalledAssetTuiError(
+            "installed TUI asset correction returned an unexpected public result",
+            stage="asset_correction",
+        )
+    corrected_revision_id = await wait_for_current_revision_id(pilot=pilot, stage="asset_correction")
+    if corrected_revision_id == first_revision_id:
+        raise InstalledAssetTuiError(
+            "installed TUI correction did not advance the public immutable revision identity",
+            stage="asset_correction",
+        )
+    progress("asset_corrected")
 
 
 async def _supersede_method_claim[T](pilot: Pilot[T], progress: Callable[[str], None], first_claim: str) -> None:

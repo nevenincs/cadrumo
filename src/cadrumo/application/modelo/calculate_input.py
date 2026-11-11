@@ -111,7 +111,7 @@ from .calculation_action_ports import CalculationActionPorts
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
-from .profile_derived_facts import MaternidadMesesResolution
+from .profile_maternidad_meses import MaternidadMesesResolution
 from .registry_helpers import validate_casilla_input_ids
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
@@ -691,7 +691,7 @@ def _resolved_maternidad_meses(
 ) -> MaternidadMesesResolution:
     """Resolve the Art. 81.1 maternidad months the work profile contributes."""
     from .calculation_helpers import resolve_registry_snapshot_for_work_unit
-    from .profile_derived_facts import resolve_maternidad_meses
+    from .profile_maternidad_meses import resolve_maternidad_meses
 
     snapshot = resolve_registry_snapshot_for_work_unit(
         work_unit,

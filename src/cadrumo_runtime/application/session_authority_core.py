@@ -20,8 +20,6 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     ApiKeyRecord,
     AutomationGrant,
-    LoginEligibility,
-    OsLockState,
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyPort, AutomationCustodySnapshot
@@ -39,6 +37,7 @@ from cadrumo_client.contracts.session_policy import (
 )
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
+from .session_login_observation import observable_login_ids, unavailable_observation_reason, uncertain_login_denial
 
 _log = get_logger(__name__)
 
@@ -66,44 +65,6 @@ def _retirement_kind(kind: SessionRetirementKind, reason: AccessDenialCode) -> S
         if reason is AccessDenialCode.CUSTODY_CHANGED:
             return SessionRetirementKind.CUSTODY_CHANGED
     return kind
-
-
-def _observable_login_ids(facts: SessionAuthorityFacts, os_owner_id: str) -> set[str]:
-    """Keep live and uncertain owner logins distinct from positively absent ones."""
-    live_logins = {
-        login.login_id
-        for login in facts.context.login_contexts
-        if login.active and login.unlocked and login.os_owner_id == os_owner_id
-    }
-    uncertain_logins = {
-        login.login_id
-        for login in facts.context.login_contexts
-        if login.os_owner_id == os_owner_id
-        and login.lock_state is OsLockState.UNKNOWN
-        and login.unattended is LoginEligibility.UNKNOWN
-    }
-    return live_logins | uncertain_logins
-
-
-def unavailable_observation_reason(session: AccessSession, facts: SessionAuthorityFacts) -> str:
-    """Describe an admission observation without exposing session or owner IDs."""
-    if not facts.context.private_work_available:
-        return "private_work_unavailable"
-    if session_requires_grant(session):
-        return "unattended_login_unavailable"
-    matching = tuple(
-        login
-        for login in facts.context.login_contexts
-        if login.login_id == session.originating_login_id and login.os_owner_id == session.binding.os_owner_id
-    )
-    if not matching:
-        return "originating_login_absent"
-    active = next((login for login in matching if login.active), None)
-    if active is None:
-        return "originating_login_inactive"
-    if active.lock_state is OsLockState.UNKNOWN:
-        return "originating_lock_unknown"
-    return "ancestor_or_other_observation_unavailable"
 
 
 class SessionAuthorityCore:
@@ -273,7 +234,7 @@ class SessionAuthorityCore:
         )
 
     def _retire_sessions_without_live_login(self, facts: SessionAuthorityFacts) -> None:
-        retained_logins = _observable_login_ids(facts, self.binding.os_owner_id)
+        retained_logins = observable_login_ids(facts, self.binding.os_owner_id)
         self._retire(
             {
                 session.session_id
@@ -342,21 +303,10 @@ class SessionAuthorityCore:
             isinstance(decision, AccessDenied)
             and session.session_id in self._sessions
             and decision.code not in {AccessDenialCode.CONNECTION_MISMATCH, AccessDenialCode.CLIENT_MISMATCH}
-            and not self._uncertain_login_denial(session, facts, decision)
+            and not uncertain_login_denial(session, facts, decision)
         ):
             self._retire({session.session_id}, reason=decision.code)
         return decision
-
-    @staticmethod
-    def _uncertain_login_denial(session: AccessSession, facts: SessionAuthorityFacts, decision: AccessDenied) -> bool:
-        """Observation failure denies work without turning uncertainty into logout."""
-        return decision.code is AccessDenialCode.OS_SESSION_UNAVAILABLE and any(
-            login.login_id == session.originating_login_id
-            and login.os_owner_id == session.binding.os_owner_id
-            and login.lock_state is OsLockState.UNKNOWN
-            and login.unattended is LoginEligibility.UNKNOWN
-            for login in facts.context.login_contexts
-        )
 
     @contextmanager
     def _activation(self, session_id: UUID) -> Generator[None]:

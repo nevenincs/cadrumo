@@ -165,3 +165,33 @@ def test_a_confirmation_that_cannot_read_names_the_failure(probe: AgentProviderA
     _Runner.script = [AgentInvocationResult(status=1, standard_output=b"")]
     observed = probe.confirm("codex", root=tmp_path)
     assert (observed.state, observed.cause) == (CliState.UNKNOWN, CliStateCause.STATUS_READ_FAILED)
+
+
+class _UnsettledRunner(_Runner):
+    """A runner whose supplier scope is not confirmed gone until it is settled."""
+
+    instances: list[_UnsettledRunner] = []
+
+    def __init__(self, **_ignored: Any) -> None:
+        super().__init__()
+        self.settled = False
+        type(self).instances.append(self)
+
+    def settle(self) -> None:
+        self.settled = True
+
+
+def test_a_runner_left_unsettled_refuses_later_reads_until_close_settles_it(
+    probe: AgentProviderAuthStatusProbe, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _UnsettledRunner.instances = []
+    monkeypatch.setattr(status_module, "WindowsAgentInvocationRunner", _UnsettledRunner)
+    _Runner.script = [_answer()]
+    first = probe.confirm("codex", root=tmp_path)
+    second = probe.confirm("codex", root=tmp_path)
+    assert first.state is CliState.INSTALLED_SIGNED_IN
+    assert (second.state, second.cause) == (CliState.UNKNOWN, CliStateCause.STATUS_READ_FAILED)
+    assert len(_Runner.calls) == 1
+    assert len(_UnsettledRunner.instances) == 1
+    probe.close()
+    assert _UnsettledRunner.instances[0].settled

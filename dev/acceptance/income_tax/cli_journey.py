@@ -55,15 +55,8 @@ def imputation_criterion_args(year: int, criterion: str = "cobros_y_pagos") -> t
     )
 
 
-def _observe_annual_calculation_values(
-    calculation: dict[str, Any], year: int, annual_oracle: AnnualOracle | None
-) -> dict[str, str]:
-    """Observe annual calculation values."""
-    values = calculation.get("casilla_values")
-    if not isinstance(values, dict):
-        raise JourneyError("Modelo 100 returned no casilla map")
-    annual = annual_oracle or build_scenario(year).annual_oracle
-    expected = {
+def _expected_annual_values(annual: AnnualOracle) -> dict[str, str]:
+    return {
         "0171": _money(annual.activity_income),
         "0218": _money(annual.deductible_expenses),
         "0220": _money(annual.deductible_expenses),
@@ -75,10 +68,9 @@ def _observe_annual_calculation_values(
         # of the payments on account is the activity credit plus the fractional payments.
         "0609": _money(annual.activity_withholding + annual.m130_payments),
     }
-    # A casilla the calculation left unresolved is absent from the map: name it instead of reading it as a number.
-    actual = {
-        casilla: _money(Decimal(str(values[casilla]))) if casilla in values else "<unresolved>" for casilla in expected
-    }
+
+
+def _require_oracle_agreement(expected: dict[str, str], actual: dict[str, str]) -> None:
     # An unresolved figure is not a wrong one. The activity chain may stay unresolved when a source it reads is
     # not ready (the 2025 inventory activity ledger), and that outcome is reported by verification below; a
     # resolved figure, and every credit, must equal the oracle.
@@ -89,6 +81,22 @@ def _observe_annual_calculation_values(
     mismatched = {casilla for casilla, value in actual.items() if value != expected[casilla]} - unresolved
     if mismatched:
         raise JourneyError(f"Modelo 100 annual oracle mismatch: expected {expected}, got {actual}")
+
+
+def _observe_annual_calculation_values(
+    calculation: dict[str, Any], year: int, annual_oracle: AnnualOracle | None
+) -> dict[str, str]:
+    """Observe annual calculation values."""
+    values = calculation.get("casilla_values")
+    if not isinstance(values, dict):
+        raise JourneyError("Modelo 100 returned no casilla map")
+    annual = annual_oracle or build_scenario(year).annual_oracle
+    expected = _expected_annual_values(annual)
+    # A casilla the calculation left unresolved is absent from the map: name it instead of reading it as a number.
+    actual = {
+        casilla: _money(Decimal(str(values[casilla]))) if casilla in values else "<unresolved>" for casilla in expected
+    }
+    _require_oracle_agreement(expected, actual)
     return actual
 
 

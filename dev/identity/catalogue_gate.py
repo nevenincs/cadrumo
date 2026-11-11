@@ -165,15 +165,18 @@ class ConventionScan:
 
 
 def _shape(value: str) -> str | None:
-    if len(value) == 9 and value[:8].isdigit() and value[8].isalpha():
+    if len(value) != 9:
+        return None
+    if value[:8].isdigit() and value[8].isalpha():
         return _NIF_SHAPE
-    if len(value) == 9 and value[0] in "XYZ" and value[1:8].isdigit() and value[8].isalpha():
-        return _NIE_SHAPE
-    if len(value) == 9 and value[0] in _PREFIXED_NIF_LEADERS and value[1:8].isdigit() and value[8].isalpha():
-        return _PREFIXED_NIF_SHAPE
-    if len(value) == 9 and value[0].isalpha() and value[1:8].isdigit():
-        return _CIF_SHAPE
-    return None
+    if not (value[0].isalpha() and value[1:8].isdigit()):
+        return None
+    if value[8].isalpha():
+        if value[0] in "XYZ":
+            return _NIE_SHAPE
+        if value[0] in _PREFIXED_NIF_LEADERS:
+            return _PREFIXED_NIF_SHAPE
+    return _CIF_SHAPE
 
 
 def _counter(value: str, shape: str) -> int:
@@ -188,27 +191,38 @@ def _normal(candidate: str) -> str:
     return upper
 
 
-def _pool_range(table: dict[str, object], where: str) -> PoolRange:
+def _pool_kind(table: dict[str, object], where: str) -> str:
     shape = table.get("kind")
-    first = table.get("first")
-    last = table.get("last")
-    letters = table.get("letters", [])
     if not isinstance(shape, str) or shape not in {_NIF_SHAPE, _NIE_SHAPE, _PREFIXED_NIF_SHAPE, _CIF_SHAPE}:
         raise CatalogueError(f"{where}: kind must be nif, nie, prefixed_nif or cif")
+    return shape
+
+
+def _pool_bounds(table: dict[str, object], where: str) -> tuple[int, int]:
+    first = table.get("first")
+    last = table.get("last")
     if not isinstance(first, int) or not isinstance(last, int) or first > last:
         raise CatalogueError(f"{where}: first and last must be integers with first <= last")
+    return first, last
+
+
+def _pool_letters(table: dict[str, object], where: str) -> list[str]:
+    letters = table.get("letters", [])
     if not isinstance(letters, list) or not all(isinstance(letter, str) for letter in letters):
         raise CatalogueError(f"{where}: letters must be a list of strings")
+    return [letter for letter in letters if isinstance(letter, str)]
+
+
+def _pool_range(table: dict[str, object], where: str) -> PoolRange:
+    shape = _pool_kind(table, where)
+    first, last = _pool_bounds(table, where)
+    letters = _pool_letters(table, where)
     if shape != _NIF_SHAPE and not letters:
         raise CatalogueError(f"{where}: a {shape} range names its leading letters")
     return PoolRange(shape=shape, first=first, last=last, letters=frozenset(letters))
 
 
-def parse_catalogue(document: dict[str, object]) -> Catalogue:
-    """Read the convention out of a parsed ``identities.toml``."""
-    convention = document.get("convention")
-    if not isinstance(convention, dict):
-        raise CatalogueError("convention must be a table")
+def _generic_pool(convention: dict[str, object]) -> tuple[list[object], list[object]]:
     pool = convention.get("generic_pool")
     if not isinstance(pool, dict):
         raise CatalogueError("convention.generic_pool must be declared")
@@ -216,10 +230,24 @@ def parse_catalogue(document: dict[str, object]) -> Catalogue:
     ranges = pool.get("ranges")
     if not isinstance(values, list) or not isinstance(ranges, list) or not ranges:
         raise CatalogueError("convention.generic_pool needs values and at least one range")
+    return list[object](values), list[object](ranges)
+
+
+def _projection_prefixes(convention: dict[str, object]) -> list[str]:
     projections = convention.get("generated_projections")
     prefixes = projections.get("paths") if isinstance(projections, dict) else None
     if not isinstance(prefixes, list) or not all(isinstance(prefix, str) for prefix in prefixes):
         raise CatalogueError("convention.generated_projections.paths must list path prefixes")
+    return [prefix for prefix in prefixes if isinstance(prefix, str)]
+
+
+def parse_catalogue(document: dict[str, object]) -> Catalogue:
+    """Read the convention out of a parsed ``identities.toml``."""
+    convention = document.get("convention")
+    if not isinstance(convention, dict):
+        raise CatalogueError("convention must be a table")
+    values, ranges = _generic_pool(convention)
+    prefixes = _projection_prefixes(convention)
     roles: dict[str, tuple[str, str]] = {}
     for table in _tables(document.get("identities")):
         roles[_normal(str(table["value"]))] = (str(table["role"]), str(table["persona"]))
@@ -299,6 +327,27 @@ def classify(catalogue: Catalogue, relative: str, value: str) -> tuple[Conventio
     return ConventionViolation.OFF_CONVENTION, None
 
 
+def _file_findings(rules: Catalogue, candidate: CandidateFile, text: str) -> list[ConventionFinding]:
+    findings: list[ConventionFinding] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for kind, column, match in checksum_valid_spans(line, BLOCKING_KINDS):
+            verdict = classify(rules, candidate.relative, _normal(match))
+            if verdict is None:
+                continue
+            violation, role = verdict
+            findings.append(
+                ConventionFinding(
+                    path=candidate.relative,
+                    line=line_number,
+                    column=column,
+                    kind=kind,
+                    violation=violation,
+                    role=role,
+                )
+            )
+    return findings
+
+
 def scan_convention(
     repo_root: Path,
     *,
@@ -328,21 +377,6 @@ def scan_convention(
                 unreadable.append(candidate.relative)
                 continue
             scanned += 1
-            for line_number, line in enumerate(text.splitlines(), start=1):
-                for kind, column, match in checksum_valid_spans(line, BLOCKING_KINDS):
-                    verdict = classify(rules, candidate.relative, _normal(match))
-                    if verdict is None:
-                        continue
-                    violation, role = verdict
-                    findings.append(
-                        ConventionFinding(
-                            path=candidate.relative,
-                            line=line_number,
-                            column=column,
-                            kind=kind,
-                            violation=violation,
-                            role=role,
-                        )
-                    )
+            findings.extend(_file_findings(rules, candidate, text))
     ordered = tuple(sorted(findings, key=lambda finding: (finding.path, finding.line, finding.column)))
     return ConventionScan(findings=ordered, files_scanned=scanned, unreadable=tuple(sorted(unreadable)))

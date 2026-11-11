@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from queue import Empty, Full, Queue
+from queue import Empty, Queue
 from threading import Event, Lock, Thread
 from typing import BinaryIO
 from uuid import uuid4
@@ -20,7 +20,7 @@ from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 
 from ..providers.application.contracts import HelperCause, ServiceCause
-from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthEvent, AuthProtocol, snapshot
+from .auth_protocol import TERMINAL_EVENTS, AuthEvent, AuthProtocol, append_auth_code, read_event_lines, snapshot
 from .credential_frame import wipe
 
 _LOGGER = get_logger(__name__)
@@ -122,7 +122,7 @@ class AuthAttempt:
         # JSON escaping can make a printable code exceed the helper's line limit.
         line = bytearray(b'{"version":1,"action":"auth_code","code":"')
         try:
-            _append_auth_code(line, code)
+            append_auth_code(line, code)
             with self._lock:
                 input_stream = self._code_input()
                 # Consume the opportunity before writing: a partial write cannot be replayed.
@@ -190,23 +190,6 @@ class AuthAttempt:
             self._snapshot = value
 
     @staticmethod
-    def _read(stream: BinaryIO, queue: Queue[bytes | None]) -> None:
-        try:
-            while True:
-                line = stream.readline(MAX_AUTH_LINE + 1)
-                queue.put_nowait(line or None)
-                if not line or len(line) > MAX_AUTH_LINE or not line.endswith(b"\n"):
-                    return
-        except (OSError, ValueError, Full):
-            with contextlib.suppress(Empty):
-                queue.get_nowait()
-            with contextlib.suppress(Full):
-                queue.put_nowait(None)
-        finally:
-            with contextlib.suppress(OSError, ValueError):
-                stream.close()
-
-    @staticmethod
     def _discard(stream: BinaryIO) -> None:
         with stream, contextlib.suppress(OSError, ValueError):
             while stream.read(4096):
@@ -236,24 +219,35 @@ class AuthAttempt:
             if now >= deadline:
                 self._publish(snapshot(self.id, self._lane, "started"))
                 return "failed", "timeout", "timed_out"
-            try:
-                raw = queue.get(timeout=0.25)
-            except Empty:
+            event = self._next_event(queue)
+            if event is None:
                 continue
-            try:
-                event = self._read_event(raw)
-            except ValueError:
-                raise HelperStreamError(
-                    "helper_ended_without_result" if raw is None else "helper_output_invalid"
-                ) from None
-            if event.event == "ready":
-                input_stream.write(b'{"version":1,"action":"start"}\n')
-                input_stream.flush()
-            elif event.event in TERMINAL_EVENTS:
-                return event.event, event.reason, event.cause
-            else:
-                if not self._publish_action(event):
-                    return "cancelled", None, None
+            settlement = self._answer_event(input_stream, event)
+            if settlement is not None:
+                return settlement
+
+    def _next_event(self, queue: Queue[bytes | None]) -> AuthEvent | None:
+        """Read the helper's next event, or nothing when none arrived within the poll."""
+        try:
+            raw = queue.get(timeout=0.25)
+        except Empty:
+            return None
+        try:
+            return self._read_event(raw)
+        except ValueError:
+            raise HelperStreamError("helper_ended_without_result" if raw is None else "helper_output_invalid") from None
+
+    def _answer_event(self, input_stream: BinaryIO, event: AuthEvent) -> _Settlement | None:
+        """Act on one event; a settlement ends the exchange."""
+        if event.event == "ready":
+            input_stream.write(b'{"version":1,"action":"start"}\n')
+            input_stream.flush()
+            return None
+        if event.event in TERMINAL_EVENTS:
+            return event.event, event.reason, event.cause
+        if not self._publish_action(event):
+            return "cancelled", None, None
+        return None
 
     def _recheck_scope(self, now: float, checked: float) -> float:
         if now >= checked:
@@ -308,24 +302,11 @@ class AuthAttempt:
         outcome, reason, cause = "failed", "provider_error", None
         launched = False
         try:
-            if not self._valid() or self._cancel.is_set():
-                outcome, reason, cause = "cancelled", None, None
+            refused = self._refused_before_launch()
+            if refused is not None:
+                outcome, reason, cause = refused
                 return
-            if self._prepare is not None:
-                try:
-                    self._prepare()
-                except BaseException:
-                    outcome, reason, cause = "failed", "cleanup_failed", "agent_stop_failed"
-                    return
-                if not self._valid() or self._cancel.is_set():
-                    outcome, reason, cause = "cancelled", None, None
-                    return
-            try:
-                self._scope = WindowsProcessScope()
-            except BaseException as error:
-                self._scope = unreturned_windows_process_scope(error)
-                raise
-            process, input_stream, output, errors = self._scope.launch_with_standard_pipes(
+            process, input_stream, output, errors = self._open_scope().launch_with_standard_pipes(
                 executable=self._executable,
                 arguments=self._arguments,
                 directory=self._directory,
@@ -334,14 +315,7 @@ class AuthAttempt:
             launched = True
             with self._lock:
                 self._input = input_stream
-            queue: Queue[bytes | None] = Queue(maxsize=8)
-            self._readers = [
-                Thread(target=self._read, args=(output, queue), daemon=True),
-                Thread(target=self._discard, args=(errors,), daemon=True),
-            ]
-            for reader in self._readers:
-                reader.start()
-            outcome, reason, cause = self._exchange(input_stream, queue)
+            outcome, reason, cause = self._exchange(input_stream, self._start_readers(output, errors))
         except HelperStreamError as error:
             outcome, reason, cause = "failed", "provider_error", error.cause
         except BaseException:
@@ -350,6 +324,39 @@ class AuthAttempt:
             cause = "helper_ended_without_result" if launched else "helper_start_failed"
         finally:
             self._finish_run(process, input_stream, outcome, reason, cause)
+
+    def _refused_before_launch(self) -> _Settlement | None:
+        """Run the preparation unless authority is gone; a settlement means the helper must not start."""
+        if not self._valid() or self._cancel.is_set():
+            return "cancelled", None, None
+        if self._prepare is not None:
+            try:
+                self._prepare()
+            except BaseException:
+                return "failed", "cleanup_failed", "agent_stop_failed"
+            if not self._valid() or self._cancel.is_set():
+                return "cancelled", None, None
+        return None
+
+    def _open_scope(self) -> WindowsProcessScope:
+        """Own the job scope on the attempt, including a scope whose creation failed part way."""
+        try:
+            self._scope = WindowsProcessScope()
+        except BaseException as error:
+            self._scope = unreturned_windows_process_scope(error)
+            raise
+        return self._scope
+
+    def _start_readers(self, output: BinaryIO, errors: BinaryIO) -> Queue[bytes | None]:
+        """Drain both helper outputs on owned threads; only standard output is read as events."""
+        queue: Queue[bytes | None] = Queue(maxsize=8)
+        self._readers = [
+            Thread(target=read_event_lines, args=(output, queue), daemon=True),
+            Thread(target=self._discard, args=(errors,), daemon=True),
+        ]
+        for reader in self._readers:
+            reader.start()
+        return queue
 
     def _close_and_wait(
         self,
@@ -382,6 +389,40 @@ class AuthAttempt:
             # The exception may carry provider output; only its closed kind is kept.
             return False, "status_read_failed"
 
+    def _cleaned_up(
+        self,
+        process: WindowsOwnedProcess | None,
+        input_stream: BinaryIO | None,
+        settlement: _Settlement,
+    ) -> _Settlement:
+        """Retire the helper's pipes, job and readers; unconfirmed cleanup replaces the settlement."""
+        try:
+            try:
+                settlement = self._close_and_wait(process, input_stream, settlement)
+            finally:
+                # Even a failed wait or pipe close must retire the whole job.
+                self._retire_scope()
+            self._settle_readers()
+            self._clean = True
+        except Exception:
+            return "failed", "cleanup_failed", "cleanup_unconfirmed"
+        return settlement
+
+    def _confirmed_settlement(self, settlement: _Settlement) -> tuple[_Settlement, str | None]:
+        """Serve a success only while authority holds and the provider confirms it, with the status cause."""
+        if settlement[0] != "succeeded":
+            return settlement, None
+        if self._cancel.is_set() or not self._valid():
+            return ("cancelled", None, None), None
+        if self._confirm is None:
+            return settlement, None
+        signed_in, status_cause = self._confirmed()
+        if not signed_in:
+            return ("failed", "provider_error", "status_not_confirmed"), status_cause
+        if self._cancel.is_set() or not self._valid():
+            return ("cancelled", None, None), status_cause
+        return settlement, status_cause
+
     def _finish_run(
         self,
         process: WindowsOwnedProcess | None,
@@ -390,25 +431,8 @@ class AuthAttempt:
         reason: str | None,
         cause: HelperCause | ServiceCause | None,
     ) -> None:
-        status_cause: str | None = None
-        try:
-            try:
-                outcome, reason, cause = self._close_and_wait(process, input_stream, (outcome, reason, cause))
-            finally:
-                # Even a failed wait or pipe close must retire the whole job.
-                self._retire_scope()
-            self._settle_readers()
-            self._clean = True
-        except Exception:
-            outcome, reason, cause = "failed", "cleanup_failed", "cleanup_unconfirmed"
-        if outcome == "succeeded" and (self._cancel.is_set() or not self._valid()):
-            outcome, reason, cause = "cancelled", None, None
-        if outcome == "succeeded" and self._confirm is not None:
-            signed_in, status_cause = self._confirmed()
-            if not signed_in:
-                outcome, reason, cause = "failed", "provider_error", "status_not_confirmed"
-            elif self._cancel.is_set() or not self._valid():
-                outcome, reason, cause = "cancelled", None, None
+        settlement = self._cleaned_up(process, input_stream, (outcome, reason, cause))
+        (outcome, reason, cause), status_cause = self._confirmed_settlement(settlement)
         self._publish(snapshot(self.id, self._lane, outcome, reason=reason, cause=cause, status_cause=status_cause))
         self._done.set()
         _LOGGER.log(
@@ -423,13 +447,3 @@ class AuthAttempt:
         )
         if self._settled is not None:
             self._settled()
-
-
-def _append_auth_code(line: bytearray, code: bytearray) -> None:
-    for byte in code:
-        if byte in (34, 92):
-            line.append(92)
-        line.append(byte)
-    line.extend(b'"}\n')
-    if len(line) > 4096:
-        raise ValueError("invalid_request")

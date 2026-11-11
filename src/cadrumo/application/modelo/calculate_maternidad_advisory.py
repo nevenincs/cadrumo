@@ -108,7 +108,7 @@ def ambiguous_relacion_hijo_ids(
     Reads the active profile's descendiente records directly through the same
     canonical reconstruction (:func:`~domain.contribuyente.descendant_facts.descendant_list_from_facts`)
     every other consumer of this fact set uses, rather than adding a field to
-    :class:`~application.modelo.profile_derived_facts.MaternidadMesesResolution`: this
+    :class:`~application.modelo.profile_maternidad_meses.MaternidadMesesResolution`: this
     module already owns loading the profile record for
     :func:`_resolved_maternidad_meses`, and the question this asks — which
     contributing descendant's relación is unstated — is orthogonal to the

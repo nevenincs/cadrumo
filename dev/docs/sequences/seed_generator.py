@@ -46,6 +46,7 @@ runs, so a recipe without them is still an ordinary recipe.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -105,13 +106,8 @@ class SeedHeader:
     """Index of the ``:generated: end`` line."""
 
 
-def parse_seed_header(text: str, *, name: str) -> SeedHeader | None:
-    """Return the recipe's persona header, ``None`` for a recipe that declares no persona.
-
-    Raises:
-        ValueError: When the header is incomplete, repeated or its region is not one begin/end pair.
-    """
-    lines = text.splitlines()
+def _scan_directives(lines: list[str], *, name: str) -> tuple[dict[str, str], list[tuple[int, str]]]:
+    """The seed's declared directives and the line index and value of each ``:generated:`` marker."""
     declared: dict[str, str] = {}
     markers: list[tuple[int, str]] = []
     for index, line in enumerate(lines):
@@ -125,8 +121,10 @@ def parse_seed_header(text: str, *, name: str) -> SeedHeader | None:
             raise ValueError(f"seed:{name} line {index + 1}: ':{directive}:' is declared twice")
         else:
             declared[directive] = value
-    if not declared and not markers:
-        return None
+    return declared, markers
+
+
+def _require_persona_directives(declared: dict[str, str], markers: list[tuple[int, str]], *, name: str) -> None:
     missing = {"persona", "profile"} - declared.keys()
     if missing:
         raise ValueError(
@@ -134,15 +132,32 @@ def parse_seed_header(text: str, *, name: str) -> SeedHeader | None:
         )
     if [value for _, value in markers] != [_BEGIN, _END]:
         raise ValueError(f"seed:{name}: expected exactly one ':generated: begin' then one ':generated: end' line")
-    questions = tuple(declared["profile"].split())
-    if not questions or not declared["persona"]:
+    if not declared["profile"].split() or not declared["persona"]:
         raise ValueError(f"seed:{name}: ':persona:' and ':profile:' must each carry a value")
+    _require_supported_values(declared, name=name)
+
+
+def _require_supported_values(declared: dict[str, str], *, name: str) -> None:
     ledger = declared.get("ledger")
     if ledger is not None and ledger != _LEDGER_ALL:
         raise ValueError(f"seed:{name}: ':ledger:' takes only {_LEDGER_ALL!r}, found {ledger!r}")
-    carry = tuple(declared.get("carry", "").split())
-    if any(modelo != _M303 for modelo in carry):
+    if any(modelo != _M303 for modelo in declared.get("carry", "").split()):
         raise ValueError(f"seed:{name}: ':carry:' records only the Modelo {_M303} compensation balance")
+
+
+def parse_seed_header(text: str, *, name: str) -> SeedHeader | None:
+    """Return the recipe's persona header, ``None`` for a recipe that declares no persona.
+
+    Raises:
+        ValueError: When the header is incomplete, repeated or its region is not one begin/end pair.
+    """
+    declared, markers = _scan_directives(text.splitlines(), name=name)
+    if not declared and not markers:
+        return None
+    _require_persona_directives(declared, markers, name=name)
+    questions = tuple(declared["profile"].split())
+    ledger = declared.get("ledger")
+    carry = tuple(declared.get("carry", "").split())
     return SeedHeader(
         persona=declared["persona"],
         questions=questions,
@@ -273,6 +288,21 @@ def _row_frames(persona: Persona, envelope: YearEnvelope, row: LedgerRow, *, nam
     return lines
 
 
+def _present(value: Decimal | None, render: Callable[[Decimal], str]) -> str | None:
+    return None if value is None else render(value)
+
+
+def _optional_invoice_arguments(row: LedgerRow) -> list[str]:
+    optional: tuple[tuple[str, str | None], ...] = (
+        ("--taxable-base", _present(row.taxable_base, _decimal)),
+        ("--iva-rate", _present(row.iva_rate, _percentage)),
+        ("--iva-category", row.iva_category),
+        ("--retention-rate", _present(row.retencion_rate, _decimal)),
+        ("--retention-amount", _present(row.retencion_amount, _decimal)),
+    )
+    return [token for option, value in optional if value is not None for token in (option, value)]
+
+
 def _invoice_frames(persona: Persona, envelope: YearEnvelope, row: LedgerRow) -> list[str]:
     if row.invoice_kind is None or row.invoice_number is None or row.counterparty is None:
         return []
@@ -293,16 +323,7 @@ def _invoice_frames(persona: Persona, envelope: YearEnvelope, row: LedgerRow) ->
         "--currency",
         row.currency,
     ]
-    optional: tuple[tuple[str, str | None], ...] = (
-        ("--taxable-base", None if row.taxable_base is None else _decimal(row.taxable_base)),
-        ("--iva-rate", None if row.iva_rate is None else _percentage(row.iva_rate)),
-        ("--iva-category", row.iva_category),
-        ("--retention-rate", None if row.retencion_rate is None else _decimal(row.retencion_rate)),
-        ("--retention-amount", None if row.retencion_amount is None else _decimal(row.retencion_amount)),
-    )
-    for option, value in optional:
-        if value is not None:
-            arguments.extend((option, value))
+    arguments.extend(_optional_invoice_arguments(row))
     transaction = _capture_name(row.ref)
     invoice = f"{transaction}_invoice"
     return [

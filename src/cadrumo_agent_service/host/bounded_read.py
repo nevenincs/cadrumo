@@ -94,20 +94,11 @@ class BoundedRead[T]:
         deadline = monotonic() + within
         while True:
             with self._lock:
-                kept = self._kept
-                if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
+                kept = self._fresh_kept(key)
+                if kept is not None:
                     # A kept outcome is settled, so reading it does not wait.
-                    return kept[1].result()
-                running = self._running
-                withdrawn = running is not None and (running[0] != key or running[1] != self._generation)
-                if running is None:
-                    future: Future[T] = Future()
-                    self._running = running = (key, self._generation, future)
-                    try:
-                        Thread(target=self._run, args=running, name=f"agent-service-{self._name}", daemon=True).start()
-                    except BaseException:
-                        self._running = None
-                        raise
+                    return kept.result()
+                running, withdrawn = self._claim_running(key)
             if withdrawn:
                 # Invalidation withdraws the result, not ownership of the work:
                 # another provider probe must not start until this one ends.
@@ -120,6 +111,30 @@ class BoundedRead[T]:
                 return running[2].result()
             if settled is _Settled.UNFINISHED:
                 return BUSY
+
+    def _fresh_kept(self, key: Hashable) -> Future[T] | None:
+        """Return the kept outcome for ``key`` while it is fresh; the caller holds the lock."""
+        kept = self._kept
+        if kept is not None and kept[0] == key and monotonic() - kept[2] < self._fresh_seconds:
+            return kept[1]
+        return None
+
+    def _claim_running(self, key: Hashable) -> tuple[tuple[Hashable, int, Future[T]], bool]:
+        """Return the work under way, starting it when none is, and whether its result is withdrawn for ``key``.
+
+        The caller holds the lock.
+        """
+        running = self._running
+        if running is not None:
+            return running, running[0] != key or running[1] != self._generation
+        future: Future[T] = Future()
+        self._running = running = (key, self._generation, future)
+        try:
+            Thread(target=self._run, args=running, name=f"agent-service-{self._name}", daemon=True).start()
+        except BaseException:
+            self._running = None
+            raise
+        return running, False
 
     def _await_running(self, running: tuple[Hashable, int, Future[T]], *, deadline: float) -> _Settled:
         """Wait for this generation's work until ``deadline`` without releasing unfinished work ownership."""

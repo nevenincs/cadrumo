@@ -192,6 +192,30 @@ def gross_reconstitution_finding(
     # an unrecorded surcharge, which no IRPF category settles.
     if reconstituted < expected:
         return GrossReconstitutionFinding.MISMATCH
+    return _substrate_above_cash_finding(
+        taxable_base=taxable_base,
+        expected=expected,
+        reconstituted=reconstituted,
+        direction=direction,
+        category_id=category_id,
+        irpf_category=irpf_category,
+        effective_date=effective_date,
+        authority=authority,
+    )
+
+
+def _substrate_above_cash_finding(
+    *,
+    taxable_base: Decimal,
+    expected: Decimal,
+    reconstituted: Decimal,
+    direction: TransactionDirection,
+    category_id: str | None,
+    irpf_category: str | None,
+    effective_date: date,
+    authority: GovernedFactSource | None,
+) -> GrossReconstitutionFinding:
+    """Judge a tax substrate above the cash amount as the withholding shape or a mismatch."""
     if _withholding_shape_declared(
         category_id=category_id, irpf_category=irpf_category, direction=direction, authority=authority
     ):

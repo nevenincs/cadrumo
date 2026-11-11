@@ -19,7 +19,7 @@ from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from .. import provider_login
-from ..agent_programs import PACKAGE_AGENT_VARIABLE, profile_agent_root
+from ..agent_programs import PACKAGE_AGENT_VARIABLE, AgentProgramRefusalError, profile_agent_root
 from ..provider_login import ProviderLoginRefusalError, main, prepare_provider_login, selected_profile_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -288,3 +288,11 @@ def test_the_service_executable_dispatches_provider_login_before_the_service_imp
         bootstrap.main()
     assert ended.value.code == 5
     assert received == [["--provider", "codex"]]
+
+
+def test_an_unreadable_agent_folder_key_is_refused_before_the_bundled_agent_is_looked_for(outside_git: Path) -> None:
+    root = _agent_root(outside_git / "storage")
+    (root.parent / ".agent-root-key").write_bytes(b"short")
+    with pytest.raises(ProviderLoginRefusalError, match="key is unreadable") as refusal:
+        _launch(outside_git, outside_git / "package" / "absent-agent")
+    assert isinstance(refusal.value.__cause__, AgentProgramRefusalError)

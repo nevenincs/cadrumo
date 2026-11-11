@@ -84,7 +84,6 @@ from .profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
-    inject_derived_deduccion_maternidad_facts,
     inject_derived_estimation_modality_fact,
     inject_derived_incremento_guarderia_facts,
     inject_derived_marriage_facts,
@@ -94,6 +93,7 @@ from .profile_derived_facts import (
     profile_declares_economic_activity,
     snapshot_authored_year,
 )
+from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}

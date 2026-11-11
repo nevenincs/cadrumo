@@ -27,10 +27,8 @@ from ..disposable_root import (
     enclosing_git_project,
     first_answer,
     log_files,
-    profile_credentials,
     record_profile,
     removable_root,
-    remove_profile_credentials,
     remove_root,
     remove_secret_bearing,
     restaged,
@@ -39,6 +37,7 @@ from ..disposable_root import (
     temporary_parent,
 )
 from ..lane_errors import UnavailableError
+from ..stored_sign_in import profile_credentials, remove_profile_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

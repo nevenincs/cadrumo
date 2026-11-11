@@ -352,6 +352,47 @@ def write_window_depfile(depfile: Path, index: Path, dependencies: Sequence[Path
     _write_replacing(depfile, " \\\n".join(lines) + "\n")
 
 
+def _seed_family(
+    workspace: Workspace, family: FixtureFamily, digests: InputDigests, authority: Mapping[str, str], *, force: bool
+) -> bool:
+    """Bring one producing family up to date; whether it is now fresh, adopted or produced."""
+    producer = family.producer
+    if producer is None:
+        return True
+    # Inputs are read before the producer runs: an input edited during the
+    # run then shows as stale, never as a fresh stamp over older outputs.
+    inputs = _inputs(family, digests, authority)
+    current = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+    if current.state is FixtureState.FRESH and not force:
+        print(f"{family.name}: fresh")
+        return True
+    unmet = _unmet_prerequisites(workspace, family)
+    for reason in unmet:
+        print(f"  {family.name}: {reason}", file=sys.stderr)
+    if unmet:
+        return False
+    if (
+        current.state is FixtureState.UNSTAMPED
+        and family.check_proves_outputs
+        and not force
+        and _adopted(workspace, family, inputs)
+    ):
+        return True
+    print(f"{family.name}: producing ({current.state})", flush=True)
+    return _produced(workspace, family, producer, inputs)
+
+
+def _produced(workspace: Workspace, family: FixtureFamily, producer: Command, inputs: InputRecord) -> bool:
+    """Run the producer and stamp what it wrote; whether it wrote a declared output."""
+    if _run(workspace, producer) != 0:
+        return False
+    if not output_digests(family, workspace.root):
+        print(f"  {family.name} produced no declared output", file=sys.stderr)
+        return False
+    write_stamp(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+    return True
+
+
 def seed(
     names: Sequence[str],
     *,
@@ -372,57 +413,31 @@ def seed(
     selected = _selected(workspace, names, window=window)
     digests = InputDigests(workspace.root)
     authority = workspace.authority()
-    failed: list[str] = []
-    for family in selected:
-        if family.producer is None:
-            continue
-        # Inputs are read before the producer runs: an input edited during the
-        # run then shows as stale, never as a fresh stamp over older outputs.
-        inputs = _inputs(family, digests, authority)
-        current = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
-        if current.state is FixtureState.FRESH and not force:
-            print(f"{family.name}: fresh")
-            continue
-        unmet = _unmet_prerequisites(workspace, family)
-        for reason in unmet:
-            print(f"  {family.name}: {reason}", file=sys.stderr)
-        if unmet:
-            failed.append(family.name)
-            continue
-        if (
-            current.state is FixtureState.UNSTAMPED
-            and family.check_proves_outputs
-            and not force
-            and _adopted(workspace, family, inputs)
-        ):
-            continue
-        print(f"{family.name}: producing ({current.state})", flush=True)
-        if _run(workspace, family.producer) != 0:
-            failed.append(family.name)
-            continue
-        if not output_digests(family, workspace.root):
-            print(f"  {family.name} produced no declared output", file=sys.stderr)
-            failed.append(family.name)
-            continue
-        write_stamp(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+    failed = [
+        family.name
+        for family in selected
+        if family.producer is not None and not _seed_family(workspace, family, digests, authority, force=force)
+    ]
     index = None
     if any(family.output_root == WINDOW_ROOT for family in selected):
         index = record_window_index(workspace, digests, authority)
     if failed:
         print(f"Producers failed: {', '.join(failed)}", file=sys.stderr)
         return 1
-    if depfile is not None:
-        if index is None:
-            return 1
-        write_window_depfile(depfile, index, window_dependencies(workspace, digests))
+    return _write_depfile(workspace, digests, depfile, index)
+
+
+def _write_depfile(workspace: Workspace, digests: InputDigests, depfile: Path | None, index: Path | None) -> int:
+    """Write the window index's dependency file when one was asked for; the seed's exit status."""
+    if depfile is None:
+        return 0
+    if index is None:
+        return 1
+    write_window_depfile(depfile, index, window_dependencies(workspace, digests))
     return 0
 
 
-def _determinism_findings(workspace: Workspace, family: FixtureFamily) -> tuple[str, ...]:
-    if family.producer is None:
-        return ()
-    if family.determinism is None:
-        return (DETERMINISM_UNDECLARED,)
+def _determinism_scratch(workspace: Workspace) -> Path:
     stamp = datetime.now(UTC).date().isoformat()
     scratch = workspace.scratch_root / f"{stamp}-fixture-projections-{uuid.uuid4().hex[:12]}"
     # The checkout's scratch goes through its admission; an isolated workspace
@@ -432,6 +447,24 @@ def _determinism_findings(workspace: Workspace, family: FixtureFamily) -> tuple[
             raise FixtureProjectionError(f"scratch {scratch} was not admitted")
     else:
         scratch.mkdir(parents=True)
+    return scratch
+
+
+def _tree_bytes(output: Path) -> dict[str, bytes]:
+    return {path.relative_to(output).as_posix(): path.read_bytes() for path in output.rglob("*") if path.is_file()}
+
+
+def _differing_findings(first: Mapping[str, bytes], second: Mapping[str, bytes]) -> tuple[str, ...]:
+    differing = sorted(name for name in first.keys() | second.keys() if first.get(name) != second.get(name))
+    return tuple(f"not byte-identical across two builds: {name}" for name in differing)
+
+
+def _determinism_findings(workspace: Workspace, family: FixtureFamily) -> tuple[str, ...]:
+    if family.producer is None:
+        return ()
+    if family.determinism is None:
+        return (DETERMINISM_UNDECLARED,)
+    scratch = _determinism_scratch(workspace)
     try:
         trees: list[dict[str, bytes]] = []
         for run in ("first", "second"):
@@ -439,14 +472,11 @@ def _determinism_findings(workspace: Workspace, family: FixtureFamily) -> tuple[
             output.mkdir()
             if _run(workspace, family.determinism, output=output) != 0:
                 return (f"the {run} determinism build failed",)
-            trees.append(
-                {path.relative_to(output).as_posix(): path.read_bytes() for path in output.rglob("*") if path.is_file()}
-            )
+            trees.append(_tree_bytes(output))
         first, second = trees
         if not first:
             return ("the determinism build wrote nothing",)
-        differing = sorted(name for name in first.keys() | second.keys() if first.get(name) != second.get(name))
-        return tuple(f"not byte-identical across two builds: {name}" for name in differing)
+        return _differing_findings(first, second)
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
@@ -455,6 +485,27 @@ def _determinism_verdict(findings: tuple[str, ...]) -> str:
     if findings == (DETERMINISM_UNDECLARED,):
         return DETERMINISM_UNDECLARED
     return "nondeterministic" if findings[0].startswith("not byte-identical") else "determinism unproven"
+
+
+def _check_family(workspace: Workspace, family: FixtureFamily, *, determinism: bool) -> str:
+    """Run one family's check and, when asked, its determinism proof; the verdict, ``ok`` when both pass."""
+    verdict = "ok"
+    unmet = _unmet_prerequisites(workspace, family)
+    for reason in unmet:
+        print(f"  {reason}")
+    if unmet:
+        verdict = "unavailable"
+    elif any(_run(workspace, command) != 0 for command in family.check):
+        verdict = "failed"
+    # Determinism is its own finding, so it is proven even when the stored
+    # outputs are stale or the check cannot run.
+    findings = _determinism_findings(workspace, family) if determinism else ()
+    for finding in findings:
+        print(f"  {finding}")
+    if findings:
+        proof = _determinism_verdict(findings)
+        verdict = proof if verdict == "ok" else f"{verdict}, {proof}"
+    return verdict
 
 
 def check(names: Sequence[str], *, determinism: bool, workspace: Workspace | None = None) -> int:
@@ -470,22 +521,7 @@ def check(names: Sequence[str], *, determinism: bool, workspace: Workspace | Non
         failures.append("personas")
     for family in _selected(workspace, names):
         family_started = time.monotonic()
-        verdict = "ok"
-        unmet = _unmet_prerequisites(workspace, family)
-        for reason in unmet:
-            print(f"  {reason}")
-        if unmet:
-            verdict = "unavailable"
-        elif any(_run(workspace, command) != 0 for command in family.check):
-            verdict = "failed"
-        # Determinism is its own finding, so it is proven even when the stored
-        # outputs are stale or the check cannot run.
-        findings = _determinism_findings(workspace, family) if determinism else ()
-        for finding in findings:
-            print(f"  {finding}")
-        if findings:
-            proof = _determinism_verdict(findings)
-            verdict = proof if verdict == "ok" else f"{verdict}, {proof}"
+        verdict = _check_family(workspace, family, determinism=determinism)
         if verdict != "ok":
             failures.append(family.name)
         print(f"{family.name}: {verdict} ({time.monotonic() - family_started:.1f}s)", flush=True)

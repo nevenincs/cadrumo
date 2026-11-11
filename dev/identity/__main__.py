@@ -16,13 +16,16 @@ from __future__ import annotations
 
 import sys
 from collections import Counter
+from collections.abc import Sequence
 
 from dev.paths import REPO_ROOT
 
-from .catalogue_gate import GATE_SUFFIXES, scan_convention
+from .catalogue_gate import GATE_SUFFIXES, ConventionScan, scan_convention
 from .tree_scan import (
     EXCLUDED_PATH_FRAGMENTS,
     SCANNED_SUFFIXES,
+    CandidateFile,
+    TreeScan,
     advisory_findings,
     repository_files,
     scan_tree,
@@ -39,14 +42,7 @@ def main___bucket(relative_path: str) -> str:
     return "/".join(parts[:2]) if parts[0] in {"src", "dev", "docs"} else parts[0]
 
 
-def main() -> int:
-    """Print both sections and return the process exit status."""
-    # One enumeration feeds both sections. Walking the working tree twice for a
-    # report that describes a single moment also lets the two halves disagree
-    # about which files existed.
-    files = repository_files(_REPO_ROOT, suffixes=SCANNED_SUFFIXES)
-
-    scan = scan_tree(_REPO_ROOT, files=files)
+def _print_blocking(scan: TreeScan) -> None:
     print(f"blocking scope: {scan.files_scanned} data files scanned, {len(scan.findings)} findings in tracked content")
     for finding in scan.findings:
         print(f"  {finding.rendered()}")
@@ -70,12 +66,15 @@ def main() -> int:
         count = scan.suppressed_by_fragment.get(fragment, 0)
         print(f"  {fragment:28s} {count:6d}   {reason}")
 
+
+def _print_advisory(files: Sequence[CandidateFile]) -> None:
     advisory = advisory_findings(_REPO_ROOT, files=files)
     print(f"\nadvisory, outside the blocking scope: {len(advisory)} occurrences")
     for bucket, count in sorted(Counter(main___bucket(finding.path) for finding in advisory).items()):
         print(f"  {bucket:34s} {count:6d}")
 
-    convention = scan_convention(_REPO_ROOT, files=repository_files(_REPO_ROOT, suffixes=GATE_SUFFIXES))
+
+def _print_convention(convention: ConventionScan) -> None:
     counts = convention.by_violation()
     print(
         f"\ncatalogue convention, tests and fixtures: {convention.files_scanned} files scanned, "
@@ -88,6 +87,21 @@ def main() -> int:
         print(f"convention gate could not open: {len(convention.unreadable)}")
         for relative in convention.unreadable:
             print(f"  {relative}")
+
+
+def main() -> int:
+    """Print both sections and return the process exit status."""
+    # One enumeration feeds both sections. Walking the working tree twice for a
+    # report that describes a single moment also lets the two halves disagree
+    # about which files existed.
+    files = repository_files(_REPO_ROOT, suffixes=SCANNED_SUFFIXES)
+
+    scan = scan_tree(_REPO_ROOT, files=files)
+    _print_blocking(scan)
+    _print_advisory(files)
+
+    convention = scan_convention(_REPO_ROOT, files=repository_files(_REPO_ROOT, suffixes=GATE_SUFFIXES))
+    _print_convention(convention)
 
     return 1 if scan.findings or convention.findings or convention.unreadable else 0
 

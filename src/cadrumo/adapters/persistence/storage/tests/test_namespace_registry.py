@@ -55,12 +55,14 @@ from ..secure_object_namespaces import (
     SECURE_OBJECT_CATALOGUE_KEY,
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
-    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
-    TEST_SESSION_LIFECYCLE_NAMESPACE,
-    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+)
+from ..secure_object_probe_namespaces import (
+    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+    TEST_SESSION_LIFECYCLE_NAMESPACE,
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
 )
 from ..storage_hierarchy_registry import StorageHierarchyRegistry
 from ..storage_path_definitions import (

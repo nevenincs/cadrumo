@@ -313,7 +313,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # ever will.
         #
         # CONSUMED, not pending. Resolved by the SAME out-of-formula pattern as
-        # the Madrid tranches above: ``_resolved_minimo_descendientes_thresholds``
+        # the Madrid tranches above: ``resolved_minimo_descendientes_thresholds``
         # (``src/cadrumo/application/modelo/profile_binding.py``) reads them by
         # iterating ``snapshot.revision.parameters`` rather than calling
         # ``read_parameter(...)``, and lives under ``src/cadrumo/application/``
