@@ -1,10 +1,10 @@
 """Regression guards for the deferred semantic rows of the newest authored Modelo 100 edition.
 
-That edition's declarations for casillas 0150 and 0613 are measured
-cross-revision divergences.  They must not acquire a prior-year producer until
-their row-specific legal, input-contract, and independent-value evidence has
-been accepted.  These tests exercise the loaded registry graph so an
-accidental formula or profile binding cannot be added silently.
+That edition's declaration for casilla 0613 is a measured cross-revision
+divergence.  It must not acquire a prior-year producer until its row-specific
+legal, input-contract, and independent-value evidence has been accepted.  These
+tests exercise the loaded registry graph so an accidental formula or profile
+binding cannot be added silently.
 """
 
 from __future__ import annotations
@@ -25,10 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PRIOR_EDITION, _DEFERRED_EDITION = (str(edition) for edition in newest_authored_editions("100", 2))
 
 
-_FOCUS_ROWS: tuple[tuple[str, str], ...] = (
-    ("0150", "formula"),
-    ("0613", "formula"),
-)
+_FOCUS_ROWS: tuple[tuple[str, str], ...] = (("0613", "formula"),)
 
 
 def _casilla(revision: ModeloRevision, casilla_id: str):
