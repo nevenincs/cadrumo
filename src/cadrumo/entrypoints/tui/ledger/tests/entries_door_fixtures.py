@@ -56,9 +56,12 @@ from .....application.ledger.tracking_projection import LedgerTrackingProjection
 from .....application.ledger.transaction_projection import (
     LedgerTransactionProjection,
     LedgerTransactionReviewProjection,
+    classification_reason_source,
+    classification_reason_words,
 )
 from .....application.review.filter import LedgerReviewStatus
 from .....core.errors.hierarchy import CadrumoError, RecordedRegisteredError
+from .....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from .....core.operations import OperationEffect
 from .....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .....domain.buckets.event_repository import build_bucket_event
@@ -146,8 +149,16 @@ def synthetic_entry(
         if classification == BusinessClassification.REVIEWED_EXCLUDED.value
         else LedgerReviewStatus.REVIEWED
     )
+    reason_source = classification_reason_source(transaction.classification_reason)
+    reason_words = classification_reason_words(reason_source, DEFAULT_OUTPUT_LANGUAGE)
     return LedgerTransactionReviewProjection(
-        transaction=transaction, review_status=status, group_label=None, own_account_id=None
+        transaction=transaction,
+        review_status=status,
+        group_label=None,
+        own_account_id=None,
+        classification_reason_source=reason_source,
+        classification_reason_words=reason_words,
+        classification_reason_words_language=DEFAULT_OUTPUT_LANGUAGE if reason_words else None,
     )
 
 
