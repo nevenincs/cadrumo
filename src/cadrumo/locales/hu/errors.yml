@@ -1133,6 +1133,13 @@ errors:
     refused_export_format: A kért exportálási sorosítási formátum nem támogatott.
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
+    refused_filing_export_field_overflow: A(z) {export_record_id} rekord {export_field_id}
+      mezője a hivatalos tervben {field_length} karakteres, de az értéke {value_length}
+      karaktert igényel. A terv nem ír elő rövidítést, ezért semmi sem íródott ki.
+      Ellenőrizd a forrásértéket, és exportálj újra.
+    refused_filing_export_required_record_absent: A hivatalos terv legalább egy {export_record_id}
+      rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
+      mit kiírni, és semmi sem íródott ki.
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
       kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
@@ -1153,6 +1160,9 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodai használati
       arány eltér az adózói nyilvántartásban szereplő, kötelező jogi forrásértéktől.
       Igazítsd ehhez az értékhez.
+    refused_fixed_width_value_overflow: Egy érték {value_length} pozíciót igényel,
+      de a rögzített szélességű mezője csak {field_length} pozíciós, ezért elutasításra
+      kerül, nem rövidül le.
     refused_flow_answer: A vezetett folyamat elutasította a választ.
     refused_flow_checkpoint: A vezetett folyamat elutasította a mentés és folytatás
       műveletet.

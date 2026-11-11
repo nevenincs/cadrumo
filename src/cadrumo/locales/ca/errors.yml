@@ -1211,6 +1211,13 @@ errors:
       és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
+    refused_filing_export_field_overflow: El camp {export_field_id} del registre {export_record_id}
+      admet {field_length} caràcters en el disseny oficial, però el seu valor en necessita
+      {value_length}. El disseny no preveu escurçar-lo, així que no s'ha escrit res.
+      Revisa el valor d'origen i torna a exportar.
+    refused_filing_export_required_record_absent: El disseny oficial exigeix almenys
+      un registre {export_record_id}, però aquesta declaració no en té cap, així que
+      no hi ha res a escriure en aquest format i no s'ha escrit res.
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions
@@ -1233,6 +1240,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_fixed_width_value_overflow: Un valor necessita {value_length} posicions,
+      però el seu camp d'amplada fixa n'admet {field_length}; es rebutja en lloc d'escurçar-lo.
     refused_flow_answer: El flux guiat ha rebutjat la resposta.
     refused_flow_checkpoint: El flux guiat ha rebutjat l'operació de desar i reprendre.
     refused_flow_navigation: El flux guiat ha rebutjat la petició de navegació.

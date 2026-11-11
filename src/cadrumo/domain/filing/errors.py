@@ -52,3 +52,54 @@ class FilingExportValidationError(FilingExportError):
     Pydantic export validator translates this registered failure to
     ``ValueError`` at its narrow boundary.
     """
+
+
+class FilingExportFieldOverflowError(FilingExportValidationError):
+    """Refuses an export whose value is wider than its fixed-width field.
+
+    An official design that asks for a complete value gives no truncation
+    rule, so the export writes nothing rather than shorten it. The context
+    names the record, the field and both widths, never the value, which can be
+    a taxpayer's or a counterparty's private data.
+    """
+
+    def __init__(self, *, export_record_id: str, export_field_id: str, field_length: int, value_length: int) -> None:
+        """Record where the value does not fit and by how much."""
+        super().__init__(
+            f"export record {export_record_id!r} field {export_field_id!r} needs {value_length} positions "
+            f"but its fixed width is {field_length}",
+            context={
+                "export_record_id": export_record_id,
+                "export_field_id": export_field_id,
+                "field_length": field_length,
+                "value_length": value_length,
+            },
+        )
+        self.export_record_id = export_record_id
+        self.export_field_id = export_field_id
+        self.field_length = field_length
+        self.value_length = value_length
+
+
+class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
+    """Refuses an export whose layout requires a record this return has no occurrence of.
+
+    The official design cannot be written without that record, so a return
+    with nothing to state in it has nothing to file in this format.
+    """
+
+    def __init__(self, *, export_record_id: str) -> None:
+        """Record which required record has no occurrence."""
+        super().__init__(
+            f"required export record {export_record_id!r} has no applicable occurrence",
+            context={"export_record_id": export_record_id},
+        )
+        self.export_record_id = export_record_id
+
+
+#: Export refusals the modelo export boundary shows as they are, since their
+#: own code and context already tell the operator why nothing was written.
+FILING_EXPORT_REFUSALS: tuple[type[FilingExportValidationError], ...] = (
+    FilingExportFieldOverflowError,
+    FilingExportRequiredRecordAbsentError,
+)

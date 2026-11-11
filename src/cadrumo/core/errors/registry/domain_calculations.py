@@ -138,6 +138,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.fixed_width_codec.FixedWidthValueOverflowError",
+        ErrorCode(
+            code="REFUSED_FIXED_WIDTH_VALUE_OVERFLOW",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_fixed_width_value_overflow",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.fixed_width_codec.FixedWidthRecordRenderError",
         ErrorCode(
             code="FAIL_FIXED_WIDTH_RECORD_RENDER",

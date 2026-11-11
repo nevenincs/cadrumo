@@ -468,6 +468,28 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportFieldOverflowError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_FIELD_OVERFLOW",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_field_overflow",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportRequiredRecordAbsentError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_REQUIRED_RECORD_ABSENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_required_record_absent",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.errors.IvaValidationError",
         ErrorCode(
             code="ERROR_IVA_VALIDATION",

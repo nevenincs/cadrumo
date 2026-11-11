@@ -24,7 +24,7 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import FilingExportRequiredRecordAbsentError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.modelos.perceptor_clave_scope import (
     PerceptorClaveScope,
@@ -81,7 +81,7 @@ def render_layout_records(
             projection_plan=projection_plan,
         )
         if record.required and not rows:
-            raise FilingExportValidationError(f"required export record {record.id!r} has no applicable occurrence")
+            raise FilingExportRequiredRecordAbsentError(export_record_id=record.id)
         require_m347_declarado_casillas_have_one_row(
             record,
             rows=tuple(row for row, _context in rows),
@@ -405,7 +405,8 @@ def _validate_projection_values(
     values: dict[ProjectionAddress, object],
 ) -> None:
     for address, field in expected_fields.items():
-        format_field(field, values[address])
+        export_record_id, _occurrence, _projection_ref = address
+        format_field(field, values[address], export_record_id=export_record_id)
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
