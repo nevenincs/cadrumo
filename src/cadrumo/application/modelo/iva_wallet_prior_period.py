@@ -278,7 +278,7 @@ def _local_calculation_carry_evidence(
     """
     if prior_calculations is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
-    modelo = Modelo("303").value
+    modelo = form_for_role("iva.periodic")
     revision = prior_calculations.latest_revision(modelo, source_period)
     if revision is None:
         return _NO_PRIOR_PERIOD_OBSERVATION

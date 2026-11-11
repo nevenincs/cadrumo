@@ -2440,8 +2440,6 @@ cli:
         help: Declare the taxpayer's ascendants for the Modelo 100 household section.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           ascendant(s).
-        invalid_flag: The --ascendiente value is invalid. Every row must declare NACIMIENTO=YYYY-MM-DD;
-          NIF, FALLECIMIENTO and CONVIVIENTES are optional.
         invalid_row: The --ascendiente row could not be read. Use KEY=VALUE pairs
           with the keys NACIMIENTO, NIF, FALLECIMIENTO and CONVIVIENTES, each at most
           once and with a value; the error context names the key when it can be identified.

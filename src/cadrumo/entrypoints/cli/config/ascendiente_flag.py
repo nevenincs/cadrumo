@@ -1,8 +1,9 @@
 """The ``--ascendiente KEY=VALUE,...`` grammar, mapped onto the leaves an ascendant row stores.
 
 Each key names exactly one stored leaf. The values stay text: the ascendants operation
-the window also uses reads them, checks the NIF or NIE, the dates and the cohabiting
-bound against the pinned authority, and refuses a row by its position.
+the window also uses reads them, requires the birth date, checks the NIF or NIE, the
+dates and the cohabiting bound against the pinned authority, and refuses a row by its
+position.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ _KEY_TO_LEAF: Final = {
     "FALLECIMIENTO": "fallecimiento",
     "CONVIVIENTES": "convivientes",
 }
-_INVALID_FLAG_LOCALE_KEY: Final = "cli.config.profile.ascendiente.invalid_flag"
 _INVALID_ROW_LOCALE_KEY: Final = "cli.config.profile.ascendiente.invalid_row"
 
 
@@ -38,8 +38,6 @@ def parse_ascendiente_flag(raw: str) -> ProfileAscendantRow:
         if not separator or key not in _KEY_TO_LEAF or key in parts or not value.strip():
             raise _refuse_row(key if key in _KEY_TO_LEAF else None)
         parts[key] = value.strip()
-    if "NACIMIENTO" not in parts:
-        raise CliRefusedBoundaryError(translated_message=_INVALID_FLAG_LOCALE_KEY, context={"key": "NACIMIENTO"})
     return ProfileAscendantRow(
         facts=tuple(ProfileAscendantFact(field_key=_KEY_TO_LEAF[key], value=value) for key, value in parts.items())
     )

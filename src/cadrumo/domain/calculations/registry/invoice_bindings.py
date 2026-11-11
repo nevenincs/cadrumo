@@ -30,6 +30,7 @@ from .binding_selector_utils import (
 from .errors import RegistryValidationError
 from .form_codes import form_for_role
 from .ids import BindingId
+from .ine_provincia_catalogue import require_ine_provincia_code
 from .invoice_row_materialization import (
     InvoiceGrouping,
     build_invoice_rows,
@@ -183,13 +184,19 @@ class InvoiceObservation(BaseModel):
     """The leased premises' SITUACIÓN DEL INMUEBLE code, when the lease records it."""
     referencia_catastral: str | None = Field(default=None, min_length=1, max_length=32)
     """The leased premises' referencia catastral, when the lease records it."""
-    party_provincia_code: str | None = Field(default=None, pattern=r"^[0-9]{2}$")
+    party_provincia_code: str | None = Field(default=None, min_length=1, max_length=16)
     """The INE code of the province of a Spanish counterparty's domicilio fiscal, when the person stated it.
 
     Modelo 347 declares it as the declarado's CÓDIGO PROVINCIA (pos. 77-78). No
     invoice holds it as a fact, so it comes only from the counterparty's stated
     facts and is never read out of an address.
     """
+
+    @field_validator("party_provincia_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _is_a_catalogue_provincia(cls, value: str | None) -> str | None:
+        return require_ine_provincia_code(value)
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
