@@ -137,11 +137,10 @@ from .export_contracts import (
     ModeloExportEvidenceMissingError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
-    ModeloExportUnrepresentableCharacterError,
     ModeloIvaWalletDecisionProvenance,
     PreparedModeloExport,
 )
-from .export_field_refusal import export_field_unrenderable_refusal
+from .export_field_refusal import export_field_unrenderable_refusal, export_unrepresentable_character_refusal
 from .export_ports import ModeloExportPorts
 from .export_preparation import (
     approve_export_draft,
@@ -646,7 +645,7 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
         return ModeloExportRequiredRecordAbsentError(context=refusal_context)
     if isinstance(exc, FilingExportUnrepresentableCharacterError):
-        return _export_unrepresentable_character_refusal(command, exc)
+        return export_unrepresentable_character_refusal(command, exc)
     if isinstance(exc, FilingExportFieldUnrenderableError):
         return export_field_unrenderable_refusal(command, exc)
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
@@ -700,49 +699,6 @@ def _export_value_overflow_refusal(
             context={**context, "field_value": exc.rendered},
         )
     return ModeloExportValueOverflowError(context=context)
-
-
-def _export_unrepresentable_character_refusal(
-    command: ModeloExportCommand, exc: FilingExportUnrepresentableCharacterError
-) -> ModeloExportUnrepresentableCharacterError:
-    """Refuse a text value holding a character its record design cannot write, naming the slot and the character.
-
-    Dropping or replacing the character would declare something else, so
-    nothing is written. The value is shown as the record's rule wrote it,
-    because it is what the filer recorded and has to find again.
-    """
-    context: dict[str, object] = {
-        "calculation_revision_id": command.calculation_revision_id,
-        "field_id": exc.field_id,
-        "character": exc.character,
-        "code_point": f"U+{ord(exc.character):04X}",
-        "field_value": exc.rendered,
-    }
-    if exc.record_type is not None:
-        context["record_type"] = exc.record_type
-    failure = build_modelo_precondition_failure(
-        subject_leaf_key="modelo.export",
-        condition_id="modelo.export.text_value.writable",
-        scenario_id="modelo.export.text_value.unrepresentable_character",
-        evidence_id="modelo.export.text_value",
-        evidence_values={
-            "calculation_revision_id": command.calculation_revision_id,
-            "field_id": exc.field_id,
-            "code_point": f"U+{ord(exc.character):04X}",
-        },
-        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-    )
-    if exc.first_position is None or exc.field_length is None or exc.record_type is None:
-        return ModeloExportUnrepresentableCharacterError(context=context, precondition_failure=failure)
-    return ModeloExportUnrepresentableCharacterError(
-        translated_message="application.modelo.errors.export_text_unrepresentable_character",
-        context={
-            **context,
-            "first_position": exc.first_position,
-            "last_position": exc.first_position + exc.field_length - 1,
-        },
-        precondition_failure=failure,
-    )
 
 
 def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:
