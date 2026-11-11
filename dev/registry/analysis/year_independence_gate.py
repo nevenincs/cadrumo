@@ -124,7 +124,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     modelos, catalogues = load_registry_tree(args.registry_root)
     keys, singles = collect_keys(modelos, catalogues, args.registry_root)
     if args.write_baseline:
-        args.baseline.write_text(render_baseline(keys), encoding="utf-8")
+        args.baseline.write_text(render_baseline(keys), encoding="utf-8", newline="\n")
         sys.stdout.write(f"wrote {len(set(keys))} findings to {args.baseline.as_posix()}\n")
         return 0
     if args.check:
