@@ -51,18 +51,16 @@ def require_declared_party_names(
         FilingExportDeclaredPartyNameTooWideError: The carried name is wider than the slot.
     """
     for field in record.fields:
-        if field.party_name is None or field.kind != CasillaFieldKind.BINDING or field.binding is None:
-            continue
-        if _slot_taken_by_another_field(record, field, row):
+        if not _is_party_name_slot(field) or _slot_taken_by_another_field(record, field, row):
             continue
         length = field.length
         if length is None:
             continue
         value = binding_values.get((field.binding, row.row_index))
-        if isinstance(value, str) and value.strip() and len(value) <= length:
+        if _is_stated(value) and len(str(value)) <= length:
             continue
         tax_identifier, country_code = _row_party(record, revision=revision, binding_values=binding_values, row=row)
-        composed_length = len(value) if isinstance(value, str) and value.strip() else None
+        composed_length = len(str(value)) if _is_stated(value) else None
         error_type = (
             FilingExportDeclaredPartyNameMissingError
             if composed_length is None
@@ -79,6 +77,16 @@ def require_declared_party_names(
             tax_identifier=tax_identifier,
             country_code=country_code,
         )
+
+
+def _is_party_name_slot(field: ExportFieldDefinition) -> bool:
+    """Whether the field is a binding-filled party-name slot."""
+    return field.party_name is not None and field.kind == CasillaFieldKind.BINDING and field.binding is not None
+
+
+def _is_stated(value: object) -> bool:
+    """Whether the bound value is a non-blank string."""
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _slot_taken_by_another_field(
@@ -102,6 +110,22 @@ def _row_party(
     row: RecordRenderRow,
 ) -> tuple[str | None, str | None]:
     """Return the identifier and country this record occurrence files for its party."""
+    by_row_field = _row_values_by_field(record, revision=revision, binding_values=binding_values, row=row)
+    tax_field = next((name for name in _TAX_IDENTIFIER_ROW_FIELDS if name in by_row_field), None)
+    country = next((by_row_field[name] for name in _COUNTRY_ROW_FIELDS if name in by_row_field), None)
+    if country is None and tax_field == _SPANISH_ONLY_ROW_FIELD:
+        country = SPAIN_COUNTRY_CODE
+    return (None if tax_field is None else by_row_field[tax_field]), country
+
+
+def _row_values_by_field(
+    record: ExportRecordDefinition,
+    *,
+    revision: ModeloRevision,
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row: RecordRenderRow,
+) -> dict[str, str]:
+    """Map each row field this occurrence files to its first non-blank value."""
     bindings = {binding.id: binding for binding in revision.bindings}
     by_row_field: dict[str, str] = {}
     for field in record.fields:
@@ -114,11 +138,7 @@ def _row_party(
         value = binding_values.get((field.binding, row.row_index))
         if isinstance(row_field, str) and isinstance(value, str) and value.strip():
             by_row_field.setdefault(row_field, value.strip())
-    tax_field = next((name for name in _TAX_IDENTIFIER_ROW_FIELDS if name in by_row_field), None)
-    country = next((by_row_field[name] for name in _COUNTRY_ROW_FIELDS if name in by_row_field), None)
-    if country is None and tax_field == _SPANISH_ONLY_ROW_FIELD:
-        country = SPAIN_COUNTRY_CODE
-    return (None if tax_field is None else by_row_field[tax_field]), country
+    return by_row_field
 
 
 __all__ = ["require_declared_party_names"]

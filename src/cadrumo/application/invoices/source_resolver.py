@@ -173,13 +173,13 @@ def _invoice_resolution_from_observations(
         context=context,
         resolver_id=resolver_id,
     )
-    if context.modelo == form_for_role("iva.intracommunity_summary"):
-        diagnostics += _m349_inferred_clave_diagnostics(
-            declared_invoices,
-            bucket_invoices=catalogue_invoices,
-            resolver_id=resolver_id,
-        )
-        diagnostics += _m349_unclassified_operation_diagnostics(source_invoices, resolver_id=resolver_id)
+    diagnostics += _m349_operation_clave_diagnostics(
+        context,
+        declared_invoices=declared_invoices,
+        catalogue_invoices=catalogue_invoices,
+        source_invoices=source_invoices,
+        resolver_id=resolver_id,
+    )
     diagnostics += m347_role_fact_advisories(
         source_invoices,
         context=context,
@@ -221,6 +221,23 @@ def _invoice_resolution_from_observations(
             for row in _invoice_provenance(invoice, observation, resolved_sources=resolved_sources)
         ),
     )
+
+
+def _m349_operation_clave_diagnostics(
+    context: CalculationSourceContext,
+    *,
+    declared_invoices: tuple[Invoice, ...],
+    catalogue_invoices: tuple[Invoice, ...],
+    source_invoices: Sequence[Invoice],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    if context.modelo != form_for_role("iva.intracommunity_summary"):
+        return ()
+    return _m349_inferred_clave_diagnostics(
+        declared_invoices,
+        bucket_invoices=catalogue_invoices,
+        resolver_id=resolver_id,
+    ) + _m349_unclassified_operation_diagnostics(source_invoices, resolver_id=resolver_id)
 
 
 def _source_transaction_ids(observed_items: Sequence[ObservedInvoice]) -> tuple[str, ...]:

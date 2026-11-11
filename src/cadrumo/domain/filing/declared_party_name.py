@@ -97,23 +97,31 @@ class DeclaredPartyFilingName(BaseModel):
     @model_validator(mode="after")
     def _parts_match_kind(self) -> DeclaredPartyFilingName:
         if self.kind is DeclaredPartyKind.ENTITY:
-            if self.razon_social is None:
-                raise ValueError("an entity states its razón social")
-            if any(part is not None for part in (self.primer_apellido, self.segundo_apellido, self.nombre)):
-                raise ValueError("an entity states no surnames or given name")
-            if self.no_second_surname:
-                raise ValueError("an entity states no surnames")
+            self._require_entity_parts()
         else:
-            if self.razon_social is not None:
-                raise ValueError("a natural person states no razón social")
-            if self.primer_apellido is None or self.nombre is None:
-                raise ValueError("a natural person states the first surname and the given name")
-            if (self.segundo_apellido is None) != self.no_second_surname:
-                raise ValueError("a natural person states a second surname or that there is none")
+            self._require_natural_person_parts()
         widths = [rendering.width for rendering in self.renderings]
         if len(widths) != len(set(widths)):
             raise ValueError("one rendering per width")
         return self
+
+    def _require_entity_parts(self) -> None:
+        """An entity files its razón social alone."""
+        if self.razon_social is None:
+            raise ValueError("an entity states its razón social")
+        if any(part is not None for part in (self.primer_apellido, self.segundo_apellido, self.nombre)):
+            raise ValueError("an entity states no surnames or given name")
+        if self.no_second_surname:
+            raise ValueError("an entity states no surnames")
+
+    def _require_natural_person_parts(self) -> None:
+        """A natural person files surnames and a given name, never a razón social."""
+        if self.razon_social is not None:
+            raise ValueError("a natural person states no razón social")
+        if self.primer_apellido is None or self.nombre is None:
+            raise ValueError("a natural person states the first surname and the given name")
+        if (self.segundo_apellido is None) != self.no_second_surname:
+            raise ValueError("a natural person states a second surname or that there is none")
 
 
 __all__ = [

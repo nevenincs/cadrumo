@@ -10,7 +10,7 @@ provider, real SQLite engine, real serializer throughout.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -38,8 +38,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "37373737-3737-4737-8737-37373737373b"
 _SUPPLIER_CIF = "B00015016"
-_FIRST_STATED = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
-_RESTATED = datetime(2026, 5, 2, 9, 30, tzinfo=UTC)
+# Whole seconds so the stored timestamp round-trips exactly; restating happens later than stating.
+_FIRST_STATED = datetime.now(UTC).replace(microsecond=0)
+_RESTATED = _FIRST_STATED + timedelta(days=15, hours=22)
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
 

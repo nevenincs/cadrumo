@@ -78,39 +78,60 @@ def party_name_refusal_diagnostics(
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Name each party whose filing name a slot could not file, once per party and refusal, with an invoice."""
+    earliest = _earliest_invoice_by_party(observed_items)
+    slots = _party_name_slot_sources(context.revision)
+    diagnostics: dict[tuple[str, str, str], CalculationSourceDiagnostic] = {}
+    for refusal in refusals:
+        handle = refusal.party_handle or ""
+        key = (handle, refusal.reason, refusal.export_field_id)
+        if key not in diagnostics:
+            diagnostics[key] = _refusal_diagnostic(
+                refusal,
+                item=earliest.get(handle),
+                slot=slots.get(refusal.export_field_id, (None, None)),
+                context=context,
+                resolver_id=resolver_id,
+            )
+    return tuple(diagnostics[key] for key in sorted(diagnostics))
+
+
+def _earliest_invoice_by_party(observed_items: Sequence[ObservedInvoice]) -> dict[str, ObservedInvoice]:
     earliest: dict[str, ObservedInvoice] = {}
     for invoice, observation in sorted(
         observed_items, key=lambda item: (item[0].issued_at, item[0].invoice_number, item[0].invoice_id)
     ):
         if observation.party_handle is not None:
             earliest.setdefault(observation.party_handle, (invoice, observation))
-    slots = _party_name_slot_sources(context.revision)
-    diagnostics: dict[tuple[str, str, str], CalculationSourceDiagnostic] = {}
-    for refusal in refusals:
-        handle = refusal.party_handle or ""
-        key = (handle, refusal.reason, refusal.export_field_id)
-        if key in diagnostics:
-            continue
-        item = earliest.get(handle)
-        source, casilla_id = slots.get(refusal.export_field_id, (None, None))
-        named = refusal.export_field_id if item is None else _party_named(item)
-        diagnostics[key] = CalculationSourceDiagnostic(
-            reason="declared_party_name_unresolved",
-            source_kind=_INVOICE_SOURCE_KIND if source is None else source.value,
-            binding_source=source,
-            resolver_id=resolver_id,
-            source_ref=f"party-name:{refusal.reason}:{handle or refusal.export_field_id}",
-            casilla_id=casilla_id,
-            fact=CalculationNoteFact.of(
-                _SENTENCES[type(refusal).reason],
-                rows=() if item is None else (item[0].invoice_id,),
-                party=named,
-                width=refusal.field_length,
-            ),
-            message=_message(refusal, named=named, context=context),
-            remedy=_REMEDY,
-        )
-    return tuple(diagnostics[key] for key in sorted(diagnostics))
+    return earliest
+
+
+def _refusal_diagnostic(
+    refusal: FilingExportDeclaredPartyNameError,
+    *,
+    item: ObservedInvoice | None,
+    slot: tuple[BindingSourceKind | None, CasillaId | None],
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    source, casilla_id = slot
+    handle = refusal.party_handle or ""
+    named = refusal.export_field_id if item is None else _party_named(item)
+    return CalculationSourceDiagnostic(
+        reason="declared_party_name_unresolved",
+        source_kind=_INVOICE_SOURCE_KIND if source is None else source.value,
+        binding_source=source,
+        resolver_id=resolver_id,
+        source_ref=f"party-name:{refusal.reason}:{handle or refusal.export_field_id}",
+        casilla_id=casilla_id,
+        fact=CalculationNoteFact.of(
+            _SENTENCES[type(refusal).reason],
+            rows=() if item is None else (item[0].invoice_id,),
+            party=named,
+            width=refusal.field_length,
+        ),
+        message=_message(refusal, named=named, context=context),
+        remedy=_REMEDY,
+    )
 
 
 _SENTENCES: Final = {

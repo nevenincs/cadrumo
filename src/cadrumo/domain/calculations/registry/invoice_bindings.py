@@ -17,8 +17,7 @@ from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...filing.declared_party_name import DeclaredPartyFilingName
-from ...filing.declared_party_name_filing import PartyNameRefusals, PartyNameSlot, party_name_filing_text
-from ...filing.errors import FilingExportDeclaredPartyNameError
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from ...invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -37,13 +36,12 @@ from .ine_provincia_catalogue import require_ine_provincia_code
 from .invoice_row_materialization import (
     InvoiceGrouping,
     build_invoice_rows,
-    invoice_party_reference,
     normalise_m349_nif_export_rows,
 )
 from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
-from .party_name_composition import PartyNameComposition
+from .party_name_rows import file_party_names
 from .schema_base import coerce_enum_member
-from .schema_exports import ExportFieldDataType, ExportFieldDefinition, ExportRecordDefinition
+from .schema_exports import ExportFieldDataType
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
@@ -820,63 +818,14 @@ def resolve_invoice_binding_row_values(
             effective_date=_require_m347_effective_date(effective_date),
         ),
     )
-    composed = _compose_party_filing_names(revision, rows, available, refusals=party_name_refusals)
+    composed = file_party_names(
+        revision,
+        rows,
+        available,
+        name_bindings=_party_name_bindings(revision),
+        refusals=party_name_refusals,
+    )
     return normalise_m349_nif_export_rows(composed)
-
-
-type _PartyNameField = tuple[ExportRecordDefinition, ExportFieldDefinition, PartyNameComposition, int]
-
-
-def _compose_party_filing_names(
-    revision: ModeloRevision,
-    rows: dict[tuple[BindingId, int], Decimal | str],
-    observations: tuple[InvoiceObservation, ...],
-    *,
-    refusals: PartyNameRefusals | None,
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Replace each row's party reference in a ``party_filing_name`` cell with the name its slot files.
-
-    A revision read without its export layouts has no slot to file into, so its
-    name cells are dropped rather than left holding the reference.
-    """
-    name_bindings = _party_name_bindings(revision)
-    if not name_bindings:
-        return rows
-    if not revision.export_layouts:
-        return {key: value for key, value in rows.items() if key[0] not in name_bindings}
-    name_fields = _party_name_fields(revision, name_bindings)
-    parties: dict[str, InvoiceObservation] = {}
-    for observation in observations:
-        reference = invoice_party_reference(observation.country_code, observation.party_tax_id)
-        known = parties.get(reference)
-        if known is None or (known.party_filing_name is None and observation.party_filing_name is not None):
-            parties[reference] = observation
-    composed: dict[tuple[BindingId, int], Decimal | str] = {}
-    for (binding_id, row_index), value in rows.items():
-        name_field = name_fields.get(binding_id)
-        if name_field is None:
-            composed[(binding_id, row_index)] = value
-            continue
-        record, field, composition, length = name_field
-        party = parties.get(str(value))
-        slot = PartyNameSlot(
-            modelo=refusals.modelo if refusals is not None else str(record.id),
-            export_record_id=str(record.id),
-            export_field_id=str(field.id),
-            field_length=length,
-            party_handle=None if party is None else party.party_handle,
-            row_index=row_index,
-        )
-        try:
-            composed[(binding_id, row_index)] = party_name_filing_text(
-                None if party is None else party.party_filing_name,
-                composition=composition,
-                slot=slot,
-            )
-        except FilingExportDeclaredPartyNameError as refusal:
-            if refusals is not None:
-                refusals.refusals.append(refusal)
-    return composed
 
 
 def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
@@ -887,35 +836,6 @@ def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
         if binding.source in INVOICE_BINDING_SOURCE_KINDS
         and _validated_invoice_selector(binding).row_field == "party_filing_name"
     )
-
-
-def _party_name_fields(
-    revision: ModeloRevision, name_bindings: frozenset[BindingId]
-) -> dict[BindingId, _PartyNameField]:
-    """Index the layout field that files each ``party_filing_name`` binding, with its design rule and width.
-
-    Raises:
-        RegistryValidationError: A binding files a party name but no layout
-            field states how, or two fields filing it state different rules.
-    """
-    fields: dict[BindingId, _PartyNameField] = {}
-    for layout in revision.export_layouts:
-        for record in layout.records:
-            for field in record.fields:
-                if field.binding not in name_bindings or field.party_name is None or field.length is None:
-                    continue
-                found = (record, field, field.party_name, field.length)
-                known = fields.setdefault(field.binding, found)
-                if (known[2], known[3]) != (found[2], found[3]):
-                    raise RegistryValidationError(
-                        f"binding {field.binding!r} files a party name in fields with different design rules",
-                    )
-    missing = sorted(name_bindings - fields.keys())
-    if missing:
-        raise RegistryValidationError(
-            f"bindings {missing!r} file a party name but no export field states its composition rule",
-        )
-    return fields
 
 
 def _validate_invoice_operation_claves(
