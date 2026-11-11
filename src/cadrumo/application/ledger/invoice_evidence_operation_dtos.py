@@ -29,7 +29,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.iva.classification import IvaInvoiceClassificationCriteria
 from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
-from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ..ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts, MissingClassifierInput
 from ..ledger.classification_category_resolution import IvaCategoryResolution
 from ..ledger.confirm_establishment import ConfirmedEstablishment
@@ -710,10 +710,10 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     label_reading_fallback: LabelReadingFallbackProjectionV1 | None = None
 
     @classmethod
-    def from_result(cls, result: InvoiceConfirmationResult) -> Self:
-        """Copy the canonical invoice, actual re-run draft and resolution facts."""
+    def from_result(cls, result: InvoiceConfirmationResult, *, documents: InvoiceDocumentIndex) -> Self:
+        """Copy the canonical invoice with its stored documents, actual re-run draft and resolution facts."""
         return cls(
-            invoice=CatalogueInvoiceSnapshot.from_invoice(result.invoice),
+            invoice=CatalogueInvoiceSnapshot.from_invoice(result.invoice, documents=documents),
             draft=InvoiceDraftProjectionV1.from_draft(result.draft),
             created=result.created,
             total_discrepancy=(

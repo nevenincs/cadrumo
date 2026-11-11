@@ -215,6 +215,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         grand_total_eur=None,
         referencia_catastral=None,
         settlement_amount=PublicDecimal(decimal="106.00"),
+        documents=(),
     )
 
 

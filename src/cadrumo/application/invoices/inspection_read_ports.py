@@ -7,7 +7,7 @@ from typing import Protocol
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.catalogue import StoredInvoiceCatalogue
-from .catalogue_reads_ports import InvoiceCatalogueReader
+from .catalogue_reads_ports import InvoiceCatalogueReader, InvoiceDocumentManifestReader
 
 
 class BoundInvoiceCatalogueReader(InvoiceCatalogueReader, Protocol):
@@ -25,10 +25,11 @@ class BoundInvoiceCatalogueReader(InvoiceCatalogueReader, Protocol):
 
 @dataclass(frozen=True, slots=True)
 class InvoiceInspectionReadPorts:
-    """One read capability bound to one worker profile."""
+    """The invoice reads bound to one worker profile: its catalogue and the documents kept for it."""
 
     bucket_id: str
     invoices: BoundInvoiceCatalogueReader
+    documents: InvoiceDocumentManifestReader
 
 
 class InvoiceInspectionReadPortsFactory(Protocol):

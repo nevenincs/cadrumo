@@ -16,7 +16,7 @@ from .catalogue_creation_ports import (
     CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRepositoryPort,
 )
-from .catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .catalogue_reads_ports import InvoiceCatalogueReadPorts, InvoiceDocumentManifestReader
 
 
 class SealedRevisionReaderPort(Protocol):
@@ -36,6 +36,8 @@ class CatalogueLifecyclePorts:
     event_repository: CatalogueInvoiceEventRepositoryPort
     audit_commit: CatalogueInvoiceAuditCommitPort
     sealed_revisions: SealedRevisionReaderPort
+    #: The profile's document manifests, so a changed or removed invoice is served with its documents.
+    documents: InvoiceDocumentManifestReader
 
 
 class CatalogueLifecyclePortsFactory(Protocol):

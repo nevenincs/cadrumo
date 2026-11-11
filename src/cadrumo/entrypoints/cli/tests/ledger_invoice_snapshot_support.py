@@ -60,4 +60,5 @@ def received_invoice_snapshot(*, counterparty_tax_id: str | None) -> CatalogueIn
         grand_total_eur=None,
         referencia_catastral=None,
         settlement_amount=PublicDecimal(decimal="121.00"),
+        documents=(),
     )

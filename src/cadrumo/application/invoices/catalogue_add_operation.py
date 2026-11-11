@@ -69,7 +69,7 @@ from .catalogue_creation_ports import (
     CatalogueCreationPortsFactory,
     CatalogueInvoiceRateProviderPort,
 )
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from .simplificada_advisory import SimplificadaTaxIdAdvisory, resolve_simplificada_tax_id_advisory
 
 _DUPLICATE_INVOICE_TRANSLATION = "application.invoices.creation.errors.duplicate_invoice"
@@ -166,9 +166,10 @@ def _persist_invoice_add(
     ports: CatalogueCreationPorts,
     invoice: Invoice,
     actor: str,
-) -> CatalogueInvoiceCreateResult:
+) -> tuple[CatalogueInvoiceCreateResult, InvoiceDocumentIndex]:
     with validating_governed_facts(authority_operation):
-        return create_catalogue_invoice(invoice=invoice, ports=ports, actor=actor)
+        created = create_catalogue_invoice(invoice=invoice, ports=ports, actor=actor)
+    return created, InvoiceDocumentIndex.read(ports.documents)
 
 
 async def _commit_invoice_add(
@@ -187,7 +188,7 @@ async def _commit_invoice_add(
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         await context.events.effect(OperationEffect.UNKNOWN)
         try:
-            created = await asyncio.to_thread(
+            created, documents = await asyncio.to_thread(
                 _persist_invoice_add,
                 authority_operation=authority_operation,
                 ports=ports,
@@ -213,7 +214,7 @@ async def _commit_invoice_add(
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         result = InvoiceAddResult.created(
             payload.profile_id,
-            invoice=CatalogueInvoiceSnapshot.from_invoice(created.invoice),
+            invoice=CatalogueInvoiceSnapshot.from_invoice(created.invoice, documents=documents),
             bucket_event_ids=created.bucket_event_ids,
             euro_value_pending=created.invoice.euro_value_pending,
             simplificada_tax_id_advisory_required=advisory_required,

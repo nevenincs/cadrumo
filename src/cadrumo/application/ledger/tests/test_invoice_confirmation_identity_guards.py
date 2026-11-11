@@ -19,6 +19,7 @@ from ....application.invoices.catalogue_creation_ports import (
     CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRateProviderPort,
 )
+from ....application.invoices.catalogue_reads_ports import InvoiceDocumentManifestReader
 from ....application.ledger import invoice_confirmation as confirmation
 from ....application.ledger.confirm_establishment import ConfirmedEstablishment
 from ....application.ledger.establishment_ladder import CounterpartyEstablishment
@@ -128,6 +129,7 @@ def _persist_with_existing_invoice(
         event_repository=cast(CatalogueInvoiceEventRepositoryPort, object()),
         audit_commit=cast(CatalogueInvoiceAuditCommitPort, object()),
         rate_provider=cast(CatalogueInvoiceRateProviderPort, object()),
+        documents=cast(InvoiceDocumentManifestReader, object()),
     )
 
     return confirmation.persist_confirmed_invoice(
@@ -180,6 +182,7 @@ def test_same_document_with_a_different_invoice_number_refuses_before_any_write(
         event_repository=cast(CatalogueInvoiceEventRepositoryPort, object()),
         audit_commit=cast(CatalogueInvoiceAuditCommitPort, object()),
         rate_provider=cast(CatalogueInvoiceRateProviderPort, object()),
+        documents=cast(InvoiceDocumentManifestReader, object()),
     )
     monkeypatch.setattr(confirmation, "link_attachment_invoice", lambda *_args, **_kwargs: writes.append("link"))
     monkeypatch.setattr(

@@ -25,6 +25,7 @@ from ...core.percentage import fraction_of_percentage
 from ...core.time.clock import now
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
+from ..invoices.catalogue_read_projection import InvoiceDocumentIndex
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -248,13 +249,14 @@ class LedgerEvidenceConfirmExecutor:
                     evidence_ports=ports.evidence_ports,
                 )
                 await context.events.effect(OperationEffect.UPDATED)
+                documents = await asyncio.to_thread(InvoiceDocumentIndex.read, ports.catalogue_creation_ports.documents)
             result = LedgerEvidenceConfirmProjection(
                 profile_id=payload.profile_id,
                 evidence_id=payload.evidence_id,
                 attachment_id=payload.attachment_id,
                 source_sha256=payload.expected_source_sha256,
                 reviewed_draft_sha256=payload.expected_draft_review_sha256,
-                confirmation=InvoiceConfirmationProjectionV1.from_result(confirmation),
+                confirmation=InvoiceConfirmationProjectionV1.from_result(confirmation, documents=documents),
             )
             check_invoice_evidence_result_size(result)
             return await context.operands.put(

@@ -18,7 +18,7 @@ from ....application.invoices.catalogue_add_contracts import (
     InvoiceAddResult,
 )
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
-from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -58,7 +58,7 @@ def _present_add_result(monkeypatch: pytest.MonkeyPatch, *, currency: str, invoi
     invoice = _invoice(currency, invoice_number)
     added = InvoiceAddResult.created(
         _PROFILE,
-        invoice=CatalogueInvoiceSnapshot.from_invoice(invoice),
+        invoice=CatalogueInvoiceSnapshot.from_invoice(invoice, documents=InvoiceDocumentIndex.from_manifests(())),
         bucket_event_ids=("bucket-event",),
         euro_value_pending=invoice.euro_value_pending,
         simplificada_tax_id_advisory_required=False,

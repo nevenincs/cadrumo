@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import date
 from decimal import Decimal
 
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.attachments.models import Attachment
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import append_bucket_event
 from ....domain.currency.models import EurRateLookup
@@ -104,6 +105,13 @@ class _InMemoryRateProvider:
         return None
 
 
+class _InMemoryDocumentManifests:
+    """A profile whose attachment custody holds no document."""
+
+    def iter_manifests(self) -> Iterator[Attachment]:
+        return iter(())
+
+
 def in_memory_catalogue_creation_ports() -> CatalogueCreationPorts:
     """Compose fresh inward fakes for one application test scenario."""
     invoices = _InMemoryInvoiceRepository()
@@ -113,6 +121,7 @@ def in_memory_catalogue_creation_ports() -> CatalogueCreationPorts:
         event_repository=events,
         audit_commit=_InMemoryAuditCommit(invoices, events),
         rate_provider=_InMemoryRateProvider(),
+        documents=_InMemoryDocumentManifests(),
     )
 
 

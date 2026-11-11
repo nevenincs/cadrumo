@@ -127,6 +127,7 @@ def _confirm_the_foreign_document(
         event_repository=base_catalogue_ports.event_repository,
         audit_commit=base_catalogue_ports.audit_commit,
         rate_provider=_AlwaysSilentRateProvider(),
+        documents=base_catalogue_ports.documents,
     )
     return confirm_invoice_draft_from_evidence(
         bucket_id=BUCKET_ID,

@@ -25,7 +25,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .catalogue_lifecycle import remove_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 
 INVOICE_REMOVE_OPERATION_DEFINITION_ID = "ledger.invoice.remove"
 
@@ -79,7 +79,9 @@ class InvoiceRemoveExecutor:
             return InvoiceRemoveResult(
                 profile_id=payload.profile_id,
                 invoice_id=payload.invoice_id,
-                invoice=CatalogueInvoiceSnapshot.from_invoice(removed.invoice),
+                invoice=CatalogueInvoiceSnapshot.from_invoice(
+                    removed.invoice, documents=InvoiceDocumentIndex.read(ports.documents)
+                ),
             )
 
         async def commit() -> str:
