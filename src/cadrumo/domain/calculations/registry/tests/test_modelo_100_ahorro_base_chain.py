@@ -301,6 +301,8 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
         # neutral zero for a scenario with no descendants.
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+        # Art. 81.2 guarderia increment (casilla 0613); neutral zero for a scenario with no descendants.
+        "renta-profile-incremento-guarderia": Decimal("0"),
     }
     # The reviewed edition requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.
