@@ -139,19 +139,28 @@ def _designed_incremento_casilla(snapshot: RegistrySnapshot) -> str:
     return carriers[0]
 
 
-def _nursery_child(filing_year: int, *, months: int, monthly_spend: Decimal) -> DescendantInfo:
-    """A child under three all year, living with a mother who works every month, in a nursery from January."""
+def _nursery_child(
+    filing_year: int, *, months: int, monthly_spend: Decimal, schedule: str | None = None
+) -> DescendantInfo:
+    """A child under three all year, living with a mother who works every month, in a nursery from January.
+
+    ``schedule`` states the paid months outright when they are not the first ``months`` of the year.
+    """
     return DescendantInfo(
         birth_date=date(filing_year - 1, 1, 15),
         meses_madre_trabajo=parse_meses_trabajo(f"1-{_CALENDAR_MONTHS}", field="test"),
         gastos_guarderia_euros=0,
-        gastos_guarderia_mensuales=parse_guarderia_mensual(f"1-{months}:{monthly_spend}", field="test"),
+        gastos_guarderia_mensuales=parse_guarderia_mensual(
+            f"1-{months}:{monthly_spend}" if schedule is None else schedule, field="test"
+        ),
         segundo_ciclo_infantil_inicio_mes=None,
     )
 
 
-def _mother_facts(filing_year: int, *, months: int, monthly_spend: Decimal) -> tuple[UserProfileFact, ...]:
-    child = _nursery_child(filing_year, months=months, monthly_spend=monthly_spend)
+def _mother_facts(
+    filing_year: int, *, months: int, monthly_spend: Decimal, schedule: str | None = None
+) -> tuple[UserProfileFact, ...]:
+    child = _nursery_child(filing_year, months=months, monthly_spend=monthly_spend, schedule=schedule)
     child_facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list((child,)))
     return (
         UserProfileFact(path="renta_taxpayer.sex", value="M"),
@@ -390,3 +399,25 @@ def test_a_mother_calculates_the_increment_bounded_by_her_stated_cotizaciones(
     expected = _expected_incremento(months=months, monthly_spend=monthly_spend, cotizaciones=cotizaciones)
     assert expected > 0
     assert revision.casilla_values[validated_casilla_id(target)] == expected
+
+
+@pytest.mark.parametrize("filing_year", _years_with_the_increment())
+def test_a_month_without_a_paid_fee_is_not_prorated(tmp_path: Path, filing_year: int) -> None:
+    """The manual counts only the months whose fee is paid for the whole month, so an unpaid August is not one."""
+    target = _incremento_target(_snapshot(filing_year))
+    assert target is not None
+    paid_months = _CALENDAR_MONTHS - 1
+    monthly_spend = Decimal("220")
+    mother = _mother_facts(
+        filing_year,
+        months=paid_months,
+        monthly_spend=monthly_spend,
+        schedule=f"1-7:{monthly_spend};9-12:{monthly_spend}",
+    )
+
+    with _profile(tmp_path, filing_year, mother):
+        revision = _calculate(filing_year)
+
+    expected = _expected_incremento(months=paid_months, monthly_spend=monthly_spend)
+    assert expected == (_STATUTORY_ANNUAL_CAP / Decimal(_CALENDAR_MONTHS) * Decimal(paid_months))
+    assert revision.casilla_values[validated_casilla_id(target)] == expected.quantize(Decimal("0.01"))
