@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:d26af061a592e37d5deb16676e80299fcbdaca59ba6124b0f2685f0115faa213'
+body_hash: 'sha256:ed648160b04fb308584174e1df664d39affd12313f1f2dd660b7025f7800a1fd'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -105,6 +105,9 @@ related:
 - `S06` `M` `src/cadrumo_agent_service/service_administration.py`
 - `S06` `verify:` `pytest src/cadrumo_agent_service (936) + dev/packaging/native/tests/test_environment_conformance.py (62) + test_local_ai_demand.py incl. real pipe` -> `pass`
 - `S06` `verify:` `ratchet branch_gate_delta added 0, lint-imports 31 kept, ty/basedpyright/pyrefly clean, rustfmt` -> `pass`
+- `S06` `M` `src/cadrumo_agent_service/adapters/served_catalog_models.py`
+- `S06` `M` `src/cadrumo_agent_service/adapters/tests/test_served_catalog_models.py`
+- `S06` `verify:` `pytest src/cadrumo_agent_service (938)` -> `pass`
 
 ## Notes
 
@@ -115,3 +118,4 @@ related:
 - `S03` coordinator review: parent must be the admitted desktop process (PID + creation time), not any desktop-image process; cargo pending DESKTOP staged verification
 - `S05` cargo, clippy and ctest pending: DESKTOP verifies staged in root; `llama_server::presentation` is left with only test callers `(live_package.rs,` `llama_server/tests.rs),` flagged for S06 reuse or removal
 - `S06` Rust (manager `local_ai_demand_route,` desktop agent launch env) is rustfmt-clean but uncompiled here: DESKTOP verifies staged. Worktree-env failures (uv build wheel/sdist, preflight collection, pyrefly spawn) are environmental and unrelated.
+- `S06` Found while scoping S07: a dormant server made the agent catalogue say not installed, so every local read refused `no_selection` before the demand.
