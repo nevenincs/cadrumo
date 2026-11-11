@@ -115,6 +115,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
+from ...domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ...domain.deadlines.models import TaxpayerProfile
 from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
@@ -122,7 +123,16 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+# Two distinct exercises before any edition either modelo authors: the registry has no revision for them,
+# so the planner refuses each coordinate and a pair keeps its own year.
+_FIRST_EDITION_YEAR = min(authored_revisions(modelo)[0].valid_from.year for modelo in ("100", "303"))
+_BEFORE_EDITIONS = _FIRST_EDITION_YEAR - 1
+_FURTHER_BEFORE_EDITIONS = _FIRST_EDITION_YEAR - 2
+_HORIZON = filing_year_envelope().horizon
+_TODAY = date(_HORIZON, 3, 15)
+# The newest exercise already closed on ``_TODAY``.
+_EJERCICIO = _TODAY.year - 1
+_NOW = datetime(_HORIZON, 8, 24, 20, tzinfo=UTC)
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,7 +172,7 @@ class _DeterministicFiledHistoryDiscovery:
         self,
         *,
         modelo: str = "100",
-        ejercicio: int = 2000,
+        ejercicio: int = _BEFORE_EDITIONS,
         entered: asyncio.Event | None = None,
         release: asyncio.Event | None = None,
     ) -> None:
@@ -328,7 +338,7 @@ def _composition_discovery(
 def _composition_pair(modelo: str = "100") -> FiledHistoryDiscoveryPair:
     return FiledHistoryDiscoveryPair(
         modelo=modelo,
-        ejercicio=2000,
+        ejercicio=_BEFORE_EDITIONS,
         signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
     )
 
@@ -345,7 +355,7 @@ def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run:
             ports=composition.ports,
             filed_data_port=composition.filed_data_port,
             output_root=tmp_path,
-            today=date(2026, 3, 15),
+            today=_TODAY,
             dry_run=dry_run,
             discover=_composition_discovery(*pairs),
         ),
@@ -355,7 +365,10 @@ def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run:
 def test_canonical_composition_preserves_every_discovered_pair_and_refusal(tmp_path: Path) -> None:
     run = _run_composition(_composition_pair("100"), _composition_pair("303"), tmp_path=tmp_path)
 
-    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [("100", 2000), ("303", 2000)]
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [
+        ("100", _BEFORE_EDITIONS),
+        ("303", _BEFORE_EDITIONS),
+    ]
     assert all(pair.refused for pair in run.pairs)
     assert all(pair.failure_type == "LiveApplicationInputError" for pair in run.pairs)
     assert run.evidence_notices == ()
@@ -509,7 +522,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "filed",
-                today=date(2026, 3, 15),
+                today=_TODAY,
             ),
         )
 
@@ -606,7 +619,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root:
             sync_run_repository_factory=lambda: repository,
             composition_factory=composition_factory,
             browser_resources_factory=BrowserRuntimeResourceScope,
-            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=_EJERCICIO)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
         _, _, operands, supervisor, _ = build_supervised_operation(
@@ -622,7 +635,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root:
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
                 output_root=output_root if names_root else None,
-                today=date(2026, 3, 15),
+                today=_TODAY,
                 dry_run=True,
             ),
         )
@@ -686,7 +699,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
             sync_run_repository_factory=lambda: repository,
             composition_factory=_test_filed_history_composition,
             browser_resources_factory=BrowserRuntimeResourceScope,
-            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=_EJERCICIO)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
         durable_root = tmp_path / "terminal-operations"
@@ -710,7 +723,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "terminal-filed",
-                today=date(2026, 3, 15),
+                today=_TODAY,
             ),
         )
 
@@ -763,7 +776,7 @@ async def _history_accounting_projection_roundtrips(
     ):
         pair = FiledHistoryPairOutcome(
             modelo="303",
-            ejercicio=2025,
+            ejercicio=_EJERCICIO,
             signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
             walk_attempted=attempted,
             walk_completed=completed,
@@ -807,7 +820,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
             sync_run_repository_factory=lambda: repository,
             composition_factory=_test_filed_history_composition,
             browser_resources_factory=BrowserRuntimeResourceScope,
-            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
+            pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=_EJERCICIO)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
         registry = _registered_filed_history_definition(definition)
@@ -832,7 +845,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
                 output_root=tmp_path / "result-projection-filed",
-                today=date(2026, 3, 15),
+                today=_TODAY,
             ),
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
@@ -893,7 +906,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
                 pairs=(
                     FiledHistoryPairOutcome(
                         modelo="303",
-                        ejercicio=2025,
+                        ejercicio=_EJERCICIO,
                         signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
                         walk_attempted=True,
                         walk_completed=False,
@@ -996,7 +1009,7 @@ def test_filed_history_access_requires_whole_profile_commit_and_result_disclosur
         operations=frozenset({definition.definition_id}),
         actions=submitted.policy.actions,
         disclosures=frozenset(),
-        periods=frozenset({Period.from_year_and_code(2025, "1T")}),
+        periods=frozenset({Period.from_year_and_code(_EJERCICIO, "1T")}),
         allow_period_independent=True,
         allow_delegation=False,
     )
@@ -1154,7 +1167,7 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
             definition_id=definition.definition_id,
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
-                profile_id=UUID(profile.bucket_id), output_root=tmp_path / "filed", today=date(2026, 3, 15)
+                profile_id=UUID(profile.bucket_id), output_root=tmp_path / "filed", today=_TODAY
             ),
         )
 
@@ -1190,19 +1203,22 @@ def test_canonical_composition_retains_cartesian_only_planning_refusals(tmp_path
     first = _composition_pair("100")
     second = FiledHistoryDiscoveryPair(
         modelo="303",
-        ejercicio=2001,
+        ejercicio=_FURTHER_BEFORE_EDITIONS,
         signals=(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,),
     )
     run = _run_composition(first, second, tmp_path=tmp_path, dry_run=True)
 
-    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [("100", 2000), ("303", 2001)]
+    assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [
+        ("100", _BEFORE_EDITIONS),
+        ("303", _FURTHER_BEFORE_EDITIONS),
+    ]
     assert len(run.refused_pairs) == 2 and all(pair.failure_type == "LiveApplicationInputError" for pair in run.pairs)
     assert all(pair.signals == (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,) for pair in run.pairs)
     # The same real rectangular planner refuses the two additional coordinates.
     # Their facts must survive the discovery-only join without fabricated rows.
     assert run.stage_failures == (
-        "filed_capture: modelo 100 ejercicio 2001: LiveApplicationInputError",
-        "filed_capture: modelo 303 ejercicio 2000: LiveApplicationInputError",
+        f"filed_capture: modelo 100 ejercicio {_FURTHER_BEFORE_EDITIONS}: LiveApplicationInputError",
+        f"filed_capture: modelo 303 ejercicio {_BEFORE_EDITIONS}: LiveApplicationInputError",
     )
     assert run.reached_count == 0 and run.captured_count == 0 and run.sync_run_ref is None
     assert settled_filed_history_effect(run) is OperationEffect.NONE

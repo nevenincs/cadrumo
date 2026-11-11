@@ -29,6 +29,11 @@ from ......application.modelo.work_form_wording import SOURCE_WORDED_ORIGINS
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
+from ......domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    supported_authored_exercises,
+)
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ....tests.settling import settle, settle_until
@@ -49,7 +54,7 @@ _GUTTERS = 4
 def workbench(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
     """One real first-quarter Modelo 303, read only for every assertion in this module."""
     root: Path = tmp_path_factory.mktemp("refinements-real")
-    with real_workbench(root, modelo="303", filing_year=2026, period_code="1T") as installed:
+    with real_workbench(root, modelo="303", filing_year=filing_year_envelope().horizon, period_code="1T") as installed:
         yield installed
 
 
@@ -68,9 +73,11 @@ def _navigator(screen: ModeloWorkbenchScreen) -> list[str]:
 @pytest.mark.asyncio
 async def test_a_heading_the_real_layout_prints_twice_is_listed_once(tmp_path: Path) -> None:
     # Authored M303 layouts now distinguish their headings. The published
-    # M390 2023 page 2 retains two general-regime sections with one heading.
+    # The oldest published M390 edition retains two general-regime sections with one heading.
     with (
-        real_workbench(tmp_path, modelo="390", filing_year=2023, period_code="0A") as workbench,
+        real_workbench(
+            tmp_path, modelo="390", filing_year=supported_authored_exercises("390")[0], period_code="0A"
+        ) as workbench,
         override_settings(cadrumo_output_language="en"),
     ):
         screen = ModeloWorkbenchScreen(workbench, actions=workbench)
@@ -168,7 +175,9 @@ _NO_BREAK = "\u00a0"
 def annual_iva(tmp_path_factory: pytest.TempPathFactory) -> Iterator[InstalledModeloWorkbench]:
     """One real annual IVA summary (Modelo 390), whose boxes cite the IVA regulation by article."""
     root: Path = tmp_path_factory.mktemp("refinements-real-390")
-    with real_workbench(root, modelo="390", filing_year=2025, period_code="0A") as installed:
+    with real_workbench(
+        root, modelo="390", filing_year=filing_grade_exercises("390")[-1], period_code="0A"
+    ) as installed:
         yield installed
 
 

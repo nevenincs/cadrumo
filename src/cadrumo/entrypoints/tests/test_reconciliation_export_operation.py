@@ -44,9 +44,12 @@ from ...core.external_constants import OutputLanguage
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.errors import ModeloExportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class _Records:
@@ -58,7 +61,7 @@ class _Records:
                 bucket_id=entry.bucket_id,
                 work_unit_id=entry.work_unit_id,
                 registry_snapshot_ref=RegistrySnapshotRef(
-                    modelo="303", modelo_year=2026, period="1T", revision_id="saved-2026"
+                    modelo="303", modelo_year=_YEAR, period="1T", revision_id=f"saved-{_YEAR}"
                 ),
                 source_kind=entry.source_kind,
                 source_ref=entry.source_path,
@@ -197,7 +200,7 @@ def test_public_receipt_refuses_another_operation_and_unsettled_effect(tmp_path:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
-        settled_at=datetime(2026, 10, 7, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 10, 7, tzinfo=UTC),
         result_ref="f" * 64,
     )
 

@@ -31,6 +31,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
 from ......domain.calculations.registry.schema_surfaces import CasillaConstraints
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.locales_root_fixture import locales_root_scope
 from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
@@ -49,6 +50,8 @@ from ..casilla_list_values import (
 from ..vocabulary import EARLIER_FILING_GLYPH, ORIGIN_GLYPHS, origin_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _EURO = "\u00a0\u20ac"
 _PERCENT = "\u00a0%"
@@ -343,8 +346,8 @@ def _earlier(*periods: Period) -> ModeloFormValueSource:
 
 def test_a_value_from_a_source_names_the_kind_of_place_it_comes_from() -> None:
     imported = ModeloFormOrigin.IMPORTED
-    q4 = Period.from_year_and_code(2025, "4T")
-    q3 = Period.from_year_and_code(2025, "3T")
+    q4 = Period.from_year_and_code(_YEAR, "4T")
+    q3 = Period.from_year_and_code(_YEAR, "3T")
 
     with override_settings(cadrumo_output_language="en"):
         assert origin_words(_sourced(imported, ModeloFormValueSource(family=SourceFamily.RECORDS))) == (
@@ -362,7 +365,7 @@ def test_a_value_from_a_source_names_the_kind_of_place_it_comes_from() -> None:
         assert origin_words(_sourced(imported, ModeloFormValueSource(family=SourceFamily.FIXED_BY_DESIGN))) == (
             "Set by the form"
         )
-        assert origin_words(_sourced(imported, _earlier(q4))) == "From modelo 130, 4th quarter 2025"
+        assert origin_words(_sourced(imported, _earlier(q4))) == f"From modelo 130, 4th quarter {_YEAR}"
         # Two named declarations, or none named, are never narrowed to one.
         assert origin_words(_sourced(imported, _earlier(q3, q4))) == "From an earlier declaration"
         assert origin_words(_sourced(imported, _earlier())) == "From an earlier declaration"
@@ -378,12 +381,12 @@ def test_a_value_from_a_source_names_the_kind_of_place_it_comes_from() -> None:
         assert origin_words(_sourced(imported, ModeloFormValueSource(family=SourceFamily.RECORDS))) == (
             "De tus registros"
         )
-        assert origin_words(_sourced(imported, _earlier(q4))) == "Del modelo 130, 4.º trimestre 2025"
+        assert origin_words(_sourced(imported, _earlier(q4))) == f"Del modelo 130, 4.º trimestre {_YEAR}"
 
 
 @pytest.mark.asyncio
 async def test_the_row_carries_the_source_words_and_marks_a_carried_value_apart() -> None:
-    q4 = Period.from_year_and_code(2025, "4T")
+    q4 = Period.from_year_and_code(_YEAR, "4T")
     items: tuple[CasillaListItem, ...] = (
         CasillaListEntry(_field("01", "Income", ModeloFormOrigin.IMPORTED, Decimal("24000"), source=_records())),
         CasillaListEntry(_sourced(ModeloFormOrigin.IMPORTED, _earlier(q4))),
@@ -394,7 +397,7 @@ async def test_the_row_carries_the_source_words_and_marks_a_carried_value_apart(
     income = _line_with(lines, "Income")
     assert income.endswith(f"24,000.00{_EURO} {ORIGIN_GLYPHS[ModeloFormOrigin.IMPORTED]} From your records")
     carried = _line_with(lines, "Carried amount")
-    assert carried.endswith(f"500.00{_EURO} {EARLIER_FILING_GLYPH} From modelo 130, 4th quarter 2025")
+    assert carried.endswith(f"500.00{_EURO} {EARLIER_FILING_GLYPH} From modelo 130, 4th quarter {_YEAR}")
     with override_settings(cadrumo_output_language="en"):
         assert origin_text(_sourced(ModeloFormOrigin.IMPORTED, _earlier(q4))).startswith(EARLIER_FILING_GLYPH)
     assert EARLIER_FILING_GLYPH not in ORIGIN_GLYPHS.values()

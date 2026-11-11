@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from datetime import date
 from pathlib import Path
 from typing import override
 
@@ -24,6 +25,7 @@ from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from ...account import AccountSessionExpiredError
 from ...operations.outcome import SessionExpiredOutcomeUnknownError, SessionUnavailableOutcomeUnknownError
@@ -51,6 +53,8 @@ from .test_writes_hold_the_workspace import (
 from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class _SessionLostGate(Gate):
@@ -401,7 +405,7 @@ _RECORD = LedgerEvidenceRecordRowV1(
     file_name="invoice_A-0003.pdf",
     supplier=None,
     invoice_number=None,
-    created_at="2026-09-16",
+    created_at=date(_YEAR, 9, 16).isoformat(),
     status=LedgerEvidenceRecordStatus.AWAITING,
 )
 

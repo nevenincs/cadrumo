@@ -97,6 +97,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from ...domain.transactions.date_partition import LedgerDatePartition
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -108,6 +109,8 @@ from ..adapter_composition_work_ports import build_verification_repository_bundl
 from ..ledger_action_composition import compose_ledger_action_ports, compose_ledger_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET = "66666666-6666-4666-8666-666666666666"
 _PROFILE_UUID = UUID(_BUCKET)
@@ -127,36 +130,41 @@ class _Row:
     invoice_id: str | None = None
 
 
-#: Boundary rows around the fourth quarter of 2030. Reads key on the value date
+#: Boundary rows around the fourth quarter of the base year. Reads key on the value date
 #: when present, else the booked date; the accrued rows are criterio-de-caja
 #: rows whose devengo date sits apart from that filing date, so the partition
 #: offers them as candidates outside their filing quarter.
 _ROWS: tuple[_Row, ...] = (
-    _Row("q3-last-day", booked=date(2030, 9, 30)),
-    _Row("q4-first-day", booked=date(2030, 10, 1), amount=Decimal("40.00")),
-    _Row("booked-q3-valued-q4", booked=date(2030, 9, 30), value=date(2030, 10, 1), amount=Decimal("5.00")),
+    _Row("q3-last-day", booked=date(_YEAR, 9, 30)),
+    _Row("q4-first-day", booked=date(_YEAR, 10, 1), amount=Decimal("40.00")),
+    _Row("booked-q3-valued-q4", booked=date(_YEAR, 9, 30), value=date(_YEAR, 10, 1), amount=Decimal("5.00")),
     _Row(
         "q4-mid-pending",
-        booked=date(2030, 11, 15),
+        booked=date(_YEAR, 11, 15),
         amount=Decimal("30.00"),
         classification=BusinessClassification.NOT_YET_PROCESSED,
     ),
-    _Row("q4-mid-office", booked=date(2030, 11, 15), amount=Decimal("20.00")),
-    _Row("q4-personal", booked=date(2030, 11, 1), classification=BusinessClassification.PERSONAL),
-    _Row("q4-last-day", booked=date(2030, 12, 31), amount=Decimal("15.00")),
-    _Row("booked-q4-valued-next-year", booked=date(2030, 12, 31), value=date(2031, 1, 1)),
-    _Row("next-year-first-day", booked=date(2031, 1, 1)),
-    _Row("same-quarter-prior-year", booked=date(2029, 11, 15)),
-    _Row("filed-next-year-accrued-q4", booked=date(2031, 1, 15), amount=Decimal("1210.00"), accrued=date(2030, 11, 2)),
-    _Row("filed-q4-accrued-q3", booked=date(2030, 12, 1), amount=Decimal("1210.00"), accrued=date(2030, 8, 3)),
+    _Row("q4-mid-office", booked=date(_YEAR, 11, 15), amount=Decimal("20.00")),
+    _Row("q4-personal", booked=date(_YEAR, 11, 1), classification=BusinessClassification.PERSONAL),
+    _Row("q4-last-day", booked=date(_YEAR, 12, 31), amount=Decimal("15.00")),
+    _Row("booked-q4-valued-next-year", booked=date(_YEAR, 12, 31), value=date(_YEAR + 1, 1, 1)),
+    _Row("next-year-first-day", booked=date(_YEAR + 1, 1, 1)),
+    _Row("same-quarter-prior-year", booked=date(_YEAR - 1, 11, 15)),
+    _Row(
+        "filed-next-year-accrued-q4",
+        booked=date(_YEAR + 1, 1, 15),
+        amount=Decimal("1210.00"),
+        accrued=date(_YEAR, 11, 2),
+    ),
+    _Row("filed-q4-accrued-q3", booked=date(_YEAR, 12, 1), amount=Decimal("1210.00"), accrued=date(_YEAR, 8, 3)),
     #: Outside every measured period, and citing an invoice the catalogue does
     #: not hold: a one-sided link the check must report whatever period it is
     #: given, because links are global.
-    _Row("prior-year-one-sided-link", booked=date(2029, 6, 1), invoice_id="INV-NOT-STORED-0001"),
+    _Row("prior-year-one-sided-link", booked=date(_YEAR - 1, 6, 1), invoice_id="INV-NOT-STORED-0001"),
 )
 
-#: Independently stated: the stored rows whose filing date falls in 2030-Q4.
-_Q4_2030_DIRECT: frozenset[str] = frozenset(
+#: Independently stated: the stored rows whose filing date falls in the base year's Q4.
+_Q4_DIRECT_ROWS: frozenset[str] = frozenset(
     {
         "q4-first-day",
         "booked-q3-valued-q4",
@@ -168,17 +176,17 @@ _Q4_2030_DIRECT: frozenset[str] = frozenset(
     }
 )
 
-_Q4_2030 = Period.from_year_and_code(2030, "4T")
+_Q4_PERIOD = Period.from_year_and_code(_YEAR, "4T")
 
 #: The periods whose answers must not depend on which read served them,
 #: including an empty one and one with no calendar span.
 _PERIODS: tuple[Period, ...] = (
-    _Q4_2030,
-    Period.from_year_and_code(2030, "12"),
-    Period.from_year_and_code(2031, "1T"),
-    Period.from_year_and_code(2030, "2T"),
-    Period.from_year_and_code(2030, "0A"),
-    Period.from_year_and_code(2030, "1P"),
+    _Q4_PERIOD,
+    Period.from_year_and_code(_YEAR, "12"),
+    Period.from_year_and_code(_YEAR + 1, "1T"),
+    Period.from_year_and_code(_YEAR, "2T"),
+    Period.from_year_and_code(_YEAR, "0A"),
+    Period.from_year_and_code(_YEAR, "1P"),
 )
 
 
@@ -208,7 +216,7 @@ def _transaction(row: _Row) -> Transaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
             provider_name="synthetic provider",
         ),
         raw_fields={"Concepto": row.provider_id},
@@ -220,8 +228,8 @@ def _transaction(row: _Row) -> Transaction:
         "source_jurisdiction": "ES",
         "group_label": None,
         "invoice_id": row.invoice_id,
-        "created_at": datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
-        "modified_at": datetime(2031, 2, 1, 9, 0, tzinfo=UTC),
+        "created_at": datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
+        "modified_at": datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC),
     }
     if row.accrued is not None:
         fields |= {
@@ -239,7 +247,7 @@ def _transaction(row: _Row) -> Transaction:
                     recargo_amount=Decimal("0.00"),
                 ),
             ),
-            "classified_at": datetime(2031, 2, 1, 10, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR + 1, 2, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
         }
     return Transaction.model_validate(fields)
@@ -265,9 +273,9 @@ def seeded(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Ite
         TransactionCatalogueRepository(bucket_id=_BUCKET).save(TransactionCatalogue.from_transactions(direct.values()))
         ports = compose_ledger_action_ports(bucket_id=_BUCKET, operation=authority_operation)
         parent = create_manual_transaction(
-            _manual(date(2030, 11, 20), "100.00", "split parent"),
+            _manual(date(_YEAR, 11, 20), "100.00", "split parent"),
             ports=ports,
-            occurred_at=datetime(2031, 2, 2, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR + 1, 2, 2, 9, 0, tzinfo=UTC),
         )
         split = split_transaction(
             bucket_id=_BUCKET,
@@ -278,12 +286,12 @@ def seeded(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Ite
             ),
             actor=_ACTOR,
             ports=compose_ledger_action_ports(bucket_id=_BUCKET, operation=authority_operation),
-            occurred_at=datetime(2031, 2, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR + 1, 2, 2, 10, 0, tzinfo=UTC),
         )
         original = create_manual_transaction(
-            _manual(date(2030, 12, 15), "50.00", "before the edit"),
+            _manual(date(_YEAR, 12, 15), "50.00", "before the edit"),
             ports=compose_ledger_action_ports(bucket_id=_BUCKET, operation=authority_operation),
-            occurred_at=datetime(2031, 2, 3, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR + 1, 2, 3, 9, 0, tzinfo=UTC),
         )
         edited = update_manual_transaction_fields(
             bucket_id=_BUCKET,
@@ -292,7 +300,7 @@ def seeded(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Ite
             actor=_ACTOR,
             source_command="aeat app ledger edit",
             ports=compose_ledger_action_ports(bucket_id=_BUCKET, operation=authority_operation),
-            occurred_at=datetime(2031, 2, 3, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR + 1, 2, 3, 10, 0, tzinfo=UTC),
         )
         assert edited.ref.transaction_id != original.ref.transaction_id, (
             "the edit must re-derive the id for the superseded handle to mean anything"
@@ -537,7 +545,7 @@ def test_preflight_reads_the_period_partition_and_reports_what_a_full_scan_repor
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Every period, boundary dates and devengo-only candidates included, matches the full-scan report."""
-    assert _index_is_complete(_Q4_2030)
+    assert _index_is_complete(_Q4_PERIOD)
 
     for period in _PERIODS:
         outcome, calls, reference = _paired(_preflight(period, authority_operation))
@@ -547,12 +555,12 @@ def test_preflight_reads_the_period_partition_and_reports_what_a_full_scan_repor
         else:
             assert calls == Counter(load=1), f"{period} has no span and keeps the whole-catalogue read"
 
-    q4 = _preflight(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
+    q4 = _preflight(_Q4_PERIOD, authority_operation)(_Observer(widen=False, repositories=[]))
     assert isinstance(q4, LedgerPreflightProjection)
     # Independently stated: the stored Q4 rows that are ACTIVE, the two split
     # children (the SPLIT parent is not), and the edited row. A row devengado
-    # in Q4 but filed in 2031 is a partition candidate and must not be counted.
-    assert q4.checked_transaction_count == len(_Q4_2030_DIRECT) + len(seeded.split_child_ids) + 1
+    # in Q4 but filed the next year is a partition candidate and must not be counted.
+    assert q4.checked_transaction_count == len(_Q4_DIRECT_ROWS) + len(seeded.split_child_ids) + 1
     issue_ids = {issue.transaction_id for issue in q4.issues}
     assert seeded.direct["q4-mid-office"].transaction_id in issue_ids
     assert seeded.direct["filed-next-year-accrued-q4"].transaction_id not in issue_ids
@@ -585,7 +593,7 @@ def test_preflight_over_a_stale_date_index_falls_back_to_the_full_scan_report(
         seeded.profile,
         None if dropped is None else frozenset(seeded.direct[name].transaction_id for name in dropped),
     )
-    assert not _index_is_complete(_Q4_2030)
+    assert not _index_is_complete(_Q4_PERIOD)
 
     for period, expected in zip(_PERIODS, complete, strict=True):
         outcome, _calls, reference = _paired(_preflight(period, authority_operation))
@@ -658,11 +666,11 @@ def test_status_reads_the_catalogue_once_and_reports_what_separate_full_reads_re
         assert outcome == _full_scan_status(period, authority_operation), f"status differs for {period}"
         assert calls == Counter(load=1), f"status for {period} must read the whole catalogue exactly once"
 
-    q4 = _status(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
+    q4 = _status(_Q4_PERIOD, authority_operation)(_Observer(widen=False, repositories=[]))
     assert isinstance(q4, LedgerStatusProjection)
     assert q4.total_count == len(_ROWS) + 1 + len(seeded.split_child_ids) + 1
     assert q4.split_count == 1
-    assert q4.checked_transaction_count == len(_Q4_2030_DIRECT) + len(seeded.split_child_ids) + 1
+    assert q4.checked_transaction_count == len(_Q4_DIRECT_ROWS) + len(seeded.split_child_ids) + 1
     assert q4.readiness_issue_count == len(q4.readiness_issues)
     assert all(issue.transaction_present for issue in q4.readiness_issues)
 
@@ -672,7 +680,7 @@ def test_status_refuses_a_period_without_a_date_span_before_reading_the_catalogu
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An instalment clave selects no filing dates, so its money totals are refused, never zero."""
-    no_span = Period.from_year_and_code(2030, "1P")
+    no_span = Period.from_year_and_code(_YEAR, "1P")
     assert not no_span.has_date_span()
     # Active business rows are what reach the money totals' date check.
     assert any(row.classification is BusinessClassification.BUSINESS for row in _ROWS)
@@ -681,7 +689,7 @@ def test_status_refuses_a_period_without_a_date_span_before_reading_the_catalogu
     with pytest.raises(LedgerSummaryPeriodWithoutSpanError) as refused:
         _status(no_span, authority_operation)(observer)
     assert observer.calls() == Counter(), "a refused period must not decrypt the catalogue"
-    assert refused.value.context == {"period": "2030 1P"}
+    assert refused.value.context == {"period": f"{_YEAR} 1P"}
 
     code = get_registered_error_code(refused.value)
     assert code.code == "REFUSED_LEDGER_SUMMARY_PERIOD_WITHOUT_SPAN"
@@ -695,10 +703,10 @@ def test_status_refuses_a_period_without_a_date_span_before_reading_the_catalogu
         _full_scan_status(no_span, authority_operation)
 
     # A dated period in the same year still reports its status and money totals.
-    q4 = _status(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
+    q4 = _status(_Q4_PERIOD, authority_operation)(_Observer(widen=False, repositories=[]))
     assert isinstance(q4, LedgerStatusProjection)
-    assert q4.period == PublicPeriod.from_period(_Q4_2030)
-    assert q4 == _full_scan_status(_Q4_2030, authority_operation)
+    assert q4.period == PublicPeriod.from_period(_Q4_PERIOD)
+    assert q4 == _full_scan_status(_Q4_PERIOD, authority_operation)
     assert Decimal(q4.business_income_total) + Decimal(q4.business_expense_total) > 0
     assert q4.total_count == len(_ROWS) + 1 + len(seeded.split_child_ids) + 1
 
@@ -723,7 +731,7 @@ def test_check_reads_the_catalogue_once_and_keeps_links_global_under_a_period(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The link check sees a one-sided link on a row outside the period; the preflight stays scoped."""
-    for period in (_Q4_2030, Period.from_year_and_code(2030, "2T"), None):
+    for period in (_Q4_PERIOD, Period.from_year_and_code(_YEAR, "2T"), None):
         outcome, calls, reference = _paired(_check(period, authority_operation))
         assert outcome == reference
         assert calls == Counter(load_fully_validated=1), (
@@ -735,8 +743,8 @@ def test_check_reads_the_catalogue_once_and_keeps_links_global_under_a_period(
         ]
         assert outcome.ready is False
 
-    q4 = _check(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
-    preflight = _preflight(_Q4_2030, authority_operation)(_Observer(widen=False, repositories=[]))
+    q4 = _check(_Q4_PERIOD, authority_operation)(_Observer(widen=False, repositories=[]))
+    preflight = _preflight(_Q4_PERIOD, authority_operation)(_Observer(widen=False, repositories=[]))
     assert isinstance(q4, LedgerCheckProjection)
     assert isinstance(preflight, LedgerPreflightProjection)
     assert q4.checked_transaction_count == preflight.checked_transaction_count
@@ -807,7 +815,7 @@ def test_check_answers_clean_data_exactly_as_the_ordinary_read_did(
 ) -> None:
     """Reading the catalogue in full changes no finding, count or verdict on rows that pass admission."""
     del seeded
-    for period in (_Q4_2030, Period.from_year_and_code(2030, "2T"), None):
+    for period in (_Q4_PERIOD, Period.from_year_and_code(_YEAR, "2T"), None):
         full = _check_with(period, authority_operation, lambda repository: repository)
         ordinary = _check_with(period, authority_operation, _OrdinaryReadAsFullValidation)
         assert isinstance(full, LedgerCheckProjection)

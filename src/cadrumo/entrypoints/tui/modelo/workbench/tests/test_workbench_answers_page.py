@@ -12,15 +12,18 @@ import pytest
 from ......application.modelo.tests.work_form_fixture import built_form
 from ......application.modelo.work_form_models import ModeloFormOutlineKind
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..page_items import ANSWERS_PAGE_ID, DETAILS_PAGE_ID, workbench_pages
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_the_answers_stand_on_their_own_page_after_the_calculation_details(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "130", 2025, "1T")
+    form = built_form(operation, "130", _YEAR, "1T")
     assert form.answers
 
     pages = workbench_pages(form)
@@ -35,6 +38,6 @@ def test_the_answers_stand_on_their_own_page_after_the_calculation_details(
 
 
 def test_a_form_without_answers_has_no_answers_page(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
 
     assert all(page.id != ANSWERS_PAGE_ID for page in workbench_pages(form))

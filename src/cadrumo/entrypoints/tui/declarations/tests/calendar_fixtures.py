@@ -25,6 +25,7 @@ from .....application.overview.calendar_models import (
 )
 from .....application.overview.home import HomeAvailability
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from .....domain.deadlines.models import ObligationStatus
 from ...navigation import TuiScreenContextV1
@@ -32,7 +33,8 @@ from ..controller import DeclarationsCalendarController
 from ..models import CalendarEntryHandoffV1, CalendarRecoveryHandoffV1
 
 #: The observation instant every synthetic calendar projection is built at.
-CALENDAR_NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
+CALENDAR_YEAR = filing_year_envelope().horizon
+CALENDAR_NOW = datetime(CALENDAR_YEAR, 9, 3, 10, tzinfo=UTC)
 
 
 def calendar_row(
@@ -48,16 +50,16 @@ def calendar_row(
     """Build one calendar entry reference."""
     return DeclarationsCalendarEntryRefV1(
         modelo=modelo,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=CALENDAR_YEAR,
+        period=Period.from_year_and_code(CALENDAR_YEAR, period_code),
         opens_on=closes.replace(day=1),
         closes_on=closes,
         adjusted_closes_on=closes,
         shift_reason="fixture",
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         payment_cutoff_on=closes.replace(day=max(1, closes.day - 5)),
-        evaluated_on=date(2026, 9, 3),
-        days_overdue=(date(2026, 9, 3) - closes).days if legal is ObligationStatus.OVERDUE else None,
+        evaluated_on=date(CALENDAR_YEAR, 9, 3),
+        days_overdue=(date(CALENDAR_YEAR, 9, 3) - closes).days if legal is ObligationStatus.OVERDUE else None,
         legal_status=legal,
         user_state=user,
         local_filing_state=local,
@@ -71,25 +73,25 @@ def calendar_row(
 def calendar_projection(*, evidence_unobservable: bool = False) -> DeclarationsCalendarProjectionV1:
     """Build a three-entry calendar projection, optionally without AEAT evidence."""
     rows = (
-        calendar_row("130", "1T", date(2026, 4, 20), ObligationStatus.OVERDUE, OverviewPeriodState.LATE),
+        calendar_row("130", "1T", date(CALENDAR_YEAR, 4, 20), ObligationStatus.OVERDUE, OverviewPeriodState.LATE),
         calendar_row(
             "303",
             "2T",
-            date(2026, 7, 20),
+            date(CALENDAR_YEAR, 7, 20),
             ObligationStatus.FILED,
             OverviewPeriodState.FILED,
             local=OverviewLocalFilingState.EXTERNAL_BASELINE_IMPORTED,
         ),
-        calendar_row("111", "3T", date(2026, 10, 20), ObligationStatus.UPCOMING, OverviewPeriodState.DUE),
+        calendar_row("111", "3T", date(CALENDAR_YEAR, 10, 20), ObligationStatus.UPCOMING, OverviewPeriodState.DUE),
     )
     if evidence_unobservable:
         rows = tuple(
             row.model_copy(update={"aeat_submission_state": None, "justificante_verified": None}) for row in rows
         )
     return DeclarationsCalendarProjectionV1(
-        as_of=date(2026, 9, 3),
+        as_of=date(CALENDAR_YEAR, 9, 3),
         generated_at=CALENDAR_NOW,
-        query_range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(CALENDAR_YEAR, 1, 1), to_date=date(CALENDAR_YEAR, 12, 31)),
         sources=(
             DeclarationsCalendarSourceStateV1(
                 source=DeclarationsCalendarSource.SCHEDULE,

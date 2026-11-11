@@ -35,7 +35,7 @@ from ..modal import OperationModal, OperationModalSettledOutcomeV1
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 17, tzinfo=UTC)
+_NOW = datetime(1980, 10, 17, tzinfo=UTC)
 
 
 @lru_cache(maxsize=1)

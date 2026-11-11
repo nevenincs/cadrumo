@@ -31,6 +31,7 @@ from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import lookup_translation
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -182,7 +183,12 @@ def _stale(form: ModeloWorkForm) -> ModeloWorkForm:
         kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key="application.modelo.findings.ledger_snapshot_drift_changed",
-        message_facts={"modelo": "130", "filing_year": 2026, "period": "1T", "changed_count": 1},
+        message_facts={
+            "modelo": "130",
+            "filing_year": filing_year_envelope().horizon,
+            "period": "1T",
+            "changed_count": 1,
+        },
         legal_refs=("ley-58-2003:art-120",),
     )
     return form.model_copy(update={"issues": (ModeloFormIssue(finding=drift),)})
