@@ -245,7 +245,7 @@ fn lifecycle(fact: LifecycleFact) -> Level {
         | Busy { .. }
         | BootRecordConfirmed { .. }
         | VersionReprobed {} => Level::Debug,
-        Ready { .. } => Level::Info,
+        Ready { .. } | LocalAiServer { .. } => Level::Info,
         _ => Level::Debug,
     }
 }

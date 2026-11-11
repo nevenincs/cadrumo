@@ -50,6 +50,18 @@ pub enum LocalAiUnavailable {
     SelectionUnreadable,
 }
 
+/// A start or stop of the local AI server, by its cause.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalAiServerChange {
+    /// A live demand started the server, or started it again after it ended.
+    StartedOnDemand,
+    /// The last demand lapsed, so the running server was stopped.
+    IdleStopped,
+    /// The server ended while no demand was live, so it was not started again.
+    EndedWithoutDemand,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WaitReason {
@@ -292,5 +304,9 @@ pub enum LifecycleFact {
     LocalAiUnavailable {
         engine: LocalAiEngine,
         reason: LocalAiUnavailable,
+    },
+    LocalAiServer {
+        engine: LocalAiEngine,
+        change: LocalAiServerChange,
     },
 }

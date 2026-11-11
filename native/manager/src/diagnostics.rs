@@ -17,7 +17,9 @@ use crate::{
 use cadrumo_application::{
     diagnostics::{Diagnostics, EventKind, HostStage, lifecycle as fact},
     error::application::{ApplicationError, ErrorCode, Operation},
-    provisioning::local_ai::{LocalEngine, llama_server::LlamaServerUnavailable},
+    provisioning::local_ai::{
+        LocalEngine, llama_server::LlamaServerUnavailable, supervision::ServerChange,
+    },
     value::RelativePath,
 };
 use std::{io, path::Path};
@@ -284,6 +286,25 @@ pub fn local_ai_unavailable(diagnostics: &Diagnostics, engine: LocalEngine, reas
         EventKind::StageCompleted,
         HostStage::Supervision,
         fact::LifecycleFact::LocalAiUnavailable { engine, reason },
+        None,
+    );
+}
+
+/// Records a start or stop of the local AI server with its cause.
+pub fn local_ai_server(diagnostics: &Diagnostics, engine: LocalEngine, change: ServerChange) {
+    let engine = match engine {
+        LocalEngine::Ollama => fact::LocalAiEngine::Ollama,
+        LocalEngine::LlamaCpp => fact::LocalAiEngine::LlamaCpp,
+    };
+    let change = match change {
+        ServerChange::StartedOnDemand => fact::LocalAiServerChange::StartedOnDemand,
+        ServerChange::IdleStopped => fact::LocalAiServerChange::IdleStopped,
+        ServerChange::EndedWithoutDemand => fact::LocalAiServerChange::EndedWithoutDemand,
+    };
+    diagnostics.lifecycle(
+        EventKind::StageCompleted,
+        HostStage::Supervision,
+        fact::LifecycleFact::LocalAiServer { engine, change },
         None,
     );
 }

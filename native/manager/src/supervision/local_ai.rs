@@ -1,8 +1,11 @@
-//! The local AI server, supervised for the manager's whole life.
+//! The local AI server, supervised for the manager's whole life and run only on demand.
 //!
 //! The manager runs the one server of the selected [`LocalEngine`] that every surface
 //! and profile uses, and never the other engine's: the Ollama program the component
-//! engine installs, or the llama-server the package carries. While the program is set up
+//! engine installs, or the llama-server the package carries. The supervision lives as
+//! long as the manager, but the server is dormant until [`LocalAiHost::demand`], which
+//! only the agent service asks for before a document is read. A demand keeps it for the
+//! supervisor's idle stop and is renewed while the read lasts. While demanded and set up
 //! the server listens on the engine's own fixed loopback address the package's
 //! environment declaration gives it, is restarted after a crash, is stopped and held off
 //! while an engine replaces or removes the program, and is stopped when the manager
@@ -43,7 +46,9 @@ use cadrumo_application::provisioning::{
         LocalEngine, Placement,
         llama_server::{LlamaServer, LlamaServerUnavailable, PlacementHandle},
         program::{Containment, Program},
-        supervision::{EngineProgram, Environment, ServerState, ServerSupervisor, Supervised},
+        supervision::{
+            EngineProgram, Environment, ServerChange, ServerState, ServerSupervisor, Supervised,
+        },
     },
     pins::{ComponentPins, Platform, ProgramIdentity},
 };
@@ -57,6 +62,9 @@ use std::{
     thread::JoinHandle,
     time::{Duration, Instant},
 };
+
+/// The most starts and stops kept for the manager's log between two reads.
+const CHANGES_KEPT: usize = 16;
 
 /// How often the supervision looks at the server between scheduled restarts: for a
 /// crash, a requested program change, a store whose models changed, or a program newly
@@ -98,7 +106,22 @@ pub enum Unavailable {
     Supervision,
 }
 
+/// What a demand found the server's supervision doing.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DemandAnswer {
+    /// The demand was taken: the server runs, or starts at the supervision's next look.
+    Taken,
+    /// The selected engine's program is not set up, so no server can run.
+    NotSetUp,
+    /// An engine changes the program; the server starts once it is done.
+    Held,
+    /// Supervision failed, the owner stopped it, or the proxy setting keeps the server
+    /// from running: nothing starts until a retry, a resume or a new start of the owner.
+    NotRunning,
+}
+
 enum Command {
+    Demand,
     Stop,
     Resume,
     Retry,
@@ -118,6 +141,8 @@ type Shared = Arc<(Mutex<Published>, Condvar)>;
 pub struct LocalAiHost {
     commands: mpsc::Sender<Command>,
     published: Shared,
+    /// Starts and stops the supervision made, for the manager's log.
+    changes: Arc<Mutex<Vec<ServerChange>>>,
     stop_requested: bool,
     worker: Option<JoinHandle<()>>,
     /// The placement the llama-server presents its models with; none for another program.
@@ -216,12 +241,15 @@ impl LocalAiHost {
             Condvar::new(),
         ));
         let shared = Arc::clone(&published);
+        let changes = Arc::new(Mutex::new(Vec::new()));
+        let told = Arc::clone(&changes);
         let worker = std::thread::Builder::new()
             .name("cadrumo-local-ai".into())
-            .spawn(move || run(supervisor, &received, &shared))?;
+            .spawn(move || run(supervisor, &received, &shared, &told))?;
         Ok(Self {
             commands,
             published,
+            changes,
             stop_requested: false,
             worker: Some(worker),
             placement: None,
@@ -231,6 +259,35 @@ impl LocalAiHost {
     /// The last published state.
     pub fn published(&self) -> Published {
         *lock(&self.published.0)
+    }
+
+    /// Demands the server, or renews a live demand, without waiting for it to start: the
+    /// caller waits for the server's own readiness. Answers from the last published state.
+    pub fn demand(&self) -> DemandAnswer {
+        let answer = match self.published().state {
+            ServerState::NotSetUp => DemandAnswer::NotSetUp,
+            ServerState::Held => DemandAnswer::Held,
+            ServerState::Failed | ServerState::Stopped | ServerState::ProxyRefused => {
+                DemandAnswer::NotRunning
+            }
+            ServerState::Dormant | ServerState::Running | ServerState::Restarting { .. } => {
+                DemandAnswer::Taken
+            }
+        };
+        if answer == DemandAnswer::Taken && self.commands.send(Command::Demand).is_err() {
+            return DemandAnswer::NotRunning;
+        }
+        answer
+    }
+
+    /// The starts and stops since the last read, oldest first, with their causes.
+    pub fn take_changes(&self) -> Vec<ServerChange> {
+        std::mem::take(
+            &mut *self
+                .changes
+                .lock()
+                .unwrap_or_else(|error| error.into_inner()),
+        )
     }
 
     /// Waits until the supervision publishes a state for which `until` holds, for at most
@@ -295,35 +352,62 @@ fn publish(shared: &Shared, state: ServerState, looked: bool) {
     changed.notify_all();
 }
 
+/// Whether the supervision has nothing to look at until a command arrives: a dormant
+/// server waits for a demand.
+fn waits_for_command(state: ServerState) -> bool {
+    matches!(
+        state,
+        ServerState::Stopped | ServerState::Failed | ServerState::Dormant
+    )
+}
+
+/// Polls once at `now`, keeps the changes it made for the manager's log, publishes the
+/// state, and returns when the next look is due.
+fn look<P: Supervised>(
+    supervisor: &mut ServerSupervisor<P>,
+    now: Instant,
+    shared: &Shared,
+    changes: &Mutex<Vec<ServerChange>>,
+) -> Instant {
+    let state = supervisor.poll(now);
+    let paced = now + PACE;
+    let next = supervisor.next_due().map_or(paced, |due| due.min(paced));
+    let made = supervisor.take_changes();
+    if !made.is_empty() {
+        let mut kept = changes.lock().unwrap_or_else(|error| error.into_inner());
+        kept.extend(made);
+        let excess = kept.len().saturating_sub(CHANGES_KEPT);
+        kept.drain(..excess);
+    }
+    publish(shared, state, true);
+    next
+}
+
 /// Looks at the server whenever a look is due and acts on each command as it arrives.
 fn run<P: Supervised>(
     mut supervisor: ServerSupervisor<P>,
     commands: &mpsc::Receiver<Command>,
     shared: &Shared,
+    changes: &Mutex<Vec<ServerChange>>,
 ) {
     let mut next = Instant::now();
     loop {
         let now = Instant::now();
-        let idle = matches!(
-            supervisor.state(),
-            ServerState::Stopped | ServerState::Failed
-        );
-        if !idle && now >= next {
-            let state = supervisor.poll(now);
-            let paced = now + PACE;
-            next = supervisor.next_due().map_or(paced, |due| due.min(paced));
-            publish(shared, state, true);
+        if !waits_for_command(supervisor.state()) && now >= next {
+            next = look(&mut supervisor, now, shared, changes);
         }
-        let idle = matches!(
-            supervisor.state(),
-            ServerState::Stopped | ServerState::Failed
-        );
+        let idle = waits_for_command(supervisor.state());
         let command = if idle {
             commands.recv().map_err(|_| RecvTimeoutError::Disconnected)
         } else {
             commands.recv_timeout(next.saturating_duration_since(Instant::now()))
         };
         match command {
+            Ok(Command::Demand) => {
+                next = Instant::now();
+                supervisor.demand(next);
+                next = look(&mut supervisor, next, shared, changes);
+            }
             Ok(Command::Stop) => {
                 supervisor.stop();
                 publish(shared, supervisor.state(), false);
@@ -572,10 +656,11 @@ mod tests {
         }
         assert!(!llama_folder.exists(), "llama-server was never started");
 
-        // llama-server selected: it is started, and fails here, while Ollama is never
-        // looked at.
+        // llama-server selected: it is started once demanded, and fails here, while
+        // Ollama is never looked at.
         let host = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
             .expect("the package carries llama-server");
+        demanded(&host);
         let tried = host
             .wait_until(WAIT, |published| {
                 matches!(
@@ -607,6 +692,7 @@ mod tests {
         let llama_folder = state.join("components").join("llama-server");
         let host = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
             .expect("the package carries llama-server");
+        demanded(&host);
         // A creation held by an error dialog never returns, so nothing would publish.
         let tried = host
             .wait_until(WAIT, |published| {
@@ -622,6 +708,86 @@ mod tests {
             latest_start_failure(&llama_folder),
             Some(StartFailureKind::ProgramDamaged)
         );
+    }
+
+    /// Waits for the host's first look, which finds the packaged program dormant, then
+    /// demands its server.
+    fn demanded(host: &LocalAiHost) {
+        let first = host
+            .wait_until(WAIT, |published| published.looks >= 1)
+            .expect("the supervision publishes within its bound");
+        assert_eq!(first.state, ServerState::Dormant);
+        assert_eq!(host.demand(), DemandAnswer::Taken);
+    }
+
+    #[test]
+    fn a_set_up_server_is_dormant_from_the_manager_start_until_it_is_demanded() {
+        let root = Scratch::new("dormant");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        package_with_failing_llama_server(&package);
+        let state = root.path().join("state");
+        let llama_folder = state.join("components").join("llama-server");
+        let mut host = start_host(&package, &state, LocalEngine::LlamaCpp, Placement::Auto)
+            .expect("the package carries llama-server");
+
+        // From the manager's start, and however long nobody asks, nothing is started.
+        let first = host
+            .wait_until(WAIT, |published| published.looks >= 1)
+            .expect("the supervision publishes within its bound");
+        assert_eq!(first.state, ServerState::Dormant);
+        assert!(
+            host.wait_until(Duration::from_secs(3), |published| published.looks
+                > first.looks)
+                .is_none(),
+            "a dormant server waits for a demand and is not looked at on the pace"
+        );
+        assert!(
+            latest_start_failure(&llama_folder).is_none(),
+            "never started"
+        );
+        assert_eq!(host.take_changes(), []);
+
+        // A demand starts it at once; this stand-in fails to start, which only a start
+        // records.
+        assert_eq!(host.demand(), DemandAnswer::Taken);
+        host.wait_until(WAIT, |published| {
+            matches!(
+                published.state,
+                ServerState::Restarting { .. } | ServerState::Failed
+            )
+        })
+        .expect("the supervision publishes within its bound");
+        assert!(
+            latest_start_failure(&llama_folder).is_some(),
+            "started on demand"
+        );
+
+        // A stopped supervision takes no demand.
+        host.stop();
+        host.wait_until(WAIT, |published| published.state == ServerState::Stopped)
+            .expect("the supervision publishes within its bound");
+        assert_eq!(host.demand(), DemandAnswer::NotRunning);
+    }
+
+    #[test]
+    fn a_program_not_set_up_takes_no_demand() {
+        let root = Scratch::new("unset");
+        let package = root.path().join("package");
+        package_with_pins(&package);
+        let Ok(host) = start_host(
+            &package,
+            &root.path().join("state"),
+            LocalEngine::Ollama,
+            Placement::Auto,
+        ) else {
+            // The pins carry no archive for this platform.
+            assert!(Platform::current().is_none());
+            return;
+        };
+        host.wait_until(WAIT, |published| published.looks >= 1)
+            .expect("the supervision publishes within its bound");
+        assert_eq!(host.demand(), DemandAnswer::NotSetUp);
     }
 
     #[test]

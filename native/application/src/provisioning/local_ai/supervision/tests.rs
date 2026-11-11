@@ -296,6 +296,19 @@ fn a_server_stopped_by_its_process_id_after_its_demand_lapsed_is_never_restarted
     );
     assert!(!answers(address));
     assert_eq!(contained.0.load(Ordering::SeqCst), 3);
+
+    // Each start and stop is told to the owner with its cause, once.
+    assert_eq!(
+        supervisor.take_changes(),
+        [
+            ServerChange::StartedOnDemand,
+            ServerChange::EndedWithoutDemand,
+            ServerChange::StartedOnDemand,
+            ServerChange::IdleStopped,
+            ServerChange::StartedOnDemand,
+        ]
+    );
+    assert_eq!(supervisor.take_changes(), []);
 }
 
 #[test]

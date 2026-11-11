@@ -101,6 +101,20 @@ pub enum ServerState {
     ProxyRefused,
 }
 
+/// A change of whether the server runs, with its cause, for the owner's log.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServerChange {
+    /// A live demand started the server, or started it again after it ended.
+    StartedOnDemand,
+    /// The last demand lapsed, so the running server was stopped.
+    IdleStopped,
+    /// The server ended while no demand was live, so it was not started again.
+    EndedWithoutDemand,
+}
+
+/// The most changes kept for the owner between two reads; older ones are dropped.
+const CHANGES_KEPT: usize = 16;
+
 /// File facts that change whenever a program is set up or removed: a program found not
 /// set up is looked at again only once they change.
 pub type SetUpStamp = Option<(SystemTime, u64)>;
@@ -283,6 +297,8 @@ pub struct ServerSupervisor<P: Supervised = Program> {
     /// The moment the latest demand lapses; none before the first. Kept in memory only, so
     /// no demand outlives this supervisor.
     demanded_until: Option<Instant>,
+    /// Changes not yet read by the owner, oldest first.
+    changes: VecDeque<ServerChange>,
     state: ServerState,
     not_set_up: Option<SetUpStamp>,
     proxy: Option<ProxySettings>,
@@ -328,6 +344,7 @@ impl<P: Supervised> ServerSupervisor<P> {
             restarts: VecDeque::new(),
             idle_stop: IDLE_STOP,
             demanded_until: None,
+            changes: VecDeque::new(),
             state: ServerState::NotSetUp,
             not_set_up: None,
             proxy,
@@ -359,6 +376,18 @@ impl<P: Supervised> ServerSupervisor<P> {
     /// Whether a demand is live at `now`.
     fn demanded(&self, now: Instant) -> bool {
         self.demanded_until.is_some_and(|until| now < until)
+    }
+
+    /// The changes since the last read, oldest first.
+    pub fn take_changes(&mut self) -> Vec<ServerChange> {
+        self.changes.drain(..).collect()
+    }
+
+    fn changed(&mut self, change: ServerChange) {
+        if self.changes.len() == CHANGES_KEPT {
+            self.changes.pop_front();
+        }
+        self.changes.push_back(change);
     }
 
     pub fn state(&self) -> ServerState {
@@ -411,6 +440,7 @@ impl<P: Supervised> ServerSupervisor<P> {
                 if !demanded {
                     // Nobody needs it: a server that ends while no demand is live,
                     // stopped by its process ID or crashed, stays down.
+                    self.changed(ServerChange::EndedWithoutDemand);
                     self.state = ServerState::Dormant;
                     return self.state;
                 }
@@ -424,6 +454,7 @@ impl<P: Supervised> ServerSupervisor<P> {
             if !demanded {
                 // The idle stop: the last demand has lapsed.
                 self.program.halt();
+                self.changed(ServerChange::IdleStopped);
                 self.state = ServerState::Dormant;
                 return self.state;
             }
@@ -457,6 +488,7 @@ impl<P: Supervised> ServerSupervisor<P> {
         match started {
             Ok(()) => {
                 self.last_start_failure = None;
+                self.changed(ServerChange::StartedOnDemand);
                 self.state = ServerState::Running;
             }
             Err(LocalAiError::Engine(Error::Busy)) => self.state = ServerState::Held,
