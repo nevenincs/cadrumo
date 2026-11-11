@@ -8,6 +8,8 @@ line uses.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
@@ -17,7 +19,7 @@ from ....application.modelo.iva_wallet_refusal import (
     ModeloIvaWalletReconciliationBlockedError,
     raise_iva_wallet_precondition,
 )
-from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS
+from ....application.modelo.preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, IVA_WALLET_OVERRIDE_SCENARIOS
 from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
 from ....application.modelo.work_profile import ModeloWorkProfile
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
@@ -35,6 +37,7 @@ from ....application.operator_surface.action_targets import (
 )
 from ....application.operator_surface.manifest import ReconciledOperatorLeaf
 from ....application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -192,6 +195,71 @@ def test_each_real_opening_balance_refusal_records_an_action_that_resolves_to_th
         assert served.missing_argument_names == ("amount",)
         assert leaf.input_schema is not None
         assert set(bound) == set(leaf.input_schema.required_input_names)
+
+
+def test_each_real_override_refusal_records_an_action_prefilled_with_the_period_and_local_amount(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "4T")
+    local_amount = Decimal("325.50")
+
+    for reason_code in sorted(IVA_WALLET_OVERRIDE_SCENARIOS):
+        with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+            raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code=reason_code,
+                translated_message=f"application.iva_wallet.decision_reason.{reason_code}",
+                evidence_values={"reason": reason_code},
+                carry_period=carry_period,
+                local_amount=local_amount,
+            )
+        served = resolve_recorded_precondition_action(refused.value.precondition_failure.verdict)
+        (leaf,) = operator_surface_target_reconciliation("modelo.iva_wallet.override").leaves
+
+        assert served.action is not None, reason_code
+        assert served.action.action_id == "operator.modelo.iva_wallet.override", reason_code
+        assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+        bound = {item.argument_name: item for item in served.argument_bindings}
+        assert bound["filing_year"].value == carry_period.filing_year
+        assert bound["period"].value == carry_period.registry_token
+        assert bound["amount"].value == local_amount
+        assert bound["reason"].status is ActionArgumentStatus.MISSING
+        assert bound["evidence_locator"].status is ActionArgumentStatus.MISSING
+        assert set(served.missing_argument_names) == {"reason", "evidence_locator"}
+        assert leaf.input_schema is not None
+        assert set(bound) == set(leaf.input_schema.required_input_names)
+
+
+def test_an_override_refusal_without_a_local_amount_leaves_the_amount_to_supply() -> None:
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "4T")
+    with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="local_recurrence_requires_override",
+            translated_message="application.iva_wallet.decision_reason.local_recurrence_requires_override",
+            evidence_values={"reason": "local_recurrence_requires_override"},
+            carry_period=carry_period,
+        )
+    verdict = refused.value.precondition_failure.verdict
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    assert set(verdict.missing_argument_names) == {"amount", "reason", "evidence_locator"}
+
+
+def test_an_override_refusal_without_its_period_is_an_invariant_breach() -> None:
+    with pytest.raises(InternalInvariantError):
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="local_recurrence_requires_override",
+            translated_message="application.iva_wallet.decision_reason.local_recurrence_requires_override",
+            evidence_values={"reason": "local_recurrence_requires_override"},
+            local_amount=Decimal("325.50"),
+        )
 
 
 def test_a_real_missing_profile_facts_refusal_records_an_action_that_resolves_to_the_live_leaf(

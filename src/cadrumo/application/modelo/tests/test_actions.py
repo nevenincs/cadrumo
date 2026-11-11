@@ -874,6 +874,10 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
+    verdict = exc.precondition_failure.verdict
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    assert set(verdict.missing_argument_names) == {"amount", "reason", "evidence_locator"}
     finding = iva_wallet_error_verification_finding(
         exc,
         work_unit=_minimal_work_unit(modelo="303", period="1T"),

@@ -131,6 +131,32 @@ it. The wallet gate's served step and these profiles' action read this one set.
 IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
 """The catalogue action that declares the opening balance of a period's carry."""
 
+IVA_WALLET_OVERRIDE_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {
+        "filed_history_requires_override",
+        "local_recurrence_requires_override",
+        "stale_wallet_local_recurrence_requires_override",
+    },
+)
+"""The wallet refusals an explicit taxpayer override of the period's carry is the way out of.
+
+Each says the carry rests on the taxpayer's own records alone, with no current
+AEAT wallet behind it, so it is carried only once the taxpayer states the amount
+and the evidence for it. The amount those records give is known, so the action
+names it; the reason and the evidence are the taxpayer's to supply.
+"""
+
+IVA_WALLET_OVERRIDE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.override"
+"""The catalogue action that records an explicit taxpayer override of a period's carry."""
+
+
+def _iva_wallet_action_id(scenario_code: str) -> str | None:
+    if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+        return IVA_WALLET_OPENING_BALANCE_ACTION_ID
+    if scenario_code in IVA_WALLET_OVERRIDE_SCENARIOS:
+        return IVA_WALLET_OVERRIDE_ACTION_ID
+    return None
+
 
 def _iva_wallet_profiles(
     subject_leaf_key: str,
@@ -141,9 +167,7 @@ def _iva_wallet_profiles(
             subject_leaf_key,
             f"{subject_leaf_key}.iva_wallet.ready",
             f"{subject_leaf_key}.iva_wallet.{scenario_code}",
-            action_id=IVA_WALLET_OPENING_BALANCE_ACTION_ID
-            if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS
-            else None,
+            action_id=_iva_wallet_action_id(scenario_code),
         )
         for scenario_code in scenario_codes
     )
@@ -826,6 +850,8 @@ def build_modelo_work_file_unverified_revision_failure(
 __all__ = [
     "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
     "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
+    "IVA_WALLET_OVERRIDE_ACTION_ID",
+    "IVA_WALLET_OVERRIDE_SCENARIOS",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

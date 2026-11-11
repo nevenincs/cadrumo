@@ -35,6 +35,8 @@ from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import (
     IVA_WALLET_OPENING_BALANCE_ACTION_ID,
     IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_ACTION_ID,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
 )
@@ -225,6 +227,37 @@ def _opening_balance_door(reason_code: str, carry_period: Period | None) -> Oper
     return open_iva_wallet_opening_balance_step(modelo=form_for_role("iva.periodic"), period=carry_period)
 
 
+def _wallet_action(
+    reason_code: str, *, carry_period: Period | None, local_amount: Decimal | None
+) -> tuple[str | None, Mapping[str, str | int | bool | Decimal] | None, tuple[str, ...]]:
+    """The catalogue action settling ``reason_code``, its known arguments and those the taxpayer supplies."""
+    if reason_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+        if carry_period is None:
+            raise InternalInvariantError(
+                f"iva wallet refusal {reason_code} is settled by the opening balance of a period it did not name",
+            )
+        # The amount is the filer's own figure, so the action names it as still to supply.
+        return (
+            IVA_WALLET_OPENING_BALANCE_ACTION_ID,
+            {"filing_year": carry_period.filing_year, "period": carry_period.registry_token},
+            ("amount",),
+        )
+    if reason_code in IVA_WALLET_OVERRIDE_SCENARIOS:
+        if carry_period is None:
+            raise InternalInvariantError(
+                f"iva wallet refusal {reason_code} is settled by an override of a period it did not name",
+            )
+        known: dict[str, str | int | bool | Decimal] = {
+            "filing_year": carry_period.filing_year,
+            "period": carry_period.registry_token,
+        }
+        # A decision that records no amount from the taxpayer's records leaves it to them too.
+        if local_amount is None:
+            return IVA_WALLET_OVERRIDE_ACTION_ID, known, ("amount", "evidence_locator", "reason")
+        return IVA_WALLET_OVERRIDE_ACTION_ID, {**known, "amount": local_amount}, ("evidence_locator", "reason")
+    return None, None, ()
+
+
 def raise_iva_wallet_precondition(
     *,
     subject_leaf_key: str,
@@ -235,6 +268,7 @@ def raise_iva_wallet_precondition(
     cause: BaseException | None = None,
     error_type: type[ModeloIvaWalletReconciliationBlockedError] = ModeloIvaWalletReconciliationBlockedError,
     carry_period: Period | None = None,
+    local_amount: Decimal | None = None,
 ) -> Never:
     """Raise one locale-neutral IVA-wallet readiness refusal, or ``error_type`` where it is no refusal.
 
@@ -242,21 +276,16 @@ def raise_iva_wallet_precondition(
     Where the reason is one the wallet's opening balance settles, the refusal
     carries the step that opens that entry and names the catalogue action that
     declares it, so every frontend is offered the same remedy; a refusal for
-    such a reason that does not name the period is an invariant breach. Nothing
-    is written either way.
+    such a reason that does not name the period is an invariant breach. Where
+    the reason is one an explicit override settles, the action names the period
+    and ``local_amount``, the carry the taxpayer's own records give, and leaves
+    the reason and the evidence to the taxpayer, and the amount too where the
+    decision records none; a refusal for such a reason that does not name the
+    period is an invariant breach. Nothing is written either way.
     """
-    action_id: str | None = None
-    action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None
-    missing_action_arguments: tuple[str, ...] = ()
-    if reason_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
-        if carry_period is None:
-            raise InternalInvariantError(
-                f"iva wallet refusal {reason_code} is settled by the opening balance of a period it did not name",
-            )
-        # The amount is the filer's own figure, so the action names it as still to supply.
-        action_id = IVA_WALLET_OPENING_BALANCE_ACTION_ID
-        action_argument_values = {"filing_year": carry_period.filing_year, "period": carry_period.registry_token}
-        missing_action_arguments = ("amount",)
+    action_id, action_argument_values, missing_action_arguments = _wallet_action(
+        reason_code, carry_period=carry_period, local_amount=local_amount
+    )
     error = error_type(
         translated_message=translated_message,
         context=context,
