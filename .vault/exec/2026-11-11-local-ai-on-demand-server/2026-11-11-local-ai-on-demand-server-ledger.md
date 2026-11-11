@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7550c725773d42230018cbf7bb7a57aa81bc57f7be240a74466759ece070a63'
+body_hash: 'sha256:64f2bb79c3982a6f8c44e8d52d0ec77fe6d920d3896f94f2f5e8d789f13dad52'
 related:
   - "[[2026-11-11-local-ai-on-demand-server-plan]]"
 ---
@@ -50,8 +50,19 @@ related:
 - `S02` `M` `native/application/src/provisioning/local_ai/supervision.rs`
 - `S02` `M` `native/desktop/src-tauri/src/logs/manager.rs`
 - `S02` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S03` `M` `native/manager/src/cutover_windows.rs`
+- `S03` `M` `native/manager/src/desktop_host.rs`
+- `S03` `M` `native/manager/src/ipc.rs`
+- `S03` `M` `native/manager/src/ipc/windows.rs`
+- `S03` `M` `native/manager/src/lifecycle.rs`
+- `S03` `M` `native/manager/src/linux/ipc.rs`
+- `S03` `M` `native/manager/src/macos/ipc.rs`
+- `S03` `M` `native/manager/src/windows_lifecycle.rs`
+- `S03` `verify:` `rustfmt --check` -> `pass`
+- `S03` `verify:` `branch_gate_delta` -> `pass`
 
 ## Notes
 
 - `S01` cargo tests not run here: native builds are root-only; pending DESKTOP
 - `S02` cargo tests not run here: native builds are root-only; pending DESKTOP
+- `S03` cargo not run here (native builds root-only); pending DESKTOP manager.rust: ipc::windows `only_the_agent_service_a_desktop_started_may_demand_the_local_ai_server,` ipc `a_demand_carries_no_identity`
