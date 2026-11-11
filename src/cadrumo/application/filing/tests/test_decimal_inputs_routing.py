@@ -13,12 +13,13 @@ carry no fichero-BOE addressing and must not be coerced to Decimal there either.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -28,6 +29,11 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ..draft_construction import filing_binding_values, string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M200_YEAR = newest_authored_edition("200")
+#: The last day before the transitional micro-company scale of LIS DT 44a takes effect: the period
+#: whose PYME cuota is still the flat 23 % the expectations below are worked from.
+_FLAT_RATE_PERIOD_END = published_legal_reference("ley-27-2014:dt-44").effective_from - timedelta(days=1)
 
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
     "DP200012:00501",
@@ -62,7 +68,7 @@ def _m200_snapshot() -> RegistrySnapshot:
     """
     return published_snapshot(
         "200",
-        filing_year=2025,
+        filing_year=_M200_YEAR,
         period="0A",
         on=None,
         grade=RegistryAuthorityGrade.CALCULATION,
@@ -136,7 +142,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0.00"),
             _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": _FLAT_RATE_PERIOD_END},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
@@ -186,7 +192,7 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
             _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
             _M200_BIN_APLICADA_CASILLA: Decimal("10000.00"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": _FLAT_RATE_PERIOD_END},
         binding_values={
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("500000"),

@@ -35,12 +35,13 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_snapshot, published_source_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "210"
-_YEAR = 2025
+_YEAR = filing_grade_exercises(_MODELO)[-1]
 _COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _DR_SOURCE = "boe-modelo-210-diseno-registro-2011"
 

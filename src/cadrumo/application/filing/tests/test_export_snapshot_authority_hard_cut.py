@@ -10,6 +10,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.filing.software_identity import development_mock_software_identity
 from ..export import export_draft
 from .export_support import (
+    MODELO_131_HISTORICAL_YEAR,
     approved_modelo_131_historical_registry_draft,
     export_schema_provider,
     typed_modelo_131_producer_snapshot,
@@ -36,7 +37,7 @@ def test_export_uses_the_selected_snapshot_owned_layout(tmp_path) -> None:
         producer_snapshot=typed_modelo_131_producer_snapshot(),
         product_software_identity=development_mock_software_identity(),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        schema_provider=export_schema_provider(filing_year=2023, period="4T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=MODELO_131_HISTORICAL_YEAR, period="4T", modelos=("131",)),
     )
 
     assert result.output_path == output_path

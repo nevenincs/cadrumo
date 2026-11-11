@@ -19,6 +19,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.modelos.filing_kind_evidence import (
     UNKNOWN_FILING_KIND,
@@ -42,7 +43,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _C18 = validated_casilla_id("18", surface="test_cross_period_filing_kind_blockers.casilla")
 _C19 = validated_casilla_id("19", surface="test_cross_period_filing_kind_blockers.casilla")
-_PERIOD = Period.from_year_and_code(2025, "2T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 _ORIGINAL = observed_filing_kind_for_local_revision(FilingDeclarationKind.ORIGINAL, source_locator="local-filing:q2")
 _COMPLEMENTARIA = observed_filing_kind_for_local_revision(
     FilingDeclarationKind.COMPLEMENTARIA, source_locator="local-filing:q2"
@@ -56,7 +58,7 @@ _DISAGREEMENT = observed_filing_kind_from_capture(
 
 _REQUIREMENT = CrossPeriodDependencyRequirement(
     source_modelo="130",
-    filing_year=2025,
+    filing_year=_YEAR,
     period=_PERIOD,
     source_casilla_ids=(_C19, _C18),
     origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
@@ -69,7 +71,7 @@ _REQUIREMENT = CrossPeriodDependencyRequirement(
 def _payload(values: dict[str, str], filing_kind: ObservedFilingKind | None) -> ObservationEnvelopePayload:
     observation = RegistryModeloObservation(
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
         observations=tuple(
             CasillaObservation(
@@ -83,7 +85,7 @@ def _payload(values: dict[str, str], filing_kind: ObservedFilingKind | None) -> 
     )
     return ObservationEnvelopePayload(
         observation=observation,
-        captured_at=datetime(2025, 7, 20, 9, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 7, 20, 9, 0, 0, tzinfo=UTC),
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
         stamped_revision_id=revision_id_for_observation(observation),
         filing_kind=filing_kind,

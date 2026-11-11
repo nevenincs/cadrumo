@@ -13,6 +13,7 @@ from ....domain.calculations.registry.export import resolve_export_layout
 from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ....domain.calculations.registry.schema_base import DateAxis
 from ....domain.calculations.registry.schema_references import TemporalProjectionDirection
+from ....domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.period import period_end_date
 from ..m303_carry_ingress import m303_declaration_type_header_key
@@ -20,9 +21,12 @@ from ..m303_carry_ingress import m303_declaration_type_header_key
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+_EARLY_REVISION, _LATE_REVISION = split_exercise_revisions("303", early_period="1T", late_period="03")
+_SPLIT_YEAR = _LATE_REVISION.valid_from.year
+_MAPPING_FACT = "modelo-303-carry-disposition-verification-mapping"
 
 
-# Exercise every historical branch and the 2026 shared-end-date boundary.
+# Exercise every historical branch and the shared-end-date boundary of the split exercise.
 @pytest.mark.parametrize("period", ("1T", "2T", "3T", "4T", "01", "02", "03", "08", "09", "12"))
 @pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_carry_mapping_matches_the_selected_modelo_303_revision(
@@ -53,8 +57,8 @@ def test_carry_mapping_matches_the_selected_modelo_303_revision(
 @pytest.mark.parametrize(
     ("period", "revision_id", "variant_id"),
     (
-        ("1T", "2026-hasta-01-y-1t", "modelo-303-carry-disposition-verification-mapping:2026-hasta-01-y-1t"),
-        ("03", "2026-y-siguientes", "modelo-303-carry-disposition-verification-mapping:2026"),
+        ("1T", str(_EARLY_REVISION.id), f"{_MAPPING_FACT}:{_EARLY_REVISION.id}"),
+        ("03", str(_LATE_REVISION.id), f"{_MAPPING_FACT}:{_SPLIT_YEAR}"),
     ),
 )
 def test_shared_end_date_retains_the_exact_monthly_or_quarterly_mapping(
@@ -63,15 +67,17 @@ def test_shared_end_date_retains_the_exact_monthly_or_quarterly_mapping(
     revision_id: str,
     variant_id: str,
 ) -> None:
-    effective_date = period_end_date(2026, period)
-    assert effective_date == period_end_date(2026, "1T") == period_end_date(2026, "03")
-    revision = authority_operation.revision_for_context("303", filing_year=2026, period=period, on=effective_date)
+    effective_date = period_end_date(_SPLIT_YEAR, period)
+    assert effective_date == period_end_date(_SPLIT_YEAR, "1T") == period_end_date(_SPLIT_YEAR, "03")
+    revision = authority_operation.revision_for_context(
+        "303", filing_year=_SPLIT_YEAR, period=period, on=effective_date
+    )
     resolved = authority_operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="modelo-303-carry-disposition-verification-mapping",
+            fact_id=_MAPPING_FACT,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
-            filing_year=2026,
+            filing_year=_SPLIT_YEAR,
             period=period,
         ),
     )
@@ -84,7 +90,7 @@ def test_shared_end_date_retains_the_exact_monthly_or_quarterly_mapping(
     assert resolved.authority_digest == authority_operation.pin().logical_generation
     assert (
         m303_declaration_type_header_key(
-            filing_year=2026,
+            filing_year=_SPLIT_YEAR,
             period=period,
             operation=authority_operation,
         )
@@ -100,22 +106,22 @@ def test_carry_mapping_refuses_an_absent_or_unsupported_period_coordinate(
     with pytest.raises(GovernedFactNotApplicableError):
         authority_operation.resolve_governed_fact(
             MappingFactQuery(
-                fact_id="modelo-303-carry-disposition-verification-mapping",
+                fact_id=_MAPPING_FACT,
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=period_end_date(2026, "4T"),
-                filing_year=2026 if period is not None else None,
+                effective_date=period_end_date(_SPLIT_YEAR, "4T"),
+                filing_year=_SPLIT_YEAR if period is not None else None,
                 period=period,
             ),
         )
 
 
 @pytest.mark.parametrize("period", ("01", "1T"))
-def test_future_periods_use_late_mapping_after_the_2026_override(
+def test_future_periods_use_late_mapping_after_the_split_exercise_override(
     authority_operation: PinnedAuthorityOperation,
     period: str,
 ) -> None:
-    filing_year = 2027
     support = authority_operation.supported_filing_years()
+    filing_year = support.horizon + 1
     effective_date = period_end_date(filing_year, period)
     assert filing_year > support.horizon
     assert support.admits_filing_year(filing_year)
@@ -125,7 +131,7 @@ def test_future_periods_use_late_mapping_after_the_2026_override(
     )
     resolved = authority_operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="modelo-303-carry-disposition-verification-mapping",
+            fact_id=_MAPPING_FACT,
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
             filing_year=filing_year,
@@ -135,10 +141,10 @@ def test_future_periods_use_late_mapping_after_the_2026_override(
 
     assert isinstance(resolved, ResolvedMappingFact)
     entries = {entry.key: entry.value for entry in resolved.payload.entries}
-    assert str(revision.id) == entries["revision"] == "2026-y-siguientes"
-    assert str(resolved.variant_id) == "modelo-303-carry-disposition-verification-mapping:2026"
+    assert str(revision.id) == entries["revision"] == str(_LATE_REVISION.id)
+    assert str(resolved.variant_id) == f"{_MAPPING_FACT}:{_SPLIT_YEAR}"
     assert period in revision.period_selector.periods_for_year(filing_year)
-    assert period not in revision.period_selector.periods_for_year(2026)
+    assert period not in revision.period_selector.periods_for_year(_SPLIT_YEAR)
     assert revision.valid_to is None
     assert resolved.effective_date == effective_date
     assert resolved.authority_digest == authority_operation.pin().logical_generation

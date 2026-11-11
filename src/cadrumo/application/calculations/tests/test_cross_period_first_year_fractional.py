@@ -31,6 +31,7 @@ from cadrumo.application.calculations.tests.cross_period_verdict_support import 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..cross_period_clean_state import (
     qualifies_for_first_year_fractional_suppression,
     suppressed_first_year_fractional_evidence,
@@ -46,7 +47,7 @@ from ..cross_period_models import (
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-_TARGET_YEAR = 2026
+_TARGET_YEAR = filing_year_envelope().horizon
 _M202_SOURCE_CASILLA_03: CasillaId = validated_casilla_id("03", surface="_M202_SOURCE_CASILLA_03")
 _M202_REQUIREMENT_LEGAL_REFS = ("ley-27-2014:art-40",)
 _M202_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-202-instructions",)

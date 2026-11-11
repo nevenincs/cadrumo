@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -41,7 +41,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # RDL 7/2024 art. 11.2 reduces the annual simplified cuota of the exercise it enters
 # into force in; the published provision names that exercise.
-_DANA_RELIEF_EXERCISE = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from.year
+_DANA_RELIEF_START = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from
+_DANA_RELIEF_EXERCISE = _DANA_RELIEF_START.year
+_DANA_RELIEF_END = date(_DANA_RELIEF_EXERCISE, 12, 31)
 
 
 def _annual_snapshot_and_rows(
@@ -253,7 +255,7 @@ def _resolve_dana_fact(operation: PinnedAuthorityOperation, effective_date: date
     return resolved
 
 
-@pytest.mark.parametrize("effective_date", [date(2024, 11, 13), date(2024, 12, 1), date(2024, 12, 31)])
+@pytest.mark.parametrize("effective_date", [_DANA_RELIEF_START, date(_DANA_RELIEF_EXERCISE, 12, 1), _DANA_RELIEF_END])
 def test_dana_fact_is_authored_inside_and_at_the_edges_of_its_legal_window(
     authority_operation,
     effective_date: date,
@@ -262,10 +264,17 @@ def test_dana_fact_is_authored_inside_and_at_the_edges_of_its_legal_window(
 
     assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
     assert resolved.payload.value == Decimal("0.25")
-    assert (resolved.authored_valid_from, resolved.authored_valid_to) == (date(2024, 11, 13), date(2024, 12, 31))
+    assert (resolved.authored_valid_from, resolved.authored_valid_to) == (_DANA_RELIEF_START, _DANA_RELIEF_END)
 
 
-@pytest.mark.parametrize("effective_date", [date(2024, 11, 12), date(2025, 1, 1), date(2025, 12, 31)])
+@pytest.mark.parametrize(
+    "effective_date",
+    [
+        _DANA_RELIEF_START - timedelta(days=1),
+        date(_DANA_RELIEF_EXERCISE + 1, 1, 1),
+        date(_DANA_RELIEF_EXERCISE + 1, 12, 31),
+    ],
+)
 def test_dana_fact_outside_its_explicit_legal_window_refuses(authority_operation, effective_date: date) -> None:
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         _resolve_dana_fact(authority_operation, effective_date)

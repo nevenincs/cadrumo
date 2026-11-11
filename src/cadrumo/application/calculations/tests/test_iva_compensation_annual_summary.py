@@ -8,6 +8,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
@@ -18,6 +19,7 @@ from .iva_compensation_history_support import (
     state,
 )
 
+_YEAR = filing_year_envelope().horizon
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
@@ -25,10 +27,10 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
     tuple[int, int, IvaCompensationExpiryReviewState, tuple[str, ...]],
     ...,
 ] = (
-    (2024, 2025, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
+    (_YEAR - 2, _YEAR - 1, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
     (
-        2022,
-        2027,
+        _YEAR - 4,
+        _YEAR + 1,
         IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED,
         ("expired_review_required", "active"),
     ),
@@ -46,14 +48,14 @@ def test_year_end_carry_partition_keeps_the_last_period_result_apart_from_carrie
     70, and the two still account for the 120 once.
     """
     states = (
-        state(filing_year=2026, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
-        state(filing_year=2026, period="2T", applied=Decimal("30.00"), available=Decimal("70.00")),
-        state(filing_year=2026, period="3T", available=Decimal("70.00")),
-        state(filing_year=2026, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
+        state(filing_year=_YEAR, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
+        state(filing_year=_YEAR, period="2T", applied=Decimal("30.00"), available=Decimal("70.00")),
+        state(filing_year=_YEAR, period="3T", available=Decimal("70.00")),
+        state(filing_year=_YEAR, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=_YEAR, operation=operation)
 
-    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
+    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=_YEAR)
 
     assert partition.last_period_amount == Decimal("50.00")
     assert partition.generated_not_in_last_amount == Decimal("70.00")
@@ -73,14 +75,14 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662(
     still satisfy the identity.
     """
     states = (
-        state(filing_year=2026, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
-        state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
+        state(filing_year=_YEAR, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
+        state(filing_year=_YEAR, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026, operation=operation)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=_YEAR, operation=operation)
 
-    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
+    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=_YEAR)
 
-    total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
+    total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == _YEAR), Decimal("0"))
     assert partition.last_period_amount == states[1].available_end_amount
     assert partition.generated_not_in_last_amount == states[0].generated_amount
     assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
@@ -88,9 +90,9 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662(
 
 def test_iva_period_sort_key_places_annual_0a_after_periodic_rows() -> None:
     """The generic annual period sorts last even though its span starts in January."""
-    annual = Period.from_year_and_code(2026, "0A")
-    fourth_quarter = Period.from_year_and_code(2026, "4T")
-    december = Period.from_year_and_code(2026, "12")
+    annual = Period.from_year_and_code(_YEAR, "0A")
+    fourth_quarter = Period.from_year_and_code(_YEAR, "4T")
+    december = Period.from_year_and_code(_YEAR, "12")
 
     assert iva_compensation_period_sort_key(annual) > iva_compensation_period_sort_key(fourth_quarter)
     assert iva_compensation_period_sort_key(annual) > iva_compensation_period_sort_key(december)

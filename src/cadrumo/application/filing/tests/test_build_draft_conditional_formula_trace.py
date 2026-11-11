@@ -36,6 +36,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.protocols import ModeloInputs
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.submission.models import ModeloDraftStatus
@@ -59,7 +60,7 @@ def _binding_id(value: object) -> BindingId:
         raise AssertionError(f"test fixture binding key {value!r} is not a canonical binding.id") from exc
 
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 _TAX_ID = "12345678Z"
 _M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-repercutido-general-cuota")
 _M303_REPERCUTIDO_REDUCIDO_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-repercutido-reducido-cuota")
@@ -101,14 +102,14 @@ def _modelo_303_1t_inputs() -> ModeloInputs:
         _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
         _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
         _M303_STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
-        _DECL_EJERCICIO_CASILLA: Decimal("2026"),
+        _DECL_EJERCICIO_CASILLA: Decimal(_PERIOD.filing_year),
         _DECL_PERIODO_CASILLA: "1T",
     }
 
 
 def _build_modelo_303_1t_draft():
     schema_provider = build_runtime_schema_provider(
-        filing_year=2026,
+        filing_year=_PERIOD.filing_year,
         period=_PERIOD,
         modelos=("303",),
     )

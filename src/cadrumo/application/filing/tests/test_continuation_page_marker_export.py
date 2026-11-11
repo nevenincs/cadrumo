@@ -34,6 +34,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+    revision_serving_period,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import validated_casilla_id
@@ -63,19 +69,40 @@ _POSITION = 12
 _CONTINUATION = "C"
 _PRINCIPAL = " "
 
+_YEAR = filing_year_envelope().horizon
+
+
+def _design_epoch(modelo: str, filing_year: int, period: str) -> int:
+    """Return the first exercise of the design edition that serves one coordinate.
+
+    The shipped field ids carry that edition's exercise, so the expected id is built
+    from the edition the registry serves rather than spelled out per year.
+    """
+    return revision_serving_period(modelo, filing_year, period).valid_from.year
+
+
+_M232_EPOCH = revision_covering("232", _YEAR).valid_from.year
+_M303_EPOCH = _design_epoch("303", _YEAR, "1T")
+_M303_PRIOR_EPOCH = _design_epoch("303", _YEAR - 1, "1T")
+#: Modelo 353 swaps its design inside the exercise its newest edition starts in: the older edition
+#: still serves period 01 there and the newest one serves period 02.
+_M353_YEAR = authored_revisions("353")[-1].valid_from.year
+_M353_EARLY_EPOCH = _design_epoch("353", _M353_YEAR, "01")
+_M353_LATE_EPOCH = _design_epoch("353", _M353_YEAR, "02")
+
 #: (modelo, filing year, period, record id, field id) of every shipped page indicator.
 _PAGE_INDICATORS = (
-    ("131", 2026, "1T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
-    ("131", 2026, "3T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
-    ("232", 2025, "0A", "m232-operaciones-vinculadas", "m232-2018.dr23201.f005"),
-    ("232", 2025, "0A", "m232-paraisos-fiscales", "m232-2018.dr23202.f005"),
-    ("303", 2026, "1T", "m303-regimen-simplificado", "m303-2026.dp30302.f005"),
-    ("303", 2026, "1T", "m303-prorrata-deducciones", "m303-2026.dp30305.f005"),
-    ("303", 2025, "1T", "m303-regimen-simplificado", "m303-2025.dp30302.f005"),
-    ("303", 2025, "1T", "m303-prorrata-deducciones", "m303-2025.dp30305.f005"),
-    ("353", 2025, "01", "m353-declaracion", "m353-2021.pagina01.f005"),
-    ("353", 2026, "02", "m353-declaracion", "m353-2026.pagina01.f005"),
-    ("353", 2026, "02", "m353-domiciliacion-devolucion", "m353-2026.pagina02.f005"),
+    ("131", _YEAR, "1T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
+    ("131", _YEAR, "3T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
+    ("232", _YEAR, "0A", "m232-operaciones-vinculadas", f"m232-{_M232_EPOCH}.dr23201.f005"),
+    ("232", _YEAR, "0A", "m232-paraisos-fiscales", f"m232-{_M232_EPOCH}.dr23202.f005"),
+    ("303", _YEAR, "1T", "m303-regimen-simplificado", f"m303-{_M303_EPOCH}.dp30302.f005"),
+    ("303", _YEAR, "1T", "m303-prorrata-deducciones", f"m303-{_M303_EPOCH}.dp30305.f005"),
+    ("303", _YEAR - 1, "1T", "m303-regimen-simplificado", f"m303-{_M303_PRIOR_EPOCH}.dp30302.f005"),
+    ("303", _YEAR - 1, "1T", "m303-prorrata-deducciones", f"m303-{_M303_PRIOR_EPOCH}.dp30305.f005"),
+    ("353", _M353_YEAR, "01", "m353-declaracion", f"m353-{_M353_EARLY_EPOCH}.pagina01.f005"),
+    ("353", _M353_YEAR, "02", "m353-declaracion", f"m353-{_M353_LATE_EPOCH}.pagina01.f005"),
+    ("353", _M353_YEAR, "02", "m353-domiciliacion-devolucion", f"m353-{_M353_LATE_EPOCH}.pagina02.f005"),
 )
 
 
@@ -146,7 +173,7 @@ def _approved_131_draft(epigrafes: tuple[str, ...]):
             "modelo-131.dpa.epigrafe-iae": list(epigrafes),
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=_YEAR, period="1T", modelos=("131",)),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
@@ -172,7 +199,7 @@ def test_a_modelo_131_complementaria_export_marks_only_its_second_dpa_page(tmp_p
         producer_snapshot=snapshot,
         product_software_identity=development_mock_software_identity(),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=_YEAR, period="1T", modelos=("131",)),
     )
 
     payload = output_path.read_bytes()
@@ -195,7 +222,7 @@ def test_dr369_page_indicator_follows_the_page_even_for_amendment_evidence(
     revision_id: str, period: str, record_id: str, occurrence: int, expected: str
 ) -> None:
     """Position 55 of the first page of each regime, mandatory, printed ``[blanco | constante "C"]``."""
-    snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision_id)
+    snapshot = published_snapshot("369", filing_year=_YEAR, period=period, revision_id=revision_id)
     [layout] = snapshot.revision.export_layouts
     [record] = [candidate for candidate in layout.records if str(candidate.id) == record_id]
     [field] = [candidate for candidate in record.fields if candidate.computed_key == "continuation_page_marker"]

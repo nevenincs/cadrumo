@@ -9,10 +9,11 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
 _MODELO = "210"
-_YEAR = 2025
+_YEAR = filing_grade_exercises(_MODELO)[-1]
 _COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _SURFACE = "convenio_rate_test"
 _TIPO_GRAVAMEN = validated_casilla_id("tipo_gravamen", surface=_SURFACE)
