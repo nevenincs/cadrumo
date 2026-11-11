@@ -57,6 +57,7 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from cadrumo.entrypoints.tui.declarations.models import ModeloWorkCreateHandoffV1, ModeloWorkCreateResultV1
@@ -68,13 +69,15 @@ from cadrumo_client.transport.operation_controller import OperationController
 
 from .....frontend.tui.modelo import runtime_work_create
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 9, 28, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_NOW = datetime(_YEAR, 9, 28, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _ADVISORIES = ("modelo.work.advisory.identity",)
 
 
@@ -106,20 +109,20 @@ def _contract_set():
 
 
 def _unit(profile_id: UUID = _PROFILE, period: Period = _PERIOD) -> ModeloWorkMetadataSnapshot:
-    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
+    instant = datetime(_YEAR, 3, 10, 12, tzinfo=UTC)
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(profile_id),
             modelo="303",
             filing_year=period.filing_year,
             period=period,
-            revision_id="2026-y-siguientes",
+            revision_id=revision_serving_period("303", _YEAR, "1T").id,
         ),
         bucket_id=str(profile_id),
         modelo="303",
         filing_year=period.filing_year,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=revision_serving_period("303", _YEAR, "1T").id,
         name="First-quarter return",
         created_at=instant,
         updated_at=instant,
@@ -270,7 +273,7 @@ def test_runtime_create_submits_exact_profile_period_and_refreshes_after_success
         cast(FrontendClient, client), refresh_after_success=lambda: refreshes.append("refreshed")
     )
 
-    returned = handoff(" 303 ", 2026, _PERIOD)
+    returned = handoff(" 303 ", _YEAR, _PERIOD)
 
     assert returned.reused is reused
     assert returned.advisory_keys == _ADVISORIES
@@ -320,7 +323,7 @@ def test_runtime_create_returns_the_declaration_the_refreshed_generation_admits(
         cast(FrontendClient, client), refresh_after_success=lambda: refreshed
     )
 
-    returned = handoff("303", 2026, _PERIOD)
+    returned = handoff("303", _YEAR, _PERIOD)
 
     assert returned.declaration == admitted
     assert returned.advisory_keys == _ADVISORIES
@@ -342,7 +345,7 @@ def test_runtime_create_registered_applicability_refusal_preserves_terminal_rece
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
-        handoff("303", 2026, _PERIOD)
+        handoff("303", _YEAR, _PERIOD)
 
     assert len(submissions) == 1
     assert controller.result_reads == [(ModeloWorkCreateProjection, 1, True)]
@@ -365,7 +368,7 @@ def test_runtime_create_rejects_ceded_model_before_runtime_submission(monkeypatc
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
-        handoff("600", 2026, _PERIOD)
+        handoff("600", _YEAR, _PERIOD)
 
     assert raised.value.translated_message == "cli.app.modelo.work.create_stub_modelo_600_refused"
     assert submissions == []
@@ -387,7 +390,7 @@ def test_runtime_create_rejects_observation_not_correlated_to_request(
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
-        handoff("303", 2026, _PERIOD)
+        handoff("303", _YEAR, _PERIOD)
 
     assert controller.started
     assert controller.result_reads == []
@@ -410,7 +413,7 @@ def test_runtime_create_rejects_session_replacement_before_submission(monkeypatc
     client.session_id = uuid4()
 
     with pytest.raises(RefusalError) as raised:
-        handoff("303", 2026, _PERIOD)
+        handoff("303", _YEAR, _PERIOD)
 
     assert raised.value.reason is RefusalCode.CONNECTION_CLOSED
     assert submissions == []
@@ -429,7 +432,7 @@ def test_runtime_create_rejects_session_change_after_terminal_result_read(monkey
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
-        handoff("303", 2026, _PERIOD)
+        handoff("303", _YEAR, _PERIOD)
 
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
@@ -455,7 +458,7 @@ def test_runtime_create_refresh_failure_keeps_the_known_success_receipt(monkeypa
     )
 
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
-        handoff("303", 2026, _PERIOD)
+        handoff("303", _YEAR, _PERIOD)
 
     assert raised.value.context == {
         "operation_id": _OPERATION_ID,
@@ -476,15 +479,15 @@ def test_calendar_create_handoff_submits_the_entry_natural_address() -> None:
     entry: DeclarationsCalendarEntryRefV1 = calendar_row(
         "303",
         "1T",
-        date(2026, 4, 20),
+        date(_YEAR, 4, 20),
         ObligationStatus.UPCOMING,
         OverviewPeriodState.DUE,
     )
-    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period=str(_PERIOD))
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=_YEAR, period=str(_PERIOD))
 
     recover(action, entry)
 
-    assert calls == [("303", 2026, _PERIOD)]
+    assert calls == [("303", _YEAR, _PERIOD)]
 
 
 def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:

@@ -19,10 +19,12 @@ import sqlite3
 import subprocess
 import sys
 from contextlib import suppress
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.profile_storage_fixtures import isolated_profile_storage
 
 __all__ = ["isolated_profile_storage"]
@@ -43,6 +45,8 @@ from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .isolated_profile_storage_fixtures import isolated_state
 from .runtime_profile_backend import operator_profile_bound_to_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["isolated_state"]
@@ -433,7 +437,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "activities.description": "Design consulting",
                 "contact.postcode": "28015",
-                "censo.activity_start_date": "2025-01-01",
+                "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
                 "tax_residence.ccaa": "madrid",
                 "irpf.estimation_regime": "directa_simplificada",
             },

@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 
 from cadrumo.application.ledger.own_account_operation import LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -24,6 +26,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -174,9 +178,9 @@ def test_native_own_account_setup_round_trip(tmp_path: Path, run_cadrumo_cli) ->
             require_error_document(refused.output)["error"]["code"] == "REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION"
         )
 
-        closed = run("close", "acc-02", "--on", "2026-06-30")
+        closed = run("close", "acc-02", "--on", date(_YEAR, 6, 30).isoformat())
         assert closed.exit_code == 0, closed.output
-        assert unwrap_cli_result(closed)["accounts"][0]["closed_on"] == "2026-06-30"
+        assert unwrap_cli_result(closed)["accounts"][0]["closed_on"] == date(_YEAR, 6, 30).isoformat()
 
         assert run("undesignate", "--role", "charge").exit_code == 0
         removed = run("remove", "acc-01")

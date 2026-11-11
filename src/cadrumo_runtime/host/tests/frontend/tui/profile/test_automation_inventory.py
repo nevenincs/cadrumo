@@ -28,6 +28,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
 )
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
@@ -51,6 +52,8 @@ from .....frontend.tui.profile import automation_inventory as subject
 from .....frontend.tui.profile import automation_inventory_details as detail_subject
 from .....frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
 from .....frontend.tui.secret import automation_decision as decision_subject
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -129,7 +132,7 @@ def _inventory(profile_id: UUID) -> AutomationInventoryProjection:
         disclosure_count=0,
         disclosure_summary=(),
         disclosure_digest=disclosure_digest(()),
-        periods=(AutomationPeriodProjection(filing_year=2026, code="3T"),),
+        periods=(AutomationPeriodProjection(filing_year=_YEAR, code="3T"),),
         allow_period_independent=False,
         allow_delegation=False,
     )
@@ -221,7 +224,7 @@ async def test_inventory_tables_show_public_details_and_refresh_only_on_action(
         rendered = screen.query_one("#automation-inventory-details", Static).render()
         assert isinstance(rendered, Content)
         assert "[red]literal-operation[/red]" in rendered.plain
-        assert "2026/3T" in details
+        assert f"{_YEAR}/3T" in details
         assert tr("flows.confirm.yes") in details and tr("flows.confirm.no") in details
         assert "secret" not in details and "verifier" not in details and "dek" not in details
         grant_row = screen.query_one("#automation-inventory-grants", DataTable).get_row_at(0)
@@ -253,7 +256,7 @@ def test_period_restrictions_and_review_validity_are_not_collapsed() -> None:
     none_allowed = scope.model_copy(update={"periods": ()})
     assert tr("tui.automation_inventory.all_periods") in "\n".join(detail_subject.scope(unrestricted))
     assert tr("tui.automation_inventory.no_periods") in "\n".join(detail_subject.scope(none_allowed))
-    assert "2026/3T" in "\n".join(detail_subject.scope(scope))
+    assert f"{_YEAR}/3T" in "\n".join(detail_subject.scope(scope))
     unattended_notice = tr("tui.automation_inventory.unattended_notice")
     assert unattended_notice in detail_subject.grant_detail(inventory.grants[0])
     assert unattended_notice not in detail_subject.grant_detail(

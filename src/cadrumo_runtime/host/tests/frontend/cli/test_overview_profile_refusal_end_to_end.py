@@ -18,17 +18,21 @@ import sys
 from collections.abc import Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .overview_calendar_support import CALENDAR_GATING_FACT_OVERRIDES
 from .overview_native_support import invoke_native_overview
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,10 +49,18 @@ _OMITTED_SELECTOR = "has_employees"
 
 _REFUSING_INVOCATIONS = (
     pytest.param(
-        ["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"],
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            date(_YEAR, 1, 1).isoformat(),
+            "--to",
+            date(_YEAR, 3, 31).isoformat(),
+        ],
         id="calendar",
     ),
-    pytest.param(["app", "overview", "agenda", "--date", "2026-04-15"], id="agenda"),
+    pytest.param(["app", "overview", "agenda", "--date", date(_YEAR, 4, 15).isoformat()], id="agenda"),
     pytest.param(["app", "overview", "backlog"], id="backlog"),
 )
 
@@ -196,7 +208,17 @@ def test_answering_the_fact_removes_this_refusal(tmp_path: Path) -> None:
         fixture.register(label="Answered overview profile", facts=CALENDAR_GATING_FACT_OVERRIDES)
         token = _ACTIVE_NATIVE.set(fixture)
         try:
-            result = _invoke(["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"])
+            result = _invoke(
+                [
+                    "app",
+                    "overview",
+                    "calendar",
+                    "--from",
+                    date(_YEAR, 1, 1).isoformat(),
+                    "--to",
+                    date(_YEAR, 3, 31).isoformat(),
+                ]
+            )
         finally:
             _ACTIVE_NATIVE.reset(token)
 

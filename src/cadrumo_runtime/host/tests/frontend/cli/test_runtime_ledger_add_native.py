@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
@@ -15,6 +17,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -39,7 +43,7 @@ def test_native_exact_profile_add_is_readable_after_session_reauthentication(tmp
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "23.00",
             "--direction",
@@ -71,7 +75,7 @@ def test_native_add_and_list_refuse_an_unregistered_or_malformed_own_account(tmp
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "23.00",
             "--direction",

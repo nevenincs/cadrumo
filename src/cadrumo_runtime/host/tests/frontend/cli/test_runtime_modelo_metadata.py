@@ -24,6 +24,7 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo_client.transport.installation import installation
@@ -35,6 +36,8 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from ...served_runtime import SyntheticLogin
 from .cli_runner import invoke_cached_cli
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -45,21 +48,21 @@ pytestmark = [
 
 
 def _seed_unit(profile_id: str) -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
-    created = datetime(2020, 1, 1, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    created = datetime(1980, 1, 1, tzinfo=UTC)
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=profile_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2019-y-siguientes",
+            revision_id=revision_covering("130", _YEAR).id,
         ),
         bucket_id=profile_id,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=revision_covering("130", _YEAR).id,
         name="Original metadata",
         created_at=created,
         updated_at=created,
@@ -86,11 +89,11 @@ def _assert_rename_then_status(original: WorkUnit) -> None:
         "--modelo",
         "130",
         "--year",
-        "2026",
+        str(_YEAR),
         "--period",
         "1T",
         "--revision",
-        "2019-y-siguientes",
+        revision_covering("130", _YEAR).id,
         "--name",
         "Renamed through worker",
     )
@@ -110,7 +113,7 @@ def _assert_rename_then_status(original: WorkUnit) -> None:
     assert status_result["work_unit_id"] == original.work_unit_id
     assert status_result["name"] == "Renamed through worker"
     assert status_result["bucket_id"] == "<bucket-id>"
-    assert status_result["period"] == {"filing_year": 2026, "code": "1T"}
+    assert status_result["period"] == {"filing_year": _YEAR, "code": "1T"}
     assert status_result["updated_at"] == rename_result["updated_at"]
     assert PROFILE_INPUT not in status.output
 

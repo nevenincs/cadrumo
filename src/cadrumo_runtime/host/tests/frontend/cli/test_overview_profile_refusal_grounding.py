@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Sequence
+from datetime import date
 
 import pytest
 from click.testing import Result
@@ -27,10 +28,13 @@ from cadrumo.application.user_profile.preflight import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .overview_native_support import invoke_native_overview
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -136,7 +140,17 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input(
     # channel -- a parameter error never carries REFUSED.
     result = _invoke(
         native_overview_profile,
-        ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"],
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            date(_YEAR, 1, 1).isoformat(),
+            "--to",
+            date(_YEAR, 3, 31).isoformat(),
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -156,7 +170,16 @@ def test_calendar_refusal_reads_as_a_refusal_not_as_invalid_input(
 def test_calendar_refusal_carries_the_remediation_command(native_overview_profile: NativeCliProfileFixture) -> None:
     """The operator is told what to run, not only what is missing."""
     result = _invoke(
-        native_overview_profile, ["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
+        native_overview_profile,
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            date(_YEAR, 1, 1).isoformat(),
+            "--to",
+            date(_YEAR, 3, 31).isoformat(),
+        ],
     )
 
     assert result.exit_code != 0, result.output
@@ -176,9 +199,9 @@ def test_calendar_allow_incomplete_still_renders_rather_than_refusing(
             "overview",
             "calendar",
             "--from",
-            "2026-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--to",
-            "2026-03-31",
+            date(_YEAR, 3, 31).isoformat(),
             "--allow-incomplete",
         ],
     )

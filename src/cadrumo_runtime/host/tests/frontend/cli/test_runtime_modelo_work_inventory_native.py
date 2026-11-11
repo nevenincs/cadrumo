@@ -17,6 +17,7 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
@@ -34,6 +35,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import native_api_cli_session
 from .native_profile_cli_invoke import invoke_native_profile_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -105,8 +108,8 @@ def test_native_work_list_and_select_preserve_default_and_discarded_order(
         second = create_work_unit(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "2T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
             revision_id=first.revision_id,
             actor="native-work-inventory",
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
@@ -115,8 +118,8 @@ def test_native_work_list_and_select_preserve_default_and_discarded_order(
         third = create_work_unit(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "4T"),
             revision_id=first.revision_id,
             actor="native-work-inventory",
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
@@ -170,7 +173,7 @@ def test_native_work_list_and_select_preserve_default_and_discarded_order(
 
 def test_native_api_work_list_requires_unbounded_period_scope(tmp_path: Path, run_cadrumo_cli) -> None:
     """A finite-period key cannot read whole-profile inventory; an unbounded one can."""
-    selected_period = Period.from_year_and_code(2025, "1T")
+    selected_period = Period.from_year_and_code(_YEAR, "1T")
 
     with native_api_cli_session(
         tmp_path / "finite-period",

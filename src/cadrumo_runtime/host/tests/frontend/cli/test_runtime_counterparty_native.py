@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo.application.ledger.counterparty_operation import LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -19,6 +20,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,7 +63,7 @@ def _scope(client_id: UUID, *, commit: bool, finite_period: bool = False) -> Acc
                 ),
             }
         ),
-        periods=frozenset({Period.from_year_and_code(2025, "1T")}) if finite_period else None,
+        periods=frozenset({Period.from_year_and_code(_YEAR, "1T")}) if finite_period else None,
         allow_period_independent=not finite_period,
         allow_delegation=False,
     )
