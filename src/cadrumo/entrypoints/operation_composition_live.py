@@ -20,6 +20,12 @@ from ..application.operations.contract_manifest import (
 )
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
+    from ..application.live.filed_history_operation import (
+        FiledHistoryCompositionFactory,
+        FiledHistoryProviderPreflight,
+    )
     from ..application.live.justificante_capture_operation import JustificanteCapturePorts
     from ..application.live.verify import VerifySurface
     from ..application.operations.operation_definition import OperationDefinition
@@ -86,6 +92,27 @@ def compose_live_filed_history_operation(inputs: OperationCompositionInputs) -> 
     return built((definition,), (build_filed_history_operation_registration(definition),))
 
 
+def _filed_capture_source(
+    inputs: OperationCompositionInputs,
+) -> tuple[FiledHistoryCompositionFactory, FiledHistoryProviderPreflight]:
+    """The live-state composition and provider check a filed capture reads its register through.
+
+    Without an injected register the capture reads the AEAT Sede after checking
+    the profile's provider credentials. An injected register stands in for the
+    authenticated site, so there is no credential to check; every persistence,
+    receipt and reconciliation port stays the production one.
+    """
+    from .live_state_composition import compose_live_state, preflight_filed_history_provider
+
+    if inputs.filed_data_port is None:
+        return compose_live_state, preflight_filed_history_provider
+    return partial(compose_live_state, filed_data_port=inputs.filed_data_port), _recorded_register_needs_no_provider
+
+
+def _recorded_register_needs_no_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
+    del profile_id, operation
+
+
 def compose_live_filed_single_capture_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose live filed single capture operation."""
     from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope
@@ -93,11 +120,10 @@ def compose_live_filed_single_capture_operation(inputs: OperationCompositionInpu
         build_filed_single_capture_definition,
         build_filed_single_capture_registration,
     )
-    from .live_state_composition import compose_live_state, preflight_filed_history_provider
 
-    del inputs
+    composition_factory, provider_preflight = _filed_capture_source(inputs)
     definition = build_filed_single_capture_definition(
-        compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
+        composition_factory, BrowserRuntimeResourceScope, provider_preflight
     )
     return built((definition,), (build_filed_single_capture_registration(definition),))
 
@@ -110,11 +136,10 @@ def compose_live_filed_bulk_capture_operation(inputs: OperationCompositionInputs
         build_filed_bulk_capture_definition,
         build_filed_bulk_capture_registration,
     )
-    from .live_state_composition import compose_live_state, preflight_filed_history_provider
 
-    del inputs
+    composition_factory, provider_preflight = _filed_capture_source(inputs)
     definition = build_filed_bulk_capture_definition(
-        compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider, SyncRunRecordRepository
+        composition_factory, BrowserRuntimeResourceScope, provider_preflight, SyncRunRecordRepository
     )
     return built((definition,), (build_filed_bulk_capture_registration(definition),))
 

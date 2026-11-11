@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from ..application.ledger.participation_read import TransactionParticipationIndexRepositoryFactory
     from ..application.ledger.read_ports import LedgerReadPortsFactory
     from ..application.ledger.rule_repository import LedgerClassificationRuleRepositoryFactory
+    from ..application.live.filed_data_ports import FiledDataCapturePort
     from ..application.live.sede_view_ports import SedeViewStreamOpener
     from ..application.modelo.aggregate_ports import ModeloAggregateOperationPortsFactory
     from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
@@ -522,13 +523,15 @@ def build_production_operation_registry(
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     connectivity_probe: ConnectivityProbePort | None = None,
+    filed_data_port: FiledDataCapturePort | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory by composing every group eagerly.
 
     This is the validation authority the contract manifest is generated from.
     A ``None`` capability selects its production default.
     ``connectivity_probe`` browses to the site the connectivity operation
-    observes.
+    observes. ``filed_data_port`` is the AEAT register the single and bulk
+    filed captures read in place of the AEAT Sede.
     """
     inputs = OperationCompositionInputs(
         settings=settings,
@@ -575,6 +578,7 @@ def build_production_operation_registry(
         modelo_workbench_read_ports_factory=modelo_workbench_read_ports_factory,
         execution_caller_reader=execution_caller_reader,
         connectivity_probe=connectivity_probe,
+        filed_data_port=filed_data_port,
     )
     return _compose_every_group(inputs)[0]
 

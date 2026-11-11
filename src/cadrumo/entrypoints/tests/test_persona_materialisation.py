@@ -45,7 +45,7 @@ from ...application.wizard.catalogue import build_setup_flow
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
+from ...domain.modelos.filing_record import AeatConfirmationState, FilingOrigin, ModeloRecordStatus
 from ...domain.user_profile.values import ProfileSetupState
 from ...tests.personas import persona_ids
 from ..ledger_action_composition import compose_ledger_action_ports
@@ -369,17 +369,38 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
     assert persona.filed_returns
     assert persona.calculated_returns
     assert persona.leased_premises
-    assert persona.local_observations
+    assert persona.aeat_filings
     assert materialised.scope is ReplayScope.HISTORY
     assert set(materialised.filings) == declared_filed
     assert set(materialised.calculations) == declared_calculated
+    local = [record for record in records if record.origin is not FilingOrigin.AEAT]
+    captured = [record for record in records if record.origin is FilingOrigin.AEAT]
     assert {
-        filing_key(record.modelo, record.filing_year, record.period): record.calculation_revision_id
-        for record in records
+        filing_key(record.modelo, record.filing_year, record.period): record.calculation_revision_id for record in local
     } == materialised.filings
     assert {states[key] for key in materialised.filings} == {CalculationRevisionState.PRESENTADO}
     assert {states[key] for key in materialised.calculations} == {CalculationRevisionState.BORRADOR}
     assert {
         (record.confirmation, record.status, record.aeat_register, record.aeat_accepted, record.live_submission)
-        for record in records
+        for record in local
     } == {(AeatConfirmationState.PENDIENTE, ModeloRecordStatus.VIGENTE, None, False, False)}
+    # A return filed with the AEAT is captured from its register: confirmed by the justificante it was filed under.
+    assert {
+        (
+            filing_key(record.modelo, record.filing_year, record.period),
+            record.confirmation,
+            record.aeat_accepted,
+            None if record.aeat_register is None else record.aeat_register.csv,
+            None if record.aeat_register is None else record.aeat_register.justificante_number,
+        )
+        for record in captured
+    } == {
+        (
+            filing_key(filing.modelo, filing.year.resolve(world.envelope), filing.period),
+            AeatConfirmationState.CONFIRMADA,
+            True,
+            filing.csv,
+            filing.justificante,
+        )
+        for filing in persona.aeat_filings
+    }

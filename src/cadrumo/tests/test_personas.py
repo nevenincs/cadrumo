@@ -224,6 +224,56 @@ def test_a_local_observation_needs_canonical_casilla_amounts() -> None:
         _parse(document)
 
 
+_AEAT_FILING: dict[str, object] = {
+    "modelo": "100",
+    "year": "horizon-2",
+    "period": "0A",
+    "presented": {"year": "horizon-1", "month": 6, "day": 9},
+    "csv": "T5LW2N8RJ6DQ3VYB",
+    "justificante": "1004459817240",
+    "casillas": {"0224": "12846.30"},
+    "reason": "Renta del ejercicio anterior presentada",
+}
+
+
+def _with_aeat_filing(**changes: object) -> dict[str, Any]:
+    """The persona with its prior-year Renta as an AEAT filing instead of its own copy."""
+    document = copy.deepcopy(_document("persona.toml"))
+    document.pop("local_observations", None)
+    document["aeat_filings"] = [{**_AEAT_FILING, **changes}]
+    return document
+
+
+def test_an_aeat_filing_with_its_receipt_is_admitted() -> None:
+    _parse(_with_aeat_filing())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"csv": "t5lw2n8rj6dq3vyb"}, "16-character Código Seguro de Verificación"),
+        ({"csv": "T5LW2N8RJ6DQ3"}, "16-character Código Seguro de Verificación"),
+        ({"justificante": "100445981724"}, "13-digit número de justificante"),
+        ({"casillas": {}}, "at least one casilla"),
+        ({"casillas": {"0224": "12.846,30"}}, "canonical decimal"),
+        ({"period": "0B"}, "is not one of"),
+        ({"presented": {"year": "horizon-2", "month": 12, "day": 31}}, "presented before its period closes"),
+    ],
+)
+def test_a_malformed_aeat_filing_is_refused(changes: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_aeat_filing(**changes))
+
+
+def test_a_return_both_observed_locally_and_filed_with_the_aeat_is_refused() -> None:
+    document = _with_aeat_filing()
+    document["local_observations"] = [
+        {"modelo": "100", "year": "horizon-2", "period": "0A", "casillas": {"0224": "1.00"}, "reason": "Copia"}
+    ]
+    with pytest.raises(PersonaCatalogueError, match="listed twice"):
+        _parse(document)
+
+
 def _with_inventory(*books: dict[str, object]) -> dict[str, Any]:
     document = copy.deepcopy(_document("persona.toml"))
     document["inventory"] = list(books)
