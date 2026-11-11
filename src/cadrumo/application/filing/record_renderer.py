@@ -24,7 +24,11 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportValidationError, FilingExportValueOverflowError
+from ...domain.filing.errors import (
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.modelos.perceptor_clave_scope import (
     PerceptorClaveScope,
@@ -81,7 +85,7 @@ def render_layout_records(
             projection_plan=projection_plan,
         )
         if record.required and not rows:
-            raise FilingExportValidationError(f"required export record {record.id!r} has no applicable occurrence")
+            raise FilingExportRequiredRecordAbsentError(export_record_id=record.id)
         require_m347_declarado_casillas_have_one_row(
             record,
             rows=tuple(row for row, _context in rows),

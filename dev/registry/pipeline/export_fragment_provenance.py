@@ -101,6 +101,7 @@ type ExportFieldDerivationCode = Literal[
     "numeric-enumeration-v1",
     "numeric-integer-v1",
     "numeric-note-governed-amount-v1",
+    "numeric-note-governed-enumeration-v1",
     "text-a-v1",
     "text-an-v1",
     "render-profile-width-17-v1",

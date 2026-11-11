@@ -388,6 +388,18 @@ number = "122"
 # promotor's autoconsumo carriers and the rate rows' ledger bases and cuota
 # carriers join the calculation closure once they are wired on this edition.
 [[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "06"
+number = "06"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "09"
+number = "09"
+
+[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "10"
 number = "10"
 

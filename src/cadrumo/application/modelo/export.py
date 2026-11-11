@@ -61,7 +61,11 @@ from ...domain.calculations.registry.payment_instalment_split import first_insta
 from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
-from ...domain.filing.errors import FilingExportError, FilingExportValueOverflowError
+from ...domain.filing.errors import (
+    FilingExportError,
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
     AeatProductSoftwareIdentity,
@@ -74,6 +78,7 @@ from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportRequiredRecordAbsentError,
     ModeloExportValueOverflowError,
 )
 from ...domain.modelos.work_unit import WorkUnit
@@ -627,6 +632,10 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportRequiredRecordAbsentError):
+        return ModeloExportRequiredRecordAbsentError(
+            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        )
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,

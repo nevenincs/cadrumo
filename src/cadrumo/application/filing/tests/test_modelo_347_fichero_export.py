@@ -41,7 +41,11 @@ from ....domain.calculations.registry.applicability import derive_modelo_applica
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.filing.errors import FilingExportValidationError
+from ....domain.filing.errors import (
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -496,3 +500,43 @@ def test_an_sii_filer_is_not_obliged_to_file_the_ledger_that_obliges_a_filer_out
     assert result.verdict is verdict
     if verdict is ApplicabilityVerdict.NOT_APPLICABLE:
         assert "rd-1065-2007:art-32" in result.legal_refs
+
+
+def test_a_year_with_no_counterparty_above_the_floor_is_refused_as_having_no_declarado_record(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    """RGAT art. 31-33: without a third party above 3.005,06 euros there is no declarado record to state.
+
+    The design requires at least one type 2 record, so the export refuses with
+    the record it lacks and writes no file.
+    """
+    below_the_floor = (
+        _domestic("V-1", InvoiceKind.ISSUED, "B00015016", "CLIENTE PEQUENO SL", "1000.00"),
+        _domestic("C-1", InvoiceKind.RECEIVED, "A00010074", "PROVEEDOR PEQUENO SA", "500.00"),
+    )
+
+    with pytest.raises(FilingExportRequiredRecordAbsentError) as raised:
+        _exported_lines(operation, tmp_path, below_the_floor)
+
+    assert raised.value.context == {"export_record_id": "m347-declarado"}
+    assert raised.value.code.code == "ERROR_FILING_EXPORT_REQUIRED_RECORD_ABSENT"
+    assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()
+
+
+def test_a_counterparty_name_wider_than_its_slot_is_refused_by_record_field_and_width_not_truncated(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    """The design gives the declarado name positions 36-75 and asks for it complete, with no truncation rule."""
+    name = "COMUNIDAD DE PROPIETARIOS CALLE OLMO 1234"
+    long_named = (_domestic("V-1", InvoiceKind.ISSUED, "H00015016", name, "8000.00"),)
+
+    with pytest.raises(FilingExportValueOverflowError) as raised:
+        _exported_lines(operation, tmp_path, long_named)
+
+    error = raised.value
+    assert (error.first_position, error.field_length, len(error.rendered)) == (36, 40, len(name))
+    assert name not in str(error)
+    assert all(name not in str(value) for value in (error.context or {}).values())
+    assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()
