@@ -32,6 +32,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.persistence.storage.tests.source_call_support import source_calls
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .....core.period import Period
 from .....domain.justificante.schema import Justificante
@@ -43,7 +44,8 @@ from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
-_PRESENTED_AT = datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_PRESENTED_AT = datetime(_YEAR + 1, 5, 27, 11, 15, 0, tzinfo=UTC)
 _CSV_A = "AAAA11112222BBBB"
 _CSV_B = "CCCC33334444DDDD"
 
@@ -52,8 +54,8 @@ def _justificante(csv: str) -> Justificante:
     return Justificante(
         csv=csv,
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
-        ejercicio="2025",
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        ejercicio=str(_YEAR),
         presentation_id="PRES-2025-001-XYZ",
         presented_at=_PRESENTED_AT,
         tax_id="12345678Z",

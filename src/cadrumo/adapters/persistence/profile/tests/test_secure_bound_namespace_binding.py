@@ -23,6 +23,7 @@ from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
@@ -37,20 +38,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_justificante_row_carries_registry_declared_metadata(tmp_path: Path) -> None:
     """A justificante saved through its repository persists the def's metadata."""
 
+    year = filing_year_envelope().horizon
     record = Justificante(
         csv="ABCD12345678EFGH",
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
-        ejercicio="2025",
+        period=Period.from_year_and_code(year, "1T"),
+        ejercicio=str(year),
         presentation_id="PRES-2025-001-XYZ",
-        presented_at=datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC),
+        presented_at=datetime(year + 1, 5, 27, 11, 15, 0, tzinfo=UTC),
         tax_id="12345678Z",
         total_a_ingresar=Decimal("12345.67"),
         total_a_devolver=None,
         verification_url=AnyHttpUrl(justificante_wlpl_cotejo_url("ABCD12345678EFGH")),
         source_pdf_path=Path("justificantes/303-2025-1T-ABCD.pdf"),
         source_pdf_sha256="a" * 64,
-        parsed_at=datetime(2026, 5, 27, 11, 15, 0, tzinfo=UTC),
+        parsed_at=datetime(year + 1, 5, 27, 11, 15, 0, tzinfo=UTC),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:

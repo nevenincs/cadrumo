@@ -26,6 +26,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.filing.schema import (
     ModeloDraft,
     ModeloValue,
@@ -38,10 +39,12 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
-_P_Q1 = Period.from_year_and_code(2026, "1T")
-_P_Q2 = Period.from_year_and_code(2026, "2T")
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = revision_covering("130", _YEAR).id
+_P_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_P_Q2 = Period.from_year_and_code(_YEAR, "2T")
 _DRAFT_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DRAFT_INPUT_CASILLA")
-_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 30, 0, tzinfo=UTC)
+_FOREIGN_CLASS_WRITTEN_AT = datetime(_YEAR, 5, 26, 16, 30, 0, tzinfo=UTC)
 
 
 def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
@@ -54,7 +57,7 @@ def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistryS
 
 
 def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft:
-    now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    now = datetime(_YEAR, 4, 27, 10, 0, tzinfo=UTC)
     values = (
         ModeloValue(
             casilla_id=_DRAFT_INPUT_CASILLA,
@@ -63,7 +66,7 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
             source="test input",
         ),
     )
-    snapshot_ref = _snapshot_ref(modelo="130", period=period, revision_id="2019-y-siguientes")
+    snapshot_ref = _snapshot_ref(modelo="130", period=period, revision_id=_REVISION_ID)
     draft_id = compute_modelo_draft_id(
         modelo="130",
         period=period,
@@ -82,7 +85,7 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
         values=values,
         created_at=now,
         updated_at=now,
-        schema_version=registry_schema_version(modelo="130", revision_id="2019-y-siguientes"),
+        schema_version=registry_schema_version(modelo="130", revision_id=_REVISION_ID),
     )
 
 
