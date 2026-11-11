@@ -103,7 +103,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("revision", ("--revision",), TEXT_VALUE, "cli.app.modelo.work.revision_help"),
             _option("bucket_id", ("--bucket-id",), TEXT_VALUE, "cli.app.modelo.work.bucket_id_help"),
             _option("casilla", ("--casilla",), TEXT_VALUE, "cli.app.modelo.work.casilla_help", multiple=True),
-            _option("binding", ("--binding",), TEXT_VALUE, "cli.app.modelo.work.override_help", multiple=True),
+            _option("binding", ("--binding",), TEXT_VALUE, "cli.app.modelo.work.binding_option_help", multiple=True),
             _option("relation", ("--relation",), TEXT_VALUE, "cli.app.modelo.work.relation_help", multiple=True),
             _option("row", ("--row",), TEXT_VALUE, "cli.app.modelo.work.row_help", multiple=True),
             _option("actor", ("--by",), TEXT_VALUE, "cli.app.modelo.work.actor_help"),

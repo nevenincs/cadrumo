@@ -1423,6 +1423,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
+    refused_modelo_operation_subject_not_work_unit: Aquesta sol·licitud no indica
+      la declaració a què pertany el seu càlcul desat; obre aquesta declaració i torna-la
+      a fer des d'allà.
     refused_modelo_payment_election_capability: El mètode de pagament escollit encara
       no està disponible.
     refused_modelo_payment_election_incompatible: L'opció de pagament escollida requereix

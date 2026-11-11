@@ -2479,6 +2479,72 @@ application:
       detail_row_identity_conflict: Una fila de detalle que has introducido no coincide
         con la que dan tus registros para el mismo declarado; corrígela o quítala
         antes de calcular.
+      exonerado_390_attestation_applicable_unsupported: Aquí solo puede registrarse
+        la declaración de que el modelo 390 no es aplicable. Un modelo 390 que sí
+        es aplicable en el periodo %{period} de %{filing_year} no se registra por
+        esta vía. No se ha guardado nada.
+      exonerado_390_attestation_conflicting_assertions: Otra atestación registrada
+        para el periodo %{period} de %{filing_year} contradice esta, así que ninguna
+        puede respaldar el modelo 303. No se ha calculado nada. Decide qué declaración
+        prevalece antes de apoyarte en una atestación de este periodo.
+      exonerado_390_attestation_coordinate_unsupported: 'No se puede registrar prueba
+        de aplicabilidad del modelo 390 para el periodo %{period} de %{filing_year}:
+        solo existe para un modelo 303 trimestral o mensual cuyo diseño de registro
+        declara los campos ordinarios de cabecera de la prueba. No se ha guardado
+        nada.'
+      exonerado_390_attestation_evidence_coordinate_mismatch: La atestación que indicaste
+        no coincide con el periodo %{period} de %{filing_year} y el perfil actual,
+        o dice que el modelo 390 sí es aplicable, así que no puede respaldar este
+        modelo 303. No se ha calculado nada. Registra una atestación nueva para este
+        periodo y vuelve a intentarlo.
+      exonerado_390_attestation_evidence_not_attestation: El adjunto que indicaste
+        no es una atestación de aplicabilidad del modelo 390, así que no puede respaldar
+        el modelo 303 del periodo %{period} de %{filing_year}. No se ha calculado
+        nada. Registra una atestación para este periodo y vuelve a intentarlo.
+      exonerado_390_attestation_evidence_other_profile: La atestación que indicaste
+        pertenece a otro perfil o tiene otro SHA-256, así que no puede respaldar el
+        modelo 303 del periodo %{period} de %{filing_year}. No se ha calculado nada.
+        Registra una atestación nueva para este periodo y vuelve a intentarlo.
+      exonerado_390_attestation_evidence_reference_invalid: El identificador del adjunto
+        y el SHA-256 que diste no forman una referencia de atestación válida, así
+        que no pueden respaldar el modelo 303 del periodo %{period} de %{filing_year}.
+        No se ha calculado nada. Registra una atestación nueva para este periodo y
+        usa los valores que te indique.
+      exonerado_390_attestation_evidence_unusable: La atestación que indicaste no
+        se puede verificar desde la custodia de este perfil, así que no puede respaldar
+        el modelo 303 del periodo %{period} de %{filing_year}. No se ha calculado
+        nada. Registra una atestación nueva para este periodo y vuelve a intentarlo.
+      exonerado_390_attestation_incomplete_identity: Indica tanto el identificador
+        del adjunto como su SHA-256 de la atestación de aplicabilidad del modelo 390,
+        o ninguno de los dos. No se ha calculado nada.
+      exonerado_390_attestation_malformed_identity: 'El identificador del adjunto
+        y el SHA-256 que diste no son un par de identidad válido: cada uno tiene 64
+        caracteres hexadecimales y los dos son iguales. No se ha calculado nada. Indica
+        los valores que dio la atestación al registrarse.'
+      exonerado_390_attestation_not_modelo_303_work_unit: La declaración %{work_unit_id}
+        no es un modelo 303, y la atestación de aplicabilidad del modelo 390 pertenece
+        a un modelo 303. No se ha guardado nada. Indica una declaración del modelo
+        303 o el periodo.
+      exonerado_390_attestation_observation_timing: 'La atestación de aplicabilidad
+        del modelo 390 del periodo %{period} de %{filing_year} no se puede registrar:
+        solo puede observarse después de que termine el periodo y no después del momento
+        en que se registra. No se ha guardado nada. Regístrala de nuevo con una hora
+        de observación igual o posterior al final del periodo y que no sea futura.'
+      exonerado_390_attestation_profile_bucket_invalid: El identificador de perfil
+        que indicaste no es válido, así que no se ha registrado ninguna atestación
+        de aplicabilidad del modelo 390. No se ha guardado nada.
+      exonerado_390_attestation_profile_not_current: La atestación de aplicabilidad
+        del modelo 390 necesita el perfil con el que has iniciado sesión, y el perfil
+        registrado no es ese. No se ha guardado nada. Comprueba el estado del perfil.
+      exonerado_390_attestation_stored_observation_timing: La atestación de aplicabilidad
+        del modelo 390 registrada para el periodo %{period} de %{filing_year} se observó
+        en un momento que su periodo no permite, así que no puede respaldar este modelo
+        303. No se ha calculado nada. Registra una atestación nueva con una hora de
+        observación válida y vuelve a intentarlo.
+      exonerado_390_attestation_unknown_attachment: La atestación que indicaste no
+        consta en este perfil, así que no puede respaldar el modelo 303 del periodo
+        %{period} de %{filing_year}. No se ha calculado nada. Registra una atestación
+        nueva para este periodo y usa los valores que te indique.
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
@@ -2568,6 +2634,12 @@ application:
       filed_observation_split_storage_context: El almacén del historial de compensación
         de IVA es una base de datos distinta de la de observaciones de cálculo
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      input_required: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
+        %{filing_year}: falta el dato %{binding} (casilla %{boxes}). Indícalo y vuelve
+        a calcular. No se ha guardado nada.'
+      input_required_unprinted: 'Todavía no se puede calcular el Modelo %{modelo}
+        %{period} %{filing_year}: falta el dato %{binding}. Indícalo y vuelve a calcular.
+        No se ha guardado nada.'
       iva_wallet_amount_mismatch: 'La conciliación del saldo IVA está bloqueada para
         el Modelo 303: el importe de compensación anterior aportado no coincide con
         el que mantiene la autoridad de la cartera. Vuelve a ejecutar la conciliación
@@ -2700,6 +2772,20 @@ application:
         en la versión %{revision_id}: las definiciones del modelo declaran un origen
         de valor que ningún resolutor de cálculo gestiona. Añade un resolutor o márcalo
         como diferido antes de calcular.'
+      previous_filing_unobserved: 'Todavía no se puede calcular el Modelo %{modelo}
+        %{period} %{filing_year}: la declaración del Modelo %{source_modelo} de %{source_filing_year}
+        (%{source_period}) que tienes guardada no muestra las casillas %{source_boxes},
+        que la casilla %{boxes} arrastra de ella como el dato %{binding}. Una casilla
+        que no muestra es desconocida, no cero: registra esa declaración con esas
+        casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
+      previous_filing_unobserved_unprinted: 'Todavía no se puede calcular el Modelo
+        %{modelo} %{period} %{filing_year}: la declaración del Modelo %{source_modelo}
+        de %{source_filing_year} (%{source_period}) que tienes guardada no muestra
+        las casillas %{source_boxes}, que el dato %{binding} arrastra de ella. Una
+        casilla que no muestra es desconocida, no cero: registra esa declaración con
+        esas casillas o indica tú el importe del dato %{binding}, y vuelve a calcular.
+        No se ha guardado nada.'
       prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no tiene
         ningún importe de ejercicios anteriores que puedas declarar como no pendiente:
         cada uno ya tiene un valor o tu declaración, o la declaración no arrastra

@@ -1101,14 +1101,22 @@ def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(
         ],
     )
 
-    assert result.exit_code == 5, result.output
+    assert result.exit_code == 2, result.output
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["code"] == "FAIL_MODELO_EXPORT"
-    # The envelope identifies the cause by its registered error type. The
-    # producer carries a declared precondition failure now, so there is no
-    # English sentence here for a consumer to match on.
-    assert payload["error"]["context"]["cause_type"] == "M303FilingEvidenceError"
+    error = payload["error"]
+    # The producer's own registered refusal reaches the operator; the export
+    # lookup does not rewrap it as a generic export failure.
+    assert error["code"] == "REFUSED_MODELO_M303_FILING_EVIDENCE"
+    assert error["category"] == "REFUSED"
+    assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
+    action = error["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.m303_filing_evidence.valid"
+    evidence = action["evidence"]
+    assert len(evidence) == 1
+    assert evidence[0]["evidence_id"] == "modelo.work.calculate.m303_filing_evidence.missing.observation"
+    assert evidence[0]["values"]["evidence_present"] is False
+    assert evidence[0]["values"]["modelo"] == "303"
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()
     assert "Traceback" not in result.output

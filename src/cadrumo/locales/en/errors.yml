@@ -1314,6 +1314,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.
+    refused_modelo_operation_subject_not_work_unit: This request does not name the
+      declaration its saved calculation belongs to; open that declaration and make
+      the request again from there.
     refused_modelo_payment_election_capability: The selected payment method is not
       supported yet.
     refused_modelo_payment_election_incompatible: The selected payment election requires

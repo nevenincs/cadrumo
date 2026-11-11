@@ -383,7 +383,11 @@ def test_public_domiciliacion_refuses_an_unusable_charge_account_before_any_byte
             "calculation_revision_id": verified.calculation_revision_id,
             "reason": reason,
             "own_account_id": charge_account_id or "acc-01",
+            "account_role": "charge",
         }
+        assert refused.value.terminal_precondition_verdict is not None
+        assert refused.value.terminal_precondition_verdict.action is not None
+        assert refused.value.terminal_precondition_verdict.action.action_id == "operator.ledger.account.add"
         assert not output_path.exists()
         assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 

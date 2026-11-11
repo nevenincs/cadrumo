@@ -260,9 +260,9 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
         ErrorCode(
-            code="ERROR_MODELO_WORK_INPUT_REQUIRED",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_calculations_registry_validation",
+            code="REFUSED_MODELO_WORK_INPUT_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.input_required",
             retryable=False,
             runbook_id=None,
         ),
@@ -478,6 +478,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloExportPeriodUnmappableError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_PERIOD_UNMAPPABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.export_period_unmappable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m360_solicitud_operation.Modelo360SolicitudRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_360_SOLICITUD",
@@ -543,6 +553,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_REVISION_NOT_SEALED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_revision_not_sealed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloOperationSubjectNotWorkUnitError",
+        ErrorCode(
+            code="REFUSED_MODELO_OPERATION_SUBJECT_NOT_WORK_UNIT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_operation_subject_not_work_unit",
             retryable=False,
             runbook_id=None,
         ),
