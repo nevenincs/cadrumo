@@ -160,6 +160,7 @@
         "dev.acceptance.persona_table.__main__",
         "dev.acceptance.persona_table.counterparties",
         "dev.acceptance.persona_table.diff",
+        "dev.acceptance.persona_table.export_text",
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.rows",
         "dev.acceptance.persona_table.sweep",
