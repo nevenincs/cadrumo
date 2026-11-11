@@ -18,7 +18,7 @@ import {
 } from "./estimateRead";
 import type { FormSession } from "../form/session";
 import { hasIvaWallet } from "./ivaWalletRead";
-import { IvaWallet } from "./IvaWallet";
+import { IvaWallet, type OpeningBalanceAsk } from "./IvaWallet";
 import { ledgerPeriod } from "../../../shell/ledgerPeriods";
 
 /**
@@ -31,7 +31,7 @@ export function CreditsPanel({
   session,
   estimate,
   locale,
-  openingBalanceAsked = 0,
+  openingBalanceAsk = null,
   onGo,
   onOpenSurface,
   canOpenSurface,
@@ -48,9 +48,9 @@ export function CreditsPanel({
     take: ((step: LedgerWorkStep) => void) | null;
   };
   locale: string;
-  /** Counts the times a refusal's opening-balance door was taken, so the IVA
-   * balance opens that entry again each time. Zero while none was. */
-  openingBalanceAsked?: number;
+  /** A refusal's opening-balance door as last taken, so the IVA balance opens
+   * that entry, at the period the door served, each time. Null while none was. */
+  openingBalanceAsk?: OpeningBalanceAsk | null;
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
   canOpenSurface(surface: OpenableSurface): boolean;
@@ -109,7 +109,7 @@ export function CreditsPanel({
         <IvaWallet
           period={walletPeriod}
           locale={locale}
-          openingBalanceAsked={openingBalanceAsked}
+          openingBalanceAsk={openingBalanceAsk}
         />
       )}
     </div>

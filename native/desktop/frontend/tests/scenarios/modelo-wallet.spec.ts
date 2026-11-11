@@ -667,3 +667,80 @@ test("another wallet-reading declaration locks the wallet only until Check statu
     wallet(page).getByRole("button", { name: words("manage") }),
   ).toBeEnabled();
 });
+
+test("a carry refusal's opening-balance door opens the entry at the period it served", async ({
+  page,
+}) => {
+  // The carry of a quarter reads the closing balance of the period before it,
+  // so the refusal names that period, not the declaration on screen. The door
+  // is offered on this declaration and the entry opens at the served period;
+  // the window works out no period of its own. The recorded seed is the one
+  // the scenario answers, so the seed is recorded only at the served period.
+  const shown = served<{
+    form: { form: { filing_year: number; period: { code: string } } };
+  }>("modelo-303-1T-wallet-empty-en").form.form;
+  expect([SEEDED.period.filing_year, SEEDED.period.code]).not.toEqual([
+    shown.filing_year,
+    shown.period.code,
+  ]);
+  const door = "Record the opening balance the carry reads";
+  await page.addInitScript(
+    ({ period, door }) => {
+      const install = () => {
+        const port = window.__fixtureModelo;
+        if (!port) return void setTimeout(install, 10);
+        const form = port.form;
+        // The scenario's quarter asks for no M303 evidence, so the
+        // calculation is sent at once.
+        port.form = async (...args) => ({
+          ...(await form(...args)),
+          asks_m303_evidence: false,
+        });
+        const submit = port.submit;
+        port.submit = async (...args) => {
+          if (args[0] !== "modelo.work.calculate") return submit(...args);
+          return {
+            kind: "refused",
+            operation_id: "carry-refused",
+            revision: 3,
+            reason: "REFUSED_M303_CARRY_UNSEEDED",
+            detail: {
+              detail_version: 1,
+              kind: "registered_error",
+              error_code: "REFUSED_M303_CARRY_UNSEEDED",
+              refusal_words: "The carry has no opening balance to read.",
+              refusal_words_language: "en",
+              next_step: {
+                kind: "open_iva_wallet_opening_balance",
+                modelo: "303",
+                filing_year: period.filing_year,
+                period_code: period.code,
+                words: door,
+              },
+            },
+          } as never;
+        };
+      };
+      install();
+    },
+    { period: SEEDED.period, door },
+  );
+  await openWalletForm(page);
+  await page
+    .getByRole("button", {
+      name: label("workspace.modelo.next_button.calculate"),
+    })
+    .click();
+  const alert = page.getByRole("alert").filter({
+    hasText: "The carry has no opening balance to read.",
+  });
+  await alert.getByRole("button", { name: door, exact: true }).click();
+
+  const dialog = page.getByRole("dialog", { name: words("title") });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(words("amount"), { exact: true }).fill(SEEDED.amount);
+  await dialog
+    .getByRole("button", { name: words("mode.seed"), exact: true })
+    .click();
+  await expect(dialog.getByRole("status")).toContainText(words("recorded"));
+});

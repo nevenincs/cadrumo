@@ -86,6 +86,7 @@ import {
 } from "./disagreementRead";
 import { useEstimate } from "./estimateRead";
 import { hasIvaWallet } from "./ivaWalletRead";
+import type { OpeningBalanceAsk } from "./IvaWallet";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
 import { RelatedFilingsDialog } from "../declarations/RelatedFilingsDialog";
 import {
@@ -228,7 +229,8 @@ function Ready({
   const [notice, setNotice] = useState<HistoryNotice>(null);
   // Counts the times the opening-balance door was taken, so the IVA balance
   // opens its entry again each time rather than once.
-  const [openingBalanceAsked, setOpeningBalanceAsked] = useState(0);
+  const [openingBalanceAsk, setOpeningBalanceAsk] =
+    useState<OpeningBalanceAsk | null>(null);
   // What the last calculation could give no value for, as the application
   // said it. It belongs to the calculation it came with.
   const [unresolved, setUnresolved] = useState<CalculationUnresolved | null>(
@@ -706,15 +708,14 @@ function Ready({
     return true;
   };
 
-  // The door is offered only where the declaration shown is the one the step
-  // names and reads an IVA balance at all; the window matches the identity the
-  // backend served and works out no period of its own.
+  // The door is offered where the declaration shown keeps the IVA balance of
+  // the modelo the step names. The period it opens at is the one the backend
+  // served, the period whose closing balance the carry reads, which can be an
+  // earlier one than the declaration's; the window works out none of its own.
   const openingBalanceDoor =
     notice?.openingBalance &&
     hasIvaWallet(envelope) &&
-    notice.openingBalance.modelo === envelope.form.form.modelo &&
-    notice.openingBalance.filingYear === envelope.form.form.filing_year &&
-    notice.openingBalance.periodCode === envelope.form.form.period.code
+    notice.openingBalance.modelo === envelope.form.form.modelo
       ? notice.openingBalance
       : null;
   // The balance door opens only the declaration on screen; a step naming
@@ -757,7 +758,13 @@ function Ready({
                 data-refusal-step="open_iva_wallet_opening_balance"
                 onClick={() => {
                   setView("credits");
-                  setOpeningBalanceAsked((asked) => asked + 1);
+                  setOpeningBalanceAsk((asked) => ({
+                    count: (asked?.count ?? 0) + 1,
+                    period: {
+                      year: openingBalanceDoor.filingYear,
+                      code: openingBalanceDoor.periodCode,
+                    },
+                  }));
                 }}
               >
                 {openingBalanceDoor.words}
@@ -933,7 +940,7 @@ function Ready({
               session={session}
               estimate={estimate}
               locale={locale}
-              openingBalanceAsked={openingBalanceAsked}
+              openingBalanceAsk={openingBalanceAsk}
               onGo={(address) => {
                 setView("form");
                 session.selectAddress(address);
