@@ -536,7 +536,6 @@ class Expectations:
 
 type BelowFloorBlock = Literal[
     "filed_returns",
-    "filed_returns.iva_compensation_carried_in",
     "calculated_returns",
     "local_observations",
     "aeat_filings",
@@ -546,13 +545,7 @@ type BelowFloorBlock = Literal[
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
-    {
-        "filed_returns",
-        "filed_returns.iva_compensation_carried_in",
-        "calculated_returns",
-        "local_observations",
-        "aeat_filings",
-    }
+    {"filed_returns", "calculated_returns", "local_observations", "aeat_filings"}
 )
 
 
@@ -972,9 +965,6 @@ def _officer(table: _Table, where: str, roles: _Roles) -> Officer:
 _FILED_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T", "0A")
 """The period codes a filed return may name, in the order their windows close within a year."""
 _IVA_COMPENSATION_MODELO: Final[str] = "303"
-_FIRST_QUARTER: Final[str] = "1T"
-_LAST_QUARTER: Final[str] = "4T"
-"""A first quarter carries compensation in from the last quarter of the year before."""
 
 
 def _filed_returns(table: _Table, where: str) -> FiledReturns:
@@ -1553,9 +1543,8 @@ def parse_persona(
     A year outside the envelope is refused. With ``omit_below_floor``, for a
     read under a horizon lowered below the registry's own, a return-history
     record or an expectation whose year falls below the floor is left out and
-    listed in :attr:`Persona.below_floor` instead, as is a Modelo 303
-    compensation carried in from a quarter below the floor; every other token
-    stays refused there.
+    listed in :attr:`Persona.below_floor` instead; every other token stays
+    refused there.
     """
     where = f"{persona_id}/persona.toml"
     if persona_document.get("format") != CATALOGUE_FORMAT:
@@ -1706,27 +1695,10 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
                 inside.append(record)
         return tuple(inside)
 
-    def carried_in_kept(block: FiledReturns) -> FiledReturns:
-        """``block``, without the compensation it carries in from a quarter below the floor."""
-        if block.iva_compensation_carried_in is None or block.periods[0] != _FIRST_QUARTER:
-            return block
-        prior = YearToken(anchor=block.year.anchor, offset=block.year.offset - 1)
-        if not prior.precedes_floor(envelope):
-            return block
-        dropped.append(
-            BelowFloorRecord(
-                block="filed_returns.iva_compensation_carried_in",
-                modelo=block.modelo,
-                year=prior,
-                periods=(_LAST_QUARTER,),
-            )
-        )
-        return dataclasses.replace(block, iva_compensation_carried_in=None)
-
     expectations = persona.expectations
     return dataclasses.replace(
         persona,
-        filed_returns=tuple(carried_in_kept(block) for block in kept("filed_returns", persona.filed_returns)),
+        filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
