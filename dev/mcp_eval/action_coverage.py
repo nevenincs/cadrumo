@@ -151,17 +151,19 @@ def _resolve_manifest_action_profiles(
         if subject_leaf is None:
             diagnostics.append(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
             continue
-        action: ResolvedCatalogueAction | None = None
-        if profile.action is not None:
-            action = action_by_id.get(profile.action.action_id)
-            if action is None:
-                diagnostics.append(f"unknown manifest action-profile action identity: {profile.action.action_id}")
-                continue
+        offered = (*(() if profile.action is None else (profile.action,)), *profile.alternative_actions)
+        unknown = tuple(item.action_id for item in offered if item.action_id not in action_by_id)
+        if unknown:
+            diagnostics.extend(f"unknown manifest action-profile action identity: {action_id}" for action_id in unknown)
+            continue
         resolved.append(
             ResolvedManifestActionProfile(
                 declaration=profile,
                 subject_leaf=subject_leaf,
-                resolved_action=action,
+                resolved_action=None if profile.action is None else action_by_id[profile.action.action_id],
+                resolved_alternative_actions=tuple(
+                    action_by_id[item.action_id] for item in profile.alternative_actions
+                ),
             )
         )
     if diagnostics:

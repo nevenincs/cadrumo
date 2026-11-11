@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -37,7 +37,13 @@ from ..operations.public_scalar import (
     restore_facts,
     restore_scalar,
 )
-from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import (
+    ActionArgumentBinding,
+    ActionReference,
+    AlternativeRecoveryAction,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 from .preconditions import ModeloPreconditionFailure
 from .verification_preconditions import ModeloVerificationResult, VerificationFindingPreconditionProjection
 
@@ -124,8 +130,43 @@ class ModeloArgumentSnapshot(BaseModel):
         )
 
 
+class ModeloAlternativeActionSnapshot(BaseModel):
+    """A further declared recovery action, offered in order after the primary one."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: ActionReference
+    argument_bindings: tuple[ModeloArgumentSnapshot, ...]
+    missing_argument_names: tuple[str, ...]
+    conditionality: ActionConditionality
+
+    @classmethod
+    def from_alternative(cls, alternative: AlternativeRecoveryAction) -> Self:
+        """Preserve the application's exact alternative and its argument facts."""
+        return cls(
+            action=alternative.action,
+            argument_bindings=tuple(
+                ModeloArgumentSnapshot.from_argument(item) for item in alternative.argument_bindings
+            ),
+            missing_argument_names=alternative.missing_argument_names,
+            conditionality=alternative.conditionality,
+        )
+
+    def to_alternative(self) -> AlternativeRecoveryAction:
+        """Validate the restored canonical alternative."""
+        return AlternativeRecoveryAction(
+            action=self.action,
+            argument_bindings=tuple(item.to_argument() for item in self.argument_bindings),
+            missing_argument_names=self.missing_argument_names,
+            conditionality=self.conditionality,
+        )
+
+
 class ModeloPreconditionSnapshot(BaseModel):
-    """A complete application refusal identity and its canonical recovery facts."""
+    """A complete application refusal identity and its canonical recovery facts.
+
+    ``alternative_actions`` is left out of the serialized snapshot when empty,
+    so a refusal without alternatives keeps the shape it was published with.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     subject_leaf_key: str
@@ -137,6 +178,9 @@ class ModeloPreconditionSnapshot(BaseModel):
     missing_argument_names: tuple[str, ...]
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None
+    alternative_actions: tuple[ModeloAlternativeActionSnapshot, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
 
     @classmethod
     def from_failure(cls, failure: ModeloPreconditionFailure) -> Self:
@@ -151,6 +195,9 @@ class ModeloPreconditionSnapshot(BaseModel):
                 "argument_bindings": tuple(
                     ModeloArgumentSnapshot.from_argument(item) for item in verdict.argument_bindings
                 ),
+                "alternative_actions": tuple(
+                    ModeloAlternativeActionSnapshot.from_alternative(item) for item in verdict.alternative_actions
+                ),
             }
         )
 
@@ -161,6 +208,7 @@ class ModeloPreconditionSnapshot(BaseModel):
             | {
                 "evidence": tuple(item.to_evidence() for item in self.evidence),
                 "argument_bindings": tuple(item.to_argument() for item in self.argument_bindings),
+                "alternative_actions": tuple(item.to_alternative() for item in self.alternative_actions),
             }
         )
         return ModeloPreconditionFailure(

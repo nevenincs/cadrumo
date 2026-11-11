@@ -36,7 +36,7 @@ from .manifest import (
 from .precondition_action import resolve_precondition_action
 
 if TYPE_CHECKING:
-    from ...core.json_contract import ResolvedPreconditionAction
+    from ...core.json_contract import ResolvedActionReference, ResolvedPreconditionAction
     from ..operator_actions.models import PreconditionVerdict
 
 __all__ = [
@@ -400,10 +400,18 @@ def resolve_recorded_precondition_action(
         resolved_paths[command_key] = (target.program.executable_name, *target.cli_path) if path is None else path
         return recorded_action_target_reconciliation(command_key, canonical_cli_path=path)
 
+    def with_path(action: ResolvedActionReference) -> ResolvedActionReference:
+        action_path = resolved_paths.get(action.target_command_key)
+        return action if action_path is None else action.model_copy(update={"cli_path": action_path})
+
     resolved = resolve_precondition_action(verdict, target_reconciliation=reconcile)
     if resolved.action is None:
         return resolved
-    action_path = resolved_paths.get(resolved.action.target_command_key)
-    if action_path is None:
-        return resolved
-    return resolved.model_copy(update={"action": resolved.action.model_copy(update={"cli_path": action_path})})
+    return resolved.model_copy(
+        update={
+            "action": with_path(resolved.action),
+            "alternative_actions": tuple(
+                item.model_copy(update={"action": with_path(item.action)}) for item in resolved.alternative_actions
+            ),
+        }
+    )

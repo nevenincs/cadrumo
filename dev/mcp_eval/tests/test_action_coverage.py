@@ -57,3 +57,26 @@ def test_matrix_lookup_fails_closed_for_a_nonproduction_identity() -> None:
 
     with pytest.raises(KeyError, match="unknown leaf-condition-scenario identity"):
         matrix.row_for(("modelo.work.unknown", "guard.unknown", "scenario.unknown"))
+
+
+@pytest.mark.parametrize("leaf", ("modelo.work.verify", "modelo.work.file", "modelo.export"))
+@pytest.mark.parametrize(
+    ("scenario", "primary_target"),
+    (
+        ("source_absent_attestable", "modelo.work.create"),
+        ("filed_evidence_missing_attestable", "app.live.filed.pull"),
+    ),
+)
+def test_attestable_profiles_resolve_every_offered_door_against_the_live_surface(
+    leaf: str, scenario: str, primary_target: str
+) -> None:
+    """The census joins the primary door and each declared alternative to its live command leaf."""
+    row = production_leaf_condition_scenario_matrix().row_for(
+        (leaf, f"{leaf}.cross_period_dependency.clean", f"{leaf}.cross_period_dependency.{scenario}")
+    )
+
+    assert row.profile.resolved_action is not None
+    assert row.profile.resolved_action.target_command_key == primary_target
+    assert [item.target_command_key for item in row.profile.resolved_alternative_actions] == [
+        "modelo.work.attest_prior_value"
+    ]

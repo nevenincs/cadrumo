@@ -330,13 +330,14 @@ class ResolvedCatalogueAction(BaseModel):
 
 
 class ResolvedManifestActionProfile(BaseModel):
-    """One declared condition scenario joined to its live subject and action."""
+    """One declared condition scenario joined to its live subject and every action it offers."""
 
     model_config = _STRICT_FROZEN
 
     declaration: ManifestActionProfile
     subject_leaf: ReconciledOperatorLeaf
     resolved_action: ResolvedCatalogueAction | None = None
+    resolved_alternative_actions: tuple[ResolvedCatalogueAction, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -348,6 +349,13 @@ class ResolvedManifestActionProfile(BaseModel):
                 f"profile={self.declaration.subject_leaf_key}, live={subject_key}"
             )
 
+        resolved_alternative_ids = tuple(item.action_id for item in self.resolved_alternative_actions)
+        declared_alternative_ids = tuple(item.action_id for item in self.declaration.alternative_actions)
+        if resolved_alternative_ids != declared_alternative_ids:
+            raise ValueError(
+                f"action-profile alternative identity mismatch: profile={declared_alternative_ids}, "
+                f"resolved={resolved_alternative_ids}"
+            )
         action_reference = self.declaration.action
         if action_reference is None:
             if self.resolved_action is not None:

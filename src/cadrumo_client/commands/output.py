@@ -26,6 +26,7 @@ _PRECONDITION_ACTION_FIELDS = (
     "conditionality",
     "no_recovery_outcome",
 )
+_PRECONDITION_ALTERNATIVE_ACTIONS_FIELD = "alternative_actions"
 
 
 def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
@@ -68,12 +69,21 @@ def activate_subcommand_output_language(ctx: typer.Context, language: OutputLang
 
 
 def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
-    """Render the exact resolved action DTO as stable machine-readable rows, without synthesising recovery prose."""
+    """Render the exact resolved action DTO as stable machine-readable rows, without synthesising recovery prose.
+
+    The primary action's rows come first. The ordered alternative actions add
+    one row after them, and only when the verdict offers any.
+    """
     if action is None:
         return ()
     document = action.model_dump(mode="json")
+    field_names = (
+        (*_PRECONDITION_ACTION_FIELDS, _PRECONDITION_ALTERNATIVE_ACTIONS_FIELD)
+        if action.alternative_actions
+        else _PRECONDITION_ACTION_FIELDS
+    )
     return tuple(
         f"precondition_action.{field_name}\t"
         f"{json.dumps(document[field_name], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
-        for field_name in _PRECONDITION_ACTION_FIELDS
+        for field_name in field_names
     )

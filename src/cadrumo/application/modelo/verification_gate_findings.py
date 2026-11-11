@@ -306,10 +306,10 @@ def _append_cross_period_findings(
             )
             return
         requirement = evidence.requirement
-        scenario, action_argument_values = door_of(evidence)
+        door = door_of(evidence)
         failures_by_finding_id[id(finding)] = build_modelo_precondition_failure_for_scenario(
             subject_leaf_key="modelo.work.verify",
-            scenario_id=f"modelo.work.verify.cross_period_dependency.{scenario}",
+            scenario_id=f"modelo.work.verify.cross_period_dependency.{door.scenario}",
             evidence_id="modelo.work.verify.cross_period_dependency",
             evidence_values={
                 "calculation_revision_id": target.calculation_revision_id,
@@ -322,8 +322,9 @@ def _append_cross_period_findings(
                 "blocker_codes": "|".join(blocker.value for blocker in evidence.blockers),
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-            action_argument_values=action_argument_values,
-            missing_action_arguments=cross_period_door_operator_arguments(scenario),
+            action_argument_values=door.action_argument_values,
+            missing_action_arguments=cross_period_door_operator_arguments(door.scenario),
+            alternative_actions=door.alternative_actions,
         )
 
     findings.extend(

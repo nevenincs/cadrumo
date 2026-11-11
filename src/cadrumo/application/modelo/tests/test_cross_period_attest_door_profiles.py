@@ -26,8 +26,15 @@ from ...calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ...operator_actions.catalogue import lookup_action
-from ..preconditions import MODELO_PRECONDITION_PROFILES, build_modelo_precondition_failure_for_scenario
-from ..verification_cross_period import cross_period_door, cross_period_door_operator_arguments
+from ...operator_surface.action_targets import resolve_recorded_precondition_action
+from ..preconditions import (
+    ATTEST_PRIOR_VALUE_ACTION_ID,
+    MODELO_PRECONDITION_PROFILES,
+    AlternativeActionArguments,
+    ModeloPreconditionFailure,
+    build_modelo_precondition_failure_for_scenario,
+)
+from ..verification_cross_period import CrossPeriodDoor, cross_period_door, cross_period_door_operator_arguments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -54,7 +61,9 @@ def _target(year: int) -> WorkUnit:
     )
 
 
-def _evidence(source_year: int, *, outside_envelope: bool) -> CrossPeriodDependencyEvidence:
+def _evidence(
+    source_year: int, *, outside_envelope: bool, blocker: CrossPeriodCleanStateBlocker | None = None
+) -> CrossPeriodDependencyEvidence:
     return CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="100",
@@ -67,11 +76,11 @@ def _evidence(source_year: int, *, outside_envelope: bool) -> CrossPeriodDepende
             source_refs=("aeat-modelo-130-instrucciones",),
             source_outside_envelope=outside_envelope,
         ),
-        blockers=(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION,),
+        blockers=(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION if blocker is None else blocker,),
     )
 
 
-def _door(evidence: CrossPeriodDependencyEvidence, target: WorkUnit) -> tuple[str, dict[str, str | int] | None]:
+def _door(evidence: CrossPeriodDependencyEvidence, target: WorkUnit) -> CrossPeriodDoor:
     with bundled_indexed_authority().operation() as operation:
         return cross_period_door(
             evidence,
@@ -87,8 +96,9 @@ def _door(evidence: CrossPeriodDependencyEvidence, target: WorkUnit) -> tuple[st
 def test_the_statement_door_resolves_at_every_leaf_and_leaves_only_the_figure_to_the_filer(leaf: str) -> None:
     floor = filing_year_envelope().floor
     target = _target(floor)
-    scenario, arguments = _door(_evidence(floor - 1, outside_envelope=True), target)
+    scenario, arguments, alternatives = _door(_evidence(floor - 1, outside_envelope=True), target)
 
+    assert alternatives == ()
     failure = build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=leaf,
         scenario_id=f"{leaf}.cross_period_dependency.{scenario}",
@@ -132,19 +142,20 @@ def test_a_door_that_is_not_a_statement_leaves_nothing_to_the_filer() -> None:
 
 def test_a_source_the_envelope_admits_keeps_its_own_door_and_names_no_statement() -> None:
     floor = filing_year_envelope().floor
-    scenario, _ = _door(_evidence(floor, outside_envelope=False), _target(floor + 1))
+    scenario, _, _ = _door(_evidence(floor, outside_envelope=False), _target(floor + 1))
 
     assert scenario != "attest_prior_value"
 
 
-def _cross_period_outcomes(leaf: str) -> dict[str, tuple[str | None, object]]:
-    outcomes: dict[str, tuple[str | None, object]] = {}
+def _cross_period_outcomes(leaf: str) -> dict[str, tuple[str | None, object, tuple[str, ...]]]:
+    outcomes: dict[str, tuple[str | None, object, tuple[str, ...]]] = {}
     for profile in MODELO_PRECONDITION_PROFILES:
         suffix = profile.scenario_id.removeprefix(f"{leaf}.")
         if profile.subject_leaf_key == leaf and suffix.startswith(("cross_period_dependency.", "activity_start_date.")):
             outcomes[suffix] = (
                 profile.action.action_id if profile.action is not None else None,
                 profile.no_recovery_outcome,
+                tuple(item.action_id for item in profile.alternative_actions),
             )
     return outcomes
 
@@ -152,3 +163,144 @@ def _cross_period_outcomes(leaf: str) -> dict[str, tuple[str | None, object]]:
 def test_an_export_refused_on_an_earlier_return_opens_the_same_door_filing_does() -> None:
     assert _cross_period_outcomes("modelo.export") == _cross_period_outcomes("modelo.work.file")
     assert "cross_period_dependency.attest_prior_value" in _cross_period_outcomes("modelo.export")
+
+
+_LEAVES = ("modelo.work.verify", "modelo.work.file", "modelo.export")
+
+
+@pytest.mark.parametrize("leaf", _LEAVES)
+def test_every_leaf_declares_the_statement_after_the_door_of_an_absent_earlier_return(leaf: str) -> None:
+    outcomes = _cross_period_outcomes(leaf)
+
+    assert outcomes["cross_period_dependency.source_absent_attestable"] == (
+        "operator.modelo.work.create",
+        None,
+        (ATTEST_PRIOR_VALUE_ACTION_ID,),
+    )
+    assert outcomes["cross_period_dependency.filed_evidence_missing_attestable"] == (
+        "operator.live.filed.pull",
+        None,
+        (ATTEST_PRIOR_VALUE_ACTION_ID,),
+    )
+    assert outcomes["cross_period_dependency.attest_prior_value"] == (ATTEST_PRIOR_VALUE_ACTION_ID, None, ())
+    assert outcomes["cross_period_dependency.source_absent"] == ("operator.modelo.work.create", None, ())
+
+
+def _attestable_failure(leaf: str, blocker: CrossPeriodCleanStateBlocker) -> ModeloPreconditionFailure:
+    floor = filing_year_envelope().floor
+    target = _target(floor + 1)
+    door = _door(
+        _evidence(floor, outside_envelope=False, blocker=blocker).model_copy(update={"attestation_admitted": True}),
+        target,
+    )
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=leaf,
+        scenario_id=f"{leaf}.cross_period_dependency.{door.scenario}",
+        evidence_id=f"{leaf}.cross_period_dependency",
+        evidence_values={"work_unit_id": target.work_unit_id, "source_modelo": "100"},
+        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        action_argument_values=door.action_argument_values,
+        missing_action_arguments=cross_period_door_operator_arguments(door.scenario),
+        alternative_actions=door.alternative_actions,
+    )
+
+
+@pytest.mark.parametrize("leaf", _LEAVES)
+@pytest.mark.parametrize(
+    ("blocker", "primary_target"),
+    [
+        (CrossPeriodCleanStateBlocker.MISSING_OBSERVATION, "modelo.work.create"),
+        (CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE, "app.live.filed.pull"),
+    ],
+)
+def test_the_attestable_refusal_resolves_both_doors_against_their_command_leaves(
+    leaf: str, blocker: CrossPeriodCleanStateBlocker, primary_target: str
+) -> None:
+    resolved = resolve_recorded_precondition_action(_attestable_failure(leaf, blocker).verdict)
+
+    assert resolved.action is not None
+    assert resolved.action.target_command_key == primary_target
+    assert resolved.conditionality is ActionConditionality.IMMEDIATE
+    assert resolved.missing_argument_names == ()
+    assert [item.action.action_id for item in resolved.alternative_actions] == [ATTEST_PRIOR_VALUE_ACTION_ID]
+    statement = resolved.alternative_actions[0]
+    assert statement.action.target_command_key == "modelo.work.attest_prior_value"
+    assert statement.action.cli_path is not None
+    assert statement.action.cli_path[-1] == "attest-prior-value"
+    assert statement.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    assert statement.missing_argument_names == ("value",)
+    assert {item.argument_name for item in statement.argument_bindings} == {
+        "binding_id",
+        "modelo",
+        "period",
+        "value",
+        "work_unit_id",
+        "year",
+    }
+
+
+def _attestable_scenario_arguments(alternatives: tuple[AlternativeActionArguments, ...]) -> ModeloPreconditionFailure:
+    target = _target(filing_year_envelope().floor + 1)
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.verify",
+        scenario_id="modelo.work.verify.cross_period_dependency.source_absent_attestable",
+        evidence_id="modelo.work.verify.cross_period_dependency",
+        evidence_values={"work_unit_id": target.work_unit_id},
+        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        action_argument_values={"modelo": "100", "period": "0A", "year": filing_year_envelope().floor},
+        alternative_actions=alternatives,
+    )
+
+
+def _statement_arguments() -> AlternativeActionArguments:
+    target = _target(filing_year_envelope().floor + 1)
+    return AlternativeActionArguments(
+        action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+        action_argument_values={
+            "work_unit_id": target.work_unit_id,
+            "modelo": "130",
+            "year": target.filing_year,
+            "period": "1T",
+            "binding_id": _BINDING,
+        },
+        missing_action_arguments=("value",),
+    )
+
+
+def test_an_attestable_scenario_refuses_a_producer_that_omits_its_declared_statement() -> None:
+    with pytest.raises(ValueError, match="alternative actions contradict their declaration"):
+        _attestable_scenario_arguments(())
+
+
+def test_an_attestable_scenario_refuses_an_undeclared_alternative() -> None:
+    undeclared = AlternativeActionArguments(
+        action_id="operator.modelo.work.calculate", action_argument_values={"work_unit_id": "0" * 16}
+    )
+
+    with pytest.raises(ValueError, match="alternative actions contradict their declaration"):
+        _attestable_scenario_arguments((_statement_arguments(), undeclared))
+
+
+def test_a_scenario_without_alternatives_refuses_a_producer_that_adds_one() -> None:
+    target = _target(filing_year_envelope().floor + 1)
+
+    with pytest.raises(ValueError, match="alternative actions contradict their declaration"):
+        build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.verify",
+            scenario_id="modelo.work.verify.cross_period_dependency.source_absent",
+            evidence_id="modelo.work.verify.cross_period_dependency",
+            evidence_values={"work_unit_id": target.work_unit_id},
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+            action_argument_values={"modelo": "100", "period": "0A", "year": filing_year_envelope().floor},
+            alternative_actions=(_statement_arguments(),),
+        )
+
+
+def test_a_failure_whose_verdict_drops_the_declared_alternative_is_refused() -> None:
+    failure = _attestable_scenario_arguments((_statement_arguments(),))
+    stripped = failure.verdict.model_copy(update={"alternative_actions": ()})
+
+    with pytest.raises(ValueError, match="alternative actions contradict its declaration"):
+        ModeloPreconditionFailure(
+            subject_leaf_key=failure.subject_leaf_key, scenario_id=failure.scenario_id, verdict=stripped
+        )

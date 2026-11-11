@@ -203,10 +203,12 @@ class ManifestActionProfile(BaseModel):
     A profile is keyed to one live subject leaf, failed condition, and scenario.
     It preserves the exact condition-to-recovery association by carrying either
     one canonical :class:`~application.operator_actions.models.ActionReference` or one
-    explicit :class:`~core.operator_action_enums.NoRecoveryOutcome`.  The
-    application guard remains the authority for deciding whether the condition
-    applies; this record contains no predicate, runtime evidence, argument
-    value, localized prose, or CLI command string.
+    explicit :class:`~core.operator_action_enums.NoRecoveryOutcome`.  An
+    actionable profile may also declare the exact ordered alternative actions
+    its scenario offers after the primary one; a different set of actions is a
+    different scenario.  The application guard remains the authority for
+    deciding whether the condition applies; this record contains no predicate,
+    runtime evidence, argument value, localized prose, or CLI command string.
     """
 
     model_config = OPERATOR_SURFACE_MODEL_CONFIG
@@ -216,6 +218,7 @@ class ManifestActionProfile(BaseModel):
     scenario_id: NamespacedId
     action: ActionReference | None = None
     no_recovery_outcome: NoRecoveryOutcome | None = None
+    alternative_actions: tuple[ActionReference, ...] = Field(default=(), exclude_if=lambda value: not value)
 
     @property
     def identity(self) -> tuple[str, str, str]:
@@ -229,6 +232,14 @@ class ManifestActionProfile(BaseModel):
             raise ValueError(
                 "manifest action profiles require exactly one action reference or explicit no-recovery outcome"
             )
+        if self.alternative_actions:
+            if self.action is None:
+                raise ValueError("manifest action profile alternatives require a primary action")
+            action_ids = (self.action.action_id, *(item.action_id for item in self.alternative_actions))
+            if len(set(action_ids)) != len(action_ids):
+                raise ValueError(
+                    "manifest action profile actions must be unique across the primary and its alternatives"
+                )
         return self
 
 
