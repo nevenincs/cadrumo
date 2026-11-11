@@ -351,11 +351,12 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "0.00", "0604" = "4300.00" }
-concepts = { ingresos_actividad = "36100.00", gastos_actividad = "14600.00", rendimiento_neto_actividad = "21500.00", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "36100.00", "irpf_ed_suma_gastos_previos" = "14600.00", "irpf_ed_rdto_neto" = "21500.00", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Activity income is the 130 4T cumulative figure: 36100.00 - 14600.00 = 21500.00, with no provision for gastos de difícil justificación under the normal modality.
 0604 pagos fraccionados = 1120.00 + 1010.00 + 920.00 + 1250.00 = 4300.00. No withheld activity income, so 0599 = 0.
 Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they depend on the state and Madrid scales.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

@@ -2356,7 +2356,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0611" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:911 y aeat-dr-100-2023-dictionary:930: MATER, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATER, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", input_kind = "computed", formula = "renta-deduccion-maternidad-0611", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary:911 y aeat-dr-100-2023-dictionary:930: MATER, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/DeducMaterRes/MATER, tipo P102; descripcion oficial identica y mismo ambito legal en ambas ediciones.", formula = "renta-deduccion-maternidad-0611", source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0612" }
@@ -8351,7 +8351,7 @@ sequence_removals = {source_refs = [0, 1, 2, 3, 4]}
 family = "constructs"
 selector = {revision = "2022", id = "renta-final-settlement"}
 sequence_additions = {formulas = ["renta-deduccion-maternidad-0611"], legal_refs = ["ley-31-2022:art-64"], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd", "boe-modelo-100-2023-form", "aeat-renta-2023-manual-parte1"]}
-sequence_removals = {source_refs = [0, 1, 2, 3]}
+sequence_removals = {formulas = [8], source_refs = [0, 1, 2, 3]}
 sequence_order = {source_refs = [1, 2, 3, 4, 0]}
 [[revisions."2023".family_overrides]]
 family = "bindings"
@@ -8359,6 +8359,14 @@ selector = {revision = "2022", id = "renta-profile-incremento-guarderia"}
 fields = {provider = {profile_key = "renta_family.incremento_guarderia"}}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["puede alcanzar hasta 1.000 euros anuales y se calculará proporcionalmente al número de meses", "Límite del incremento"]}], source_refs = ["aeat-renta-2023-manual-parte1", "aeat-dr-100-2023-dictionary"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023".family_removals]]
+family = "bindings"
+selector = {revision = "2022", id = "renta-profile-deduccion-maternidad-cotizaciones"}
+
+[[revisions."2023".family_removals]]
+family = "formulas"
+selector = {revision = "2022", id = "renta-deduccion-maternidad-0611-cotizaciones"}
 
 [[revisions."2023".family_overrides]]
 family = "formulas"

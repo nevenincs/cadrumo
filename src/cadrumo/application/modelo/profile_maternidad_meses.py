@@ -11,23 +11,29 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
+from ...domain.contribuyente.deduccion_maternidad import (
+    compute_deduccion_maternidad_0611,
+    compute_deduccion_maternidad_0611_limitada_por_cotizaciones,
+)
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.projections import profile_fact_index
 from .profile_derived_facts import (
+    declared_profile_selectors,
     family_fact_context,
     renta_family_profile_from_facts,
     resolved_minimo_descendientes_thresholds,
-    snapshot_authored_year,
 )
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+_DEDUCCION_MATERNIDAD_KEY = "renta_family.deduccion_maternidad"
+_DEDUCCION_MATERNIDAD_COTIZACIONES_KEY = "renta_family.deduccion_maternidad_cotizaciones"
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,14 +51,20 @@ class MaternidadMesesResolution:
     withheld_indices: tuple[str, ...]
     ceilings_resolved: bool
     declares_meses: bool
-    cotizaciones_ceiling_inexpressible: bool = False
-    """True when the filing year predates 2023 and the engine cannot apply the ceiling.
+    cotizaciones_limit_applies: bool = False
+    """True when the edition's binding limits each child's deducción by the mother's cotizaciones.
 
-    Until 2022 Art. 81.1 limited the deducción to the mother's Social Security
-    cotizaciones devengadas in the period. Neither the registry nor the profile
-    schema can express that figure for those years -- the binding and the fact are
-    both 2024-pinned -- so the deducción is withheld rather than granted
-    un-ceilinged, and the caller discloses it.
+    Until Ley 31/2022 Art. 81.1 bounded each child's deducción by the cotizaciones
+    devengadas after that child's birth. The edition states which rule it follows by
+    the derived selector its binding consumes; nothing here decides from a year.
+    """
+    cotizaciones_por_hijo: tuple[tuple[str, Decimal | None], ...] = ()
+    """Each contributing ``hijo_id`` with the cotizaciones figure stated on its row, or ``None``."""
+    cotizaciones_figure_missing: bool = False
+    """True when the limit applies and a contributing child's figure was never stated.
+
+    The deducción is then left unresolved, and the caller discloses it, rather than
+    granting it un-limited or reading the missing figure as zero.
     """
     alta_posterior_hijos: frozenset[str] = frozenset()
     """``hijo_id`` values from :attr:`pairs` that also carry the Art. 81.1 post-birth
@@ -104,17 +116,6 @@ def _fact_index_declares_maternidad_months(fact_index: Mapping[str, UserProfileF
     )
 
 
-def _maternidad_ceiling_unavailable_resolution(*, declares_meses: bool) -> MaternidadMesesResolution:
-    """Withhold pre-2023 maternity months when the statutory ceiling is unavailable."""
-    return MaternidadMesesResolution(
-        pairs=(),
-        withheld_indices=(),
-        ceilings_resolved=True,
-        declares_meses=declares_meses,
-        cotizaciones_ceiling_inexpressible=True,
-    )
-
-
 def _maternidad_thresholds_unresolved_resolution(*, declares_meses: bool) -> MaternidadMesesResolution:
     """Withhold maternity months when the revision exposes no required thresholds."""
     return MaternidadMesesResolution(
@@ -159,12 +160,20 @@ def _maternidad_resolved_resolution(
     *,
     filing_year: int,
     declares_meses: bool,
+    cotizaciones_limit_applies: bool,
     context: FamilyFactResolutionContext,
 ) -> MaternidadMesesResolution:
     """Project eligible pairs and their dependent maternity diagnostics."""
     contributed = dict(pairs)
+    cotizaciones_por_hijo = tuple(
+        (hijo_id, profile.descendientes[int(hijo_id)].cotizaciones_ss_madre_euros) for hijo_id, _ in pairs
+    )
     return MaternidadMesesResolution(
         pairs=pairs,
+        cotizaciones_limit_applies=cotizaciones_limit_applies,
+        cotizaciones_por_hijo=cotizaciones_por_hijo,
+        cotizaciones_figure_missing=cotizaciones_limit_applies
+        and any(figure is None for _, figure in cotizaciones_por_hijo),
         withheld_indices=_maternidad_withheld_indices(profile, contributed),
         ceilings_resolved=True,
         declares_meses=declares_meses,
@@ -191,25 +200,6 @@ def _resolve_maternidad_meses_from_fact_index(
     reconstructing the family a second way.
     """
     declares_meses = _fact_index_declares_maternidad_months(fact_index)
-    try:
-        cotizaciones_ceiling_retired_year = context.integer("lirpf-art-81-contribution-ceiling-retired-effective-year")
-    except RegistryValidationError:
-        # The retired-ceiling fact begins with the amendment that removed it.
-        # An earlier filing coordinate cannot establish that later legal fact,
-        # so preserve the established refusal rather than infer a cutoff.
-        return _maternidad_ceiling_unavailable_resolution(
-            declares_meses=declares_meses,
-        )
-    if snapshot.filing_year < cotizaciones_ceiling_retired_year:
-        # Until 2022 the deducción was capped at the mother's cotizaciones
-        # devengadas in the period. The engine cannot apply that cap: the
-        # cotizaciones binding exists only in the 2024 revision and the profile
-        # fact is 2024-pinned, so no figure is reachable for these years.
-        # Computing anyway would grant an un-ceilinged deducción, which
-        # over-grants and therefore under-declares.
-        return _maternidad_ceiling_unavailable_resolution(
-            declares_meses=declares_meses,
-        )
     thresholds = resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
         return _maternidad_thresholds_unresolved_resolution(
@@ -223,6 +213,8 @@ def _resolve_maternidad_meses_from_fact_index(
         pairs,
         filing_year=snapshot.filing_year,
         declares_meses=declares_meses,
+        cotizaciones_limit_applies=_DEDUCCION_MATERNIDAD_COTIZACIONES_KEY
+        in declared_profile_selectors(snapshot.revision),
         context=context,
     )
 
@@ -253,18 +245,46 @@ def inject_derived_deduccion_maternidad_facts(
     """
     if context is None:
         context = family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.deduccion_maternidad_{snapshot_authored_year(snapshot)}"
-    if key not in declared_selectors:
+    consumers = tuple(
+        (key, limited)
+        for key, limited in (
+            (_DEDUCCION_MATERNIDAD_KEY, False),
+            (_DEDUCCION_MATERNIDAD_COTIZACIONES_KEY, True),
+        )
+        if key in declared_selectors
+    )
+    if not consumers:
         return
 
     resolution = _resolve_maternidad_meses_from_fact_index(fact_index, snapshot, context=context)
-    if not resolution.ceilings_resolved or resolution.cotizaciones_ceiling_inexpressible:
-        return
+    for key, limited in consumers:
+        deduccion = _deduccion_maternidad(resolution, filing_year=snapshot.filing_year, limited=limited)
+        if deduccion is None:
+            fact_index.pop(key, None)
+        else:
+            fact_index[key] = deduccion
 
-    fact_index[key] = Decimal(
+
+def _deduccion_maternidad(
+    resolution: MaternidadMesesResolution,
+    *,
+    filing_year: int,
+    limited: bool,
+) -> Decimal | None:
+    """The casilla 0611 figure under the plain or the cotizaciones-limited rule, or ``None`` when unresolved."""
+    if not resolution.ceilings_resolved:
+        return None
+    if limited:
+        return compute_deduccion_maternidad_0611_limitada_por_cotizaciones(
+            list(resolution.pairs),
+            cotizaciones_por_hijo=dict(resolution.cotizaciones_por_hijo),
+            filing_year=filing_year,
+            alta_posterior_hijos=resolution.alta_posterior_hijos,
+        )
+    return Decimal(
         compute_deduccion_maternidad_0611(
             list(resolution.pairs),
-            filing_year=snapshot.filing_year,
+            filing_year=filing_year,
             alta_posterior_hijos=resolution.alta_posterior_hijos,
         )
     )
