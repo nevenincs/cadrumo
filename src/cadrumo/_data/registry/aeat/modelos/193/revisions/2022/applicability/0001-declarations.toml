@@ -5,3 +5,15 @@ required_payer_fact = "pays_capital_income_with_retencion"
 applicable_reason = "Modelo 193 (resumen anual de retenciones sobre capital mobiliario): el contribuyente satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion y presenta el resumen anual de las retenciones declaradas."
 not_applicable_reason = "Modelo 193 no aplica: el resumen anual solo corresponde a quien satisface determinados rendimientos o rentas del capital mobiliario sujetos a retencion."
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+
+# RIRPF art. 76.1: "Con carácter general, estarán obligados a retener o ingresar a cuenta, en
+# cuanto satisfagan rentas sometidas a esta obligación: ... b) Los contribuyentes que ejerzan
+# actividades económicas, cuando satisfagan rentas en el ejercicio de sus actividades." A natural
+# person is a retenedor only through letter b); one that declares no actividad económica income is
+# not, whatever it pays.
+[[revisions."2022".applicability.exclusions]]
+id = "m193-sin-actividad"
+entity_types = ["natural_person"]
+lacking_income_categories = ["actividad_economica"]
+reason = "Modelo 193 no aplica: la persona física solo está obligada a retener o ingresar a cuenta cuando ejerce actividades económicas y satisface rentas en el ejercicio de sus actividades (artículo 76.1.b del Reglamento del IRPF), y el perfil no declara una actividad económica, de modo que no actúa como retenedor de los rendimientos del capital mobiliario que satisface."
+legal_refs = ["rd-439-2007:art-76"]

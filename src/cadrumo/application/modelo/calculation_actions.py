@@ -109,7 +109,12 @@ from .calculation_modelo_adjustments import (
 )
 from .calculation_preparation import PreparedCalculation, prepare_calculation
 from .calculation_publication import CalculationRevisionPublication
-from .calculation_resolution import build_calculation_replay_payloads, precedence_tier_issue, resolve_calculation_inputs
+from .calculation_resolution import (
+    build_calculation_replay_payloads,
+    calculation_row_binding_values,
+    precedence_tier_issue,
+    resolve_calculation_inputs,
+)
 from .calculation_screen import calculation_screen_stamp
 from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
 from .credit_resolution import (
@@ -922,7 +927,7 @@ def _evaluate_prepared_calculation(
         resolved_enum_bindings=prepared.channels.enum_bindings,
         resolved_date_bindings=prepared.channels.date_bindings,
         resolved_relations=resolved_relations,
-        resolved_row_bindings=_optional_mapping_as_dict(row_binding_values),
+        resolved_row_bindings=calculation_row_binding_values(row_binding_values, prepared.channels),
         resolved_boolean_bindings=prepared.channels.boolean_bindings,
     )
     casilla_values = dict(engine_result.values)

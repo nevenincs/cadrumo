@@ -42,9 +42,9 @@ from ....domain.calculations.registry.applicability_models import ApplicabilityV
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import (
-    FilingExportFieldOverflowError,
     FilingExportRequiredRecordAbsentError,
     FilingExportValidationError,
+    FilingExportValueOverflowError,
 )
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -520,7 +520,7 @@ def test_a_year_with_no_counterparty_above_the_floor_is_refused_as_having_no_dec
         _exported_lines(operation, tmp_path, below_the_floor)
 
     assert raised.value.context == {"export_record_id": "m347-declarado"}
-    assert raised.value.code.code == "REFUSED_FILING_EXPORT_REQUIRED_RECORD_ABSENT"
+    assert raised.value.code.code == "ERROR_FILING_EXPORT_REQUIRED_RECORD_ABSENT"
     assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()
 
 
@@ -532,13 +532,11 @@ def test_a_counterparty_name_wider_than_its_slot_is_refused_by_record_field_and_
     name = "COMUNIDAD DE PROPIETARIOS CALLE OLMO 1234"
     long_named = (_domestic("V-1", InvoiceKind.ISSUED, "H00015016", name, "8000.00"),)
 
-    with pytest.raises(FilingExportFieldOverflowError) as raised:
+    with pytest.raises(FilingExportValueOverflowError) as raised:
         _exported_lines(operation, tmp_path, long_named)
 
     error = raised.value
-    assert error.code.code == "REFUSED_FILING_EXPORT_FIELD_OVERFLOW"
-    assert error.export_record_id == "m347-declarado"
-    assert (error.field_length, error.value_length) == (40, len(name))
+    assert (error.first_position, error.field_length, len(error.rendered)) == (36, 40, len(name))
     assert name not in str(error)
     assert all(name not in str(value) for value in (error.context or {}).values())
     assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()

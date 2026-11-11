@@ -8,19 +8,18 @@ from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
-from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.errors import FixedWidthValueOverflowError, RegistryValidationError
 from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from ...domain.calculations.registry.fixed_width_codec import (
-    FixedWidthValueOverflowError,
     render_empty_block_slot,
     render_fixed_width_export_field,
 )
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from ...domain.filing.errors import FilingExportError, FilingExportFieldOverflowError, FilingExportValidationError
+from ...domain.filing.errors import FilingExportError, FilingExportValidationError, FilingExportValueOverflowError
 from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
@@ -95,7 +94,6 @@ def _render_unpositioned_record(
     return "".join(
         _render_field(
             field,
-            export_record_id=record.id,
             draft=draft,
             headers=producer_values,
             producer_snapshot=producer_snapshot,
@@ -187,7 +185,6 @@ def _render_positioned_field_bytes(
         raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
     rendered = _render_positioned_field(
         field,
-        export_record_id=record.id,
         draft=draft,
         producer_values=producer_values,
         producer_snapshot=producer_snapshot,
@@ -211,7 +208,6 @@ def _render_positioned_field_bytes(
 def _render_positioned_field(
     field: ExportFieldDefinition,
     *,
-    export_record_id: str,
     draft: ModeloDraft,
     producer_values: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -225,7 +221,6 @@ def _render_positioned_field(
         raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
     return _render_field(
         field,
-        export_record_id=export_record_id,
         draft=draft,
         headers=producer_values,
         producer_snapshot=producer_snapshot,
@@ -248,7 +243,6 @@ def _field_is_active_for_row(field: ExportFieldDefinition, row: RecordRenderRow)
 def _render_field(
     field: ExportFieldDefinition,
     *,
-    export_record_id: str,
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
@@ -274,7 +268,7 @@ def _render_field(
     if field.required_with is not None and _is_blank(casilla_values.get(field.required_with)):
         # The block carries no occurrence; _casilla_field_value refused any stray campo.
         return render_empty_block_slot(field)
-    return format_field(field, raw, export_record_id=export_record_id)
+    return format_field(field, raw)
 
 
 def _scheme_period_field_value(
@@ -576,20 +570,20 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
     return DRAFT_VALUE_PRODUCERS[field.draft_attribute](draft)
 
 
-def format_field(field: ExportFieldDefinition, value: object, *, export_record_id: str) -> str:
+def format_field(field: ExportFieldDefinition, value: object) -> str:
     """Render one value through the field's fixed-width codec, as a filing export refusal on failure.
 
-    A value wider than its field is refused by record, field and width, and is
-    never truncated.
+    A value wider than its slot is refused as that slot's overflow, never cut to fit.
     """
     try:
         return render_fixed_width_export_field(field, value)
     except FixedWidthValueOverflowError as exc:
-        raise FilingExportFieldOverflowError(
-            export_record_id=export_record_id,
-            export_field_id=field.id,
-            field_length=exc.length,
-            value_length=exc.value_length,
+        raise FilingExportValueOverflowError(
+            field_id=field.id,
+            first_position=field.offset,
+            field_length=exc.field_length,
+            rendered=exc.rendered,
+            data_type=field.data_type.value,
         ) from exc
     except RegistryValidationError as exc:
         raise FilingExportValidationError(f"export field {field.id!r} cannot render its fixed-width value") from exc

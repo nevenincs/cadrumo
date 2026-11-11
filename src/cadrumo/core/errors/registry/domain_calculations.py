@@ -98,6 +98,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.FixedWidthValueOverflowError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_FIXED_WIDTH_VALUE_OVERFLOW",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.GovernedFactNotApplicableError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_GOVERNED_FACT_NOT_APPLICABLE",
@@ -134,17 +144,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_calculations_casilla_constraint",
             retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.calculations.registry.fixed_width_codec.FixedWidthValueOverflowError",
-        ErrorCode(
-            code="REFUSED_FIXED_WIDTH_VALUE_OVERFLOW",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_fixed_width_value_overflow",
-            retryable=False,
-            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),

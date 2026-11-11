@@ -55,7 +55,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.models import RefundAccount
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.errors import ModeloExportError
+from cadrumo.domain.modelos.errors import ModeloExportError, ModeloExportProducerFactsRefusedError
 from cadrumo.domain.transactions.own_accounts import (
     OwnAccountHolding,
     OwnAccountRegister,
@@ -340,7 +340,7 @@ def test_an_undeclared_solicitud_is_refused_before_any_file_is_written(
     calculation_revision_id = _seed_360_revision(bucket_id)
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloExportProducerFactsRefusedError) as exc_info:
         _export(calculation_revision_id, output)
 
     assert isinstance(exc_info.value.context, dict)
@@ -465,7 +465,7 @@ def test_a_solicitud_declared_for_another_period_does_not_answer_this_one(
     Modelo360SolicitudRepository(bucket_id=bucket_id).declare(other_year)
     output = tmp_path / "modelo-360.txt"
 
-    with pytest.raises(ModeloExportError) as exc_info:
+    with pytest.raises(ModeloExportProducerFactsRefusedError) as exc_info:
         _export(calculation_revision_id, output)
 
     assert isinstance(exc_info.value.context, dict)

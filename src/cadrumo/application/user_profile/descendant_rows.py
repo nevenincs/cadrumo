@@ -24,6 +24,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, validating_governed_facts
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_facts_from_list, descendant_list_from_facts
+from ...domain.contribuyente.household_person_name import admitted_household_person_name, household_person_name_limit
 from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .capsule_record import ProfileRecordConflictError
@@ -37,11 +38,13 @@ DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
 
 _BIRTH_DATE_LEAF: Final = "birth_date"
 _NIF_LEAF: Final = "nif"
+_NAME_LEAF: Final = "apellidos_nombre"
 
 _ROWS_OVER_LIMIT_LOCALE_KEY: Final = "application.user_profile.errors.descendant_rows_over_limit"
 _LIMIT_UNKNOWN_LOCALE_KEY: Final = "application.user_profile.errors.descendant_limit_unknown"
 _BIRTH_DATE_REQUIRED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_birth_date_required"
 _NIF_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_nif_invalid"
+_NAME_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_name_invalid"
 _VALUE_INVALID_LOCALE_KEY: Final = "application.user_profile.errors.descendant_value_invalid"
 _FACT_UNSUPPORTED_LOCALE_KEY: Final = "application.user_profile.errors.descendant_fact_unsupported"
 
@@ -100,6 +103,13 @@ def _canonical_nif(raw: str, *, operation: PinnedAuthorityOperation) -> str | No
         return None
 
 
+def _person_name(raw: str, *, position: int, operation: PinnedAuthorityOperation) -> str:
+    admitted = admitted_household_person_name(raw, authority=operation)
+    if admitted is None:
+        _refuse(_NAME_INVALID_LOCALE_KEY, row=position, limit=household_person_name_limit(authority=operation))
+    return admitted
+
+
 def _decoded_descendants(
     supplied: dict[str, str], *, operation: PinnedAuthorityOperation
 ) -> tuple[DescendantInfo, ...] | None:
@@ -116,8 +126,10 @@ def _validated_descendant_row(
 
     The record itself checks a NIF only for width, so the control letter is
     enforced here through the identifier check ascendants use, and the stored NIF
-    is its canonical form. The domain decoder drops a leaf it does not know and a
-    row without a birth date, so each is checked against what the decoder kept:
+    is its canonical form. The name is stored with its whitespace collapsed and is
+    refused here, by its own sentence, when blank or longer than the design admits.
+    The domain decoder drops a leaf it does not know and a row without a birth
+    date, so each is checked against what the decoder kept:
     nothing the person stated may disappear or change form on its way into the
     profile.
     """
@@ -130,6 +142,9 @@ def _validated_descendant_row(
         if canonical_nif is None:
             _refuse(_NIF_INVALID_LOCALE_KEY, row=position)
         supplied[nif_path] = canonical_nif
+    name_path = f"{DESCENDANT_OBJECT_PATH}.0.{_NAME_LEAF}"
+    if name_path in supplied:
+        supplied[name_path] = _person_name(supplied[name_path], position=position, operation=operation)
     decoded = _decoded_descendants(supplied, operation=operation)
     if decoded is None:
         _refuse(_VALUE_INVALID_LOCALE_KEY, row=position)

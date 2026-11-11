@@ -24,7 +24,11 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportRequiredRecordAbsentError, FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.modelos.perceptor_clave_scope import (
     PerceptorClaveScope,
@@ -200,19 +204,23 @@ def _render_record_bytes(
     source_digests: Mapping[str, str],
     clave_scope: PerceptorClaveScope | None,
 ) -> bytes:
-    text = render_record(
-        record,
-        draft=draft,
-        producer_values=headers,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row=row,
-        render_context=render_context,
-        projection_values=projection_values,
-        source_digests=source_digests,
-        clave_scope=clave_scope,
-    )
+    try:
+        text = render_record(
+            record,
+            draft=draft,
+            producer_values=headers,
+            producer_snapshot=producer_snapshot,
+            casilla_values=casilla_values,
+            binding_values=binding_values,
+            row=row,
+            render_context=render_context,
+            projection_values=projection_values,
+            source_digests=source_digests,
+            clave_scope=clave_scope,
+        )
+    except FilingExportValueOverflowError as exc:
+        # The slot knows its field; only the record knows which design record it is.
+        raise exc.in_record(record.record_type) from exc
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
     return f"{text}{line_ending}".encode(record.encoding)
 
@@ -405,8 +413,7 @@ def _validate_projection_values(
     values: dict[ProjectionAddress, object],
 ) -> None:
     for address, field in expected_fields.items():
-        export_record_id, _occurrence, _projection_ref = address
-        format_field(field, values[address], export_record_id=export_record_id)
+        format_field(field, values[address])
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:

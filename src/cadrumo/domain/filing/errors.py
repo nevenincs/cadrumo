@@ -54,35 +54,51 @@ class FilingExportValidationError(FilingExportError):
     """
 
 
-class FilingExportFieldOverflowError(FilingExportValidationError):
-    """Refuses an export whose value is wider than its fixed-width field.
+class FilingExportValueOverflowError(FilingExportValidationError):
+    """Raised when a value is wider than its slot in the official record design.
 
-    An official design that asks for a complete value gives no truncation
-    rule, so the export writes nothing rather than shorten it. The context
-    names the record, the field and both widths, never the value, which can be
-    a taxpayer's or a counterparty's private data.
+    The export refuses instead of truncating, and names the slot: its field,
+    its one-based positions and width, and once the record is known the
+    design's record type. ``rendered`` is the text that did not fit; it is
+    kept off the context so only a boundary that chooses to show it does.
     """
 
-    def __init__(self, *, export_record_id: str, export_field_id: str, field_length: int, value_length: int) -> None:
-        """Record where the value does not fit and by how much."""
+    def __init__(
+        self,
+        *,
+        field_id: str,
+        first_position: int | None,
+        field_length: int,
+        rendered: str,
+        data_type: str,
+        record_type: str | None = None,
+    ) -> None:
+        """Construct the refusal for one slot, optionally already placed in its record."""
+        self.field_id: str = field_id
+        self.first_position: int | None = first_position
+        self.field_length: int = field_length
+        self.rendered: str = rendered
+        self.data_type: str = data_type
+        self.record_type: str | None = record_type
         super().__init__(
-            f"export record {export_record_id!r} field {export_field_id!r} needs {value_length} positions "
-            f"but its fixed width is {field_length}",
-            context={
-                "export_record_id": export_record_id,
-                "export_field_id": export_field_id,
-                "field_length": field_length,
-                "value_length": value_length,
-            },
+            f"export field {field_id!r} cannot render its fixed-width value",
+            context={"field_id": field_id, "field_length": field_length, "value_length": len(rendered)},
         )
-        self.export_record_id = export_record_id
-        self.export_field_id = export_field_id
-        self.field_length = field_length
-        self.value_length = value_length
+
+    def in_record(self, record_type: str) -> FilingExportValueOverflowError:
+        """The same refusal placed in the record design ``record_type``."""
+        return FilingExportValueOverflowError(
+            field_id=self.field_id,
+            first_position=self.first_position,
+            field_length=self.field_length,
+            rendered=self.rendered,
+            data_type=self.data_type,
+            record_type=record_type,
+        )
 
 
 class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
-    """Refuses an export whose layout requires a record this return has no occurrence of.
+    """Raised when the layout requires a record this return has no occurrence of.
 
     The official design cannot be written without that record, so a return
     with nothing to state in it has nothing to file in this format.
@@ -90,16 +106,8 @@ class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
 
     def __init__(self, *, export_record_id: str) -> None:
         """Record which required record has no occurrence."""
+        self.export_record_id: str = export_record_id
         super().__init__(
             f"required export record {export_record_id!r} has no applicable occurrence",
             context={"export_record_id": export_record_id},
         )
-        self.export_record_id = export_record_id
-
-
-#: Export refusals the modelo export boundary shows as they are, since their
-#: own code and context already tell the operator why nothing was written.
-FILING_EXPORT_REFUSALS: tuple[type[FilingExportValidationError], ...] = (
-    FilingExportFieldOverflowError,
-    FilingExportRequiredRecordAbsentError,
-)

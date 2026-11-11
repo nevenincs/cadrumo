@@ -26,10 +26,14 @@ from ...adapters.outbound.aeat.sede.schema import (
     FiledDeclarationAvailabilityReport,
     ObservedCasillaValue,
 )
+from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...application.auth.operator_scope_ports import OperatorScopePorts
+from ...application.auth.protocols import BrowserSessionFactoryPort
 from ...application.live.expedientes_ports import ExpedientesDeclaration
 from ...application.live.filed_data_ports import (
     DeferredFiledObservations,
     FiledArtefactSink,
+    FiledDataCapturePort,
     FiledDataRegisterPort,
     FiledEffectGuard,
     FiledRegisterDeclarationProtocol,
@@ -46,6 +50,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...tests.pdf_fixtures import text_pdf_bytes
 from ...tests.personas import AeatFiling, Persona, YearEnvelope
+from ..live_state_composition import FiledRegisterSource
 
 PRESENTED_TIME = time(10, 30)
 """The Europe/Madrid wall-clock time of day a persona's AEAT filing was presented at."""
@@ -301,8 +306,34 @@ PERSONA_AEAT_REGISTER = RecordedAeatRegister()
 """The one register every persona world's filed captures read."""
 
 
+def _persona_register(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+) -> FiledDataCapturePort:
+    del certificate_secret_backend_factory, browser_session_factory, operator_scope_ports
+    return PERSONA_AEAT_REGISTER
+
+
+def _recorded_register_needs_no_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
+    del profile_id, operation
+
+
+PERSONA_FILED_REGISTER = FiledRegisterSource(
+    port_factory=_persona_register,
+    provider_preflight=_recorded_register_needs_no_provider,
+)
+"""The filed register a persona replay composes in place of the AEAT Sede.
+
+The recorded register stands in for the authenticated site, so there is no
+provider credential to check before it is read.
+"""
+
+
 __all__ = [
     "PERSONA_AEAT_REGISTER",
+    "PERSONA_FILED_REGISTER",
     "PRESENTED_TIME",
     "RecordedAeatRegister",
     "RecordedFiling",

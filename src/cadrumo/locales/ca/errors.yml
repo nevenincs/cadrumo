@@ -1211,13 +1211,6 @@ errors:
       és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
-    refused_filing_export_field_overflow: El camp {export_field_id} del registre {export_record_id}
-      admet {field_length} caràcters en el disseny oficial, però el seu valor en necessita
-      {value_length}. El disseny no preveu escurçar-lo, així que no s'ha escrit res.
-      Revisa el valor d'origen i torna a exportar.
-    refused_filing_export_required_record_absent: El disseny oficial exigeix almenys
-      un registre {export_record_id}, però aquesta declaració no en té cap, així que
-      no hi ha res a escriure en aquest format i no s'ha escrit res.
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions
@@ -1240,8 +1233,6 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
-    refused_fixed_width_value_overflow: Un valor necessita {value_length} posicions,
-      però el seu camp d'amplada fixa n'admet {field_length}; es rebutja en lloc d'escurçar-lo.
     refused_flow_answer: El flux guiat ha rebutjat la resposta.
     refused_flow_checkpoint: El flux guiat ha rebutjat l'operació de desar i reprendre.
     refused_flow_navigation: El flux guiat ha rebutjat la petició de navegació.
@@ -1398,6 +1389,17 @@ errors:
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la
       domiciliació anterior (mantenir-la, o anul·lar-la o modificar-la); no se n'ha
       indicat cap, així que no s'ha escrit res. Tria'n una i torna a exportar.
+    refused_modelo_export_producer_facts: 'No s''ha escrit res: falten o no quadren
+      dades que el fitxer declara sobre tu o sobre aquesta declaració (identificació,
+      compte bancari o dades pròpies del model). Completa-les al teu perfil o a les
+      opcions de l''exportació i torna a exportar.'
+    refused_modelo_export_required_record_absent: El disseny oficial exigeix almenys
+      un registre %{export_record_id}, però aquesta declaració no en té cap, així que
+      no hi ha res a escriure en aquest format i no s'ha escrit res.
+    refused_modelo_export_value_overflow: 'No s''ha escrit res: un valor no cap al
+      camp %{field_id}, al qual el disseny de registre de l''AEAT dona %{field_length}
+      posicions. Retallar-lo declararia una altra dada. Revisa aquesta dada o import
+      i torna a exportar.'
     refused_modelo_instalment_election: 'Aquesta declaració no es pot pagar en dos
       terminis: cal un resultat a ingressar que deixi un segon termini d''almenys
       un cèntim, que no sigui rectificativa i es presenti dins de termini i, si domicilies

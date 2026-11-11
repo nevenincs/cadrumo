@@ -1202,13 +1202,6 @@ errors:
       está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
-    refused_filing_export_field_overflow: El campo {export_field_id} del registro
-      {export_record_id} admite {field_length} caracteres en el diseño oficial, pero
-      su valor necesita {value_length}. El diseño no prevé acortarlo, así que no se
-      ha escrito nada. Revisa el valor de origen y vuelve a exportar.
-    refused_filing_export_required_record_absent: El diseño oficial exige al menos
-      un registro {export_record_id}, pero esta declaración no tiene ninguno, así
-      que no hay nada que escribir en este formato y no se ha escrito nada.
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del
@@ -1231,8 +1224,6 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
-    refused_fixed_width_value_overflow: Un valor necesita {value_length} posiciones,
-      pero su campo de ancho fijo admite {field_length}; se rechaza en lugar de acortarlo.
     refused_flow_answer: El flujo guiado rechazó la respuesta.
     refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
     refused_flow_navigation: El flujo guiado rechazó la petición de navegación.
@@ -1389,6 +1380,17 @@ errors:
       rectificativa del modelo 303 con la casilla 111 necesita una elección sobre
       la domiciliación anterior (mantenerla, o anularla o modificarla); no se indicó
       ninguna, así que no se ha escrito nada. Elige una y vuelve a exportar.
+    refused_modelo_export_producer_facts: 'No se ha escrito nada: faltan o no cuadran
+      datos que el fichero declara sobre ti o sobre esta declaración (identificación,
+      cuenta bancaria o datos propios del modelo). Complétalos en tu perfil o en las
+      opciones de la exportación y vuelve a exportar.'
+    refused_modelo_export_required_record_absent: El diseño oficial exige al menos
+      un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
+      que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
+      en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
+      posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve
+      a exportar.'
     refused_modelo_instalment_election: 'Esta declaración no se puede pagar en dos
       plazos: hace falta un resultado a ingresar que deje un segundo plazo de al menos
       un céntimo, que no sea rectificativa y se presente dentro de plazo y, si domicilias

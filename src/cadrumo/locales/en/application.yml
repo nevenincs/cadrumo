@@ -2343,6 +2343,11 @@ application:
         the amount settled does not go the way the result does, as when part of the
         amount to pay is suspended against your spouse''s refund or you waive a refund.
         Cadrumo does not yet compute the remainder for this year''s form.'
+      export_text_value_overflow: 'Nothing was written: «%{field_value}» has %{value_length}
+        characters and the AEAT record design allows only %{field_length} at positions
+        %{first_position}-%{last_position} of the «%{record_type}» record. Cutting
+        it would declare something else. Correct it where you recorded it, as it appears
+        in the AEAT census, and export again.'
       export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
         %{reason}. The calculation, the check and the records of filings you keep
         may still exist, but this command cannot produce an AEAT upload file for this
@@ -3535,6 +3540,8 @@ application:
         does not keep for an ascendant.
       ascendant_limit_unknown: The declaration design states no limit for ascendants,
         so the list cannot be checked or saved.
+      ascendant_name_invalid: The surnames and name of ascendant %{row} cannot be
+        blank and can have at most %{limit} characters.
       ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
         its letters and digits.
       ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
@@ -3565,6 +3572,8 @@ application:
         store.
       descendant_limit_unknown: The declaration design states no limit for descendants,
         so the list cannot be checked or saved.
+      descendant_name_invalid: The surnames and name of descendant %{row} cannot be
+        blank and can have at most %{limit} characters.
       descendant_nif_invalid: The NIF or NIE of descendant %{row} is not valid; check
         its letters and digits.
       descendant_rows_over_limit: A declaration lists at most %{limit} descendants,
@@ -3619,6 +3628,8 @@ application:
         Available fields: %{fields}.'
     family_rows:
       ascendiente:
+        apellidos_nombre:
+          label: Ascendant's surnames and name (surnames first)
         birth_date:
           label: Date of birth
         convivientes:

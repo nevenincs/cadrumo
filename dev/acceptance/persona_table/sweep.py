@@ -11,6 +11,7 @@ itself breaks; a red return is a row, not a failed case.
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import re
 from datetime import UTC, datetime
@@ -56,7 +57,8 @@ from cadrumo.application.modelo.work_verification_contracts import (
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -78,16 +80,19 @@ from cadrumo.tests.personas import (
     read_persona,
 )
 
+from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .rows import (
     PlannedRow,
     Stage,
     TableRow,
+    ended,
     in_force,
     is_unsupported,
     not_run,
     planned_rows,
     replay_horizons,
     select,
+    stage_refusal_codes,
     write_rows,
 )
 
@@ -118,7 +123,9 @@ def _persona(persona_id: str) -> Persona:
 
 
 def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:
-    rows = planned_rows(_persona(persona_id), horizon, _envelope())
+    persona, envelope = _persona(persona_id), _envelope()
+    today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
+    rows = ended(planned_rows(persona, horizon, envelope), today)
     return select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
 
 
@@ -155,11 +162,14 @@ def _short(error: BaseException) -> str:
 
 
 def _values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
-    """The persona's counterparty-free stated values in force for the planned return, under the replay's envelope."""
+    """The persona's stated values in force for the planned return, under the replay's envelope.
+
+    A value stated per counterparty is taken only for a return whose type-2 record is compared.
+    """
     return [
         value
         for year, value in in_force(persona.expectations.values, envelope)
-        if value.counterparty is None
+        if (value.counterparty is None or is_compared(value))
         and value.modelo == plan.modelo
         and value.period == plan.period
         and year == plan.year
@@ -220,7 +230,12 @@ def _run_return(
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
+    calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
     reasons += [reason for reason in (verify_reason, export_reason) if reason]
+    if stated_refusal is not None and stated_refusal in stage_refusal_codes(verify_reason, export_reason):
+        return TableRow.from_plan(
+            plan, Stage.EXPECTED_REFUSAL, reason=" | ".join([verify_reason, export_reason])[:_REASON_LIMIT]
+        )
     return TableRow.from_plan(
         plan,
         calculate,
@@ -289,15 +304,19 @@ def _compare(
 ) -> tuple[Stage, list[str]]:
     """The calculate stage against the stated values, and the reasons it is not a plain pass."""
     mismatches = _mismatches(values, calculated)
+    reasons: list[str] = []
     if stated_refusal is not None:
-        calculate, reasons = Stage.REFUSAL_NOT_RAISED, [f"stated refusal {stated_refusal} not raised"]
+        calculate = Stage.REFUSAL_NOT_RAISED
+        reasons.append(f"stated refusal {stated_refusal} not raised")
     elif not values:
-        calculate, reasons = Stage.CALCULATED, []
+        calculate = Stage.CALCULATED
     else:
         calculate = Stage.MISMATCH if mismatches else Stage.PASSED
-        reasons = ["; ".join(mismatches)] if mismatches else []
+        reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
-    return calculate, reasons + ([f"unresolved: {unresolved}"] if unresolved else [])
+    if unresolved:
+        reasons.append(f"unresolved: {unresolved}")
+    return calculate, reasons
 
 
 def _mismatches(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> list[str]:
@@ -339,11 +358,50 @@ def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[S
     )
 
 
+def _export_path(plan: PlannedRow, exports: Path) -> Path:
+    return exports / f"{plan.persona}-{plan.modelo}-{plan.year}-{plan.period}.txt"
+
+
+def _counterparty_mismatches(
+    persona: Persona, plan: PlannedRow, values: list[ExpectedValue], output: Path
+) -> list[str]:
+    """Each stated counterparty value the written fichero does not give, read through the registry layout."""
+    with bundled_indexed_authority().operation() as operation:
+        layout = _export_layout(operation, plan)
+        return counterparty_mismatches(values, persona.identities, layout, output.read_bytes())
+
+
+def _export_layout(operation: PinnedAuthorityOperation, plan: PlannedRow) -> ExportLayoutDefinition:
+    """The fixed-width layout of the revision the law selects for the planned return."""
+    revision = operation.revision_for_context(plan.modelo, filing_year=plan.year, period=plan.period)
+    return operation.revision_with_export_layouts(plan.modelo, revision.id).export_layouts[0]
+
+
+def _with_counterparties(
+    calculate: Stage,
+    reasons: list[str],
+    values: list[ExpectedValue],
+    persona: Persona,
+    plan: PlannedRow,
+    exports: Path,
+    export: Stage,
+) -> tuple[Stage, list[str]]:
+    """The calculate stage once the written fichero has been compared with the counterparties the persona states."""
+    if not any(is_compared(value) for value in values) or plan.modelo not in DESIGNS:
+        return calculate, reasons
+    if export is not Stage.PASSED:
+        return calculate, [*reasons, "counterparties not compared: no fichero written"]
+    mismatches = _counterparty_mismatches(persona, plan, values, _export_path(plan, exports))
+    if not mismatches:
+        return calculate, reasons
+    return Stage.MISMATCH, [*reasons, "; ".join(mismatches)]
+
+
 def _export(
     world: PersonaWorld, plan: PlannedRow, exports: Path, work_unit_id: str, revision_id: str
 ) -> tuple[Stage, str, str]:
     """The export stage, what was written, and the reason it was not."""
-    output = exports / f"{plan.persona}-{plan.modelo}-{plan.year}-{plan.period}.txt"
+    output = _export_path(plan, exports)
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
         exported = settle_operation(
@@ -405,9 +463,14 @@ def _owed_periods(persona: Persona, plan: PlannedRow) -> set[str]:
 
 
 def _scope(persona: Persona) -> ReplayScope:
-    """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
-    if persona.filed_returns or persona.calculated_returns or persona.local_observations:
-        return ReplayScope.HISTORY
+    """The records scope when the persona holds a return history, else the full ledger.
+
+    The table takes every return of the history through calculate, verify,
+    export and local filing itself, in chain order, so the replay records only
+    what those returns read.
+    """
+    if persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings:
+        return ReplayScope.RECORDS
     return ReplayScope.FULL
 
 

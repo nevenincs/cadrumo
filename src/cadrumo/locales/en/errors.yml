@@ -1112,13 +1112,6 @@ errors:
       export.
     refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
-    refused_filing_export_field_overflow: Field {export_field_id} of record {export_record_id}
-      holds {field_length} characters in the official design, but its value needs
-      {value_length}. The design gives no rule for shortening it, so nothing was written.
-      Review the source value, then export again.
-    refused_filing_export_required_record_absent: The official design requires at
-      least one {export_record_id} record, but this return has none, so there is nothing
-      to write in this format and nothing was written.
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
     refused_financial_aggregation_missing_classification: Some in-period transactions
@@ -1139,8 +1132,6 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
-    refused_fixed_width_value_overflow: A value needs {value_length} positions, but
-      its fixed-width slot holds {field_length}; it is refused rather than shortened.
     refused_flow_answer: The guided flow refused the answer.
     refused_flow_checkpoint: The guided flow refused the save-and-resume operation.
     refused_flow_navigation: The guided flow refused the navigation request.
@@ -1289,6 +1280,17 @@ errors:
       that states casilla 111 needs a choice for the earlier direct debit (keep it,
       or cancel or modify it); none was given, so nothing was written. Choose one
       and export again.
+    refused_modelo_export_producer_facts: 'Nothing was written: facts the file states
+      about you or about this return are missing or inconsistent (identification,
+      bank account or facts specific to the modelo). Complete them in your profile
+      or in the export options and export again.'
+    refused_modelo_export_required_record_absent: The official design requires at
+      least one %{export_record_id} record, but this return has none, so there is nothing
+      to write in this format and nothing was written.
+    refused_modelo_export_value_overflow: 'Nothing was written: a value does not fit
+      field %{field_id}, which the AEAT record design gives %{field_length} positions.
+      Cutting it would declare something else. Check that value or amount and export
+      again.'
     refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,

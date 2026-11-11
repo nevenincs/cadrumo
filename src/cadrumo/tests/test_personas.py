@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import tomllib
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
@@ -11,9 +12,11 @@ import pytest
 
 from .personas import (
     PERSONAS_ROOT,
+    Persona,
     PersonaCatalogueError,
     ProvisionPeriods,
     YearEnvelope,
+    YearToken,
     cadastral_control_characters,
     identity_catalogue,
     parse_identity_catalogue,
@@ -32,15 +35,24 @@ def _document(name: str) -> dict[str, Any]:
     return tomllib.loads((PERSONAS_ROOT / _PERSONA / name).read_text(encoding="utf-8"))
 
 
-def _parse(persona_document: dict[str, Any], *, envelope: YearEnvelope = _ENVELOPE) -> None:
-    parse_persona(
+def _parse(
+    persona_document: dict[str, Any],
+    *,
+    envelope: YearEnvelope = _ENVELOPE,
+    expectations_document: dict[str, Any] | None = None,
+    omit_below_floor: bool = False,
+) -> Persona:
+    return parse_persona(
         _PERSONA,
         persona_document=persona_document,
         ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
         documents_document=_document("documents.toml"),
-        expectations_document=_document("expectations.toml"),
+        expectations_document=_document("expectations.toml")
+        if expectations_document is None
+        else expectations_document,
         catalogue=identity_catalogue(),
         envelope=envelope,
+        omit_below_floor=omit_below_floor,
     )
 
 
@@ -115,6 +127,101 @@ def test_an_unknown_field_is_refused() -> None:
 def test_a_year_outside_the_envelope_is_refused(path: tuple[str, ...], token: object) -> None:
     with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
         _parse(_changed(path, token))
+
+
+#: The synthetic envelope with its horizon lowered one year above the floor, as a replay of an earlier year reads it.
+_LOWERED = YearEnvelope(floor=_ENVELOPE.floor, horizon=_ENVELOPE.floor + 1)
+
+
+def test_a_history_record_below_the_floor_is_refused_unless_a_lowered_horizon_omits_it() -> None:
+    document = _document("persona.toml")
+    (observation,) = document["local_observations"]
+    assert YearToken.parse(observation["year"], where="test").precedes_floor(_LOWERED)
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED)
+
+    persona = _parse(document, envelope=_LOWERED, omit_below_floor=True)
+
+    assert persona.local_observations == ()
+    assert [(item.block, item.modelo, str(item.year), item.periods) for item in persona.below_floor] == [
+        ("local_observations", observation["modelo"], observation["year"], (observation["period"],))
+    ]
+    assert persona.below_floor[0].history
+    assert f"floor {_LOWERED.floor}" in persona.below_floor[0].reason(_LOWERED)
+
+
+def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon() -> None:
+    document = _with_filed_returns(
+        {"modelo": "303", "year": "horizon-1", "periods": ["2T"], "iva_compensation_carried_in": "0.00"},
+        {"modelo": "303", "year": "horizon-2", "periods": ["4T"], "iva_compensation_carried_in": "0.00"},
+    )
+    expectations = copy.deepcopy(_document("expectations.toml"))
+    stated = copy.deepcopy(expectations["values"][0])
+    expectations["values"].append({**stated, "year": "horizon-2"})
+    expectations["obligations"].append({**expectations["obligations"][0], "year": "horizon-2"})
+    expectations["deadlines"].append({**expectations["deadlines"][0], "year": "horizon-2"})
+    unchanged = _parse(document, expectations_document=expectations)
+
+    persona = _parse(document, envelope=_LOWERED, expectations_document=expectations, omit_below_floor=True)
+
+    assert unchanged.below_floor == ()
+    assert persona.filed_returns == unchanged.filed_returns[:1]
+    for kept, every in (
+        (persona.expectations.values, unchanged.expectations.values),
+        (persona.expectations.obligations, unchanged.expectations.obligations),
+        (persona.expectations.deadlines, unchanged.expectations.deadlines),
+    ):
+        assert kept == tuple(item for item in every if str(item.year) != "horizon-2")
+    assert sorted(item.block for item in persona.below_floor) == [
+        "expectations.deadlines",
+        "expectations.obligations",
+        "expectations.values",
+        "filed_returns",
+        "local_observations",
+    ]
+    assert sorted(item.block for item in persona.below_floor if item.history) == [
+        "filed_returns",
+        "local_observations",
+    ]
+
+
+def test_a_compensation_carried_in_from_below_the_floor_is_left_out_of_its_first_quarter() -> None:
+    document = _with_filed_returns(
+        {"modelo": "303", "year": "horizon-1", "periods": ["1T", "2T"], "iva_compensation_carried_in": "0.00"}
+    )
+    raised = YearEnvelope(floor=_LOWERED.floor, horizon=_LOWERED.horizon + 1)
+
+    (lowered,) = _parse(document, envelope=_LOWERED, omit_below_floor=True).filed_returns
+    below = _parse(document, envelope=_LOWERED, omit_below_floor=True).below_floor
+    (kept,) = _parse(document, envelope=raised, omit_below_floor=True).filed_returns
+
+    assert lowered.periods == ("1T", "2T") and lowered.iva_compensation_carried_in is None
+    carried = [item for item in below if item.block == "filed_returns.iva_compensation_carried_in"]
+    assert [(item.modelo, str(item.year), item.periods, item.history) for item in carried] == [
+        ("303", "horizon-2", ("4T",), True)
+    ]
+    assert kept.iva_compensation_carried_in == Decimal("0.00")
+
+
+@pytest.mark.parametrize(
+    ("path", "token"),
+    [
+        (("persona", "fiscal_year"), "horizon-2"),
+        (("persona", "fiscal_year"), "horizon+1"),
+        (("clock", "as_of"), {"year": "horizon-2", "month": 2, "day": 16}),
+    ],
+)
+def test_a_lowered_horizon_still_refuses_a_scenario_year_outside_the_envelope(
+    path: tuple[str, ...], token: object
+) -> None:
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(_changed(path, token), envelope=_LOWERED, omit_below_floor=True)
+
+
+def test_a_lowered_horizon_still_refuses_a_history_record_above_the_horizon() -> None:
+    document = _with_filed_returns({"modelo": "303", "year": "horizon+1", "periods": ["1T"]})
+    with pytest.raises(PersonaCatalogueError, match="outside the supported envelope"):
+        _parse(document, envelope=_LOWERED, omit_below_floor=True)
 
 
 def test_a_literal_year_is_refused() -> None:
@@ -509,3 +616,41 @@ def test_a_provision_the_envelope_does_not_carry_is_refused_rather_than_ignored(
     expectations = _parse_expectations(_governed_expectations())
     with pytest.raises(PersonaCatalogueError, match="does not carry the governed periods"):
         values_in_force(expectations.values, _ENVELOPE)
+
+
+_ACCRUING = "minorista-recargo"
+
+
+def _accruing_ledger(ibi_accrual: str) -> Any:
+    """The minorista persona with its IBI row's accrual cells replaced by ``ibi_accrual``."""
+    text = (PERSONAS_ROOT / _ACCRUING / "ledger.csv").read_text(encoding="utf-8")
+    lines = [
+        line.rsplit(",", 3)[0] + "," + ibi_accrual if line.startswith("MIN-IBI-1,") else line
+        for line in text.splitlines()
+    ]
+    return parse_persona(
+        _ACCRUING,
+        persona_document=tomllib.loads((PERSONAS_ROOT / _ACCRUING / "persona.toml").read_text(encoding="utf-8")),
+        ledger_text="\n".join(lines) + "\n",
+        documents_document=tomllib.loads((PERSONAS_ROOT / _ACCRUING / "documents.toml").read_text(encoding="utf-8")),
+        expectations_document=tomllib.loads(
+            (PERSONAS_ROOT / _ACCRUING / "expectations.toml").read_text(encoding="utf-8")
+        ),
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+    )
+
+
+def test_a_ledger_row_states_its_accrual_date_apart_from_the_movement() -> None:
+    persona = _accruing_ledger("horizon-1,1,1")
+    rows = {row.ref: row for row in persona.ledger}
+    ibi = rows["MIN-IBI-1"]
+    assert ibi.accrual_date(_ENVELOPE) == date(_ENVELOPE.horizon - 1, 1, 1)
+    assert ibi.operation_date(_ENVELOPE) != ibi.accrual_date(_ENVELOPE)
+    assert all(row.accrual_date(_ENVELOPE) is None for ref, row in rows.items() if ref != "MIN-IBI-1")
+
+
+@pytest.mark.parametrize("cells", ["horizon-1,1,", "horizon-1,13,1", ",1,1"])
+def test_an_incomplete_or_impossible_accrual_date_is_refused(cells: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="accrual"):
+        _accruing_ledger(cells)

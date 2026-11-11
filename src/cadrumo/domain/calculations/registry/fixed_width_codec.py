@@ -13,7 +13,7 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.fixed_width import coerce_fixed_width_decimal
 from ....core.errors.hierarchy import CadrumoError
 from ....core.money.rounding import round_to_cents
-from .errors import RegistryValidationError
+from .errors import FixedWidthValueOverflowError, RegistryValidationError
 from .export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyWireValue,
@@ -213,25 +213,6 @@ class FixedWidthRecordRenderError(CadrumoError):
         self.field_id = field_id
         self.reason = reason
         self.export_record_id = export_record_id
-
-
-class FixedWidthValueOverflowError(RegistryValidationError):
-    """A value wider than its fixed-width slot, which the codec refuses rather than truncates.
-
-    The context names the slot and both widths, never the value, because the
-    value can be a taxpayer's or a counterparty's private data.
-    """
-
-    def __init__(self, *, field_id: str | None, length: int, value_length: int) -> None:
-        """Record the slot, its declared width and the width the value needs."""
-        subject = "fixed-width value" if field_id is None else f"export field {field_id!r} value"
-        context: dict[str, object] = {"field_length": length, "value_length": value_length}
-        if field_id is not None:
-            context["export_field_id"] = field_id
-        super().__init__(f"{subject} exceeds length {length}", context=context)
-        self.field_id = field_id
-        self.length = length
-        self.value_length = value_length
 
 
 def validate_fixed_width_shape(field: ExportField) -> None:
@@ -440,7 +421,7 @@ def pad_fixed_width_text(
 ) -> str:
     """Apply the canonical padding contract to already-rendered text."""
     if len(value) > length:
-        raise FixedWidthValueOverflowError(field_id=None, length=length, value_length=len(value))
+        raise FixedWidthValueOverflowError(rendered=value, field_length=length)
     if padding is ExportPadding.NONE:
         if justification is not ExportJustification.NONE:
             raise RegistryValidationError("no-padding fixed-width value requires no justification")
@@ -714,7 +695,7 @@ def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -
 def _render_with_reserved_sign(field: ExportField, digits: str, *, negative: bool, length: int) -> str:
     magnitude_width = length - 1
     if len(digits) > magnitude_width:
-        raise FixedWidthValueOverflowError(field_id=field.id, length=length, value_length=len(digits) + 1)
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
     magnitude = digits.rjust(magnitude_width, "0")
     if field.sign_position is ExportSignPosition.N_UNLESS_ZERO:
         return "0" * length if not digits.strip("0") else "N" + magnitude
@@ -743,8 +724,7 @@ def _render_signed_digits(field: ExportField, digits: str, *, negative: bool, le
 def _render_displacing_marker(field: ExportField, digits: str, *, marker: str, negative: bool, length: int) -> str:
     magnitude_width = length - 1 if negative else length
     if len(digits) > magnitude_width:
-        value_length = len(digits) + 1 if negative else len(digits)
-        raise FixedWidthValueOverflowError(field_id=field.id, length=length, value_length=value_length)
+        raise FixedWidthValueOverflowError(rendered=digits, field_length=length, field_id=field.id)
     return (marker if negative else "") + digits.rjust(magnitude_width, "0")
 
 
@@ -773,7 +753,7 @@ def _pad(field: ExportField, value: str) -> str:
             justification=field.justification,
         )
     except FixedWidthValueOverflowError as exc:
-        raise FixedWidthValueOverflowError(field_id=field.id, length=length, value_length=exc.value_length) from exc
+        raise FixedWidthValueOverflowError(rendered=exc.rendered, field_length=length, field_id=field.id) from exc
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"export field {field.id!r}: {exc}") from exc
 
@@ -786,7 +766,6 @@ __all__ = [
     "ExportPadding",
     "ExportPaddingValue",
     "FixedWidthRecordRenderError",
-    "FixedWidthValueOverflowError",
     "pad_fixed_width_text",
     "render_empty_block_slot",
     "render_fixed_width_export_field",

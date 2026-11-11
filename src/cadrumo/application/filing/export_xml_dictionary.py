@@ -46,6 +46,7 @@ from ...domain.calculations.registry.export_xml_dictionary import (
 )
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.inventory_bindings import TAXPAYER_YEAR_ACTIVITY_GRAIN
+from ...domain.calculations.registry.profile_bindings import ProfileProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
@@ -707,18 +708,39 @@ def _row_column_entry(
     entries: tuple[XmlDictionaryEntry, ...],
     repeating: Mapping[str, int | None],
 ) -> tuple[str, XmlDictionaryEntry]:
-    """Find the one dictionary row a row binding fills, and the repeating element around it."""
-    target = selector_as_dict(binding).get("target_casilla_id")
-    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS or target is None:
+    """Find the one dictionary row a row binding fills, and the repeating element around it.
+
+    A source row binding names the box it fills. A profile row object names the
+    dictionary field and the schema path of its column, as its scalar profile
+    bindings do, so it is placed by that field and must sit at that path.
+    """
+    if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
         raise FilingExportValidationError(f"binding {binding.id!r} carries rows but declares no row column")
+    provider = binding.provider
+    if isinstance(provider, ProfileProvider) and provider.rows is not None and provider.dictionary_field is not None:
+        column = provider.dictionary_field
+        expected_path = provider.xsd_path
+
+        def fills(entry: XmlDictionaryEntry) -> bool:
+            return entry.field_id == column and expected_path in {None, entry.path}
+
+    else:
+        target = selector_as_dict(binding).get("target_casilla_id")
+        if target is None:
+            raise FilingExportValidationError(f"binding {binding.id!r} carries rows but declares no row column")
+        column = str(target)
+
+        def fills(entry: XmlDictionaryEntry) -> bool:
+            return entry.casilla_id == target
+
     placed = tuple(
         (element, entry)
         for entry in entries
-        if entry.casilla_id == target and (element := _nearest_repeating_path(entry.path, repeating)) is not None
+        if fills(entry) and (element := _nearest_repeating_path(entry.path, repeating)) is not None
     )
     if len(placed) != 1:
         raise FilingExportValidationError(
-            f"row column {binding.id!r} needs one repeating dictionary row for box {target}, found {len(placed)}",
+            f"row column {binding.id!r} needs one repeating dictionary row for {column}, found {len(placed)}",
         )
     return placed[0]
 

@@ -58,9 +58,14 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
+from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
-from ...domain.filing.errors import FILING_EXPORT_REFUSALS, FilingExportError
+from ...domain.filing.errors import (
+    FilingExportError,
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.filing.software_identity import (
     AeatProductSoftwareIdentity,
@@ -73,6 +78,8 @@ from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportRequiredRecordAbsentError,
+    ModeloExportValueOverflowError,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -584,8 +591,6 @@ def _write_export_staging(
             mutation_writer=mutation_writer,
             states_whole_return=True,
         )
-    except FILING_EXPORT_REFUSALS:
-        raise
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
@@ -619,14 +624,18 @@ def _consume_export_payload(
             schema_provider=schema_provider,
             states_whole_return=True,
         )
-    except FILING_EXPORT_REFUSALS:
-        raise
     except FilingExportError as exc:
         raise export_write_failure(command, exc) from exc
 
 
 def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -> ModeloExportError:
     """Keep a refused box's own message; the generic one would read as a disk problem."""
+    if isinstance(exc, FilingExportValueOverflowError):
+        return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportRequiredRecordAbsentError):
+        return ModeloExportRequiredRecordAbsentError(
+            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        )
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
         return ModeloExportError(
             translated_message=exc.translated_message,
@@ -636,6 +645,35 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
         translated_message="application.modelo.errors.export_draft_write_failed",
         context=_export_write_failure_context(command, exc),
     )
+
+
+def _export_value_overflow_refusal(
+    command: ModeloExportCommand, exc: FilingExportValueOverflowError
+) -> ModeloExportValueOverflowError:
+    """Refuse a value wider than its slot in the record design, naming the slot and, for text, the value.
+
+    Cutting the value to fit would declare something else, so nothing is
+    written. A text value is shown because it is what the filer recorded and
+    has to find again - a counterparty's name, an address; an amount is
+    named by its slot only.
+    """
+    context: dict[str, object] = {
+        "calculation_revision_id": command.calculation_revision_id,
+        "field_id": exc.field_id,
+        "field_length": exc.field_length,
+        "value_length": len(exc.rendered),
+    }
+    if exc.record_type is not None:
+        context["record_type"] = exc.record_type
+    if exc.first_position is not None:
+        context["first_position"] = exc.first_position
+        context["last_position"] = exc.first_position + exc.field_length - 1
+    if exc.data_type == CasillaDataType.TEXT:
+        return ModeloExportValueOverflowError(
+            translated_message="application.modelo.errors.export_text_value_overflow",
+            context={**context, "field_value": exc.rendered},
+        )
+    return ModeloExportValueOverflowError(context=context)
 
 
 def _export_write_failure_context(command: ModeloExportCommand, exc: FilingExportError) -> dict[str, object]:

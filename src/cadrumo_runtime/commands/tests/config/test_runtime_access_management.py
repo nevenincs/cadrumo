@@ -9,12 +9,12 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileAutomationChangeResult,
     ConfigProfileAutomationCreateResult,

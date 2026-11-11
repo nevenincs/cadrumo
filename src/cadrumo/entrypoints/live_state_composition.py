@@ -14,7 +14,7 @@ from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Protocol, override
 from uuid import UUID
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -337,23 +337,52 @@ def compose_filed_observation_persistence_ports(
     )
 
 
+class FiledDataPortFactory(Protocol):
+    """Build the register transport filed captures read, from one composition's AEAT access."""
+
+    def __call__(
+        self,
+        *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> FiledDataCapturePort:
+        """Return the transport bound to this composition's AEAT access."""
+        ...
+
+
 def build_filed_data_capture_port(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ) -> FiledDataCapturePort:
-    """Build the AEAT Sede transport that reads filed declarations.
-
-    This is the only place the live composition constructs that transport, so a
-    recorded in-memory port can stand in for AEAT while every capture,
-    finalization and reconciliation step downstream stays real.
-    """
+    """Build the AEAT Sede transport that reads filed declarations."""
     return SedeFiledDataCapturePort(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class FiledRegisterSource:
+    """The register single and bulk filed captures read, and the check run before reading it.
+
+    The pair travels together: the provider credential check exists for the
+    transport that authenticates against the AEAT Sede, so a register that needs
+    no authentication carries a check of its own.
+    """
+
+    port_factory: FiledDataPortFactory
+    provider_preflight: Callable[[UUID, PinnedAuthorityOperation], None]
+
+
+AEAT_SEDE_FILED_REGISTER = FiledRegisterSource(
+    port_factory=build_filed_data_capture_port,
+    provider_preflight=preflight_filed_history_provider,
+)
+"""The AEAT Sede, read after the profile's provider credentials are checked."""
 
 
 def compose_live_state(
@@ -362,12 +391,13 @@ def compose_live_state(
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
     operation: PinnedAuthorityOperation,
-    filed_data_port: FiledDataCapturePort | None = None,
+    filed_data_port_factory: FiledDataPortFactory = build_filed_data_capture_port,
 ) -> LiveStateComposition:
     """Compose the shared live-state port and filed-observation ports once.
 
-    ``filed_data_port`` is a recorded register that stands in for the AEAT Sede
-    transport :func:`build_filed_data_capture_port` builds when it is omitted.
+    ``filed_data_port_factory`` builds the register transport from this
+    composition's AEAT access; the AEAT Sede transport unless a composition
+    group binds the register its operation reads.
 
     Core types:
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
@@ -391,12 +421,11 @@ def compose_live_state(
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
-    if filed_data_port is None:
-        filed_data_port = build_filed_data_capture_port(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            browser_session_factory=browser_session_factory,
-            operator_scope_ports=operator_scope_ports,
-        )
+    filed_data_port = filed_data_port_factory(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operator_scope_ports=operator_scope_ports,
+    )
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,
@@ -858,7 +887,10 @@ def _decimal(value: object) -> str | None:
 
 
 __all__ = [
+    "AEAT_SEDE_FILED_REGISTER",
     "AppIvaRemoteStatePort",
+    "FiledDataPortFactory",
+    "FiledRegisterSource",
     "LiveStateComposition",
     "carry_forward_lot_row",
     "compose_filed_observation_persistence_ports",
