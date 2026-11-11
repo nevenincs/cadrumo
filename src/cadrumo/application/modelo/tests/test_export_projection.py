@@ -47,12 +47,12 @@ from ....domain.filing.errors import (
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.errors import (
-    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportValueOverflowError,
 )
 from ...filing.errors import ModeloApplicationError
 from ...filing.record_field_renderer import format_field
+from ..action_errors import ModeloExportDeclaredPartyNameError
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
 from ..export import export_write_failure
 from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
@@ -227,6 +227,16 @@ def test_an_unnamed_party_slot_reaches_the_operator_with_its_door_and_keeps_the_
     assert failure.context is not None
     assert (failure.context["tax_identifier"], failure.context["country_code"]) == (party, "ES")
     assert failure.context["door_action_id"] == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    verdict = failure.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert {(item.argument_name, item.status.value) for item in verdict.argument_bindings} == {
+        ("tax_identifier", "resolved"),
+        ("country_code", "resolved"),
+        ("kind", "missing"),
+    }
+    assert party not in str(verdict.evidence)
     kept = public_error_context(failure)
     assert kept is not None
     assert {"tax_identifier", "country_code"}.isdisjoint(kept)

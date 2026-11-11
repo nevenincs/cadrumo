@@ -368,6 +368,11 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.counterparty.filing_name",
             argument_specifications=(
                 ActionArgumentBindingSpecification(
+                    argument_name="kind",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="kind",
+                ),
+                ActionArgumentBindingSpecification(
                     argument_name="tax_identifier",
                     source=ActionArgumentSource.VERDICT_CONTEXT,
                     source_key="tax_identifier",

@@ -312,6 +312,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.instalment_election.admitted",
         "modelo.export.instalment_election.refused",
     ),
+    # A party-name slot the record design fills from the party's own name parts
+    # is given by the operator stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
     # The character sits in a name the operator recorded on a profile fact, a
     # ledger entry or an invoice; the layout field does not say which, so no
     # single catalogued edit action reaches it.

@@ -31,11 +31,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..operations.next_step import OperationNextStepErrorMixin, OperationNextStepWording
 from ..operator_actions.models import PreconditionVerdict
 from ..workflow.abort import WorkflowAbortReason
@@ -653,6 +653,58 @@ def instalment_election_refusal(
     )
 
 
+class ModeloExportDeclaredPartyNameError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: a party-name slot has no declared filing name the record design can take.
+
+    The design fills the slot from the party's own name parts and allows no
+    shortening, so the party's filing name is stated, or restated with a
+    rendering for the slot's width, through the action its verdict names. The
+    context never carries the name. The party's tax identifier and country,
+    which the verdict binds as the action's arguments, also travel as
+    process-local keys: no kept record, journal or log holds them.
+    """
+
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"tax_identifier", "country_code"})
+
+
+def declared_party_name_unstated_error(
+    *,
+    context: Mapping[str, object],
+    tax_identifier: str | None,
+    country_code: str | None,
+) -> ModeloExportDeclaredPartyNameError:
+    """Refuse an export whose party-name slot has no filing name it can take.
+
+    The door states the party's filing name. Whether the party is a natural
+    person or an entity is the operator's answer and stays for them to supply;
+    the party's identifier and country bind the action's arguments when the
+    refusal knows them and otherwise stay for the operator too. The name parts
+    are the operator's words and are never carried. The verdict's evidence holds no party identity.
+    """
+    resolved: dict[str, str] = {}
+    if tax_identifier is not None:
+        resolved["tax_identifier"] = tax_identifier
+    if country_code is not None:
+        resolved["country_code"] = country_code
+    precondition_failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.declared_party_name.unstated",
+        evidence_id="modelo.export.declared_party_name",
+        evidence_values={"filing_name_declared": False},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values=resolved,
+        missing_action_arguments=(
+            "kind",
+            *(name for name in ("tax_identifier", "country_code") if name not in resolved),
+        ),
+    )
+    return ModeloExportDeclaredPartyNameError(
+        translated_message="errors.refused.refused_modelo_export_declared_party_name",
+        context={**context, **resolved},
+        precondition_failure=precondition_failure,
+    )
+
+
 class ModeloExportPeriodUnmappableError(ModeloPreconditionErrorMixin, ModeloError):
     """Refused: a declaration's stored period contradicts its filing year, so no filing period maps."""
 
@@ -759,6 +811,7 @@ __all__ = [
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",
+    "ModeloExportDeclaredPartyNameError",
     "ModeloExportPeriodUnmappableError",
     "ModeloInstalmentElectionRefusedError",
     "ModeloLocalObservationError",
@@ -779,6 +832,7 @@ __all__ = [
     "WorkUnitNotFoundError",
     "WorkUnitRevisionDivergenceError",
     "amendment_evidence_missing_precondition",
+    "declared_party_name_unstated_error",
     "export_period_unmappable_error",
     "instalment_election_refusal",
     "modelo_edit_refusal_error",

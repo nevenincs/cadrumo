@@ -750,16 +750,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos.errors.ModeloExportDeclaredPartyNameError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_export_declared_party_name",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.modelos.errors.ModeloExportProducerFactsRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_PRODUCER_FACTS",

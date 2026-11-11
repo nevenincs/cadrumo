@@ -78,7 +78,6 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
-    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
     ModeloExportRequiredRecordAbsentError,
@@ -109,7 +108,9 @@ from ..filing.runtime import RegistryModeloSubview, RegistrySchemaAccessor, buil
 from ..filing.shared_owner_refusal import is_shared_owner_refusal
 from .action_errors import (
     CalculationRevisionNotFoundError,
+    ModeloExportDeclaredPartyNameError,
     WorkUnitNotFoundError,
+    declared_party_name_unstated_error,
 )
 from .calculation_note_gate import SourceDisagreementResolutions, require_work_unit_calculation_unblocked
 from .calculation_notes import read_recorded_notes
@@ -659,17 +660,17 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
 def _declared_party_name_refusal(
     command: ModeloExportCommand, exc: FilingExportDeclaredPartyNameError
 ) -> ModeloExportDeclaredPartyNameError:
-    """Name the slot, a non-identifying party handle and the door.
+    """Name the slot and a non-identifying party handle, and attach the door.
 
-    The party's identifier reaches only the in-process envelope, where the door
-    binds it; the name is never carried.
+    The door is the filing-name action; the party's identifier and country bind
+    its arguments in the verdict and the in-process envelope only. The name is
+    never carried.
     """
-    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})}
-    if exc.tax_identifier is not None:
-        context["tax_identifier"] = exc.tax_identifier
-    if exc.country_code is not None:
-        context["country_code"] = exc.country_code
-    return ModeloExportDeclaredPartyNameError(context=context)
+    return declared_party_name_unstated_error(
+        context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
+        tax_identifier=exc.tax_identifier,
+        country_code=exc.country_code,
+    )
 
 
 def _export_value_overflow_refusal(
