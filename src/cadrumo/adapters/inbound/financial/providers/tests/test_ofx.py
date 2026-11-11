@@ -90,6 +90,7 @@ def test_ofx_provider_refuses_non_finite_transaction_amounts(
     assert parse_warnings
     assert all(record.exc_info is None and amount_token not in record.message for record in parse_warnings)
 
+
 def test_the_fitid_is_the_reference_the_feed_printed() -> None:
     """Each OFX row's FITID is served as its statement reference."""
     assert optional_extra_available(OFX_EXTRA)
