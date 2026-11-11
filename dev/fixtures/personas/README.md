@@ -131,6 +131,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
 | `[[own_accounts]]` | array | bank accounts the taxpayer holds, with the charge and refund roles they are designated for |
+| `[[prior_carries]]` | array | per Modelo 100 year, the negative general bases of earlier ejercicios still pending |
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
 | `[[rental_properties]]` | array | declarative facts for a let dwelling |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
@@ -213,6 +214,27 @@ that account, or its export is refused for want of one.
 
 The materialiser registers each account and designates it through the
 `ledger.own_account` operation (`add`, then `designate`), in the full scope.
+
+### Prior carries
+
+A Modelo 100 carries the negative general bases still pending from the four
+previous ejercicios (Ley 35/2006 art. 50.3) in casillas 1380, 1382, 1385 and
+1388, read from the previous return. Where the profile holds no earlier return,
+as for the return of the support floor, those carries are unknown and the
+calculation refuses until the taxpayer states them. One entry per Modelo 100
+year states them:
+
+| key | meaning |
+| --- | --- |
+| `year` | year token of the Modelo 100 the statement belongs to; stated once per year |
+| `nothing_pending` | `true`: no carry is pending; the only admitted value |
+| `pending` | instead of `nothing_pending`, a table of box to positive canonical amount; a box left out holds nothing |
+
+The statement answers only the carries no earlier return supplies. The helper
+`attest_prior_carries` in `src/cadrumo/entrypoints/tests/persona_prior_carries.py`
+makes it through the operations the refusal's door names: the declaration's
+form read, then the edit check and apply, after the return is created and
+before it is calculated.
 
 ### Withholding certificates
 

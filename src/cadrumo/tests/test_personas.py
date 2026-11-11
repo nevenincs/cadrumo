@@ -11,6 +11,7 @@ import pytest
 
 from .personas import (
     PERSONAS_ROOT,
+    Persona,
     PersonaCatalogueError,
     ProvisionPeriods,
     YearEnvelope,
@@ -32,8 +33,8 @@ def _document(name: str) -> dict[str, Any]:
     return tomllib.loads((PERSONAS_ROOT / _PERSONA / name).read_text(encoding="utf-8"))
 
 
-def _parse(persona_document: dict[str, Any], *, envelope: YearEnvelope = _ENVELOPE) -> None:
-    parse_persona(
+def _parse(persona_document: dict[str, Any], *, envelope: YearEnvelope = _ENVELOPE) -> Persona:
+    return parse_persona(
         _PERSONA,
         persona_document=persona_document,
         ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
@@ -249,6 +250,61 @@ def test_an_own_account_with_a_designation_is_admitted() -> None:
 def test_a_malformed_own_account_is_refused(accounts: tuple[dict[str, object], ...], message: str) -> None:
     with pytest.raises(PersonaCatalogueError, match=message):
         _parse(_with_own_accounts(*accounts))
+
+
+def _with_prior_carries(*statements: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["prior_carries"] = list(statements)
+    return document
+
+
+def test_the_pending_carries_are_stated_as_nothing_pending_or_as_amounts_per_box() -> None:
+    nothing, amounts = _parse(
+        _with_prior_carries(
+            {"year": "horizon-1", "nothing_pending": True},
+            {"year": "horizon-2", "pending": {"1388": "1250.40", "1380": "300.00"}},
+        )
+    ).prior_carries
+    assert (str(nothing.year), nothing.pending) == ("horizon-1", ())
+    assert (str(amounts.year), amounts.pending) == (
+        "horizon-2",
+        (("1380", Decimal("300.00")), ("1388", Decimal("1250.40"))),
+    )
+
+
+@pytest.mark.parametrize(
+    ("statements", "message"),
+    [
+        (({"year": "horizon-1", "pending": {"1381": "10.00"}},), "is not one of"),
+        (({"year": "horizon-1", "pending": {"1380": "0.00"}},), "positive amount"),
+        (({"year": "horizon-1", "pending": {"1380": "1.234,00"}},), "canonical decimal"),
+        (({"year": "horizon-1", "pending": {}},), "at least one box"),
+        (({"year": "horizon-1", "nothing_pending": False},), "only be stated true"),
+        (({"year": "horizon-1"},), "either nothing_pending"),
+        (({"year": "horizon-1", "nothing_pending": True, "pending": {"1380": "1.00"}},), "either nothing_pending"),
+        (({"year": "horizon-1", "nothing_pending": True, "modelo": "100"},), "unknown fields"),
+        (({"year": _ENVELOPE.horizon, "nothing_pending": True},), "not a year token"),
+        (({"year": "horizon+1", "nothing_pending": True},), "outside the supported envelope"),
+        (({"year": "floor-1", "nothing_pending": True},), "outside the supported envelope"),
+        (
+            ({"year": "horizon-1", "nothing_pending": True}, {"year": "floor+3", "pending": {"1380": "5.00"}}),
+            "stated twice",
+        ),
+    ],
+)
+def test_a_malformed_pending_carry_statement_is_refused(
+    statements: tuple[dict[str, object], ...], message: str
+) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_prior_carries(*statements))
+
+
+def test_a_pending_carry_statement_needs_a_persona_that_files_modelo_100() -> None:
+    document = _with_prior_carries({"year": "horizon-1", "nothing_pending": True})
+    document["persona"]["modelos"] = ["303"]
+    document.pop("own_accounts", None)
+    with pytest.raises(PersonaCatalogueError, match="files no Modelo 100"):
+        _parse(document)
 
 
 def test_a_local_observation_needs_canonical_casilla_amounts() -> None:

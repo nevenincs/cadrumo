@@ -113,6 +113,7 @@ from ...application.live.filed_single_capture_operation import (
     FiledSingleCapturePublicResultV1,
     FiledSingleCaptureRequest,
 )
+from ...application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
@@ -468,18 +469,38 @@ def settle_operation(
     """Submit one registered operation, settle it, refuse anything but success, and return its public result.
 
     The operation addresses the profile unless ``subject`` names another subject, such as a work unit.
+    A declaration edit travels as the window's volatile operator input: the
+    operation is admitted on its amount-free request, then receives the staged
+    intents as its financial operand.
     """
+    subject_ref = subject or profile_operation_subject(str(world.profile_id))
 
     async def settle() -> OperationPublicProjectionV1:
         services = world.services
-        submitted = await services.submission.submit(
-            OperationRequest(
+        if not isinstance(payload, ModeloEditOperatorInputV2):
+            submitted = await services.submission.submit(
+                OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload),
+                actor_ref=PERSONA_ACTOR,
+            )
+        else:
+            prepared = prepare_modelo_edit_operand(
                 definition_id=definition_id,
-                subject_ref=subject or profile_operation_subject(str(world.profile_id)),
-                payload=payload,
-            ),
-            actor_ref=PERSONA_ACTOR,
-        )
+                profile_id=world.profile_id,
+                subject_ref=subject_ref,
+                input_json=payload.model_dump_json(),
+            )
+            try:
+                submitted = await services.submission.submit(
+                    OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=prepared.request),
+                    actor_ref=PERSONA_ACTOR,
+                )
+                if prepared.operand is None:
+                    raise PersonaMaterialisationError(f"{definition_id} prepared no edit operand")
+                await services.submission.supervisor.bind_typed_financial_operand(
+                    submitted.receipt.operation_id, prepared.operand
+                )
+            finally:
+                prepared.release()
         operation_id = submitted.receipt.operation_id
         await services.submission.start(operation_id)
         await services.submission.settled(operation_id)

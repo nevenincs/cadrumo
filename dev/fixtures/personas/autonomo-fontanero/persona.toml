@@ -179,3 +179,12 @@ label = "Cuenta principal"
 holding = "titular"
 iban = "ES4400000000000000000005"
 designations = [{ role = "refund", modelo = "100" }]
+
+# No negative general base of an earlier ejercicio is pending: this synthetic
+# taxpayer has had no year with a negative base. Where the profile holds no
+# earlier return, as for the return of the support floor, the Modelo 100 cannot
+# read the four pending carries (casillas 1380, 1382, 1385 and 1388) and never
+# takes them as zero, so the taxpayer states that none is pending.
+[[prior_carries]]
+year = "horizon-1"
+nothing_pending = true
