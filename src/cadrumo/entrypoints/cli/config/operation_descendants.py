@@ -22,9 +22,10 @@ from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
 from .profile_mutation import execute_profile_mutation, read_mutation_baseline
 
 
-def _decode(
+def decode_descendants(
     client: FrontendClient, collection: ProfileViewCollection, operation: PinnedAuthorityOperation
 ) -> tuple[DescendantInfo, ...]:
+    """Read the stored descendant rows out of one complete facts stream."""
     if collection.profile_id != client.profile_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     items = collection.items(ProfileViewPageKind.FACTS)
@@ -39,7 +40,7 @@ def read_descendants(
 ) -> tuple[ProfileViewCollection, tuple[DescendantInfo, ...]]:
     """Read one complete authorized revision and its canonical family rows."""
     baseline = read_mutation_baseline(client, deadline=deadline)
-    return baseline, _decode(client, baseline, operation)
+    return baseline, decode_descendants(client, baseline, operation)
 
 
 def replace_descendants(
@@ -50,6 +51,7 @@ def replace_descendants(
     operation: PinnedAuthorityOperation,
     deadline: float,
 ) -> tuple[DescendantInfo, ...]:
+    """Read the stored descendant rows out of one complete facts stream."""
     """Publish once and expose only the verified committed revision's family.
 
     A readback or decoding refusal after settlement retains its operation ID;
@@ -71,7 +73,7 @@ def replace_descendants(
         projection = completed.projection
         if not isinstance(projection, ProfileDescendantsOperationProjection):
             raise RefusalError(RefusalCode.INVALID_FRAME)
-        rows = _decode(client, current, operation)
+        rows = decode_descendants(client, current, operation)
         if projection.total != len(rows):
             raise RefusalError(RefusalCode.INVALID_FRAME)
     except (CadrumoError, ValueError, TypeError) as error:
