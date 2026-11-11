@@ -66,7 +66,6 @@ _ESTATAL_CASILLA_ID = "0513"
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
@@ -74,23 +73,6 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
     "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )  # fmt: skip
-
-
-def _binding_flags_without(*binding_ids: str) -> tuple[str, ...]:
-    """The required-binding flags with the named bindings' ``--binding`` PAIRS dropped.
-
-    Pair-aware on purpose. The flags are a flat alternating tuple, so filtering
-    by substring removes the ``id=value`` element and leaves its ``--binding``
-    behind — which then swallows the NEXT pair's value and the one after it
-    arrives as an unexpected positional argument.
-    """
-    kept: list[str] = []
-    pairs = zip(_REQUIRED_2024_BINDING_FLAGS[::2], _REQUIRED_2024_BINDING_FLAGS[1::2], strict=True)
-    for flag, assignment in pairs:
-        if any(assignment.startswith(f"{binding_id}=") for binding_id in binding_ids):
-            continue
-        kept.extend((flag, assignment))
-    return tuple(kept)
 
 
 @pytest.fixture
@@ -144,16 +126,6 @@ def _calculate_with(runtime_profile: NativeCliProfileFixture, work_unit_id: str,
     result = _invoke(runtime_profile, ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *flags])
     assert result.exit_code == 0, result.output
     return result
-
-
-def _calculate_with_madre_cotizacion(runtime_profile: NativeCliProfileFixture, work_unit_id: str) -> Result:
-    return _calculate_with(
-        runtime_profile,
-        work_unit_id,
-        *_binding_flags_without("renta-profile-cotizaciones-ss-madre"),
-        "--binding",
-        "renta-profile-cotizaciones-ss-madre=5000",
-    )
 
 
 def _registry_first_tranche(year: int) -> Decimal:
@@ -386,13 +358,8 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             # The 0613 increment is never overridden: it is the aggregate this
-            # test exists to prove the engine derives from the declared
-            # months. The cotización is set well above the
-            # post-birthday total so it cannot be what the min() picks.
-            *_binding_flags_without(
-                "renta-profile-cotizaciones-ss-madre",
-            ),
-            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
+            # test exists to prove the engine derives from the declared months.
+            *_REQUIRED_2024_BINDING_FLAGS,
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -421,7 +388,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     _add_descendiente(runtime_profile, "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400")
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
     fired = [
@@ -473,7 +440,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     )
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
 
     # The manual's printed figure.
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
@@ -515,7 +482,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     assert add_result.exit_code == 0, add_result.output
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
 
     fired = [
@@ -554,7 +521,7 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     _add_descendiente(runtime_profile, "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-4")
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
 
 
@@ -576,7 +543,7 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
     _add_descendiente(runtime_profile, "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-12")
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
     assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
 
 
@@ -602,67 +569,15 @@ def test_the_flag_refuses_both_spend_shapes_for_one_child(
     assert "GASTOS_GUARDERIA_MENSUAL" in result.output
 
 
-def test_the_cotizaciones_term_binds_the_0613_cap(
-    runtime_profile: NativeCliProfileFixture,
-) -> None:
-    """The mother's SS cotizaciones is a real term of the cap, and it must BIND.
-
-    Art. 81.2 caps the increase at ``min(incremento_prorrateado,
-    cotizaciones_ss_madre)``. A test that only ever lets the prorated increase
-    win would pass against a formula that dropped the cotizaciones argument
-    entirely, so this pins the case where cotizaciones is the smaller of the two
-    and is therefore what the operator receives.
-
-    This assertion previously existed only against a domain-layer method that
-    duplicated the formula in Python and had no production consumer. Deleting
-    that method without replacing this would have left a real term's behaviour
-    asserted nowhere, while every gate stayed green — so the replacement lands in
-    the same change as the deletion, never after it.
-
-    The expected figure is the cotizaciones input itself, not a re-derivation of
-    the formula: the whole claim is that the smaller term is what comes out.
-    """
-    _seed_natural_person_profile(runtime_profile)
-
-    add_result = _invoke(runtime_profile,
-        [
-            "--format", "json",
-            "config", "profile", "descendiente", "add",
-            # Spend of 2.400 across a child under three all year, against a
-            # mother qualifying all year, so the prorated increase is the full
-            # 1.000 annual ceiling and the cotizaciones below is smaller.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
-        ],
-    )  # fmt: skip
-    assert add_result.exit_code == 0, add_result.output
-
-    work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _invoke(runtime_profile,
-        [
-            "--format", "json",
-            "app", "modelo", "work", "calculate", work_unit_id,
-            *_binding_flags_without(
-                "renta-profile-cotizaciones-ss-madre",
-            ),
-            # The smallest of the three terms, so it is the one that must win.
-            "--binding", "renta-profile-cotizaciones-ss-madre=450",
-        ],
-    )  # fmt: skip
-    assert calc_result.exit_code == 0, calc_result.output
-
-    assert Decimal(str(unwrap_schema_envelope(calc_result.output)["casilla_values"]["0613"])) == Decimal("450.00")
-
-
 def test_the_population_term_binds_the_0613_cap(
     runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The prorated increase is the other term that must be able to win.
 
-    With spend and cotizaciones both above it, the result is the registry's own
-    annual ceiling — this child is under three and in the guardería for the
-    whole period, and the mother qualified in every month, so Art. 81.3 prorates
-    twelve twelfths of it and the full ceiling is what remains. Pinned for the
-    same reason as the cotizaciones case: a formula that dropped this argument
+    With spend above it, the result is the registry's own annual ceiling — this
+    child is under three and in the guardería for the whole period, and the
+    mother qualified in every month, so Art. 81.3 prorates twelve twelfths of it
+    and the full ceiling is what remains. A formula that dropped this argument
     would still satisfy every test in which the spend term happened to be
     smallest.
 
@@ -676,7 +591,7 @@ def test_the_population_term_binds_the_0613_cap(
     _add_descendiente(runtime_profile, "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12")
 
     work_unit_id = _create_renta_2024_unit(runtime_profile)
-    calc_result = _calculate_with_madre_cotizacion(runtime_profile, work_unit_id)
+    calc_result = _calculate_with(runtime_profile, work_unit_id, *_REQUIRED_2024_BINDING_FLAGS)
 
     # One eligible child in the guardería all year against a mother who
     # qualified all year, so the proration keeps the whole annual ceiling.

@@ -35,6 +35,12 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "taxpayer-birth-date" = { year = "horizon-71", month = 9, day = 2 }
 "third-party-transactions-above-347-threshold" = false
 
+[[own_accounts]]
+label = "Cuenta de la pensión"
+holding = "titular"
+iban = "ES2800000000000000000002"
+designations = [{ role = "refund", modelo = "100" }]
+
 # The taxpayer transcribes the payer's certificate: the catalogue holds no
 # certificate document, so the figures are recorded as his own declaration.
 [[withholding_certificates]]

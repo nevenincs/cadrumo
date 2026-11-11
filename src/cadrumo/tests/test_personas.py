@@ -303,6 +303,43 @@ def test_malformed_leased_premises_are_refused(changes: dict[str, object], messa
         _parse(_with_leased_premises(**changes))
 
 
+def _with_own_accounts(*accounts: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["own_accounts"] = list(accounts)
+    return document
+
+
+def _own_account(**changes: object) -> dict[str, object]:
+    account: dict[str, object] = {
+        "label": "Cuenta",
+        "holding": "titular",
+        "iban": "ES5500000000000000000001",
+        "designations": [{"role": "refund", "modelo": "100"}],
+    }
+    account.update(changes)
+    return account
+
+
+def test_an_own_account_with_a_designation_is_admitted() -> None:
+    _parse(_with_own_accounts(_own_account(iban="ES55 0000 0000 0000 0000 0001")))
+
+
+@pytest.mark.parametrize(
+    ("accounts", "message"),
+    [
+        ((_own_account(iban="ES5600000000000000000001"),), "checksum-valid"),
+        ((_own_account(holding="apoderado"),), "is not one of"),
+        ((_own_account(designations=[{"role": "payout"}]),), "is not one of"),
+        ((_own_account(designations=[{"role": "refund", "modelo": "303"}]),), "persona's modelos"),
+        ((_own_account(designations=[{"role": "refund", "year": "horizon"}]),), "unknown fields"),
+        ((_own_account(), _own_account(iban="ES2800000000000000000002")), "one role and scope"),
+    ],
+)
+def test_a_malformed_own_account_is_refused(accounts: tuple[dict[str, object], ...], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_own_accounts(*accounts))
+
+
 def test_a_local_observation_needs_canonical_casilla_amounts() -> None:
     document = copy.deepcopy(_document("persona.toml"))
     observation = {"modelo": "100", "year": "horizon-2", "period": "0A", "reason": "Copia propia"}

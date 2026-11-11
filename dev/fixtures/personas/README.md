@@ -126,10 +126,11 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[clock].as_of` | date | the scenario instant |
 | `[profile]` | table | wizard question id → answer |
 | `[fields]` | table | profile schema path → value, for facts no wizard question asks |
-| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph` |
+| `[[activities]]` | array | censo activity rows: `description`, `iae_epigraph`, `tipo_actividad` |
 | `[[elections]]` | array | dated elections: `question` (wizard id), `value`, `year` (token) |
 | `[[household.descendants]]` | array | one descendant row |
 | `[[household.ascendants]]` | array | one ascendant row |
+| `[[own_accounts]]` | array | bank accounts the taxpayer holds, with the charge and refund roles they are designated for |
 | `[[withholding_certificates]]` | array | retenciones soportadas declared by a payer |
 | `[[rental_properties]]` | array | declarative facts for a let dwelling |
 | `[[officers]]` | array | company officers (`identity`, `role`, `remunerated`) |
@@ -194,6 +195,24 @@ Values are written in the leaf's canonical string form (dates as date tables),
 because the descendant and ascendant operations refuse a row whose canonical
 re-projection differs from what was supplied: omit a leaf whose value is its
 default (`custodia_compartida = false`, ordinary `relacion`).
+
+### Own accounts
+
+A Renta refund is paid only into an account the taxpayer states as his own: the
+Manual práctico de Renta says the devolución is made "mediante transferencia
+bancaria a la cuenta que el contribuyente indique como de su titularidad" in
+the Modelo 100. A persona whose stated result is a refund therefore declares
+that account, or its export is refused for want of one.
+
+| key | meaning |
+| --- | --- |
+| `label` | operator name of the account |
+| `holding` | `titular` or `cotitular` |
+| `iban` | synthetic ES IBAN that passes the mod-97 check; the catalogue never holds a real account number |
+| `designations` | optional array of `{ role = "charge" \| "refund", modelo = "<id>" }`; an absent `modelo` covers every modelo, a present one is one of the persona's `modelos`; one role and scope is designated once across the persona |
+
+The materialiser registers each account and designates it through the
+`ledger.own_account` operation (`add`, then `designate`), in the full scope.
 
 ### Withholding certificates
 
