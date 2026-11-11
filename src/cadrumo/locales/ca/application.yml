@@ -3925,6 +3925,15 @@ application:
         qualsevol programa que estigui utilitzant el magatzem de perfils i torna-ho
         a provar.
       registration_label_blank: El nom del perfil no pot estar buit.
+      rental_lease_property_missing: L'arrendament anomena l'immoble %{inmueble},
+        que no és al teu perfil; afegeix-lo abans amb «aeat config profile inmueble
+        add».
+      rental_property_has_leases: L'immoble %{inmueble} té arrendaments (%{leases});
+        elimina'ls abans de treure l'immoble.
+      rental_row_invalid: La dada «%{leaf}» no és vàlida o contradiu altres dades
+        del registre; no s'ha desat res.
+      rental_tenant_id_invalid: El NIF d'un arrendatari no és vàlid; revisa'n les
+        lletres i xifres o marca'l com a estranger.
       repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
         està registrat amb sensibilitat %{expected}, però la classificació del registre
         emmagatzemat és %{classification}.

@@ -110,6 +110,8 @@ _CLEARED_FROM_V6 = (
     _PAYS_RENT,
 )
 _EXPECTED_CLEARED = {6: _CLEARED_FROM_V6, 7: _CLEARED_FROM_V7}
+_PAYER_DEFAULT_VERSIONS = (6, 7)
+"""The stored versions whose transition cleared a pre-answered payer default; schema 8 cleared none."""
 
 _UNTOUCHED_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
@@ -225,7 +227,7 @@ def _publish_legacy(
     )
 
 
-@pytest.fixture(params=SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.fixture(params=_PAYER_DEFAULT_VERSIONS)
 def legacy_capsule(
     request: pytest.FixtureRequest,
     tmp_path: Path,
@@ -245,7 +247,7 @@ def legacy_capsule(
 
 def test_both_supported_stored_versions_are_older_than_the_current_schema() -> None:
     """The declared window must name real earlier versions, not the current one."""
-    assert SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS == (6, 7)
+    assert (*_PAYER_DEFAULT_VERSIONS, 8) == SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS
     assert max(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS) < MIGRATED_PROFILE_SCHEMA_VERSION
 
 
@@ -325,7 +327,7 @@ def test_a_second_migration_run_is_a_no_op(
     assert len(ProfileRecordStore(session=session, root=root).schema_migrations()) == 1
 
 
-@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.mark.parametrize("version", _PAYER_DEFAULT_VERSIONS)
 def test_the_migration_is_deterministic_across_capsules(
     version: int,
     tmp_path: Path,
@@ -479,7 +481,7 @@ def test_the_cleared_art109_coverage_fact_reopens_modelo_130_until_it_is_answere
     assert declared_no.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.mark.parametrize("version", _PAYER_DEFAULT_VERSIONS)
 def test_a_stored_art109_yes_survives_every_transition(
     version: int,
     tmp_path: Path,
@@ -546,7 +548,7 @@ def test_the_cleared_capital_income_fact_reopens_its_eight_modelos_until_it_is_a
     assert declared_no == (ApplicabilityVerdict.NOT_APPLICABLE,) * len(_CAPITAL_GATED_MODELOS)
 
 
-@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.mark.parametrize("version", _PAYER_DEFAULT_VERSIONS)
 def test_a_stored_capital_income_yes_survives_every_transition(
     version: int,
     tmp_path: Path,
@@ -620,7 +622,7 @@ def test_the_cleared_residency_reopens_the_residency_gated_modelos_until_it_is_a
     assert declared["210"] is ApplicabilityVerdict.NOT_APPLICABLE
 
 
-@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.mark.parametrize("version", _PAYER_DEFAULT_VERSIONS)
 def test_a_stored_non_resident_residency_survives_every_transition(
     version: int,
     tmp_path: Path,
@@ -659,7 +661,7 @@ def test_a_stored_non_resident_residency_survives_every_transition(
     assert verdicts["100"] is ApplicabilityVerdict.NOT_APPLICABLE
 
 
-@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+@pytest.mark.parametrize("version", _PAYER_DEFAULT_VERSIONS)
 def test_a_stored_iva_enrolment_yes_survives_every_transition(
     version: int,
     tmp_path: Path,

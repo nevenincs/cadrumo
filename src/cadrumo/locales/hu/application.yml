@@ -3876,6 +3876,15 @@ application:
         felvált. Zárj be minden programot, amely a profiltárat használja, és próbáld
         újra.
       registration_label_blank: A profil neve nem lehet üres.
+      rental_lease_property_missing: A bérleti szerződés a(z) %{inmueble} ingatlanra
+        hivatkozik, ami nincs a profilodban; előbb add hozzá az «aeat config profile
+        inmueble add» paranccsal.
+      rental_property_has_leases: A(z) %{inmueble} ingatlanhoz bérleti szerződések
+        tartoznak (%{leases}); az ingatlan törlése előtt töröld őket.
+      rental_row_invalid: A(z) „%{leaf}” adat érvénytelen, vagy ellentmond a rekord
+        más adatainak; semmi nem került mentésre.
+      rental_tenant_id_invalid: Egy bérlő adóazonosítója érvénytelen; ellenőrizd a
+        betűit és számjegyeit, vagy jelöld külföldiként.
       repository_classification_mismatch: A(z) %{namespace} biztonságos objektum névtér
         a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása
         %{classification}.

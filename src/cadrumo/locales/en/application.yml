@@ -3741,6 +3741,14 @@ application:
         The stored session of the profile it replaces could not be removed. Close
         any program using the profile store and try again.
       registration_label_blank: The profile name cannot be empty.
+      rental_lease_property_missing: The lease names property %{inmueble}, which is
+        not in your profile; add it first with “aeat config profile inmueble add”.
+      rental_property_has_leases: Property %{inmueble} has leases (%{leases}); remove
+        them before removing the property.
+      rental_row_invalid: The fact “%{leaf}” is not valid or contradicts other facts
+        of the record; nothing was stored.
+      rental_tenant_id_invalid: A tenant's tax ID is not valid; check its letters
+        and digits or mark it as foreign.
       repository_classification_mismatch: Secure-object namespace %{namespace} is
         registered for sensitivity %{expected}, but the stored record's classification
         is %{classification}.

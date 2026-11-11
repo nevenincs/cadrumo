@@ -219,6 +219,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.arrendamiento",
+            target_command_key="config.profile.arrendamiento.list",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.ascendiente",
             target_command_key="config.profile.ascendiente.list",
         ),

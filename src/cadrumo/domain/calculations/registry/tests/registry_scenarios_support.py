@@ -509,7 +509,6 @@ def real_estate_capital_scenario() -> RegistryCalculationScenario:
         },
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
-            "renta-rental-reduccion-art-23-2-tier": "tier-50",
         },
         relation_values={
             "renta-modelo-130-pagos-fraccionados": Decimal("0.00"),

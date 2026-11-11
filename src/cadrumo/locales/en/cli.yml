@@ -2463,6 +2463,18 @@ cli:
           export_target_exists: A file already exists at the destination path, and
             a backup is never overwritten. Choose another --output or move the existing
             file first; no profile was read.
+      arrendamiento:
+        add_help: Add a lease from --value FACT=VALUE facts; the property it names
+          must exist.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a lease and clear the ones you name; the rest stay.
+        end_fecha_help: Last day of the lease (YYYY-MM-DD).
+        end_help: State the last day of a lease.
+        help: Record the leases of your properties.
+        list_help: List the stored leases with their row key.
+        remove_help: Remove a lease.
+        row_help: Row key of the lease, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       ascendiente:
         add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,APELLIDOS_NOMBRE=<surnames
           and name>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number of descendants
@@ -2681,6 +2693,17 @@ cli:
           command.
         rows_or_none_required: Give at least one %{flag} row, or %{none} to state
           there are none.
+      inmueble:
+        add_help: Add a property from --value FACT=VALUE facts; it is stored only
+          if they cohere.
+        clear_help: Clear a fact by name; repeat the option for several.
+        edit_help: Change facts of a property and clear the ones you name; the rest
+          stay.
+        help: Record the properties you let.
+        list_help: List the stored properties with their row key.
+        remove_help: Remove a property; refused while a lease names it.
+        row_help: Row key of the property, as «list» shows it.
+        value_help: One FACT=VALUE fact; repeat the option for several facts.
       list:
         incoherent_observation_advisory: 'The profile listing could not be read coherently
           (outcome: {outcome}). Run the command again; if it persists, inspect the
@@ -2708,6 +2731,10 @@ cli:
           wizard wrote as its default, so it could not be told apart from an unanswered
           question and has been cleared. Obligations that depend on it stay undetermined
           until you answer it with the {flag} option of the profile edit command.'
+        rental_tier_cleared: 'Your profile stored the art. 23.2 reduction tier for
+          rental income. That value no longer exists: the tier is derived from the
+          facts of each lease. Record your leases with «aeat config profile arrendamiento
+          add» to calculate the reduction again.'
       plantilla_media:
         average_workforce_help: Average total workforce for the year, as full-time
           equivalents with at most two decimal places.

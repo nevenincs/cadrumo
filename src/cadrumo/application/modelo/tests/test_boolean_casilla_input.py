@@ -72,7 +72,6 @@ def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> 
         binding_values={binding.id: Decimal(0) for binding in revision.bindings},
         enum_binding_values={
             "renta-profile-tax-residence-ccaa": "madrid",
-            "renta-rental-reduccion-art-23-2-tier": "tier-50",
         },
         relation_values={binding.id: Decimal(0) for binding, _ in relation_prefill_bindings_for_period(revision)},
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},

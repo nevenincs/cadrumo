@@ -426,6 +426,41 @@ profile:
           label: Válido desde
         valid_to:
           label: Válido hasta
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Otra
+            vivienda_asequible_o_social: Vivienda asequible o social
+          label: Finalidad de la vivienda para la entidad
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Administración pública
+            entidad_sin_fines_lucro: Entidad sin fines lucrativos
+          label: Tipo de arrendatario que no es persona física
+        arrendatario_pariente_art24:
+          label: Arrendatario pariente (art. 24)
+        fecha_contrato:
+          label: Fecha del contrato
+        fecha_fin:
+          label: Fecha de fin
+        fecha_inicio:
+          label: Fecha de inicio
+        inmueble:
+          label: Inmueble arrendado (clave de fila)
+        inquilinos:
+          label: Arrendatarios
+        primer_arrendamiento_vivienda:
+          label: Primer arrendamiento de la vivienda
+        rehabilitacion_fecha:
+          label: Fecha de fin de la rehabilitación
+        renta_inicial:
+          label: Renta inicial
+        renta_ultima_contrato_anterior:
+          label: Última renta del contrato anterior
+        uso_vivienda:
+          label: Arrendamiento de vivienda
+        zona_tensionada:
+          label: Zona de mercado residencial tensionado
       renta_family:
         anualidades_alimentos_euros:
           label: Anualidades por alimentos a favor de los hijos por decisión judicial
@@ -465,14 +500,86 @@ profile:
       renta_filing:
         declaration_type:
           label: Tipo de declaración
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: Reducción del 50 %
-            tier-60: Reducción del 60 %
-            tier-70: Reducción del 70 %
-            tier-90: Reducción del 90 %
-          label: Tramo de reducción por alquiler (art. 23.2)
+            lucrativa: Lucrativa
+            onerosa: Onerosa
+          label: Título de adquisición
+        amortizacion_acumulada:
+          label: Amortización acumulada atestada
+        amortizacion_acumulada_desde:
+          label: Fecha a la que se refiere la amortización acumulada
+        anejo_adquisicion_titulo:
+          choices:
+            lucrativa: Lucrativa
+            onerosa: Onerosa
+          label: Título de adquisición del anejo
+        anejo_fecha_adquisicion:
+          label: Fecha de adquisición del anejo
+        anejo_gastos_tributos_adquisicion:
+          label: Gastos y tributos de adquisición del anejo
+        anejo_importe_adquisicion:
+          label: Importe de adquisición del anejo
+        anejo_referencia_catastral:
+          label: Referencia catastral del anejo
+        anejo_valor_suelo:
+          label: Valor del suelo del anejo
+        anejo_valores_catastrales:
+          label: Valores catastrales del anejo por ejercicio del IBI
+        direccion:
+          label: Dirección del inmueble
+        fecha_adquisicion:
+          label: Fecha de adquisición
+        fecha_transmision:
+          label: Fecha de transmisión
+        gastos_tributos_adquisicion:
+          label: Gastos y tributos de adquisición
+        importe_adquisicion:
+          label: Importe de adquisición
+        mejoras:
+          label: Mejoras anteriores al libro mayor
+        naturaleza:
+          choices:
+            rustica: Rústica
+            urbana: Urbana
+          label: Naturaleza del inmueble
+        porcentaje_propiedad:
+          label: Porcentaje de propiedad
+        porcentaje_usufructo:
+          label: Porcentaje de usufructo
+        referencia_catastral:
+          label: Referencia catastral
+        situacion:
+          choices:
+            '1': Con referencia catastral, en territorio común
+            '2': Con referencia catastral, en el País Vasco
+            '3': Con referencia catastral, en Navarra
+            '4': En España, sin referencia catastral
+            '5': En el extranjero
+          label: Situación del inmueble
+        titular:
+          choices:
+            comun: Común a ambos cónyuges
+            conyuge: Cónyuge
+            hijo: Hijo
+            primer_declarante: Primer declarante
+          label: Titular del inmueble
+        titular_hijo_ordinal:
+          label: Ordinal del hijo titular
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Nuda propiedad
+            pleno_dominio: Pleno dominio
+            pleno_dominio_y_usufructo: Pleno dominio y usufructo
+            usufructo: Usufructo
+          label: Régimen de titularidad
+        usos:
+          label: Usos distintos del arrendamiento
+        valor_suelo:
+          label: Valor del suelo
+        valores_catastrales:
+          label: Valores catastrales por ejercicio del IBI
       renta_spouse:
         birth_date:
           label: Fecha de nacimiento del cónyuge
@@ -652,15 +759,20 @@ profile:
       provenance:
         summary: De dónde proceden los datos del perfil y desde cuándo se aplican.
         title: Origen y vigencia
+      renta_arrendamiento:
+        summary: Los contratos de arrendamiento de tus inmuebles, una fila por contrato,
+          con los datos fijados al firmar.
+        title: Arrendamientos
       renta_family:
         summary: Hijos y otros familiares que pueden darte derecho a mínimos familiares.
         title: Familia (Renta)
       renta_filing:
         summary: Cómo presentas tu declaración anual de la Renta.
         title: Contexto de presentación (Renta)
-      renta_rental:
-        summary: Contexto de los alquileres en tu declaración anual.
-        title: Contexto de alquiler (Renta)
+      renta_inmueble:
+        summary: Los inmuebles que arriendas, una fila por inmueble. Aquí van sus
+          datos fijos; los importes salen del libro mayor.
+        title: Inmuebles arrendados
       renta_spouse:
         summary: Los datos de tu cónyuge, necesarios para la declaración conjunta.
         title: Cónyuge (Renta)

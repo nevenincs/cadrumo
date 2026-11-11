@@ -10,6 +10,10 @@ two.
   coverage, IVA enrolment, large-company and fiscal-residency facts the same
   way: an absent fact is unanswered, and a stated value is the answer the
   taxpayer gave.
+- Schema 9 retires the year-keyed art. 23.2 reduction tier. The tier of the
+  reduction is derived from the facts of each lease, and a stored tier cannot be
+  converted into those facts, so the migration clears whatever value is stored
+  and the operator is asked to record the leases.
 
 Before each of those bumps the setup wizard pre-answered the affected
 questions and wrote its default as an ordinary ``manual_cli`` fact, so the
@@ -45,7 +49,7 @@ from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
 from .values import UserProfileFact, UserProfileRecord, section_field_key
 
-MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 8
+MIGRATED_PROFILE_SCHEMA_VERSION: Final[int] = 9
 """The profile schema version the migration writes."""
 
 _UNPROVEN_FALSE: Final[bool] = False
@@ -117,10 +121,80 @@ _DEFAULTED_VALUES_BY_TRANSITION: Final[Mapping[int, Mapping[str, object]]] = Map
 )
 """What the transition that LEAVES each version clears, keyed by that version."""
 
+_NO_PATHS: Final[frozenset[str]] = frozenset[str]()
+_NO_DEFAULTS: Final[Mapping[str, object]] = MappingProxyType({})
+
+RETIRED_RENTAL_TIER_PATH: Final[str] = "renta_rental.reduccion_art_23_2_tier_2024"
+"""The schema-8 field that stored the art. 23.2 reduction tier for one ejercicio."""
+
+_RETIRED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
+    {8: frozenset({RETIRED_RENTAL_TIER_PATH})},
+)
+"""Paths the transition that LEAVES each version retires: cleared whatever value they hold.
+
+A defaulted answer is cleared only when it equals its default. A retired field has
+no successor to read its value, so every stored value goes.
+"""
+
+
+def _transition_paths(version: int) -> frozenset[str]:
+    defaulted: set[str] = set(_DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS))
+    return frozenset(defaulted | _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS))
+
+
 _CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
-    {version: frozenset(paths) for version, paths in _DEFAULTED_VALUES_BY_TRANSITION.items()},
+    {
+        version: _transition_paths(version)
+        for version in (*_DEFAULTED_VALUES_BY_TRANSITION, *_RETIRED_PATHS_BY_TRANSITION)
+    },
 )
 """The same transitions as path sets, for the callers that only need the names."""
+
+_PROPERTY_LEAVES: Final[tuple[str, ...]] = (
+    "situacion",
+    "referencia_catastral",
+    "naturaleza",
+    "direccion",
+    "titularidad_regimen",
+    "titular",
+    "titular_hijo_ordinal",
+    "porcentaje_propiedad",
+    "porcentaje_usufructo",
+    "adquisicion_titulo",
+    "fecha_adquisicion",
+    "fecha_transmision",
+    "importe_adquisicion",
+    "gastos_tributos_adquisicion",
+    "valor_suelo",
+    "mejoras",
+    "valores_catastrales",
+    "usos",
+    "anejo_referencia_catastral",
+    "anejo_adquisicion_titulo",
+    "anejo_fecha_adquisicion",
+    "anejo_importe_adquisicion",
+    "anejo_gastos_tributos_adquisicion",
+    "anejo_valor_suelo",
+    "anejo_valores_catastrales",
+    "amortizacion_acumulada",
+    "amortizacion_acumulada_desde",
+)
+_LEASE_LEAVES: Final[tuple[str, ...]] = (
+    "inmueble",
+    "fecha_contrato",
+    "fecha_inicio",
+    "fecha_fin",
+    "uso_vivienda",
+    "inquilinos",
+    "zona_tensionada",
+    "primer_arrendamiento_vivienda",
+    "arrendatario_entidad_tipo",
+    "arrendatario_entidad_finalidad",
+    "rehabilitacion_fecha",
+    "renta_inicial",
+    "renta_ultima_contrato_anterior",
+    "arrendatario_pariente_art24",
+)
 
 PATHS_INTRODUCED_IN_V7: Final[frozenset[str]] = frozenset(
     {
@@ -135,10 +209,18 @@ Compared by declared ``section.field``, so an indexed instance path such as
 ``irpf.plantilla_media.0.year`` counts as its field.
 """
 
+PATHS_INTRODUCED_IN_V9: Final[frozenset[str]] = frozenset(
+    {
+        *(f"renta_inmueble.{leaf}" for leaf in _PROPERTY_LEAVES),
+        *(f"renta_arrendamiento.{leaf}" for leaf in _LEASE_LEAVES),
+    },
+)
+"""Fields schema 8 did not declare: the property and lease records."""
+
 _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
     {
         7: PATHS_INTRODUCED_IN_V7,
-        MIGRATED_PROFILE_SCHEMA_VERSION: frozenset[str](),
+        9: PATHS_INTRODUCED_IN_V9,
     },
 )
 """Fields each version ADDED. Schema 8 adds none; it only re-reads stored values."""
@@ -185,9 +267,17 @@ def _defaulted_values_between(from_version: int, to_version: int) -> Mapping[str
     cleared_payer_fact_paths_between(from_version, to_version)
     defaulted: dict[str, object] = {}
     for version in range(from_version, to_version):
-        for path, value in _DEFAULTED_VALUES_BY_TRANSITION[version].items():
+        for path, value in _DEFAULTED_VALUES_BY_TRANSITION.get(version, _NO_DEFAULTS).items():
             defaulted.setdefault(path, value)
     return defaulted
+
+
+def _retired_paths_between(from_version: int, to_version: int) -> frozenset[str]:
+    """Return the paths the transitions from ``from_version`` to ``to_version`` retire."""
+    retired: set[str] = set()
+    for version in range(from_version, to_version):
+        retired |= _RETIRED_PATHS_BY_TRANSITION.get(version, _NO_PATHS)
+    return frozenset(retired)
 
 
 def _is_stored_default(fact: UserProfileFact, defaulted: Mapping[str, object]) -> bool:
@@ -219,10 +309,10 @@ def legacy_profile_schema(
 ) -> ProfileSchemaDefinition:
     """Return the schema a record stored at ``version`` is authenticated against.
 
-    Every later schema only ADDED optional fields, so the legacy schema is the
-    current declaration stamped with the legacy version; :func:`migrate_profile_facts`
-    separately refuses a legacy record that carries a field its own version
-    never declared.
+    Every later schema only ADDED optional fields or retired a field whose stored
+    value the migration clears, so the legacy schema is the current declaration
+    stamped with the legacy version; :func:`migrate_profile_facts` separately
+    refuses a legacy record that carries a field its own version never declared.
 
     Raises:
         UserProfileValidationError: When ``current`` is not the schema this
@@ -307,10 +397,11 @@ def migrate_profile_facts(
             f"schema-{from_version} profile record carries later-schema paths {introduced!r}",
         )
     defaulted = _defaulted_values_between(from_version, MIGRATED_PROFILE_SCHEMA_VERSION)
+    retired = _retired_paths_between(from_version, MIGRATED_PROFILE_SCHEMA_VERSION)
     kept: list[UserProfileFact] = []
     cleared: set[str] = set()
     for fact in stored:
-        if _is_stored_default(fact, defaulted):
+        if fact.path in retired or _is_stored_default(fact, defaulted):
             cleared.add(fact.path)
             continue
         kept.append(fact)
@@ -330,22 +421,45 @@ def pending_cleared_payer_fact_paths(
 
     A path counts as answered once the record carries a fact on it with a
     value, whether yes or no; a cleared (``None``) fact is still unanswered.
+    A retired path is not a payer fact and is never offered here: its finding is
+    :func:`rental_tier_finding_pending`.
 
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     answered = {fact.path for fact in record.facts if fact.value is not None}
-    cleared = {path for migration in migrations for path in migration.cleared_paths}
+    retired = _retired_paths_between(0, MIGRATED_PROFILE_SCHEMA_VERSION)
+    cleared = {path for migration in migrations for path in migration.cleared_paths} - retired
     return tuple(sorted(cleared - answered))
+
+
+def rental_tier_finding_pending(
+    record: UserProfileRecord,
+    migrations: Iterable[ProfileSchemaMigration],
+) -> bool:
+    """Report whether a migration cleared a stored reduction tier and no lease has been recorded since.
+
+    The tier cannot be converted into lease facts, so the finding stands until the
+    profile holds at least one lease with a stated value.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    if not any(RETIRED_RENTAL_TIER_PATH in migration.cleared_paths for migration in migrations):
+        return False
+    return not any(fact.value is not None and fact.path.startswith("renta_arrendamiento.") for fact in record.facts)
 
 
 __all__ = [
     "MIGRATED_PROFILE_SCHEMA_VERSION",
     "PATHS_INTRODUCED_IN_V7",
+    "PATHS_INTRODUCED_IN_V9",
+    "RETIRED_RENTAL_TIER_PATH",
     "SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS",
     "ProfileSchemaMigration",
     "cleared_payer_fact_paths_between",
     "legacy_profile_schema",
     "migrate_profile_facts",
     "pending_cleared_payer_fact_paths",
+    "rental_tier_finding_pending",
 ]
