@@ -22,8 +22,13 @@ from ....application.ledger.update_contracts import (
 )
 from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionDirection
 from .. import operation_ledger_update as bridge
+
+_YEAR = filing_year_envelope().horizon
+_BOOKED_ON = date(_YEAR, 4, 16).isoformat()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -37,8 +42,8 @@ def _projection(
 ) -> LedgerUpdateOperationResult:
     transaction = LedgerTransactionProjection(
         transaction_id=transaction_id,
-        date="2026-04-16",
-        booked_date="2026-04-16",
+        date=_BOOKED_ON,
+        booked_date=_BOOKED_ON,
         value_date=None,
         amount="121.00",
         direction="INCOMING",
@@ -70,8 +75,8 @@ def _projection(
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at="2026-04-16T00:00:00+00:00",
-        modified_at="2026-04-16T00:00:00+00:00",
+        created_at="1980-04-16T00:00:00+00:00",
+        modified_at="1980-04-16T00:00:00+00:00",
     )
     return LedgerUpdateOperationResult(
         outcome="updated",
@@ -111,7 +116,7 @@ def _invoke() -> LedgerUpdateOperationResult:
         cast(typer.Context, cast(object, None)),
         transaction_id=_TRANSACTION_ID[:12],
         patch=ManualLedgerTransactionPatch(
-            booked_date=date(2026, 4, 16),
+            booked_date=date(_YEAR, 4, 16),
             direction=TransactionDirection.INCOMING,
             group_label="Travel",
         ),
@@ -140,7 +145,7 @@ def test_bridge_submits_and_correlates_wire_date_direction_and_group(monkeypatch
     assert request.profile_id == _PROFILE
     assert request.transaction_id == _TRANSACTION_ID[:12]
     assert set(request.patch_fields) == {"booked_date", "direction", "group_label"}
-    assert request.patch.booked_date == "2026-04-16"
+    assert request.patch.booked_date == _BOOKED_ON
     assert request.patch.direction == "INCOMING"
     assert request.patch.group_label == "Travel"
 

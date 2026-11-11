@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -34,8 +34,12 @@ from ....application.ledger.preconditions import LedgerPreconditionCondition, le
 from ....core.config import override_settings
 from ....core.errors.error_codes import get_error_exit_code, get_registered_error_code
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_ledger_evidence_read as bridge
 from ..errors import emit_error_and_exit
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -55,13 +59,13 @@ def _record(**changes: object) -> LedgerEvidenceRecordProjection:
         "media_kind": MediaKind.PDF,
         "supplier": "Supplier SL",
         "invoice_number": "INV-001",
-        "invoice_date": "2026-04-01",
+        "invoice_date": date(_YEAR, 4, 1).isoformat(),
         "taxable_base": "100.00",
         "iva_rate": "0.21",
         "iva_amount": "21.00",
         "notes": "read fixture",
-        "created_at": datetime(2026, 4, 2, 10, 30, tzinfo=UTC),
-        "updated_at": datetime(2026, 4, 2, 10, 30, tzinfo=UTC),
+        "created_at": datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC),
+        "updated_at": datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC),
     }
     data.update(changes)
     return LedgerEvidenceRecordProjection.model_validate(data)

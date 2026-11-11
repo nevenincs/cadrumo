@@ -13,9 +13,13 @@ from __future__ import annotations
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import BusinessClassification
 from ..errors import LLMClassifierError
 from ..llm import PromptSpec, parse_response, prompt_spec_with_saturation_fields
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,7 +30,7 @@ _VALID = (
 
 
 def _spec(operation: PinnedAuthorityOperation) -> PromptSpec:
-    return prompt_spec_with_saturation_fields(year=2025, operation=operation)
+    return prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation)
 
 
 def test_clean_allowed_response_parses(operation: PinnedAuthorityOperation) -> None:
