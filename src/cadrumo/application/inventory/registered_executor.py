@@ -23,6 +23,7 @@ from ...domain.contribuyente.inventory.corrections import (
     inventory_refusal_key,
     is_inventory_correction_refusal_reason,
 )
+from ...domain.contribuyente.inventory.records import PurchaseLedgerRow
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
@@ -617,6 +618,12 @@ def _movement_command(
         unit_cost=Decimal(request.unit_cost.decimal) if request.unit_cost is not None else None,
         taxable_base=Decimal(request.taxable_base.decimal) if request.taxable_base is not None else None,
         acquisition_cost=request.acquisition_cost.to_domain() if request.acquisition_cost is not None else None,
+        ledger_row=(
+            request.ledger_row if isinstance(request, InventoryMovementAddRequest) else PurchaseLedgerRow.UNSTATED
+        ),
+        claimed_transaction_id=(
+            request.claimed_transaction_id if isinstance(request, InventoryMovementAddRequest) else None
+        ),
     )
 
 

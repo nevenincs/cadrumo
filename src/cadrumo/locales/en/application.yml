@@ -668,6 +668,7 @@ application:
         authority_reconciliation: Closing value check
       history_kind:
         described: Described
+        ledger_row_stated: Purchase's ledger entry stated
         movement_corrected: Movement corrected
         movement_reversed: Movement reversed
         opening_corrected: Opening corrected
@@ -695,6 +696,20 @@ application:
           and year %{year}. Open it instead of creating another.
         activity_not_found: No inventory record book exists for this activity and
           year %{year}. Create it first, or check the activity and year.
+        claimed_transaction_amount_mismatch: 'Purchase %{movement_id} of the %{year}
+          inventory does not match its ledger entry: the base, IVA and recargo must
+          be equal to the cent. Correct the purchase or choose another entry.'
+        claimed_transaction_double_claim: The ledger entry that purchase %{movement_id}
+          names is already claimed by another inventory or by an asset in your register.
+          Each ledger entry belongs to one register only.
+        claimed_transaction_missing: Purchase %{movement_id} of the %{year} inventory
+          names a ledger entry that is not an active entry of your ledger. Choose
+          the entry that books this purchase.
+        claimed_transaction_not_eur: The ledger entry that purchase %{movement_id}
+          names is not in euros. Only entries in euros can be named for now.
+        claimed_transaction_substrate_missing: The ledger entry that purchase %{movement_id}
+          names states no taxable base or IVA, so it cannot be compared. Complete
+          the entry first.
         closing_authority_conflict: A different closing value is already recorded
           for this activity and year.
         closing_authority_invalid: This closing value could not be recorded because
@@ -723,12 +738,17 @@ application:
         later_closing_authority_recorded: The %{later_year} closing value of this
           activity starts from this closing, so the %{year} stock facts can no longer
           change.
+        ledger_row_not_purchase: Only an inventory purchase can name the ledger entry
+          that books it, and %{movement_id} is not a purchase.
         movement_already_superseded: This movement was already corrected or reversed.
         movement_not_found: The %{year} inventory of this activity does not have this
           movement.
         movement_outside_year: This movement is dated outside the %{year} inventory.
         prior_closing_document_needed: This closing value needs the previous year's
           closing document. Add it and try again.
+        recargo_with_deductible_iva: A purchase that bears recargo de equivalencia
+          deducts no IVA (article 154.Dos of the Ley del IVA). State a deductible
+          IVA proportion of zero.
         stock_would_go_negative: 'This would take stock below zero: %{sku} would need
           more units than remain.'
     workbench:
@@ -1564,6 +1584,12 @@ application:
           export it as it stands.
         what_to_do: Calculate the declaration again, check it and record it again;
           the new record replaces this one.
+      household_row_fact_unstated:
+        what: A person in your household is recorded without a fact the declaration
+          requires, so the declaration cannot be checked, exported or filed until
+          you state it.
+        what_to_do: State the missing fact for that person in your profile, then calculate
+          again.
       household_rows_incomplete:
         what: Your profile states more people in this group than it records, so the
           declaration uses only the people recorded and does not treat the group as
@@ -1584,14 +1610,12 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: Cadrumo estimated a 1 % or 2 % withholding from a payment shortfall,
           and a bank fee or a discount could explain it.
-      household_row_fact_unstated:
-        what: A person in your household is recorded without a fact the declaration
-          requires, so the declaration cannot be checked, exported or filed until
-          you state it.
-        what_to_do: State the missing fact for that person in your profile, then calculate
-          again.
         what_to_do: Check the withholding against your client's invoice or certificate
           in your records, correct the record if it differs, and calculate again.
+      inventory_book_claimed_purchase:
+        what: A purchase of stock is left out of your expenses, because your inventory
+          declares it as a purchase of stock.
+        what_to_do: No action is needed.
       invoice_category_counterparty_mismatch:
         what: The VAT treatment of an invoice does not fit its customer's country,
           so the invoice was left out.
@@ -1856,6 +1880,11 @@ application:
         is left out of the instalment for the period ending {period_end}.'
       amortization_box_unbound: '{element}: this edition has no box for its depreciation
         charge, so it adds nothing to this calculation.'
+      book_claimed_purchase: The ledger entry of {row_date} for {row_amount} is a
+        purchase in your inventory, so it is declared as a purchase of stock rather
+        than as an expense.
+      book_claimed_purchase_undated: A ledger entry is a purchase in your inventory,
+        so it is declared as a purchase of stock rather than as an expense.
       claim_gap_accrued: '{element}: no depreciation charge is recorded from {start}
         to {end}. {amount} accrued, and box {box} declares only what is recorded.'
       claim_gap_free_method: '{element}: no depreciation charge is recorded from {start}
@@ -1918,6 +1947,8 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
+      household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
+        {leaf}.'
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
@@ -1947,8 +1978,6 @@ application:
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
       retencion_soportada_absence_contradicted: 'Income class {income_class}: there
-      household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
-        {leaf}.'
         are payer records and also your attestation that no payer withheld. Remove
         the records or withdraw the attestation.'
       retencion_soportada_evidence_required: 'Income class {income_class}: there is
@@ -1987,6 +2016,8 @@ application:
         states a withholding of {amount}, but its NIF does not show whether the issuer
         pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
     calc_diagnostic_words:
+      household_leaf:
+        nif: tax ID (NIF)
       income_class:
         actividad_economica: economic activities
         arrendamiento_inmueble_urbano: urban property rental
@@ -2016,8 +2047,6 @@ application:
       fact_filing: Filing
       fact_revision_state: Revision state
       fact_taxpayer: Taxpayer
-      household_leaf:
-        nif: tax ID (NIF)
       fact_verification: Check
       filing_none: Not recorded as filed
       filing_recorded: Filing recorded in Cadrumo; the official proof is the AEAT

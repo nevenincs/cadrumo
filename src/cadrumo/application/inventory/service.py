@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationError, model_va
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FourDigitYear
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.clock import now as clock_now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -38,6 +39,7 @@ from ...domain.contribuyente.inventory.corrections import (
     restore_ledger,
     retire_ledger,
     reverse_movement,
+    state_movement_ledger_row,
 )
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
@@ -49,6 +51,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryValuationResult,
     MovementKind,
     MovementRecord,
+    PurchaseLedgerRow,
     ValuationMethod,
     parse_valuation_method,
 )
@@ -59,6 +62,7 @@ from .errors import (
     InventoryClosingAuthorityConflictError,
     InventoryServiceInputError,
 )
+from .movement_claim_checks import InventoryClaimLedgerReads, require_ledger_claims_stand
 from .ports import InventoryClosingAuthorityWrite, InventoryLedgerServiceRepositoryProtocol, InventoryServicePorts
 
 
@@ -100,6 +104,8 @@ class InventoryMovementCommand(BaseModel):
     unit_cost: Decimal | None = Field(default=None)
     taxable_base: Decimal | None = Field(default=None)
     acquisition_cost: InventoryAcquisitionCost | None = None
+    ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED
+    claimed_transaction_id: TransactionId | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -222,6 +228,8 @@ def _movement_record(movement: InventoryMovementCommand) -> MovementRecord:
             movement_date=movement.movement_date,
             quantity=movement.quantity,
             acquisition_cost=movement.acquisition_cost,
+            ledger_row=movement.ledger_row,
+            claimed_transaction_id=movement.claimed_transaction_id,
         )
     return MovementRecord(
         movement_id=movement.movement_id,
@@ -230,7 +238,24 @@ def _movement_record(movement: InventoryMovementCommand) -> MovementRecord:
         quantity=movement.quantity,
         unit_cost=movement.unit_cost,
         taxable_base=movement.taxable_base,
+        ledger_row=movement.ledger_row,
+        claimed_transaction_id=movement.claimed_transaction_id,
     )
+
+
+def _with_claims_checked(
+    change: Callable[[InventoryLedgerDocument, InventoryLedger], InventoryLedger],
+    reads: InventoryClaimLedgerReads,
+) -> Callable[[InventoryLedgerDocument, InventoryLedger], InventoryLedger]:
+    """Check the changed book's claims against the ledger before the guarded write publishes it."""
+
+    def checked(document: InventoryLedgerDocument, ledger: InventoryLedger) -> InventoryLedger:
+        changed = change(document, ledger)
+        if changed is not ledger:
+            require_ledger_claims_stand(document, changed, reads=reads)
+        return changed
+
+    return checked
 
 
 class InventoryService:
@@ -250,6 +275,7 @@ class InventoryService:
         self._event_repository = ports.bucket_event_repository
         self._repository_factory = ports.inventory_repository_factory
         self._document_file_name = ports.document_file_name
+        self._claim_reads_factory = ports.claim_reads_factory
 
     def _repository_for(self, bucket_id: str) -> InventoryLedgerServiceRepositoryProtocol:
         return self._repository_factory(bucket_id)
@@ -400,10 +426,13 @@ class InventoryService:
                 context={"actividad_id": actividad_id, "year": str(year), "movement_id": movement.movement_id},
             ) from exc
         repository = self._repository_for(bucket_id)
+        claim_reads = self._claim_reads_factory(bucket_id)
 
         def validate_candidate(candidate: InventoryLedger) -> None:
             try:
                 compute_inventory_valuation(candidate)
+                if record.claimed_transaction_id is not None:
+                    require_ledger_claims_stand(repository.load(), candidate, reads=claim_reads)
             except (InventoryLedgerError, ValidationError) as exc:
                 # The revision-guarded repository invokes this validator on
                 # each latest candidate before publishing it. Only validation
@@ -734,13 +763,54 @@ class InventoryService:
                 "replacement_movement_id": record.movement_id,
                 "reason": reason.value,
             },
-            change=lambda document, ledger: correct_movement(
-                document,
-                ledger,
-                stamp=stamp,
-                target_movement_id=target_movement_id,
-                replacement=record,
-                reason=reason,
+            change=_with_claims_checked(
+                lambda document, ledger: correct_movement(
+                    document,
+                    ledger,
+                    stamp=stamp,
+                    target_movement_id=target_movement_id,
+                    replacement=record,
+                    reason=reason,
+                ),
+                self._claim_reads_factory(bucket_id),
+            ),
+        )
+
+    def movement_ledger_row(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        correction_id: str,
+        movement_id: str,
+        ledger_row: PurchaseLedgerRow,
+        claimed_transaction_id: TransactionId | None,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
+        """State which ledger transaction books one purchase, or that none does.
+
+        A claim fact, so it stays changeable after a closing authority. A claim is
+        checked against the ledger and the asset register before it is written.
+        """
+        stamp = InventoryChangeStamp(correction_id=correction_id, recorded_at=clock_now_utc(), actor=actor)
+        return self._apply_change(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            event_type=BucketEventType.LEDGER_INVENTORY_MOVEMENT_LEDGER_ROW_STATED,
+            event_payload={"correction_id": correction_id, "movement_id": movement_id, "ledger_row": ledger_row.value},
+            change=_with_claims_checked(
+                lambda document, ledger: state_movement_ledger_row(
+                    document,
+                    ledger,
+                    stamp=stamp,
+                    movement_id=movement_id,
+                    ledger_row=ledger_row,
+                    claimed_transaction_id=claimed_transaction_id,
+                ),
+                self._claim_reads_factory(bucket_id),
             ),
         )
 

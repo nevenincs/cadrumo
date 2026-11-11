@@ -9,9 +9,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.decimal.constants import MONEY_ZERO
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.identity.digest import ContentDigest
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
@@ -37,6 +39,7 @@ from ...domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
     ValuationMethod,
     derive_inventory_acquisition_totals,
 )
@@ -166,6 +169,7 @@ class InventoryAcquisitionCostRequest(BaseModel):
     attributable_cost_components: tuple[InventoryAttributableCostComponentRequest, ...]
     evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
     completeness: InventoryAcquisitionCompleteness
+    consideration_recargo_amount: PublicDecimal | None = None
     directly_attributable_cost_total: PublicDecimal | None = None
     nonrecoverable_iva_included: PublicDecimal | None = None
     recoverable_iva_excluded: PublicDecimal | None = None
@@ -186,6 +190,11 @@ class InventoryAcquisitionCostRequest(BaseModel):
             ),
             evidence=acquisition.evidence,
             completeness=acquisition.completeness,
+            consideration_recargo_amount=(
+                None
+                if acquisition.consideration_recargo_amount == MONEY_ZERO
+                else PublicDecimal(decimal=str(acquisition.consideration_recargo_amount))
+            ),
             directly_attributable_cost_total=PublicDecimal(decimal=str(acquisition.directly_attributable_cost_total)),
             nonrecoverable_iva_included=PublicDecimal(decimal=str(acquisition.nonrecoverable_iva_included)),
             recoverable_iva_excluded=PublicDecimal(decimal=str(acquisition.recoverable_iva_excluded)),
@@ -212,15 +221,19 @@ class InventoryAcquisitionCostRequest(BaseModel):
         consideration = Decimal(self.consideration_excluding_iva.decimal)
         iva = Decimal(self.consideration_iva_amount.decimal)
         ratio = Decimal(self.consideration_deductible_iva_ratio.decimal)
+        stated_recargo = self.consideration_recargo_amount
+        recargo = MONEY_ZERO if stated_recargo is None else Decimal(stated_recargo.decimal)
         derived = derive_inventory_acquisition_totals(
             consideration_excluding_iva=consideration,
             consideration_iva_amount=iva,
+            consideration_recargo_amount=recargo,
             consideration_deductible_iva_ratio=ratio,
             attributable_cost_components=components,
         )
         return InventoryAcquisitionCost(
             consideration_excluding_iva=consideration,
             consideration_iva_amount=iva,
+            consideration_recargo_amount=recargo,
             consideration_deductible_iva_ratio=ratio,
             attributable_cost_components=components,
             evidence=self.evidence,
@@ -248,6 +261,8 @@ class InventoryMovementAddRequest(_InventoryRequest):
     unit_cost: PublicDecimal | None = None
     taxable_base: PublicDecimal | None = None
     acquisition_cost: InventoryAcquisitionCostRequest | None = None
+    ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED
+    claimed_transaction_id: TransactionId | None = None
 
 
 class InventoryValuationPreviewRequest(_InventoryRequest):
