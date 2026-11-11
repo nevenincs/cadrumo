@@ -15,7 +15,7 @@ from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.core.traceback_summary import TRACEBACK_FRAMES
+from cadrumo.core.traceback_summary import SUMMARY_FRAMES
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
@@ -265,9 +265,9 @@ def test_a_traceback_names_only_its_innermost_frames(log_file: Path, sink_record
     framing.finish()
     (record,) = _summaries(sink_records)
     named = str(record.__dict__["traceback_frames"]).split(" <- ")
-    assert len(named) == TRACEBACK_FRAMES
+    assert len(named) == SUMMARY_FRAMES
     assert named[0] == "deep.py:399:step_399"
-    assert named[-1] == f"deep.py:{400 - TRACEBACK_FRAMES}:step_{400 - TRACEBACK_FRAMES}"
+    assert named[-1] == f"deep.py:{400 - SUMMARY_FRAMES}:step_{400 - SUMMARY_FRAMES}"
 
 
 def test_a_block_that_never_ends_is_abandoned_and_counted(log_file: Path, sink_records: _Records) -> None:

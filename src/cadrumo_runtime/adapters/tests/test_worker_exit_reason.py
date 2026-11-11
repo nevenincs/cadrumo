@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cadrumo.core.traceback_summary import TRACEBACK_FRAMES
+from cadrumo.core.traceback_summary import SUMMARY_FRAMES
 
 from ..worker_exit_reason import WORKER_STANDARD_ERROR_BYTES, worker_exit_fields
 
@@ -74,5 +74,5 @@ def test_a_traceback_longer_than_the_held_bytes_still_names_its_innermost_frames
     assert fields["worker_error_type"] == "RecursionError"
     assert fields["worker_error_origin"] == "deep.py:399:step_399"
     named = str(fields["worker_error_frames"]).split(" <- ")
-    assert len(named) == TRACEBACK_FRAMES
-    assert named[-1] == f"deep.py:{400 - TRACEBACK_FRAMES}:step_{400 - TRACEBACK_FRAMES}"
+    assert len(named) == SUMMARY_FRAMES
+    assert named[-1] == f"deep.py:{400 - SUMMARY_FRAMES}:step_{400 - SUMMARY_FRAMES}"

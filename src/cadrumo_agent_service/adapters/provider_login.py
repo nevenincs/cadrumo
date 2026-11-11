@@ -21,6 +21,7 @@ from uuid import UUID
 
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.storage_environment import configured_storage_root
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo_client.commands import profile_selection
 
@@ -194,7 +195,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             device=options.device,
         )
     except ProviderLoginRefusalError as refusal:
-        sys.stderr.write(f"{refusal}\n")
+        sys.stderr.write(f"{encode_terminal_text(str(refusal))}\n")
         return REFUSAL_STATUS
     # Inherited standard streams: the provider's login prints device codes there.
     done = subprocess.run(
