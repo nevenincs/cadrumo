@@ -10,6 +10,10 @@ as long as the fact stays unanswered.
 A yes/no fact is answered by one of two flags and a select by one flag and a
 value, so the two carry different wording: naming ``--no-fiscal-residency``
 would send the operator to a flag the command does not have.
+
+A migration also retires the year-keyed art. 23.2 reduction tier. That is no payer
+fact and has no flag: the notice asks the operator to record the leases, whose
+facts decide the tier, and stays until one is recorded.
 """
 
 from __future__ import annotations
@@ -21,6 +25,7 @@ from ..application.operator_actions.catalogue import next_action
 from ..application.user_profile.profile_schema_migration import drain_migration_cleared_paths
 from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
+from ..domain.user_profile.schema_migration import RETIRED_RENTAL_TIER_PATH
 
 if TYPE_CHECKING:
     from ..application.wizard.models import WizardQuestion
@@ -31,6 +36,21 @@ NOTICE_CODE = "config.profile.payer_fact_cleared"
 _PROFILE_EDIT_ACTION_ID = "operator.profile.edit"
 _CLEARED_BOOL_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared"
 _CLEARED_SELECT_LOCALE_KEY = "cli.config.profile.notices.payer_fact_cleared_select"
+RENTAL_TIER_NOTICE_CODE = "config.profile.rental_tier_cleared"
+_RENTAL_TIER_ACTION_ID = "operator.profile.arrendamiento"
+_RENTAL_TIER_LOCALE_KEY = "cli.config.profile.notices.rental_tier_cleared"
+_RENTAL_TIER_MODELO = "100"
+
+
+def rental_tier_cleared_notice() -> Notice:
+    """Return the finding that asks the operator to record the leases a cleared tier stood for."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=RENTAL_TIER_NOTICE_CODE,
+        message=tr(_RENTAL_TIER_LOCALE_KEY),
+        action=next_action(_RENTAL_TIER_ACTION_ID),
+        context={"path": RETIRED_RENTAL_TIER_PATH},
+    )
 
 
 def _edit_question_by_path(operation: PinnedAuthorityOperation) -> dict[str, WizardQuestion]:
@@ -68,6 +88,9 @@ def payer_fact_cleared_notices(
     schema = operation.profile_decode_context().schema
     notices: list[Notice] = []
     for path in sorted(set(paths)):
+        if path == RETIRED_RENTAL_TIER_PATH:
+            notices.append(rental_tier_cleared_notice())
+            continue
         question = questions[path]
         notices.append(
             Notice(
@@ -141,13 +164,18 @@ def pending_payer_fact_notices(
     paths = repository.pending_cleared_payer_fact_paths(record.profile_id)
     if modelo is not None:
         paths = tuple(path for path in paths if modelo in payer_fact_gated_modelos(path, operation=operation))
-    return payer_fact_cleared_notices(paths, operation=operation)
+    notices = payer_fact_cleared_notices(paths, operation=operation)
+    if modelo in (None, _RENTAL_TIER_MODELO) and repository.rental_tier_finding_pending(record.profile_id):
+        notices = (*notices, rental_tier_cleared_notice())
+    return notices
 
 
 __all__ = [
     "NOTICE_CODE",
+    "RENTAL_TIER_NOTICE_CODE",
     "drain_payer_fact_migration_notices",
     "payer_fact_cleared_notices",
     "payer_fact_gated_modelos",
     "pending_payer_fact_notices",
+    "rental_tier_cleared_notice",
 ]

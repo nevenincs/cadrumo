@@ -59,6 +59,7 @@ _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
         "renta-profile-deduccion-maternidad",
+        "renta-profile-incremento-guarderia",
         "renta-maritime-path-rebeca",
         "renta-maritime-gross-navigation-income",
         "renta-maritime-annual-salary",

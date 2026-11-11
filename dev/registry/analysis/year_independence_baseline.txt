@@ -159,10 +159,8 @@ year-in-profile-key|100|2023|renta-profile-minimo-descendientes-estatal|renta_fa
 year-in-profile-key|100|2024|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2024
 year-in-profile-key|100|2024|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2024
 year-in-profile-key|100|2024|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2024
-year-in-profile-key|100|2024|renta-rental-reduccion-art-23-2-tier|renta_rental.reduccion_art_23_2_tier_2024
 year-in-profile-key|100|2025|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2025
-year-in-profile-key|100|2025|renta-rental-reduccion-art-23-2-tier|renta_rental.reduccion_art_23_2_tier_2024
 year-valued-fact|lirpf-objective-estimation-settled-year-max|lirpf-objective-estimation-settled-year-max:2016-01-01|2026
 year-valued-fact|madrid-nacimiento-adopcion-applicability|madrid-nacimiento-adopcion-applicability:2025-01-01|2025

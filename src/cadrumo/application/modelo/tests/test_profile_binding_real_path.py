@@ -96,14 +96,6 @@ def _profile_bindings() -> list[Any]:
 # ---------------------------------------------------------------------------
 
 
-def _rental_tier_profile_key() -> str:
-    """The profile key the selected edition's art. 23.2 tier binding reads."""
-    binding = next(b for b in _profile_bindings() if b.id == "renta-rental-reduccion-art-23-2-tier")
-    key = binding.provider.profile_key
-    assert isinstance(key, str), binding.id
-    return key
-
-
 def _full_m100_profile() -> UserProfileRecord:
     """A UserProfileRecord populated for every profile_key appearing in M100 2025 bindings.
 
@@ -175,8 +167,6 @@ def _full_m100_profile() -> UserProfileRecord:
             # censal tipo de actividad under the direct-estimation regime)
             UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
             UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
-            # 0150 renta-rental-reduccion-art-23-2-tier: the edition inherits the art. 23.2 tier binding
-            UserProfileFact(path=_rental_tier_profile_key(), value="tier-50"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
         ),

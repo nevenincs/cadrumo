@@ -9021,11 +9021,6 @@ position = 119
 
 [[revisions."2025".family_positions]]
 family = "parameters"
-id = "renta-rental-ejercicio-amendment-year"
-position = 0
-
-[[revisions."2025".family_positions]]
-family = "parameters"
 id = "renta-rental-rehab-lookback-years"
 position = 1
 
@@ -9555,6 +9550,9 @@ fields = { legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instru
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "eo-agraria-reduccion-irregularidad-base" }
 fields = { source_refs = ["aeat-renta-2025-manual-parte1"], constraints = { source_refs = ["aeat-renta-2025-manual-parte1"] } }
+[[revisions."2025".casilla_overrides]]
+selector = { revision = "2024", id = "trabajo-mar-renta-exenta" }
+fields = { source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"] }
 
 # Ley 35/2006 art. 50.3 compensation chain inherited from the 2022 edition:
 # this edition's predicate ids and the design sources of the older origin
@@ -9616,3 +9614,9 @@ family = "bindings"
 selector = {revision = "2024", id = "renta-base-liquidable-negativa-general-em2-pendiente-inicio"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["pendientes de compensar al inicio del ejercicio", "remanente pendiente de aplicación en ejercicios futuros"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
+
+[[revisions."2025".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "renta-maritime-exempt-income"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["límite máximo de 60.100 euros anuales", "Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]}], source_refs = ["aeat-renta-2025-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [2]}

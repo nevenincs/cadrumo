@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import prefixed_digest
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
@@ -56,7 +56,6 @@ from ...domain.calculations.registry.binding_terminal_origin import TerminalOrig
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.rental_reduction import require_rental_reduction_art232_tier
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -95,6 +94,7 @@ from .profile_derived_facts import (
     snapshot_authored_year,
 )
 from .profile_maternidad_meses import inject_derived_deduccion_maternidad_facts
+from .profile_rental_reduction import inject_derived_rental_reduction_facts
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
@@ -348,6 +348,8 @@ class _ProfileFacts:
     fingerprint: str | None
     decided_derived_paths: frozenset[str] = frozenset()
     """Derived paths an injector decided, including those it decided to leave absent."""
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+    """Diagnostics an injector raised while deciding its paths."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -486,10 +488,19 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
+    rental_reduction = inject_derived_rental_reduction_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        bucket_id=bucket_id,
+        resolver_id=_PROFILE_RESOLVER_ID,
+        operation=operation,
+    )
     return _ProfileFacts(
         fact_index=fact_index,
         fingerprint=profile_record_fingerprint,
-        decided_derived_paths=decided_derived_paths,
+        decided_derived_paths=decided_derived_paths | frozenset(rental_reduction.decided_paths),
+        diagnostics=rental_reduction.diagnostics,
     )
 
 
@@ -500,8 +511,6 @@ def resolve_profile_binding_channels(
     caller_binding_ids: frozenset[BindingId],
     formula_date_consumed: frozenset[BindingId],
     enum_bindings: frozenset[BindingId],
-    effective_date: date | None = None,
-    operation: PinnedAuthorityOperation,
 ) -> _ResolvedBindingChannels:
     """Resolve each selected binding into the Decimal / enum / date / boolean channels."""
     channels = _ResolvedBindingChannels()
@@ -512,12 +521,6 @@ def resolve_profile_binding_channels(
         value = resolve_profile_binding_value(binding, fact_index)
         if value is None:
             continue
-        if binding.value.typed_enum is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
-            value = require_rental_reduction_art232_tier(
-                value,
-                effective_date=effective_date,
-                authority=operation,
-            )
         _route_resolved_binding(
             binding_id,
             value,
@@ -634,8 +637,6 @@ def resolve_profile_sourced_bindings(
         caller_binding_ids=caller_binding_ids,
         formula_date_consumed=selection.formula_date_consumed,
         enum_bindings=enum_consumed_binding_ids(snapshot.revision),
-        effective_date=date(snapshot.filing_year, 1, 1),
-        operation=operation,
     )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
@@ -667,6 +668,7 @@ def resolve_profile_sourced_bindings(
         unresolved_binding_ids=tuple(binding.id for binding in unanswered_text_bindings),
         diagnostics=(
             *_unanswered_text_binding_diagnostics(snapshot, unanswered_text_bindings, bucket_id=bucket_id),
+            *facts.diagnostics,
             *derived_binding_diagnostics(
                 selection.bindings,
                 facts.fact_index,

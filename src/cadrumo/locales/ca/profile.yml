@@ -425,6 +425,43 @@ profile:
           label: Vàlid des de
         valid_to:
           label: Vàlid fins
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Una altra
+            vivienda_asequible_o_social: Habitatge assequible o social
+          label: Finalitat de l'habitatge per a l'entitat
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Administració pública
+            entidad_sin_fines_lucro: Entitat sense finalitat lucrativa
+          label: Tipus d'arrendatari que no és persona física
+        arrendatario_pariente_art24:
+          label: Arrendatari parent (art. 24)
+        fecha_contrato:
+          label: Data del contracte
+        fecha_fin:
+          label: Data de fi
+        fecha_inicio:
+          label: Data d'inici
+        incumple_lau_17_6:
+          label: Incompleix l'art. 17.6 LAU (zona tensionada)
+        inmueble:
+          label: Immoble arrendat (clau de fila)
+        inquilinos:
+          label: Arrendataris
+        primer_arrendamiento_vivienda:
+          label: Primer arrendament de l'habitatge
+        rehabilitacion_fecha:
+          label: Data de fi de la rehabilitació
+        renta_inicial:
+          label: Renda inicial
+        renta_ultima_contrato_anterior:
+          label: Última renda del contracte anterior
+        uso_vivienda:
+          label: Arrendament d'habitatge
+        zona_tensionada:
+          label: Zona de mercat residencial tensionat
       renta_family:
         anualidades_alimentos_euros:
           label: Anualitats per aliments a favor dels fills per decisió judicial
@@ -464,14 +501,76 @@ profile:
       renta_filing:
         declaration_type:
           label: Tipus de declaració
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: Reducció del 50 %
-            tier-60: Reducció del 60 %
-            tier-70: Reducció del 70 %
-            tier-90: Reducció del 90 %
-          label: Tram de reducció per lloguer (art. 23.2)
+            lucrativa: Lucrativa
+            onerosa: Onerosa
+          label: Títol d'adquisició
+        amortizacion_acumulada:
+          label: Amortització acumulada atestada
+        amortizacion_acumulada_desde:
+          label: Data a la qual es refereix l'amortització acumulada
+        direccion:
+          label: Adreça de l'immoble
+        fecha_adquisicion:
+          label: Data d'adquisició
+        fecha_transmision:
+          label: Data de transmissió
+        gastos_tributos_adquisicion:
+          label: Despeses i tributs d'adquisició
+        importe_adquisicion:
+          label: Import d'adquisició
+        importes_movimientos:
+          choices:
+            inmueble_completo: Imports de l'immoble sencer
+            parte_propia: La teva part
+          label: Imports dels moviments vinculats
+        inmueble_principal:
+          label: Immoble principal (clau de fila)
+        mejoras:
+          label: Millores anteriors al llibre major
+        naturaleza:
+          choices:
+            rustica: Rústica
+            urbana: Urbana
+          label: Naturalesa de l'immoble
+        porcentaje_propiedad:
+          label: Percentatge de propietat
+        porcentaje_usufructo:
+          label: Percentatge d'usdefruit
+        referencia_catastral:
+          label: Referència cadastral
+        situacion:
+          choices:
+            '1': Amb referència cadastral, en territori comú
+            '2': Amb referència cadastral, al País Basc
+            '3': Amb referència cadastral, a Navarra
+            '4': A Espanya, sense referència cadastral
+            '5': A l'estranger
+          label: Situació de l'immoble
+        titular:
+          choices:
+            comun: Comú a tots dos cònjuges
+            conyuge: Cònjuge
+            hijo: Fill
+            primer_declarante: Primer declarant
+          label: Titular de l'immoble
+        titular_hijo_ordinal:
+          label: Ordinal del fill titular
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Nua propietat
+            pleno_dominio: Ple domini
+            pleno_dominio_y_usufructo: Ple domini i usdefruit
+            usufructo: Usdefruit
+          label: Règim de titularitat
+        usos:
+          label: Usos diferents de l'arrendament
+        valor_suelo:
+          label: Valor del sòl
+        valores_catastrales:
+          label: Valors cadastrals per exercici de l'IBI
       renta_spouse:
         birth_date:
           label: Data de naixement del cònjuge
@@ -650,15 +749,20 @@ profile:
       provenance:
         summary: D'on procedeixen les dades del perfil i des de quan s'apliquen.
         title: Origen i vigència
+      renta_arrendamiento:
+        summary: Els contractes d'arrendament dels teus immobles, una fila per contracte,
+          amb les dades fixades en signar.
+        title: Arrendaments
       renta_family:
         summary: Fills i altres familiars que et poden donar dret a mínims familiars.
         title: Família (Renda)
       renta_filing:
         summary: Com presentes la teva declaració anual de la Renda.
         title: Context de presentació (Renda)
-      renta_rental:
-        summary: Context dels lloguers a la teva declaració anual.
-        title: Context de lloguer (Renda)
+      renta_inmueble:
+        summary: Els immobles que arrendes, una fila per immoble. Aquí van les seves
+          dades fixes; els imports surten del llibre major.
+        title: Immobles arrendats
       renta_spouse:
         summary: Les dades del teu cònjuge, necessàries per a la declaració conjunta.
         title: Cònjuge (Renda)

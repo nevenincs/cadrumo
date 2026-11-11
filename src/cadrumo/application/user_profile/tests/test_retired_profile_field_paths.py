@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
-_RETIRED_SECTIONS = ("usage_ratios", "properties", "attribution_entity")
+_RETIRED_SECTIONS = ("usage_ratios", "properties", "attribution_entity", "renta_rental")
 
 _RETIRED_FACTS = (
     UserProfileFact(path="identity.notes", value="note"),
@@ -30,6 +30,7 @@ _RETIRED_FACTS = (
     UserProfileFact(path="attribution_entity.legal_form", value="comunidad_bienes"),
     UserProfileFact(path="properties.0.cadastral_reference", value="9872023VH5797S0001WX"),
     UserProfileFact(path="properties.0.use_type", value="habitual"),
+    UserProfileFact(path="renta_rental.reduccion_art_23_2_tier_2024", value="tier-70"),
     UserProfileFact(path="usage_ratios.0.category_id", value="office"),
     UserProfileFact(path="usage_ratios.0.business_ratio", value="0.3"),
     UserProfileFact(path="taxpayer_type.sal_socios_trabajadores_count", value=3),
