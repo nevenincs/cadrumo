@@ -1211,6 +1211,22 @@ errors:
       és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
+    refused_filing_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id}
+      anomena una part sense un nom de declaració que el disseny de registre de l''AEAT
+      admeti allà. Indica el nom de declaració de la part i torna a exportar.'
+    refused_filing_export_declared_party_name_missing: 'No s''ha escrit res: el camp
+      %{export_field_id} anomena una part sense nom de declaració indicat. El disseny
+      de registre de l''AEAT l''omple amb els seus cognoms i nom, o amb la seva raó
+      social, i res més no pot ocupar el seu lloc. Indica el nom de declaració de
+      la part i torna a exportar.'
+    refused_filing_export_declared_party_name_single_surname: 'No s''ha escrit res:
+      el camp %{export_field_id} anomena una persona física indicada amb un sol cognom,
+      i el disseny de registre de l''AEAT no dona cap regla per compondre aquest nom.
+      Revisa els cognoms indicats; no es declara res en el seu lloc.'
+    refused_filing_export_declared_party_name_too_wide: 'No s''ha escrit res: el nom
+      de declaració d''una part té %{composed_length} caràcters i el camp %{export_field_id}
+      en té %{field_length}. El disseny de registre no permet abreujar-lo, així que
+      indica una versió del nom de %{field_length} caràcters i torna a exportar.'
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
       de categoria o de perfil. Classifica la transacció abans d'agregar.
     refused_financial_aggregation_missing_classification: Encara hi ha transaccions
@@ -1283,6 +1299,11 @@ errors:
       de substituir-lo.
     refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
       amb un identificador de contrapart que no valida.
+    refused_ledger_counterparty_filing_name_input: El nom indicat no és un que admeti
+      una declaració informativa. Una persona física necessita el primer cognom, el
+      nom i el segon cognom o la indicació que no en té; una entitat només necessita
+      la seva raó social. Cada part s'escriu sense espais inicials, finals ni dobles,
+      i cada forma abreujada cap en la seva amplada.
     refused_ledger_counterparty_provincia_input: La província indicada no és un codi
       de província de l'INE.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
@@ -1385,6 +1406,10 @@ errors:
       ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) perquè la finestra de presentació
       no en fixa cap; el {export_on} només pots pagar el resultat d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
+    refused_modelo_export_declared_party_name: 'No s''ha escrit res: el camp %{export_field_id},
+      de %{field_length} posicions, anomena una part sense un nom de declaració que
+      el disseny de registre de l''AEAT admeti. Indica o corregeix el nom de declaració
+      de la part i torna a exportar.'
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidació
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la
       domiciliació anterior (mantenir-la, o anul·lar-la o modificar-la); no se n'ha

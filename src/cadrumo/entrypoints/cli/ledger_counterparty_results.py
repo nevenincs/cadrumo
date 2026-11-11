@@ -29,6 +29,7 @@ from ...core.classifier_input_source import ClassifierInputSource
 from ...core.identity.digest import ContentDigest
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
+from ...domain.filing.declared_party_name import DeclaredPartyKind
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 
 
@@ -56,6 +57,56 @@ class CounterpartyEstablishmentPayload(OutputSchema):
     asserted_by: NonEmptyStr
     asserted_at: datetime
     note: str = ""
+
+
+class CounterpartyFilingNameRenderingPayload(OutputSchema):
+    """A shorter rendering the person stated for a field of one width."""
+
+    width: int
+    text: NonEmptyStr
+
+
+class CounterpartyFilingNamePayload(OutputSchema):
+    """The name a counterparty is filed under, in the parts the person stated.
+
+    The parts are carried as stated and never composed here: the order and the
+    separators of the composed field value belong to each record design's
+    registry layout, not to a surface.
+
+    Attributes:
+        party_kind: Natural person or entity.
+        primer_apellido: A natural person's first surname.
+        segundo_apellido: A natural person's second surname, ``None`` only
+            beside :attr:`no_second_surname`.
+        no_second_surname: The person's statement that the party has one surname.
+        nombre: A natural person's full given name.
+        razon_social: An entity's complete razón social or denominación.
+        renderings: Shorter renderings stated for narrower fields, one per width.
+        asserted_by: Who stated the name.
+        asserted_at: When the name was stated.
+    """
+
+    party_kind: DeclaredPartyKind
+    primer_apellido: str | None = None
+    segundo_apellido: str | None = None
+    no_second_surname: bool = False
+    nombre: str | None = None
+    razon_social: str | None = None
+    renderings: tuple[CounterpartyFilingNameRenderingPayload, ...] = ()
+    asserted_by: NonEmptyStr
+    asserted_at: datetime
+
+
+class CounterpartyFilingNameFindingPayload(OutputSchema):
+    """A declared party kind that contradicts the form of the Spanish identifier.
+
+    The name is stored as stated either way; the finding only reports the
+    disagreement, in kinds alone, never naming the identifier or the party.
+    """
+
+    code: NonEmptyStr
+    declared_kind: DeclaredPartyKind
+    observed_form: DeclaredPartyKind
 
 
 class CounterpartyConfirmResult(OutputSchema):
@@ -157,6 +208,10 @@ class CounterpartyViewResult(OutputSchema):
         contradiction_detail: The disagreement in words, taken from the resolver
             rather than recomposed, so the sentence an operator reads here and
             the one a confirm raises cannot drift.
+        filing_name: The name stated for this counterparty's informative-return
+            name fields, or ``None`` when none is stated.
+        filing_name_findings: Disagreements between the stated kind and the
+            form of a Spanish identifier; empty when they agree or none applies.
     """
 
     tax_identifier: NonEmptyStr
@@ -169,3 +224,25 @@ class CounterpartyViewResult(OutputSchema):
     contradicted: bool = False
     confirmed_scope: IvaTerritorialScope | None = None
     contradiction_detail: str | None = None
+    filing_name: CounterpartyFilingNamePayload | None = None
+    filing_name_findings: tuple[CounterpartyFilingNameFindingPayload, ...] = ()
+
+
+class CounterpartyFilingNameResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger counterparty filing-name``.
+
+    Attributes:
+        counterparty_key: The record the name is stored on.
+        canonical_tax_identifier: Whom the name is about, canonicalised.
+        filing_name: The stored name, whether this call wrote it or found it.
+        recorded: Whether this call changed the stored name. ``False`` when the
+            same name was already stated, so the original attribution stands.
+        findings: Disagreements between the stated kind and the form of a
+            Spanish identifier. The name is stored regardless.
+    """
+
+    counterparty_key: ContentDigest
+    canonical_tax_identifier: NonEmptyStr
+    filing_name: CounterpartyFilingNamePayload
+    recorded: bool
+    findings: tuple[CounterpartyFilingNameFindingPayload, ...] = ()

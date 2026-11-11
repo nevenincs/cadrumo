@@ -682,6 +682,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "cadrumo.domain.calculations.registry.errors",
         "cadrumo.domain.calculations.registry.export_semantics",
         "cadrumo.domain.calculations.registry.ids",
+        "cadrumo.domain.calculations.registry.party_name_composition",
         "cadrumo.core.casilla_id",
         "cadrumo.domain.calculations.export_field_kind",
         "cadrumo.domain.calculations.registry.schema_base",

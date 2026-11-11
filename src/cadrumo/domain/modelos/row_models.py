@@ -496,7 +496,12 @@ class Modelo349OperadorRow(BaseModel):
     row_type: Literal["operador"] = "operador"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _RequiredNameStr
+    razon_social: _RequiredNameStr | None
+    """The name the operador is filed under; ``None`` while its party has no declared filing name.
+
+    A row without it is still the calculated row: its export refuses until the
+    person declares the name.
+    """
     clave_operacion: Modelo349ClaveOperacionValue
     importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
 
@@ -526,7 +531,12 @@ class Modelo349RectificacionRow(BaseModel):
     row_type: Literal["rectificacion"] = "rectificacion"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _RequiredNameStr
+    razon_social: _RequiredNameStr | None
+    """The name the operador is filed under; ``None`` while its party has no declared filing name.
+
+    A row without it is still the calculated row: its export refuses until the
+    person declares the name.
+    """
     clave_operacion: Modelo349ClaveOperacionValue
     ejercicio: Annotated[str, StringConstraints(strip_whitespace=True)]
     periodo: str

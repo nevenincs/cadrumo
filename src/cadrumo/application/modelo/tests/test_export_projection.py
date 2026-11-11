@@ -22,7 +22,12 @@ from ....application.operations.error_detail import build_operation_error_detail
 from ....application.operations.models import OperationIdentity, OperationTerminalReceipt
 from ....application.operations.operation_definition import OperationDefinition
 from ....application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
-from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
+from ....core.errors.error_codes import (
+    ErrorCategory,
+    get_registered_error_code,
+    public_error_context,
+    resolve_error_message,
+)
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.payment_election import PaymentElection
@@ -33,10 +38,19 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from ....domain.filing.errors import FilingExportValidationError, FilingExportValueOverflowError
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
+from ....domain.filing.errors import (
+    FilingExportDeclaredPartyNameMissingError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ....domain.modelos.errors import ModeloExportError, ModeloExportValueOverflowError
+from ....domain.modelos.errors import (
+    ModeloExportDeclaredPartyNameError,
+    ModeloExportError,
+    ModeloExportValueOverflowError,
+)
 from ...filing.errors import ModeloApplicationError
 from ...filing.record_field_renderer import format_field
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
@@ -184,6 +198,47 @@ def test_an_amount_wider_than_its_record_slot_is_refused_by_its_slot_alone() -> 
     message = resolve_error_message(failure, locale="es")
     assert money.id in message
     assert str(length) in message
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_an_unnamed_party_slot_reaches_the_operator_with_its_door_and_keeps_the_nif_in_process(locale: str) -> None:
+    """The door binds the party's identifier and country; no kept record holds them."""
+    record = _m347_declarado_record()
+    field = _m347_declarado_field(record, binding="modelo-347-contraparte-row-nombre")
+    assert field.length is not None
+    party = "B11111112"
+    refusal = FilingExportDeclaredPartyNameMissingError(
+        modelo="347",
+        export_record_id=str(record.id),
+        export_field_id=str(field.id),
+        field_length=field.length,
+        door_action_id=DECLARED_PARTY_NAME_DOOR_ACTION_ID,
+        row_index=1,
+        tax_identifier=party,
+        country_code="ES",
+    )
+    assert party not in str(refusal.context)
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = export_write_failure(command, refusal)
+
+    assert isinstance(failure, ModeloExportDeclaredPartyNameError)
+    assert get_registered_error_code(failure).code == "REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME"
+    assert failure.context is not None
+    assert (failure.context["tax_identifier"], failure.context["country_code"]) == (party, "ES")
+    assert failure.context["door_action_id"] == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    kept = public_error_context(failure)
+    assert kept is not None
+    assert {"tax_identifier", "country_code"}.isdisjoint(kept)
+    assert party not in str(kept)
+    message = resolve_error_message(failure, locale=locale)
+    for shown in (str(field.id), str(field.length)):
+        assert shown in message
+    assert party not in message
+    detail = build_operation_error_detail(failure)
+    assert detail is not None
+    assert detail.error_code == "REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME"
+    assert {"tax_identifier", "country_code"}.isdisjoint({entry.key for entry in detail.context})
 
 
 def _canonical_receipt(

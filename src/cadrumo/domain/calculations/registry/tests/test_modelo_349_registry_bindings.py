@@ -8,6 +8,8 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+
 from .....core.aggregation import BindingSourceKind, IntracomOperationType
 from .....core.casilla_id import CasillaId
 from ..binding_selector_utils import selector_as_dict
@@ -214,6 +216,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="SALE GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SALE GMBH"),
         ),
         InvoiceObservation(
             invoice_id="inv-de-acq",
@@ -224,6 +227,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             base_amount=Decimal("750.00"),
             intracommunity_clave="A",
             party_legal_name="SUPPLIER GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SUPPLIER GMBH"),
         ),
         InvoiceObservation(
             invoice_id="inv-it-service-acq",
@@ -234,6 +238,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             base_amount=Decimal("3000.00"),
             intracommunity_clave="I",
             party_legal_name="SERVIZI SRL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SERVIZI SRL"),
         ),
     )
 
@@ -261,6 +266,7 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
             base_amount=base,
             intracommunity_clave="T",
             party_legal_name="TRIANGLE SARL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="TRIANGLE SARL"),
         )
         for source_kind, invoice_id, day, base in (
             (BindingSourceKind.COLLECTIBLE_INVOICE, "inv-fr-t-sale", 4, Decimal("400.00")),
@@ -352,6 +358,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -362,6 +369,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             base_amount=Decimal("500.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -372,6 +380,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             base_amount=Decimal("300.50"),
             intracommunity_clave="S",
             party_legal_name="FRANCE SARL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="FRANCE SARL"),
         ),
     )
 
@@ -412,6 +421,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             base_amount=Decimal("1100.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
             is_rectification=True,
             rectified_base_previous=Decimal("1000.00"),
             rectified_period="2T",
@@ -426,6 +436,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             base_amount=Decimal("200.00"),
             intracommunity_clave="E",
             party_legal_name="ITALIA SRL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ITALIA SRL"),
             is_rectification=True,
             rectified_base_previous=Decimal("180.00"),
             rectified_period="4T",

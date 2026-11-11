@@ -35,7 +35,7 @@ EPOCHS = tuple(
 )
 INMUEBLE_ROW_FIELDS = {
     "declarado_tax_id": "inmueble.arrendatario-nif",
-    "party_legal_name": "inmueble.arrendatario-nombre",
+    "party_filing_name": "inmueble.arrendatario-nombre",
     "importe_total": "inmueble.importe-operacion",
     "situacion_inmueble": "inmueble.situacion",
     "referencia_catastral": "inmueble.referencia-catastral",

@@ -40,6 +40,7 @@ from ....domain.calculations.registry.m347_threshold import m347_threshold_decim
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from ....domain.filing.errors import FilingExportValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -100,6 +101,7 @@ def _observation(
         invoice_total_amount=Decimal(total),
         operation_clave=operation_clave,
         party_legal_name=party_legal_name,
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=party_legal_name),
     )
 
 
@@ -419,7 +421,7 @@ def test_conditional_money_fields_stay_scalar_and_are_not_fabricated(revision_id
 
     bound_casilla_ids = {
         record.row_field_casilla_ids["declarado_tax_id"],
-        record.row_field_casilla_ids["party_legal_name"],
+        record.row_field_casilla_ids["party_filing_name"],
         record.row_field_casilla_ids["clave"],
         record.row_field_casilla_ids["importe_total"],
         record.row_field_casilla_ids["importe_q1"],

@@ -1539,6 +1539,12 @@ application:
           source that is wrong, and recalculate. If you have checked that the amount
           in use is right, accept it with its finding id: `aeat app modelo work accept-disagreement
           <finding id> --reason <why>`.'
+      declared_party_name_unresolved:
+        what: A declared party has no filing name its record can carry, so its name
+          field is left without content and the export refuses.
+        what_to_do: 'State the party''s filing name: surnames and given name, or its
+          razón social, and a shorter rendering where the field is narrower. Then
+          calculate again.'
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1899,6 +1905,11 @@ application:
         longer applies.'
       credit_source_disagreement: 'Box {box}: the declared source gives {amount};
         according to {cross_check}, it is {compared_amount}.'
+      declared_party_name_missing: No filing name is stated for {party}.
+      declared_party_name_single_surname: '{party} is stated with one surname, which
+        the record design gives no rule for.'
+      declared_party_name_too_wide: The filing name of {party} is wider than its {width}-character
+        field and no rendering for that width is stated.
       disposal_claim_gap: '{element}: its disposal is on {date} and part of {year}
         has no recorded depreciation charge. Its minimum still reduces the cost.'
       disposal_exemption_not_computed: '{element}: any exemption or deferral on its

@@ -86,14 +86,31 @@ cli:
           a esta parte. Indícalo para preguntar qué responderá la escalera para ese
           documento, que es la única forma de ver una discrepancia con lo que tú confirmaste
           antes de que una confirmación la rechace.
+        filing_name_help: Indica el nombre con el que se declara una contraparte en
+          las declaraciones informativas, en las partes que nombran los diseños de
+          registro. Se indica una sola vez, para todas las exportaciones posteriores.
         group_help: Confirma lo que se sabe de una contraparte, una sola vez, para
           todos los documentos posteriores.
         identification_state_help: 'Estado miembro que identifica a efectos de IVA
           a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este,
           no por dónde esté establecida.'
+        no_second_surname_help: Indica que la persona física tiene un solo apellido.
+          Un segundo apellido que falta nunca se interpreta como ausencia.
+        nombre_help: El nombre completo de una persona física.
         note_help: En qué se basa la respuesta, con tus propias palabras. Se registra,
           nunca se consulta.
+        party_kind_help: Si la contraparte es persona física o entidad; decide qué
+          partes indicas.
+        primer_apellido_help: El primer apellido de una persona física, tal y como
+          lo conoces.
+        razon_social_help: La razón social o denominación completa de una entidad,
+          nunca un nombre comercial.
+        rendering_help: Una forma más corta que indicas para un campo más estrecho,
+          como ANCHO=TEXTO. Repítelo una vez por ancho; un nombre nunca se acorta sin
+          que lo indiques.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
+        segundo_apellido_help: El segundo apellido de una persona física. Omítelo
+          solo junto con --no-second-surname.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
         view_help: Muestra lo que la escalera de identificación de IVA respondería
@@ -3587,8 +3604,14 @@ cli:
           respuesta: ''--scope'' para dónde está establecida la contraparte, ''--identification-state''
           para qué Estado miembro la identifica a efectos de IVA, o ambas. Son hechos
           independientes y cualquiera de ellos puede indicarse por separado.'
+        rendering_malformed: '''{rendering}'' no es una forma abreviada. Escríbela
+          como ANCHO=TEXTO, con el ancho del campo en caracteres y el texto que quieres
+          declarar en él.'
         unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
           por lo que no hay ninguna contraparte sobre la que confirmar nada.'
+      lines:
+        filing_name_stated: '{identifier}: nombre de declaración indicado'
+        filing_name_unchanged: '{identifier}: el nombre de declaración ya estaba indicado'
       notices:
         already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}''
           como ''{answered}''; esta llamada no creó ninguna confirmación nueva y se
@@ -3597,11 +3620,21 @@ cli:
           en {confirmed}, pero el justificante que has aportado sitúa a la misma parte
           en {evidenced}. Cadrumo no fijará ningún territorio para esta contraparte
           hasta que se retire uno de los dos.'
+        filing_name_already_stated: '''{identifier}'' ya tiene este nombre de declaración,
+          indicado por ''{asserted_by}''; esta llamada no ha cambiado nada y se mantiene
+          la indicación original.'
+        filing_name_kind_contradicts_identifier_form: Has indicado el nombre de declaración
+          para {declared}, pero la forma de este identificador fiscal español es la
+          de {observed}. El nombre se guarda tal como lo indicaste y no se ha cambiado
+          nada; comprueba cuál de las dos cosas es correcta.
         not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
           por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había nada confirmado para '{identifier}', por lo
           que no se ha retirado nada y el almacén ya está en el estado solicitado.
+      party_kinds:
+        entity: una entidad
+        natural_person: una persona física
     detach:
       actor_help: Actor registrado en el evento de ciclo de vida.
       attachment_help: Id del adjunto que se separa; repetible.

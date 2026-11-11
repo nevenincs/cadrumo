@@ -699,6 +699,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger.counterparty_establishment.CounterpartyFilingNameInputError",
+        ErrorCode(
+            code="REFUSED_LEDGER_COUNTERPARTY_FILING_NAME_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_counterparty_filing_name_input",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger.evidence_errors.PurchaseInvoiceEvidenceInputError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_INPUT",

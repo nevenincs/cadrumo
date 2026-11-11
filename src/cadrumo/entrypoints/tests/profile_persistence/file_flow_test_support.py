@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.profile.credit_resolution_records import Credi
 from cadrumo.adapters.persistence.profile.foreign_assets import ForeignAssetRegisterRepository
 from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
 from cadrumo.adapters.persistence.profile.invoice_source_resolver import (
+    CounterpartyFilingNameAdapter,
     CounterpartyProvinciaAdapter,
     InvoiceCatalogueSourceResolverAdapter,
 )
@@ -248,6 +249,9 @@ def calculation_ports_for_test(
             invoice_source_ports=InvoiceSourceResolverPorts(
                 catalogue_reader=InvoiceCatalogueSourceResolverAdapter(repository=resolved_invoice_repository),
                 counterparty_provincias=CounterpartyProvinciaAdapter(
+                    repository=CounterpartyEstablishmentRepository(bucket_id=normalized_bucket_id, objects=objects),
+                ),
+                counterparty_filing_names=CounterpartyFilingNameAdapter(
                     repository=CounterpartyEstablishmentRepository(bucket_id=normalized_bucket_id, objects=objects),
                 ),
             ),

@@ -1629,6 +1629,13 @@ application:
           la font que estigui malament i torna a calcular. Si has comprovat que l''import
           utilitzat és correcte, accepta''l amb el seu identificador: `aeat app modelo
           work accept-disagreement <identificador> --reason <motiu>`.'
+      declared_party_name_unresolved:
+        what: Una part declarada no té un nom de declaració que el seu registre pugui
+          portar, així que el seu camp de nom queda sense contingut i l'exportació
+          es rebutja.
+        what_to_do: 'Indica el nom de declaració de la part: cognoms i nom, o la seva
+          raó social, i una versió més curta on el camp sigui més estret. Després
+          torna a calcular.'
       deferred_binding_source:
         what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
         what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
@@ -1994,6 +2001,12 @@ application:
         l''acceptació ja no s''aplica.'
       credit_source_disagreement: 'Casella {box}: la font declarada dona {amount};
         segons {cross_check}, són {compared_amount}.'
+      declared_party_name_missing: No hi ha nom de declaració indicat per a {party}.
+      declared_party_name_single_surname: '{party} està indicada amb un sol cognom,
+        per al qual el disseny de registre no dona cap regla.'
+      declared_party_name_too_wide: El nom de declaració de {party} és més ample que
+        el seu camp de {width} caràcters i no hi ha cap versió indicada per a aquesta
+        amplada.
       disposal_claim_gap: '{element}: la seva baixa és el {date} i part de {year}
         no té dotació registrada. El seu mínim redueix igualment el cost.'
       disposal_exemption_not_computed: '{element}: qualsevol exempció o diferiment

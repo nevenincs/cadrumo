@@ -83,13 +83,28 @@ cli:
           it to ask what the ladder will answer for that document, which is the only
           way to see a disagreement with what you confirmed before a confirm refuses
           on it.
+        filing_name_help: State the name a counterparty is filed under in informative
+          returns, in the parts the record designs name. Stated once, for every later
+          export.
         group_help: Confirm what is known about a counterparty, once, for every later
           document.
         identification_state_help: 'Member State that VAT-identifies the counterparty.
           A different fact from --scope: art. 25 exempts on this, not on where the
           party is established.'
+        no_second_surname_help: State that the natural person has one surname. A missing
+          second surname is never read as absence.
+        nombre_help: A natural person's full given name.
         note_help: What the answer rests on, in your own words. Recorded, never consulted.
+        party_kind_help: Whether the counterparty is a natural person or an entity;
+          it decides which parts you state.
+        primer_apellido_help: A natural person's first surname, as you know it.
+        razon_social_help: An entity's complete razón social or denominación, never
+          a trade name.
+        rendering_help: A shorter rendering you state for a narrower field, as WIDTH=TEXT.
+          Repeat once per width; a name is never shortened unless you state how.
         scope_help: The IVA territory the counterparty is established in.
+        segundo_apellido_help: A natural person's second surname. Leave it out only
+          together with --no-second-surname.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         view_help: Show what the VAT-identification ladder would answer for this counterparty
           based on what is confirmed so far.
@@ -3332,8 +3347,13 @@ cli:
           ''--scope'' for where the counterparty is established, ''--identification-state''
           for which Member State VAT-identifies it, or both. They are independent
           facts and either may be supplied alone.'
+        rendering_malformed: '''{rendering}'' is not a rendering. Write it as WIDTH=TEXT,
+          with the field width in characters and the text you want filed there.'
         unverifiable_identifier: '''{identifier}'' is not a verifiable tax identifier,
           so there is no counterparty to confirm anything about.'
+      lines:
+        filing_name_stated: '{identifier}: filing name stated'
+        filing_name_unchanged: '{identifier}: filing name already stated'
       notices:
         already_confirmed: '''{identifier}'' was already confirmed by ''{asserted_by}''
           as ''{answered}''; this call created no new confirmation and the original
@@ -3342,11 +3362,21 @@ cli:
           in {confirmed}, but the supporting document you supplied places the same
           party in {evidenced}. Cadrumo will settle no territory for this counterparty
           until one of the two is withdrawn.'
+        filing_name_already_stated: '''{identifier}'' already has this filing name,
+          stated by ''{asserted_by}''; this call changed nothing and the original
+          statement stands.'
+        filing_name_kind_contradicts_identifier_form: The filing name was stated for
+          {declared}, but the form of this Spanish tax identifier is that of {observed}.
+          The name is stored as stated and nothing was changed; check which of the
+          two is right.
         not_confirmed: No establishment is confirmed for '{identifier}', so the ladder
           settles nothing from this rung and a document whose paper is non-decisive
           will raise the question.
         nothing_to_withdraw: Nothing was confirmed for '{identifier}', so nothing
           was withdrawn and the store is already in the state you asked for.
+      party_kinds:
+        entity: an entity
+        natural_person: a natural person
     detach:
       actor_help: Actor recorded on the lifecycle event.
       attachment_help: Id of the attachment to detach; repeatable.

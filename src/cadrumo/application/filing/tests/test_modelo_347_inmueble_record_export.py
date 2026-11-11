@@ -20,6 +20,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -77,6 +79,7 @@ def _observation(
         invoice_total_amount=Decimal("8000.00"),
         operation_clave=clave,
         party_legal_name=name,
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
         arrendamiento_local_negocio=lease,
         situacion_inmueble="1" if lease else None,
         referencia_catastral=referencia_catastral,

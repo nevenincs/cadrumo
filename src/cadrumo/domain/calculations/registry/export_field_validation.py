@@ -69,9 +69,6 @@ _SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
 )
 
 
-_MONEY_IMPLIED_DECIMALS: Final[int] = 2
-
-
 def validate_export_field_kind(field: ExportFieldDefinition) -> None:
     """Validate semantic payload, render shape and taxpayer-specific requirements."""
     _validate_field_semantic_payload(field)
@@ -82,6 +79,7 @@ def validate_export_field_kind(field: ExportFieldDefinition) -> None:
     _validate_field_render_shape(field)
     _validate_required_for(field)
     _validate_required_with(field)
+    _validate_party_name(field)
     _validate_design_type(field)
     validate_export_field_policy_metadata(field)
 
@@ -203,6 +201,18 @@ def _validate_required_for(field: ExportFieldDefinition) -> None:
         )
 
 
+def _validate_party_name(field: ExportFieldDefinition) -> None:
+    """Admit a party-name composition only on a text slot a stated name can fill."""
+    if field.party_name is None:
+        return
+    if field.kind not in {CasillaFieldKind.BINDING, CasillaFieldKind.HEADER} or field.data_type != "text":
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare party_name only on a text binding or header field",
+        )
+    if field.length is None:
+        raise RegistryValidationError(f"export field {field.id!r} declares party_name without a fixed width")
+
+
 def _validate_required_with(field: ExportFieldDefinition) -> None:
     """Admit a block anchor only on a casilla the export can read beside its anchor."""
     if field.required_with is None:
@@ -279,9 +289,8 @@ def _allowed_values_member_failure(
     length = field.length
     if length is None:
         return f"export field {field.id!r} allowed_values requires a declared length"
-    scale = _MONEY_IMPLIED_DECIMALS if field.data_type == "money" else (field.decimals or 0)
-    unit_digit_budget = length - scale
-    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, unit_digit_budget))
+    # Members are the digit runs the slot prints, implied decimals included.
+    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, length))
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
     return None

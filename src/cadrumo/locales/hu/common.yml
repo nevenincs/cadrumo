@@ -6417,7 +6417,7 @@ sheets:
       operation_date: Művelet dátuma
       operation_kind_code: Művelettípus
       pago: Kifizetés
-      party_legal_name: Fél neve
+      party_filing_name: Bevallási név
       party_tax_id: Fél adóazonosítója
       penalizaciones: Kötbérek
       pendiente_flag: Függőben

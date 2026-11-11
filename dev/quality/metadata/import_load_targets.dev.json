@@ -1383,6 +1383,7 @@
         "dev.registry.pipeline.note_governed_enumerations",
         "dev.registry.pipeline.note_literals",
         "dev.registry.pipeline.note_negative_amount",
+        "dev.registry.pipeline.party_name_statements",
         "dev.registry.pipeline.published_edition_staging",
         "dev.registry.pipeline.pydantic_error_detail",
         "dev.registry.pipeline.record_design_intermediate",
