@@ -50,11 +50,13 @@ pub fn segment(name: &str) -> String {
 }
 
 /// The typed code of a gateway refusal: its own code where it gives one,
-/// else its status.
+/// else its status. A coded refusal also carries the context sizes it states
+/// as whole numbers, never its prose.
 pub fn refusal(status: u16, body: &[u8]) -> Refused {
-    let coded = serde_json::from_slice::<Value>(body)
-        .ok()
-        .and_then(|body| body.get("detail")?.get("code")?.as_str().map(str::to_owned))
+    let body = serde_json::from_slice::<Value>(body).ok();
+    let detail = body.as_ref().and_then(|body| body.get("detail"));
+    let coded = detail
+        .and_then(|detail| detail.get("code")?.as_str().map(str::to_owned))
         .filter(|code| {
             !code.is_empty()
                 && code.len() <= 64
@@ -62,10 +64,23 @@ pub fn refusal(status: u16, body: &[u8]) -> Refused {
                     .bytes()
                     .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
         });
-    match coded {
-        Some(code) => Refused::new(format!("agent_gateway_{code}")),
-        None => Refused::new(format!("agent_gateway_{status}")),
+    match (coded, detail) {
+        (Some(code), Some(detail)) => Refused {
+            needed_tokens: tokens(detail, "needed_tokens"),
+            context_tokens: tokens(detail, "context_tokens"),
+            ..Refused::new(format!("agent_gateway_{code}"))
+        },
+        _ => Refused::new(format!("agent_gateway_{status}")),
     }
+}
+
+/// A positive whole number of tokens the refusal states under `name`.
+fn tokens(detail: &Value, name: &str) -> Option<u32> {
+    detail
+        .get(name)?
+        .as_u64()
+        .filter(|count| *count > 0)
+        .and_then(|count| u32::try_from(count).ok())
 }
 
 pub struct Client {
@@ -507,5 +522,51 @@ mod tests {
             "agent_gateway_422"
         );
         assert_eq!(refusal(401, b"").code, "agent_gateway_401");
+    }
+
+    #[test]
+    fn a_refusal_carries_the_context_sizes_it_states_as_numbers() {
+        let shortfall = br#"{"detail": {"code": "model_does_not_fit", "message": "prose",
+            "offered": [], "needed_tokens": 17700, "context_tokens": 16384}}"#;
+        let refused = refusal(422, shortfall);
+        assert_eq!(refused.code, "agent_gateway_model_does_not_fit");
+        assert_eq!(refused.needed_tokens, Some(17700));
+        assert_eq!(refused.context_tokens, Some(16384));
+
+        let memory = br#"{"detail": {"code": "model_does_not_fit", "context_tokens": 8192}}"#;
+        let refused = refusal(422, memory);
+        assert_eq!(refused.needed_tokens, None);
+        assert_eq!(refused.context_tokens, Some(8192));
+
+        let unusable: [&[u8]; 5] = [
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": "17700"}}"#,
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": -1}}"#,
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": 0}}"#,
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": 1.5}}"#,
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": 99999999999}}"#,
+        ];
+        for unusable in unusable {
+            assert_eq!(refusal(422, unusable).needed_tokens, None);
+        }
+        // An uncoded refusal carries nothing of its body.
+        let uncoded = br#"{"detail": {"code": "Not A Code", "needed_tokens": 5}}"#;
+        assert_eq!(refusal(422, uncoded).needed_tokens, None);
+    }
+
+    #[test]
+    fn a_refusal_without_sizes_serializes_as_its_code_alone() {
+        let refused = refusal(409, br#"{"detail": {"code": "run_busy"}}"#);
+        assert_eq!(
+            serde_json::to_value(&refused).unwrap(),
+            serde_json::json!({"code": "agent_gateway_run_busy"})
+        );
+        let sized = refusal(
+            422,
+            br#"{"detail": {"code": "model_does_not_fit", "needed_tokens": 2, "context_tokens": 1}}"#,
+        );
+        assert_eq!(
+            serde_json::to_value(&sized).unwrap(),
+            serde_json::json!({"code": "agent_gateway_model_does_not_fit", "needed_tokens": 2, "context_tokens": 1})
+        );
     }
 }
