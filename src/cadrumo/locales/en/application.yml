@@ -1584,6 +1584,12 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: Cadrumo estimated a 1 % or 2 % withholding from a payment shortfall,
           and a bank fee or a discount could explain it.
+      household_row_fact_unstated:
+        what: A person in your household is recorded without a fact the declaration
+          requires, so the declaration cannot be checked, exported or filed until
+          you state it.
+        what_to_do: State the missing fact for that person in your profile, then calculate
+          again.
         what_to_do: Check the withholding against your client's invoice or certificate
           in your records, correct the record if it differs, and calculate again.
       invoice_category_counterparty_mismatch:
@@ -1941,6 +1947,8 @@ application:
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
       retencion_soportada_absence_contradicted: 'Income class {income_class}: there
+      household_row_fact_unstated: '{group}: {recorded} recorded, {omitting} without
+        {leaf}.'
         are payer records and also your attestation that no payer withheld. Remove
         the records or withdraw the attestation.'
       retencion_soportada_evidence_required: 'Income class {income_class}: there is
@@ -2008,6 +2016,8 @@ application:
       fact_filing: Filing
       fact_revision_state: Revision state
       fact_taxpayer: Taxpayer
+      household_leaf:
+        nif: tax ID (NIF)
       fact_verification: Check
       filing_none: Not recorded as filed
       filing_recorded: Filing recorded in Cadrumo; the official proof is the AEAT

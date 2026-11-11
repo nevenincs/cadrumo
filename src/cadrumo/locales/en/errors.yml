@@ -1280,6 +1280,9 @@ errors:
       that states casilla 111 needs a choice for the earlier direct debit (keep it,
       or cancel or modify it); none was given, so nothing was written. Choose one
       and export again.
+    refused_modelo_household_row_fact_unstated: 'The declaration stays refused: your
+      profile does not state a household fact that the official design requires. Add
+      it in your profile, then calculate again.'
     refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
       that needs a result to pay large enough to leave a second instalment of at least
       one cent, a return that is not corrective and is filed within its filing period,

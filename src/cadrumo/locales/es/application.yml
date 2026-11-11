@@ -1683,6 +1683,12 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: Cadrumo ha estimado una retención del 1 % o del 2 % a partir de lo que
           faltaba en un cobro, y podría ser una comisión o un descuento.
+      household_row_fact_unstated:
+        what: Hay una persona de tu hogar registrada sin un dato que la declaración
+          exige, así que no puede comprobarse, exportarse ni presentarse hasta que
+          lo indiques.
+        what_to_do: Indica en tu perfil el dato que falta de esa persona y vuelve
+          a calcular.
         what_to_do: Revisa la retención con la factura o el certificado de tu cliente
           en tus registros, corrige el registro si es distinta y vuelve a calcular.
       invoice_category_counterparty_mismatch:
@@ -2046,6 +2052,8 @@ application:
         que ya no existen.'
       residence_period_unknown: No hay residencia fiscal registrada para el {date},
         así que tus elementos se cuentan como si se aplicaran los Modelos 100 y 130.
+      household_row_fact_unstated: '{group}: {recorded} registradas, {omitting} sin
+        {leaf}.'
       retencion_soportada_absence_contradicted: 'Clase de renta {income_class}: hay
         registros de pagadores y también tu declaración de que ningún pagador practicó
         retención. Elimina los registros o retira la declaración.'
@@ -2115,6 +2123,8 @@ application:
       fact_exported_at: Exportado
       fact_filing: Presentación
       fact_revision_state: Estado de la revisión
+      household_leaf:
+        nif: NIF
       fact_taxpayer: Contribuyente
       fact_verification: Comprobación
       filing_none: No registrado como presentado

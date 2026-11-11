@@ -34,6 +34,11 @@ class ProfileRowsSelector(BaseModel):
     ``count_path`` names the profile fact that states how many rows the object
     holds. A stated count is the positive fact that lets a reader tell a filer
     who declared no rows from one who has not answered.
+
+    ``required`` says the official design requires this leaf on every row the
+    object holds. A stored row that states no value for it is then a fact the
+    filer still owes, and the declaration cannot be checked, exported or filed
+    until it is stated; the leaf is never filled with a stand-in.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -41,6 +46,7 @@ class ProfileRowsSelector(BaseModel):
     object_path: str = Field(max_length=128, pattern=_FACT_PATH_PATTERN)
     leaf: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
     count_path: str = Field(max_length=128, pattern=_FACT_PATH_PATTERN)
+    required: bool = False
 
     def row_path(self, index: int) -> str:
         """Return the stored fact path of this leaf on row ``index``."""

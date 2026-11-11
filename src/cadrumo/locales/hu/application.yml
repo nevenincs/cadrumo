@@ -1639,6 +1639,11 @@ application:
       inferred_retencion_sectoral_rate_unconfirmed:
         what: A Cadrumo egy befizetés hiányából 1 % vagy 2 % levonást becsült, amelyet
           banki költség vagy engedmény is magyarázhat.
+      household_row_fact_unstated:
+        what: A háztartásodban szerepel egy személy olyan adat nélkül, amelyet a bevallás
+          megkövetel, ezért amíg meg nem adod, nem ellenőrizhető, nem exportálható
+          és nem nyújtható be.
+        what_to_do: Add meg a profilodban a személy hiányzó adatát, majd számíts újra.
         what_to_do: Ellenőrizd a levonást az ügyfeled számlájával vagy igazolásával
           a nyilvántartásodban, javítsd a tételt, ha eltér, majd számolj újra.
       invoice_category_counterparty_mismatch:
@@ -2006,6 +2011,8 @@ application:
         meg, amely már nem létezik.'
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
+      household_row_fact_unstated: '{group}: {recorded} rögzítve, ebből {omitting}
+        {leaf} nélkül.'
       retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
         vannak kifizetői rekordok, és a nyilatkozatod is, hogy egyetlen kifizető sem
         vont le. Töröld a rekordokat, vagy vond vissza a nyilatkozatot.'
@@ -2076,6 +2083,8 @@ application:
       fact_exported_at: Exportálva
       fact_filing: Benyújtás
       fact_revision_state: Számítási változat állapota
+      household_leaf:
+        nif: NIF
       fact_taxpayer: Adózó
       fact_verification: Ellenőrzés
       filing_none: Nincs benyújtottként rögzítve
