@@ -316,7 +316,12 @@ impl SignIn {
         {
             return Err(failure(ErrorCode::SessionUnavailable).with_reason("person_not_signed_in"));
         }
+        use cadrumo_application::diagnostics::service::{
+            PersonRestoreCause, PersonRestoreOutcome, ServiceFact,
+        };
+        let mut cause = PersonRestoreCause::NoHeldSession;
         if let Some(held) = cached.upgrade() {
+            cause = PersonRestoreCause::HeldSessionEnded;
             let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
             if person.identity["profile_id"] == profile_id && person.is_open() {
                 drop(person);
@@ -328,17 +333,33 @@ impl SignIn {
             }
         }
         log::debug!("person restoring stored sign-in");
-        let mut person = self
-            .restoration
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .attempt(&observed, || {
+        // Each real presentation of the stored sign-in is recorded once, so a
+        // log shows when a session was restored without the person signing in.
+        let mut presented = false;
+        let attempted = {
+            let mut restoration = self.restoration.lock().unwrap_or_else(|e| e.into_inner());
+            let attempted = restoration.attempt(&observed, || {
+                presented = true;
                 self.resume(profile_id).inspect_err(|failure| {
                     // This real attempt is logged once; returning its cached refusal
                     // to later status readers must not create a diagnostic storm.
                     self.diagnostics.failure((*failure.error).clone());
                 })
-            })?;
+            });
+            if presented {
+                let outcome = match &attempted {
+                    Ok(_) => PersonRestoreOutcome::Restored,
+                    Err(_) if restoration.refusal(&observed).is_some() => {
+                        PersonRestoreOutcome::Refused
+                    }
+                    Err(_) => PersonRestoreOutcome::Unavailable,
+                };
+                self.diagnostics
+                    .service(None, ServiceFact::PersonRestore { cause, outcome });
+            }
+            attempted
+        };
+        let mut person = attempted?;
         log::debug!("person stored sign-in restored");
         let observed = restoration::observation_after_proof(
             &observed,

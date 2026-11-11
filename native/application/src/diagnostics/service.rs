@@ -121,6 +121,29 @@ pub enum AdmissionReadOutcome {
     Invalid,
 }
 
+/// Why the window presented its stored sign-in again to hold a person session.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PersonRestoreCause {
+    /// The window held no person session for the profile.
+    NoHeldSession,
+    /// The session the window held had ended, or was another profile's.
+    HeldSessionEnded,
+}
+
+/// How presenting the stored sign-in ended.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PersonRestoreOutcome {
+    /// The runtime admitted a person session from the stored sign-in.
+    Restored,
+    /// The stored sign-in was refused for good, such as after an idle lapse;
+    /// the person signs in again.
+    Refused,
+    /// The attempt did not settle, and may be tried again.
+    Unavailable,
+}
+
 /// Why a feature could not start.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -172,6 +195,11 @@ pub enum ServiceFact {
         read: AdmissionRead,
         outcome: AdmissionReadOutcome,
         elapsed_ms: u64,
+    },
+    /// The window presented its stored sign-in to hold a person session.
+    PersonRestore {
+        cause: PersonRestoreCause,
+        outcome: PersonRestoreOutcome,
     },
     ManagerInstallationStarted {
         scope: InstallationScope,
