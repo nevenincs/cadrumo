@@ -88,14 +88,14 @@ export async function runOperation<Result>(
     if (failure.code === "refused" && failure.operation_id !== null) {
       // Submit rejects with closed metadata. Read the already-settled
       // operation for its served explanation; never submit the write again.
-      let words: string | null = null;
+      let detail: LedgerErrorDetail | null = null;
       try {
         const observed = await port.observe(failure.operation_id);
         if (
           observed.kind === "refused" &&
           observed.operation_id === failure.operation_id
         )
-          words = servedRefusalWords(observed.detail);
+          detail = observed.detail;
       } catch {
         // The refusal is known even when its explanation cannot be read.
       }
@@ -103,9 +103,9 @@ export async function runOperation<Result>(
         kind: "refused",
         operationId: failure.operation_id,
         reason: failure.reason ?? null,
-        words,
-        step: null,
-        detail: null,
+        words: servedRefusalWords(detail),
+        step: servedNextStep(detail),
+        detail,
       };
     }
     if (NOT_SENT.has(failure.code))
