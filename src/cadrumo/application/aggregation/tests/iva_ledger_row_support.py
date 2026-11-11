@@ -23,16 +23,65 @@ def aggregate_row(transaction: Transaction, period: Period) -> tuple[Sequence[Iv
 
 
 def uncategorised_sale_row(
-    row_id: str, *, booked: date, base: Decimal, iva_rate: Decimal | None, iva_amount: Decimal
+    row_id: str,
+    *,
+    booked: date,
+    base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal,
+    recargo_amount: Decimal | None = None,
 ) -> Transaction:
-    """One classified incoming business sale with no IVA category, whose gross is the base plus the cuota."""
+    """One classified incoming business sale with no IVA category, whose gross is base, cuota and recargo."""
+    return _uncategorised_row(
+        row_id,
+        direction=TransactionDirection.INCOMING,
+        booked=booked,
+        base=base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
+    )
+
+
+def uncategorised_purchase_row(
+    row_id: str,
+    *,
+    booked: date,
+    base: Decimal,
+    iva_rate: Decimal,
+    iva_amount: Decimal,
+    recargo_amount: Decimal | None = None,
+) -> Transaction:
+    """One classified outgoing business purchase with no IVA category, whose gross is base, cuota and recargo."""
+    return _uncategorised_row(
+        row_id,
+        direction=TransactionDirection.OUTGOING,
+        booked=booked,
+        base=base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
+    )
+
+
+def _uncategorised_row(
+    row_id: str,
+    *,
+    direction: TransactionDirection,
+    booked: date,
+    base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal,
+    recargo_amount: Decimal | None,
+) -> Transaction:
+    gross = base + iva_amount + (recargo_amount or Decimal("0"))
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
                 provider_transaction_id=row_id,
                 booked_date=booked,
                 value_date=booked,
-                amount=base + iva_amount,
+                amount=gross,
                 currency="EUR",
                 counterparty="Cliente",
                 description=f"venta {row_id}",
@@ -46,7 +95,7 @@ def uncategorised_sale_row(
                 ),
                 raw_fields={"source_kind": "ledger_transaction"},
             ),
-            "direction": TransactionDirection.INCOMING,
+            "direction": direction,
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
@@ -54,6 +103,7 @@ def uncategorised_sale_row(
             "taxable_base": base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
+            "recargo_amount": recargo_amount,
             "iva_category": None,
             "exemption_article": None,
             "art_104_tres_exclusion": None,
