@@ -67,7 +67,7 @@ def _event(*, marker: str, minute: int, payload: dict[str, str], actor: str = "o
     return build_bucket_event(
         bucket_id=str(_PROFILE),
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-        occurred_at=datetime(1980, 5, 1, 12, minute, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 1, 12, minute, tzinfo=UTC),
         actor=actor,
         object_type=BucketEventObjectType.PROFILE,
         object_id=marker,
@@ -237,7 +237,7 @@ def _receipt(identity: OperationIdentity) -> OperationTerminalReceipt:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(1980, 5, 2, 9, tzinfo=UTC),
+        settled_at=datetime(2026, 5, 2, 9, tzinfo=UTC),
         result_ref="f" * 64,
     )
 

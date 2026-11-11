@@ -25,7 +25,6 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormRepeatingGroupBlock,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ..edit_admission import permitted_binding_entry
@@ -48,8 +47,6 @@ from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import built_form, uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 #: The first quarter's answers about earlier filings that no box of its layout takes.
 _PREVIOUS_YEAR_INCOME = "irpf.previous_year_economic_activity_net_income"
@@ -216,7 +213,7 @@ def test_every_answer_of_every_revision_is_named_in_words(
 def test_the_first_quarter_serves_its_earlier_filing_answers_with_their_words(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    form, _snapshot = _form(operation, "130", _YEAR, "1T", language)
+    form, _snapshot = _form(operation, "130", 2025, "1T", language)
 
     assert [
         str(field.address.binding_id) for field in form.answers if isinstance(field.address, ModeloFormBindingAddressV1)
@@ -242,7 +239,7 @@ def test_the_first_quarter_serves_its_earlier_filing_answers_with_their_words(
 def test_the_answers_group_counts_what_the_answers_ask_and_the_outline_still_sums_to_the_form(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form, _snapshot = _form(operation, "130", _YEAR, "1T")
+    form, _snapshot = _form(operation, "130", 2025, "1T")
 
     groups = [group for group in form.outline if group.kind is ModeloFormOutlineKind.ANSWERS]
     assert len(groups) == 1
@@ -257,14 +254,14 @@ def test_the_answers_group_counts_what_the_answers_ask_and_the_outline_still_sum
 
 
 def test_a_form_without_an_untaken_override_has_no_answers_group(operation: PinnedAuthorityOperation) -> None:
-    form, _snapshot = _form(operation, "303", _YEAR, "1T")
+    form, _snapshot = _form(operation, "303", 2026, "1T")
 
     assert form.answers == ()
     assert all(group.kind is not ModeloFormOutlineKind.ANSWERS for group in form.outline)
 
 
 def test_an_override_the_layout_already_places_is_not_answered_again(operation: PinnedAuthorityOperation) -> None:
-    revision_id = str(operation.revision_for_context("130", filing_year=_YEAR, period="1T").id)
+    revision_id = str(operation.revision_for_context("130", filing_year=2025, period="1T").id)
     layout = operation.form_layout("130", revision_id)
     assert layout is not None
     first_page = layout.pages[0]
@@ -286,7 +283,7 @@ def test_an_override_the_layout_already_places_is_not_answered_again(operation: 
         }
     )
 
-    form, _snapshot = _form(operation, "130", _YEAR, "1T", layout=moved)
+    form, _snapshot = _form(operation, "130", 2025, "1T", layout=moved)
 
     assert [field.address for field in form.answers] == [
         ModeloFormBindingAddressV1(binding_id=_EARLIER_NEGATIVE_RESULTS)
@@ -298,7 +295,7 @@ def test_an_override_the_layout_already_places_is_not_answered_again(operation: 
 def test_a_filed_quarter_still_shows_its_answers_but_offers_none_for_editing(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "130", _YEAR, "1T", lifecycle=CalculationRevisionState.PRESENTADO, held={"19": "0.00"})
+    form = built_form(operation, "130", 2025, "1T", lifecycle=CalculationRevisionState.PRESENTADO, held={"19": "0.00"})
 
     assert {field.address for field in form.answers} == {
         ModeloFormBindingAddressV1(binding_id=_PREVIOUS_YEAR_INCOME),
@@ -310,7 +307,7 @@ def test_a_filed_quarter_still_shows_its_answers_but_offers_none_for_editing(
 
 @pytest.mark.parametrize("repeat", ["an_answer", "a_box"])
 def test_an_answer_the_form_takes_elsewhere_is_refused(operation: PinnedAuthorityOperation, repeat: str) -> None:
-    form, _snapshot = _form(operation, "130", _YEAR, "1T")
+    form, _snapshot = _form(operation, "130", 2025, "1T")
     repeated = form.answers[0] if repeat == "an_answer" else next(field for field in form.fields() if field.box == "05")
 
     with pytest.raises(ValidationError, match="no other field of the form takes"):
@@ -318,8 +315,8 @@ def test_an_answer_the_form_takes_elsewhere_is_refused(operation: PinnedAuthorit
 
 
 def test_an_empty_answer_whose_box_could_not_be_worked_out_needs_the_filer(operation: PinnedAuthorityOperation) -> None:
-    before = built_form(operation, "130", _YEAR, "1T")
-    after = built_form(operation, "130", _YEAR, "1T", calculated=True)
+    before = built_form(operation, "130", 2025, "1T")
+    after = built_form(operation, "130", 2025, "1T", calculated=True)
 
     # Before any calculation nothing says the boxes they feed failed, so the answers read optional.
     assert {field.origin for field in before.answers} == {ModeloFormOrigin.OPTIONAL_EMPTY}

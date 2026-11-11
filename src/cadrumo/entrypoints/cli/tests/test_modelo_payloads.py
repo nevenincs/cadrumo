@@ -23,7 +23,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..modelo_query_results import CasillaObservationPayload, DeltaRowPayload
 from ..modelo_results import CalculationRevisionPayload, FindingPayload, WorkCalculateResult
@@ -40,9 +39,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
-_REVISION_TIMESTAMP = datetime(1980, 1, 1, tzinfo=UTC)
-_NOW = _REVISION_TIMESTAMP.isoformat()
-_YEAR = filing_year_envelope().horizon
+_NOW = "2025-01-01T00:00:00+00:00"
+_REVISION_TIMESTAMP = datetime(2025, 1, 1, tzinfo=UTC)
 
 
 _PAYLOAD_CASILLA: CasillaId = validated_casilla_id("001")
@@ -52,8 +50,8 @@ _NON_CANONICAL_KEY = "bad key"
 _RELATION_OVERRIDE: RelationId = "renta-modelo-130-pagos-fraccionados"
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="130",
-    revision_id=open_ended_revision("130").id,
-    modelo_year=_YEAR,
+    revision_id="2019-y-siguientes",
+    modelo_year=2024,
     period="1T",
 )
 
@@ -106,7 +104,7 @@ def _base_revision_fields() -> dict[str, Any]:
         ),
         binding_overrides={"src1": "ledger-abc"},
         relation_overrides={_RELATION_OVERRIDE: "725.75"},
-        input_values_by_casilla_id={_INPUT_EJERCICIO_CASILLA: str(_YEAR), _INPUT_PERIODO_CASILLA: "1T"},
+        input_values_by_casilla_id={_INPUT_EJERCICIO_CASILLA: "2024", _INPUT_PERIODO_CASILLA: "1T"},
         created_at=_NOW,
         updated_at=_NOW,
     )
@@ -124,7 +122,7 @@ def test_calculation_revision_payload_input_values_by_casilla_id_roundtrips() ->
     restored = CalculationRevisionPayload.model_validate_json(json_str)
 
     assert restored == original
-    assert restored.input_values_by_casilla_id == {_INPUT_EJERCICIO_CASILLA: str(_YEAR), _INPUT_PERIODO_CASILLA: "1T"}
+    assert restored.input_values_by_casilla_id == {_INPUT_EJERCICIO_CASILLA: "2024", _INPUT_PERIODO_CASILLA: "1T"}
     assert restored.relation_overrides == {_RELATION_OVERRIDE: "725.75"}
     assert restored.detail_rows[0].fields["nif_comunitario"] == "DE123456789"
     assert restored.detail_rows[1].fields["importe"] == "900.00"
@@ -134,7 +132,7 @@ def test_calculation_revision_payload_input_values_by_casilla_id_rejects_non_str
     """Strict pydantic must reject a non-string value in input_values_by_casilla_id."""
     fields = _base_revision_fields()
     # Inject an integer value - must not pass dict[CasillaId, str] validation.
-    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: _YEAR}
+    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
         CalculationRevisionPayload(**fields)
@@ -142,7 +140,7 @@ def test_calculation_revision_payload_input_values_by_casilla_id_rejects_non_str
 
 def test_calculation_revision_payload_input_values_by_casilla_id_rejects_non_canonical_casilla_key() -> None:
     fields = _base_revision_fields()
-    fields["input_values_by_casilla_id"] = {_NON_CANONICAL_KEY: str(_YEAR)}
+    fields["input_values_by_casilla_id"] = {_NON_CANONICAL_KEY: "2024"}
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         CalculationRevisionPayload(**fields)
@@ -289,7 +287,7 @@ def test_calculation_revision_payload_input_values_by_casilla_id_json_channel_re
     """Non-string value injected via raw JSON string must also be rejected."""
     original = CalculationRevisionPayload(**_base_revision_fields())
     raw = json.loads(original.model_dump_json())
-    raw["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: _YEAR}
+    raw["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
         CalculationRevisionPayload.model_validate(raw)
@@ -327,7 +325,7 @@ def test_work_calculate_result_input_values_by_casilla_id_roundtrips() -> None:
 
 def test_work_calculate_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
     fields = _base_revision_fields()
-    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: _YEAR}
+    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
         WorkCalculateResult(
@@ -340,7 +338,7 @@ def test_work_calculate_result_input_values_by_casilla_id_rejects_non_string_val
 
 def test_work_calculate_result_input_values_by_casilla_id_rejects_non_canonical_casilla_key() -> None:
     fields = _base_revision_fields()
-    fields["input_values_by_casilla_id"] = {_NON_CANONICAL_KEY: str(_YEAR)}
+    fields["input_values_by_casilla_id"] = {_NON_CANONICAL_KEY: "2024"}
 
     with pytest.raises(ValidationError, match="String should match pattern"):
         WorkCalculateResult(
@@ -369,7 +367,7 @@ def test_work_revision_result_input_values_by_casilla_id_roundtrips() -> None:
 
 def test_work_revision_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
     fields = _base_revision_fields()
-    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: _YEAR}
+    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
         WorkRevisionResult(**fields)
@@ -461,7 +459,7 @@ def test_work_wizard_result_input_values_by_casilla_id_roundtrips() -> None:
 
 def test_work_wizard_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
     fields = _base_revision_fields()
-    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: _YEAR}
+    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
 
     with pytest.raises(ValidationError):
         WorkWizardResult(saved=True, saved_confirmation="Saved", **_no_unresolved_fields(), **fields)

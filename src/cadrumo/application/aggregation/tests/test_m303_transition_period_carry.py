@@ -6,22 +6,15 @@ those terms: "SI para el ultimo periodo (12 y 4T)". Both cadences are therefore
 checked here, for every edition the bundled authority publishes, through the
 registry rather than against a period list held in the code under test.
 
-Modelo 303 files monthly only under the editions that declare that cadence, so the
-monthly cases are asked of the years whose selected edition declares it.
+Modelo 303 files monthly only from the 2023 edition onwards, so the monthly
+cases are asked of the years whose selected edition declares that cadence.
 """
 
 from __future__ import annotations
 
-from itertools import pairwise
-
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_grade_exercises,
-    filing_year_envelope,
-)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
@@ -30,61 +23,20 @@ from ..m303_arrivals import transition_period_applicability_from_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_QUARTERS = ("1T", "2T", "3T", "4T")
-
-
-def _supported_editions() -> tuple[tuple[int, frozenset[str], str], ...]:
-    """Return, per authored Modelo 303 edition inside the support envelope, its first year, periods and id."""
-    floor = filing_year_envelope().floor
-    return tuple(
-        (
-            revision.valid_from.year,
-            frozenset(revision.period_selector.periods_for_year(revision.valid_from.year)),
-            str(revision.id),
-        )
-        for revision in authored_revisions("303")
-        if revision.valid_from.year >= floor
-    )
-
-
-def _edition_contexts() -> tuple[tuple[int, str, str], ...]:
-    """Return one filing context per bundled Modelo 303 edition, with the edition it selects."""
-    return tuple(
-        (year, next(code for code in _QUARTERS if code in periods), revision_id)
-        for year, periods, revision_id in _supported_editions()
-    )
-
-
-def _years_declaring(cadence: str) -> tuple[int, ...]:
-    """Return the filing years whose Modelo 303 editions declare ``cadence``: the quarterly or the monthly one."""
-    years: set[int] = set()
-    for year, periods, _revision_id in _supported_editions():
-        declared = [code for code in periods if (code in _QUARTERS if cadence == "quarterly" else code.isdigit())]
-        if declared:
-            years.add(year)
-    return tuple(sorted(years))
-
-
-def _last_periods_of_editions_replaced_mid_year() -> tuple[tuple[int, str], ...]:
-    """Return the last quarterly and monthly period of each edition a later edition replaces in its own year."""
-    floor = filing_year_envelope().floor
-    cases: list[tuple[int, str]] = []
-    for earlier, later in pairwise(authored_revisions("303")):
-        year = earlier.valid_from.year
-        if year != later.valid_from.year or year < floor:
-            continue
-        served = earlier.period_selector.periods_for_year(year)
-        cases.append((year, max(code for code in served if code in _QUARTERS)))
-        cases.append((year, max(code for code in served if code.isdigit())))
-    return tuple(cases)
-
-
 #: One filing context per bundled Modelo 303 edition, with the edition it selects.
-_EDITION_CONTEXTS = _edition_contexts()
+_EDITION_CONTEXTS: tuple[tuple[int, str, str], ...] = (
+    (2022, "1T", "2022"),
+    (2023, "1T", "2023"),
+    (2024, "1T", "2024-hasta-08-y-2t"),
+    (2024, "3T", "2024-desde-09-y-3t"),
+    (2025, "1T", "2025"),
+    (2026, "1T", "2026-hasta-01-y-1t"),
+    (2026, "2T", "2026-y-siguientes"),
+)
 #: Filing years whose Modelo 303 editions declare the quarterly cadence.
-_QUARTERLY_YEARS = _years_declaring("quarterly")
+_QUARTERLY_YEARS: tuple[int, ...] = (2022, 2023, 2024, 2025, 2026)
 #: Filing years whose Modelo 303 editions declare the monthly cadence.
-_MONTHLY_YEARS = _years_declaring("monthly")
+_MONTHLY_YEARS: tuple[int, ...] = (2023, 2024, 2025, 2026)
 
 
 @pytest.mark.parametrize(("filing_year", "period_code", "revision_id"), _EDITION_CONTEXTS)
@@ -157,7 +109,7 @@ def test_january_is_not_a_transition_period(filing_year: int) -> None:
 
 @pytest.mark.parametrize(
     ("filing_year", "period_code"),
-    _last_periods_of_editions_replaced_mid_year(),
+    [(2024, "2T"), (2024, "08"), (2026, "1T"), (2026, "01")],
 )
 def test_the_last_period_of_an_edition_replaced_mid_year_is_not_a_transition_period(
     filing_year: int, period_code: str
@@ -174,6 +126,6 @@ def test_the_last_period_of_an_edition_replaced_mid_year_is_not_a_transition_per
 
 def test_a_revision_without_a_periodic_carry_answers_nothing_rather_than_guessing() -> None:
     """The carry is the evidence; a revision holding none must not name a transition period."""
-    revision = published_snapshot("390", filing_year=filing_grade_exercises("390")[-1], period="0A").revision
+    revision = published_snapshot("390", filing_year=2025, period="0A").revision
 
     assert periodic_carry_bindings_for_period(revision) == ()

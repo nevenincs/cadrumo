@@ -38,7 +38,6 @@ from cadrumo.application.user_profile.automation_lifecycle import AutomationDeni
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo_client.contracts.access_management import AutomationDenied, AutomationDeny
@@ -81,7 +80,7 @@ pytestmark = [
 ]
 
 _CREATE = MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1P")
+_PERIOD = Period.from_year_and_code(2025, "1P")
 
 
 def _scope(destination_id: UUID) -> AccessScope:
@@ -211,7 +210,7 @@ def test_refusal_detail_is_fenced_after_authority_revocation(
                     profile_id=profile_id,
                     modelo="202",
                     period=PublicPeriod.from_period(_PERIOD),
-                    revision_id=str(revision_covering("202", _PERIOD.filing_year).id),
+                    revision_id="2025-y-siguientes",
                     actor="native-refusal-detail-test",
                 )
                 submitted = api.operation(

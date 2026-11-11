@@ -17,7 +17,6 @@ import sys
 from collections import Counter
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from queue import Queue
@@ -32,7 +31,6 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.tests.cli_envelope import unwrap_cli_result
@@ -51,8 +49,6 @@ from cadrumo_client.contracts.model_runs import (
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
 from .ledger_llm_support import PROFILE_FACTS
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -253,7 +249,7 @@ def _add(review: _NativeReview, marker: str) -> str:
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "121.00",
             "--direction",

@@ -35,7 +35,6 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
@@ -69,9 +68,7 @@ from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-_REVISION_ID = revision_serving_period("303", _YEAR, "1T").id
-_NOW = datetime(1980, 7, 4, 14, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
 _BUCKET_ID = "30330300-0000-4000-8000-000000000601"
 _TX_ID = "d" * 64
 _LEGAL_REFS = ("ley-37-1992:art-99",)
@@ -82,8 +79,8 @@ _CASILLA: CasillaId = validated_casilla_id("00501")
 _ROW_CASILLA: CasillaId = validated_casilla_id("00181")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="303",
-    revision_id=_REVISION_ID,
-    modelo_year=_YEAR,
+    revision_id="2022",
+    modelo_year=2026,
     period="1T",
 )
 
@@ -111,7 +108,7 @@ def _repository_with_parent_work_unit(secure_objects: SecureObjectRepository) ->
         filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
         period=period,
         revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
-        name=f"303-{_YEAR}-1T",
+        name="303-2026-1T",
         created_at=_NOW,
         updated_at=_NOW,
     )
@@ -169,9 +166,9 @@ def _revision(
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        revision_id=_REVISION_ID,
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2022",
     )
     row_values = {"inventory-operation-0181": {"1": "120.00"}} if row_identity is not None else {}
     row_identities: dict[tuple[str, int], RowSourceIdentity] = (
@@ -185,7 +182,7 @@ def _revision(
                 source_row_index=1,
                 source_identity=row_identity,
                 materialization_rule_id="inventory-operation-0181",
-                materialization_rule_version=_REVISION_ID,
+                materialization_rule_version="2022",
             )
         }
         if with_row_materialization and row_identity is not None

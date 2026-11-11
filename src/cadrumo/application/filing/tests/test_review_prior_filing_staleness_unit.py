@@ -26,7 +26,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...calculations.observations_repository import ObservationEnvelopePayload
 from ..draft_review import prior_filing_observations_fingerprint
 from .filing_support import empty_prior_filing_observations_fingerprint
@@ -35,10 +34,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LEGAL_REFS = ("ley-35-2006:art-99",)
 _SOURCE_REFS = ("boe-modelo-130-2025-form",)
-_EXERCISE = filing_year_envelope().horizon
-_PRIOR_EXERCISE = filing_year_envelope().floor
-_STAMPED_REVISION = str(revision_covering("130", _EXERCISE).id)
-_RETIRED_REVISION = "retired-edition"
 
 
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior filing staleness unit test")
@@ -47,7 +42,7 @@ _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior f
 def _prior_observation(*, value: str) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_EXERCISE,
+        filing_year=2026,
         period="1T",
         observations=(
             CasillaObservation(
@@ -61,11 +56,11 @@ def _prior_observation(*, value: str) -> RegistryModeloObservation:
 
 
 def _carrier(
-    *, value: str, source_kind: str = "app_filing", stamped_revision_id: str = _STAMPED_REVISION
+    *, value: str, source_kind: str = "app_filing", stamped_revision_id: str = "2019-y-siguientes"
 ) -> ObservationEnvelopePayload:
     return ObservationEnvelopePayload(
         observation=_prior_observation(value=value),
-        captured_at=datetime(_EXERCISE, 1, 1, tzinfo=UTC),
+        captured_at=datetime(2026, 1, 1, tzinfo=UTC),
         source_kind=source_kind,
         member_nif=None,
         stamped_revision_id=stamped_revision_id,
@@ -91,7 +86,7 @@ def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion
         def carrier(value: str) -> ObservationEnvelopePayload:
             observation = RegistryModeloObservation(
                 modelo="130",
-                filing_year=_EXERCISE,
+                filing_year=2026,
                 period="1T",
                 observations=(
                     CasillaObservation(
@@ -105,10 +100,10 @@ def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion
             )
             return ObservationEnvelopePayload(
                 observation=observation,
-                captured_at=datetime(_EXERCISE, 1, 1, tzinfo=UTC),
+                captured_at=datetime(2026, 1, 1, tzinfo=UTC),
                 source_kind="app_filing",
                 member_nif=None,
-                stamped_revision_id=_STAMPED_REVISION,
+                stamped_revision_id="2019-y-siguientes",
                 source_metadata={},
             )
 
@@ -121,12 +116,12 @@ def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion
 def test_prior_filing_fingerprint_refuses_a_stale_stamped_revision() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         prior_filing_observations_fingerprint(
-            [_carrier(value="100.00", stamped_revision_id=_STAMPED_REVISION)], operation=_authority_operation_for_test
+            [_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")], operation=_authority_operation_for_test
         )
 
         with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
             prior_filing_observations_fingerprint(
-                [_carrier(value="100.00", stamped_revision_id=_RETIRED_REVISION)],
+                [_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")],
                 operation=_authority_operation_for_test,
             )
 
@@ -137,7 +132,7 @@ def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> No
         b = ObservationEnvelopePayload(
             observation=RegistryModeloObservation(
                 modelo="130",
-                filing_year=_PRIOR_EXERCISE,
+                filing_year=2025,
                 period="1T",
                 observations=(
                     CasillaObservation(
@@ -148,10 +143,10 @@ def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> No
                     ),
                 ),
             ),
-            captured_at=datetime(_EXERCISE, 1, 2, tzinfo=UTC),
+            captured_at=datetime(2026, 1, 2, tzinfo=UTC),
             source_kind="app_filing",
             member_nif=None,
-            stamped_revision_id=_STAMPED_REVISION,
+            stamped_revision_id="2019-y-siguientes",
             source_metadata={},
         )
 

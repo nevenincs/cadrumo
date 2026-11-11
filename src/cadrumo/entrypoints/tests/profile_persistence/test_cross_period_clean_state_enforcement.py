@@ -10,11 +10,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    newest_authored_edition,
-)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -107,17 +102,13 @@ from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from .verification_substance_support import general_iva_workflow_profile
 
-_YEAR = filing_year_envelope().horizon
-_M100_YEAR = newest_authored_edition("100")
-_M390_YEAR = filing_grade_exercises("390")[-1]
-
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-_CLOCK = datetime(_YEAR, 6, 5, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
 # A monthly modelo 353 period whose presentation window is open at _CLOCK.
 _GROUP_PERIOD = "05"
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
@@ -128,7 +119,7 @@ _M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
     "decl.tipo-declaracion",
     surface="_M390_TIPO_DECLARACION_CASILLA",
 )
-_M202_2P_REQUIRED_BINDING_OVERRIDES = {
+_M202_2026_2P_REQUIRED_BINDING_OVERRIDES = {
     "modelo-202-cuota-base-ejercicio-anterior": "0",
     "modelo-202-incn-prior-12-months": "7000000",
     "modelo-202-pagos-fraccionados-anteriores": "0",
@@ -178,9 +169,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         # neither Modelo 303 cadence.
         UserProfileFact(path="censo.large_company", value=False),
         UserProfileFact(path="provenance.source", value="manual_cli"),
-        UserProfileFact(
-            path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1).isoformat()
-        ),
+        UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]
     if is_legal_entity:
         facts.extend(
@@ -352,8 +341,8 @@ def _verified_revision_binding_overrides(
     filing_year: int,
     period: str,
 ) -> dict[str, str]:
-    if modelo == "202" and filing_year == _YEAR and period == "2P":
-        return dict(_M202_2P_REQUIRED_BINDING_OVERRIDES)
+    if modelo == "202" and filing_year == 2026 and period == "2P":
+        return dict(_M202_2026_2P_REQUIRED_BINDING_OVERRIDES)
     return {}
 
 
@@ -443,7 +432,7 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="180",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="0A",
             operation=operation,
         )
@@ -477,7 +466,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="390",
-            filing_year=_M390_YEAR,
+            filing_year=2025,
             period="0A",
             operation=operation,
         )
@@ -504,13 +493,13 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period"),
     (
-        ("390", _M390_YEAR, "0A"),
-        ("180", _YEAR, "0A"),
-        ("190", _YEAR, "0A"),
-        ("193", _YEAR, "0A"),
-        ("100", _M100_YEAR, "0A"),
-        ("202", _YEAR, "2P"),
-        ("200", _YEAR, "0A"),
+        ("390", 2025, "0A"),
+        ("180", 2026, "0A"),
+        ("190", 2026, "0A"),
+        ("193", 2026, "0A"),
+        ("100", 2025, "0A"),
+        ("202", 2026, "2P"),
+        ("200", 2026, "0A"),
     ),
 )
 def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
@@ -552,7 +541,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="2T",
             operation=operation,
         )
@@ -591,7 +580,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
         revision_id = _seed_draft_revision(
             bucket_id=profile.bucket_id,
             modelo="100",
-            filing_year=_M100_YEAR,
+            filing_year=2025,
             period="0A",
             operation=operation,
         )
@@ -640,18 +629,18 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
         seed_payer_certificate(
             operation=operation,
             taxpayer_tax_id="X0001500M",
-            ejercicio=_M100_YEAR,
+            ejercicio=2025,
             payer_tax_id="B00010082",
             income_class=RetencionSoportadaClase.TRABAJO,
             retencion=retenciones_trabajo_amount,
             importe_integro_dinerario=Decimal("32000.00"),
         )
-        snapshot = published_authority_operation().snapshot("100", filing_year=_M100_YEAR, period="0A")
+        snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
             bucket_id=profile.bucket_id,
             modelo="100",
-            filing_year=_M100_YEAR,
-            period=Period.from_year_and_code(_M100_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision_id=snapshot.revision.id,
             clock=_CLOCK,
             ports=WorkLifecyclePorts(
@@ -728,7 +717,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_390_IMPORTED_PROFILE_ID) as profile:
         _seed_ready_profile(profile.bucket_id, profile.repository, modelo="390")
-        target_snapshot = published_authority_operation().snapshot("390", filing_year=_M390_YEAR, period="0A")
+        target_snapshot = published_authority_operation().snapshot("390", filing_year=2025, period="0A")
         observations = CalculationObservationRepository()
         requirements_by_source: dict[tuple[str, int, str], set[CasillaId]] = {}
         for requirement in cross_period_dependency_requirements(target_snapshot):
@@ -885,7 +874,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="390",
-            filing_year=_M390_YEAR,
+            filing_year=2025,
             period="0A",
             operation=operation,
         )
@@ -904,8 +893,8 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
             ).record
 
     assert filing.modelo == "390"
-    assert filing.filing_year == _M390_YEAR
-    assert filing.period == Period.from_year_and_code(_M390_YEAR, "0A")
+    assert filing.filing_year == 2025
+    assert filing.period == Period.from_year_and_code(2025, "0A")
     assert filing.status is ModeloRecordStatus.VIGENTE
 
 
@@ -913,7 +902,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_PROFILE_ID) as profile:
-        snapshot = published_authority_operation().snapshot("353", filing_year=_YEAR, period=_GROUP_PERIOD)
+        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period=_GROUP_PERIOD)
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
@@ -921,11 +910,11 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
             CalculationObservationRepository().prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="322",
-                    filing_year=_YEAR,
+                    filing_year=2026,
                     period=_GROUP_PERIOD,
                     observations=registry_grounded_observations(
                         modelo="322",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period=_GROUP_PERIOD,
                         casilla_values={
                             casilla_id: Decimal(index + 1)
@@ -939,11 +928,11 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period=_GROUP_PERIOD,
                         observations=registry_grounded_observations(
                             modelo="322",
-                            filing_year=_YEAR,
+                            filing_year=2026,
                             period=_GROUP_PERIOD,
                             casilla_values={
                                 casilla_id: Decimal(index + 1)
@@ -957,7 +946,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="353",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=_GROUP_PERIOD,
             operation=operation,
         )
@@ -978,8 +967,8 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 cross_period_expected_member_sets=(
                     CrossPeriodExpectedMemberSet(
                         source_modelo="322",
-                        filing_year=_YEAR,
-                        period=Period.from_year_and_code(_YEAR, _GROUP_PERIOD),
+                        filing_year=2026,
+                        period=Period.from_year_and_code(2026, _GROUP_PERIOD),
                         member_nifs=("A00010009", "B00000001"),
                     ),
                 ),
@@ -997,7 +986,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_ROSTER_PROFILE_ID) as profile:
-        snapshot = published_authority_operation().snapshot("353", filing_year=_YEAR, period=_GROUP_PERIOD)
+        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period=_GROUP_PERIOD)
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
@@ -1005,11 +994,11 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             CalculationObservationRepository().prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="322",
-                    filing_year=_YEAR,
+                    filing_year=2026,
                     period=_GROUP_PERIOD,
                     observations=registry_grounded_observations(
                         modelo="322",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period=_GROUP_PERIOD,
                         casilla_values={
                             casilla_id: Decimal(index + 1)
@@ -1023,11 +1012,11 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period=_GROUP_PERIOD,
                         observations=registry_grounded_observations(
                             modelo="322",
-                            filing_year=_YEAR,
+                            filing_year=2026,
                             period=_GROUP_PERIOD,
                             casilla_values={
                                 casilla_id: Decimal(index + 1)
@@ -1041,7 +1030,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
             modelo="353",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=_GROUP_PERIOD,
             operation=operation,
         )
@@ -1050,8 +1039,8 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 "cross_period_group_member_rosters": (
                     CrossPeriodGroupMemberRoster(
                         source_modelo="322",
-                        filing_year=_YEAR,
-                        period=Period.from_year_and_code(_YEAR, _GROUP_PERIOD),
+                        filing_year=2026,
+                        period=Period.from_year_and_code(2026, _GROUP_PERIOD),
                         member_nifs=("A00010009", "B00010082"),
                     ),
                 ),

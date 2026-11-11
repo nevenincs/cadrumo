@@ -496,7 +496,7 @@ def test_a_settled_prior_accrual_row_refuses_the_collection_year_export(
                 workflow_profile=TaxpayerProfile(
                     tax_id="12345678Z",
                     iva_regime=IVARegime("GENERAL"),
-                    activity_start_date=date(1990, 1, 1),
+                    activity_start_date=date(2020, 1, 1),
                     has_employees=False,
                     pays_rent_with_retencion=False,
                     does_intracomunitario=False,

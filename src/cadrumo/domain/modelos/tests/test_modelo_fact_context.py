@@ -8,32 +8,17 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, manual_edition_matches
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EXERCISE = filing_year_envelope().horizon
-
-
-def _euros(printed: str) -> Decimal:
-    """Read an amount as the AEAT manual prints it: dot thousands, comma decimals."""
-    return Decimal(printed.replace(".", "").replace(",", "."))
-
-
-# The manual edition of the exercise that raised the art. 20 RNT ceiling prints both figures.
-((_RAISED_IN, _RAISE),) = manual_edition_matches(
-    "renta", r"se eleva de ([\d.]+) euros hasta ([\d.]+(?:,\d+)?) euros"
-).items()
-_CEILING_BEFORE_RAISE, _CEILING_AFTER_RAISE = (_euros(printed) for printed in _RAISE.groups())
-
 
 def _context() -> ModeloFactResolutionContext:
     return ModeloFactResolutionContext(
         authority=PublishedGovernedFactSource(),
-        filing_period=date(_EXERCISE, 12, 31),
-        devengo_date=date(_EXERCISE, 12, 31),
+        filing_period=date(2025, 12, 31),
+        devengo_date=date(2025, 12, 31),
     )
 
 
@@ -48,14 +33,14 @@ def test_art20_fact_resolves_on_filing_period_with_provenance() -> None:
 @pytest.mark.parametrize(
     ("filing_year", "ceiling", "source_ref"),
     (
-        pytest.param(_RAISED_IN - 1, _CEILING_BEFORE_RAISE, f"aeat-renta-{_RAISED_IN - 1}-manual-parte1", id="before"),
-        pytest.param(_RAISED_IN, _CEILING_AFTER_RAISE, f"aeat-renta-{_RAISED_IN}-manual-parte1", id="raised"),
+        pytest.param(2022, Decimal("16825.00"), "aeat-renta-2022-manual-parte1", id="2022"),
+        pytest.param(2023, Decimal("19747.50"), "aeat-renta-2023-manual-parte1", id="2023"),
     ),
 )
-def test_art20_ceiling_resolves_for_the_exercises_around_its_raise(
+def test_art20_ceiling_resolves_for_each_earlier_supported_year(
     filing_year: int, ceiling: Decimal, source_ref: str
 ) -> None:
-    """Ley 31/2022 raised the art. 20 RNT ceiling for the exercise the AEAT manual says it did; the exercise before keeps the old one."""
+    """The art. 20 RNT ceiling for 2022 is 16,825 euros; Ley 31/2022 raised it to 19,747.5 from 2023."""
     context = ModeloFactResolutionContext(
         authority=PublishedGovernedFactSource(),
         filing_period=date(filing_year, 12, 31),

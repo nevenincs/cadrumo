@@ -41,13 +41,11 @@ from cadrumo.domain.calculations.registry.bindings import CasillaObservation, Re
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_CAPTURED_AT = datetime(1980, 5, 28, 11, 35, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 5, 28, 11, 35, tzinfo=UTC)
 
 
 def _observation(filing_year: int) -> RegistryModeloObservation:
@@ -123,8 +121,8 @@ def test_iter_modelo_refuses_an_observation_filed_under_a_foreign_period_key(
         repository = CalculationObservationRepository()
         _write_under_key(
             repository,
-            _observation(_YEAR),
-            object_key=observation_key("303", Period.from_year_and_code(_YEAR - 1, "1T")),
+            _observation(2026),
+            object_key=observation_key("303", Period.from_year_and_code(2025, "1T")),
         )
 
         # The scan reports the application-owned degradation; the storage
@@ -143,7 +141,7 @@ def test_iter_modelo_yields_an_observation_filed_under_its_own_key(
         repository = CalculationObservationRepository()
         repository.save(
             repository.prepare_observation_envelope(
-                _observation(_YEAR - 1),
+                _observation(2025),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CAPTURED_AT,
                 source_headers=(
@@ -154,10 +152,10 @@ def test_iter_modelo_yields_an_observation_filed_under_its_own_key(
                         source_locator="test:observation-scan:declaration-type",
                     ),
                 ),
-                stamped_revision_id=revision_id_for_observation(_observation(_YEAR - 1)),
+                stamped_revision_id=revision_id_for_observation(_observation(2025)),
             ),
         )
 
         scanned = tuple(repository.iter_modelo("303"))
 
-        assert [payload.observation.filing_year for payload in scanned] == [_YEAR - 1]
+        assert [payload.observation.filing_year for payload in scanned] == [2025]

@@ -42,7 +42,7 @@ from .receipt_sign_in import OTHER_LOGIN_ID, RECEIPT_LOGIN_ID, publish_sign_in_c
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(1980, 10, 5, 9, 0, tzinfo=UTC)
+_NOW = datetime(2026, 10, 5, 9, 0, tzinfo=UTC)
 _EPOCH = "binding-epoch"
 _SERVICE = acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE
 

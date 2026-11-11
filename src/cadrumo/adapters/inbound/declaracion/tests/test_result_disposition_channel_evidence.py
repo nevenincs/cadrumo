@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 _ANNEX_DIR = FIXTURES_DIR / "manual_annexes" / "303"
 
-_SPECIMENS = tuple(sorted(path.stem for path in _ANNEX_DIR.glob("*-?T.pdf")))
+_SPECIMENS = ("2024-1T", "2024-2T", "2024-3T", "2024-4T")
 """The AEAT-published M303 facsimiles for one worked example's four quarters.
 
 Two of the four filed a negative resultado and elected compensación; two filed a

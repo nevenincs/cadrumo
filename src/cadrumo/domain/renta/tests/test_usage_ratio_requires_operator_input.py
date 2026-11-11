@@ -41,7 +41,6 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...categories.proportionality import ProportionalityKind
 from ...categories.proportionality_catalogue import require_proportionality_kind
 from ...categories.registry import resolve_category_profiles
@@ -56,7 +55,7 @@ from ..ledger_expenses import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _USAGE_RATIO_KIND_TOKENS = ("usage_ratio_home_area", "usage_ratio_personal")
 
 
@@ -79,7 +78,7 @@ def _fact(category: SpendingCategory) -> RentaDeductibleExpenseFact:
         transaction_id="a" * 64,
         invoice_id="inv-1",
         invoice_issue_date=date(_YEAR, 3, 8),
-        catalogue_id=f"ledger-{_YEAR}",
+        catalogue_id="ledger-2025",
         operation_date=date(_YEAR, 3, 8),
         category=category,
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,

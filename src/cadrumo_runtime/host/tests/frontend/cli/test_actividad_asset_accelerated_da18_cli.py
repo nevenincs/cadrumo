@@ -26,7 +26,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.i18n.render import tr
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, manual_editions_printing
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -65,19 +65,6 @@ BASIS = Decimal("30000.00")
 _ACCELERATED_CODE = "REFUSED_ACTIVIDAD_ASSET_ACCELERATED_DA18_DEPRECIATION_NOT_COMPUTED"
 _ACCELERATED_MESSAGE_KEY = "errors.refused.refused_actividad_asset_accelerated_da18_depreciation_not_computed"
 LANGUAGES = ("en", "es", "ca", "hu")
-
-_ACCELERATED_REGIME_HEADING = "amortizacion acelerada de determinados vehiculos"
-_FREE_REGIME_HEADING = "libertad de amortizacion en determinados vehiculos"
-#: The exercise whose bundled manual edition gives LIS DA 18 as accelerated
-#: depreciation and not as free depreciation, and the first exercise whose edition
-#: gives it as free depreciation.
-_ACCELERATED_EXERCISE = max(
-    set(manual_editions_printing("renta", _ACCELERATED_REGIME_HEADING))
-    - set(manual_editions_printing("renta", _FREE_REGIME_HEADING))
-)
-_FREE_EXERCISE = min(manual_editions_printing("renta", _FREE_REGIME_HEADING))
-_ACCELERATED_ASSET = f"van-{_ACCELERATED_EXERCISE}"
-_FREE_ASSET = f"van-{_FREE_EXERCISE}"
 
 
 def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = "madrid") -> None:
@@ -182,10 +169,7 @@ def _forecast(asset_id: str, year: int, *, language: str = "es") -> Result:
 def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_language(tmp_path: Path) -> None:
     with runtime_cli_profile(tmp_path=tmp_path, label="accelerated da18") as profile:
         seed_direct_normal_profile(profile.storage_root, profile.bucket_id)
-        for asset_id, in_service in (
-            (_ACCELERATED_ASSET, date(_ACCELERATED_EXERCISE, 3, 1)),
-            (_FREE_ASSET, date(_FREE_EXERCISE, 3, 1)),
-        ):
+        for asset_id, in_service in (("van-2023", date(2023, 3, 1)), ("van-2024", date(2024, 3, 1))):
             payment = van_payment(asset_id, in_service)
             created = invoke_cached_cli(
                 [
@@ -195,10 +179,8 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
                 ],
             )
             assert created.exit_code == 0, created.output
-        refusals = {
-            language: _forecast(_ACCELERATED_ASSET, _ACCELERATED_EXERCISE, language=language) for language in LANGUAGES
-        }
-        admitted = _forecast(_FREE_ASSET, _FREE_EXERCISE)
+        refusals = {language: _forecast("van-2023", 2023, language=language) for language in LANGUAGES}
+        admitted = _forecast("van-2024", 2024)
 
     messages: set[str] = set()
     for language, refused in refusals.items():
@@ -207,8 +189,8 @@ def test_an_electric_vehicle_under_the_accelerated_regime_refuses_in_every_langu
         assert error["code"] == _ACCELERATED_CODE, error
         assert error["message"] == tr(_ACCELERATED_MESSAGE_KEY, locale=language)
         assert error["context"]["legal_reference"] == "ley-27-2014:da-18"
-        assert error["context"]["tax_year"] == str(_ACCELERATED_EXERCISE)
-        assert error["context"]["asset_id"] == _ACCELERATED_ASSET
+        assert error["context"]["tax_year"] == "2023"
+        assert error["context"]["asset_id"] == "van-2023"
         messages.add(error["message"])
     # Each supported language renders its own translation, not a shared fallback text.
     assert len(messages) == len(LANGUAGES)

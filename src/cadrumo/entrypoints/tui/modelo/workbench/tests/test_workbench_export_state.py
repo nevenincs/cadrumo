@@ -42,7 +42,6 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import bundled_indexed_authority
 from ......domain.calculations.registry.ids import BindingId
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.repository import upsert_work_unit
 from ......domain.modelos.work_unit import WorkUnitCatalogue
@@ -56,7 +55,7 @@ from .workbench_fixture import FakeActions, FakeReader, synthetic_form
 
 __all__ = ["isolated_backend"]
 
-_EXPORTED_AT = datetime(filing_year_envelope().horizon, 4, 2, 9, 30, tzinfo=UTC)
+_EXPORTED_AT = datetime(2026, 4, 2, 9, 30, tzinfo=UTC)
 _EN = OutputLanguage.EN
 
 
@@ -128,7 +127,7 @@ async def test_each_file_state_reads_in_the_header_and_leads_f8_to_its_one_step(
             assert actions.exports == []
 
 
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2026
 _PERIOD_CODE = "4T"
 _ACTIVITY_START = date(_FILING_YEAR, 10, 1)
 _SURFACE = "workbench export state test"
@@ -177,7 +176,7 @@ def test_a_file_exported_for_real_reaches_the_header_through_the_installed_workb
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=revision_id,
-                output_path=tmp_path / f"modelo-130-{_FILING_YEAR}-4T.txt",
+                output_path=tmp_path / "modelo-130-2026-4T.txt",
                 actor="operator",
             ),
             workflow_profile=export_taxpayer_profile().model_copy(update={"activity_start_date": _ACTIVITY_START}),

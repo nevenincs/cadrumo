@@ -14,14 +14,11 @@ from cadrumo.core.period import Period
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,7 +36,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
         may = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 counterparty="Vendor SL",
@@ -47,12 +44,12 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
                 idempotency_key="review-may",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 6, 1),
+                booked_date=date(2026, 6, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 counterparty="Vendor SL",
@@ -60,11 +57,11 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
                 idempotency_key="review-june",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 6, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 6, 1, 8, 0, tzinfo=UTC),
         )
 
         listed = query_ledger_review_rows(
-            LedgerReviewQuery(bucket_id=BUCKET_ID, period=Period.from_year_and_code(_YEAR, "05"), status="pending"),
+            LedgerReviewQuery(bucket_id=BUCKET_ID, period=Period.from_year_and_code(2026, "05"), status="pending"),
             ports=ports,
         )
         single = query_ledger_review_rows(
@@ -74,7 +71,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
         single_filtered_out = query_ledger_review_rows(
             LedgerReviewQuery(
                 bucket_id=BUCKET_ID,
-                period=Period.from_year_and_code(_YEAR, "06"),
+                period=Period.from_year_and_code(2026, "06"),
                 transaction_id=may.ref.transaction_id,
             ),
             ports=ports,
@@ -98,26 +95,26 @@ def test_query_ledger_review_rows_filters_by_direction(secure_objects: SecureObj
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("250.00"),
                 direction=TransactionDirection.INCOMING,
                 description="client payment",
                 idempotency_key="dir-incoming",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
         expense = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 idempotency_key="dir-outgoing",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         )
 
         full = query_ledger_review_rows(

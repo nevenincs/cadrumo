@@ -22,7 +22,6 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -37,32 +36,30 @@ if TYPE_CHECKING:
 
 __all__ = ["build_package_bytes", "build_package_path", "review_package_revision", "review_package_work_unit"]
 
-_EXERCISE = filing_year_envelope().horizon
-_NOW = datetime(_EXERCISE, 7, 3, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
 _SURFACE = "review_package_bytes_support"
 _BASE_CASILLA = validated_casilla_id("base", surface=_SURFACE)
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface=_SURFACE)
 
 
 def review_package_work_unit(*, bucket_id: str) -> WorkUnit:
-    """Return the 303 second-quarter draft work unit of the horizon exercise the package suites sign."""
-    period = Period.from_year_and_code(_EXERCISE, "2T")
-    revision_id = str(revision_serving_period("303", _EXERCISE, "2T").id)
+    """Return the 303 second-quarter 2026 draft work unit the package suites sign."""
+    period = Period.from_year_and_code(2026, "2T")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=_EXERCISE,
+        filing_year=2026,
         period=period,
-        revision_id=revision_id,
+        revision_id="2026-y-siguientes",
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=_EXERCISE,
+        filing_year=2026,
         period=period,
-        revision_id=revision_id,
-        name=f"303-{_EXERCISE}-2T",
+        revision_id="2026-y-siguientes",
+        name="303-2026-2T",
         created_at=_NOW,
         updated_at=_NOW,
         state=WorkUnitState.BORRADOR,

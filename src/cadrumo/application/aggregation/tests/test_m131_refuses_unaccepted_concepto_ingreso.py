@@ -19,7 +19,6 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
@@ -31,9 +30,8 @@ from .renta_income_aggregation_support import raw_transaction
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "9f86d081-884c-4d65-9a2f-eaa0c55ad015"
-_YEAR = filing_year_envelope().horizon
-_QUARTER = Period.from_year_and_code(_YEAR, "2T")
-_IN_WINDOW = date(_YEAR, 5, 14)
+_QUARTER = Period.from_year_and_code(2026, "2T")
+_IN_WINDOW = date(2026, 5, 14)
 _RETIRED = ConceptoIngreso.from_registry("retired_concept")
 
 
@@ -52,7 +50,7 @@ def _receipt(provider_id: str, *, tipo_actividad: TipoActividad, concepto_ingres
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(1980, 7, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 7, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
             "tipo_actividad": tipo_actividad,
             "concepto_ingreso": ConceptoIngreso.from_registry(concepto_ingreso),

@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RENTA_YEAR = newest_authored_edition("100")
 
 
 def test_casillas_number_filter_finds_m100_employment_income_and_withholding() -> None:
@@ -24,7 +21,7 @@ def test_casillas_number_filter_finds_m100_employment_income_and_withholding() -
             "casillas",
             "100",
             "--year",
-            str(_RENTA_YEAR),
+            "2025",
             "--period",
             "0A",
             "--number",
@@ -40,7 +37,7 @@ def test_casillas_number_filter_finds_m100_employment_income_and_withholding() -
             "casillas",
             "100",
             "--year",
-            str(_RENTA_YEAR),
+            "2025",
             "--period",
             "0A",
             "--number",
@@ -61,10 +58,10 @@ def test_casillas_number_filter_is_distinct_from_form_number_filter() -> None:
     """``--number`` covers casilla ids that ``--form-number`` does not."""
 
     by_casilla = invoke_cached_cli(
-        ["app", "modelo", "casillas", "100", "--year", str(_RENTA_YEAR), "--period", "0A", "--number", "0596"],
+        ["app", "modelo", "casillas", "100", "--year", "2025", "--period", "0A", "--number", "0596"],
     )
     by_form = invoke_cached_cli(
-        ["app", "modelo", "casillas", "100", "--year", str(_RENTA_YEAR), "--period", "0A", "--form-number", "0596"],
+        ["app", "modelo", "casillas", "100", "--year", "2025", "--period", "0A", "--form-number", "0596"],
     )
 
     assert by_casilla.exit_code == 0, by_casilla.output

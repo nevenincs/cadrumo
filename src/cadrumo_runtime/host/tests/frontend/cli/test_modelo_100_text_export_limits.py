@@ -24,7 +24,6 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -36,9 +35,10 @@ from .runtime_profile_backend import runtime_cli_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _LABEL = "Modelo 100 text export limits test profile"
-_FILING_YEAR = newest_authored_edition("100")
+_FILING_YEAR = 2025
 _PERIOD = "0A"
 _XSD = "{http://www.w3.org/2001/XMLSchema}"
+_XSD_FILE = "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
 _NAME_PATH = "./DatosIdentificativos/Declarante/DP_APENOM_D"
 _CALCULATE_FLAGS: tuple[str, ...] = (
     "--casilla",
@@ -96,9 +96,8 @@ def _seed(runtime_profile: TestRuntimeProfile, *, name: str, surnames: str, cert
 
 
 def _name_pattern() -> str:
-    files = Path(bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files"))
-    (xsd,) = files.glob(f"*-100-esquema-xsd-ejercicio-{_FILING_YEAR}-*.xsd")
-    root = DefusedElementTree.parse(xsd).getroot()
+    path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files", _XSD_FILE)
+    root = DefusedElementTree.parse(Path(path)).getroot()
     assert root is not None
     for simple_type in root.iter(f"{_XSD}simpleType"):
         if simple_type.get("name") == "tipo_ApeNom":
@@ -110,7 +109,7 @@ def _name_pattern() -> str:
 
 def _calculated_work_unit() -> tuple[str, str]:
     work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(revision_covering("100", _FILING_YEAR).id)
+        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
     )
     calculated = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
@@ -171,7 +170,7 @@ def test_a_stored_surname_past_the_profile_bound_refuses_new_work_naming_the_fac
             "--period",
             _PERIOD,
             "--revision",
-            str(revision_covering("100", _FILING_YEAR).id),
+            str(_FILING_YEAR),
         ]
     )
 
@@ -189,7 +188,7 @@ def test_a_surname_stored_past_the_bound_after_work_began_refuses_calculate_nami
 ) -> None:
     _seed(runtime_profile, name="Ana", surnames="Pérez Núñez")
     work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(revision_covering("100", _FILING_YEAR).id)
+        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
     )
     surnames = "Pérez" * 80
     _seed(runtime_profile, name="Ana", surnames=surnames, certificate=False)

@@ -53,15 +53,13 @@ from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySig
 from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_TODAY = date(_YEAR, 8, 7)
-_ACTIVITY_START = date(_YEAR - 2, 3, 1)
+_TODAY = date(2026, 8, 7)
+_ACTIVITY_START = date(2024, 3, 1)
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +95,7 @@ def _autonomo(
     activity_start_date: date | None = _ACTIVITY_START,
     activity_end_date: date | None = None,
 ) -> TaxpayerProfile:
-    """A natural person with economic activity, IVA general, activity from two years back.
+    """A natural person with economic activity, IVA general, activity from 2024.
 
     The two activity dates are the only axes these tests vary, so they are named
     parameters rather than a ``**overrides`` bag: the bag erased every field to
@@ -124,32 +122,32 @@ def _autonomo(
 
 def test_the_year_span_runs_from_the_declared_activity_start_to_today() -> None:
     grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
-    assert grid.ejercicios == (_YEAR, _YEAR - 1, _YEAR - 2)
+    assert grid.ejercicios == (2026, 2025, 2024)
     assert grid.activity_start_declared is True
 
 
 def test_a_declared_activity_end_caps_the_span() -> None:
-    # A taxpayer who ceased activity last year is not expected to have filed for
-    # this year, and flagging this year as expected-but-not-found would be a false anomaly.
+    # A taxpayer who ceased activity in 2025 is not expected to have filed for
+    # 2026, and flagging 2026 as expected-but-not-found would be a false anomaly.
     grid = expected_filed_declaration_grid(
-        _autonomo(activity_end_date=date(_YEAR - 1, 6, 30)),
+        _autonomo(activity_end_date=date(2025, 6, 30)),
         today=_TODAY,
     )
-    assert grid.ejercicios == (_YEAR - 1, _YEAR - 2)
+    assert grid.ejercicios == (2025, 2024)
     assert grid.activity_end_declared is True
 
 
 def test_an_activity_end_after_today_does_not_extend_the_span_into_the_future() -> None:
     grid = expected_filed_declaration_grid(
-        _autonomo(activity_end_date=date(_YEAR + 4, 1, 1)),
+        _autonomo(activity_end_date=date(2030, 1, 1)),
         today=_TODAY,
     )
-    assert grid.ejercicios == (_YEAR, _YEAR - 1, _YEAR - 2)
+    assert grid.ejercicios == (2026, 2025, 2024)
 
 
 def test_an_activity_starting_this_year_yields_exactly_this_year() -> None:
-    grid = expected_filed_declaration_grid(_autonomo(activity_start_date=date(_YEAR, 1, 15)), today=_TODAY)
-    assert grid.ejercicios == (_YEAR,)
+    grid = expected_filed_declaration_grid(_autonomo(activity_start_date=date(2026, 1, 15)), today=_TODAY)
+    assert grid.ejercicios == (2026,)
 
 
 def test_no_declared_activity_start_says_cannot_say_rather_than_nothing_expected() -> None:
@@ -224,7 +222,7 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
             entity_type=EntityType.from_registry("legal_entity"),
             irpf_income_categories=frozenset(),
             iva_regime=IVARegime("GENERAL"),
-            activity_start_date=date(_YEAR - 2, 3, 1),
+            activity_start_date=date(2024, 3, 1),
         ),
         today=_TODAY,
     )
@@ -237,7 +235,7 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
 def _availability(*items: tuple[str, tuple[int, ...]]) -> _AvailabilityReport:
     return _AvailabilityReport(
         items=tuple(_Availability(modelo=modelo, ejercicios=years) for modelo, years in items),
-        discovered_at=datetime(_YEAR, 8, 7, 10, 0, tzinfo=UTC),
+        discovered_at=datetime(2026, 8, 7, 10, 0, tzinfo=UTC),
     )
 
 
@@ -258,7 +256,7 @@ def _report_for(
 
 
 def test_a_pair_in_both_signals_carries_both_tags() -> None:
-    report = _report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=(("303", (_YEAR - 1,)),))
+    report = _report_for(modelos=("303",), ejercicios=(2025,), offered=(("303", (2025,)),))
     (pair,) = report.pairs
     assert pair.signals == (
         FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,
@@ -267,13 +265,13 @@ def test_a_pair_in_both_signals_carries_both_tags() -> None:
 
 
 def test_a_profile_only_pair_carries_only_the_profile_tag() -> None:
-    report = _report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=(("100", (_YEAR - 1,)),))
+    report = _report_for(modelos=("303",), ejercicios=(2025,), offered=(("100", (2025,)),))
     profile_only = next(pair for pair in report.pairs if pair.modelo == "303")
     assert profile_only.signals == (FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
 
 
 def test_a_register_only_pair_carries_only_the_register_tag() -> None:
-    report = _report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=(("100", (_YEAR - 1,)),))
+    report = _report_for(modelos=("303",), ejercicios=(2025,), offered=(("100", (2025,)),))
     register_only = next(pair for pair in report.pairs if pair.modelo == "100")
     assert register_only.signals == (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)
 
@@ -281,13 +279,13 @@ def test_a_register_only_pair_carries_only_the_register_tag() -> None:
 def test_the_register_signal_only_ever_widens_the_grid() -> None:
     expected = ExpectedFiledDeclarationGrid(
         modelos=("303",),
-        ejercicios=(_YEAR - 1, _YEAR - 2),
+        ejercicios=(2025, 2024),
         activity_start_declared=True,
     )
     without = filed_history_discovery_report(expected=expected, availability=None)
     with_register = filed_history_discovery_report(
         expected=expected,
-        availability=_availability(("100", (_YEAR - 3,))),
+        availability=_availability(("100", (2023,))),
     )
     assert set(without.walk_pairs) <= set(with_register.walk_pairs)
     # And every profile pair keeps its standing after the union.
@@ -300,28 +298,28 @@ def test_the_register_signal_can_never_remove_a_profile_pair() -> None:
     report = filed_history_discovery_report(
         expected=ExpectedFiledDeclarationGrid(
             modelos=("303",),
-            ejercicios=(_YEAR - 1,),
+            ejercicios=(2025,),
             activity_start_declared=True,
         ),
         availability=_availability(),
     )
-    assert report.walk_pairs == (("303", _YEAR - 1),)
+    assert report.walk_pairs == (("303", 2025),)
     assert report.pairs[0].expected_by_profile is True
 
 
 def test_walk_order_reaches_recent_filings_first() -> None:
     report = _report_for(
         modelos=("100", "303"),
-        ejercicios=(_YEAR - 2, _YEAR, _YEAR - 1),
+        ejercicios=(2024, 2026, 2025),
         offered=(),
     )
     assert report.walk_pairs == (
-        ("100", _YEAR),
-        ("100", _YEAR - 1),
-        ("100", _YEAR - 2),
-        ("303", _YEAR),
-        ("303", _YEAR - 1),
-        ("303", _YEAR - 2),
+        ("100", 2026),
+        ("100", 2025),
+        ("100", 2024),
+        ("303", 2026),
+        ("303", 2025),
+        ("303", 2024),
     )
 
 
@@ -329,7 +327,7 @@ def test_walk_order_reaches_recent_filings_first() -> None:
 
 
 def test_zero_rows_is_an_anomaly_only_for_a_profile_nominated_pair() -> None:
-    report = _report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=(("100", (_YEAR - 1,)),))
+    report = _report_for(modelos=("303",), ejercicios=(2025,), offered=(("100", (2025,)),))
     by_modelo = {pair.modelo: pair for pair in report.pairs}
     assert by_modelo["303"].zero_rows_is_an_anomaly is True
     assert by_modelo["100"].zero_rows_is_an_anomaly is False
@@ -338,15 +336,15 @@ def test_zero_rows_is_an_anomaly_only_for_a_profile_nominated_pair() -> None:
 def test_a_pair_in_both_signals_is_still_an_anomaly_when_empty() -> None:
     # Being ALSO offered by the register must not downgrade a profile
     # expectation; the union is additive in coverage, not in standing.
-    report = _report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=(("303", (_YEAR - 1,)),))
+    report = _report_for(modelos=("303",), ejercicios=(2025,), offered=(("303", (2025,)),))
     assert report.pairs[0].zero_rows_is_an_anomaly is True
 
 
 def test_the_two_pair_partitions_are_total_and_disjoint() -> None:
     report = _report_for(
         modelos=("303",),
-        ejercicios=(_YEAR - 1,),
-        offered=(("100", (_YEAR - 1, _YEAR - 2)), ("303", (_YEAR - 1,))),
+        ejercicios=(2025,),
+        offered=(("100", (2025, 2024)), ("303", (2025,))),
     )
     expected_pairs = set(report.profile_expected_pairs)
     register_only = set(report.register_options_only_pairs)
@@ -357,9 +355,9 @@ def test_the_two_pair_partitions_are_total_and_disjoint() -> None:
 def test_a_register_only_report_carries_no_taxpayer_specific_denominator() -> None:
     report = filed_history_discovery_report(
         expected=ExpectedFiledDeclarationGrid(),
-        availability=_availability(("303", (_YEAR - 1,))),
+        availability=_availability(("303", (2025,))),
     )
-    assert report.walk_pairs == (("303", _YEAR - 1),)
+    assert report.walk_pairs == (("303", 2025),)
     assert report.carries_a_taxpayer_specific_denominator is False
     assert report.profile_year_span_determined is False
     assert report.register_options_read is True
@@ -369,7 +367,7 @@ def test_a_profile_report_carries_a_taxpayer_specific_denominator() -> None:
     report = filed_history_discovery_report(
         expected=ExpectedFiledDeclarationGrid(
             modelos=("303",),
-            ejercicios=(_YEAR - 1,),
+            ejercicios=(2025,),
             activity_start_declared=True,
         ),
         availability=None,
@@ -384,13 +382,13 @@ def test_a_profile_report_carries_a_taxpayer_specific_denominator() -> None:
 
 def test_a_pair_nominated_by_nothing_is_refused() -> None:
     with pytest.raises(ValidationError, match="signals"):
-        FiledHistoryDiscoveryPair(modelo="303", ejercicio=_YEAR - 1, signals=())
+        FiledHistoryDiscoveryPair(modelo="303", ejercicio=2025, signals=())
 
 
 def test_signal_order_is_canonicalised_so_equal_nominations_compare_equal() -> None:
     forward = FiledHistoryDiscoveryPair(
         modelo="303",
-        ejercicio=_YEAR - 1,
+        ejercicio=2025,
         signals=(
             FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,
             FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,
@@ -398,7 +396,7 @@ def test_signal_order_is_canonicalised_so_equal_nominations_compare_equal() -> N
     )
     reversed_with_duplicate = FiledHistoryDiscoveryPair(
         modelo="303",
-        ejercicio=_YEAR - 1,
+        ejercicio=2025,
         signals=(
             FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,
             FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,
@@ -411,22 +409,22 @@ def test_signal_order_is_canonicalised_so_equal_nominations_compare_equal() -> N
 def test_the_report_survives_a_strict_json_roundtrip() -> None:
     saved = _report_for(
         modelos=("303",),
-        ejercicios=(_YEAR - 1, _YEAR - 2),
-        offered=(("100", (_YEAR - 3,)),),
+        ejercicios=(2025, 2024),
+        offered=(("100", (2023,)),),
     )
     loaded = FiledHistoryDiscoveryReport.model_validate_json(saved.model_dump_json())
     assert loaded == saved
 
 
 def test_the_report_refuses_a_payload_whose_pair_lost_its_signals() -> None:
-    corrupted = json.loads(_report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=()).model_dump_json())
+    corrupted = json.loads(_report_for(modelos=("303",), ejercicios=(2025,), offered=()).model_dump_json())
     del corrupted["pairs"][0]["signals"]
     with pytest.raises(ValidationError, match="signals"):
         FiledHistoryDiscoveryReport.model_validate_json(json.dumps(corrupted))
 
 
 def test_the_report_refuses_an_unknown_signal_token() -> None:
-    corrupted = json.loads(_report_for(modelos=("303",), ejercicios=(_YEAR - 1,), offered=()).model_dump_json())
+    corrupted = json.loads(_report_for(modelos=("303",), ejercicios=(2025,), offered=()).model_dump_json())
     corrupted["pairs"][0]["signals"] = ["operator_guess"]
     with pytest.raises(ValidationError, match="signals"):
         FiledHistoryDiscoveryReport.model_validate_json(json.dumps(corrupted))
@@ -450,7 +448,7 @@ def test_an_offered_modelo_the_profile_excludes_reads_as_likely_universal() -> N
 
     reading = classify_register_scoping_signal(
         profile,
-        _availability((next(iter(sorted(excluded))), (_YEAR - 1,))),
+        _availability((next(iter(sorted(excluded))), (2025,))),
         today=_TODAY,
     )
     assert reading is RegisterScopingSignal.LIKELY_UNIVERSAL
@@ -459,7 +457,7 @@ def test_an_offered_modelo_the_profile_excludes_reads_as_likely_universal() -> N
 def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary() -> None:
     profile = _autonomo()
     excluded = next(iter(sorted(_confidently_excluded(profile))))
-    availability = _availability((excluded, (_YEAR - 1,)))
+    availability = _availability((excluded, (2025,)))
 
     class _DiscoveryPort(UnavailableFiledDataCapturePort):
         @override
@@ -491,7 +489,7 @@ def test_an_offered_set_avoiding_every_excluded_modelo_reads_as_likely_nif_scope
     offered = "303"
     assert offered not in excluded, "the fixture modelo is excluded, so this arm is testing the other branch"
 
-    reading = classify_register_scoping_signal(profile, _availability((offered, (_YEAR - 1,))), today=_TODAY)
+    reading = classify_register_scoping_signal(profile, _availability((offered, (2025,))), today=_TODAY)
     assert reading is RegisterScopingSignal.LIKELY_NIF_SCOPED
 
 
@@ -529,12 +527,12 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
     """
     profile = _autonomo()
     excluded = next(iter(sorted(_confidently_excluded(profile))))
-    universal_looking = _availability((excluded, (_YEAR - 1,)))
-    scoped_looking = _availability(("303", (_YEAR - 1,)))
+    universal_looking = _availability((excluded, (2025,)))
+    scoped_looking = _availability(("303", (2025,)))
 
     expected = ExpectedFiledDeclarationGrid(
         modelos=("303",),
-        ejercicios=(_YEAR - 1,),
+        ejercicios=(2025,),
         activity_start_declared=True,
     )
     assert classify_register_scoping_signal(profile, universal_looking, today=_TODAY) is (
@@ -555,11 +553,11 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
 
 def _filed_130_observation_for_tests() -> FiledDeclaracionObservation:
     """Build one canonical filed observation for the recapture projections."""
-    presented_at = datetime(_YEAR, 4, 20, 10, 0, tzinfo=UTC)
+    presented_at = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
     return FiledDeclaracionObservation(
         modelo="130",
-        ejercicio=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         expediente_id="13020260410ABCD1234EFGH5678",
         status="ALTA",
         presented_at=presented_at,
@@ -584,7 +582,7 @@ def _filed_130_observation_for_tests() -> FiledDeclaracionObservation:
                 confidence=1.0,
             ),
         ),
-        registry_snapshot_ref=registry_snapshot("130", _YEAR, "1T").snapshot_ref,
+        registry_snapshot_ref=registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
 
 
@@ -595,11 +593,11 @@ def _stored_130_registry_observation(*, casilla_03: str):
 
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
             casilla_values={validated_casilla_id("03"): Decimal(casilla_03)},
         ),
@@ -635,11 +633,11 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
 
     stored_without_03 = RegistryModeloObservation(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
             casilla_values={validated_casilla_id("07"): Decimal("10.00")},
         ),
@@ -651,7 +649,7 @@ def test_a_change_within_the_registry_published_tolerance_is_absorbed() -> None:
     """A real registry-published tolerance -- not a hardcoded cent -- absorbs rounding noise.
 
     The fresh capture reads casilla 03 as ``1500.00``; the stored value differs
-    by EXACTLY the modelo 130 1T published tolerance (``0.01``), so it must
+    by EXACTLY the modelo 130 2026 1T published tolerance (``0.01``), so it must
     not surface as a divergence when that tolerance is passed.
     """
     changed = casillas_a_recapture_would_change(
@@ -690,11 +688,11 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
             repo.prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="130",
-                    filing_year=_YEAR,
+                    filing_year=2026,
                     period="1T",
                     observations=registry_grounded_observations(
                         modelo="130",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period="1T",
                         casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
                     ),
@@ -703,11 +701,11 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="130",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period="1T",
                         observations=registry_grounded_observations(
                             modelo="130",
-                            filing_year=_YEAR,
+                            filing_year=2026,
                             period="1T",
                             casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
                         ),
@@ -734,11 +732,11 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
             repo.prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="130",
-                    filing_year=_YEAR,
+                    filing_year=2026,
                     period="1T",
                     observations=registry_grounded_observations(
                         modelo="130",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period="1T",
                         casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
                     ),
@@ -747,11 +745,11 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="130",
-                        filing_year=_YEAR,
+                        filing_year=2026,
                         period="1T",
                         observations=registry_grounded_observations(
                             modelo="130",
-                            filing_year=_YEAR,
+                            filing_year=2026,
                             period="1T",
                             casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
                         ),

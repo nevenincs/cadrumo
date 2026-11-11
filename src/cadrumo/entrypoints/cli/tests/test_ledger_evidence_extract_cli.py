@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -27,7 +26,6 @@ from ....application.ledger.structured_invoice_ports import (
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.operations import OperationEffect
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ledger_evidence_commands import (
     evidence_extract_lines,
     evidence_extract_payload,
@@ -35,8 +33,6 @@ from ..ledger_evidence_commands import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _EVIDENCE_ID = "e" * 16
@@ -50,7 +46,7 @@ def _projection() -> LedgerEvidenceExtractProjection:
     draft = InvoiceDraft(
         supplier_name="Mayorista Ejemplo SL",
         invoice_number="FAC-2024-0007",
-        invoice_date=date(_YEAR, 11, 20).isoformat(),
+        invoice_date="2024-11-20",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21.00"),
         iva_amount=Decimal("21.00"),

@@ -29,11 +29,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    newest_authored_edition,
-    open_ended_revision,
-    revision_covering,
-)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
@@ -47,10 +42,6 @@ from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-# The newest authored Modelo 100 exercise consumes the prior exercise's observation.
-_YEAR = newest_authored_edition("100")
-_PRIOR_YEAR = _YEAR - 1
 
 
 @pytest.fixture
@@ -108,7 +99,7 @@ def _record_local_prior_observation() -> None:
             "--modelo",
             "100",
             "--year",
-            str(_PRIOR_YEAR),
+            "2024",
             "--period",
             "0A",
             "--by",
@@ -139,7 +130,7 @@ def _record_local_prior_observation() -> None:
     assert payload["operation"] == "modelo.filing_record.observe_local"
     assert payload["action"] == "recorded"
     assert payload["reason"] == "synthetic prior-year reconstruction"
-    assert payload["observation_key"] == f"100:{_PRIOR_YEAR}:0A"
+    assert payload["observation_key"] == "100:2024:0A"
     assert payload["observation_layers"]["official"] is None
     assert payload["observation_layers"]["pending_local"]["source_kind"] == "operator_manual"
     assert payload["observation_layers"]["effective_source_kind"] == "operator_manual"
@@ -168,16 +159,16 @@ def _record_local_prior_observation() -> None:
 def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
-        observed = repository.load_observation("100", Period.from_year_and_code(_PRIOR_YEAR, "0A"))
+        observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
         assert observed is not None
         assert observed.source_kind == "operator_manual"
-        assert observed.stamped_revision_id == str(revision_covering("100", _PRIOR_YEAR).id)
+        assert observed.stamped_revision_id == "2024"
         assert observed.source_metadata["official_evidence"] == "false"
         assert observed.source_metadata["filing_record_created"] == "false"
         assert observed.source_metadata["captured_by"] == "sofia-local"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = published_snapshot("100", filing_year=_YEAR, period="0A")
+        m100_snapshot = published_snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(
             m100_snapshot,
             repository=repository,
@@ -192,7 +183,7 @@ def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation
         ):
             assert m100_prefill.binding_values[binding_id] == Decimal("0")
 
-        m130_snapshot = published_snapshot("130", filing_year=_YEAR, period="1T")
+        m130_snapshot = published_snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(
             m130_snapshot,
             repository=repository,
@@ -214,17 +205,17 @@ def _assert_m130_calculation_consumes_the_observation() -> None:
             "--modelo",
             "130",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
             "--revision",
-            str(open_ended_revision("130").id),
+            "2019-y-siguientes",
         ],
     )
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
-    seed_m130_income_transaction(amount=Decimal("6000.00"), filing_year=_YEAR, source_key="local-observation")
-    seed_m130_expense_transaction(amount=Decimal("2000.00"), filing_year=_YEAR, source_key="local-observation")
+    seed_m130_income_transaction(amount=Decimal("6000.00"), filing_year=2025, source_key="local-observation")
+    seed_m130_expense_transaction(amount=Decimal("2000.00"), filing_year=2025, source_key="local-observation")
 
     calculated = invoke_cached_cli(
         [
@@ -281,7 +272,7 @@ def _observe_local(*arguments: str) -> dict[str, Any]:
             "--modelo",
             "130",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
             "--by",
@@ -297,9 +288,9 @@ def test_observe_local_overrides_official_evidence_with_audit_and_clear_restores
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """An override sits above the official layer with its audit; ``--clear`` restores the official value."""
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     casilla_id = validated_casilla_id("01")
-    revision = published_snapshot("130", filing_year=_YEAR, period=period.registry_token).revision
+    revision = published_snapshot("130", filing_year=2025, period=period.registry_token).revision
     declared = casillas_by_id(revision)[casilla_id]
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
@@ -307,7 +298,7 @@ def test_observe_local_overrides_official_evidence_with_audit_and_clear_restores
             repository.prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="130",
-                    filing_year=_YEAR,
+                    filing_year=2025,
                     period=period.registry_token,
                     observations=(
                         CasillaObservation(
@@ -319,7 +310,7 @@ def test_observe_local_overrides_official_evidence_with_audit_and_clear_restores
                     ),
                 ),
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime(_YEAR, 4, 18, 9, 30, tzinfo=UTC),
+                captured_at=datetime(2025, 4, 18, 9, 30, tzinfo=UTC),
                 stamped_revision_id=str(revision.id),
                 source_metadata={"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"},
             ),
@@ -361,7 +352,7 @@ def test_observe_local_refuses_values_with_clear_and_a_missing_reason(runtime_pr
     """``--clear`` takes no values and every mode requires ``--reason``."""
     del runtime_profile
     base = ["--format", "json", "app", "modelo", "filing-record", "observe-local"]
-    target = ["--modelo", "130", "--year", str(_YEAR), "--period", "1T"]
+    target = ["--modelo", "130", "--year", "2025", "--period", "1T"]
 
     with_values = invoke_cached_cli([*base, *target, "--reason", "r", "--clear", "--set", "01=1.00"])
     without_reason = invoke_cached_cli([*base, *target, "--set", "01=1.00"])

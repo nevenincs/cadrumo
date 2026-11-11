@@ -6,18 +6,14 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_YEAR = filing_year_envelope().horizon
-
 _IVA_RATE = Decimal("0.21")
-_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -51,7 +47,7 @@ def iva_transaction(
         {
             "raw": _raw_transaction(
                 provider_id,
-                booked_date=date(_YEAR, 2, 15),
+                booked_date=date(2026, 2, 15),
                 amount=taxable_base + iva_amount,
             ),
             "direction": direction,

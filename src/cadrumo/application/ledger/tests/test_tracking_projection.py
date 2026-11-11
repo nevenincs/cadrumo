@@ -11,7 +11,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
@@ -33,13 +32,11 @@ from ..tracking_projection import (
     LedgerTrackingProjection,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _tracking_payload() -> LedgerTransactionTrackingPayload:
-    occurred_at = datetime(_YEAR, 5, 5, 10, 15, tzinfo=UTC)
+    occurred_at = datetime(2026, 5, 5, 10, 15, tzinfo=UTC)
     return LedgerTransactionTrackingPayload(
         transaction_id="a" * 64,
         created_event_id=None,
@@ -100,12 +97,12 @@ def _participation(
     filing_record_id: str | None = None,
     justificante_reference: str | None = None,
 ) -> TransactionRevisionParticipation:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return TransactionRevisionParticipation(
         calculation_revision_id=revision_id,
         work_unit_id="f" * 64,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_state=revision_state,
         filing_record_id=filing_record_id,
@@ -132,7 +129,7 @@ def test_participation_projection_preserves_period_shape_order_and_empty_absence
     assert [item.model_dump(mode="json") for item in projected] == [
         item.model_dump(mode="json") for item in index.participations
     ]
-    assert projected[0].period.model_dump(mode="json") == {"filing_year": _YEAR, "code": "1T"}
+    assert projected[0].period.model_dump(mode="json") == {"filing_year": 2026, "code": "1T"}
     assert projected[0].filing_record_id is None
     assert projected[1].filing_record_id == "3" * 64
     assert (
@@ -144,10 +141,10 @@ def test_participation_projection_preserves_period_shape_order_and_empty_absence
 
 
 def _transaction(*, created_event_id: str | None = None) -> Transaction:
-    ingested_at = datetime(_YEAR, 5, 6, 9, 30, tzinfo=UTC)
+    ingested_at = datetime(2026, 5, 6, 9, 30, tzinfo=UTC)
     raw = RawTransaction(
         provider_transaction_id="tracking-import-row",
-        booked_date=date(_YEAR, 5, 5),
+        booked_date=date(2026, 5, 5),
         value_date=None,
         amount=Decimal("42.50"),
         currency="EUR",

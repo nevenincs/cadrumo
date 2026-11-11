@@ -9,27 +9,17 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.snapshot import build_validated_snapshot
-from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where, revision_first_exercise
 from ....domain.calculations.registry.tests.registry_tree import bundled_modelo_components
 from ..error_detail import OperationErrorDetailKind, build_operation_error_detail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-# The authored Modelo 200 revision that declares calculation grade, so a filing-grade request is refused.
-(_CALCULATION_GRADE_REVISION,) = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)
-_REVISION_ID = str(_CALCULATION_GRADE_REVISION.id)
-_FILING_YEAR = revision_first_exercise("200", _REVISION_ID)
 
 
 def _filing_grade_refusal(operation: PinnedAuthorityOperation) -> RegistryValidationError:
     """Ask the published Modelo 200 revision for filing authority it does not declare."""
     modelo, catalogues = bundled_modelo_components("200")
     with validating_governed_facts(operation), pytest.raises(RegistryValidationError) as refused:
-        build_validated_snapshot(
-            modelo, catalogues, filing_year=_FILING_YEAR, period="0A", grade=RegistryAuthorityGrade.FILING
-        )
+        build_validated_snapshot(modelo, catalogues, filing_year=2024, period="0A", grade=RegistryAuthorityGrade.FILING)
     return refused.value
 
 
@@ -52,7 +42,7 @@ def test_a_registry_authority_refusal_records_its_failed_condition_and_facts(
         "declared_authority_grade": "calculation",
         "modelo": "200",
         "requested_authority_grade": "filing",
-        "revision_id": _REVISION_ID,
+        "revision_id": "2024",
     }
 
 

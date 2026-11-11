@@ -49,17 +49,10 @@ from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings impor
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 
-from .....domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    open_ended_revision,
-    revision_serving_period,
-)
 from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 
 #: An explicit bundle. These tests exercise the surrounding wiring, not the law;
@@ -74,7 +67,7 @@ _PARAMS = BienesInversionRegularizacionParameters(
     umbral_comparison=ThresholdComparison.EXCLUSIVE,
     provenance=BienesInversionParameterProvenance(
         modelo_id="303",
-        revision_id=open_ended_revision("303").id,
+        revision_id="2025",
         parameter_ids=(
             "m303-bien-inversion-ventana-anos-mueble",
             "m303-bien-inversion-ventana-anos-inmueble",
@@ -82,7 +75,7 @@ _PARAMS = BienesInversionRegularizacionParameters(
             "m303-bien-inversion-divisor-inmueble",
             "m303-bien-inversion-regularizacion-umbral-puntos",
         ),
-        resolved_on=_date(_YEAR - 1, 6, 1),
+        resolved_on=_date(2025, 6, 1),
     ),
 )
 
@@ -101,8 +94,7 @@ def _params_for(year: int) -> BienesInversionRegularizacionParameters:
 _BINDING_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 _M390_BINDING_ID = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 _CURRENT_YEAR_PRORRATA_ID = "iva.prorrata-porcentaje"
-_FILING_YEAR = _YEAR - 2
-_AFTER_WINDOW = _YEAR + _PARAMS.ventana_anos_mueble
+_FILING_YEAR = 2024
 _BUCKET_ID = "f4475676-5fc4-4beb-b132-e97d3b071fb5"  # was 'bienes-inversion-regularizacion-source-resolver'
 
 
@@ -176,7 +168,7 @@ def _register() -> BienesInversionIvaRegister:
             BienInversionIvaRecord(
                 identifier="bi-2022-maquina",
                 description="Máquina afecta",
-                acquisition_year=_YEAR - _PARAMS.ventana_anos_mueble,
+                acquisition_year=2022,
                 cuota_soportada=Decimal("5000.00"),
                 prorrata_inicial_pct=Decimal("80"),
                 kind=BienInversionKind.from_registry("mueble"),
@@ -235,9 +227,9 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
         _m303_revision(),
         _register(),
-        regularizacion_year=_YEAR - 2,
+        regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-2022-maquina": Decimal("60")},
-        parameters=_params_for(_FILING_YEAR),
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("200.00")
     assert diagnostic is not None
@@ -267,9 +259,9 @@ def test_advisory_fires_even_when_percentage_pending() -> None:
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
         _m303_revision(),
         _register(),
-        regularizacion_year=_YEAR - 2,
+        regularizacion_year=2024,
         prorrata_definitiva_by_identifier={},
-        parameters=_params_for(_FILING_YEAR),
+        parameters=_params_for(2024),
     )
     assert projection.pending_percentage_count == 1
     assert projection.proposed_casilla_43 == Decimal("0.00")
@@ -282,9 +274,9 @@ def test_no_advisory_when_no_in_window_goods() -> None:
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
         _m303_revision(),
         _register(),
-        regularizacion_year=_AFTER_WINDOW,  # outside the mueble window
+        regularizacion_year=2030,  # outside the 2023-2026 mueble window
         prorrata_definitiva_by_identifier={},
-        parameters=_params_for(_AFTER_WINDOW),
+        parameters=_params_for(2030),
     )
     assert projection.rows == ()
     assert diagnostic is None
@@ -559,13 +551,13 @@ def _disposed_register() -> BienesInversionIvaRegister:
             BienInversionIvaRecord(
                 identifier="bi-2022-furgoneta",
                 description="Furgoneta de reparto afecta",
-                acquisition_year=_YEAR - _PARAMS.ventana_anos_mueble,
+                acquisition_year=2022,
                 cuota_soportada=Decimal("10000.00"),
                 prorrata_inicial_pct=Decimal("60"),
                 kind=BienInversionKind.from_registry("mueble"),
                 acquisition_ledger_id="ledger-bi-2022-furgoneta",
                 disposal=BienInversionDisposal(
-                    year=_YEAR - 2, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
+                    year=2024, regime=BienInversionDisposalRegime.from_registry("sujeta_no_exenta")
                 ),
             ),
         )
@@ -582,8 +574,8 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
         _m303_revision(),
         _disposed_register(),
-        disposal_year=_YEAR - 2,
-        parameters=_params_for(_FILING_YEAR),
+        disposal_year=2024,
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-2400.00")
     assert diagnostic is not None
@@ -604,9 +596,9 @@ def test_transmision_advisory_applies_supplied_cap() -> None:
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
         _m303_revision(),
         _disposed_register(),
-        disposal_year=_YEAR - 2,
+        disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-2022-furgoneta": Decimal("1500.00")},
-        parameters=_params_for(_FILING_YEAR),
+        parameters=_params_for(2024),
     )
     assert projection.proposed_casilla_43 == Decimal("-1500.00")
     assert diagnostic is not None
@@ -618,8 +610,8 @@ def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
         _m303_revision(),
         _disposed_register(),
-        disposal_year=_YEAR - 3,  # the recorded disposal falls in another year
-        parameters=_params_for(_FILING_YEAR - 1),
+        disposal_year=2023,  # the recorded disposal is 2024
+        parameters=_params_for(2023),
     )
     assert projection.rows == ()
     assert diagnostic is None
@@ -637,13 +629,13 @@ def test_nonempty_early_m303_register_admits_period_figures_and_preserves_defini
         bundled_indexed_authority().operation() as operation,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
-        period = Period.from_year_and_code(_YEAR, period_token)
-        snapshot = operation.snapshot("303", filing_year=_YEAR, period=period_token)
-        assert snapshot.revision.id == revision_serving_period("303", _YEAR, period_token).id
+        period = Period.from_year_and_code(2026, period_token)
+        snapshot = operation.snapshot("303", filing_year=2026, period=period_token)
+        assert snapshot.revision.id == "2026-hasta-01-y-1t"
         context = CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
             revision=snapshot.revision,
         )
@@ -651,7 +643,7 @@ def test_nonempty_early_m303_register_admits_period_figures_and_preserves_defini
         if not in_window_good:
             # The persisted good is real and validated; its regularisation window has ended.
             record = BienInversionIvaRecord.model_validate(
-                {**record.model_dump(mode="python"), "acquisition_year": _YEAR - _PARAMS.ventana_anos_mueble - 2},
+                {**record.model_dump(mode="python"), "acquisition_year": 2020},
             )
         repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
         repository.add(record)

@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....calculations.registry.tests.authored_editions import filing_year_envelope
 from ..lifecycle import (
     BASIS_STAGE_FACTS,
     OPENING_STATUS_FACTS,
@@ -84,7 +83,7 @@ def test_a_missing_opening_history_states_no_fact_and_a_known_one_may_state_each
     known = OpeningAmortizationHistory(
         status=OpeningHistoryStatus.KNOWN,
         accumulated_amount=Decimal("100"),
-        covered_through_tax_year=filing_year_envelope().floor,
+        covered_through_tax_year=2024,
     )
     assert {name for name in OPENING_STATUS_FACTS[OpeningHistoryStatus.KNOWN] if getattr(known, name) is not None} == {
         "accumulated_amount",

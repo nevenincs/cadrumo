@@ -27,7 +27,6 @@ import { ibanMalformed } from "../src/shared/iban";
 import { servedSupport } from "../src/dev/servedYearAuthority";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
-import { fixtureInstant } from "../src/dev/fixtureDates";
 
 // The Setup sections' pure decisions and the staged rule run. No page is
 // opened.
@@ -101,9 +100,9 @@ test("a rule from a selection starts from what the movements share", () => {
 });
 
 test("the rule order follows priority, then age, and a place takes the number that holds it", () => {
-  const first = rule("first", 10, fixtureInstant(1, 1, "00:00:00Z"));
-  const tie = rule("tie", 10, fixtureInstant(1, 2, "00:00:00Z"));
-  const last = rule("last", 50, fixtureInstant(1, 1, "00:00:00Z"));
+  const first = rule("first", 10, "2026-01-01T00:00:00Z");
+  const tie = rule("tie", 10, "2026-01-02T00:00:00Z");
+  const last = rule("last", 50, "2026-01-01T00:00:00Z");
   const ordered = ruleOrder([last, tie, first]);
   expect(ordered.map((found) => found.rule_id)).toEqual(
     [first, tie, last].map((found) => found.rule_id),
@@ -119,14 +118,14 @@ test("the rule order follows priority, then age, and a place takes the number th
 });
 
 test("moving a rule writes it once where a number fits, and numbers all again where none does", () => {
-  const a = rule("a", 10, fixtureInstant(1, 1, "00:00:00Z"));
-  const b = rule("b", 20, fixtureInstant(1, 2, "00:00:00Z"));
-  const c = rule("c", 30, fixtureInstant(1, 3, "00:00:00Z"));
+  const a = rule("a", 10, "2026-01-01T00:00:00Z");
+  const b = rule("b", 20, "2026-01-02T00:00:00Z");
+  const c = rule("c", 30, "2026-01-03T00:00:00Z");
   expect(reorderWrites([a, b, c], 2, 1)).toEqual([{ rule: c, priority: 19 }]);
   expect(reorderWrites([a, b, c], 0, 2)).toEqual([{ rule: a, priority: 40 }]);
   expect(reorderWrites([a, b, c], 1, 1)).toEqual([]);
-  const x = rule("x", 1, fixtureInstant(1, 1, "00:00:00Z"));
-  const y = rule("y", 1, fixtureInstant(1, 2, "00:00:00Z"));
+  const x = rule("x", 1, "2026-01-01T00:00:00Z");
+  const y = rule("y", 1, "2026-01-02T00:00:00Z");
   // Nothing goes below 1: everything is numbered again, the moved rule
   // first, and a rule already on its number is not written.
   expect(reorderWrites([x, y], 1, 0)).toEqual([

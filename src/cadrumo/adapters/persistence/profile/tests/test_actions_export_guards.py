@@ -19,14 +19,11 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     OTHER_BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,21 +44,21 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
             create_manual_transaction(
                 ManualLedgerTransactionCommand(
                     bucket_id=BUCKET_ID,
-                    booked_date=date(_YEAR, 5, index + 1),
+                    booked_date=date(2026, 5, index + 1),
                     amount=Decimal("25.00"),
                     direction=TransactionDirection.OUTGOING,
                     description=f"export row {index:02d}",
                     idempotency_key=f"export-bulk-{index:02d}",
                 ),
                 ports=ports,
-                occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
             )
 
     result = export_ledger_transactions(
         LedgerExportCommand(bucket_id=BUCKET_ID),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert result.row_count == 12
@@ -85,14 +82,14 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
         first = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="bucket a row",
                 idempotency_key="shared-key",
             ),
             ports=ports_a,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=OTHER_BUCKET_ID,
@@ -103,21 +100,21 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: 
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=OTHER_BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="bucket b row",
                 idempotency_key="shared-key",
             ),
             ports=ports_b,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     result = export_ledger_transactions(
         LedgerExportCommand(bucket_id=BUCKET_ID, export_format=ExportSerializationFormat.JSONL),
         transaction_repository=repo_a,
         bucket_event_repository=event_repo_a,
-        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert result.row_count == 1
@@ -143,14 +140,14 @@ def test_export_ledger_transactions_writes_output_before_export_event(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="export row",
                 idempotency_key="export-output-before-event",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with pytest.raises(OSError):
@@ -158,7 +155,7 @@ def test_export_ledger_transactions_writes_output_before_export_event(
             LedgerExportCommand(bucket_id=BUCKET_ID, output_path=tmp_path),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            occurred_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         )
 
     assert [event.event_type for event in event_repository.load().for_bucket(BUCKET_ID)] == [
@@ -189,14 +186,14 @@ def test_export_ledger_transactions_replaces_prior_export_atomically(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="export row",
                 idempotency_key="export-atomic-replace",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     output_path = tmp_path / "ledger-export.csv"
@@ -209,7 +206,7 @@ def test_export_ledger_transactions_replaces_prior_export_atomically(
         LedgerExportCommand(bucket_id=BUCKET_ID, output_path=output_path),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
     )
 
     assert output_path.read_bytes() == result.payload

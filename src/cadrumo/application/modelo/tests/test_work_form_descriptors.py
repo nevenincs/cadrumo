@@ -16,7 +16,7 @@ themselves, not read back from the builder:
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -29,7 +29,6 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.filing.schema import ModeloValueKind
@@ -76,8 +75,6 @@ from ..work_form_service import modelo_form_deadline, modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _LEGAL_REF = "rd-439-2007:art-110"
 
@@ -156,7 +153,7 @@ def _field(form: ModeloWorkForm, casilla_id: str) -> ModeloFormField:
 
 def test_a_carried_box_names_the_earlier_declaration_it_reads(operation: PinnedAuthorityOperation) -> None:
     """Modelo 130 box 05 carries the instalments already paid this year: in the 2nd quarter, the 1st's."""
-    form = _form(operation, "130", _YEAR, "2T")
+    form = _form(operation, "130", 2026, "2T")
 
     carried = _field(form, "05").source
     records = _field(form, "01").source
@@ -164,7 +161,7 @@ def test_a_carried_box_names_the_earlier_declaration_it_reads(operation: PinnedA
     assert carried is not None
     assert carried.family is SourceFamily.EARLIER_FILINGS
     assert carried.earlier_filings == (
-        ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(_YEAR, "1T")),
+        ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2026, "1T")),
     )
     assert carried.binding_id == _field(form, "05").bindings[0].binding_id
     assert records is not None
@@ -176,7 +173,7 @@ def test_a_carried_box_names_the_earlier_declaration_it_reads(operation: PinnedA
 
 def test_a_carry_with_no_earlier_quarter_names_no_declaration(operation: PinnedAuthorityOperation) -> None:
     """In the 1st quarter there is no earlier instalment of the year, so none is named, never guessed."""
-    carried = _field(_form(operation, "130", _YEAR, "1T"), "05").source
+    carried = _field(_form(operation, "130", 2026, "1T"), "05").source
 
     assert carried is not None
     assert carried.family is SourceFamily.EARLIER_FILINGS
@@ -184,7 +181,7 @@ def test_a_carry_with_no_earlier_quarter_names_no_declaration(operation: PinnedA
 
 
 def test_a_rate_the_design_prints_reads_as_set_by_the_form(operation: PinnedAuthorityOperation) -> None:
-    rate = _field(_form(operation, "303", _YEAR, "1T"), "02")
+    rate = _field(_form(operation, "303", 2026, "1T"), "02")
 
     assert rate.editability is ModeloFormEditability.DESIGN_CONSTANT
     assert rate.source is not None
@@ -216,7 +213,7 @@ def test_the_modelo_130_result_settles_as_its_record_design_declares(
     direction: ModeloFormResultDirection,
     disposition: ResultDisposition,
 ) -> None:
-    result = _form(operation, "130", _YEAR, quarter, values={"19": value}).result
+    result = _form(operation, "130", 2026, quarter, values={"19": value}).result
 
     assert result is not None
     assert result.box == "19"
@@ -227,7 +224,7 @@ def test_the_modelo_130_result_settles_as_its_record_design_declares(
 
 
 def test_a_result_not_calculated_yet_has_no_direction(operation: PinnedAuthorityOperation) -> None:
-    result = _form(operation, "130", _YEAR, "1T").result
+    result = _form(operation, "130", 2026, "1T").result
 
     assert result is not None
     assert result.box == "19"
@@ -246,7 +243,7 @@ def test_a_modelo_303_credit_is_carried_forward_in_a_first_quarter(
     in ``test_m303_refund_election_words``; this form reads no profile, so the
     inscription stays unstated here.
     """
-    result = _form(operation, "303", _YEAR, "1T", values={"71": Decimal("-420.00")}).result
+    result = _form(operation, "303", 2026, "1T", values={"71": Decimal("-420.00")}).result
 
     assert result is not None
     assert result.box == "71"
@@ -256,9 +253,9 @@ def test_a_modelo_303_credit_is_carried_forward_in_a_first_quarter(
 
 
 def test_a_modelo_100_result_settles_by_its_declared_type(operation: PinnedAuthorityOperation) -> None:
-    """Box 0670 decides the annual record's "tipo de declaración": a negative result is a refund, "D"."""
-    refund = _form(operation, "100", _YEAR, "0A", values={"0670": Decimal("-812.40")}).result
-    to_pay = _form(operation, "100", _YEAR, "0A", values={"0670": Decimal("812.40")}).result
+    """Box 0670 decides the 2025 record's "tipo de declaración": a negative result is a refund, "D"."""
+    refund = _form(operation, "100", 2025, "0A", values={"0670": Decimal("-812.40")}).result
+    to_pay = _form(operation, "100", 2025, "0A", values={"0670": Decimal("812.40")}).result
 
     assert refund is not None and to_pay is not None
     assert refund.box == "0670"
@@ -270,7 +267,7 @@ def test_a_modelo_100_result_settles_by_its_declared_type(operation: PinnedAutho
 
 
 def test_an_informative_return_has_no_settlement_box(operation: PinnedAuthorityOperation) -> None:
-    assert _form(operation, "349", _YEAR, "1T").result is None
+    assert _form(operation, "349", 2026, "1T").result is None
 
 
 # -- what the filer owes -----------------------------------------------------
@@ -284,8 +281,8 @@ def test_modelo_100_asks_for_no_box_the_registry_or_the_calculation_does_not_req
     The boxes asked for are the four earlier years' pending negative bases, which the calculation refuses to
     start without.
     """
-    form = _form(operation, "100", _YEAR, "0A")
-    snapshot = _snapshot(operation, "100", _YEAR, "0A")
+    form = _form(operation, "100", 2025, "0A")
+    snapshot = _snapshot(operation, "100", 2025, "0A")
     manifest = snapshot.revision.completeness_manifest
     assert manifest is not None
     closure = {str(item.casilla_id) for item in manifest.casillas}
@@ -304,7 +301,7 @@ def test_modelo_100_asks_for_no_box_the_registry_or_the_calculation_does_not_req
 
 
 def test_modelo_210_asks_for_the_boxes_the_registry_requires(operation: PinnedAuthorityOperation) -> None:
-    form = _form(operation, "210", _YEAR, "0A")
+    form = _form(operation, "210", 2025, "0A")
 
     needs = {address_key(field.address)[1] for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT}
 
@@ -316,7 +313,7 @@ def test_modelo_210_asks_for_the_boxes_the_registry_requires(operation: PinnedAu
 
 
 def test_a_declaration_recorded_as_filed_offers_nothing_for_editing(operation: PinnedAuthorityOperation) -> None:
-    snapshot = _snapshot(operation, "130", _YEAR, "1T")
+    snapshot = _snapshot(operation, "130", 2026, "1T")
     casilla = next(item for item in snapshot.revision.casillas if item.id == "06")
     surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] = (
         ModeloEditWritableScalarSurfaceEntryV1(
@@ -327,10 +324,10 @@ def test_a_declaration_recorded_as_filed_offers_nothing_for_editing(operation: P
         ),
     )
 
-    draft = _form(operation, "130", _YEAR, "1T", surface=surface)
-    filed = _form(operation, "130", _YEAR, "1T", surface=surface, lifecycle=CalculationRevisionState.PRESENTADO)
+    draft = _form(operation, "130", 2026, "1T", surface=surface)
+    filed = _form(operation, "130", 2026, "1T", surface=surface, lifecycle=CalculationRevisionState.PRESENTADO)
     superseded = _form(
-        operation, "130", _YEAR, "1T", surface=surface, lifecycle=CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+        operation, "130", 2026, "1T", surface=surface, lifecycle=CalculationRevisionState.PRESENTADO_SUPERSEDIDO
     )
 
     assert draft.edit_admitted
@@ -349,42 +346,34 @@ def test_a_declaration_recorded_as_filed_offers_nothing_for_editing(operation: P
 
 
 def test_a_deadline_on_a_working_day_stands_and_counts_the_days_left(operation: PinnedAuthorityOperation) -> None:
-    year = next(candidate for candidate in filing_year_envelope().years if date(candidate, 4, 20).weekday() < 5)
     deadline = modelo_form_deadline(
         operation,
         ModeloCode("130"),
-        Period.from_year_and_code(year, "1T"),
-        reference_on=date(year, 4, 10),
+        Period.from_year_and_code(2026, "1T"),
+        reference_on=date(2026, 4, 10),
     )
 
     assert deadline is not None
-    assert deadline.nominal_closes_on == date(year, 4, 20)
-    assert deadline.closes_on == date(year, 4, 20)
+    assert deadline.nominal_closes_on == date(2026, 4, 20)
+    assert deadline.closes_on == date(2026, 4, 20)
     assert deadline.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
     assert deadline.days_remaining == 10
     assert deadline.days_overdue is None
 
 
-@pytest.mark.parametrize("year", filing_year_envelope().years)
-def test_a_deadline_on_a_weekend_moves_to_the_next_working_day(operation: PinnedAuthorityOperation, year: int) -> None:
-    """The fourth-quarter window of Modelo 136 stores the nominal 20 January; a weekend 20th moves to the Monday."""
-    nominal = date(year + 1, 1, 20)
-    shift_to_monday = {5: 2, 6: 1}.get(nominal.weekday(), 0)
-    closes_on = nominal + timedelta(days=shift_to_monday)
-    reference_on = nominal + timedelta(days=5)
-
+def test_a_deadline_on_a_saturday_moves_to_the_next_working_day(operation: PinnedAuthorityOperation) -> None:
+    """The window stores the nominal 20 January 2024, a Saturday; the filer has until Monday the 22nd."""
     deadline = modelo_form_deadline(
         operation,
         ModeloCode("136"),
-        Period.from_year_and_code(year, "4T"),
-        reference_on=reference_on,
+        Period.from_year_and_code(2023, "4T"),
+        reference_on=date(2024, 1, 25),
     )
 
     assert deadline is not None
-    assert deadline.nominal_closes_on == nominal
-    assert deadline.closes_on == closes_on
-    assert closes_on.weekday() < 5
-    assert deadline.days_overdue == (reference_on - closes_on).days
+    assert deadline.nominal_closes_on == date(2024, 1, 20)
+    assert deadline.closes_on == date(2024, 1, 22)
+    assert deadline.days_overdue == 3
     assert deadline.days_remaining is None
 
 
@@ -393,8 +382,8 @@ def test_a_period_with_no_window_has_no_deadline(operation: PinnedAuthorityOpera
         modelo_form_deadline(
             operation,
             ModeloCode("130"),
-            Period.from_year_and_code(_YEAR, "0A"),
-            reference_on=date(_YEAR, 4, 10),
+            Period.from_year_and_code(2026, "0A"),
+            reference_on=date(2026, 4, 10),
         )
         is None
     )
@@ -407,8 +396,8 @@ def _requirement(operation: PinnedAuthorityOperation) -> CrossPeriodDependencyRe
     assert _LEGAL_REF in legal_reference_ids(operation)
     return CrossPeriodDependencyRequirement(
         source_modelo="111",
-        filing_year=_YEAR - 1,
-        period=Period.from_year_and_code(_YEAR - 1, "4T"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "4T"),
         source_casilla_ids=(validated_casilla_id("30"),),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("modelo-130-pagos-fraccionados-anteriores",),
@@ -429,8 +418,8 @@ def _cross_period_findings(operation: PinnedAuthorityOperation) -> dict[str, Mod
     verdict = CrossPeriodCleanStateVerdict(
         bucket_id="13000000-0000-4000-8000-000000000454",
         target_modelo="130",
-        target_filing_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_filing_year=2026,
+        target_period=Period.from_year_and_code(2026, "1T"),
         dependencies=(evidence,),
     )
     return {finding.message_locale_key: finding for finding in cross_period_clean_state_findings(verdict)}
@@ -472,7 +461,7 @@ def test_a_blocking_finding_blocks_whatever_its_message(operation: PinnedAuthori
 
 def test_every_issue_on_the_form_carries_its_attention(operation: PinnedAuthorityOperation) -> None:
     findings = tuple(_cross_period_findings(operation).values())
-    form = _form(operation, "130", _YEAR, "1T", findings=findings)
+    form = _form(operation, "130", 2026, "1T", findings=findings)
 
     assert {issue.finding.message_locale_key: issue.attention for issue in form.issues} == {
         key: finding_attention(finding) for key, finding in _cross_period_findings(operation).items()

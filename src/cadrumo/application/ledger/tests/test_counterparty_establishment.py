@@ -32,7 +32,6 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import resolve_iva_classification_catalogue
@@ -56,8 +55,6 @@ from ..counterparty_establishment import (
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .ledger_value_fixtures import repository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = ["repository"]
@@ -65,7 +62,7 @@ __all__ = ["repository"]
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _SUPPLIER_CIF = "B00015016"
 _OTHER_CIF = "B87654321"
-_ASSERTED_AT = datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC)
+_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 _DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_canarias")
 
 
@@ -372,7 +369,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
         territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="someone-else@example.test",
         note="confirmed by telephone",
-        asserted_at=datetime(_YEAR, 9, 1, tzinfo=UTC),
+        asserted_at=datetime(2026, 9, 1, tzinfo=UTC),
         repository=repository,
     )
 
@@ -468,7 +465,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         )
 
         blocked = assemble_classification_criteria(
-            transaction_date=date(_YEAR, 3, 10),
+            transaction_date=date(2026, 3, 10),
             direction=InvoiceKind.RECEIVED,
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(
@@ -495,7 +492,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         assert remembered is not None
 
         derived = assemble_classification_criteria(
-            transaction_date=date(_YEAR, 3, 10),
+            transaction_date=date(2026, 3, 10),
             direction=InvoiceKind.RECEIVED,
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(supply_nature=services, customer_scope=filer_side, issuer_scope=remembered),

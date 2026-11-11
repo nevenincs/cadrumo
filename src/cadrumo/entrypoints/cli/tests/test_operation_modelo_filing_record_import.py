@@ -31,7 +31,6 @@ from ....application.modelo.filing_record_list_contracts import ModeloFilingReco
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     AeatRegisterRef,
@@ -47,21 +46,18 @@ from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import operation_modelo_filing_record_import as bridge
 from ..modelo_results import FilingRecordImportResult
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "b" * 64
 _REVISION = "a" * 64
 _REFERENCE = "synthetic-expediente"
-_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=str(_PROFILE),
     modelo="303",
-    filing_year=_YEAR,
-    period=Period.from_year_and_code(_YEAR, "1T"),
+    filing_year=2026,
+    period=Period.from_year_and_code(2026, "1T"),
     revision_id="synthetic-revision",
 )
 
@@ -79,8 +75,8 @@ def _projection(
         calculation_revision_id=_REVISION,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=_NOW,
         filed_by="synthetic import actor",
         origin=FilingOrigin.AEAT,
@@ -98,8 +94,8 @@ def _projection(
         outcome=outcome,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         member_nif=None,
         filing_record_id=record.filing_record_id,
         affected_filing_record_ids=(),

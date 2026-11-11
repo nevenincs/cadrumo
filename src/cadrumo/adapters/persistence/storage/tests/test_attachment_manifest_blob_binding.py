@@ -33,7 +33,7 @@ from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_CAPTURED_AT = datetime(1980, 5, 25, 13, 45, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 _PAYLOAD = b"%PDF-1.4\n%attachment-manifest-blob-binding-canary\n" + b"\x00" * 48
 

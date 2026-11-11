@@ -77,7 +77,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observation_rows,
 )
@@ -89,8 +88,8 @@ _MODELO = "721"
 
 #: Two distinct renta ejercicios the fidelity test spans.
 #: First ejercicio for M721 is 2023; enrollment uses 2023/2024.
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2023
+_YEAR_N_PLUS_1 = 2024
 
 #: Context label for the cross-year observation (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annual-cycles"
@@ -126,8 +125,8 @@ _CUSTODIO_NOMBRE = Decimal("1")  # proxy for "Coinbase Inc" — numeric sentinel
 _CUSTODIO_PAIS = Decimal("840")  # US ISO 3166-1 numeric country code
 
 # Clock timestamps (M721 filing window: 1 January – 31 March following ejercicio).
-_CLOCK_N = datetime(_YEAR_N_PLUS_1, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2023
-_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2024
+_CLOCK_N = datetime(2024, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2023
+_CLOCK_N_PLUS_1 = datetime(2025, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2024
 
 
 _EJERCICIO_CASILLA: CasillaId = validated_casilla_id("ejercicio")

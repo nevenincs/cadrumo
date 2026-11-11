@@ -29,7 +29,6 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
@@ -37,9 +36,7 @@ from ..schema import EUMemberState, IvaCatalogue, IvaCategory, IvaCitation, IvaR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = filing_year_envelope().horizon
-
-_ON = date(_YEAR, 6, 1)
+_ON = date(2025, 6, 1)
 #: A category the constructed catalogues deliberately leave out or mis-ground.
 _PROBE_CATEGORY = IvaCategory("domestic_general")
 
@@ -79,8 +76,8 @@ def _catalogue_citing_an_unregistered_reference() -> IvaCatalogue:
                     IvaCitation(
                         legal_reference="ley-37-1992:art-90-uno-absent-from-registry",
                         quoted_text="El impuesto se exigirá al tipo del 21 por ciento.",
-                        valid_from=date(filing_year_envelope().floor, 1, 1),
-                        valid_to=date(_YEAR, 12, 31),
+                        valid_from=date(2022, 1, 1),
+                        valid_to=date(2026, 12, 31),
                     ),
                 ),
                 notes="",

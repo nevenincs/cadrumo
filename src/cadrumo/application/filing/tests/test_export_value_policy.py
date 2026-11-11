@@ -20,7 +20,6 @@ from ....domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 from ....domain.submission.models import ModeloDraftStatus
@@ -34,24 +33,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # renderer and the verifier's record-and-field identity lookup, both of which
 # are modelo-agnostic. The registry snapshot is needed only for its source
 # resolution (`source_root`/`sources`), so it must simply be a coordinate the
-# authority still admits at filing grade. Modelo 303 at the newest supported year is used
+# authority still admits at filing grade. Modelo 303 / revision 2025 is used
 # because it files, and its refs are quoted here so the synthetic declaration
 # stays grounded in the modelo it names rather than in an unrelated one.
 _MODELO = "303"
-_FILING_YEAR = filing_year_envelope().horizon
+_REVISION_ID = "2025"
+_FILING_YEAR = 2025
 _PERIOD_CODE = "4T"
-_REVISION = revision_serving_period(_MODELO, _FILING_YEAR, _PERIOD_CODE)
-_REVISION_ID = str(_REVISION.id)
 _LEGAL_REFS = ("orden-eha-3786-2008:art-1",)
-_SOURCE_REFS = (f"aeat-dr-303-{_REVISION.valid_from.year}",)
-
-#: The policy prints the last two digits of the year. A year ending in 00 is the boundary
-#: where a naive ``year - 2000`` or unpadded rendering would print nothing or one digit.
-_YEAR_ENDING_IN_00 = next(year for year in range(_FILING_YEAR, _FILING_YEAR + 100) if year % 100 == 0)
-
-
-def _short(year: int) -> str:
-    return f"{year % 100:02d}"
+_SOURCE_REFS = ("aeat-dr-303-2025",)
 
 
 def _filing_schema_provider() -> RegistrySchemaAccessor:
@@ -100,7 +90,7 @@ def _record(record_id: str, field: ExportFieldDefinition, *, order: int) -> Expo
 
 def _draft(*, checkbox: bool | None, year: int | str) -> ModeloDraft:
     period = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
-    stamped = datetime(1980, 8, 10, tzinfo=UTC)
+    stamped = datetime(2026, 8, 10, tzinfo=UTC)
     return ModeloDraft(
         draft_id="policy-proof",
         modelo=_MODELO,
@@ -166,11 +156,7 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
 
 @pytest.mark.parametrize(
     ("checkbox", "year", "expected"),
-    [
-        (False, _FILING_YEAR, f"0{_short(_FILING_YEAR)}".encode()),
-        (True, str(_FILING_YEAR), f"1{_short(_FILING_YEAR)}".encode()),
-        (None, _YEAR_ENDING_IN_00, f"0{_short(_YEAR_ENDING_IN_00)}".encode()),
-    ],
+    [(False, 2026, b"026"), (True, "2026", b"126"), (None, 2000, b"000")],
 )
 def test_filing_writer_emits_exact_policy_bytes(checkbox: object, year: object, expected: bytes) -> None:
     layout = _two_record_layout()
@@ -185,16 +171,7 @@ def test_filing_writer_refuses_invalid_checkbox_inputs(invalid: object) -> None:
         _render_one(_two_record_layout().records[0], invalid)
 
 
-@pytest.mark.parametrize(
-    "invalid",
-    [
-        _FILING_YEAR % 100,
-        _short(_FILING_YEAR),
-        float(_FILING_YEAR),
-        Decimal(_FILING_YEAR),
-        f" {_FILING_YEAR}",
-    ],
-)
+@pytest.mark.parametrize("invalid", [26, "26", 2026.0, Decimal("2026"), " 2026"])
 def test_filing_writer_refuses_invalid_short_year_inputs(invalid: object) -> None:
     with pytest.raises(FilingExportValidationError):
         _render_one(_two_record_layout().records[1], invalid)
@@ -204,8 +181,8 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
     layout = _two_record_layout()
     mismatched, checked = mismatched_casilla_ids(
         layout,
-        draft=_draft(checkbox=True, year=_FILING_YEAR),
-        payload=f"1{_short(_FILING_YEAR)}".encode(),
+        draft=_draft(checkbox=True, year=2026),
+        payload=b"126",
         schema_provider=_filing_schema_provider(),
     )
 
@@ -213,17 +190,11 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
     assert checked == ("01", "02")
 
 
-@pytest.mark.parametrize(
-    ("payload", "expected_mismatch"),
-    [
-        (f"0{_short(_FILING_YEAR)}".encode(), "01"),
-        (f"1{_short(_FILING_YEAR + 1)}".encode(), "02"),
-    ],
-)
+@pytest.mark.parametrize(("payload", "expected_mismatch"), [(b"026", "01"), (b"125", "02")])
 def test_verifier_detects_transformed_value_drift(payload: bytes, expected_mismatch: str) -> None:
     mismatched, _ = mismatched_casilla_ids(
         _two_record_layout(),
-        draft=_draft(checkbox=True, year=_FILING_YEAR),
+        draft=_draft(checkbox=True, year=2026),
         payload=payload,
         schema_provider=_filing_schema_provider(),
     )

@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from ....application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
 from ....application.modelo.historical_filing_projection import project_historical_filing_content
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -29,12 +28,11 @@ from ..modelo_results import FilingRecordImportResult, ModeloRecordShowResult, W
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
 _WORK_UNIT_ID = "a" * 64
 _REVISION_ID = "c" * 64
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_IMPORTED_AT = datetime(1980, 1, 15, 12, 0, 0, tzinfo=UTC)
-_FILED_AT = datetime(1980, 4, 16, 12, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_IMPORTED_AT = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_FILED_AT = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _AMENDS_ID = derive_filing_record_id(
     work_unit_id=_WORK_UNIT_ID, calculation_revision_id="d" * 64, filed_by="aeat-import"
 )
@@ -51,7 +49,7 @@ def _confirmed_complementaria(evidence_kind: ExternalEvidenceKind, reference_id:
         calculation_revision_id=_REVISION_ID,
         bucket_id="default",
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=_PERIOD,
         filed_at=_FILED_AT,
         filed_by="operator-A",
@@ -155,7 +153,7 @@ def test_filing_record_payload_keeps_absent_evidence_and_links_explicit() -> Non
         calculation_revision_id=_REVISION_ID,
         bucket_id="default",
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=_PERIOD,
         filed_at=_FILED_AT,
         filed_by="operator-A",

@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
 from typing import Protocol, cast
 from uuid import UUID
 
@@ -50,7 +49,6 @@ from cadrumo.core.identity.transaction_ids import TransactionId
 from cadrumo.core.operations import (
     OperationEffect,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -73,8 +71,6 @@ from .door_session_support import (
     install_scripted_controller,
     terminal_observation,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -116,7 +112,7 @@ def _review(profile_id: UUID, *, prefix: str | None = None) -> LedgerReviewProje
         rows=(
             LedgerReviewRowProjection(
                 id=_TRANSACTION_ID,
-                date=date(_YEAR, 3, 14).isoformat(),
+                date="2026-03-14",
                 amount="1250.00",
                 description="Material de oficina",
                 status=LedgerReviewStatus.PENDING,

@@ -43,24 +43,15 @@ from .session import connected_server_and_client_session
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
-def _supported_prior_year() -> int:
-    """The supported year before the horizon, read from the published authority."""
-    with bundled_indexed_authority().operation() as operation:
-        return operation.supported_filing_years().horizon - 1
-
-
-_PRIOR_YEAR = _supported_prior_year()
-
-
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
     requests = {
         "modelos": {},
         "support": {},
-        "bindings": {"modelo": "100", "filing_year": _PRIOR_YEAR},
-        "describe": {"modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"},
-        "casillas": {"modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"},
-        "casilla": {"modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A", "casilla": "0505"},
-        "formulas": {"modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"},
+        "bindings": {"modelo": "100", "filing_year": 2024},
+        "describe": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "casillas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
+        "casilla": {"modelo": "100", "filing_year": 2024, "period": "0A", "casilla": "0505"},
+        "formulas": {"modelo": "100", "filing_year": 2024, "period": "0A"},
         "categories": {},
         "portals": {},
         "portal": {"portal": "portal_sede_root"},
@@ -87,15 +78,15 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
             {
                 "query": "describe",
                 "modelo": "100",
-                "filing_year": _PRIOR_YEAR,
+                "filing_year": 2024,
                 "period": "0A",
-                "as_of": date(_PRIOR_YEAR, 12, 31).isoformat(),
+                "as_of": "2024-12-31",
             },
         )
 
         assert described["outcome"] == "published", described
         assert described["report"]["code"] == "100"
-        assert described["report"]["filing_year"] == _PRIOR_YEAR
+        assert described["report"]["filing_year"] == 2024
         assert described["report"]["period"] == "0A"
         assert described["report"]["revision"]
         assert described["report"]["authority_grade"] == "filing"
@@ -170,7 +161,7 @@ async def test_authority_response_provenance_matches_the_pin_passed_to_the_real_
     try:
         result = await adapter.call(
             "authority",
-            {"query": "describe", "modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"},
+            {"query": "describe", "modelo": "100", "filing_year": 2024, "period": "0A"},
         )
     finally:
         await adapter.close()

@@ -15,7 +15,6 @@ from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -29,8 +28,6 @@ from .cli_runner import invoke_cached_cli
 from .iva_wallet_inspector_support import NIF
 from .profile_password_cli import refused_for_want_of_an_operator
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
@@ -40,14 +37,14 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
             state = seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "4T"),
+                period=Period.from_year_and_code(2024, "4T"),
                 amount=Decimal("1200.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
 
             repo = IvaCompensationHistoryRepository()
-            loaded = repo.load_period(Period.from_year_and_code(_YEAR, "4T"))
+            loaded = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
         assert loaded is not None
         assert loaded.available_end_amount == Decimal("1200.00")
@@ -63,13 +60,13 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
             seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "4T"),
+                period=Period.from_year_and_code(2025, "4T"),
                 amount=Decimal("1500.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
             report = query_iva_wallet_balance(
-                as_of_year=_YEAR,
+                as_of_year=2025,
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
@@ -78,7 +75,7 @@ def test_seeded_state_surfaces_as_a_wallet_lot(tmp_path: Path) -> None:
         assert report.total_balance == Decimal("1500.00"), "balance must reflect the seeded amount, not zero"
         assert report.active_balance == Decimal("1500.00")
         assert report.expired_balance == Decimal("0")
-        assert report.next_expiry_year == _YEAR + 4
+        assert report.next_expiry_year == 2025 + 4
 
 
 def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
@@ -87,13 +84,13 @@ def test_zero_seed_surfaces_no_lot_anti_tautology(tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f699b704-4c17-4682-ab50-7a2051ce4c52"):
             seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "1T"),
+                period=Period.from_year_and_code(2025, "1T"),
                 amount=Decimal("0"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
             report = query_iva_wallet_balance(
-                as_of_year=_YEAR,
+                as_of_year=2025,
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
@@ -110,7 +107,7 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
             state_a = seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "3T"),
+                period=Period.from_year_and_code(2024, "3T"),
                 amount=Decimal("500.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
@@ -119,7 +116,7 @@ def test_seed_iva_compensation_anti_tautology_different_amounts(tmp_path: Path) 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3ba277a9-0812-47c5-9400-64768e433f06"):
             state_b = seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "3T"),
+                period=Period.from_year_and_code(2024, "3T"),
                 amount=Decimal("999.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
@@ -136,7 +133,7 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="58072ef9-4b9f-42b3-9f46-38f4239b1510"):
             seed_iva_compensation_period(
                 taxpayer_nif=NIF,
-                period=Period.from_year_and_code(_YEAR, "2T"),
+                period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("800.00"),
                 repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
@@ -145,14 +142,14 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
             with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
                 seed_iva_compensation_period(
                     taxpayer_nif=NIF,
-                    period=Period.from_year_and_code(_YEAR, "2T"),
+                    period=Period.from_year_and_code(2024, "2T"),
                     amount=Decimal("100.00"),
                     repository=IvaCompensationHistoryRepository(),
                     operation=_authority_operation_for_test,
                 )
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
-        assert excinfo.value.context == {"filing_year": _YEAR, "period": "2T", "existing_provenance": "operator_seed"}
+        assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_provenance": "operator_seed"}
 
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
@@ -166,7 +163,7 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            "2024",
             "--period",
             "4T",
             "--amount",
@@ -188,7 +185,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path, authority_operation: PinnedAut
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            "2024",
             "--period",
             "4T",
             "--amount",
@@ -198,13 +195,13 @@ def test_cli_seed_verb_happy_path(tmp_path: Path, authority_operation: PinnedAut
 
         reauthenticate_native_profile(profile, authority_operation=authority_operation)
         repo = IvaCompensationHistoryRepository()
-        stored = repo.load_period(Period.from_year_and_code(_YEAR, "4T"))
+        stored = repo.load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code == 0, result.output
     payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.iva_wallet.seed"
-    assert payload["filing_year"] == _YEAR
-    assert payload["period"] == {"filing_year": _YEAR, "code": "4T"}
+    assert payload["filing_year"] == 2024
+    assert payload["period"] == {"filing_year": 2024, "code": "4T"}
     assert payload["amount"] == "1200.50"
     assert payload["provenance"] == "operator_seed"
     assert payload["register_status"] is None
@@ -227,7 +224,7 @@ def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            "2024",
             "--period",
             "4T",
             "--amount",
@@ -235,7 +232,7 @@ def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(
             "--confirm",
         )
         reauthenticate_native_profile(profile, authority_operation=authority_operation)
-        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "4T"))
+        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code != 0, result.output
     assert not refused_for_want_of_an_operator(result), result.output
@@ -257,28 +254,28 @@ def test_cli_override_verb_records_taxpayer_override_decision(
             "iva-wallet",
             "override",
             "--filing-year",
-            str(_YEAR),
+            "2025",
             "--period",
             "2T",
             "--amount",
             "210.00",
             "--reason",
-            f"1T {_YEAR} credit a compensar carried forward",
+            "1T 2025 credit a compensar carried forward",
             "--evidence-locator",
-            f"local M303 1T-{_YEAR} filed revision",
+            "local M303 1T-2025 filed revision",
             "--confirm",
         )
 
     assert result.exit_code == 0, result.output
     payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.iva_wallet.override"
-    assert payload["filing_year"] == _YEAR
-    assert payload["period"] == {"filing_year": _YEAR, "code": "2T"}
+    assert payload["filing_year"] == 2025
+    assert payload["period"] == {"filing_year": 2025, "code": "2T"}
     assert payload["amount"] == "210.00"
     assert payload["selected_authority"] == "taxpayer_override"
     assert payload["divergence"] == "override"
-    assert payload["reason"] == f"1T {_YEAR} credit a compensar carried forward"
-    assert payload["evidence_locator"] == f"local M303 1T-{_YEAR} filed revision"
+    assert payload["reason"] == "1T 2025 credit a compensar carried forward"
+    assert payload["evidence_locator"] == "local M303 1T-2025 filed revision"
 
 
 def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
@@ -293,7 +290,7 @@ def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
                 "iva-wallet",
                 "override",
                 "--filing-year",
-                str(_YEAR),
+                "2025",
                 "--period",
                 "2T",
                 "--amount",
@@ -321,7 +318,7 @@ def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
                 "iva-wallet",
                 "override",
                 "--filing-year",
-                str(_YEAR),
+                "2025",
                 "--period",
                 "2T",
                 "--amount",
@@ -349,7 +346,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path, authority_operation: Pi
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            "2024",
             "--period",
             "4T",
             "--amount",
@@ -364,7 +361,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path, authority_operation: Pi
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            "2024",
             "--period",
             "4T",
             "--amount",
@@ -372,7 +369,7 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path, authority_operation: Pi
             "--confirm",
         )
         reauthenticate_native_profile(profile, authority_operation=authority_operation)
-        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(_YEAR, "4T"))
+        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
 
     assert result.exit_code != 0
     assert stored is not None
@@ -384,14 +381,14 @@ def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:
     with pytest.raises(ValidationError, match="must equal generated_amount"):
         IvaCompensationCarryForwardLot(
             taxpayer_nif=NIF,
-            source_filing_year=_YEAR,
-            source_period=Period.from_year_and_code(_YEAR, "1T"),
+            source_filing_year=2024,
+            source_period=Period.from_year_and_code(2024, "1T"),
             generated_amount=Decimal("1200.00"),
             applied_amount=Decimal("800.00"),
             remaining_amount=Decimal("500.00"),
             age_years=2,
             expiry_review_state=IvaCompensationExpiryReviewState.ACTIVE,
-            source_observation_key=f"303:{_YEAR}:1T:EXP",
+            source_observation_key="303:2024:1T:EXP",
         )
 
 

@@ -50,15 +50,13 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from .embedded_rendering_fixture import EMBEDDED_RENDERING_FIXTURE_BUCKET_ID, install_embedded_rendering_fixture
 from .published_authority_support import published_authority_operation
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 _FIXTURE_BUCKET_ID = EMBEDDED_RENDERING_FIXTURE_BUCKET_ID
 _CATALOGUE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 _SNAPSHOTS = MODELO_CALCULATION_RENDERING_SNAPSHOT_NAMESPACE
 _REFERENCE_FORM = "rendering_digest_reference"
-_CREATED_AT = datetime(_YEAR, 4, 2, 9, 0, 0, tzinfo=UTC)
+_CREATED_AT = datetime(2026, 4, 2, 9, 0, 0, tzinfo=UTC)
 _BASE = validated_casilla_id("iva.base-imponible", surface="_BASE")
 
 
@@ -289,7 +287,7 @@ def test_two_writers_of_one_new_rendering_lose_no_revision(tmp_path: Path) -> No
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIXTURE_BUCKET_ID) as profile:
         install_embedded_rendering_fixture(profile, with_calculations=False)
         units = {unit.period.code: unit for unit in WorkUnitCatalogueRepository(objects=profile.repository).load()}
-        snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
+        snapshot = operation.snapshot("303", filing_year=2026, period="1T")
         rendering = CalculationRenderingSnapshot.capture(
             snapshot, authority_generation=operation.pin().logical_generation
         )

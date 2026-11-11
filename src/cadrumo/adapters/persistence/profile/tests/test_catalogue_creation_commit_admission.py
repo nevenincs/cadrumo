@@ -17,7 +17,6 @@ from .....core.secure_object_write import SecureObjectWrite
 from .....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -26,8 +25,6 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
 from ..catalogue_creation import CatalogueCreationAuditCommitAdapter, build_catalogue_creation_ports
 from ..invoices import InvoiceCatalogueRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 _PROFILE = "76767676-7676-4767-8676-767676767676"
@@ -132,7 +129,7 @@ def test_admission_starts_after_both_cas_reads_and_event_preparation_and_ends_af
             counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number="PREPARED-1",
-            issued_at=date(_YEAR, 5, 1),
+            issued_at=date(2026, 5, 1),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("21"),
             currency="EUR",

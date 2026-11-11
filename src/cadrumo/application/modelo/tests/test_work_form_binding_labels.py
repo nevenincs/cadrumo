@@ -15,11 +15,6 @@ from ....domain.calculations.registry.manual_input_selector import ManualInputPr
 from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    revision_covering,
-)
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import (
@@ -34,9 +29,6 @@ from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_YEAR_390 = filing_grade_exercises("390")[-1]
-"""The newest exercise whose Modelo 390 edition reaches filing grade."""
 
 
 def _form(
@@ -80,7 +72,7 @@ def test_catalogue_names_reach_inputs_that_feed_no_box(
     operation: PinnedAuthorityOperation,
     language: OutputLanguage,
 ) -> None:
-    form = _form(operation, "390", _YEAR_390, "0A", language)
+    form = _form(operation, "390", 2025, "0A", language)
     fields = _binding_fields(form)
 
     assert fields
@@ -95,7 +87,7 @@ def test_catalogue_names_reach_inputs_that_feed_no_box(
 def test_a_binding_inputs_printed_code_is_in_the_box_slot(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    fields = _binding_fields(_form(operation, "390", _YEAR_390, "0A", OutputLanguage.EN))
+    fields = _binding_fields(_form(operation, "390", 2025, "0A", OutputLanguage.EN))
     field = next(field for field in fields if field.box == "K1")
     assert "K1" not in field.label.text
     assert "activity" in field.label.text.lower()
@@ -138,7 +130,7 @@ def test_an_unproven_manual_input_remains_visible_and_honestly_unnamed(
         _form(
             operation,
             "390",
-            _YEAR_390,
+            2025,
             "0A",
             OutputLanguage.EN,
             adjust=add_unproven_input,
@@ -155,7 +147,7 @@ def test_an_unproven_manual_input_remains_visible_and_honestly_unnamed(
 
 
 def test_the_generated_envelope_closing_tag_is_not_a_manual_question(operation: PinnedAuthorityOperation) -> None:
-    fields = _binding_fields(_form(operation, "369", filing_year_envelope().horizon, "1T", OutputLanguage.EN))
+    fields = _binding_fields(_form(operation, "369", 2025, "1T", OutputLanguage.EN))
     assert fields
     assert all(
         not isinstance(field.address, ModeloFormBindingAddressV1)
@@ -167,15 +159,15 @@ def test_the_generated_envelope_closing_tag_is_not_a_manual_question(operation: 
 def _catalogued_manual_binding(
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, str]:
-    """A manual input of the newest filing-grade Modelo 390 with a catalogue name and a providing box."""
+    """A manual input of the 2025 Modelo 390 with a catalogue name and a providing box."""
     snapshot = modelo_form_snapshot(
         operation,
         ModeloCode("390"),
-        _YEAR_390,
-        Period.from_year_and_code(_YEAR_390, "0A"),
-        str(operation.revision_for_context("390", filing_year=_YEAR_390, period="0A").id),
+        2025,
+        Period.from_year_and_code(2025, "0A"),
+        str(operation.revision_for_context("390", filing_year=2025, period="0A").id),
     )
-    form = _form(operation, "390", _YEAR_390, "0A", OutputLanguage.EN)
+    form = _form(operation, "390", 2025, "0A", OutputLanguage.EN)
     field = next(field for field in _binding_fields(form) if field.box == "K1")
     assert isinstance(field.address, ModeloFormBindingAddressV1)
     binding_id = str(field.address.binding_id)
@@ -196,7 +188,7 @@ def test_the_binding_question_precedes_a_declared_owner_name(operation: PinnedAu
     binding_id, provider_id = _catalogued_manual_binding(operation)
     owner = next(
         casilla
-        for casilla in operation.revision("390", str(revision_covering("390", _YEAR_390).id)).casillas
+        for casilla in operation.revision("390", "2025").casillas
         if str(casilla.id) != provider_id and casilla.localization_keys
     )
 
@@ -207,7 +199,7 @@ def test_the_binding_question_precedes_a_declared_owner_name(operation: PinnedAu
         )
         return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
 
-    field = _field_for(_form(operation, "390", _YEAR_390, "0A", OutputLanguage.EN, adjust=add_owner), binding_id)
+    field = _field_for(_form(operation, "390", 2025, "0A", OutputLanguage.EN, adjust=add_owner), binding_id)
     expected = lookup_translation(binding_locale_key("390", binding_id, "label"), locale="en")
     assert field.label.text == expected
     assert field.label.text != resolve_modelo_localization(owner.localization_keys, locale="en")
@@ -224,8 +216,6 @@ def test_missing_relationship_names_preserve_the_binding_question(operation: Pin
         )
         return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
 
-    field = _field_for(
-        _form(operation, "390", _YEAR_390, "0A", OutputLanguage.EN, adjust=remove_provider_name), binding_id
-    )
+    field = _field_for(_form(operation, "390", 2025, "0A", OutputLanguage.EN, adjust=remove_provider_name), binding_id)
     assert field.label.text == lookup_translation(binding_locale_key("390", binding_id, "label"), locale="en")
     assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED

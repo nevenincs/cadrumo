@@ -21,8 +21,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -34,8 +32,6 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..check_query import ledger_check_years, read_ledger_check
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,7 +57,7 @@ def _transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -76,8 +72,8 @@ def _transaction(
             "business_classification": classification,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
+            "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
         }
     )
 
@@ -116,7 +112,7 @@ def _read_ports(*, invoices: InvoiceCatalogue | None = None) -> InvoiceCatalogue
 
 def _one_sided_link_row() -> Transaction:
     """A personal row citing an invoice the invoice catalogue does not hold."""
-    return _transaction(provider_id="link", booked=date(_YEAR - 2, 4, 10)).model_copy(update={"invoice_id": "inv-1"})
+    return _transaction(provider_id="link", booked=date(2024, 4, 10)).model_copy(update={"invoice_id": "inv-1"})
 
 
 def _invoice_citing_a_missing_row() -> InvoiceCatalogue:
@@ -125,7 +121,7 @@ def _invoice_citing_a_missing_row() -> InvoiceCatalogue:
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "INV-ONE-SIDED",
-            "issued_at": date(_YEAR - 2, 4, 1),
+            "issued_at": date(2024, 4, 1),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -160,13 +156,13 @@ def test_the_years_swept_come_from_the_rows_not_the_calendar(operation: PinnedAu
     """A sweep must cover exactly the years the ledger spans."""
     catalogue = TransactionCatalogue.from_transactions(
         (
-            _transaction(provider_id="a", booked=date(_YEAR - 3, 6, 1)),
-            _transaction(provider_id="b", booked=date(_YEAR - 1, 2, 3)),
-            _transaction(provider_id="c", booked=date(_YEAR - 3, 9, 9)),
+            _transaction(provider_id="a", booked=date(2023, 6, 1)),
+            _transaction(provider_id="b", booked=date(2025, 2, 3)),
+            _transaction(provider_id="c", booked=date(2023, 9, 9)),
         )
     )
 
-    assert ledger_check_years(catalogue) == (_YEAR - 3, _YEAR - 1)
+    assert ledger_check_years(catalogue) == (2023, 2025)
 
 
 def test_an_empty_ledger_spans_no_years() -> None:
@@ -176,14 +172,14 @@ def test_an_empty_ledger_spans_no_years() -> None:
 
 def test_a_clean_ledger_with_no_link_problems_is_ready(operation: PinnedAuthorityOperation) -> None:
     """The baseline both other cases are measured against."""
-    with _stored(_transaction(provider_id="a", booked=date(_YEAR - 2, 4, 10))) as catalogue:
+    with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10))) as catalogue:
         check = read_ledger_check(
             bucket_id=_BUCKET, transactions=catalogue, ports=_read_ports(), profile_record=None, operation=operation
         )
 
     assert check.ready is True
     assert check.link_inconsistencies == ()
-    assert check.periods == (str(_YEAR - 2),)
+    assert check.periods == ("2024",)
 
 
 def test_a_one_sided_invoice_link_alone_makes_a_ledger_not_ready(operation: PinnedAuthorityOperation) -> None:
@@ -192,7 +188,7 @@ def test_a_one_sided_invoice_link_alone_makes_a_ledger_not_ready(operation: Pinn
     A branch spelling readiness as preflight-only would pass this ledger, and
     the operator would file against catalogues that disagree.
     """
-    with _stored(_transaction(provider_id="a", booked=date(_YEAR - 2, 4, 10)), _one_sided_link_row()) as catalogue:
+    with _stored(_transaction(provider_id="a", booked=date(2024, 4, 10)), _one_sided_link_row()) as catalogue:
         check = read_ledger_check(
             bucket_id=_BUCKET,
             transactions=catalogue,
@@ -237,17 +233,17 @@ def test_an_explicit_period_reports_only_that_period(operation: PinnedAuthorityO
     from ....core.period import Period
 
     with _stored(
-        _transaction(provider_id="a", booked=date(_YEAR - 2, 4, 10)),
-        _transaction(provider_id="b", booked=date(_YEAR - 3, 4, 10)),
+        _transaction(provider_id="a", booked=date(2024, 4, 10)),
+        _transaction(provider_id="b", booked=date(2023, 4, 10)),
     ) as catalogue:
         check = read_ledger_check(
             bucket_id=_BUCKET,
             transactions=catalogue,
-            period=Period.from_year_and_code(_YEAR - 2, "0A"),
+            period=Period.from_year_and_code(2024, "0A"),
             ports=_read_ports(),
             profile_record=None,
             operation=operation,
         )
 
     assert len(check.periods) == 1
-    assert str(_YEAR - 2) in check.periods[0]
+    assert "2024" in check.periods[0]

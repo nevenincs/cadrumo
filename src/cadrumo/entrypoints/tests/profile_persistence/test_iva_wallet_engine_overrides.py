@@ -137,7 +137,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
                 operator_explanation=(
                     "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
                 ),
-                evidence_locator=f"operator-review:modelo-303-{TARGET_YEAR}-2T-filed-history",
+                evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
                 recorded_at=DECIDED_AT,
             ),
             decided_at=DECIDED_AT,
@@ -172,7 +172,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=report.decision,
                 filing_instance_evidence=filing_instance_evidence(work_unit.period, operation=operation),
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_136,
                 clock=DECIDED_AT,
             ).revision
@@ -210,7 +210,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                     iva_compensation_decision=None,
                     filing_instance_evidence=filing_instance_evidence(work_unit.period, operation=operation),
-                    filing_period_date=date(TARGET_YEAR, 6, 30),
+                    filing_period_date=date(2026, 6, 30),
                     ports=_calculation_ports_171,
                     clock=DECIDED_AT,
                 ).revision

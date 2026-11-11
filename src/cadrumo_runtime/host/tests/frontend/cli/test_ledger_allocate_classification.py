@@ -24,15 +24,12 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -47,7 +44,7 @@ _PROFILE_FACTS = {
     "identity.name": "Tester",
     "identity.surnames": "Allocation",
     "activities.description": "freelance",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
 }
 
 
@@ -85,7 +82,7 @@ def allocation_profile_and_transaction(
             created = create_manual_transaction(
                 ManualLedgerTransactionCommand(
                     bucket_id=bucket_id,
-                    booked_date=date(_YEAR, 4, 15),
+                    booked_date=date(2026, 4, 15),
                     amount=Decimal("121.00"),
                     direction=TransactionDirection.OUTGOING,
                     description="Invoice 1",
@@ -93,7 +90,7 @@ def allocation_profile_and_transaction(
                     idempotency_key="allocation-classification-seed",
                 ),
                 ports=ports,
-                occurred_at=datetime(_YEAR, 4, 15, 12, tzinfo=UTC),
+                occurred_at=datetime(2026, 4, 15, 12, tzinfo=UTC),
             )
             transaction_id = created.transaction.transaction_id
         finally:

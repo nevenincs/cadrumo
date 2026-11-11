@@ -19,7 +19,6 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -47,7 +46,7 @@ from .test_renta_imputation_criterion import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _F_ON = date(_YEAR, 2, 1)
 _R_ON = date(_YEAR, 5, 1)
 
@@ -183,7 +182,7 @@ def _supplier_refund(on: date, *, evidence_id: str | None) -> Transaction:
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": evidence_id,
             "category_id": SpendingCategory.from_registry("asesoria_fiscal").value,
-            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

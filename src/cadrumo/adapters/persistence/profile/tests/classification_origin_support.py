@@ -30,15 +30,13 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .ledger_action_create_support import ledger_ports_for_test
 
-_YEAR = filing_year_envelope().horizon
 BUCKET_ID = "43434343-4343-4343-8343-434343434343"
 PERSON = "synthetic-person"
 AUTOMATION = f"automation:external-client.attended.{UUID('5aa00000-0000-4000-8000-0000000000dd')}"
-NOW_DATE = date(_YEAR, 1, 21)
+NOW_DATE = date(2025, 1, 21)
 PDF_BYTES = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\norigin-at-the-writers\n%%EOF\n"
 BUSINESS = BusinessClassification.BUSINESS
 
@@ -146,7 +144,7 @@ def store_attachment(ledger: Ledger, marker: bytes) -> str:
             source=AttachmentSource.LOCAL_FILE,
             source_reference="synthetic-evidence",
             mime_type="application/pdf",
-            captured_at=datetime(_YEAR, 1, 21, tzinfo=UTC),
+            captured_at=datetime(2025, 1, 21, tzinfo=UTC),
             bucket_id=BUCKET_ID,
         ),
     )

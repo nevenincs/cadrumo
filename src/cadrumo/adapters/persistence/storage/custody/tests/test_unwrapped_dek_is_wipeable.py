@@ -49,7 +49,7 @@ _SESSION_KEY = bytes(range(32))
 _DEK = bytes(range(100, 132))
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _SESSION_ID = UUID("22222222-2222-4222-8222-222222222222")
-_ISSUED_AT = datetime(1980, 8, 15, 6, tzinfo=UTC)
+_ISSUED_AT = datetime(2026, 8, 15, 6, tzinfo=UTC)
 _IDLE_DEADLINE = _ISSUED_AT + timedelta(minutes=30)
 _ABSOLUTE_DEADLINE = _ISSUED_AT + timedelta(hours=8)
 

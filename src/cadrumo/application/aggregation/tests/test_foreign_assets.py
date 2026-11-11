@@ -10,7 +10,6 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
@@ -62,11 +61,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
-_YEAR = _SUPPORT.horizon
-_P_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
-_ACQUIRED = date(_YEAR - 2, 1, 15)
-_EXTINGUISHED = date(_YEAR, 6, 13)
-_INVOICE_ID = f"INV-{_YEAR}-0007"
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 _M720_LEGAL_REFS = (
     "orden-hap-72-2013:art-1",
     "rd-1065-2007:art-42-bis",
@@ -108,17 +103,16 @@ def _m720_row_binding(binding_id: str, row_field: str) -> BindingDefinition:
 
 
 def _m720_revision() -> ModeloRevision:
-    published = revision_covering("720", _YEAR)
     return ModeloRevision(
-        id=str(published.id),
-        localization_key=f"test.schema.revision.{published.id}.label",
-        valid_from=published.valid_from,
-        period_selector=PeriodSelector(year_from=published.valid_from.year, periods=("0A",)),
+        id="2013-y-siguientes",
+        localization_key="test.schema.revision.2013-y-siguientes.label",
+        valid_from=date(2013, 1, 1),
+        period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
         source_refs=_M720_SOURCE_REFS,
         parameters=published_snapshot(
             "720",
-            filing_year=_YEAR,
+            filing_year=2025,
             period="0A",
         ).revision.parameters,
         bindings=tuple(_m720_row_binding(binding_id, row_field) for binding_id, row_field in _M720_ROW_BINDINGS),
@@ -129,8 +123,8 @@ def _revision_without_foreign_asset_source() -> ModeloRevision:
     return ModeloRevision(
         id="foreign-asset-empty-test",
         localization_key="test.schema.revision.foreign-asset-empty-test.label",
-        valid_from=date(_YEAR, 1, 1),
-        period_selector=PeriodSelector(years=(_YEAR,), periods=("1T",)),
+        valid_from=date(2025, 1, 1),
+        period_selector=PeriodSelector(years=(2025,), periods=("1T",)),
         legal_refs=("ley-37-1992:art-1",),
         source_refs=("test-foreign-asset-no-source",),
     )
@@ -158,7 +152,7 @@ def asset_ref(label: str) -> str:
     return "m720a_" + hashlib.sha256(label.encode("utf-8")).hexdigest()[:32]
 
 
-# 31 December and 13 June of the exercise are ECB publication days; the stub answers only them.
+# 2025-12-31 and 2025-06-13 are ECB publication days; the stub answers only them.
 _USD_RATE = Decimal("0.85")
 _RATE_SOURCE = "test-reference"
 
@@ -167,7 +161,7 @@ class _UsdRates:
     rate_source_id = _RATE_SOURCE
 
     def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
-        published = currency == "USD" and rate_date in {date(_YEAR, 12, 31), _EXTINGUISHED}
+        published = currency == "USD" and rate_date in {date(2025, 12, 31), date(2025, 6, 13)}
         return eur_rate_lookup(_USD_RATE if published else None, rate_date=rate_date, source=_RATE_SOURCE)
 
 
@@ -180,7 +174,7 @@ def _obs(
     source_kind: BindingSourceKind | str = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     held: bool = True,
-    acquisition: str = _ACQUIRED.isoformat(),
+    acquisition: str = "2023-01-15",
     currency: str = "EUR",
 ) -> ForeignAssetIngestObservation:
     # source_kind is deliberately BindingSourceKind | str: TestObservationContract
@@ -198,7 +192,7 @@ def _obs(
             "valuation_amount": Decimal(valuation),
             "currency_code": currency,
             "valuation_event": M720ValuationEvent.YEAR_END if held else M720ValuationEvent.EXTINCTION,
-            "valuation_event_date": None if held else _EXTINGUISHED.isoformat(),
+            "valuation_event_date": None if held else "2025-06-13",
             "acquisition_date": acquisition,
         },
     )
@@ -208,8 +202,8 @@ def _context(revision: ModeloRevision | None = None) -> CalculationSourceContext
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="720",
-        filing_year=_YEAR,
-        period=_P_ANNUAL,
+        filing_year=2025,
+        period=_P_2025_ANNUAL,
         revision=revision or _m720_revision(),
     )
 
@@ -242,7 +236,7 @@ def _registered(
         country_code=country,
         identifier=M720AssetIdentifier(scheme=scheme, value=identifier),
         description="synthetic asset",
-        held_since=date(_YEAR - 10, 1, 1),
+        held_since=date(2015, 1, 1),
         ceased_on=ceased_on,
     )
 
@@ -322,7 +316,7 @@ class TestObservationContract:
 
 class TestAggregateBasic:
     def test_empty_observations_produce_zero_totals(self) -> None:
-        result = aggregate_foreign_assets_720((), period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720((), period=_P_2025_ANNUAL)
         assert result.modelo == "720"
         assert result.rollups == ()
         assert result.total_assets == 0
@@ -330,7 +324,7 @@ class TestAggregateBasic:
 
     def test_single_observation_creates_one_rollup(self) -> None:
         obs = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="12345.67", country="AD")
-        result = aggregate_foreign_assets_720((obs,), period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720((obs,), period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.source_kind is BindingSourceKind.LEDGER_TRANSACTION
@@ -346,7 +340,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="20000", asset_external_id="S1"),
             _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="30000", asset_external_id="R1"),
         )
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert len(result.rollups) == 3
         classes = {row.asset_class for row in result.rollups}
         assert classes == {
@@ -362,7 +356,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="20000", asset_external_id="A1", country="AD"),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="30000", asset_external_id="A2", country="CH"),
         )
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.assets_count == 2
@@ -372,10 +366,10 @@ class TestAggregateBasic:
     def test_rollups_sort_by_asset_class_value(self) -> None:
         observations = (
             _obs(asset_class=ForeignAssetClass.REAL_ESTATE, valuation="1000", asset_external_id="R1"),
-            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="2500", asset_external_id="A1"),
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="2000", asset_external_id="A1"),
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="3000", asset_external_id="S1"),
         )
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         values = [row.asset_class.value for row in result.rollups]
         assert values == sorted(values)
 
@@ -385,7 +379,7 @@ class TestAggregateBasic:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="10000", asset_external_id="A2", held=False),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="10000", asset_external_id="A3", held=True),
         )
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         row = result.rollups[0]
         assert row.assets_count == 3
         assert row.held_at_year_end_count == 2
@@ -404,17 +398,17 @@ class TestThreshold720:
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert ForeignAssetClass.ACCOUNT in declarable_asset_classes_720(result)
 
     def test_not_declarable_at_exactly_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert ForeignAssetClass.ACCOUNT not in declarable_asset_classes_720(result)
 
     def test_not_declarable_below_threshold(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         assert ForeignAssetClass.ACCOUNT not in declarable_asset_classes_720(result)
 
     def test_security_and_insurance_share_valores_obligation_block_threshold(self) -> None:
@@ -439,7 +433,7 @@ class TestThreshold720:
             ),
         )
 
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
 
         assert declarable_asset_classes_720(result) == frozenset(
             {
@@ -467,7 +461,7 @@ class TestThreshold720:
             ),
         )
 
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
 
         assert declarable_asset_classes_720(result) == frozenset()
         assert ForeignAssetClass.SECURITY not in declarable_asset_classes_720(result)
@@ -476,7 +470,7 @@ class TestThreshold720:
 
 class TestForeignAssetSourceResolver:
     def test_resolver_validates_declarable_m720_rows_against_registry_row_bindings(self) -> None:
-        period = _P_ANNUAL
+        period = Period.from_year_and_code(2025, "0A")
         observations = (
             _obs(
                 asset_class=ForeignAssetClass.ACCOUNT,
@@ -485,7 +479,7 @@ class TestForeignAssetSourceResolver:
                 country="AD",
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_id="tx-account-ad",
-                acquisition=date(_YEAR - 5, 1, 15).isoformat(),
+                acquisition="2020-01-15",
             ),
             _obs(
                 asset_class=ForeignAssetClass.ACCOUNT,
@@ -494,7 +488,7 @@ class TestForeignAssetSourceResolver:
                 country="CH",
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_id="payable-account-ch",
-                acquisition=date(_YEAR - 4, 2, 20).isoformat(),
+                acquisition="2021-02-20",
             ),
             _obs(
                 asset_class=ForeignAssetClass.SECURITY,
@@ -511,7 +505,7 @@ class TestForeignAssetSourceResolver:
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="720",
-                filing_year=_YEAR,
+                filing_year=2025,
                 period=period,
                 revision=revision,
             ),
@@ -542,16 +536,16 @@ class TestForeignAssetSourceResolver:
         assert row_values[("modelo-720-asset-row-class", 1)] == "C"
         assert row_values[("modelo-720-asset-row-country", 1)] == "AD"
         assert row_values[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
-        assert row_values[("modelo-720-asset-row-acquisition-date", 1)] == date(_YEAR - 5, 1, 15).isoformat()
+        assert row_values[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
         assert row_values[("modelo-720-asset-row-valuation", 1)] == Decimal("40000.00")
         assert row_values[("modelo-720-asset-row-class", 2)] == "C"
         assert row_values[("modelo-720-asset-row-country", 2)] == "CH"
         assert row_values[("modelo-720-asset-row-identifier", 2)] == "CH-ACCOUNT-002"
-        assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == date(_YEAR - 4, 2, 20).isoformat()
+        assert row_values[("modelo-720-asset-row-acquisition-date", 2)] == "2021-02-20"
         assert row_values[("modelo-720-asset-row-valuation", 2)] == Decimal("15000.00")
 
     def test_row_projection_uses_official_iic_and_real_estate_codes(self) -> None:
-        period = _P_ANNUAL
+        period = Period.from_year_and_code(2025, "0A")
         observations = (
             _obs(
                 asset_class=ForeignAssetClass.COLLECTIVE_INVESTMENT,
@@ -572,7 +566,7 @@ class TestForeignAssetSourceResolver:
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="720",
-                filing_year=_YEAR,
+                filing_year=2025,
                 period=period,
                 revision=_m720_revision(),
             ),
@@ -596,7 +590,7 @@ class TestForeignAssetSourceResolver:
             ),
         )
         with pytest.raises(ValueError, match="not a Modelo 720 foreign-asset class"):
-            aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
+            aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
         with pytest.raises(ValueError, match="not a Modelo 720 foreign-asset class"):
             _resolver(observations=observations).resolve(_context())
 
@@ -613,8 +607,8 @@ class TestForeignAssetSourceResolver:
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="303",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
                 revision=_revision_without_foreign_asset_source(),
             ),
         )
@@ -631,8 +625,8 @@ class TestInvariants:
             _obs(asset_class=ForeignAssetClass.SECURITY, valuation="5000", asset_external_id="S1"),
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="3000", asset_external_id="A1"),
         )
-        forward = aggregate_foreign_assets_720(observations, period=_P_ANNUAL)
-        reverse = aggregate_foreign_assets_720(tuple(reversed(observations)), period=_P_ANNUAL)
+        forward = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL)
+        reverse = aggregate_foreign_assets_720(tuple(reversed(observations)), period=_P_2025_ANNUAL)
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_rollup_held_count_cannot_exceed_total(self) -> None:
@@ -662,7 +656,7 @@ class TestInvariants:
         with pytest.raises(ValidationError, match="may appear at most once"):
             ForeignAssetsAggregation(
                 modelo="720",
-                period=_P_ANNUAL,
+                period=_P_2025_ANNUAL,
                 rollups=(row, row),
                 total_assets=2,
                 total_valuation_eur=Decimal("2000"),
@@ -675,7 +669,7 @@ class TestInvariants:
             ForeignAssetsAggregation.model_validate(
                 {
                     "modelo": "720",
-                    "period": str(_YEAR),
+                    "period": "2025",
                     "rollups": (),
                     "total_assets": 0,
                     "total_valuation_eur": Decimal("0"),
@@ -689,7 +683,7 @@ class TestInvariants:
             ForeignAssetsAggregation.model_validate(
                 {
                     "modelo": "720",
-                    "period": {"filing_year": _YEAR, "code": "0A"},
+                    "period": {"filing_year": 2025, "code": "0A"},
                     "rollups": (),
                     "total_assets": 0,
                     "total_valuation_eur": Decimal("0"),
@@ -697,7 +691,7 @@ class TestInvariants:
             )
 
 
-@pytest.mark.parametrize("impossible", [f"{_YEAR}-99-99", f"{_YEAR}-02-30", f"{_YEAR}-13-01", "0000-00-00"])
+@pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01", "0000-00-00"])
 def test_impossible_acquisition_dates_are_refused_at_ingestion(impossible: str) -> None:
     """An impossible calendar date is refused before it can reach aggregation.
 
@@ -711,10 +705,7 @@ def test_impossible_acquisition_dates_are_refused_at_ingestion(impossible: str) 
         _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition=impossible)
 
 
-@pytest.mark.parametrize(
-    "malformed",
-    [date(_YEAR, 3, 1).strftime("%Y%m%d"), f"{_YEAR}-3-1", f"01-03-{_YEAR}", f"{date(_YEAR, 3, 1)}T00:00:00"],
-)
+@pytest.mark.parametrize("malformed", ["20260301", "2026-3-1", "01-03-2026", "2026-03-01T00:00:00"])
 def test_non_extended_iso_acquisition_dates_are_refused(malformed: str) -> None:
     """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
     with pytest.raises(ValidationError):
@@ -727,21 +718,22 @@ def test_valid_acquisition_date_aggregates_and_reaches_the_registry_row() -> Non
     Without this, the refusal assertions above would also hold for a validator
     that refused every value.
     """
-    observation = _obs(
-        asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition=date(_YEAR, 3, 1).isoformat()
-    )
-    assert observation.acquisition_date == date(_YEAR, 3, 1).isoformat()
+    observation = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition="2026-03-01")
+    assert observation.acquisition_date == "2026-03-01"
 
-    aggregation = aggregate_foreign_assets_720((observation,), period=_P_ANNUAL)
+    aggregation = aggregate_foreign_assets_720(
+        (observation,),
+        period=Period.from_year_and_code(2026, "0A"),
+    )
     assert aggregation.total_assets == 1
 
     row = registry_observation_from_foreign_asset(observation)
-    assert row.acquisition_date == date(_YEAR, 3, 1)
+    assert row.acquisition_date == date(2026, 3, 1)
 
 
 @pytest.mark.parametrize(
     "not_a_transaction_identity",
-    ["ledger_transaction-urban-a", _INVOICE_ID, "A" * 64, "a" * 63, "a" * 65],
+    ["ledger_transaction-urban-a", "INV-2025-0007", "A" * 64, "a" * 63, "a" * 65],
 )
 def test_ledger_sourced_observation_requires_the_canonical_transaction_identity(
     not_a_transaction_identity: str,
@@ -770,7 +762,7 @@ def test_ledger_sourced_observation_requires_the_canonical_transaction_identity(
                 "valuation_amount": Decimal("60000.00"),
                 "currency_code": "EUR",
                 "valuation_event": M720ValuationEvent.YEAR_END,
-                "acquisition_date": _ACQUIRED.isoformat(),
+                "acquisition_date": "2023-01-15",
             },
         )
 
@@ -786,10 +778,10 @@ def test_non_ledger_sources_keep_their_external_identifiers() -> None:
         asset_class=ForeignAssetClass.ACCOUNT,
         valuation="60000.00",
         source_kind=BindingSourceKind.PAYABLE_INVOICE,
-        source_id=_INVOICE_ID,
+        source_id="INV-2025-0007",
     )
 
-    assert observation.source_object_id == _INVOICE_ID
+    assert observation.source_object_id == "INV-2025-0007"
 
 
 def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
@@ -799,7 +791,7 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
     ``source_transaction_ids`` must be admissible by the persisted revision's
     transaction-identity field, so ingestion and persistence cannot disagree.
     """
-    period = _P_ANNUAL
+    period = _P_2025_ANNUAL
     observations = (
         _obs(
             asset_class=ForeignAssetClass.ACCOUNT,
@@ -815,7 +807,7 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
             asset_external_id="CH-ACCOUNT-002",
             country="CH",
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
-            source_id=_INVOICE_ID,
+            source_id="INV-2025-0007",
         ),
     )
 
@@ -823,7 +815,7 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
         CalculationSourceContext(
             bucket_id="operator",
             modelo="720",
-            filing_year=_YEAR,
+            filing_year=2025,
             period=period,
             revision=_m720_revision(),
         ),
@@ -834,11 +826,7 @@ def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
     for transaction_id in resolution.source_transaction_ids:
         assert adapter.validate_python(transaction_id) == transaction_id
     # The invoice-sourced external id stays out of the identity tuple.
-    assert _INVOICE_ID not in resolution.source_transaction_ids
-
-
-_WORKSHEET_ACQUIRED = date(_YEAR - 3, 5, 1)
-_SECOND_LOT_ACQUIRED = date(_YEAR - 2, 7, 1)
+    assert "INV-2025-0007" not in resolution.source_transaction_ids
 
 
 def _worksheet_row(
@@ -857,7 +845,7 @@ def _worksheet_row(
             "country_code": country,
             "currency_code": currency,
             "asset_identifier": label,
-            "acquisition_date": _WORKSHEET_ACQUIRED,
+            "acquisition_date": date(2022, 5, 1),
             "valuation_amount": Decimal(valuation),
             "valuation_event": M720ValuationEvent.YEAR_END,
         },
@@ -943,7 +931,7 @@ class TestEuroValuation:
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000.00", asset_external_id="A2"),
         )
 
-        result = aggregate_foreign_assets_720(observations, period=_P_ANNUAL, rate_provider=_UsdRates())
+        result = aggregate_foreign_assets_720(observations, period=_P_2025_ANNUAL, rate_provider=_UsdRates())
 
         assert result.total_valuation_eur == Decimal("1850.00")
 
@@ -984,7 +972,7 @@ class TestLedgerAndWorksheetSources:
         worksheet = (
             _worksheet_row(label="ZLI", valuation="40000.00", asset_class="V", country="LI"),
             _worksheet_row(label="ZLI", valuation="40000.00", asset_class="V", country="LI").model_copy(
-                update={"source_id": "detalle:per_foreign_asset:lot-2", "acquisition_date": _SECOND_LOT_ACQUIRED},
+                update={"source_id": "detalle:per_foreign_asset:lot-2", "acquisition_date": date(2023, 7, 1)},
             ),
         )
 
@@ -992,8 +980,8 @@ class TestLedgerAndWorksheetSources:
 
         row_values = dict(resolution.row_binding_values)
         assert [row_values[("modelo-720-asset-row-acquisition-date", index)] for index in (1, 2)] == [
-            _WORKSHEET_ACQUIRED.isoformat(),
-            _SECOND_LOT_ACQUIRED.isoformat(),
+            "2022-05-01",
+            "2023-07-01",
         ]
 
 
@@ -1122,7 +1110,7 @@ class TestRegisterJoin:
         register = register.model_copy(
             update={
                 "assets": tuple(
-                    asset.model_copy(update={"ceased_on": date(_YEAR - 1, 5, 31)})
+                    asset.model_copy(update={"ceased_on": date(2024, 5, 31)})
                     if asset.asset_ref == sold.asset_ref
                     else asset
                     for asset in register.assets
@@ -1142,7 +1130,7 @@ class TestRegisterJoin:
         register = _register_for(lot)
         register = register.model_copy(
             update={
-                "assets": tuple(asset.model_copy(update={"ceased_on": date(_YEAR, 3, 1)}) for asset in register.assets)
+                "assets": tuple(asset.model_copy(update={"ceased_on": date(2025, 3, 1)}) for asset in register.assets)
             },
         )
 

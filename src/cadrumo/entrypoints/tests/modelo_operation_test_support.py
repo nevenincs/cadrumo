@@ -41,17 +41,11 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_certificate_secret_backend_factory,
 )
 
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
-
 MODELO_OPERATION_TEST_ACTOR: Final = "operator:s45"
 MODELO: Final = "130"
-# The compare operation needs two consecutive supported exercises: the one filed here and the horizon one.
-MODELO_FILING_YEAR: Final = _YEAR - 1
+MODELO_FILING_YEAR: Final = 2025
 MODELO_PERIOD: Final = "1T"
-_PROFILE_CLOCK = datetime(_YEAR, 8, 24, 18, tzinfo=UTC)
+_PROFILE_CLOCK = datetime(2026, 8, 24, 18, tzinfo=UTC)
 
 FIRST_QUARTER_PRIOR_PERIOD_BINDINGS: Final[dict[str, Decimal]] = {
     "irpf.previous_year_economic_activity_net_income": Decimal("0"),
@@ -171,5 +165,5 @@ def captured_justificante_snapshot(profile_id: UUID, unit: WorkUnit) -> Justific
         csv="ABCD1234EFGH",
         pdf_bytes=pdf,
         pdf_sha256=sha256_hex(pdf),
-        captured_at=datetime(_YEAR, 9, 29, tzinfo=UTC),
+        captured_at=datetime(2026, 9, 29, tzinfo=UTC),
     )

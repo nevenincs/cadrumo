@@ -28,14 +28,10 @@ from ....application.live.remote_state_models import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_iva_commands as handler
 from .. import operation_iva_remote_state_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletPullEvidenceResult
 from .operation_bridge_support import bind_profile_submission
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,9 +44,9 @@ def _projection() -> IvaRemoteStateCapturePublicResultV1:
     return IvaRemoteStateCapturePublicResultV1(
         acquisition_manifest_id="manifest-ref",
         output_root=str(_OUTPUT_ROOT),
-        year_from=_YEAR - 3,
-        year_to=_YEAR - 1,
-        target_year=_YEAR,
+        year_from=2022,
+        year_to=2024,
+        target_year=2025,
         target_period="1T",
         auth=LiveIvaAuthOutcomePublicV1(
             status=LiveIvaReadStatus.FAILED,
@@ -72,7 +68,7 @@ def _projection() -> IvaRemoteStateCapturePublicResultV1:
                 failure_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
                 failure_type="ClaveMovilApprovalTimeoutError",
                 failure_context_json=(
-                    f'{{"progress":{{"ejercicio":{_YEAR},"modelo":"303","stage":"walk_declarations_register"}}}}'
+                    '{"progress":{"ejercicio":2025,"modelo":"303","stage":"walk_declarations_register"}}'
                 ),
                 captured_count=None,
                 calculation_observation_count=None,
@@ -104,10 +100,10 @@ def _read() -> bridge.IvaRemoteStateCaptureRead:
     return bridge.read_iva_remote_state_capture_for_cli(
         cast(typer.Context, cast(object, None)),
         output_root=_OUTPUT_ROOT,
-        year_from=_YEAR - 3,
-        year_to=_YEAR - 1,
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        year_from=2022,
+        year_to=2024,
+        target_year=2025,
+        target_period=Period.from_year_and_code(2025, "1T"),
         taxpayer_nif="X0001500M",
     )
 
@@ -121,22 +117,22 @@ def test_registered_combined_capture_uses_exact_profile_scope_and_restores_conte
 
     assert bound_profiles == [_PROFILE]
     assert read.completion.operation_id == _OPERATION_ID
-    assert read.report.target_period == Period.from_year_and_code(_YEAR, "1T")
+    assert read.report.target_period == Period.from_year_and_code(2025, "1T")
     assert read.report.filed_history is None
     assert read.report.wallet is None
     assert read.report.filed_history_succeeded is False
     assert read.report.wallet_succeeded is True
     assert read.report.outcomes[0].failure_context == {
-        "progress": {"ejercicio": _YEAR, "modelo": "303", "stage": "walk_declarations_register"}
+        "progress": {"ejercicio": 2025, "modelo": "303", "stage": "walk_declarations_register"}
     }
     assert len(submitted) == 1
     request, options = submitted[0]
     assert request == IvaRemoteStateCaptureRequest(
         profile_id=_PROFILE,
         output_root=_OUTPUT_ROOT,
-        year_from=_YEAR - 3,
-        year_to=_YEAR - 1,
-        target_year=_YEAR,
+        year_from=2022,
+        year_to=2024,
+        target_year=2025,
         target_period="1T",
         taxpayer_nif="X0001500M",
     )
@@ -172,11 +168,11 @@ def test_scope_or_receipt_mismatch_refuses_with_correlated_operation(
     if mismatch == "output_root":
         projection = projection.model_copy(update={"output_root": "other-root"})
     elif mismatch == "year_from":
-        projection = projection.model_copy(update={"year_from": _YEAR - 2})
+        projection = projection.model_copy(update={"year_from": 2023})
     elif mismatch == "year_to":
-        projection = projection.model_copy(update={"year_to": _YEAR - 2})
+        projection = projection.model_copy(update={"year_to": 2023})
     elif mismatch == "target_year":
-        projection = projection.model_copy(update={"target_year": _YEAR - 1})
+        projection = projection.model_copy(update={"target_year": 2024})
     elif mismatch == "target_period":
         projection = projection.model_copy(update={"target_period": "2T"})
     elif mismatch == "effect":
@@ -221,9 +217,9 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
         request=IvaRemoteStateCaptureRequest(
             profile_id=_PROFILE,
             output_root=_OUTPUT_ROOT,
-            year_from=_YEAR - 3,
-            year_to=_YEAR - 1,
-            target_year=_YEAR,
+            year_from=2022,
+            year_to=2024,
+            target_year=2025,
             target_period="1T",
             taxpayer_nif="X0001500M",
         ),
@@ -236,9 +232,9 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
 
     handler.iva_wallet_pull_evidence_cmd(
         cast(typer.Context, cast(object, None)),
-        year_from=_YEAR - 3,
-        year_to=_YEAR - 1,
-        target_year=_YEAR,
+        year_from=2022,
+        year_to=2024,
+        target_year=2025,
         target_period="1T",
         taxpayer_nif="X0001500M",
         output_root=_OUTPUT_ROOT,
@@ -249,10 +245,10 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
     assert envelope["command"] == "app.live.iva_wallet.pull_evidence"
     result = cast(IvaWalletPullEvidenceResult, envelope["result"])
     assert result.output_root == str(_OUTPUT_ROOT)
-    assert result.year_from == _YEAR - 3
-    assert result.year_to == _YEAR - 1
-    assert result.target_year == _YEAR
-    assert result.target_period == Period.from_year_and_code(_YEAR, "1T")
+    assert result.year_from == 2022
+    assert result.year_to == 2024
+    assert result.target_year == 2025
+    assert result.target_period == Period.from_year_and_code(2025, "1T")
     assert result.acquisition_manifest_id == "manifest-ref"
     assert result.auth.status is LiveIvaReadStatus.FAILED
     assert result.auth.outcome_mode is LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
@@ -261,13 +257,13 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
     assert result.wallet_succeeded is True
     assert result.outcomes[0].failure_type == "ClaveMovilApprovalTimeoutError"
     assert result.outcomes[0].failure_context == {
-        "progress": {"ejercicio": _YEAR, "modelo": "303", "stage": "walk_declarations_register"}
+        "progress": {"ejercicio": 2025, "modelo": "303", "stage": "walk_declarations_register"}
     }
     assert result.outcomes[1].captured_count == 1
     lines = cast(tuple[str, ...], envelope["lines"])
     assert "filed_history_succeeded=False" in lines
     assert "wallet_succeeded=True" in lines
     assert any(
-        f"failure_context=progress={{ejercicio:{_YEAR},modelo:303,stage:walk_declarations_register}}" in line
+        "failure_context=progress={ejercicio:2025,modelo:303,stage:walk_declarations_register}" in line
         for line in lines
     )

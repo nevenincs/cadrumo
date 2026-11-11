@@ -33,7 +33,6 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...calculations.registry.tests.published_authority import published_legal_references, published_revision
 from ..flow import (
     IvaFlowDirection,
@@ -445,7 +444,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     changes, this test fires unless 303's formula updates in lockstep."""
     from ..flow import is_devengada_flow
 
-    revision = published_revision("303", str(revision_covering("303", filing_year_envelope().floor).id))
+    revision = published_revision("303", "2022")
 
     # Each ledger_iva_aggregation binding declares its flow direction in
     # the selector. Collect the flow directions of all bindings whose

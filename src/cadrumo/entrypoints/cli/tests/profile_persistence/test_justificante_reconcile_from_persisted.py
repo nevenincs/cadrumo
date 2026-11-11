@@ -23,7 +23,6 @@ from cadrumo.application.modelo.reconciliation import (
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.tests.profile_persistence.justificante_reconcile_support import (
     MODELO_130_FIXTURE,
     active_bucket_id,
@@ -39,8 +38,6 @@ isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"i
 __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-FILING_YEAR = filing_year_envelope().horizon
 
 
 def _reconcile_snapshot(
@@ -62,11 +59,11 @@ def test_reconcile_from_persisted_capture_matches(operation: PinnedAuthorityOper
     """A persisted real-fixture capture reconciles to MATCHES against its work unit."""
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    work_unit_id = seed_work_unit(modelo="130", filing_year=FILING_YEAR, period="1T")
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=FILING_YEAR,
+        filing_year=2026,
         period="1T",
     )
 
@@ -100,12 +97,12 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(
     its secure-object reference and that the isolated storage tree contains no
     durable copy of the raw PDF bytes after the reconcile call.
     """
-    work_unit_id = seed_work_unit(modelo="130", filing_year=FILING_YEAR, period="1T")
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
     pdf_bytes = MODELO_130_FIXTURE.read_bytes()
     snapshot = persist_capture(
         pdf_bytes=pdf_bytes,
         modelo=Modelo("130").value,
-        filing_year=FILING_YEAR,
+        filing_year=2026,
         period="1T",
     )
 
@@ -260,11 +257,11 @@ def test_the_plaintext_scan_finds_a_planted_copy_so_its_silence_can_be_trusted(t
 
 def test_reconcile_from_persisted_capture_mismatches_on_modelo(operation: PinnedAuthorityOperation) -> None:
     """A 303 work unit reconciled against the persisted 130 capture mismatches."""
-    work_unit_id = seed_work_unit(modelo="303", filing_year=FILING_YEAR, period="1T")
+    work_unit_id = seed_work_unit(modelo="303", filing_year=2026, period="1T")
     snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
-        filing_year=FILING_YEAR,
+        filing_year=2026,
         period="1T",
     )
 
@@ -282,11 +279,11 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path(
     The persisted secure object reference is the only source identifier surfaced
     in the error; no plaintext filesystem path is involved.
     """
-    work_unit_id = seed_work_unit(modelo="130", filing_year=FILING_YEAR, period="1T")
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = persist_capture(
         pdf_bytes=b"%PDF-1.4\nnot a real justificante\n%%EOF\n",
         modelo=Modelo("130").value,
-        filing_year=FILING_YEAR,
+        filing_year=2026,
         period="1T",
     )
 

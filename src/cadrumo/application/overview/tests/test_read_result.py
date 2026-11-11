@@ -18,7 +18,7 @@ from ..read_result import OverviewReadResult, project_overview_read_result
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_SETTLED_AT = datetime(1980, 1, 15, 9, 30, tzinfo=UTC)
+_SETTLED_AT = datetime(2026, 1, 15, 9, 30, tzinfo=UTC)
 
 
 def _result() -> OverviewReadResult:

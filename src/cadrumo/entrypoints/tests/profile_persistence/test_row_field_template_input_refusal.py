@@ -55,8 +55,6 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     verify_revision,
 )
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REFUSAL_KEY = "errors.calc.row_field_template_supplied_as_input"
@@ -193,9 +191,9 @@ def test_m349_scalar_operador_inputs_are_refused_naming_every_record_that_carrie
     work_unit = seed_work_unit(
         wu_repo,
         modelo="349",
-        filing_year=filing_year_envelope().horizon,
+        filing_year=2026,
         period="1T",
-        revision_id=str(open_ended_revision("349").id),
+        revision_id="2020-y-siguientes",
     )
     records = sorted(
         {*_row_field_records(work_unit, _M349_OPERADOR_BASE), *_row_field_records(work_unit, _M349_COUNTRY)}

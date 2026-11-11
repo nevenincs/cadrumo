@@ -14,7 +14,6 @@ import pydantic
 import pytest
 
 from ....core.modelo import Modelo
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.sepa_marca import SepaMarca
 from ..own_accounts import (
     OwnAccountDesignation,
@@ -27,9 +26,6 @@ from ..own_accounts import (
     OwnBankAccountDetails,
     own_account_id_for,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -152,7 +148,7 @@ def test_a_malformed_bic_is_refused(bic: str) -> None:
 
 
 def test_an_account_cannot_close_before_it_opened() -> None:
-    cause = _validation_cause(lambda: _details(opened_on=date(_YEAR, 3, 1), closed_on=date(_YEAR, 2, 1)))
+    cause = _validation_cause(lambda: _details(opened_on=date(2026, 3, 1), closed_on=date(2026, 2, 1)))
 
     assert "close before it opened" in str(cause)
 
@@ -172,12 +168,12 @@ def test_the_mask_shows_only_country_and_last_four() -> None:
 
 
 def test_open_on_respects_both_bounds() -> None:
-    account = _details(opened_on=date(_YEAR, 1, 10), closed_on=date(_YEAR, 6, 30))
+    account = _details(opened_on=date(2026, 1, 10), closed_on=date(2026, 6, 30))
 
-    assert not account.open_on(date(_YEAR, 1, 9))
-    assert account.open_on(date(_YEAR, 1, 10))
-    assert account.open_on(date(_YEAR, 6, 30))
-    assert not account.open_on(date(_YEAR, 7, 1))
+    assert not account.open_on(date(2026, 1, 9))
+    assert account.open_on(date(2026, 1, 10))
+    assert account.open_on(date(2026, 6, 30))
+    assert not account.open_on(date(2026, 7, 1))
 
 
 def test_accounts_receive_ordinal_ids_that_are_never_reused() -> None:
@@ -224,10 +220,10 @@ def test_update_replaces_details_and_keeps_the_identity() -> None:
 
 
 def test_close_records_the_date_once() -> None:
-    register = _register(_ES_IBAN).with_closed_account("acc-01", date(_YEAR, 9, 30))
+    register = _register(_ES_IBAN).with_closed_account("acc-01", date(2026, 9, 30))
 
-    assert register.account("acc-01").closed_on == date(_YEAR, 9, 30)
-    cause = _validation_cause(lambda: register.with_closed_account("acc-01", date(_YEAR, 10, 1)))
+    assert register.account("acc-01").closed_on == date(2026, 9, 30)
+    cause = _validation_cause(lambda: register.with_closed_account("acc-01", date(2026, 10, 1)))
     assert "already closed" in str(cause)
 
 

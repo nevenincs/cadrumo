@@ -27,7 +27,7 @@ from ..models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 8, 13, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 13, 12, 0, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 
 
@@ -108,7 +108,7 @@ def _request() -> OperationRequest[SubmittedPayload]:
         definition_id="profile.censo.pull",
         subject_ref="profile:active",
         payload=SubmittedPayload(value=7),
-        idempotency_key="pull-1980-08-13",
+        idempotency_key="pull-2026-08-13",
     )
 
 
@@ -165,7 +165,7 @@ def test_terminal_snapshot_requires_one_exact_correlated_receipt() -> None:
         {"revision": 5},
         {"condition": OperationTerminalCondition.FAILED},
         {"effect": OperationEffect.PARTIAL},
-        {"settled_at": datetime(1980, 8, 13, 12, 1, tzinfo=UTC)},
+        {"settled_at": datetime(2026, 8, 13, 12, 1, tzinfo=UTC)},
     ],
 )
 def test_terminal_snapshot_refuses_receipt_drift(changed: dict[str, object]) -> None:

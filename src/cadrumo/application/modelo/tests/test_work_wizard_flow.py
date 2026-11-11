@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
+from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ...flows.copy import resolve_copy
 from ...flows.definition import FlowDefinition, FlowPage
@@ -14,28 +15,23 @@ from ...flows.engine import FlowState
 from ...flows.errors import FlowCopyResolutionError
 from .. import work_wizard
 from ..work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard_from_steps
-from .work_operation_support import FIRST_QUARTER_PERIOD, FIRST_QUARTER_REVISION_ID, FIRST_QUARTER_YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _unit() -> WorkUnit:
-    period = FIRST_QUARTER_PERIOD
-    instant = datetime(FIRST_QUARTER_YEAR, 3, 10, 12, tzinfo=UTC)
+    period = Period.from_year_and_code(2026, "1T")
+    instant = datetime(2026, 3, 10, 12, tzinfo=UTC)
     bucket_id = "5aa00000-0000-4000-8000-0000000000aa"
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=bucket_id,
-            modelo="303",
-            filing_year=FIRST_QUARTER_YEAR,
-            period=period,
-            revision_id=FIRST_QUARTER_REVISION_ID,
+            bucket_id=bucket_id, modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
         ),
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=FIRST_QUARTER_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=FIRST_QUARTER_REVISION_ID,
+        revision_id="2026-y-siguientes",
         name="First-quarter return",
         created_at=instant,
         updated_at=instant,

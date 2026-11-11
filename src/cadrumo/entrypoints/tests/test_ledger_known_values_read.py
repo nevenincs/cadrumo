@@ -41,7 +41,6 @@ from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.ledger_known_values import LedgerKnownValueKind
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -72,10 +71,6 @@ from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_FLOOR = filing_year_envelope().floor
-_CREATED = datetime(_YEAR + 1, 1, 1, 9, 0, tzinfo=UTC)
-
 _PROFILE = UUID("77777777-7777-4777-8777-777777777777")
 _BUCKET = str(_PROFILE)
 _OTHER_PROFILE = UUID("88888888-8888-4888-8888-888888888888")
@@ -84,7 +79,7 @@ _OTHER_PROFILE = UUID("88888888-8888-4888-8888-888888888888")
 def _movement(
     row: str,
     *,
-    booked: date = date(_YEAR, 3, 1),
+    booked: date = date(2028, 3, 1),
     counterparty: str = "",
     description: str = "movimiento",
     **fields: object,
@@ -101,7 +96,7 @@ def _movement(
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=_CREATED,
+            ingested_at=datetime(2029, 1, 1, 9, 0, tzinfo=UTC),
             provider_name="synthetic provider",
         ),
         raw_fields={"Concepto": row},
@@ -113,8 +108,8 @@ def _movement(
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": "ES",
             "group_label": None,
-            "created_at": _CREATED,
-            "modified_at": _CREATED,
+            "created_at": datetime(2029, 1, 1, 9, 0, tzinfo=UTC),
+            "modified_at": datetime(2029, 1, 1, 9, 0, tzinfo=UTC),
             **fields,
         }
     )
@@ -259,13 +254,13 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
     """Spelling variants fold together, the newest spelling is shown, and split parents stay out."""
     _save_movements(
         (
-            _movement("a", booked=date(_YEAR, 1, 2), description="Alquiler oficina", counterparty="Casero SL"),
-            _movement("b", booked=date(_YEAR, 6, 1), description="ALQUILER  OFICINA", group_label="Oficina"),
-            _movement("c", booked=date(_YEAR, 3, 1), description="Luz", group_label="oficina"),
-            _movement("d", booked=date(_YEAR, 4, 1), description="LUZ", group_label=None),
+            _movement("a", booked=date(2021, 2, 1), description="Alquiler oficina", counterparty="Casero SL"),
+            _movement("b", booked=date(2028, 6, 1), description="ALQUILER  OFICINA", group_label="Oficina"),
+            _movement("c", booked=date(2024, 6, 1), description="Luz", group_label="oficina"),
+            _movement("d", booked=date(2025, 6, 1), description="LUZ", group_label=None),
             _movement(
                 "split-parent",
-                booked=date(_YEAR, 9, 1),
+                booked=date(2029, 6, 1),
                 description="Texto del padre",
                 group_label="Grupo del padre",
                 lifecycle_state=TransactionLifecycleState.SPLIT,
@@ -280,12 +275,12 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
     )
 
     assert [(row.text, row.uses, row.last_used) for row in result.descriptions] == [
-        ("ALQUILER  OFICINA", 2, date(_YEAR, 6, 1)),
-        ("LUZ", 2, date(_YEAR, 4, 1)),
+        ("ALQUILER  OFICINA", 2, date(2028, 6, 1)),
+        ("LUZ", 2, date(2025, 6, 1)),
     ]
     assert result.descriptions[0].counterparty == "Casero SL"
     assert [(row.text, row.uses, row.last_used) for row in result.group_labels] == [
-        ("Oficina", 2, date(_YEAR, 6, 1)),
+        ("Oficina", 2, date(2028, 6, 1)),
     ]
     assert result.truncated == ()
     # Only the kinds asked for are read and returned.
@@ -297,19 +292,19 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
 @pytest.mark.usefixtures("profile")
 def test_a_movement_name_joins_the_only_tax_id_it_can_mean(authority_operation: PinnedAuthorityOperation) -> None:
     """One folded name under one tax id joins; the movement name stays with that party."""
-    _save_invoices(_invoice("U-1", name="Gestoría Núñez SL", tax_id="B00015016", issued=date(_YEAR, 1, 10)))
+    _save_invoices(_invoice("U-1", name="Gestoría Núñez SL", tax_id="B00015016", issued=date(2026, 1, 10)))
     _save_movements(
         (
-            _movement("named", booked=date(_YEAR, 5, 1), counterparty="GESTORIA NUNEZ SL"),
-            _movement("nobody", booked=date(_YEAR, 7, 1), counterparty="Sin Factura SA"),
+            _movement("named", booked=date(2027, 5, 1), counterparty="GESTORIA NUNEZ SL"),
+            _movement("nobody", booked=date(2027, 7, 1), counterparty="Sin Factura SA"),
         )
     )
 
     result = _read(authority_operation, LedgerKnownValueKind.COUNTERPARTY)
 
     assert [(row.name, row.tax_id, row.country, row.uses, row.last_used) for row in result.counterparties] == [
-        ("Sin Factura SA", None, None, 1, date(_YEAR, 7, 1)),
-        ("GESTORIA NUNEZ SL", "B00015016", "ES", 2, date(_YEAR, 5, 1)),
+        ("Sin Factura SA", None, None, 1, date(2027, 7, 1)),
+        ("GESTORIA NUNEZ SL", "B00015016", "ES", 2, date(2027, 5, 1)),
     ]
 
 
@@ -317,10 +312,10 @@ def test_a_movement_name_joins_the_only_tax_id_it_can_mean(authority_operation: 
 def test_a_name_under_two_tax_ids_gives_a_movement_neither(authority_operation: PinnedAuthorityOperation) -> None:
     """The ambiguous name keeps both invoice parties, and its movement joins neither."""
     _save_invoices(
-        _invoice("A-1", name="Comercial Duero SL", tax_id="B00015016", issued=date(_YEAR, 1, 10)),
-        _invoice("A-2", name="comercial duero sl", tax_id="B00010157", issued=date(_YEAR, 2, 10)),
+        _invoice("A-1", name="Comercial Duero SL", tax_id="B00015016", issued=date(2026, 1, 10)),
+        _invoice("A-2", name="comercial duero sl", tax_id="B00010157", issued=date(2026, 2, 10)),
     )
-    _save_movements((_movement("ambiguous", booked=date(_YEAR, 5, 1), counterparty="Comercial Duero SL"),))
+    _save_movements((_movement("ambiguous", booked=date(2027, 5, 1), counterparty="Comercial Duero SL"),))
 
     result = _read(authority_operation, LedgerKnownValueKind.COUNTERPARTY)
 
@@ -338,14 +333,14 @@ def test_the_cap_keeps_the_newest_and_says_so_only_when_something_was_cut(
     """One past the cap is truncated and drops the oldest; exactly the cap is not truncated."""
     rows = [
         _movement(
-            f"group-{index}", booked=date(_FLOOR, 1, 1).replace(year=_FLOOR + index // 300), group_label=f"g{index:04}"
+            f"group-{index}", booked=date(2020, 1, 1).replace(year=2020 + index // 300), group_label=f"g{index:04}"
         )
         for index in range(KNOWN_VALUES_PER_KIND)
     ]
     _save_movements(
         (
             *rows,
-            _movement("no-group", booked=date(_FLOOR - 1, 1, 1), description="Una sola"),
+            _movement("no-group", booked=date(2010, 1, 1), description="Una sola"),
         )
     )
     at_the_cap = _read(authority_operation, LedgerKnownValueKind.GROUP_LABEL)
@@ -355,7 +350,7 @@ def test_the_cap_keeps_the_newest_and_says_so_only_when_something_was_cut(
     _save_movements(
         (
             *rows,
-            _movement("past-the-cap", booked=date(_FLOOR - 1, 1, 1), group_label="la mas antigua"),
+            _movement("past-the-cap", booked=date(2010, 1, 1), group_label="la mas antigua"),
         )
     )
     past_the_cap = _read(authority_operation, LedgerKnownValueKind.GROUP_LABEL, LedgerKnownValueKind.DESCRIPTION)
@@ -397,14 +392,14 @@ def test_m210_values_and_asset_references_come_from_their_own_stated_fields(
     )
     _save_movements(
         (
-            _movement("m210", booked=date(_YEAR, 8, 1), m210_income_classification=classification),
-            _movement("plain", booked=date(_YEAR, 9, 1), description="ignored here"),
+            _movement("m210", booked=date(2027, 8, 1), m210_income_classification=classification),
+            _movement("plain", booked=date(2027, 9, 1), description="ignored here"),
         )
     )
     assets = ActividadAssetHistoryRepository(bucket_id=_BUCKET)
-    assets.append_revision(_revision("asset-a", reference="EXP-2024/17", in_service=date(_YEAR, 1, 1)))
-    assets.append_revision(_revision("asset-b", reference="exp-2024/17", in_service=date(_YEAR, 3, 1)))
-    assets.append_revision(_revision("asset-c", reference="CERT-9", in_service=date(_YEAR, 2, 1)))
+    assets.append_revision(_revision("asset-a", reference="EXP-2024/17", in_service=date(2024, 3, 1)))
+    assets.append_revision(_revision("asset-b", reference="exp-2024/17", in_service=date(2026, 3, 1)))
+    assets.append_revision(_revision("asset-c", reference="CERT-9", in_service=date(2025, 3, 1)))
 
     result = _read(
         authority_operation,
@@ -413,11 +408,11 @@ def test_m210_values_and_asset_references_come_from_their_own_stated_fields(
         LedgerKnownValueKind.ASSET_REFERENCE,
     )
 
-    assert [(row.text, row.uses, row.last_used) for row in result.m210_payers] == [("PAGADOR-7", 1, date(_YEAR, 8, 1))]
-    assert [(row.text, row.uses, row.last_used) for row in result.m210_assets] == [("BIEN-3", 1, date(_YEAR, 8, 1))]
+    assert [(row.text, row.uses, row.last_used) for row in result.m210_payers] == [("PAGADOR-7", 1, date(2027, 8, 1))]
+    assert [(row.text, row.uses, row.last_used) for row in result.m210_assets] == [("BIEN-3", 1, date(2027, 8, 1))]
     assert [(row.text, row.uses, row.last_used) for row in result.asset_references] == [
-        ("exp-2024/17", 2, date(_YEAR, 3, 1)),
-        ("CERT-9", 1, date(_YEAR, 2, 1)),
+        ("exp-2024/17", 2, date(2026, 3, 1)),
+        ("CERT-9", 1, date(2025, 3, 1)),
     ]
 
 

@@ -8,7 +8,6 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
@@ -18,9 +17,6 @@ from ..schema import InvoiceKind, IvaCategory, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
-_ON = date(_YEAR, 6, 15)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -32,7 +28,7 @@ def _registry_authority_scope() -> Iterator[None]:
 def test_oss_ioss_regime_catalogue_covers_all_three_esquemas(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    catalogue = resolve_oss_ioss_regime_catalogue(effective_date=_ON, authority=operation)
+    catalogue = resolve_oss_ioss_regime_catalogue(effective_date=date(2025, 6, 15), authority=operation)
     assert len(catalogue.all_regimes) == 3
 
 
@@ -45,7 +41,7 @@ def test_oss_ioss_regime_string_values_match_registry_selector_keys() -> None:
 def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=_ON,
+            transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
@@ -61,7 +57,7 @@ def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
 def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=_ON,
+            transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("FR"),
@@ -77,7 +73,7 @@ def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> Non
 def test_classifier_routes_oss_union_services_to_r19() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=_ON,
+            transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("IT"),
@@ -93,7 +89,7 @@ def test_classifier_routes_oss_union_services_to_r19() -> None:
 def test_classifier_routes_external_scheme_services_to_r16() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=_ON,
+            transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("third_country"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("ES"),
@@ -109,7 +105,7 @@ def test_classifier_routes_external_scheme_services_to_r16() -> None:
 def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=_ON,
+            transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
@@ -126,7 +122,7 @@ def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria.model_validate(
             {
-                "transaction_date": _ON,
+                "transaction_date": date(2025, 6, 15),
                 "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
                 "customer_residency": IvaTerritorialScope.from_registry("eu_member"),
                 "customer_identification_state": require_eu_member_state("DE"),

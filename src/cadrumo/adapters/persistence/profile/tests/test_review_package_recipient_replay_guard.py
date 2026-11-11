@@ -46,7 +46,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(1980, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 
 
 def _fresh_nonce_hex() -> str:
@@ -88,8 +88,8 @@ def test_mark_consumed_then_load_roundtrips_with_strict_equality(tmp_path: Path)
 @pytest.mark.parametrize(
     "consumed_at",
     (
-        pytest.param(datetime(1980, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(1980, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_mark_consumed_refuses_a_naive_or_non_utc_consumed_at(tmp_path: Path, consumed_at: datetime) -> None:

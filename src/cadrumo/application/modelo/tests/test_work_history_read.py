@@ -17,18 +17,15 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..declarations_workspace_contracts import DeclarationsLifecycleKind
 from ..history import WorkUnitHistory
 from ..work_history_read import LIFECYCLE_KIND_BY_ACTOR, LIFECYCLE_KIND_BY_EVENT, OTHER_HISTORY_KIND, worded_history
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _BUCKET = "5aa00000-0000-4000-8000-0000000000aa"
 _UNIT = "e" * 64
-_START = datetime(_YEAR, 4, 2, 9, tzinfo=UTC)
+_START = datetime(2026, 4, 2, 9, tzinfo=UTC)
 
 
 def _event(event_type: BucketEventType, minutes: int, payload: dict[str, str] | None = None) -> BucketEvent:

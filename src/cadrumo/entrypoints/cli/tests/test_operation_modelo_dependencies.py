@@ -18,12 +18,8 @@ from ....application.modelo.dependency_operation import (
     ModeloDependencySnapshot,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_work_verification_cli
 from .. import operation_modelo_dependencies as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,7 +29,7 @@ _OPERATION_ID = "a" * 64
 
 
 def _projection(
-    *, profile_id: UUID = _PROFILE, filing_year: int = _YEAR, modelo: str | None = None
+    *, profile_id: UUID = _PROFILE, filing_year: int = 2025, modelo: str | None = None
 ) -> ModeloDependencyProjection:
     return ModeloDependencyProjection(
         profile_id=profile_id,
@@ -68,21 +64,21 @@ def test_bridge_submits_exact_profile_and_filters(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(bridge, "run_registered_operation", submit)
     read = bridge.read_modelo_dependencies(
-        cast(typer.Context, cast(object, None)), filing_year=_YEAR, modelo="303", period=None
+        cast(typer.Context, cast(object, None)), filing_year=2025, modelo="303", period=None
     )
     assert read.completion.operation_id == _OPERATION_ID
     assert read.snapshot.modelo_filter == "303"
-    assert submitted == [ModeloDependencyRequest(profile_id=_PROFILE, filing_year=_YEAR, modelo="303")]
+    assert submitted == [ModeloDependencyRequest(profile_id=_PROFILE, filing_year=2025, modelo="303")]
 
 
 @pytest.mark.parametrize(
     ("profile_id", "filing_year", "modelo", "condition", "effect"),
     [
-        (_OTHER, _YEAR, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
-        (_PROFILE, _YEAR + 1, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
-        (_PROFILE, _YEAR, "303", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
-        (_PROFILE, _YEAR, None, OperationTerminalCondition.REFUSED, OperationEffect.NONE),
-        (_PROFILE, _YEAR, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
+        (_OTHER, 2025, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
+        (_PROFILE, 2026, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
+        (_PROFILE, 2025, "303", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE),
+        (_PROFILE, 2025, None, OperationTerminalCondition.REFUSED, OperationEffect.NONE),
+        (_PROFILE, 2025, None, OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
     ],
 )
 def test_bad_projection_retains_submitted_receipt(
@@ -106,7 +102,7 @@ def test_bad_projection_retains_submitted_receipt(
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
         bridge.read_modelo_dependencies(
-            cast(typer.Context, cast(object, None)), filing_year=_YEAR, modelo=None, period=None
+            cast(typer.Context, cast(object, None)), filing_year=2025, modelo=None, period=None
         )
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
@@ -132,7 +128,7 @@ def test_presentation_error_retains_completed_operation(monkeypatch: pytest.Monk
         lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private")),
     )
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        modelo_work_verification_cli.work_dependencies(cast(typer.Context, cast(object, None)), year=_YEAR)
+        modelo_work_verification_cli.work_dependencies(cast(typer.Context, cast(object, None)), year=2025)
     assert refused.value.context is not None
     assert refused.value.context["operation_id"] == _OPERATION_ID
     assert refused.value.context["effect"] == OperationEffect.NONE.value

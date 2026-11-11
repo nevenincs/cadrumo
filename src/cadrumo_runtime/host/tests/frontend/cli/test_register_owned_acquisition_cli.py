@@ -2,7 +2,7 @@
 
 The whole flow runs through the live command tree: the purchase is added with
 ``aeat app ledger add``, the asset is registered against that transaction with
-``aeat app ledger actividad-asset create``, its charge for the service year is forecast and
+``aeat app ledger actividad-asset create``, its 2025 charge is forecast and
 claimed, and the Modelo 303, 130, and 100 figures are read from
 ``aeat app modelo work calculate``.
 
@@ -12,10 +12,10 @@ coefficient, not from a prior run:
 - 1.000,00 base plus 21 % IVA soportado = 1.210,00 paid from the bank.
 - Maquinaria carries a 12 % maximum linear coefficient (LIS art. 12.1.a), so the
   full-year charge on the 1.000,00 amortizable base (RIS art. 3.2) is 120,00.
-- The machine enters service on 5 April, so the service year covers 271 of 365 service
-  days (a year that is not a leap year): 120,00 x 271 / 365 = 89,0958... = 89,10 to the cent.
+- The machine enters service on 2025-04-05, so 2025 covers 271 of 365 service
+  days: 120,00 x 271 / 365 = 89,0958... = 89,10 to the cent.
 - Modelo 303 2T deducts the 210,00 input cuota on its 1.000,00 base.
-- Modelo 130 2T deducts nothing yet: the service-year charge is not covered until the
+- Modelo 130 2T deducts nothing yet: the 2025 charge is not covered until the
   year closes, and the 1.000,00 purchase is not an expense of the period.
 - Modelo 130 4T and Modelo 100 deduct 89,10, once each.
 
@@ -37,7 +37,6 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
 )
@@ -49,15 +48,11 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
 
-_FLOOR = filing_year_envelope().floor
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_FLOOR = filing_year_envelope().floor
-_T0 = datetime(1980, 2, 1, 9, 0, tzinfo=UTC)
-_ACQUIRED_ON = date(_YEAR, 4, 5)
-_ASSET_ID = "machine-asset"
+_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+_ACQUIRED_ON = date(2025, 4, 5)
+_ASSET_ID = "machine-2025"
 
 _BASE = Decimal("1000.00")
 _IVA = Decimal("210.00")
@@ -65,17 +60,12 @@ _PAID = Decimal("1210.00")
 
 #: LIS art. 12.1.a table, "Maquinaria": 12 % maximum linear coefficient.
 _MACHINERY_LINEAR_COEFFICIENT = Decimal("0.12")
-#: From the in-service date through 31 December inclusive, counted from the calendar.
-_SERVICE_DAYS = Decimal((date(_YEAR, 12, 31) - _ACQUIRED_ON).days + 1)
-_DAYS_IN_YEAR = Decimal((date(_YEAR, 12, 31) - date(_YEAR, 1, 1)).days + 1)
-_CHARGE = (_BASE * _MACHINERY_LINEAR_COEFFICIENT * _SERVICE_DAYS / _DAYS_IN_YEAR).quantize(
+#: 2025-04-05 through 2025-12-31 inclusive: 26 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31.
+_SERVICE_DAYS_2025 = Decimal("271")
+_DAYS_IN_2025 = Decimal("365")
+_CHARGE_2025 = (_BASE * _MACHINERY_LINEAR_COEFFICIENT * _SERVICE_DAYS_2025 / _DAYS_IN_2025).quantize(
     Decimal("0.01"),
     rounding=ROUND_HALF_UP,
-)
-#: From the in-service date through 30 June inclusive: the second quarter's accrual.
-_SECOND_QUARTER_DAYS = Decimal((date(_YEAR, 6, 30) - _ACQUIRED_ON).days + 1)
-_SECOND_QUARTER_CHARGE = (_BASE * _MACHINERY_LINEAR_COEFFICIENT * _SECOND_QUARTER_DAYS / _DAYS_IN_YEAR).quantize(
-    Decimal("0.01"), rounding=ROUND_HALF_UP
 )
 
 
@@ -119,7 +109,7 @@ def _seed_ready_profile(root: Path, profile_id: str) -> None:
                         path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
                         value=False,
                     ),
-                    UserProfileFact(path="censo.activity_start_date", value=date(_FLOOR, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                     UserProfileFact(path="renta_filing.declaration_type", value="1"),
                     UserProfileFact(path="renta_taxpayer.sex", value="M"),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
@@ -148,7 +138,7 @@ def _seed_zero_iva_compensation() -> None:
     _result(
         [
             *("app", "modelo", "iva-wallet", "seed"),
-            *("--filing-year", str(_YEAR), "--period", "1T", "--amount", "0", "--confirm"),
+            *("--filing-year", "2025", "--period", "1T", "--amount", "0", "--confirm"),
         ]
     )
 
@@ -296,7 +286,7 @@ def _register_machine(transaction_id: str) -> None:
     assert revisions[0]["asset_id"] == _ASSET_ID
 
 
-def _claim_service_year_charge() -> Decimal:
+def _claim_2025_charge() -> Decimal:
     forecast = _result(
         [
             "app",
@@ -307,7 +297,7 @@ def _claim_service_year_charge() -> Decimal:
             "--covered-from",
             _ACQUIRED_ON.isoformat(),
             "--covered-until",
-            date(_YEAR + 1, 1, 1).isoformat(),
+            "2026-01-01",
         ],
     )
     forecast_amount = Decimal(str(forecast["amount"]))
@@ -328,7 +318,7 @@ def _claim_service_year_charge() -> Decimal:
 
 def _calculated_casillas(*, modelo: str, period: str, options: tuple[str, ...] = ()) -> dict[str, str]:
     created = _result(
-        ["app", "modelo", "work", "create", "--modelo", modelo, "--year", str(_YEAR), "--period", period],
+        ["app", "modelo", "work", "create", "--modelo", modelo, "--year", "2025", "--period", period],
     )
     assert created
     calculated = _result(
@@ -340,7 +330,7 @@ def _calculated_casillas(*, modelo: str, period: str, options: tuple[str, ...] =
             "--modelo",
             modelo,
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             period,
             "--by",
@@ -360,14 +350,14 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
         _seed_zero_iva_compensation()
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
-        charge = _claim_service_year_charge()
+        charge = _claim_2025_charge()
 
         iva_q2 = _calculated_casillas(modelo="303", period="2T", options=joint_return_options())
         renta_q2 = _calculated_casillas(modelo="130", period="2T", options=_NO_PRIOR_PAGOS_FRACCIONADOS)
         renta_q4 = _calculated_casillas(modelo="130", period="4T", options=_NO_PRIOR_PAGOS_FRACCIONADOS)
         annual = _calculated_casillas(modelo="100", period="0A", options=_M100_ANNUAL_ANSWERS)
 
-    assert charge == _CHARGE
+    assert charge == _CHARGE_2025 == Decimal("89.10")
 
     # Modelo 303 still deducts the input cuota: the register owns the IRPF
     # treatment of the purchase, never its IVA.
@@ -375,9 +365,9 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
     assert Decimal(iva_q2["iva.soportado.interiores"]) == _IVA
 
     # The 1.000,00 purchase is the amortizable base, so no quarter deducts it.
-    # Modelo 130 accrues from the schedule: the in-service date through 30 June,
-    # over the year's own length.
-    assert Decimal(renta_q2["02"]) == _SECOND_QUARTER_CHARGE
+    # Modelo 130 accrues from the schedule: 5 April through 30 June is 26 + 31 + 30
+    # days, and 1,000.00 x 12% x 87/365 = 28.60.
+    assert Decimal(renta_q2["02"]) == Decimal("28.60")
     assert Decimal(renta_q4["02"]) == charge
     assert Decimal(annual["0208"]) == charge
     assert Decimal(_BASE) not in {Decimal(value) for value in annual.values()}
@@ -396,7 +386,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Pat
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
-        _claim_service_year_charge()
+        _claim_2025_charge()
         competing_base, competing_iva, competing_paid = Decimal("250.00"), Decimal("52.50"), Decimal("302.50")
         _add_machine_purchase(
             _add_supplier_invoice_evidence(
@@ -416,7 +406,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Pat
         created = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "create"),
-                *("--modelo", "130", "--year", str(_YEAR), "--period", "4T"),
+                *("--modelo", "130", "--year", "2025", "--period", "4T"),
             ],
         )
         assert created.exit_code == 0, created.output
@@ -424,7 +414,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Pat
         calculated = invoke_cached_cli(
             [
                 *("--format", "json", "app", "modelo", "work", "calculate"),
-                *("--modelo", "130", "--year", str(_YEAR), "--period", "4T"),
+                *("--modelo", "130", "--year", "2025", "--period", "4T"),
                 *("--by", "Autonoma"),
                 *_NO_PRIOR_PAGOS_FRACCIONADOS,
             ],
@@ -436,7 +426,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Pat
 
     envelope = json.loads(calculated.output)
     # Only the register's 89.10 is deducted: the competing 250.00 is not added.
-    assert Decimal(envelope["result"]["casilla_values"]["02"]) == _CHARGE
+    assert Decimal(envelope["result"]["casilla_values"]["02"]) == _CHARGE_2025
     note = next(
         notice["context"]
         for notice in envelope["notices"]

@@ -20,7 +20,6 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -40,9 +39,8 @@ from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_EXERCISE = filing_year_envelope().horizon
-_NOW = datetime(_EXERCISE, 6, 2, 12, 0, tzinfo=UTC)
-_P_1T = Period.from_year_and_code(_EXERCISE, "1T")
+_NOW = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+_P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 
 def _tx(
@@ -55,8 +53,8 @@ def _tx(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_EXERCISE, 4, 5),
-        value_date=date(_EXERCISE, 4, 5),
+        booked_date=date(2026, 4, 5),
+        value_date=date(2026, 4, 5),
         amount=raw_amount,
         currency="EUR",
         counterparty="Proveedor",
@@ -91,9 +89,9 @@ def _tx(
 
 def _revision_identity(modelo: str, source_ids: tuple[str, ...], operation: PinnedAuthorityOperation):
     """Derive the work unit id, calculation revision id and filing evidence both revision builders share."""
-    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=_EXERCISE, period=_P_1T, revision_id="r1")
+    wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     filing_instance_evidence = (
-        general_m303_filing_evidence(_P_1T, reference="test:filing-snapshot-coverage", operation=operation)
+        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage", operation=operation)
         if modelo == "303"
         else None
     )
@@ -113,8 +111,8 @@ def _snapshot_ref(modelo: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
         revision_id="r1",
-        modelo_year=_EXERCISE,
-        period=_P_1T.registry_token,
+        modelo_year=2026,
+        period=_P_2026_1T.registry_token,
     )
 
 

@@ -36,7 +36,6 @@ from cadrumo.domain.user_profile.values import (
 )
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -59,17 +58,16 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
         ).revision
 
 
-_YEAR = filing_year_envelope().horizon
-_CLOCK = datetime(_YEAR, 10, 15, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
 
 #: The profile capsule exists well before the 3T filing window the work target
 #: sits in. Seeding it at ``_CLOCK`` dated the profile's own creation to a
 #: future instant, which the record validator refuses outright.
-_PROFILE_SEEDED_AT = datetime(1980, 1, 5, 9, 0, 0, tzinfo=UTC)
+_PROFILE_SEEDED_AT = datetime(2026, 1, 5, 9, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = general_iva_profile_facts(
     tax_id="00000000T",
-    activity_start_date=date(_YEAR - 6, 1, 1).isoformat(),
+    activity_start_date="2020-01-01",
     name="Diego",
 )
 
@@ -109,16 +107,16 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         # Year-to-date activity through 3T: casillas 01 and 02 are sourced from these ledger rows.
         seed_m130_income_transaction(
             amount=Decimal("30000"),
-            filing_year=_YEAR,
+            filing_year=2026,
             source_key="override-ytd-income",
-            value_date=date(_YEAR, 7, 5),
+            value_date=date(2026, 7, 5),
             bucket_id=_PROFILE_ID,
         )
         seed_m130_expense_transaction(
             amount=Decimal("12000"),
-            filing_year=_YEAR,
+            filing_year=2026,
             source_key="override-ytd-expense",
-            value_date=date(_YEAR, 7, 5),
+            value_date=date(2026, 7, 5),
             bucket_id=_PROFILE_ID,
         )
         wu = WorkUnitCatalogueRepository(objects=objects)
@@ -138,9 +136,9 @@ def _work_unit_3t(repos: _Repos, *, operation: PinnedAuthorityOperation):
         create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "3T"),
-            revision_id=str(open_ended_revision("130").id),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            revision_id="2019-y-siguientes",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_CLOCK,
             operation=operation,

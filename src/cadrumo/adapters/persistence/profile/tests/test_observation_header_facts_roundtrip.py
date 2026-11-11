@@ -48,14 +48,12 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_CAPTURED_AT = datetime(1980, 5, 28, 11, 35, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 _IVA_RESULTADO: CasillaId = validated_casilla_id("iva.resultado", surface="header facts roundtrip")
@@ -70,7 +68,7 @@ def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
 def _observation() -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
         observations=(
             CasillaObservation(

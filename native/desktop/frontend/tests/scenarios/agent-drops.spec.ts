@@ -1,6 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { AgentDropSignal } from "../../src/shell/agentSession";
-import { fixtureInstant } from "../../src/dev/fixtureDates";
 import {
   agentColumn,
   messageField,
@@ -145,7 +144,7 @@ test("a fast dropped upload stays ready and is sent by reference in the selected
         document: {
           name: "recibo-luz.pdf",
           size_bytes: 120_000,
-          modified_at: fixtureInstant(10, 26, "00:00:00Z"),
+          modified_at: "2026-10-26T00:00:00Z",
           sha256: "a".repeat(64),
           media_type: "application/pdf",
         },

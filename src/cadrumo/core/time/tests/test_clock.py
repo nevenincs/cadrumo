@@ -30,7 +30,7 @@ def test_now_returns_recent_monotone_utc_datetime() -> None:
 class TestFrozenClockSeam:
     """The deterministic-output clock seam: default-off, scoped, guarded."""
 
-    _INSTANT = datetime(1986, 4, 14, 9, 30, 0, tzinfo=UTC)
+    _INSTANT = datetime(2026, 4, 14, 9, 30, 0, tzinfo=UTC)
 
     def test_default_off_returns_real_wall_clock(self) -> None:
         """Outside any scope, ``now()`` is real wall-clock — zero behaviour change."""
@@ -52,8 +52,8 @@ class TestFrozenClockSeam:
         assert now() != self._INSTANT
 
     def test_nested_scopes_restore_the_outer_instant(self) -> None:
-        outer = datetime(1986, 1, 1, tzinfo=UTC)
-        inner = datetime(1986, 12, 31, tzinfo=UTC)
+        outer = datetime(2026, 1, 1, tzinfo=UTC)
+        inner = datetime(2026, 12, 31, tzinfo=UTC)
         with frozen_clock(outer):
             assert now() == outer
             with frozen_clock(inner):
@@ -61,7 +61,7 @@ class TestFrozenClockSeam:
             assert now() == outer
 
     def test_refuses_naive_instant(self) -> None:
-        naive = datetime(1986, 4, 14, 9, 30, 0)  # deliberately tz-naive
+        naive = datetime(2026, 4, 14, 9, 30, 0)  # deliberately tz-naive
         with pytest.raises(CoreValidationError), frozen_clock(naive):
             pass
 
@@ -89,21 +89,21 @@ class TestTodayMadrid:
 
     def test_tracks_the_seam_date_away_from_the_boundary(self) -> None:
         """At 09:00Z (11:00 Madrid) the UTC date and the Madrid civil date agree."""
-        with frozen_clock(datetime(1986, 4, 1, 9, 0, 0, tzinfo=UTC)):
-            assert now().date() == date(1986, 4, 1)
-            assert today_madrid() == date(1986, 4, 1)
+        with frozen_clock(datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)):
+            assert now().date() == date(2026, 4, 1)
+            assert today_madrid() == date(2026, 4, 1)
 
     def test_boundary_instant_madrid_civil_date_leads_utc_by_a_day(self) -> None:
         """At 23:30Z on New Year's Eve, Madrid (UTC+1) has already turned the year.
 
         This is the exact window the date-boundary ruling exists for: a regulated
-        comparison built on the UTC date would read 1986-12-31 while the Spanish
-        civil date — the legal authority — is already 1987-01-01. ``frozen_clock``
+        comparison built on the UTC date would read 2026-12-31 while the Spanish
+        civil date — the legal authority — is already 2027-01-01. ``frozen_clock``
         pins both, proving the derivation and the boundary semantics deterministic.
         """
-        with frozen_clock(datetime(1986, 12, 31, 23, 30, 0, tzinfo=UTC)):
-            assert now().date() == date(1986, 12, 31)
-            assert today_madrid() == date(1987, 1, 1)
+        with frozen_clock(datetime(2026, 12, 31, 23, 30, 0, tzinfo=UTC)):
+            assert now().date() == date(2026, 12, 31)
+            assert today_madrid() == date(2027, 1, 1)
 
 
 class TestMadridWallClockToUtc:
@@ -118,27 +118,27 @@ class TestMadridWallClockToUtc:
     """
 
     def test_a_winter_reading_uses_the_cet_offset(self) -> None:
-        assert madrid_wall_clock_to_utc(datetime(1986, 2, 1, 19, 15, 34)) == datetime(
-            1986, 2, 1, 18, 15, 34, tzinfo=UTC
+        assert madrid_wall_clock_to_utc(datetime(2026, 2, 1, 19, 15, 34)) == datetime(
+            2026, 2, 1, 18, 15, 34, tzinfo=UTC
         )
 
     def test_a_summer_reading_uses_the_cest_offset(self) -> None:
-        assert madrid_wall_clock_to_utc(datetime(1986, 7, 20, 19, 15, 34)) == datetime(
-            1986, 7, 20, 17, 15, 34, tzinfo=UTC
+        assert madrid_wall_clock_to_utc(datetime(2026, 7, 20, 19, 15, 34)) == datetime(
+            2026, 7, 20, 17, 15, 34, tzinfo=UTC
         )
 
     def test_the_spanish_civil_date_round_trips(self) -> None:
         """The date a filing-plazo comparison reads is preserved."""
-        reading = datetime(1986, 4, 20, 23, 30, 0)
+        reading = datetime(2026, 4, 20, 23, 30, 0)
         instant = madrid_wall_clock_to_utc(reading)
 
-        assert instant == datetime(1986, 4, 20, 21, 30, 0, tzinfo=UTC)
+        assert instant == datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
         assert instant.astimezone(MADRID_TZ).replace(tzinfo=None) == reading
-        assert instant.astimezone(MADRID_TZ).date() == date(1986, 4, 20)
+        assert instant.astimezone(MADRID_TZ).date() == date(2026, 4, 20)
 
     def test_an_aware_value_is_converted_not_reinterpreted(self) -> None:
         """An offset its source supplied is a fact, not a reading to re-read."""
-        aware = datetime(1986, 4, 20, 21, 30, 0, tzinfo=UTC)
+        aware = datetime(2026, 4, 20, 21, 30, 0, tzinfo=UTC)
 
         assert madrid_wall_clock_to_utc(aware) == aware
-        assert madrid_wall_clock_to_utc(datetime(1986, 4, 20, 23, 30, 0, tzinfo=MADRID_TZ)) == aware
+        assert madrid_wall_clock_to_utc(datetime(2026, 4, 20, 23, 30, 0, tzinfo=MADRID_TZ)) == aware

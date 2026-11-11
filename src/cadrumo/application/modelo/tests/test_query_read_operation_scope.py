@@ -21,7 +21,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import (
     ADMISSION_ENTRY_ACTIONS,
     ADMISSION_REPLAY_ACTIONS,
@@ -43,13 +42,11 @@ from ..query_read_operation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EXERCISE = filing_year_envelope().horizon
-
 
 def test_scope_requires_all_periods_when_a_read_is_not_exact() -> None:
     """A missing-binding or periodless readiness query cannot borrow one period."""
     profile_id = uuid4()
-    annual = Period.from_year_and_code(_EXERCISE, "0A")
+    annual = Period.from_year_and_code(2026, "0A")
     assert requested_scope(ModeloBindingsListRequest(profile_id=profile_id)) == (frozenset(), True, False)
     assert requested_scope(ModeloBindingsListRequest(profile_id=profile_id, missing=True)) == (
         frozenset(),
@@ -57,15 +54,13 @@ def test_scope_requires_all_periods_when_a_read_is_not_exact() -> None:
         True,
     )
     assert requested_scope(
-        ModeloBindingsListRequest(profile_id=profile_id, year=_EXERCISE, period_code="0A", missing=True)
+        ModeloBindingsListRequest(profile_id=profile_id, year=2026, period_code="0A", missing=True)
     ) == (
         frozenset({annual}),
         False,
         False,
     )
-    assert requested_scope(
-        ModeloReadinessOperationRequest(profile_id=profile_id, modelo="303", filing_year=_EXERCISE)
-    ) == (
+    assert requested_scope(ModeloReadinessOperationRequest(profile_id=profile_id, modelo="303", filing_year=2026)) == (
         frozenset(),
         True,
         True,
@@ -74,7 +69,7 @@ def test_scope_requires_all_periods_when_a_read_is_not_exact() -> None:
         ModeloReadinessOperationRequest(
             profile_id=profile_id,
             modelo="303",
-            filing_year=_EXERCISE,
+            filing_year=2026,
             period=PublicPeriod.from_period(annual),
         )
     ) == (frozenset({annual}), False, False)
@@ -111,7 +106,7 @@ def test_query_executor_requires_context_definition_identity(monkeypatch: pytest
     assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
 
 
-_ANNUAL = Period.from_year_and_code(_EXERCISE, "0A")
+_ANNUAL = Period.from_year_and_code(2026, "0A")
 _HELD_AUTHORITY = cast(PinnedAuthorityOperation, object())
 
 

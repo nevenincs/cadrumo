@@ -7,14 +7,13 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from ...calculations.registry.tests.authored_editions import filing_grade_exercises
 from ..credit_resolution import CreditResolutionRecord, CreditResolutionState
 from ..source_disagreement import SourceDisagreementRole
 from .source_disagreement_support import sample_source_disagreement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AT = datetime(1980, 4, 2, 9, 0, tzinfo=UTC)
+_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _SESSION = "automation-session-label"
 
 
@@ -35,7 +34,7 @@ def test_a_resolution_is_keyed_by_the_finding_it_answers_and_starts_active() -> 
     record = _record()
 
     assert record.finding_key == record.disagreement.finding_key
-    assert record.identity == ("100", filing_grade_exercises("100")[-1], "0A", record.disagreement.finding_key)
+    assert record.identity == ("100", 2025, "0A", record.disagreement.finding_key)
     assert record.state is CreditResolutionState.ACTIVE
     assert record.active
     assert record.revoked_at is None

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
 from operator import methodcaller
 from pathlib import Path
@@ -17,8 +16,6 @@ from ....core.directory_scan import scan_directory
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
-from ...calculations.registry.tests.published_authority import published_legal_reference
 from ...invoices.enums import IvaRate
 from ...invoices.errors import InvoiceValidationError
 from ..deduction_facts import IvaDeductionClassificationProvenance
@@ -30,13 +27,6 @@ from ..invoice_classification import (
 from ..schema import InvoiceKind, IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
-_ON = date(_YEAR, 6, 15)
-# The temporary food rates are bounded by RD-ley 4/2024 art. 1; a date inside its window is
-# read from the published provision.
-_RDL_4_2024 = published_legal_reference("real-decreto-ley-4-2024:art-1")
-_IN_WINDOW = date(_RDL_4_2024.effective_from.year, 11, 15)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -125,13 +115,14 @@ def test_classification_for_reverse_charge_category_with_inconsistent_flow_rejec
 
 
 def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() -> None:
+    from datetime import date
     from decimal import Decimal
 
     from ..invoice_classification import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="inv-001",
-        issued_at=_ON,
+        issued_at=date(2025, 6, 15),
         invoice_kind=InvoiceKind.ISSUED,
         iva_rate=IvaRate.from_registry("RATE_21"),
         base_amount=Decimal("1000"),
@@ -141,7 +132,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     )
     assert isinstance(obs, IvaLedgerObservation)
     assert obs.ledger_id == "inv-001"
-    assert obs.transaction_date == _ON
+    assert obs.transaction_date == date(2025, 6, 15)
     assert obs.category == IvaCategory("domestic_general")
     assert obs.rate_kind == IvaRateKind("general")
     assert obs.flow_direction == IvaFlowDirection.from_registry("repercutido")
@@ -164,10 +155,11 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
     field. Only the pair distinguishes "carries its own rate" from "carries
     something".
     """
+    from datetime import date
 
     from ..invoice_classification import invoice_line_to_iva_observation
 
-    in_window = _IN_WINDOW
+    in_window = date(2024, 11, 15)
     two_percent = invoice_line_to_iva_observation(
         invoice_id="inv-2pct",
         issued_at=in_window,
@@ -213,6 +205,7 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
     misfiled. A silent drop is invisible to every totals check, which is why
     nothing failed while it was happening.
     """
+    from datetime import date
 
     from ....core.aggregation import BindingAggregation, BindingAggregationOp
     from ...calculations.registry.binding_value_contract import (
@@ -251,7 +244,7 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
             source_refs=("aeat-dr-390-2025",),
         )
 
-    in_window = _IN_WINDOW
+    in_window = date(2024, 11, 15)
     rows = tuple(
         cast(Any, invoice_line_to_iva_observation)(
             invoice_id=f"inv-{slot.name}",
@@ -269,10 +262,10 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
         )
     )
     revision = ModeloRevision(
-        id="synthetic-revision",
-        localization_key="test.schema.revision.synthetic-revision.label",
-        valid_from=date(_IN_WINDOW.year, 1, 1),
-        period_selector=PeriodSelector(year_from=_IN_WINDOW.year, periods=("0A",)),
+        id="2010-y-siguientes",
+        localization_key="test.schema.revision.2010-y-siguientes.label",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
         legal_refs=("ley-37-1992:art-91",),
         source_refs=("aeat-dr-390-2025",),
         bindings=(
@@ -300,13 +293,14 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
 
 
 def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() -> None:
+    from datetime import date
     from decimal import Decimal
 
     from ..invoice_classification import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="bill-77",
-        issued_at=date(_YEAR, 7, 1),
+        issued_at=date(2025, 7, 1),
         invoice_kind=InvoiceKind.RECEIVED,
         iva_rate=IvaRate.from_registry("RATE_10"),
         base_amount=Decimal("500"),
@@ -326,13 +320,14 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
 
 def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_authority() -> None:
     """A received invoice cannot become deductible IVA by a domestic-current default."""
+    from datetime import date
 
     from ..invoice_classification import invoice_line_to_iva_observation
 
     with pytest.raises(TypeError, match=r"deduction_fact_kind|deduction_provenance"):
         cast(Any, invoice_line_to_iva_observation)(
             invoice_id="bill-without-authority",
-            issued_at=date(_YEAR, 7, 1),
+            issued_at=date(2025, 7, 1),
             invoice_kind=InvoiceKind.RECEIVED,
             iva_rate=IvaRate.from_registry("RATE_10"),
             base_amount=Decimal("500"),
@@ -341,7 +336,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
     with pytest.raises(ValidationError, match="exact deduction authority"):
         invoice_line_to_iva_observation(
             invoice_id="bill-explicitly-unclassified",
-            issued_at=date(_YEAR, 7, 1),
+            issued_at=date(2025, 7, 1),
             invoice_kind=InvoiceKind.RECEIVED,
             iva_rate=IvaRate.from_registry("RATE_10"),
             base_amount=Decimal("500"),
@@ -352,6 +347,7 @@ def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_au
 
 
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
+    from datetime import date
 
     from ..invoice_classification import invoice_line_to_iva_observation
 
@@ -359,7 +355,7 @@ def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
         methodcaller(
             "__call__",
             invoice_id="inv-bad",
-            issued_at=_ON,
+            issued_at=date(2025, 6, 15),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=IvaRate.from_registry("RATE_21"),
             base_amount="1000",
@@ -374,19 +370,20 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     observations from invoice metadata via invoice_line_to_iva_observation,
     feed them to resolve_ledger_iva_aggregation_binding_values, get
     binding totals back."""
+    from datetime import date
     from decimal import Decimal
 
     from ...calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
     from ...calculations.registry.tests.published_authority import published_revision
     from ..invoice_classification import invoice_line_to_iva_observation
 
-    revision = published_revision("303", str(revision_covering("303", filing_year_envelope().floor).id))
+    revision = published_revision("303", "2022")
 
     # Two issued + one received line, all standard-case domestic
     observations = (
         invoice_line_to_iva_observation(
             invoice_id="inv-1",
-            issued_at=date(_YEAR, 1, 15),
+            issued_at=date(2025, 1, 15),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=IvaRate.from_registry("RATE_21"),
             base_amount=Decimal("1000"),
@@ -396,7 +393,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
         ),
         invoice_line_to_iva_observation(
             invoice_id="inv-2",
-            issued_at=date(_YEAR, 1, 20),
+            issued_at=date(2025, 1, 20),
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=IvaRate.from_registry("RATE_10"),
             base_amount=Decimal("500"),
@@ -406,7 +403,7 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
         ),
         invoice_line_to_iva_observation(
             invoice_id="bill-1",
-            issued_at=date(_YEAR, 2, 10),
+            issued_at=date(2025, 2, 10),
             invoice_kind=InvoiceKind.RECEIVED,
             iva_rate=IvaRate.from_registry("RATE_21"),
             base_amount=Decimal("400"),

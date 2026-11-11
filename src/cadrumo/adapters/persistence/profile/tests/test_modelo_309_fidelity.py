@@ -51,7 +51,6 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from .modelo_leaf_calculation_support import calculate_from_bindings, registry_observation_of
@@ -60,11 +59,11 @@ from .observation_lookup_support import find_observation, save_app_filing_observ
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "309"
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2024
+_YEAR_N_PLUS_1 = 2025
 _PERIOD = "3T"
-_CLOCK_N = datetime(_YEAR_N, 4, 10, 10, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1, 3, 5, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(2024, 4, 10, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(2025, 3, 5, 10, 0, 0, tzinfo=UTC)
 
 #: The computed total casilla and its two bound leaves.
 _CASILLA_TOTAL: CasillaId = validated_casilla_id(

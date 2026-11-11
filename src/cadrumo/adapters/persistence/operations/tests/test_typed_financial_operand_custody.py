@@ -22,15 +22,12 @@ from .....application.operations.persistence.financial_operand_custody import (
     OperationFinancialOperandCustodyConflictError,
 )
 from .....application.operations.tests.financial_operand_models import FinancialOperandBaseline, FinancialOperandBatch
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.thread_file_io_probe import recording_file_io
 from ...storage.errors import RepositoryError
 from ..typed_financial_operand_custody import OperationTypedFinancialOperandCustodyFilesystemRepository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_NOW = datetime(_YEAR, 10, 5, tzinfo=UTC)
+_NOW = datetime(2026, 10, 5, tzinfo=UTC)
 
 
 def _checkpoint() -> OperationFinancialOperandCustodyCheckpointV1:

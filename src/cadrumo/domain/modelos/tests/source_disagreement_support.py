@@ -5,7 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ....core.casilla_id import validated_casilla_id
-from ...calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 from ..source_disagreement import (
     DisagreementDecimalValue,
     SourceDisagreementEntry,
@@ -15,18 +14,16 @@ from ..source_disagreement import (
 
 __all__ = ["sample_source_disagreement"]
 
-_FILING_YEAR = filing_grade_exercises("100")[-1]
-
 
 def sample_source_disagreement(*, casilla_id: str = "0596", work_unit_id: str = "w" * 64) -> SourceDisagreementFact:
     """Return a credit casilla whose recorded value and borrador cross-check differ by one cent."""
     casilla = validated_casilla_id(casilla_id)
     return SourceDisagreementFact.of(
         modelo="100",
-        filing_year=_FILING_YEAR,
+        filing_year=2025,
         period="0A",
         work_unit_id=work_unit_id,
-        registry_revision_id=str(revision_covering("100", _FILING_YEAR).id),
+        registry_revision_id="2025",
         inputs_digest="d" * 64,
         key=str(casilla),
         value_channel="decimal",

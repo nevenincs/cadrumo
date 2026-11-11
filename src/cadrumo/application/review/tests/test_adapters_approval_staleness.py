@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
@@ -35,8 +34,6 @@ from .test_adapters import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 _A = "a" * 64
 _B = "b" * 64
@@ -65,7 +62,7 @@ def _approved(*, review_checksum: str | None) -> ModeloDraft:
     return base.model_copy(
         update={
             "approval_basis": _basis(base.draft_id),
-            "approved_at": datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+            "approved_at": datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
             "approved_by": "operator-A",
             "review_checksum": review_checksum,
         },

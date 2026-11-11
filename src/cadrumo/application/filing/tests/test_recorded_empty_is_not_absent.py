@@ -19,7 +19,6 @@ from uuid import UUID
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..retention import (
     FilingRetentionAuthority,
     try_record_filing_retention_snapshot,
@@ -28,7 +27,7 @@ from ..retention import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = UUID("2f8c6b41-9d05-4e73-a1c2-7b3e5d09f846")
-_OBSERVED_AT = datetime(filing_year_envelope().horizon, 8, 15, 12, 0, tzinfo=UTC)
+_OBSERVED_AT = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
 
 
 def test_absent_and_recorded_empty_are_distinguishable(tmp_path: Path) -> None:

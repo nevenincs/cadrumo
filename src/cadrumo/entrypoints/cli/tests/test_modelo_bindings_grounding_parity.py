@@ -16,7 +16,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ..modelo_bindings_results import (
     BindingGroundingPayload,
     BindingListRowPayload,
@@ -24,8 +23,6 @@ from ..modelo_bindings_results import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 #: Identity and provenance both surfaces must describe identically.
 _SHARED_GROUNDING_FIELDS = (
@@ -47,8 +44,8 @@ def _list_row(**overrides: object) -> BindingListRowPayload:
     return BindingListRowPayload.model_validate(
         {
             "modelo": "130",
-            "revision": str(open_ended_revision("130").id),
-            "filing_year": _YEAR,
+            "revision": "2019-y-siguientes",
+            "filing_year": 2024,
             "period": "1T",
             "binding_id": "ledger-ingresos",
             "source": "ledger_aggregation",

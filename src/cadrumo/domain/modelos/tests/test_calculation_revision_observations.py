@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ..calculation_revision import derive_calculation_revision_id
 from .calculation_revision_test_support import (
     INPUT_CASILLA_001,
@@ -22,9 +21,6 @@ from .calculation_revision_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EXERCISE = filing_year_envelope().horizon
-_REVISION_ID = str(revision_serving_period("303", _EXERCISE, "1T").id)
-
 
 def test_observations_consistency_validator_accepts_matching_projection() -> None:
     """Stage one of the staged consistency check: when observations is populated, casilla_values
@@ -38,8 +34,8 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     work_unit_id = "d" * 64
     registry_snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id=_REVISION_ID,
-        modelo_year=_EXERCISE,
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
         period="1T",
     )
     casilla_values = {
@@ -68,7 +64,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
         filing_instance_evidence=None,
         source_provenance=(),
     )
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     rev = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -100,8 +96,8 @@ def test_observations_consistency_validator_rejects_drift() -> None:
     work_unit_id = "e" * 64
     registry_snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id=_REVISION_ID,
-        modelo_year=_EXERCISE,
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
         period="1T",
     )
     casilla_values = {OBSERVATION_CASILLA_100: Decimal("250.00")}
@@ -123,7 +119,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
         filing_instance_evidence=None,
         source_provenance=(),
     )
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(pydantic.ValidationError, match="inconsistent with the typed observations envelope"):
         CalculationRevision(
             calculation_revision_id=revision_id,
@@ -151,8 +147,8 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
     work_unit_id = "f" * 64
     registry_snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id=_REVISION_ID,
-        modelo_year=_EXERCISE,
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
         period="1T",
     )
     casilla_values = {OBSERVATION_CASILLA_100: Decimal("250.00")}
@@ -164,7 +160,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
         filing_instance_evidence=None,
         source_provenance=(),
     )
-    created = datetime(1980, 5, 26, 10, 0, 0, tzinfo=UTC)
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(pydantic.ValidationError, match="must carry typed observations"):
         CalculationRevision(
             calculation_revision_id=revision_id,

@@ -43,7 +43,6 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    M303_YEAR,
     QUARTERLY_303_FILER_FACTS,
     blocked_wallet_decision,
     filed_history_only_wallet_decision,
@@ -73,10 +72,10 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
@@ -108,10 +107,10 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
@@ -143,16 +142,16 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(M303_YEAR, "2T")) is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with (
@@ -189,10 +188,10 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     IvaWalletDecisionRepository().save_decision(filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
@@ -228,15 +227,15 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
     decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(M303_YEAR, "2T")) is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with bundled_indexed_authority().operation() as operation:
@@ -275,15 +274,15 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
-        filing_year=M303_YEAR,
+        filing_year=2026,
         period="2T",
         filing_instance_evidence=export_m303_filing_evidence(
-            Period.from_year_and_code(M303_YEAR, "2T"), operation=operation
+            Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(M303_YEAR, "2T")) is None
+    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
     revision_for_approval = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
     assert revision_for_approval is not None
     verification_repo = VerificationReportCatalogueRepository(bucket_id=bucket_id)
@@ -320,9 +319,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     assert (
         ModeloRecordCatalogueRepository()
         .load()
-        .current_for(
-            bucket_id=bucket_id, modelo="303", filing_year=M303_YEAR, period=Period.from_year_and_code(M303_YEAR, "2T")
-        )
+        .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period=Period.from_year_and_code(2026, "2T"))
         is None
     )
     work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)

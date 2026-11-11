@@ -48,7 +48,6 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.domain.modelos.verification_report import VerificationReportCatalogue
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
@@ -72,8 +71,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -289,7 +286,7 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Persist the canonical M130 chain and refuse an unavailable previous filing."""
-    selected = authority_operation.snapshot("130", filing_year=_YEAR, period="1T")
+    selected = authority_operation.snapshot("130", filing_year=2025, period="1T")
     output = (tmp_path / "native-modelo-130.txt").resolve()
     observed = _watch_quickfile_client(monkeypatch, selected)
     with native_cli_profile_scope(tmp_path) as profile:
@@ -303,7 +300,7 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
                 "identity.name": "Synthetic",
                 "identity.surnames": "Quickfile",
                 "activities.description": "design",
-                "censo.activity_start_date": date(_YEAR - 1, 1, 1).isoformat(),
+                "censo.activity_start_date": "2024-01-01",
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "tax_residence.ccaa": "madrid",
@@ -315,7 +312,7 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
             "--modelo",
             "130",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
             "--revision",
@@ -413,8 +410,8 @@ def _urban_rent_withholding_evidence(invoice_id: str) -> InvoiceWithholdingEvide
         scheme=RetencionScheme("arrendamiento_urbano"),
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id=f"m115-rent-payment-{date(_YEAR, 3, 15).isoformat()}",
-        payment_occurred_on=date(_YEAR, 3, 15),
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=date(2025, 3, 15),
         allocation_id="m115-rent-allocation-1",
         idempotency_key="m115-rent-allocation-1",
         allocated_base=Decimal("2700.00"),
@@ -437,7 +434,7 @@ def _urban_rent_withholding_evidence(invoice_id: str) -> InvoiceWithholdingEvide
             ),
             recipient_province_code="28",
             modality="1",
-            accrual_year=_YEAR,
+            accrual_year=2025,
             withholding_percentage=Decimal("19.00"),
         ),
     )
@@ -485,7 +482,7 @@ def _assert_export_matches_persisted_calculation(
     assert calculation is not None and calculation.work_unit_id == work.work_unit_id
     assert report is not None and report.granted_verificado_completo
     assert report.calculation_revision_id == calculation.calculation_revision_id
-    snapshot = authority_operation.snapshot("115", filing_year=_YEAR, period="1T", revision_id=work.revision_id)
+    snapshot = authority_operation.snapshot("115", filing_year=2025, period="1T", revision_id=work.revision_id)
     assert projection.registry_revision_id == snapshot.revision.id
     layout = resolve_export_layout(snapshot, str(snapshot.revision.export_layouts[0].id)).layout
     parsed = parse_export_payload(layout, exported)
@@ -516,7 +513,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
                 "identity.name": "Synthetic",
                 "identity.surnames": "Quickfile",
                 "activities.description": "design",
-                "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+                "censo.activity_start_date": "2025-01-01",
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "tax_residence.ccaa": "madrid",
@@ -544,7 +541,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             "--invoice-number",
             "M115-RENT-2025-001",
             "--invoice-date",
-            date(_YEAR, 3, 15).isoformat(),
+            "2025-03-15",
             "--country-code",
             "ES",
             "--taxable-base",
@@ -568,7 +565,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             "--modelo",
             "115",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -582,7 +579,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             "--modelo",
             "115",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
             "--casilla",

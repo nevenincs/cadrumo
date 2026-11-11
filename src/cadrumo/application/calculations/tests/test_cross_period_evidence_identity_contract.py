@@ -17,7 +17,6 @@ from pydantic import ValidationError
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ..cross_period_models import (
     CrossPeriodDependencyEvidence,
@@ -28,8 +27,6 @@ from ..observations_repository import ObservationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _VALID_FILING_RECORD_ID = "a" * 64
 _VALID_CALCULATION_REVISION_ID = "b" * 64
 
@@ -37,8 +34,8 @@ _VALID_CALCULATION_REVISION_ID = "b" * 64
 def _requirement() -> CrossPeriodDependencyRequirement:
     return CrossPeriodDependencyRequirement(
         source_modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         source_casilla_ids=(validated_casilla_id("71", surface="test casilla id"),),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("modelo-303-compensacion-pendiente-anteriores",),

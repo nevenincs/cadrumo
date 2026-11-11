@@ -33,7 +33,6 @@ from cadrumo.application.user_profile.profile_operation_contracts import PROFILE
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -48,12 +47,11 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEARS = filing_year_envelope().years[-2:]
-NOW = datetime(_YEARS[-1], 9, 26, 12, tzinfo=UTC)
+NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)
 DESTINATIONS = tuple(UUID(int=index) for index in range(1, 4))
 PROJECTIONS = ("profile.values.v1", "tax.values.v1", "operation.status.v1")
 OPERATIONS = ("profile.read", "profile.write", "modelo.calculate", "modelo.export", "ledger.read", "ledger.write")
-PERIODS = tuple(Period.from_year_and_code(year, code) for year in _YEARS for code in ("1T", "2T", "3T", "4T"))
+PERIODS = tuple(Period.from_year_and_code(year, code) for year in (2025, 2026) for code in ("1T", "2T", "3T", "4T"))
 PERMISSIONS = tuple(
     DisclosurePermission(destination_id=destination, projection_id=projection, category=category)
     for destination, projection, category in product(DESTINATIONS, PROJECTIONS, DisclosureCategory)

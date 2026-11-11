@@ -46,14 +46,11 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_runner import semantic_cli_output
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -153,7 +150,7 @@ def _calculate_args(work_unit_id: str) -> list[str]:
 def _create_work_unit(session: NativeApiCliSession[None]) -> str:
     created = session.invoke_password(
         "app", "modelo", "work", "create",
-        "--modelo", "200", "--year", str(_YEAR), "--period", "0A", "--revision", str(revision_covering("200", _YEAR).id),
+        "--modelo", "200", "--year", "2024", "--period", "0A", "--revision", "2024",
         "--by", _SHORT_PROFILE_LABEL,
     )  # fmt: skip
     assert created.exit_code == 0, created.output

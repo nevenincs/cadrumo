@@ -19,7 +19,6 @@ from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.identity.transaction_ids import TransactionId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
@@ -56,9 +55,6 @@ from .workspace_fixtures import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
-_DAY = date(_YEAR, 3, 27)
 
 _INVOICE_ID = "c" * 64
 
@@ -110,7 +106,7 @@ async def test_invoice_entry_names_every_unreadable_field_and_writes_nothing() -
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
             await settle(pilot)
-            _fill(screen, invoice_date=_DAY.strftime("%d/%m/%Y"), taxable_base="twelve")
+            _fill(screen, invoice_date="27/03/2026", taxable_base="twelve")
             screen.query_one("#ledger-invoice-review", Button).press()
             await settle(pilot)
             notice = str(screen.query_one("#ledger-refusal", Static).render())
@@ -133,7 +129,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
                 counterparty_name="Hardware Profesional Sur SL",
                 counterparty_nif="B00015099",
                 invoice_number="A-0003",
-                invoice_date=_DAY.isoformat(),
+                invoice_date="2026-03-27",
                 taxable_base="1200.00",
                 iva_rate="21",
             )
@@ -154,7 +150,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
             counterparty_nif="B00015099",
             country_code="ES",
             invoice_number="A-0003",
-            invoice_date=_DAY,
+            invoice_date=date(2026, 3, 27),
             taxable_base=Decimal("1200.00"),
             iva_rate=Decimal(21),
             currency="EUR",
@@ -175,7 +171,7 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
                 counterparty_name="Synthetic client",
                 counterparty_nif="B00010157",
                 invoice_number="S-01",
-                invoice_date=date(_YEAR - 1, 2, 15).isoformat(),
+                invoice_date="2025-02-15",
                 taxable_base="4000.00",
                 iva_rate="21",
                 iva_category="domestic_general",
@@ -203,13 +199,7 @@ async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> N
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
             await settle(pilot)
-            _fill(
-                screen,
-                counterparty_name="X SL",
-                invoice_number="1",
-                invoice_date=date(_YEAR, 1, 1).isoformat(),
-                taxable_base="10",
-            )
+            _fill(screen, counterparty_name="X SL", invoice_number="1", invoice_date="2026-01-01", taxable_base="10")
             screen.query_one("#ledger-invoice-review", Button).press()
             await settle(pilot)
             screen.query_one("#ledger-invoice-confirm", Button).press()
@@ -245,7 +235,7 @@ class EvidenceDoor:
             file_name="invoice_A-0003.pdf",
             supplier=None,
             invoice_number=None,
-            created_at=date(_YEAR, 9, 16).isoformat(),
+            created_at="2026-09-16",
             status=LedgerEvidenceRecordStatus.AWAITING,
         )
         self.records.append(record)
@@ -258,7 +248,7 @@ class EvidenceDoor:
             supplier_name="Hardware Profesional Sur SL",
             supplier_tax_id="B00015099",
             invoice_number="A-0003",
-            invoice_date=_DAY.isoformat(),
+            invoice_date="2026-03-27",
             taxable_base=None,
             iva_rate="21",
             iva_amount=None,
@@ -386,7 +376,7 @@ async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record()
         file_name="invoice_A-0003.pdf",
         supplier=None,
         invoice_number=None,
-        created_at=date(_YEAR, 9, 16).isoformat(),
+        created_at="2026-09-16",
         status=LedgerEvidenceRecordStatus.UNMEASURED,
     )
     door.records.extend(
@@ -435,7 +425,7 @@ async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
             file_name="invoice_A-0003.pdf",
             supplier=None,
             invoice_number=None,
-            created_at=date(_YEAR, 9, 16).isoformat(),
+            created_at="2026-09-16",
             status=LedgerEvidenceRecordStatus.UNMEASURED,
         )
     )

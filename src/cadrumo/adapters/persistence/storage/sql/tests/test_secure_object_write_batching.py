@@ -39,7 +39,7 @@ from .secure_objects_support import ephemeral_secure_repo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "cadrumo-test.write.batching"
-_WRITTEN_AT = datetime(1980, 5, 22, 18, 0, 0, tzinfo=UTC)
+_WRITTEN_AT = datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC)
 
 
 def _write(key: str, payload: bytes, *, written_at: datetime = _WRITTEN_AT) -> SecureObjectWrite:
@@ -105,7 +105,7 @@ def test_in_batch_duplicate_key_chains_revisions_like_sequential_saves(tmp_path:
         repo.save_many(
             (
                 _write("dup-key", b"first-payload"),
-                _write("dup-key", b"second-payload", written_at=datetime(1980, 5, 22, 18, 5, 0, tzinfo=UTC)),
+                _write("dup-key", b"second-payload", written_at=datetime(2026, 5, 22, 18, 5, 0, tzinfo=UTC)),
             ),
         )
         with sqlite3.connect(db_path) as con:

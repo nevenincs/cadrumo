@@ -27,7 +27,6 @@ from ....application.modelo.filing_record_view_operation import (
 from ....application.modelo.historical_filing_projection import ModeloHistoricalFilingContentProjection
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -43,21 +42,18 @@ from ..filing_chain_payloads import (
     ObservationOverridePayload,
 )
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 
 
 def _projection(*, profile_id: UUID = _PROFILE, request_id: str | None = None):
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     unit_id = derive_work_unit_id(
-        bucket_id=str(_PROFILE), modelo="303", filing_year=_YEAR, period=period, revision_id="test-revision"
+        bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
     )
     filing_id = derive_filing_record_id(
         work_unit_id=unit_id,
@@ -70,7 +66,7 @@ def _projection(*, profile_id: UUID = _PROFILE, request_id: str | None = None):
         calculation_revision_id="b" * 64,
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         filed_at=_NOW,
         filed_by="test operator",
@@ -94,7 +90,7 @@ def _projection(*, profile_id: UUID = _PROFILE, request_id: str | None = None):
     )
     layers = ModeloFilingObservationLayersProjection(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         official=official,
         pending_local=pending,

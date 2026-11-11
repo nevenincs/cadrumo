@@ -23,7 +23,6 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
@@ -48,7 +47,6 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only]
 
 _MODELO_202_PERIODS = ("1P", "2P", "3P")
-_YEAR = filing_year_envelope().horizon
 
 
 def _assert_payload_period(payload: dict[str, object], *, year: int, code: str) -> None:
@@ -79,13 +77,13 @@ def _create_202_work_unit(period: str) -> str:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", str(_YEAR), "--period", period,
-            "--revision", str(revision_covering("202", _YEAR).id),
+            "--modelo", "202", "--year", "2026", "--period", period,
+            "--revision", "2025-y-siguientes",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
-    _assert_payload_period(payload, year=_YEAR, code=period)
+    _assert_payload_period(payload, year=2026, code=period)
     work_unit_id = STR_KEYED_MAPPING_ADAPTER.validate_python(payload)["work_unit_id"]
     assert isinstance(work_unit_id, str)
     return work_unit_id
@@ -140,7 +138,7 @@ def test_create_calculate_status_verify_agree_on_modelo_202_pago_fraccionado_per
         )
         assert status_result.exit_code == 0, f"{period}: {status_result.output}"
         status_payload = unwrap_schema_envelope(status_result.output)
-        _assert_payload_period(status_payload, year=_YEAR, code=period)
+        _assert_payload_period(status_payload, year=2026, code=period)
 
         # Verify must accept the same period token without crashing. Exit code 0
         # (fully verified) or 1 (incomplete) are both acceptable; exit code 2

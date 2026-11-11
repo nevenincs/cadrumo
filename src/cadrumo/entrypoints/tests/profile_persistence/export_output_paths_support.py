@@ -61,10 +61,6 @@ from cadrumo.domain.transactions.own_accounts import (
 )
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
 
 def product_software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
@@ -176,7 +172,7 @@ def persist_rectificativa_with_nota_three(
     receipt number, a persisted motive, and the selected registry snapshot.
     """
     csv = "CSV3032026N3ORIGINAL"
-    filed_at = datetime(_YEAR, 5, 20, 9, 0, tzinfo=UTC)
+    filed_at = datetime(2026, 5, 20, 9, 0, tzinfo=UTC)
     work_unit = work_repo.load().get(verified.work_unit_id)
     original = ModeloRecord(
         filing_record_id=derive_filing_record_id(
@@ -279,5 +275,5 @@ def redeme_profile(*, taxpayer_nif: str) -> TaxpayerProfile:
 @pytest.fixture(autouse=True)
 def authored_export_clock() -> Iterator[None]:
     """Keep captured wallet freshness on the authored scenario's timeline."""
-    with frozen_clock(datetime(_YEAR, 6, 4, 12, 0, tzinfo=UTC)):
+    with frozen_clock(datetime(2026, 6, 4, 12, 0, tzinfo=UTC)):
         yield

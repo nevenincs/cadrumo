@@ -14,7 +14,6 @@ import pytest
 
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -58,8 +57,7 @@ from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDo
 from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
-YEAR = filing_year_envelope().horizon
-NOW = datetime(YEAR, 9, 3, 10, 30, tzinfo=UTC)
+NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
@@ -87,19 +85,19 @@ def profile_record(
 
 def declaration_work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
     """Create the one Modelo 130 declaration the profile holds in these fixtures."""
-    period = Period.from_year_and_code(YEAR, "1T")
-    revision_id = operation.snapshot("130", filing_year=YEAR, period="1T").revision.id
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = operation.snapshot("130", filing_year=2026, period="1T").revision.id
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=PROFILE_ID,
             modelo="130",
-            filing_year=YEAR,
+            filing_year=2026,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=PROFILE_ID,
         modelo="130",
-        filing_year=YEAR,
+        filing_year=2026,
         period=period,
         revision_id=revision_id,
         name="declaration",
@@ -246,8 +244,8 @@ def synthetic_transaction() -> object:
 
     raw = RawTransaction(
         provider_transaction_id="row-capture-guard",
-        booked_date=date(YEAR, 3, 1),
-        value_date=date(YEAR, 3, 1),
+        booked_date=date(2026, 3, 1),
+        value_date=date(2026, 3, 1),
         amount=Decimal("50.00"),
         currency="EUR",
         counterparty="Synthetic SL",

@@ -7,7 +7,6 @@ import hashlib
 import threading
 from collections.abc import Callable, Coroutine
 from dataclasses import replace
-from datetime import date
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -32,7 +31,6 @@ from cadrumo.application.ledger.workspace import LedgerWorkspaceArea
 from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -60,11 +58,9 @@ from .ledger_invoices_runtime_harness import (
 )
 from .unsupported_result import raises_unsupported_result
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_BOOK = f"numero;fecha;base\nF-1;{date(_YEAR, 3, 1).isoformat()};100.00\n".encode()
+_BOOK = b"numero;fecha;base\nF-1;2026-03-01;100.00\n"
 _REFUSAL_CODE = "ERROR_INVOICE_VALIDATION"
 _DETAIL = OperationErrorDetailV1(
     kind=OperationErrorDetailKind.REGISTERED_ERROR,
@@ -288,7 +284,7 @@ def _wizard_request(kind: InvoiceKind = InvoiceKind.ISSUED) -> InvoiceWizardRequ
         counterparty_nif="B00010082",
         counterparty_name="Synthetic customer",
         invoice_number="F-00001",
-        invoice_date=date(_YEAR, 3, 1).isoformat(),
+        invoice_date="2026-03-01",
         taxable_base="100.00",
         iva_rate="21",
         currency="EUR",

@@ -15,13 +15,10 @@ from __future__ import annotations
 import pytest
 
 from ....application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_filed_results import FiledCaptureResult
 from ..app_live_rendering import filed_capture_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def test_dry_run_is_a_result_field_not_a_notice() -> None:
@@ -74,7 +71,7 @@ def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="303",
-                year=_YEAR,
+                year=2025,
                 walk_attempted=True,
                 walk_completed=True,
                 row_count=0,
@@ -84,8 +81,8 @@ def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
         ),
         output_root="filed-declarations",
         modelos=("303",),
-        year_from=_YEAR,
-        year_to=_YEAR,
+        year_from=2025,
+        year_to=2025,
         captured_count=0,
         reached_count=0,
         failed_count=0,

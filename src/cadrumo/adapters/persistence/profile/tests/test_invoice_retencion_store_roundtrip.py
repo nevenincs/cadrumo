@@ -49,15 +49,12 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import IvaCategory
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .retencion_observation_authoring import replace_retencion_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _MODELO = "111"
 _SCHEME = RetencionScheme("actividades_profesionales")
 
@@ -73,7 +70,7 @@ _PERCEPTOR_NIF = "B00015016"
 
 def _received_invoice() -> Invoice:
     """A received professional invoice carrying a declared retencion."""
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -87,7 +84,7 @@ def _received_invoice() -> Invoice:
         {
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "F-PROV-778",
-            "issued_at": date(_YEAR, 3, 15),
+            "issued_at": date(2026, 3, 15),
             "counterparty_name": _PERCEPTOR_NAME,
             "counterparty_tax_id": _PERCEPTOR_NIF,
             "counterparty_country": "ES",

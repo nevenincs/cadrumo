@@ -106,11 +106,7 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.projection_pages import encode_projection_document, project_encoded_page
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.operation_contract_support import modelo_work_file_contract, unavailable, unavailable_operator_scope_ports
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -118,7 +114,7 @@ _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _WORK_UNIT = "b" * 64
-_NOW = datetime(_YEAR, 10, 2, tzinfo=UTC)
+_NOW = datetime(2026, 10, 2, tzinfo=UTC)
 _REFUSAL_CODE = "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO"
 _DIAGNOSTIC = "sha256:" + "d" * 64
 
@@ -137,7 +133,7 @@ def test_profile_requirement_explanation_survives_recorded_detail(message_key: s
         translated_message=message_key,
         context={
             "modelo": "303",
-            "filing_year": _YEAR,
+            "filing_year": 2024,
             "period": "1T",
             "profile_requirements": explanation,
             "missing": ("private-question-id",),

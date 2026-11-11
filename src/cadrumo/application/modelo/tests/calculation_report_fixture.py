@@ -30,7 +30,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -48,9 +47,9 @@ from ..work_review import build_modelo_work_review_casillas
 
 BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 MODELO = ModeloCode("130")
-FILING_YEAR = filing_year_envelope().horizon
+FILING_YEAR = 2026
 PERIOD_CODE = "1T"
-EXPORTED_AT = datetime(FILING_YEAR, 4, 12, 8, 0, tzinfo=UTC)
+EXPORTED_AT = datetime(2026, 4, 12, 8, 0, tzinfo=UTC)
 GENERATION = "b" * 64
 VERIFICATION_REPORT_ID = "c" * 64
 FILING_RECORD_ID = "d" * 64

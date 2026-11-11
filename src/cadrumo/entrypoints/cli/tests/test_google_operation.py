@@ -41,14 +41,11 @@ from ....core.operations import (
     OperationEventKind,
     OperationTerminalCondition,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operation_composition import compose_operation_dependencies
 from ..modelo_spreadsheet_results import ModeloSpreadsheetPushResult
 from ..operation_modelo_spreadsheet_push import google_operation_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize(
@@ -118,7 +115,7 @@ def test_google_sheets_export_definition_declares_one_safe_credential_free_contr
     request = GoogleSheetsExportOperationRequest(
         profile_id=UUID("11111111-1111-4111-8111-111111111111"),
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
         prefill_relations=True,
         dry_run=True,
@@ -149,7 +146,7 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
             payload=GoogleSheetsExportOperationRequest(
                 profile_id=UUID(profile.bucket_id),
                 modelo="130",
-                filing_year=_YEAR,
+                filing_year=2025,
                 period="1T",
                 dry_run=False,
             ),
@@ -241,7 +238,7 @@ def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch)
         modelo="130",
         revision="r1",
         period="1T",
-        filing_year=_YEAR,
+        filing_year=2025,
         engine_version="test-engine",
         registry_sha="a" * 64,
         dry_run=True,
@@ -281,14 +278,14 @@ def test_cli_push_uses_bound_profile_and_registered_export_contract(monkeypatch)
     )
 
     cli_context = cast(typer.Context, SimpleNamespace())
-    cli_module.modelo_spreadsheet_push(cli_context, "130", "1T", _YEAR, prefill_relations=True, dry_run=True)
+    cli_module.modelo_spreadsheet_push(cli_context, "130", "1T", 2025, prefill_relations=True, dry_run=True)
 
     request = submitted["request"]
     assert submitted["client"] is client
     assert isinstance(request, GoogleSheetsExportOperationRequest)
     assert request.profile_id == profile_id
     assert request.modelo == "130"
-    assert request.period == "1T" and request.filing_year == _YEAR
+    assert request.period == "1T" and request.filing_year == 2025
     assert request.prefill_relations is True and request.dry_run is True
     assert submitted["definition_id"] == GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID
     assert submitted["subject_ref"] == profile_operation_subject(str(profile_id))

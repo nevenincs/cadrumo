@@ -17,7 +17,6 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.application.overview.pipeline_operation import OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
@@ -29,8 +28,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -38,8 +35,8 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_TARGET = Period.from_year_and_code(_YEAR, "1T")
-_OUTSIDE = Period.from_year_and_code(_YEAR, "2T")
+_TARGET = Period.from_year_and_code(2025, "1T")
+_OUTSIDE = Period.from_year_and_code(2025, "2T")
 
 
 def _scope(
@@ -92,8 +89,8 @@ def _seed_profile(
     ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=operation)
     transaction_ids: list[str] = []
     for label, period, booked_date, amount in (
-        ("selected", _TARGET, date(_YEAR, 2, 15), Decimal("121.00")),
-        ("outside", _OUTSIDE, date(_YEAR, 5, 15), Decimal("60.50")),
+        ("selected", _TARGET, date(2025, 2, 15), Decimal("121.00")),
+        ("outside", _OUTSIDE, date(2025, 5, 15), Decimal("60.50")),
     ):
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(

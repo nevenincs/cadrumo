@@ -29,7 +29,6 @@ from ....application.live.expedientes_read_operation import (
     ExpedientesSnapshotSummaryPublicV1,
 )
 from ....core.operations import OperationEffect, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_expedientes_commands as handler
 from .. import operation_expedientes_read as bridge
 from .. import operation_profile_operation as profile_operation
@@ -42,12 +41,10 @@ from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(1980, 3, 6, 7, 8, tzinfo=UTC)
+_CAPTURED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
 _SOURCE_URL = "https://sede.example/expedientes"
 _SNAPSHOT_ID = "2" * 64
 _EXPEDIENTE_ID = "20250000000000001A"
@@ -65,7 +62,7 @@ def _summary(snapshot_id: str = _SNAPSHOT_ID) -> ExpedientesSnapshotSummaryPubli
 def _declaration(*, expediente_id: str = _EXPEDIENTE_ID, period: str = "1T") -> ExpedienteDeclarationPublicV1:
     return ExpedienteDeclarationPublicV1(
         modelo="303",
-        ejercicio=_YEAR,
+        ejercicio=2025,
         period=period,
         expediente_id=expediente_id,
         estado="ALTA",
@@ -293,7 +290,7 @@ def test_handlers_keep_json_and_text_fields_including_full_declaration_rows(
     assert [row.model_dump(mode="json") for row in shown.declarations] == [
         {
             "modelo": "303",
-            "ejercicio": _YEAR,
+            "ejercicio": 2025,
             "period": "1T",
             "expediente_id": _EXPEDIENTE_ID,
             "estado": "ALTA",
@@ -310,7 +307,7 @@ def test_handlers_keep_json_and_text_fields_including_full_declaration_rows(
         },
         {
             "modelo": "303",
-            "ejercicio": _YEAR,
+            "ejercicio": 2025,
             "period": "2T",
             "expediente_id": "20250000000000002B",
             "estado": "ALTA",
@@ -332,8 +329,8 @@ def test_handlers_keep_json_and_text_fields_including_full_declaration_rows(
         f"captured_at\t{_CAPTURED_AT.isoformat()}",
         f"source_url\t{_SOURCE_URL}",
         "declaration_count\t2",
-        f"{_EXPEDIENTE_ID}\t303\t{_YEAR}\t{_YEAR} 1T\tALTA\t{_CAPTURED_AT.isoformat()}",
-        f"20250000000000002B\t303\t{_YEAR}\t{_YEAR} 2T\tALTA\t{_CAPTURED_AT.isoformat()}",
+        f"{_EXPEDIENTE_ID}\t303\t2025\t2025 1T\tALTA\t{_CAPTURED_AT.isoformat()}",
+        f"20250000000000002B\t303\t2025\t2025 2T\tALTA\t{_CAPTURED_AT.isoformat()}",
     ]
 
     latest, latest_lines = emitted["app.live.expedientes.latest"]

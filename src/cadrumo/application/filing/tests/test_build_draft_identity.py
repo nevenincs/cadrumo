@@ -27,15 +27,12 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.casilla_membership import format_noncanonical_casilla_reference
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ..draft_construction import build_draft, filing_period_date
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
@@ -61,7 +58,7 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
 # from that revision below rather than transcribed, so the test cannot outlive
 # the reuse it describes.
 _REUSED_NUMBER_MODELO = "200"
-_REUSED_NUMBER_FILING_YEAR = filing_grade_exercises(_REUSED_NUMBER_MODELO)[-1]
+_REUSED_NUMBER_FILING_YEAR = 2025
 _REUSED_NUMBER_PERIOD_CODE = "0A"
 
 
@@ -108,7 +105,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: Pinned
 
     draft = build_draft(
         modelo="130",
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        period=Period.from_year_and_code(2026, "1T"),
         profile=_profile(),
         inputs={
             _M130_INGRESOS_CASILLA: Decimal("10000"),
@@ -134,8 +131,8 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: Pinned
         },
         schema_provider=_schema_provider(
             modelos=("130",),
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "1T"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
             operation=operation,
         ),
     )
@@ -144,18 +141,18 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref(operation: Pinned
     assert draft.subject_tax_id == "12345678Z"
     assert draft.subject_tax_id == draft.profile_tax_id
 
-    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
+    snapshot = operation.snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
 
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo == "130"
     assert draft.snapshot_ref.revision_id == snapshot.revision.id
-    assert draft.snapshot_ref.modelo_year == _YEAR
+    assert draft.snapshot_ref.modelo_year == 2026
     assert draft.snapshot_ref.period == "1T"
 
 
 def test_build_draft_rejects_whitespace_padded_casilla_input_key(operation: PinnedAuthorityOperation) -> None:
     """The filing builder must not silently ignore an inexact casilla key."""
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
 
     with pytest.raises(ModeloBuilderError, match=re.escape("application.filing.build_draft.errors.input_key_padded")):
         build_draft(
@@ -165,7 +162,7 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key(operation: Pinn
             inputs={
                 cast(CasillaId, " 01"): Decimal("10000"),
             },
-            schema_provider=_schema_provider(modelos=("130",), filing_year=_YEAR, period=period, operation=operation),
+            schema_provider=_schema_provider(modelos=("130",), filing_year=2026, period=period, operation=operation),
         )
 
 
@@ -192,8 +189,8 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
     expected_fragment: str,
 ) -> None:
     """Printed numbers and export refs must not be accepted as input casilla references."""
-    period = Period.from_year_and_code(_YEAR, "1T")
-    snapshot = operation.snapshot("303", filing_year=_YEAR, period=period.code, on=date(_YEAR, 4, 1))
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = operation.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == casilla_id)
     if reference_kind == "printed_number":
         input_key = casilla.number
@@ -211,7 +208,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
             inputs={
                 input_key: Decimal("100.00"),
             },
-            schema_provider=_schema_provider(modelos=("303",), filing_year=_YEAR, period=period, operation=operation),
+            schema_provider=_schema_provider(modelos=("303",), filing_year=2026, period=period, operation=operation),
         )
 
     # The refusal renders through the locale catalogue, so the offending token
@@ -310,5 +307,5 @@ def test_build_draft_rejects_ambiguous_reused_printed_number(operation: PinnedAu
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:
     """Typed non-standard registry periods still supply the calculation date axis."""
 
-    assert filing_period_date(Period.from_year_and_code(_YEAR, "EXT-1T")) == date(_YEAR, 3, 31)
-    assert filing_period_date(Period.from_year_and_code(_YEAR, "EXT-4T")) == date(_YEAR, 12, 31)
+    assert filing_period_date(Period.from_year_and_code(2025, "EXT-1T")) == date(2025, 3, 31)
+    assert filing_period_date(Period.from_year_and_code(2025, "EXT-4T")) == date(2025, 12, 31)

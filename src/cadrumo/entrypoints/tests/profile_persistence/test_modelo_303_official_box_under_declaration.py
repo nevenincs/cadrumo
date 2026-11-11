@@ -1,6 +1,6 @@
 """Modelo 303 official Diseño-de-Registros box projection (Stage 2).
 
-The M303 revisions carry two casilla layers: the semantic
+The M303 2026 revisions carry two casilla layers: the semantic
 aggregate cuota casillas (``iva.repercutido.general``, ``iva.soportado.interiores``,
 ...) that the ledger source mesh populates and that feed the resultado chain, and
 the official numbered Diseño-de-Registros boxes (ids "01".."77") that carry the
@@ -83,7 +83,6 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .ready_profile_taxpayer import ready_profile_tax_id
 from .verification_substance_support import workflow_profile as plain_workflow_profile
 
@@ -91,9 +90,8 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET = "33333333-3333-4333-8333-333333333333"
 
 # DISTINCT non-equal cuotas so the wiring is unmistakable: one INCOMING general-21
@@ -197,8 +195,8 @@ def _iva_transaction(
         {
             "raw": RawTransaction(
                 provider_transaction_id=provider_id,
-                booked_date=date(_YEAR, 2, 10),
-                value_date=date(_YEAR, 2, 10),
+                booked_date=date(2026, 2, 10),
+                value_date=date(2026, 2, 10),
                 amount=amount,
                 currency="EUR",
                 counterparty="Cliente o proveedor",
@@ -208,7 +206,7 @@ def _iva_transaction(
                     source_sha256="d" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
                     provider_name="manual-ledger",
                 ),
                 raw_fields={"source_kind": "ledger_transaction"},
@@ -239,7 +237,7 @@ def _iva_transaction(
                 if direction is TransactionDirection.OUTGOING
                 else None
             ),
-            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -248,10 +246,10 @@ def _iva_transaction(
 def _wallet_decision() -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=ready_profile_tax_id(),
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "1T"),
         target_registry_snapshot_ref=published_authority_operation()
-        .snapshot("303", filing_year=_YEAR, period="1T")
+        .snapshot("303", filing_year=2026, period="1T")
         .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
@@ -286,9 +284,9 @@ def _seed_work_unit(
     return create_work_unit(
         bucket_id=_BUCKET,
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2026-hasta-01-y-1t",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
         operation=operation,
@@ -508,7 +506,7 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
 
     # The per-box equals consistency predicates hold (box == source by
     # projection), so no BLOCKING_RULE finding carries one of their exact ids.
-    snapshot = _authority_for_303().snapshot("303", filing_year=_YEAR, period="1T")
+    snapshot = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     consistency_predicate_ids = {
         predicate.predicate_id
         for predicate in snapshot.revision.verification_predicates
@@ -539,7 +537,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     from cadrumo.application.modelo.verification_predicates import evaluate_verification_predicates
 
     auth = _authority_for_303()
-    snap = auth.snapshot("303", filing_year=_YEAR, period="1T")
+    snap = auth.snapshot("303", filing_year=2026, period="1T")
     # The box-equals-source guards; the promotor's autoconsumo reconciliation is
     # an equality between two semantic casillas, not a box and its source.
     equals_predicates = tuple(
@@ -585,7 +583,7 @@ def test_each_projected_box_has_exactly_one_producing_formula() -> None:
     """
     from collections import Counter
 
-    snap = _authority_for_303().snapshot("303", filing_year=_YEAR, period="1T")
+    snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
     target_counts = Counter(f.target_casilla_id for f in rev.formulas)
     by_target = {f.target_casilla_id: f for f in rev.formulas}
@@ -650,7 +648,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-    snap = _authority_for_303().snapshot("303", filing_year=_YEAR, period="1T")
+    snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
     casilla_kind = {c.id: c.input_kind for c in rev.casillas}
     # The compensacion-pendiente-anteriores casilla is a previous_filing-bound
@@ -682,7 +680,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         },
-        date_context={"filing_period": _date(_YEAR, 3, 31)},
+        date_context={"filing_period": _date(2026, 3, 31)},
     )
     relay_boxes = {box: relay.values[box] for box in _PROJECTED_BOXES}
 
@@ -712,7 +710,7 @@ def test_export_ref_points_at_projected_box_carrying_value(
     The export half of the claim is that the selected revision's fichero writes
     box 27 from that same casilla, exactly once.
     """
-    snap = _authority_for_303().snapshot("303", filing_year=_YEAR, period="1T")
+    snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
 
     casilla_27 = next(c for c in rev.casillas if c.id == _OFFICIAL_CUOTA_DEVENGADA_TOTAL)

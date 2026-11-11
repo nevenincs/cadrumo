@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_modelo_ids
 from ..filed_capture_queries import filed_capture_unsupported_reason, plan_filed_capture_queries
 
@@ -40,12 +39,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: sample is deterministic rather than dependent on registry iteration order.
 _SAMPLE_SIZE = 8
 
-_YEAR = filing_year_envelope().horizon
-_YEAR_BEFORE = _YEAR - 1
-
 
 def _modelos_declaring_no_read_surface() -> tuple[str, ...]:
-    """Return registry modelos that carry a revision for the year but declare no read surface.
+    """Return registry modelos that carry a 2024 revision but declare no read surface.
 
     A modelo with no revision for the year is excluded: its refusal is about
     corpus coverage and says nothing about a read surface, so it would not
@@ -54,7 +50,7 @@ def _modelos_declaring_no_read_surface() -> tuple[str, ...]:
     derived = sorted(
         modelo_id
         for modelo_id in published_modelo_ids()
-        if (reason := filed_capture_unsupported_reason(modelo=modelo_id, year=_YEAR_BEFORE)) is not None
+        if (reason := filed_capture_unsupported_reason(modelo=modelo_id, year=2024)) is not None
         and "no revision" not in reason
     )
     assert derived, (
@@ -76,7 +72,7 @@ _AEAT_COVERAGE_CLAIMS = (
 
 def _unsupported_rows(modelo: str) -> tuple[str, ...]:
     """Return the planner's own refusal messages for one modelo."""
-    _, failures = plan_filed_capture_queries((modelo,), year_from=_YEAR_BEFORE, year_to=_YEAR)
+    _, failures = plan_filed_capture_queries((modelo,), year_from=2024, year_to=2025)
     return tuple(row.message for row in failures)
 
 
@@ -123,7 +119,7 @@ def test_a_declared_modelo_is_not_refused_at_all() -> None:
     Modelo 303 declares the read surface, so the planner must queue it rather than
     divert it, and no refusal message exists to inspect.
     """
-    pairs, failures = plan_filed_capture_queries(("303",), year_from=_YEAR_BEFORE, year_to=_YEAR)
+    pairs, failures = plan_filed_capture_queries(("303",), year_from=2024, year_to=2025)
 
     assert pairs, "modelo 303 declares the read surface and must be queued for capture"
     assert not [row for row in failures if "read surface" in row.message], (

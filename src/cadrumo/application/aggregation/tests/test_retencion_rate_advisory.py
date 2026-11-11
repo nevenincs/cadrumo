@@ -28,7 +28,6 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.directory_scan import scan_directory
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
@@ -37,9 +36,7 @@ from ..retenciones import RetencionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
-_EFFECTIVE_DATE = date(_YEAR, 3, 31)
-_ACCRUED_ON = date(_YEAR, 3, 15).isoformat()
+_EFFECTIVE_DATE = date(2026, 3, 31)
 
 
 def _administrador(base: str, withheld: str, *, nif: str = "X0001502F") -> RetencionObservation:
@@ -51,7 +48,7 @@ def _administrador(base: str, withheld: str, *, nif: str = "X0001502F") -> Reten
         scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal(base),
         retencion_amount=Decimal(withheld),
-        accrued_on=_ACCRUED_ON,
+        accrued_on="2026-03-15",
     )
 
 
@@ -64,7 +61,7 @@ def _empleado(base: str, withheld: str) -> RetencionObservation:
         scheme=RetencionScheme("rendimientos_trabajo"),
         taxable_base=Decimal(base),
         retencion_amount=Decimal(withheld),
-        accrued_on=_ACCRUED_ON,
+        accrued_on="2026-03-15",
     )
 
 

@@ -50,7 +50,6 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import Transaction
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .classification_origin_support import (
     AUTOMATION,
     BUCKET_ID,
@@ -64,8 +63,6 @@ from .classification_origin_support import (
     synthetic_invoice,
 )
 from .ledger_action_persistence_support import persist_verified_revision_citing_transaction
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -113,7 +110,7 @@ def _sealed_row_automation_classified(ledger: Ledger) -> tuple[str, LedgerFiling
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=BUCKET_ID,
-            booked_date=date(_YEAR, 1, 21),
+            booked_date=date(2025, 1, 21),
             amount=Decimal(_STORED_TEXT["amount"]),
             direction=TransactionDirection.OUTGOING,
             description="classified by an automation and cited by a finalized revision",
@@ -134,7 +131,7 @@ def _sealed_row_automation_classified(ledger: Ledger) -> tuple[str, LedgerFiling
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=(row,),
         catalogue=ledger.transactions.load(),
-        captured_at=datetime(_YEAR, 2, 1, tzinfo=UTC),
+        captured_at=datetime(2025, 2, 1, tzinfo=UTC),
     )
     assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
     return row, snapshot
@@ -291,7 +288,7 @@ def test_an_automation_label_links_purchase_evidence_to_a_row_the_person_classif
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=BUCKET_ID,
-            booked_date=date(_YEAR, 1, 21),
+            booked_date=date(2025, 1, 21),
             amount=Decimal("121.00"),
             direction=direction,
             description="the person's row",

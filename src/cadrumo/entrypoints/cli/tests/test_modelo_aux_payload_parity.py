@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _HEX64 = "a" * 64
 _DIGEST = "b" * 64
-_WHEN = datetime(1980, 4, 1, 10, 30, tzinfo=UTC)
+_WHEN = datetime(2026, 4, 1, 10, 30, tzinfo=UTC)
 
 
 def _event(**overrides: Any) -> WorkUnitHistoryEventPayload:
@@ -133,7 +133,7 @@ class TestModeloAuditViewResult:
     def test_well_formed_bundle_renders_wire_shape(self) -> None:
         wire = self._bundle().model_dump(mode="json")
         assert wire["verification_state"] == BundleVerificationState.PENDING.value
-        assert wire["created_at"].startswith(_WHEN.strftime("%Y-%m-%dT%H:%M"))
+        assert wire["created_at"].startswith("2026-04-01T10:30")
 
     def test_bogus_bundle_id_is_refused(self) -> None:
         with pytest.raises(ValidationError):
@@ -167,7 +167,7 @@ class TestWorkUnitHistoryEvent:
     def test_well_formed_event_renders_wire_shape(self) -> None:
         wire = _event().model_dump(mode="json")
         assert wire["event_type"] == BucketEventType.MODELO_WORK_UNIT_CREATED.value
-        assert wire["occurred_at"].startswith(_WHEN.strftime("%Y-%m-%dT%H:%M"))
+        assert wire["occurred_at"].startswith("2026-04-01T10:30")
 
     def test_bogus_event_id_is_refused(self) -> None:
         with pytest.raises(ValidationError):

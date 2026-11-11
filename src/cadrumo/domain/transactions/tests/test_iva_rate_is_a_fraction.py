@@ -30,13 +30,9 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,8 +48,8 @@ def _transaction(*, iva_rate: Decimal | None) -> Transaction:
     return Transaction(
         raw=RawTransaction(
             provider_transaction_id="row-1",
-            booked_date=date(_YEAR, 4, 10),
-            value_date=date(_YEAR, 4, 10),
+            booked_date=date(2026, 4, 10),
+            value_date=date(2026, 4, 10),
             amount=Decimal("121.00"),
             currency="EUR",
             counterparty="Acme SL",
@@ -63,7 +59,7 @@ def _transaction(*, iva_rate: Decimal | None) -> Transaction:
                 source_sha256="a" * 64,
                 source_row_index=1,
                 source_format=SourceFormat.CSV,
-                ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
+                ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
                 provider_name="CSV provider",
             ),
             raw_fields={},

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -40,11 +40,8 @@ from cadrumo.application.ledger.invoice_draft_records import (
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .ledger_ux_support import invoke, open_ledger_ux_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -71,7 +68,7 @@ def _draft() -> InvoiceDraft:
     return InvoiceDraft(
         supplier_tax_id="ESB00015016",
         invoice_number="2026-0142",
-        invoice_date=date(_YEAR, 3, 10).isoformat(),
+        invoice_date="2026-03-10",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -175,7 +172,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_names_none_in_review(ses
                 evidence_reference=_REFERENCE,
                 draft=_draft(),
                 extractor="extract_invoice_draft_from_evidence",
-                drafted_at=datetime(_YEAR, 9, 1, 9, 0, tzinfo=UTC),
+                drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
                 label_reading_fallback=_fallback(LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED),
             ),
         ),

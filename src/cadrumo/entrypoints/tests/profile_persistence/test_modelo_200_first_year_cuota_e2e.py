@@ -17,9 +17,9 @@ Setup that triggers the live first-year flag
   - a legal-entity profile whose ``incn_prior_12_months`` (500.000) is at or below
     the LIS art. 40.3 INCN threshold (6.000.000), so the derived modality is
     ``ART_40_2_OPTIONAL`` (modalidad cuota); and
-  - ``censo.activity_start_date`` in the filing year, so that year is the
+  - ``censo.activity_start_date`` in the filing year (2025), so 2025 is the
     taxpayer's FIRST Impuesto sobre Sociedades ejercicio (``year >= filing_year``);
-  - NO Modelo 202 filed for the filing year (a first-year cuota filer has no prior IS return
+  - NO Modelo 202 filed for 2025 (a first-year cuota filer has no prior IS return
     to base a pago fraccionado on - LIS art. 40.2).
 
 Discriminator (vs the flag-OFF status quo pinned by
@@ -41,7 +41,7 @@ or xfail.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -80,7 +80,6 @@ from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
@@ -100,10 +99,10 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(filing_year_envelope().horizon, 1, 12, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 12, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 12, 11, 0, tzinfo=UTC)
 _M200 = "200"
-_FILING_YEAR = newest_authored_edition("200")
+_FILING_YEAR = 2025
 
 # Cuota-diferencial: the formula operand that consumes the M202 pagos fold-in
 # relation. Absent (unresolved) when the relation is None; present when the
@@ -135,7 +134,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
                 # First IS ejercicio: activity starts in the filing year, so a pago
                 # fraccionado under modalidad cuota (art. 40.2) has no prior IS return.
-                UserProfileFact(path="censo.activity_start_date", value=date(_FILING_YEAR, 1, 1).isoformat()),
+                UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
             ),
             persona_id="sociedad-limitada",
         ),
@@ -149,7 +148,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
 def _calculate_m200(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> BucketAggregationCalculationResult:
-    """Run the live M200 0A calculate over the seeded bucket - NO M202 seeded."""
+    """Run the live M200/2025/0A calculate over the seeded bucket - NO M202 seeded."""
     _seed_first_year_modalidad_cuota_profile()
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)

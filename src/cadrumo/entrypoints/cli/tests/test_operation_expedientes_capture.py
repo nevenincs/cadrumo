@@ -25,7 +25,6 @@ from ....application.live.expedientes_capture_operation import (
     ExpedientesSingleCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_expedientes_commands as handler
 from .. import operation_expedientes_capture as bridge
 from ..app_live_expedientes_results import ExpedientesCaptureResult
@@ -35,15 +34,12 @@ from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_ENVELOPE = filing_year_envelope()
-_YEAR = _ENVELOPE.horizon
-_FROM_YEAR = _ENVELOPE.floor
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(1980, 3, 6, 7, 8, tzinfo=UTC)
-_PERSISTED_AT = datetime(1980, 3, 6, 7, 9, tzinfo=UTC)
-_SOURCE_URL = f"declarations:modelo=303:ejercicio={_YEAR}"
+_CAPTURED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
+_PERSISTED_AT = datetime(2025, 3, 6, 7, 9, tzinfo=UTC)
+_SOURCE_URL = "declarations:modelo=303:ejercicio=2025"
 
 
 def _single_projection(**updates: object) -> ExpedientesSingleCapturePublicResultV1:
@@ -62,8 +58,8 @@ def _bulk_projection(**updates: object) -> ExpedientesBulkCapturePublicResultV1:
     projection = ExpedientesBulkCapturePublicResultV1(
         bucket_id=str(_PROFILE),
         modelos=("303", "390"),
-        year_from=_FROM_YEAR,
-        year_to=_YEAR,
+        year_from=2024,
+        year_to=2025,
         captured_snapshot_count=1,
         declaration_count=4,
         snapshot_ids=("3" * 64,),
@@ -71,7 +67,7 @@ def _bulk_projection(**updates: object) -> ExpedientesBulkCapturePublicResultV1:
         failures=(
             {
                 "modelo": "390",
-                "year": _FROM_YEAR,
+                "year": 2024,
                 "error_type": "TimeoutError",
                 "message": "Register walk timed out",
             },
@@ -95,12 +91,12 @@ def _context() -> typer.Context:
 def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatch: pytest.MonkeyPatch) -> None:
     single_projection = _single_projection()
     submitted_single, bound_single = _bind(monkeypatch, single_projection, effect=OperationEffect.NONE)
-    single = bridge.read_expedientes_single_capture_for_cli(_context(), profile_id=_PROFILE, modelo="303", year=_YEAR)
+    single = bridge.read_expedientes_single_capture_for_cli(_context(), profile_id=_PROFILE, modelo="303", year=2025)
 
     bulk_projection = _bulk_projection()
     submitted_bulk, bound_bulk = _bind(monkeypatch, bulk_projection)
     bulk = bridge.read_expedientes_bulk_capture_for_cli(
-        _context(), profile_id=_PROFILE, modelos=("303", "390"), year_from=_FROM_YEAR, year_to=_YEAR
+        _context(), profile_id=_PROFILE, modelos=("303", "390"), year_from=2024, year_to=2025
     )
 
     assert bound_single == bound_bulk == [_PROFILE]
@@ -108,7 +104,7 @@ def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatc
     assert bulk.projection is bulk_projection
     assert submitted_single == [
         (
-            ExpedientesSingleCaptureRequest(profile_id=_PROFILE, modelo="303", year=_YEAR),
+            ExpedientesSingleCaptureRequest(profile_id=_PROFILE, modelo="303", year=2025),
             {
                 "definition_id": EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
                 "subject_ref": profile_operation_subject(str(_PROFILE)),
@@ -122,9 +118,7 @@ def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatc
     ]
     assert submitted_bulk == [
         (
-            ExpedientesBulkCaptureRequest(
-                profile_id=_PROFILE, modelos=("303", "390"), year_from=_FROM_YEAR, year_to=_YEAR
-            ),
+            ExpedientesBulkCaptureRequest(profile_id=_PROFILE, modelos=("303", "390"), year_from=2024, year_to=2025),
             {
                 "definition_id": EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
                 "subject_ref": profile_operation_subject(str(_PROFILE)),
@@ -150,19 +144,13 @@ def test_single_and_bulk_submit_the_exact_profile_and_operation_scope(monkeypatc
         ),
         (
             False,
-            _single_projection(source_url=f"declarations:modelo=390:ejercicio={_FROM_YEAR}"),
+            _single_projection(source_url="declarations:modelo=390:ejercicio=2024"),
             OperationEffect.UPDATED,
             OperationTerminalCondition.SUCCEEDED,
             None,
         ),
         (False, _single_projection(), OperationEffect.UNKNOWN, OperationTerminalCondition.SUCCEEDED, None),
-        (
-            True,
-            _bulk_projection(year_to=_YEAR + 1),
-            OperationEffect.UPDATED,
-            OperationTerminalCondition.SUCCEEDED,
-            None,
-        ),
+        (True, _bulk_projection(year_to=2026), OperationEffect.UPDATED, OperationTerminalCondition.SUCCEEDED, None),
         (True, _bulk_projection(failed_count=0), OperationEffect.UPDATED, OperationTerminalCondition.SUCCEEDED, None),
         (True, _bulk_projection(), OperationEffect.UPDATED, OperationTerminalCondition.REFUSED, None),
         (
@@ -193,10 +181,10 @@ def test_invalid_scope_or_receipt_is_correlated_to_the_submitted_operation(
     with pytest.raises(CliRefusedBoundaryError) as error:
         if is_bulk:
             bridge.read_expedientes_bulk_capture_for_cli(
-                _context(), profile_id=_PROFILE, modelos=("303", "390"), year_from=_FROM_YEAR, year_to=_YEAR
+                _context(), profile_id=_PROFILE, modelos=("303", "390"), year_from=2024, year_to=2025
             )
         else:
-            bridge.read_expedientes_single_capture_for_cli(_context(), profile_id=_PROFILE, modelo="303", year=_YEAR)
+            bridge.read_expedientes_single_capture_for_cli(_context(), profile_id=_PROFILE, modelo="303", year=2025)
 
     assert error.value.context is not None
     assert error.value.context["operation_id"] == _OPERATION_ID
@@ -206,7 +194,7 @@ def test_invalid_scope_or_receipt_is_correlated_to_the_submitted_operation(
 def test_pull_keeps_single_and_bulk_cli_payloads_and_lines(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(handler, "active_bucket_id_or_refuse", lambda: str(_PROFILE))
     monkeypatch.setattr(handler, "emit_live_auth_preflight", lambda *_args, **_kwargs: None)
-    monkeypatch.setattr(handler, "resolve_pull_year_range", lambda **_kwargs: (_FROM_YEAR, _YEAR))
+    monkeypatch.setattr(handler, "resolve_pull_year_range", lambda **_kwargs: (2024, 2025))
     single_projection = _single_projection()
     single_read = bridge.ExpedientesSingleCaptureRead(
         completion=RegisteredOperationCompletion(
@@ -237,14 +225,14 @@ def test_pull_keeps_single_and_bulk_cli_payloads_and_lines(monkeypatch: pytest.M
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: emitted.append(kwargs))
     ctx = _context()
 
-    handler.expedientes_pull(ctx, modelos=["303"], year=_YEAR)
-    handler.expedientes_pull(ctx, modelos=["303", "390"], year_from=_FROM_YEAR, year_to=_YEAR)
+    handler.expedientes_pull(ctx, modelos=["303"], year=2025)
+    handler.expedientes_pull(ctx, modelos=["303", "390"], year_from=2024, year_to=2025)
     handler.expedientes_pull(ctx)
 
     assert calls == [
-        ("single", {"profile_id": _PROFILE, "modelo": "303", "year": _YEAR}),
-        ("bulk", {"profile_id": _PROFILE, "year_from": _FROM_YEAR, "year_to": _YEAR, "modelos": ("303", "390")}),
-        ("bulk", {"profile_id": _PROFILE, "year_from": _FROM_YEAR, "year_to": _YEAR, "modelos": None}),
+        ("single", {"profile_id": _PROFILE, "modelo": "303", "year": 2025}),
+        ("bulk", {"profile_id": _PROFILE, "year_from": 2024, "year_to": 2025, "modelos": ("303", "390")}),
+        ("bulk", {"profile_id": _PROFILE, "year_from": 2024, "year_to": 2025, "modelos": None}),
     ]
     single_result = cast(ExpedientesCaptureResult, emitted[0]["result"])
     assert single_result.model_dump(mode="json") == {
@@ -278,13 +266,13 @@ def test_pull_keeps_single_and_bulk_cli_payloads_and_lines(monkeypatch: pytest.M
     assert emitted[1]["lines"] == [
         f"bucket\t{_PROFILE}",
         "modelo_count=2",
-        f"year_from={_FROM_YEAR}",
-        f"year_to={_YEAR}",
+        "year_from=2024",
+        "year_to=2025",
         "captured_snapshot_count=1",
         "declaration_count=4",
         "failed_count=1",
         f"snapshot_ids={'3' * 64}",
-        f"failure=390\t{_FROM_YEAR}\tTimeoutError\tRegister walk timed out",
+        "failure=390\t2024\tTimeoutError\tRegister walk timed out",
     ]
 
 

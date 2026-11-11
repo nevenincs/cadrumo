@@ -27,17 +27,14 @@ from .....application.operations.persistence.leases import (
 )
 from .....core.locks import exclusive_file_lock
 from .....core.operations import OperationEffect, OperationLifecycle
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.errors import RepositoryError
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_STARTED = datetime(_YEAR, 8, 14, 9, tzinfo=UTC)
+_STARTED = datetime(2026, 8, 14, 9, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 _SCOPE_REF = operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject")
 

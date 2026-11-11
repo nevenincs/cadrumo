@@ -97,12 +97,6 @@ from cadrumo.domain.buckets.event import BucketEventType as BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    open_ended_revision,
-    revision_covering,
-)
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -331,27 +325,25 @@ __all__ = [
 ]
 
 
-_YEAR = filing_year_envelope().horizon
 _T0 = SEED_CLOCK
-_T1 = datetime(_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(_YEAR, 4, 14, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(_YEAR, 4, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(_YEAR, 4, 16, 12, 0, 0, tzinfo=UTC)
-_T5 = datetime(_YEAR, 4, 17, 13, 0, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
+_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+_T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 FILE_FLOW_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 _VERIFY_MODELO = "180"
-_VERIFY_REVISION = revision_covering(_VERIFY_MODELO, filing_grade_exercises(_VERIFY_MODELO)[-1]).id
+_VERIFY_REVISION = "2023-y-siguientes"
 _VERIFY_PERIOD = "0A"
-_VERIFY_YEAR = filing_grade_exercises(_VERIFY_MODELO)[-1]
-_GASTO_YEAR = filing_grade_exercises("193")[-1]
+_VERIFY_YEAR = 2024
 _READY_PROFILE_FACTS = persona_facts_beneath(
     (
         UserProfileFact(path="identity.tax_id", value="X0001500M"),
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="file-flow"),
-        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
         # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
         # carries the row as filer data, so it must be stated rather than assumed.
         # False is the truthful value for this natural-person filer.
@@ -466,9 +458,9 @@ def _seed_work_unit(
     *,
     bucket_id: str = FILE_FLOW_PROFILE_ID,
     modelo: str = "130",
-    filing_year: int = _YEAR,
+    filing_year: int = 2026,
     period: str = "1T",
-    revision_id: str = open_ended_revision("130").id,
+    revision_id: str = "2019-y-siguientes",
 ) -> WorkUnit:
     """Default fixture: modelo 130 1T 2026 — autónomo IRPF quarterly,
     9 manual casillas + 10 formulas + 1 prior-filing binding.
@@ -585,7 +577,7 @@ def _seed_m130_activity(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return plain_workflow_profile(activity_start_date=date(filing_year_envelope().floor - 1, 1, 1))
+    return plain_workflow_profile(activity_start_date=date(2000, 1, 1))
 
 
 def _target_filing_records(
@@ -807,13 +799,7 @@ def _seed_modelo_193_work_unit(wu_repo: WorkUnitCatalogueRepository):
     is a perceptor-record row field, answered by the row source rather than
     by a scalar input.
     """
-    return _seed_work_unit(
-        wu_repo,
-        modelo="193",
-        filing_year=_GASTO_YEAR,
-        period="0A",
-        revision_id=revision_covering("193", _GASTO_YEAR).id,
-    )
+    return _seed_work_unit(wu_repo, modelo="193", filing_year=2024, period="0A", revision_id="2024")
 
 
 DEFAULT_130_BASELINE_EXPENSE = _DEFAULT_130_BASELINE_EXPENSE

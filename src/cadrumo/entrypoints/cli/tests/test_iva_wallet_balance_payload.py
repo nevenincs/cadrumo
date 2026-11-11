@@ -22,24 +22,20 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva_compensation.balance import IvaWalletBalanceReport
 from ..modelo_iva_wallet_results import IvaWalletBalanceResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_AS_OF = filing_year_envelope().horizon
-_EXPIRY = _AS_OF + 1
-
 
 def _report(**overrides: Any) -> IvaWalletBalanceReport:
     base: dict[str, Any] = {
-        "as_of_year": _AS_OF,
+        "as_of_year": 2026,
         "total_balance": Decimal("100.00"),
         "active_balance": Decimal("60.00"),
         "expired_balance": Decimal("40.00"),
         "lot_count": 2,
-        "next_expiry_year": _EXPIRY,
+        "next_expiry_year": 2029,
         "unallocated_applied_amount": Decimal("0.00"),
     }
     base.update(overrides)
@@ -48,12 +44,12 @@ def _report(**overrides: Any) -> IvaWalletBalanceReport:
 
 def _payload(**overrides: Any) -> IvaWalletBalanceResult:
     base: dict[str, Any] = {
-        "as_of_year": _AS_OF,
+        "as_of_year": 2026,
         "total_balance": "100.00",
         "active_balance": "60.00",
         "expired_balance": "40.00",
         "lot_count": 2,
-        "next_expiry_year": _EXPIRY,
+        "next_expiry_year": 2029,
         "unallocated_applied_amount": "0.00",
     }
     base.update(overrides)
@@ -73,9 +69,9 @@ def test_a_valid_report_projects_onto_the_payload() -> None:
         unallocated_applied_amount=str(report.unallocated_applied_amount),
     )
 
-    assert payload.as_of_year == _AS_OF
+    assert payload.as_of_year == 2026
     assert payload.total_balance == "100.00"
-    assert payload.next_expiry_year == _EXPIRY
+    assert payload.next_expiry_year == 2029
     assert payload.model_dump(mode="json")["lot_count"] == 2
 
 

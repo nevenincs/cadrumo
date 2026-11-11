@@ -336,7 +336,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
         "previous_payload_hash": "c" * 64,
         "payload_hash": "d" * 64,
         "ciphertext_hash": "e" * 64,
-        "revision_written_at": "1980-05-22T12:30:00+00:00",
+        "revision_written_at": "2026-05-22T12:30:00+00:00",
         "write_provenance": "test:quarantine-metadata",
         "source_event_id": "event-2026-05-22-001",
         "conflict_policy": "last-write-wins",
@@ -383,7 +383,7 @@ def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -
 
     with ephemeral_secure_repo(tmp_path, "revision-write.db") as (db_path, _, repo):
         payload = b"revision-integrity-payload"
-        written_at = datetime(1980, 5, 22, 13, 0, 0, tzinfo=UTC)
+        written_at = datetime(2026, 5, 22, 13, 0, 0, tzinfo=UTC)
         repo.save(
             namespace="cadrumo.revision.write",
             object_key="revision-key",
@@ -423,7 +423,7 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
             object_key="overwrite-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 14, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 14, 0, 0, tzinfo=UTC),
             payload=b"first-revision-payload",
             write_provenance="test:first-write",
         )
@@ -438,7 +438,7 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
             object_key="overwrite-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 14, 5, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 14, 5, 0, tzinfo=UTC),
             payload=b"second-revision-payload",
             write_provenance="test:second-write",
         )
@@ -467,7 +467,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
                     object_key="batch-a",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
-                    written_at=datetime(1980, 5, 22, 16, 0, 0, tzinfo=UTC),
+                    written_at=datetime(2026, 5, 22, 16, 0, 0, tzinfo=UTC),
                     payload=b"batch-payload-a",
                     write_provenance="test:batch",
                     source_event_id="batch-event-a",
@@ -477,7 +477,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
                     object_key="batch-b",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
-                    written_at=datetime(1980, 5, 22, 16, 1, 0, tzinfo=UTC),
+                    written_at=datetime(2026, 5, 22, 16, 1, 0, tzinfo=UTC),
                     payload=b"batch-payload-b",
                     write_provenance="test:batch",
                     source_event_id="batch-event-b",
@@ -514,7 +514,7 @@ def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path
             hashed_object_key=raw_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 17, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 17, 0, 0, tzinfo=UTC),
             payload=payload,
             write_provenance="test:raw-key",
             source_event_id="raw-key-event",
@@ -545,7 +545,7 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
                     "object_key": "policy-key",
                     "classification": SensitivityClass.FINANCIAL,
                     "schema_version": 1,
-                    "written_at": datetime(1980, 5, 22, 18, 0, 0, tzinfo=UTC),
+                    "written_at": datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC),
                     "payload": b"policy-payload",
                     "conflict_policy": "compare-and-swap",
                 },
@@ -563,7 +563,7 @@ def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_
             object_key="cas-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 19, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 19, 0, 0, tzinfo=UTC),
             payload=b"cas-before",
         )
         with sqlite3.connect(db_path) as con:
@@ -577,7 +577,7 @@ def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_
             object_key="cas-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 19, 5, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 19, 5, 0, tzinfo=UTC),
             payload=b"cas-after",
             expected_revision_id=first_revision_id,
         )
@@ -604,7 +604,7 @@ def test_secure_object_save_with_stale_expected_revision_refuses_without_overwri
             object_key="cas-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(1980, 5, 22, 20, 0, 0, tzinfo=UTC),
+            written_at=datetime(2026, 5, 22, 20, 0, 0, tzinfo=UTC),
             payload=b"current-payload",
         )
         with sqlite3.connect(db_path) as con:
@@ -619,7 +619,7 @@ def test_secure_object_save_with_stale_expected_revision_refuses_without_overwri
                 object_key="cas-key",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
-                written_at=datetime(1980, 5, 22, 20, 5, 0, tzinfo=UTC),
+                written_at=datetime(2026, 5, 22, 20, 5, 0, tzinfo=UTC),
                 payload=b"stale-overwrite",
                 expected_revision_id="f" * 64,
             )
@@ -649,7 +649,7 @@ def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path:
                 object_key="missing-key",
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=1,
-                written_at=datetime(1980, 5, 22, 20, 30, 0, tzinfo=UTC),
+                written_at=datetime(2026, 5, 22, 20, 30, 0, tzinfo=UTC),
                 payload=b"must-not-create",
                 expected_revision_id="a" * 64,
             )

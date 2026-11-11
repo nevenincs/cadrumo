@@ -27,19 +27,15 @@ from ....application.review.read_projections import (
 )
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_review as bridge
 from .operation_bridge_support import bind_exact_profile_read
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "f" * 64
-_SINCE = datetime(_YEAR, 9, 30, 11, 30, tzinfo=UTC)
+_SINCE = datetime(2026, 9, 30, 11, 30, tzinfo=UTC)
 
 
 def _queue_request(profile_id: UUID = _PROFILE) -> ReviewQueueReadRequest:

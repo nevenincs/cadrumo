@@ -31,7 +31,6 @@ from ....domain.calculations.registry.applicability_models import (
     ModeloApplicability,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
@@ -66,10 +65,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET_ID = "34734734-7347-4347-8347-347347347347"
 _THRESHOLD_FACT = "exceeds_third_party_threshold"
-# The modelo 347 for a filing year falls due in the year after it, so the newest filing year
-# whose declaration is still inside the support envelope is the one before the horizon.
-_FILING_YEAR = filing_year_envelope().horizon - 1
-_AFTER_YEAR_END = date(_FILING_YEAR + 1, 3, 1)
+_FILING_YEAR = 2025
+_AFTER_YEAR_END = date(2026, 3, 1)
 _DISAGREEMENT_WARNING = "applicability.evidence_disagreement"
 
 
@@ -344,9 +341,7 @@ def test_a_conclusive_ledger_settles_the_collector_floor_a_profile_no_cannot(
     assert exceeded.evidence_disagreement is not None
 
 
-_RANGE_FILING_DUE_YEAR = OverviewCalendarRange(
-    from_date=date(_FILING_YEAR + 1, 1, 1), to_date=date(_FILING_YEAR + 1, 12, 31)
-)
+_RANGE_2026 = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
 
 
 def _fixed_evidence(
@@ -366,10 +361,10 @@ def _m347_years(calendar_entries: Iterable[OverviewCalendarEntry]) -> set[int]:
 def test_calendar_keeps_a_contradicted_row_and_warns(operation: PinnedAuthorityOperation) -> None:
     declared_no = _autonomo(threshold=False)
 
-    plain = build_overview_calendar(declared_no, _RANGE_FILING_DUE_YEAR, operation=operation, today=_AFTER_YEAR_END)
+    plain = build_overview_calendar(declared_no, _RANGE_2026, operation=operation, today=_AFTER_YEAR_END)
     calendar = build_overview_calendar(
         declared_no,
-        _RANGE_FILING_DUE_YEAR,
+        _RANGE_2026,
         operation=operation,
         today=_AFTER_YEAR_END,
         applicability_evidence=_fixed_evidence(declared_no, LedgerPayerFactDerivation.DERIVED_YES),
@@ -388,7 +383,7 @@ def test_calendar_shows_a_ledger_derived_row_for_an_unanswered_profile(operation
 
     calendar = build_overview_calendar(
         unanswered,
-        _RANGE_FILING_DUE_YEAR,
+        _RANGE_2026,
         operation=operation,
         today=_AFTER_YEAR_END,
         applicability_evidence=_fixed_evidence(unanswered, LedgerPayerFactDerivation.DERIVED_YES),
@@ -403,7 +398,7 @@ def test_calendar_advises_rather_than_excludes_on_an_incomplete_ledger(operation
 
     calendar = build_overview_calendar(
         unanswered,
-        _RANGE_FILING_DUE_YEAR,
+        _RANGE_2026,
         operation=operation,
         today=_AFTER_YEAR_END,
         applicability_evidence=_fixed_evidence(unanswered, LedgerPayerFactDerivation.UNKNOWN),
@@ -417,11 +412,11 @@ def test_calendar_advises_rather_than_excludes_on_an_incomplete_ledger(operation
 def test_calendar_and_agenda_decide_the_same_ledger_derived_obligation(operation: PinnedAuthorityOperation) -> None:
     unanswered = _autonomo(threshold=None)
     evidence = _fixed_evidence(unanswered, LedgerPayerFactDerivation.DERIVED_YES)
-    as_of = date(_FILING_YEAR + 1, 2, 20)
+    as_of = date(2026, 2, 20)
 
     calendar = build_overview_calendar(
         unanswered,
-        OverviewCalendarRange(from_date=date(_FILING_YEAR + 1, 1, 1), to_date=date(_FILING_YEAR + 1, 3, 31)),
+        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31)),
         operation=operation,
         today=as_of,
         applicability_evidence=evidence,
@@ -444,7 +439,7 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
 
     calendar = build_overview_calendar(
         profile,
-        _RANGE_FILING_DUE_YEAR,
+        _RANGE_2026,
         operation=operation,
         today=_AFTER_YEAR_END,
         applicability_evidence=evidence,
@@ -480,20 +475,15 @@ _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
 
 
 def test_calendar_reads_the_threshold_answer_for_each_filing_year(operation: PinnedAuthorityOperation) -> None:
-    """A profile answering no for the year before and yes for the filing year owes only the filing year's declaration."""
+    """A profile answering no for 2024 and yes for 2025 owes only the 2025 declaration."""
     threshold = "obligations.third_party_transactions_above_347_threshold"
     record = create_user_profile_record(
         context=operation.profile_create_context(),
         profile_id=_BUCKET_ID,
         facts=(
             *_AUTONOMO_FACTS,
-            UserProfileFact(
-                path=threshold,
-                value=False,
-                valid_from=date(_FILING_YEAR - 1, 1, 1),
-                valid_to=date(_FILING_YEAR - 1, 12, 31),
-            ),
-            UserProfileFact(path=threshold, value=True, valid_from=date(_FILING_YEAR, 1, 1)),
+            UserProfileFact(path=threshold, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
+            UserProfileFact(path=threshold, value=True, valid_from=date(2025, 1, 1)),
         ),
         setup_state=ProfileSetupState.COMPLETE,
     )
@@ -506,7 +496,7 @@ def test_calendar_reads_the_threshold_answer_for_each_filing_year(operation: Pin
         operation=operation,
         today=_AFTER_YEAR_END,
     )
-    years = OverviewCalendarRange(from_date=date(_FILING_YEAR, 1, 1), to_date=date(_FILING_YEAR + 1, 12, 31))
+    years = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2026, 12, 31))
     current = projection_for_taxpayer(record, schema=schema)
 
     undated = build_overview_calendar(current, years, operation=operation, today=_AFTER_YEAR_END)
@@ -518,8 +508,8 @@ def test_calendar_reads_the_threshold_answer_for_each_filing_year(operation: Pin
         applicability_evidence=evidence,
     )
 
-    assert _m347_years(undated.entries) == {_FILING_YEAR - 1, _FILING_YEAR}
-    assert _m347_years(per_year.entries) == {_FILING_YEAR}
+    assert _m347_years(undated.entries) == {2024, 2025}
+    assert _m347_years(per_year.entries) == {2025}
 
 
 def test_the_ledger_derivation_of_a_filing_year_records_its_phase_once_per_year(

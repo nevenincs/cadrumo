@@ -26,21 +26,17 @@ from ....application.live.justificante_read_operation import (
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....core.operations import OperationEffect, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_justificante_commands as handler
 from .. import operation_justificante_read as bridge
 from ..app_live_justificante_results import JustificanteListResult, JustificanteViewResult
 from .operation_bridge_support import bind_profile_reads
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(_YEAR, 4, 20, 10, 30, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 4, 20, 10, 30, tzinfo=UTC)
 _SNAPSHOT_ID = "9" * 64
 _PDF_SHA256 = "b" * 64
 
@@ -49,7 +45,7 @@ def _summary(snapshot_id: str = _SNAPSHOT_ID) -> JustificanteSnapshotSummaryPubl
     return JustificanteSnapshotSummaryPublicV1(
         snapshot_id=snapshot_id,
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         pdf_sha256=_PDF_SHA256,
         state=SnapshotLifecycleState.ACTIVE.value,
@@ -66,7 +62,7 @@ def _show_projection(*, bucket_id: UUID = _PROFILE, snapshot_id: str = _SNAPSHOT
         bucket_id=str(bucket_id),
         snapshot_id=snapshot_id,
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         expediente_id="202613000010001A",
         csv="ABCD1234EFGH5678",
@@ -182,7 +178,7 @@ def test_handlers_keep_existing_json_and_text_fields(monkeypatch: pytest.MonkeyP
     assert list_lines == [
         f"bucket\t{_PROFILE}",
         "count\t1",
-        f"{_SNAPSHOT_ID}\t130\t{_YEAR}\t1T\t{_CAPTURED_AT.isoformat()}",
+        f"{_SNAPSHOT_ID}\t130\t2026\t1T\t{_CAPTURED_AT.isoformat()}",
     ]
 
     shown, show_lines = emitted["app.live.justificante.view"]
@@ -197,7 +193,7 @@ def test_handlers_keep_existing_json_and_text_fields(monkeypatch: pytest.MonkeyP
         f"bucket\t{_PROFILE}",
         f"snapshot_id\t{_SNAPSHOT_ID}",
         "modelo\t130",
-        f"filing_year\t{_YEAR}",
+        "filing_year\t2026",
         "period\t1T",
         "expediente_id\t202613000010001A",
         f"pdf_sha256\t{_PDF_SHA256}",

@@ -28,7 +28,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -52,8 +51,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 # ---------------------------------------------------------------------------
 
 _M130_BUCKET = "13000000-0000-4000-8000-000000000013"
-_M130_REVISION = str(open_ended_revision("130").id)
-_M130_YEAR = filing_year_envelope().horizon
+_M130_REVISION = "2019-y-siguientes"
+_M130_YEAR = 2026
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
@@ -72,19 +71,19 @@ _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577")
 # (Jan 1 - Mar 31). Distinct values make the fold unmistakable: a single-receipt
 # copy or a coincidental sum cannot satisfy the casilla-01 == sum assertion.
 _M130_INCOME_BY_ID: dict[str, tuple[date, Decimal]] = {
-    "m130-jan": (date(_M130_YEAR, 1, 20), Decimal("1200.00")),
-    "m130-feb": (date(_M130_YEAR, 2, 14), Decimal("850.50")),
-    "m130-mar": (date(_M130_YEAR, 3, 31), Decimal("433.25")),
+    "m130-jan": (date(2026, 1, 20), Decimal("1200.00")),
+    "m130-feb": (date(2026, 2, 14), Decimal("850.50")),
+    "m130-mar": (date(2026, 3, 31), Decimal("433.25")),
 }
 _M130_EXPECTED_INGRESOS = Decimal("1200.00") + Decimal("850.50") + Decimal("433.25")  # 2483.75
 
 # casilla 13 (minoración) reads binding ``irpf.previous_year_economic_activity_net_income``
 # (source = previous_filing, M100 prior-year net income). On a fresh bucket the
 # engine RAISES if that prior-year value is absent, so we seed a real prior-year
-# (the prior exercise) M100 observation; the enrolled PreviousFilingSourceResolver carries it.
+# (2025) M100 observation; the enrolled PreviousFilingSourceResolver carries it.
 # This is upstream substrate, NOT the casilla under test — €8000 only steers the
 # minoración band; it does not contribute to casilla 01.
-_M130_PRIOR_YEAR = _M130_YEAR - 1
+_M130_PRIOR_YEAR = 2025
 _M130_PRIOR_YEAR_NET_INCOME = Decimal("8000")
 
 # Manual casillas the M130 engine consumes downstream of casilla 01 (the
@@ -135,7 +134,7 @@ def _income_transaction(
                     source_sha256="a" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_M130_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={"Concepto": provider_id},
@@ -152,7 +151,7 @@ def _income_transaction(
             "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(_M130_YEAR, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -277,7 +276,7 @@ def test_m130_casilla_06_withholds_a_reconstructed_retencion_and_reports_it_on_l
 
     tx = _income_transaction(
         "m130-net-paid",
-        value_date=date(_M130_YEAR, 3, 15),
+        value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),

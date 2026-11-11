@@ -29,7 +29,6 @@ from cadrumo.domain.buckets.event import BucketEventHistoryCatalogue
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -58,9 +57,8 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_a
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "10000000-0000-4000-8000-000000000131"
-_YEAR = filing_year_envelope().horizon
-_T0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
-_T1 = datetime(_YEAR, 1, 15, 13, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 _INCOME: CasillaId = validated_casilla_id("01")
 _EXPENSE: CasillaId = validated_casilla_id("02")
 # The baseline records casilla values only. Correcting casilla 01 reaches formulas whose
@@ -102,14 +100,14 @@ class _Catalogues:
 
 
 def _seed_confirmed_baseline(objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation) -> _Baseline:
-    """Seed a Modelo 130 1T filing in the horizon year created at ``_T0`` with an AEAT-confirmed filing at ``_T1``."""
+    """Seed Modelo 130 1T 2026 created at ``_T0`` with an AEAT-confirmed filing at ``_T1``."""
     work_unit = create_work_unit(
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        revision_id=revision_covering("130", _YEAR).id,
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2019-y-siguientes",
         clock=_T0,
         operation=operation,
     )

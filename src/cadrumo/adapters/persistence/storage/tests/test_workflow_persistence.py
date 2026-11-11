@@ -57,7 +57,7 @@ class TestPersistenceRoundTrip:
     """End-to-end coverage of save/load/list and lock-target alignment."""
 
     def test_save_load_round_trip(self, tmp_path: Path) -> None:
-        original = _result("a" * 16, datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC))
+        original = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC))
         marker = save_run(original, runs_dir=tmp_path)
         reloaded = load_run(original.run_id)
         assert reloaded == original
@@ -78,7 +78,7 @@ class TestPersistenceRoundTrip:
         assert excinfo.value.translated_message == "application.workflow.errors.run_id_invalid_separators"
 
     def test_save_rejects_traversal_id(self, tmp_path: Path) -> None:
-        escaped = _result("a" * 16, datetime(1980, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
+        escaped = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
             update={"run_id": "../escape"},
         )
         with pytest.raises(WorkflowError) as excinfo:
@@ -86,19 +86,19 @@ class TestPersistenceRoundTrip:
         assert excinfo.value.translated_message == "application.workflow.errors.run_id_invalid_separators"
 
     def test_list_runs_sorted_descending(self, tmp_path: Path) -> None:
-        early = _result("a" * 16, datetime(1980, 4, 10, tzinfo=UTC))
-        late = _result("b" * 16, datetime(1980, 4, 12, tzinfo=UTC))
+        early = _result("a" * 16, datetime(2026, 4, 10, tzinfo=UTC))
+        late = _result("b" * 16, datetime(2026, 4, 12, tzinfo=UTC))
         save_run(early, runs_dir=tmp_path)
         save_run(late, runs_dir=tmp_path)
         runs = list_runs()
         assert [r.run_id for r in runs] == [late.run_id, early.run_id]
 
     def test_list_runs_since_filter(self, tmp_path: Path) -> None:
-        early = _result("a" * 16, datetime(1980, 4, 10, tzinfo=UTC))
-        late = _result("b" * 16, datetime(1980, 4, 12, tzinfo=UTC))
+        early = _result("a" * 16, datetime(2026, 4, 10, tzinfo=UTC))
+        late = _result("b" * 16, datetime(2026, 4, 12, tzinfo=UTC))
         save_run(early, runs_dir=tmp_path)
         save_run(late, runs_dir=tmp_path)
-        runs = list_runs(since=date(1980, 4, 11))
+        runs = list_runs(since=date(2026, 4, 11))
         assert [r.run_id for r in runs] == [late.run_id]
 
     def test_save_run_does_not_create_envelope_files(
@@ -107,7 +107,7 @@ class TestPersistenceRoundTrip:
     ) -> None:
         runs_dir = tmp_path / "probe-runs"
         runs_dir.mkdir()
-        result = _result("c" * 16, datetime(1980, 4, 13, tzinfo=UTC))
+        result = _result("c" * 16, datetime(2026, 4, 13, tzinfo=UTC))
         save_run(result, runs_dir=runs_dir)
         assert scan_directory(runs_dir) == ()
 

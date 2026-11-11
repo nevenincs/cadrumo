@@ -31,7 +31,6 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
@@ -48,8 +47,7 @@ from .test_renta_income_actividad_contract import m130_2026_q1_revision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-_YEAR = filing_year_envelope().horizon
-_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q1 = Period.from_year_and_code(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
@@ -74,7 +72,7 @@ def _cobro(provider_id: str, day: date, *, cash: Decimal, cuota: Decimal) -> Tra
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={},
@@ -90,7 +88,7 @@ def _cobro(provider_id: str, day: date, *, cash: Decimal, cuota: Decimal) -> Tra
             "taxable_base": cash if cuota == 0 else _BASE,
             "iva_amount": cuota,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -140,12 +138,12 @@ def _invoice(
 
 def _first_quarter() -> tuple[TransactionCatalogue, list[Invoice]]:
     dated = (
-        (f"{_YEAR}-001", date(_YEAR, 1, 15)),
-        (f"{_YEAR}-003", date(_YEAR, 2, 14)),
-        (f"{_YEAR}-004", date(_YEAR, 3, 14)),
+        ("2026-001", date(2026, 1, 15)),
+        ("2026-003", date(2026, 2, 14)),
+        ("2026-004", date(2026, 3, 14)),
     )
     cobros = [_cobro(number, day, cash=_NET_COBRO, cuota=_CUOTA) for number, day in dated]
-    kunde = _cobro(f"{_YEAR}-002", date(_YEAR, 1, 31), cash=_INTRA_COMMUNITY_BASE, cuota=Decimal("0"))
+    kunde = _cobro("2026-002", date(2026, 1, 31), cash=_INTRA_COMMUNITY_BASE, cuota=Decimal("0"))
     invoices = [
         _invoice(
             number,
@@ -155,14 +153,14 @@ def _first_quarter() -> tuple[TransactionCatalogue, list[Invoice]]:
             retencion=_RETENCION,
             country="ES",
             # The last invoice is linked from its movement alone.
-            linked=() if number == f"{_YEAR}-004" else (cobro.transaction_id,),
+            linked=() if number == "2026-004" else (cobro.transaction_id,),
         )
         for (number, day), cobro in zip(dated, cobros, strict=True)
     ]
     invoices.append(
         _invoice(
-            f"{_YEAR}-002",
-            date(_YEAR, 1, 31),
+            "2026-002",
+            date(2026, 1, 31),
             base=_INTRA_COMMUNITY_BASE,
             cuota=Decimal("0"),
             retencion=None,

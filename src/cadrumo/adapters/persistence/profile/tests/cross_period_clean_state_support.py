@@ -83,27 +83,19 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
-from .....domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    revision_covering,
-)
-
-_YEAR = filing_year_envelope().horizon
-
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID
-_M390_YEAR = filing_grade_exercises("390")[-1]
+_M390_YEAR = 2025
 _M390_PERIOD = "0A"
 _M390_FIRST_QUARTER = Period.from_year_and_code(_M390_YEAR, "1T")
 #: The law-determined revision for ``(390, _M390_YEAR, _M390_PERIOD)``. The open
 #: ``2010-y-siguientes`` span was split into per-year revisions, so the pinned
 #: literal named a revision the modelo no longer declares. It stays a literal
 #: because the work unit only ever ASSERTS it equals the resolved revision.
-_M390_REVISION = str(revision_covering("390", _M390_YEAR).id)
-_M353_YEAR = _YEAR
+_M390_REVISION = "2025"
+_M353_YEAR = 2026
 _M353_PERIOD = "12"
-_CLOCK = datetime(_YEAR, 1, 20, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _GROUP_MEMBER_A = "A00010009"
 _GROUP_MEMBER_B = "B00010082"
 _GROUP_MEMBER_C = "C00010231"
@@ -418,8 +410,8 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
         calculation_revision_id=revision_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
         origin=FilingOrigin.AEAT,

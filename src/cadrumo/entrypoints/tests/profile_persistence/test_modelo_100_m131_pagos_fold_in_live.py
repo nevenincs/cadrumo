@@ -56,7 +56,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -79,10 +78,9 @@ def bucket_id() -> str:
     return BUCKET_ID
 
 
-#: The edition before the newest: the newest reshaped the bindings the withdrawn-fold proof and these zero defaults read.
-_YEAR = newest_authored_editions("100", 2)[0]
-_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = 2024
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M100_ANNUAL_PERIOD = "0A"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 
@@ -127,7 +125,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime
                     UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
                     UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
                     UserProfileFact(path="irpf.estimation_regime", value=estimation_regime),
-                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 4, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                 )
             ),

@@ -45,7 +45,6 @@ from ....core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKi
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect
 from ....domain.attachments.enums import AttachmentSource
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_ledger_evidence_followup as bridge
 from ..ledger_business_payloads import (
     AttachmentReviewQueueResult,
@@ -56,9 +55,6 @@ from ..ledger_business_payloads import (
 )
 from .operation_bridge_support import bind_exact_profile_read
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -67,7 +63,7 @@ _ATTACHMENT_ID = "a" * 64
 _EVIDENCE_REFERENCE = "evidence-followup-reference"
 _OPERATION_ID = "f" * 64
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
-_CAPTURED_AT = datetime(_YEAR, 9, 30, 11, 30, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 9, 30, 11, 30, tzinfo=UTC)
 #: The review view carries the stored label-reading fallback beside its draft,
 #: so it alone reads the second result schema.
 _RESULT_VERSIONS = {

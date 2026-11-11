@@ -133,8 +133,8 @@ def test_date_page_shape_validation_refuses_then_commits_through_the_engine(*, r
     assert verdicts[0].ok is False
     assert verdicts[0].message_key == "flows.errors.invalid_date"
 
-    committed = answer(definition, state, "activity-start-date", "1980-12-31")
-    assert committed.answers["activity-start-date"] == "1980-12-31"
+    committed = answer(definition, state, "activity-start-date", "2020-12-31")
+    assert committed.answers["activity-start-date"] == "2020-12-31"
     assert "activity-start-date" not in committed.verdicts
 
 

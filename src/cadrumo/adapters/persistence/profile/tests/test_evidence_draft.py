@@ -59,7 +59,6 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .....core.model_roles import ModelRole
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
 from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
@@ -77,9 +76,6 @@ from .invoice_confirmation_test_support import (
 from .invoice_confirmation_test_support import runtime_profile as runtime_profile
 from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
-_YEAR = filing_year_envelope().horizon
-_PRINTED_DATE = date(_YEAR, 3, 10).strftime("%d/%m/%Y")
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
@@ -91,7 +87,7 @@ _FULL_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
     f"Proveedor NIF: {_SUPPLIER_CIF}",
     "Numero de factura: 2026-0142",
-    f"Fecha: {_PRINTED_DATE}",
+    "Fecha: 10/03/2026",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -132,8 +128,8 @@ _FULL_INVOICE_FIELDS = {
     "supplier_tax_id_role_evidence": "Proveedor NIF:",
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
-    "invoice_date": date(_YEAR, 3, 10).isoformat(),
-    "invoice_date_anchor": _PRINTED_DATE,
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
     "taxable_base": "100,00",
     "taxable_base_anchor": "100,00",
     "iva_rate": "21",
@@ -249,7 +245,7 @@ class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
 
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
-        assert draft.invoice_date == date(_YEAR, 3, 10).isoformat()
+        assert draft.invoice_date == "2026-03-10"
         assert draft.taxable_base == 100
         assert draft.iva_rate == 21
         assert draft.iva_amount == 21
@@ -337,7 +333,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
             {
                 "supplier_tax_id": _SUPPLIER_CIF,
                 "invoice_number": "2026-0142",
-                "invoice_date": _PRINTED_DATE,
+                "invoice_date": "10/03/2026",
                 "taxable_base": "100,00",
                 "iva_rate": "21",
                 "iva_amount": "21,00",
@@ -362,7 +358,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
 
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
-        assert draft.invoice_date == date(_YEAR, 3, 10).isoformat()
+        assert draft.invoice_date == "2026-03-10"
         assert draft.taxable_base == Decimal("100.00")
         assert draft.iva_rate == 21
         assert draft.iva_amount == Decimal("21.00")
@@ -421,7 +417,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
         svc = make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
-        clock = datetime(_YEAR, 1, 1, tzinfo=UTC)
+        clock = datetime(2026, 1, 1, tzinfo=UTC)
         seed_test_profile_record(
             create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
@@ -748,7 +744,7 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
             counterparty_name="Acme Suministros SL",
             counterparty_tax_id=_SUPPLIER_CIF,
             invoice_number="ATT-0099",
-            invoice_date=date(_YEAR, 3, 15),
+            invoice_date=date(2026, 3, 15),
             settings=isolated_settings,
             **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )

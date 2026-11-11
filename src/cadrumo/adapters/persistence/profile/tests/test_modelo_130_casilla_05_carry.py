@@ -46,7 +46,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -63,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
 _BUCKET_ID = "13005000-0000-4000-8000-000000000130"
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2026
 
 
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
@@ -293,7 +292,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
     blocker, so the verdict is clean for a genuine first filer.
     """
     snapshot = published_authority_operation().snapshot("130", filing_year=_FILING_YEAR, period="2T")
-    # Activity starts mid-2T; the 1T period (ending 31 March) is strictly prior.
+    # Activity starts mid-2T; the 1T period (ending 2026-03-31) is strictly prior.
     verdict = evaluate_cross_period_clean_state(
         snapshot,
         bucket_id=_BUCKET_ID,
@@ -302,7 +301,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
         calculation_repository=CalculationRevisionCatalogueRepository(),
         verification_repository=VerificationReportCatalogueRepository(),
         justificante_repository=JustificanteRepository(),
-        activity_start_date=date(_FILING_YEAR, 4, 15),
+        activity_start_date=date(2026, 4, 15),
         operation=operation,
     )
 

@@ -5,15 +5,14 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .parser_boundary_m303_support import M303_2023_2024_IDS
 from .parser_boundary_support import expected_casilla_values
 
 M303_CASILLA_C46: CasillaId = validated_casilla_id("c46", surface="declaracion_parser_boundary.casilla")
 M303_CASILLA_C69: CasillaId = validated_casilla_id("c69", surface="declaracion_parser_boundary.casilla")
 
-_M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
+M303_2023_2024_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py.
-    expected_casilla_values(
+    "2023-1T": expected_casilla_values(
         {
             "27": Decimal("12600.00"),
             "29": Decimal("8100.00"),
@@ -23,7 +22,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("4500.00"),
         }
     ),
-    expected_casilla_values(
+    "2023-2T": expected_casilla_values(
         {
             "27": Decimal("13800.00"),
             "29": Decimal("8700.00"),
@@ -33,7 +32,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("5100.00"),
         }
     ),
-    expected_casilla_values(
+    "2023-3T": expected_casilla_values(
         {
             "27": Decimal("15000.00"),
             "29": Decimal("9300.00"),
@@ -43,7 +42,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("5700.00"),
         }
     ),
-    expected_casilla_values(
+    "2023-4T": expected_casilla_values(
         {
             "27": Decimal("16800.00"),
             "29": Decimal("10500.00"),
@@ -53,7 +52,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("6300.00"),
         }
     ),
-    expected_casilla_values(
+    "2024-1T": expected_casilla_values(
         {
             "27": Decimal("13200.00"),
             "29": Decimal("8400.00"),
@@ -63,7 +62,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("4800.00"),
         }
     ),
-    expected_casilla_values(
+    "2024-2T": expected_casilla_values(
         {
             "27": Decimal("14400.00"),
             "29": Decimal("9000.00"),
@@ -73,7 +72,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("5400.00"),
         }
     ),
-    expected_casilla_values(
+    "2024-3T": expected_casilla_values(
         {
             "27": Decimal("16200.00"),
             "29": Decimal("10200.00"),
@@ -83,7 +82,7 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("6000.00"),
         }
     ),
-    expected_casilla_values(
+    "2024-4T": expected_casilla_values(
         {
             "27": Decimal("18000.00"),
             "29": Decimal("11400.00"),
@@ -93,7 +92,4 @@ _M303_CURRENT_EXPECTED_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
             "c69": Decimal("6600.00"),
         }
     ),
-)
-M303_2023_2024_EXPECTED: dict[str, dict[CasillaId, Decimal]] = dict(
-    zip(M303_2023_2024_IDS, _M303_CURRENT_EXPECTED_OLDEST_FIRST, strict=True)
-)
+}

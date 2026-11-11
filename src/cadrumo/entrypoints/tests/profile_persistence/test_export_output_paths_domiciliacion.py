@@ -68,10 +68,7 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.transactions.own_accounts import (
     OwnAccountRole,
 )
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    M303_YEAR,
-    build_verified_modelo_303_revision,
-)
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 
 from .export_output_paths_support import (
     authored_export_clock,
@@ -119,7 +116,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        filed_at=datetime(M303_YEAR, 5, 21, 11, 58, tzinfo=UTC),
+        filed_at=datetime(2026, 5, 21, 11, 58, tzinfo=UTC),
         filed_by="aeat-import",
         origin=FilingOrigin.AEAT,
         confirmation=AeatConfirmationState.CONFIRMADA,
@@ -128,7 +125,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             reference_id=baseline_evidence_reference,
-            imported_at=datetime(M303_YEAR, 5, 21, 11, 58, tzinfo=UTC),
+            imported_at=datetime(2026, 5, 21, 11, 58, tzinfo=UTC),
         ),
     )
     filing_repository.save(upsert_filing_record(filing_repository.load(), baseline))
@@ -150,7 +147,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 ),
             ),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=datetime(M303_YEAR, 5, 21, 11, 59, tzinfo=UTC),
+            captured_at=datetime(2026, 5, 21, 11, 59, tzinfo=UTC),
             source_metadata={"aeat_justificante_csv": baseline_evidence_reference},
             source_headers=(
                 ObservedHeaderFact(
@@ -230,7 +227,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 filing=filing_repository,
                 bucket_event=event_repo,
             ),
-            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
     export_event = event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))[-1]
@@ -264,7 +261,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             work_units=work_repo.load(),
             notes=None,
             actor="operator",
-            now=datetime(M303_YEAR, 5, 21, 12, 4, tzinfo=UTC),
+            now=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
             calculation_repository=calc_repo,
             filing_repository=filing_repository,
             verification_repository=verification_repository,
@@ -317,7 +314,7 @@ def test_public_domiciliacion_per_filing_choice_overrides_the_charge_designation
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
             operation=operation,
         )
 
@@ -342,8 +339,8 @@ def test_public_domiciliacion_per_filing_choice_overrides_the_charge_designation
     ("charge_account_id", "closed_on", "reason"),
     [
         pytest.param("acc-07", None, "own_account_unregistered", id="unregistered-choice"),
-        pytest.param("acc-01", date(M303_YEAR, 5, 20).isoformat(), "own_account_closed", id="closed-choice"),
-        pytest.param(None, date(M303_YEAR, 5, 20).isoformat(), "own_account_closed", id="closed-designation"),
+        pytest.param("acc-01", "2026-05-20", "own_account_closed", id="closed-choice"),
+        pytest.param(None, "2026-05-20", "own_account_closed", id="closed-designation"),
     ],
 )
 def test_public_domiciliacion_refuses_an_unusable_charge_account_before_any_byte(
@@ -377,7 +374,7 @@ def test_public_domiciliacion_refuses_an_unusable_charge_account_before_any_byte
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=operation,
             )
 
@@ -401,9 +398,7 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
             positive_result=True,
             operation=operation,
         )
-        closed = own_account("Cargo", "ES9121000418450200051332").model_copy(
-            update={"closed_on": date(M303_YEAR, 1, 31)}
-        )
+        closed = own_account("Cargo", "ES9121000418450200051332").model_copy(update={"closed_on": date(2026, 1, 31)})
         register_own_account(bucket_id, closed, designate=(OwnAccountRole.CHARGE,))
         output_path = tmp_path / "modelo-303-ingreso-closed-designation.txt"
 
@@ -423,7 +418,7 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
             operation=operation,
         )
 
@@ -474,7 +469,7 @@ def test_public_refund_tipo_follows_the_refund_account_country(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
             operation=operation,
         )
 
@@ -528,7 +523,7 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -569,7 +564,7 @@ def test_public_domiciliacion_with_a_foreign_charge_account_refuses_before_any_b
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -616,7 +611,7 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -650,7 +645,7 @@ def test_public_ingreso_export_omits_did_page(
                 calculation=calc_repo,
                 bucket_event=event_repo,
             ),
-            clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
             operation=_authority_operation_for_test,
         )
 
@@ -695,7 +690,7 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -732,7 +727,7 @@ def test_export_refuses_empty_output_path(
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
         assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True))
@@ -767,7 +762,7 @@ def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_
                     calculation=calc_repo,
                     bucket_event=event_repo,
                 ),
-                clock=datetime(M303_YEAR, 5, 21, 12, minute, tzinfo=UTC),
+                clock=datetime(2026, 5, 21, 12, minute, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 

@@ -33,20 +33,16 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_local_observation as bridge
 from ..filing_chain_payloads import ObservationLayersPayload
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_PUBLIC_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_PUBLIC_PERIOD = PublicPeriod(filing_year=2026, code="1T")
 
 
 def _record_projection(*, profile_id: UUID = _PROFILE) -> ModeloLocalObservationMutationProjection:
@@ -70,7 +66,7 @@ def _record_projection(*, profile_id: UUID = _PROFILE) -> ModeloLocalObservation
         modelo="130",
         period=_PUBLIC_PERIOD,
         revision_id="revision-1",
-        observation_key=f"130:{_YEAR}:1T",
+        observation_key="130:2026:1T",
         source_kind=ObservationSourceKind.OPERATOR_MANUAL,
         casilla_values=(ModeloLocalObservationCasillaValue(casilla_id="base_imponible", value="125.00"),),
         captured_at=_NOW,
@@ -78,7 +74,7 @@ def _record_projection(*, profile_id: UUID = _PROFILE) -> ModeloLocalObservation
         reason="operator estimate",
         observation_layers=ModeloFilingObservationLayersProjection(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
             pending_local=pending,
             effective_source_kind=ObservationSourceKind.OPERATOR_MANUAL,
@@ -93,13 +89,13 @@ def _clear_projection(*, actor: str) -> ModeloLocalObservationMutationProjection
         action="cleared",
         modelo="130",
         period=_PUBLIC_PERIOD,
-        observation_key=f"130:{_YEAR}:1T",
+        observation_key="130:2026:1T",
         captured_at=_NOW,
         captured_by=actor,
         reason="remove local override",
         observation_layers=ModeloFilingObservationLayersProjection(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
             effective_source_kind=None,
         ),

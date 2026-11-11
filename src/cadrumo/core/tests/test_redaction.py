@@ -218,11 +218,11 @@ def test_cli_output_text_bucket_id_tabular_heuristic_cases() -> None:
 def test_cli_output_history_row_redacts_nif_shaped_uuid_as_one_identifier() -> None:
     """A bare history-row UUID becomes one profile placeholder before NIF redaction."""
 
-    line = f"1986-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{_NIF_SHAPED_UUID}\toperator"
+    line = f"2026-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{_NIF_SHAPED_UUID}\toperator"
 
     rendered = redact_for_cli_output(line)
 
-    assert rendered == (f"1986-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{CLI_PROFILE_ID_PLACEHOLDER}\toperator")
+    assert rendered == (f"2026-01-01T00:00:00+00:00\tCREATED\tPROFILE\t{CLI_PROFILE_ID_PLACEHOLDER}\toperator")
     assert "sha256:<profile-id>" not in rendered
 
 
@@ -483,10 +483,10 @@ def test_iso_instant_survives_the_diagnostic_funnel_unchanged() -> None:
     rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
 
     for stamp in (
-        "1986-08-08T09:32:12.345678Z",
-        "1986-08-08T09:32:12.345678+00:00",
-        "1986-08-08T09:32:12Z",
-        "1986-08-08 09:32:12.345678Z",
+        "2026-08-08T09:32:12.345678Z",
+        "2026-08-08T09:32:12.345678+00:00",
+        "2026-08-08T09:32:12Z",
+        "2026-08-08 09:32:12.345678Z",
     ):
         assert redact(stamp, rules=rules) == stamp, f"the funnel corrupted the timestamp {stamp!r}"
 
@@ -495,10 +495,10 @@ def test_identities_beside_a_timestamp_are_still_redacted() -> None:
     """Positive control: the exemption covers the stamp, not the line."""
     rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
 
-    line = "1986-08-08T09:32:12.345678Z declarante 12345678Z presented the filing"
+    line = "2026-08-08T09:32:12.345678Z declarante 12345678Z presented the filing"
     redacted = redact(line, rules=rules)
 
-    assert "1986-08-08T09:32:12.345678Z" in redacted, "the timestamp must survive"
+    assert "2026-08-08T09:32:12.345678Z" in redacted, "the timestamp must survive"
     assert "12345678Z" not in redacted, "a real identity beside a timestamp must still be redacted"
     assert "sha256:" in redacted, "the identity must be replaced by its hash"
 

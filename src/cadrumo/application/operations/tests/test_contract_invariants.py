@@ -36,7 +36,7 @@ from ..persistence.events import OperationDiagnosticEvent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 8, 13, 20, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 13, 20, 0, tzinfo=UTC)
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:active")
 
 

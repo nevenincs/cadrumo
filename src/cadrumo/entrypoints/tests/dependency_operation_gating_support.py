@@ -379,7 +379,7 @@ def _stored_image(runtime: OperationRuntime) -> tuple[str, str]:
             sha256=digest,
             mime_type="image/png",
             bytes_size=len(data),
-            captured_at=datetime(1980, 10, 24, 9, 0, tzinfo=UTC),
+            captured_at=datetime(2026, 10, 24, 9, 0, tzinfo=UTC),
             bucket_id=str(runtime.profile_id),
             captured_by="operator",
             source_command="aeat app ledger attach",

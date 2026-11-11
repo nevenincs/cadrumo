@@ -18,7 +18,6 @@ from .....domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ..engine import build_export_plan, rounding_rule_for
@@ -27,11 +26,9 @@ from ..records import RelationValues, TabName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def test_workbook_operator_labels_resolve_through_output_language() -> None:
-    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
@@ -47,13 +44,13 @@ def test_workbook_operator_labels_resolve_through_output_language() -> None:
 
 
 def test_guide_paragraphs_resolve_through_output_language() -> None:
-    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
     with override_settings(cadrumo_output_language="en"):
         plan = build_export_plan(snapshot)
 
-    assert plan.guide.title == f"{snapshot.modelo.title} - 1T/{_YEAR}"
-    assert plan.guide.paragraphs[0] == f"{snapshot.modelo.title} - period 1T / {_YEAR}."
+    assert plan.guide.title == f"{snapshot.modelo.title} - 1T/2025"
+    assert plan.guide.paragraphs[0] == f"{snapshot.modelo.title} - period 1T / 2025."
     assert "Edit only the cells in the 'Entradas' tab." in plan.guide.paragraphs[1]
     assert plan.guide.paragraphs[2] == (
         "Spreadsheet edits are not imported into the Cadrumo profile; review the changes and enter them in Cadrumo."
@@ -62,7 +59,7 @@ def test_guide_paragraphs_resolve_through_output_language() -> None:
 
 def test_localized_guides_and_anchors_name_the_actual_worksheet_identifiers() -> None:
     """Translated guidance names tabs that exist, with all placeholders supplied."""
-    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
+    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     strict = I18N_STRICT_PLACEHOLDERS.set(True)
     try:
         for locale in ("en", "es", "ca", "hu"):
@@ -88,7 +85,7 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=_YEAR,
+        filing_year=2026,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -135,7 +132,7 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
 
 
 def _m130_snapshot_with_scalar_tariff_values(*, values: tuple[object, ...]) -> RegistrySnapshot:
-    snapshot = published_snapshot("130", filing_year=_YEAR, period="1T")
+    snapshot = published_snapshot("130", filing_year=2025, period="1T")
     parameter_id = "irpf.direct_estimation_fractional_payment_rate"
     revision = snapshot.revision.model_copy(
         update={
@@ -159,12 +156,12 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
     assert error.translated_message == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
     assert error.context == {
         "parameter_id": "irpf.direct_estimation_fractional_payment_rate",
-        "valid_on": date(_YEAR, 3, 31).isoformat(),
+        "valid_on": "2025-03-31",
     }
 
 
 def test_overlapping_scalar_parameter_windows_refuse_export_through_engine_boundary() -> None:
-    source = published_snapshot("130", filing_year=_YEAR, period="1T")
+    source = published_snapshot("130", filing_year=2025, period="1T")
     parameter = next(
         item for item in source.revision.parameters if item.id == "irpf.direct_estimation_fractional_payment_rate"
     )
@@ -179,7 +176,7 @@ def test_overlapping_scalar_parameter_windows_refuse_export_through_engine_bound
     assert error.translated_message == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
     assert error.context == {
         "parameter_id": "irpf.direct_estimation_fractional_payment_rate",
-        "valid_on": date(_YEAR, 3, 31).isoformat(),
+        "valid_on": "2025-03-31",
     }
     assert error.__cause__ is not None
     assert "expected exactly one dated value, found 2" in str(error.__cause__)

@@ -20,7 +20,6 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
@@ -47,12 +46,6 @@ from .renta_income_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-
-_YEAR = Q1_2024.filing_year
-"""The exercise every transaction, period and profile election of these tests belongs to."""
-
-_FROM = filing_year_envelope().floor
-"""The first exercise the synthetic revision covers, early enough to cover ``_YEAR``."""
 
 _M130_INCOME_SOURCE_REFS = ("aeat-modelo-130-instructions",)
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
@@ -113,10 +106,10 @@ def _m130_casilla(casilla_id: str) -> CasillaDefinition:
 
 def m130_2026_q1_revision() -> ModeloRevision:
     return ModeloRevision(
-        id=f"{_FROM}-y-siguientes",
-        localization_key=f"test.schema.revision.{_FROM}-y-siguientes.label",
-        valid_from=date(_FROM, 1, 1),
-        period_selector=PeriodSelector(year_from=_FROM, periods=("1T", "2T", "3T", "4T")),
+        id="2019-y-siguientes",
+        localization_key="test.schema.revision.2019-y-siguientes.label",
+        valid_from=date(2019, 1, 1),
+        period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
         legal_refs=_M130_INGRESOS_LEGAL_REFS,
         source_refs=_M130_INCOME_SOURCE_REFS,
         casillas=(_m130_casilla(M130_INGRESOS_CASILLA), _m130_casilla(M130_RETENCIONES_CASILLA)),
@@ -171,7 +164,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
     amount = Decimal("3000.00")
     tx = actividad_transaction(
         "ae-001",
-        value_date=date(_YEAR, 2, 1),
+        value_date=date(2024, 2, 1),
         amount=amount,
         business_classification=BusinessClassification.NOT_YET_PROCESSED,
     )
@@ -203,14 +196,14 @@ def test_trabajo_income_excluded_from_m130() -> None:
     """
     nomina = actividad_transaction(
         "nomina-001",
-        value_date=date(_YEAR, 1, 31),
+        value_date=date(2024, 1, 31),
         amount=Decimal("2500.00"),
         irpf_category="trabajo",
         business_classification=BusinessClassification.BUSINESS,
     )
     actividad = actividad_transaction(
         "ae-002",
-        value_date=date(_YEAR, 1, 15),
+        value_date=date(2024, 1, 15),
         amount=Decimal("1800.00"),
     )
     catalogue = TransactionCatalogue.from_transactions((nomina, actividad))
@@ -247,7 +240,7 @@ def test_taxable_base_amount_populated_when_set() -> None:
     taxable = Decimal("1000.00")
     tx = actividad_transaction(
         "ae-inv-001",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2024, 3, 15),
         amount=gross,
         taxable_base=taxable,
     )
@@ -280,7 +273,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     """
     tx = actividad_transaction(
         "ae-net-paid",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2024, 3, 15),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),
@@ -349,7 +342,7 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
     ) -> tuple[Decimal, Decimal]:
         tx = actividad_transaction(
             provider_id,
-            value_date=date(_YEAR, 3, 15),
+            value_date=date(2024, 3, 15),
             amount=banked,
             taxable_base=invoiced_base,
             iva_rate=Decimal("0.21"),
@@ -395,14 +388,14 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
     # withholding would present a 30 % rate no article fixes.
     assert (
         mixed_retencion
-        == mixed_income * load_retencion_actividades_rates(effective_date=date(_YEAR, 3, 15)).general_rate
+        == mixed_income * load_retencion_actividades_rates(effective_date=date(2026, 3, 15)).general_rate
     )
 
 
 def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() -> None:
     tx = actividad_transaction(
         "ae-net-paid-resolver",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),
@@ -412,10 +405,10 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        filing_year=2026,
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=m130_2026_q1_revision(),
-        profile=cash_criterion_profile(_YEAR),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -449,7 +442,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
     """
     tx = actividad_transaction(
         "ae-net-paid-unrouted-retencion",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),
@@ -460,10 +453,10 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        filing_year=2026,
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=income_only,
-        profile=cash_criterion_profile(_YEAR),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -494,10 +487,10 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="130",
-            filing_year=_YEAR,
-            period=renta_income_aggregation_period(_YEAR, "1T"),
+            filing_year=2026,
+            period=renta_income_aggregation_period(2026, "1T"),
             revision=m130_2026_q1_revision(),
-            profile=cash_criterion_profile(_YEAR),
+            profile=cash_criterion_profile(2026),
         ),
     )
     assert not [
@@ -517,13 +510,13 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     """
     tagged = actividad_transaction(
         "ae-tagged",
-        value_date=date(_YEAR, 2, 10),
+        value_date=date(2024, 2, 10),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
     )
     untagged = actividad_transaction(
         "ae-untagged",
-        value_date=date(_YEAR, 3, 5),
+        value_date=date(2024, 3, 5),
         amount=Decimal("500.00"),
         taxable_base=None,
     )
@@ -561,13 +554,13 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     # Scenario A: one actividad + one trabajo — only actividad should flow
     actividad = actividad_transaction(
         "ae-a",
-        value_date=date(_YEAR, 2, 15),
+        value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="actividad_economica",
     )
     trabajo = actividad_transaction(
         "trab-a",
-        value_date=date(_YEAR, 2, 15),
+        value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="trabajo",
         business_classification=BusinessClassification.BUSINESS,
@@ -586,13 +579,13 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     # Scenario B: both transactions as actividad — both should flow
     actividad_b1 = actividad_transaction(
         "ae-b1",
-        value_date=date(_YEAR, 2, 15),
+        value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="actividad_economica",
     )
     actividad_b2 = actividad_transaction(
         "ae-b2",
-        value_date=date(_YEAR, 2, 15),
+        value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="actividad_economica",
     )
@@ -648,7 +641,7 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory() -> None
     """
     tx = actividad_transaction(
         "ae-cash-fallback-advisory",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2026, 3, 15),
         amount=Decimal("1700.00"),
         taxable_base=None,
     )
@@ -656,10 +649,10 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory() -> None
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        filing_year=2026,
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=m130_2026_q1_revision(),
-        profile=cash_criterion_profile(_YEAR),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -684,7 +677,7 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory() -> None:
     """
     tx = actividad_transaction(
         "ae-substrate-declared-control",
-        value_date=date(_YEAR, 3, 15),
+        value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
         taxable_base=Decimal("2000.00"),
         iva_rate=Decimal("0.21"),
@@ -694,10 +687,10 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory() -> None:
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        filing_year=2026,
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=m130_2026_q1_revision(),
-        profile=cash_criterion_profile(_YEAR),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -719,7 +712,7 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
     transactions = tuple(
         actividad_transaction(
             f"ae-ungrounded-{index}",
-            value_date=date(_YEAR, 3, 10 + index),
+            value_date=date(2026, 3, 10 + index),
             amount=Decimal("500.00"),
             taxable_base=None,
         )
@@ -729,10 +722,10 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
     context = CalculationSourceContext(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        filing_year=2026,
+        period=renta_income_aggregation_period(2026, "1T"),
         revision=m130_2026_q1_revision(),
-        profile=cash_criterion_profile(_YEAR),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)

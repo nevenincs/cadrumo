@@ -37,7 +37,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -105,13 +104,11 @@ BUCKET_ID = "13010000-0000-4000-8000-000000000100"
 
 TAX_ID = "12345678Z"
 
-#: The Renta exercise these fixtures are written for: the second-newest authored edition. The
-#: newest edition does not calculate from this seeded profile and ledger.
-YEAR = newest_authored_editions("100", 2)[0]
+YEAR = 2024
 
-T0 = datetime(YEAR, 1, 10, 10, 0, tzinfo=UTC)
+T0 = datetime(2024, 1, 10, 10, 0, tzinfo=UTC)
 
-FILE_AT = datetime(YEAR, 4, 6, 12, 0, tzinfo=UTC)
+FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 
 M100_ANNUAL_PERIOD = "0A"
 
@@ -152,7 +149,7 @@ PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
 
-# Prior-year actividad-económica net income. M130's casilla-13 minoración
+# Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
 # binding summing the prior annual M100's net-income casillas. The bucket
 # previous_filing resolver HARD-RAISES once any prior observation exists and the
@@ -366,11 +363,11 @@ def import_official_quarter_observation(
 
 
 def seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
-    """Observe the prior-year annual Renta (M100) net-income casillas.
+    """Observe the prior-year annual Renta (M100 2023) net-income casillas.
 
-    Carries every prior-year casilla a ``previous_filing`` binding reads:
+    Carries every prior-year casilla a 2024 ``previous_filing`` binding reads:
     M130's casilla-13 minoración sums M100 0224/1479/1553/1577 (net income in
-    0224, the rest zero for a pure actividad-económica filer), and the M100 annual
+    0224, the rest zero for a pure actividad-económica filer), and M100/2024's
     base-liquidable-negativa-general carry copies casilla 1391 (no prior BIN, so
     zero). Net income is set above the minoración ceiling so the minoración
     resolves to zero.
@@ -422,7 +419,7 @@ def autonomaworkflow_profile() -> TaxpayerProfile:
 
 
 def m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    """Zero-default every annual M100 binding that is neither profile- nor relation-sourced."""
+    """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
     snapshot = published_authority_operation().snapshot("100", filing_year=YEAR, period=M100_ANNUAL_PERIOD)
     values = {
         binding.id: Decimal("0")

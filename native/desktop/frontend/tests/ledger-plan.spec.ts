@@ -31,7 +31,6 @@ import {
   recordedCheck,
   servedBlocker,
 } from "./support/stagedCheck";
-import { fixtureDay } from "../src/dev/fixtureDates";
 
 // How staged changes become operations. No page is opened.
 
@@ -318,7 +317,7 @@ test("corrections go through a masked update; tax figures on an unclassified row
 test("an operation date is sent through the masked update, and cleared by a null", () => {
   const O = hexId("o");
   const setPlan = planRecorded(
-    staged({ [O]: { operation_date: set(fixtureDay(9, 30)) } }),
+    staged({ [O]: { operation_date: set("2026-09-30") } }),
     contextOf(movement(O)),
   );
   expect(stepKinds(setPlan)).toEqual(["update"]);
@@ -326,11 +325,11 @@ test("an operation date is sent through the masked update, and cleared by a null
   expect(sent.newIdentity).toBe(false);
   expect(sent.request).toEqual({
     transaction_id: O,
-    patch: { operation_date: fixtureDay(9, 30) },
+    patch: { operation_date: "2026-09-30" },
     patch_fields: ["operation_date"],
   });
 
-  const stored = movement(O, { operation_date: fixtureDay(9, 30) });
+  const stored = movement(O, { operation_date: "2026-09-30" });
   const clearPlan = planRecorded(
     staged({ [O]: { operation_date: clear } }),
     contextOf(stored),
@@ -347,7 +346,7 @@ test("an operation date is sent through the masked update, and cleared by a null
 test("a transfer is held from an operation date by the ledger's answer", () => {
   const T = hexId("t");
   const plan = planRecorded(
-    staged({ [T]: { operation_date: set(fixtureDay(9, 30)) } }),
+    staged({ [T]: { operation_date: set("2026-09-30") } }),
     contextOf(movement(T, { direction: "INTERNAL_TRANSFER" })),
   );
   expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);
@@ -357,7 +356,7 @@ test("a transfer is held from an operation date by the ledger's answer", () => {
 test("an accrual date is sent through the masked update, and cleared by a null", () => {
   const O = hexId("c");
   const setPlan = planRecorded(
-    staged({ [O]: { accrual_date: set(fixtureDay(9, 29)) } }),
+    staged({ [O]: { accrual_date: set("2026-09-29") } }),
     contextOf(movement(O)),
   );
   expect(stepKinds(setPlan)).toEqual(["update"]);
@@ -365,11 +364,11 @@ test("an accrual date is sent through the masked update, and cleared by a null",
   expect(sent.newIdentity).toBe(false);
   expect(sent.request).toEqual({
     transaction_id: O,
-    patch: { accrual_date: fixtureDay(9, 29) },
+    patch: { accrual_date: "2026-09-29" },
     patch_fields: ["accrual_date"],
   });
 
-  const stored = movement(O, { accrual_date: fixtureDay(9, 29) });
+  const stored = movement(O, { accrual_date: "2026-09-29" });
   const clearPlan = planRecorded(
     staged({ [O]: { accrual_date: clear } }),
     contextOf(stored),
@@ -386,7 +385,7 @@ test("an accrual date is sent through the masked update, and cleared by a null",
 test("a transfer is held from an accrual date by the ledger's answer", () => {
   const T = hexId("t");
   const plan = planRecorded(
-    staged({ [T]: { accrual_date: set(fixtureDay(9, 29)) } }),
+    staged({ [T]: { accrual_date: set("2026-09-29") } }),
     contextOf(movement(T, { direction: "INTERNAL_TRANSFER" })),
   );
   expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);
@@ -764,7 +763,7 @@ test("bulk requests carry the window's language for their row refusals", () => {
 test("new movements need their five facts and keep their key", () => {
   const ready = newDraft();
   ready.fields = {
-    booked_date: fixtureDay(10, 21),
+    booked_date: "2026-10-21",
     amount: "12.50",
     currency: "EUR",
     direction: "OUTGOING",
@@ -776,7 +775,7 @@ test("new movements need their five facts and keep their key", () => {
   missing.fields = { amount: "5" };
   const mixedDraft = newDraft();
   mixedDraft.fields = {
-    booked_date: fixtureDay(10, 21),
+    booked_date: "2026-10-21",
     amount: "5",
     currency: "EUR",
     direction: "OUTGOING",
@@ -785,7 +784,7 @@ test("new movements need their five facts and keep their key", () => {
   };
   const transfer = newDraft();
   transfer.fields = {
-    booked_date: fixtureDay(10, 21),
+    booked_date: "2026-10-21",
     amount: "5",
     currency: "EUR",
     direction: "INTERNAL_TRANSFER",
@@ -814,7 +813,7 @@ test("new movements need their five facts and keep their key", () => {
       kind: "add",
       draftKey: ready.key,
       request: {
-        booked_date: fixtureDay(10, 21),
+        booked_date: "2026-10-21",
         amount: "12.5",
         currency: "EUR",
         direction: "OUTGOING",
@@ -839,7 +838,7 @@ test("the work is ordered: bulk, single classifications, corrections, adds, then
   ];
   const draft = newDraft();
   draft.fields = {
-    booked_date: fixtureDay(10, 21),
+    booked_date: "2026-10-21",
     amount: "1",
     currency: "EUR",
     direction: "INCOMING",

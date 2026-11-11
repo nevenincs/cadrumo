@@ -51,7 +51,6 @@ from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.errors import SecureObjectRevisionConflictError
@@ -68,10 +67,9 @@ from .reconciliation_persist_support import modelo_reconcile, persist_work_unit,
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
-_EXERCISE = filing_year_envelope().horizon
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
-_WORK_UNIT_TIMESTAMP = datetime(_EXERCISE, 5, 28, 13, 30, 0, tzinfo=UTC)
-_RECONCILED_AT = datetime(_EXERCISE, 6, 1, 9, 15, 30, tzinfo=UTC)
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
+_RECONCILED_AT = datetime(2026, 6, 1, 9, 15, 30, tzinfo=UTC)
 
 
 # Seeded through a detached WorkflowState, never a repository read: the
@@ -90,7 +88,7 @@ def _active_bucket_id() -> str:
     return bucket_id
 
 
-def _seed_work_unit(*, modelo: str = "130", filing_year: int = _EXERCISE, period: str = "1T") -> str:
+def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
     bucket_id = _active_bucket_id()
     typed_period = Period.from_year_and_code(filing_year, period)
     # The law-determined revision id, never a fabricated pin: the snapshot
@@ -372,12 +370,12 @@ def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back
     that run: this is the case a revision-derived key could not have stored,
     which is why the key derives from none.
     """
-    work_unit_id = _seed_work_unit(modelo="131", filing_year=_EXERCISE, period="1T")
+    work_unit_id = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     receipt = parse_justificante(MODELO_130_FIXTURE).model_copy(
         update={
             "modelo": "131",
-            "ejercicio": str(_EXERCISE),
-            "period": Period.from_year_and_code(_EXERCISE, "1T"),
+            "ejercicio": "2024",
+            "period": Period.from_year_and_code(2024, "1T"),
             "tax_id": "00000000T",
             "total_a_ingresar": Decimal("500.00"),
             "total_a_devolver": None,

@@ -19,7 +19,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calculation_bucket_actions import orphaned_override_diagnostics
 
@@ -32,7 +31,7 @@ carries after the cut, and the one this advisory exists for."""
 
 def _m303_revision():
     """Return the live Modelo 303 revision, not a stand-in for one."""
-    return published_snapshot("303", filing_year=filing_year_envelope().horizon, period="1T").revision
+    return published_snapshot("303", filing_year=2026, period="1T").revision
 
 
 def test_retired_relation_key_surfaces_a_structured_advisory() -> None:

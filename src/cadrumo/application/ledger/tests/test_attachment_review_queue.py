@@ -22,13 +22,9 @@ from typing import override
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.models import Attachment
 from ..attachment_review import get_attachment_review_item, list_attachment_review_queue
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +46,7 @@ def _attachment(
         source_reference=source_reference or f"https://drive.google.com/file/d/{_FILE_ID}",
         mime_type="application/pdf",
         bytes_size=42,
-        captured_at=datetime(_YEAR, 8, 23, tzinfo=UTC),
+        captured_at=datetime(2026, 8, 23, tzinfo=UTC),
         linked_invoice_ids=linked_invoice_ids,
     )
 

@@ -39,7 +39,6 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from .....domain.calculations.registry.schema_references import PeriodSelector
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from .....domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -56,7 +55,7 @@ _TAXPAYER = "00000000T"
 _PAYER_A = "B00000001"
 _PAYER_B = "B00000002"
 _PAYER_C = "B00000003"
-_EJERCICIO = filing_year_envelope().horizon
+_EJERCICIO = 2025
 _SECOND_PROFILE = "22222222-2222-4222-8222-222222222222"
 _ACTIVITY_PROFILE = "33333333-3333-4333-8333-333333333333"
 _LEGAL_REFS = ("ley-35-2006:art-99", "rd-439-2007:art-108")
@@ -120,7 +119,7 @@ def _record(
         origin=RetencionSoportadaOrigen.PAYER_CERTIFICATE,
         evidence_fingerprint=fingerprint or _certificate("one"),
         replaces_evidence_fingerprint=replaces,
-        captured_at=datetime(_EJERCICIO + 1, 4, 2, 9, 0, tzinfo=UTC),
+        captured_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
     )
 
 
@@ -153,9 +152,9 @@ def _binding(binding_id: str, income_class: str) -> BindingDefinition:
 
 def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
-        id=f"{_EJERCICIO}-retencion-soportada-test",
-        localization_key=f"test.schema.revision.{_EJERCICIO}-retencion-soportada-test.label",
-        valid_from=date(_EJERCICIO, 1, 1),
+        id="2025-retencion-soportada-test",
+        localization_key="test.schema.revision.2025-retencion-soportada-test.label",
+        valid_from=date(2025, 1, 1),
         period_selector=PeriodSelector(years=(_EJERCICIO,), periods=("0A",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
@@ -260,7 +259,7 @@ def test_the_real_authority_refuses_an_unsupported_ejercicio_and_declares_the_fa
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     authority = PinnedRetencionSoportadaWriteAuthority(operation)
-    unsupported = filing_year_envelope().floor - 1
+    unsupported = 2000
     assert not authority.admits_ejercicio(unsupported)
     assert authority.admits_ejercicio(_EJERCICIO)
     assert authority.declares_family(_EJERCICIO)
@@ -521,7 +520,7 @@ def test_certificate_bytes_that_no_longer_hash_to_their_address_are_refused(
             object_key=genuine,
             classification=ATTACHMENT_BLOB_NAMESPACE.sensitivity,
             schema_version=ATTACHMENT_BLOB_NAMESPACE.schema_version,
-            written_at=datetime(_EJERCICIO + 1, 4, 2, 9, 0, tzinfo=UTC),
+            written_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
             payload=genuine_row.payload,
         )
         assert store.read_bytes(genuine) == b"synthetic certificate substituted"

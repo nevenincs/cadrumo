@@ -32,7 +32,6 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventHistoryCatalogue
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordCatalogue
 from cadrumo.domain.modelos.verification_report import VerificationReport, VerificationReportCatalogue
@@ -52,9 +51,8 @@ from .modelo_gate_bucket_support import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000124"
-_YEAR = filing_grade_exercises("123")[-1]
-_T0 = datetime(_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
-_Q2 = Period.from_year_and_code(_YEAR, "2T")
+_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+_Q2_2025 = Period.from_year_and_code(2025, "2T")
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,12 +77,12 @@ def _bucket(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Generator
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="lifecycle clock") as profile:
         objects: SecureObjectRepository = profile.repository
         seed_ready_capital_payer_profile(bucket_id=_BUCKET_ID, at=_T0)
-        snapshot = published_authority_operation().snapshot("123", filing_year=_YEAR, period="2T")
+        snapshot = published_authority_operation().snapshot("123", filing_year=2025, period="2T")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="123",
-            filing_year=_YEAR,
-            period=_Q2,
+            filing_year=2025,
+            period=_Q2_2025,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
                 work_unit_repository=WorkUnitCatalogueRepository(objects=objects),

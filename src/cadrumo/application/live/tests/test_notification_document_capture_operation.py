@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _CERTIFICADO = "2699101808461"
-_NOW = datetime(1980, 9, 29, 12, tzinfo=UTC)
+_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
 
 
 def _record() -> NotificationDocumentRecord:

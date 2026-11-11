@@ -23,7 +23,7 @@ from ..persistence.events import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(1980, 8, 13, 18, 0, tzinfo=UTC)
+_NOW = datetime(2026, 8, 13, 18, 0, tzinfo=UTC)
 _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:active")
 _DIAGNOSTIC_REF = "sha256:0123456789ab"
 
@@ -94,7 +94,7 @@ def test_event_ordering_and_time_are_fail_closed() -> None:
     with pytest.raises(ValidationError):
         OperationDiagnosticEvent(**_base(sequence=0), diagnostic_ref=_DIAGNOSTIC_REF)
     with pytest.raises(ValidationError):
-        OperationDiagnosticEvent(**_base(timestamp=datetime(1980, 8, 13, 18, 0)), diagnostic_ref=_DIAGNOSTIC_REF)
+        OperationDiagnosticEvent(**_base(timestamp=datetime(2026, 8, 13, 18, 0)), diagnostic_ref=_DIAGNOSTIC_REF)
 
 
 def test_log_record_has_no_message_or_untyped_fact_channel() -> None:

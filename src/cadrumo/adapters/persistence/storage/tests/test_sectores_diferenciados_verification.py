@@ -54,7 +54,6 @@ from .....core.prorrata_register import (
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.ids import BindingId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.prorrata import InputClassification
@@ -71,10 +70,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 _BUCKET_ID = "5c705c70-5c70-4c70-8c70-5c705c705c70"
-_HORIZON_YEAR = filing_year_envelope().horizon
-_PRIOR_YEAR = _HORIZON_YEAR - 1
-_FLOOR_YEAR = filing_year_envelope().floor
-_PERIOD = Period.from_year_and_code(_HORIZON_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _DEDUCIBLE_BASE_BINDING: BindingId = "modelo-303-iva-soportado-interiores-base"
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
@@ -87,8 +83,8 @@ def _m303_snapshot_ref(filing_year: int):
 def _raw(provider_id: str, *, amount: Decimal, counterparty: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_HORIZON_YEAR, 2, 10),
-        value_date=date(_HORIZON_YEAR, 2, 10),
+        booked_date=date(2026, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=amount,
         currency="EUR",
         counterparty=counterparty,
@@ -98,7 +94,7 @@ def _raw(provider_id: str, *, amount: Decimal, counterparty: str) -> RawTransact
             source_sha256="5" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(1980, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -122,7 +118,7 @@ def _purchase(provider_id: str, *, sector_id: str | None) -> Transaction:
             source_locator=f"invoice:{provider_id}",
             evidence_digest="5" * 64,
         ),
-        "classified_at": datetime(1980, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if sector_id is None:
@@ -144,7 +140,7 @@ def _sale(provider_id: str) -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "classified_at": datetime(1980, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -153,20 +149,20 @@ def _sale(provider_id: str) -> Transaction:
 def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> ProrrataRegisterEntry:
     """A 2025 sector entry settled from its OWN annual volumes (con/total definitive)."""
     provisional = ProrrataRegisterEntry(
-        ejercicio=_PRIOR_YEAR,
+        ejercicio=2025,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=Decimal("50"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=f"seed:{sector_id or 'comun'}",
-        source_registry_snapshot_refs=(_m303_snapshot_ref(_FLOOR_YEAR),),
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2024),),
     )
     return settle_sector_definitive(
         provisional,
         con_derecho_volume=Decimal(con),
         sin_derecho_volume=Decimal(sin),
-        producing_snapshot_ref=_m303_snapshot_ref(_PRIOR_YEAR),
+        producing_snapshot_ref=_m303_snapshot_ref(2025),
     )
 
 
@@ -184,7 +180,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
     15.75 — a per-sector result, provably NOT any single whole-entity percentage
     applied across the 31.50 soportado.
     """
-    revision = published_revision("303", revision_covering("303", _FLOOR_YEAR).id)
+    revision = published_revision("303", "2022")
 
     # 1. Settle 2025 per-sector + common definitives from their own volumes.
     comercio_2025 = _settled_2025_entry("comercio", con="90000.00", sin="10000.00")  # 90%
@@ -193,11 +189,9 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
     register_2025 = ProrrataRegister(entries=(comercio_2025, arrendamiento_2025, common_2025))
 
     # 2. Seed 2026 provisionals from each sector's own prior definitive.
-    comercio_2026 = seed_sector_carried_definitive_from_register(
-        register_2025, ejercicio=_HORIZON_YEAR, sector_id="comercio"
-    )
+    comercio_2026 = seed_sector_carried_definitive_from_register(register_2025, ejercicio=2026, sector_id="comercio")
     arrendamiento_2026 = seed_sector_carried_definitive_from_register(
-        register_2025, ejercicio=_HORIZON_YEAR, sector_id="arrendamiento"
+        register_2025, ejercicio=2026, sector_id="arrendamiento"
     )
     assert comercio_2026 is not None
     assert arrendamiento_2026 is not None
@@ -211,13 +205,13 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
     assert comercio_pct - arrendamiento_pct > Decimal("50")
 
     common_2026 = ProrrataRegisterEntry(
-        ejercicio=_HORIZON_YEAR,
+        ejercicio=2026,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("40"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-        source_observation_ref=f"seed:comun:{_HORIZON_YEAR}",
-        source_registry_snapshot_refs=(_m303_snapshot_ref(_PRIOR_YEAR),),
+        source_observation_ref="seed:comun:2026",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2025),),
     )
 
     register_2026 = ProrrataRegister(

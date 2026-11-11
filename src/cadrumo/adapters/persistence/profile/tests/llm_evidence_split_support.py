@@ -27,12 +27,9 @@ from cadrumo.domain.transactions.llm import LLMSplitChild, LLMSplitResponse, pro
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 
-_YEAR = filing_year_envelope().horizon
-
-NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
+NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'
 
 
@@ -50,7 +47,7 @@ print({response_json!r})
         name="claude",
         command=(sys.executable, "-c", script),
         model=model,
-        spec=prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation),
+        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
     )
 
 
@@ -118,7 +115,7 @@ def seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: st
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": BUCKET,
             "invoice_number": invoice_number,
-            "issued_at": date(_YEAR, 5, 2),
+            "issued_at": date(2026, 5, 2),
             "counterparty_name": "Proveedor Mixto SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -143,8 +140,8 @@ def seed_parent(
     """Persist one ACTIVE parent transaction and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-split-parent",
-        booked_date=date(_YEAR - 1, 5, 1),
-        value_date=date(_YEAR, 5, 1),
+        booked_date=date(2025, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=amount,
         currency="EUR",
         counterparty="Proveedor Mixto SL",

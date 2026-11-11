@@ -54,7 +54,6 @@ from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -97,8 +96,7 @@ _Repos = tuple[
     TransactionCatalogueRepository,
 ]
 
-_YEAR = filing_year_envelope().horizon
-_AT = datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC)
+_AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
 
 
 @contextmanager
@@ -306,7 +304,7 @@ def test_reclassifying_then_verifying_the_stale_draft_is_refused(tmp_path: Path)
         assert dict(drift.message_facts) == {
             "anchored": True,
             "changed_count": 1,
-            "filing_year": _YEAR,
+            "filing_year": 2026,
             "modelo": "303",
             "period": "1T",
             "removed_count": 0,
@@ -430,7 +428,7 @@ def _add_transaction(
     objects: SecureObjectRepository,
     repos: _Repos,
     *,
-    booked_date: date = date(_YEAR, 3, 25),
+    booked_date: date = date(2026, 3, 25),
     business: BusinessClassification = BusinessClassification.BUSINESS,
     direction: TransactionDirection = TransactionDirection.INCOMING,
     currency: str = "EUR",
@@ -507,10 +505,10 @@ def test_added_declarable_sale_or_held_back_purchase_refuses_saved_calculation(
 @pytest.mark.parametrize(
     ("booked_date", "business", "currency"),
     [
-        (date(_YEAR, 4, 25), BusinessClassification.BUSINESS, "EUR"),
-        (date(_YEAR, 3, 25), BusinessClassification.PERSONAL, "EUR"),
-        (date(_YEAR, 3, 25), BusinessClassification.PERSONAL, "USD"),
-        (date(_YEAR, 3, 25), BusinessClassification.REVIEWED_EXCLUDED, "EUR"),
+        (date(2026, 4, 25), BusinessClassification.BUSINESS, "EUR"),
+        (date(2026, 3, 25), BusinessClassification.PERSONAL, "EUR"),
+        (date(2026, 3, 25), BusinessClassification.PERSONAL, "USD"),
+        (date(2026, 3, 25), BusinessClassification.REVIEWED_EXCLUDED, "EUR"),
     ],
 )
 def test_added_rows_outside_selected_admission_do_not_stale_the_calculation(
@@ -598,7 +596,7 @@ def test_non_ledger_binding_revision_does_not_borrow_bucket_transactions(tmp_pat
                 profile_decode_context=operation.profile_decode_context(),
             )
             assert profile is not None
-            non_ledger_revision = operation.snapshot("111", filing_year=_YEAR, period="1T").revision
+            non_ledger_revision = operation.snapshot("111", filing_year=2026, period="1T").revision
             membership = query_ledger_membership(
                 target=revision,
                 work_unit=unit,
@@ -626,7 +624,7 @@ def test_an_added_sale_in_a_different_encrypted_bucket_does_not_stale_the_draft(
             added = create_manual_transaction(
                 ManualLedgerTransactionCommand(
                     bucket_id=runtime.secondary.bucket_id,
-                    booked_date=date(_YEAR, 3, 25),
+                    booked_date=date(2026, 3, 25),
                     amount=Decimal("363.00"),
                     direction=TransactionDirection.INCOMING,
                     description="Other taxpayer's sale",

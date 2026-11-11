@@ -44,7 +44,6 @@ from ...application.workflow.persistence import WorkflowRunRepository
 from ...core.external_constants import OutputLanguage
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.tests.authored_editions import revision_covering
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -54,9 +53,6 @@ from . import modelo_operation_test_support
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
 from .registered_executor_scenario_constants import OWN_ACCOUNT_SYNTHETIC_IBAN
 from .registered_executor_seeding_support import (
-    CONFORMANCE_EARLIER_YEAR,
-    CONFORMANCE_PRIOR_YEAR,
-    CONFORMANCE_YEAR,
     seeded_modelo_edit_submission,
     seeded_modelo_filing_record,
     workflow_result,
@@ -76,7 +72,7 @@ def _seed_wallet_period(ctx: PayloadContext, period: Period) -> None:
 
 
 def _modelo_iva_wallet_correct(ctx: PayloadContext) -> PayloadResult:
-    period = Period.from_year_and_code(CONFORMANCE_EARLIER_YEAR, "4T")
+    period = Period.from_year_and_code(2024, "4T")
     _seed_wallet_period(ctx, period)
     return ctx.request(
         ctx.profile_subject,
@@ -90,8 +86,8 @@ def _modelo_iva_wallet_correct(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_iva_wallet_balance(ctx: PayloadContext) -> PayloadResult:
-    _seed_wallet_period(ctx, Period.from_year_and_code(CONFORMANCE_EARLIER_YEAR, "4T"))
-    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "as_of_year": CONFORMANCE_EARLIER_YEAR})
+    _seed_wallet_period(ctx, Period.from_year_and_code(2024, "4T"))
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "as_of_year": 2024})
 
 
 def _modelo_iva_wallet_seed(ctx: PayloadContext) -> PayloadResult:
@@ -100,7 +96,7 @@ def _modelo_iva_wallet_seed(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_EARLIER_YEAR, "4T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2024, "4T")),
             "amount": "500.00",
         },
     )
@@ -112,7 +108,7 @@ def _modelo_iva_wallet_override(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
             "amount": "450.00",
             "reason": "operator asserted prior compensation",
             "evidence_locator": "synthetic:conformance:prior-compensation",
@@ -172,7 +168,7 @@ def _modelo_work_create(ctx: PayloadContext) -> PayloadResult:
             UserProfileFact(path="identity.name", value="Conformance"),
             UserProfileFact(path="identity.surnames", value="Natural Person"),
             UserProfileFact(path="activities.description", value="professional services"),
-            UserProfileFact(path="censo.activity_start_date", value=date(CONFORMANCE_PRIOR_YEAR, 1, 1).isoformat()),
+            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -187,8 +183,8 @@ def _modelo_work_create(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "modelo": "202",
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1P")),
-            "revision_id": str(revision_covering("202", CONFORMANCE_PRIOR_YEAR).id),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2025, "1P")),
+            "revision_id": "2025-y-siguientes",
             "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         },
     )
@@ -379,13 +375,13 @@ def _modelo_work_dependencies(ctx: PayloadContext) -> PayloadResult:
 
 def _workflow_run_read(ctx: PayloadContext) -> PayloadResult:
     run_id = "a" * 16
-    period = Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     WorkflowRunRepository().save(
         workflow_result(
             run_id,
             modelo="303",
             period=period,
-            started_at=datetime(CONFORMANCE_PRIOR_YEAR, 5, 1, tzinfo=UTC),
+            started_at=datetime(2025, 5, 1, tzinfo=UTC),
         )
     )
     return ctx.request(
@@ -402,32 +398,23 @@ def _overview_read(ctx: PayloadContext) -> PayloadResult:
     kind = OverviewReadKind(ctx.definition_id.removeprefix("overview."))
     values: dict[str, object] = {"profile_id": ctx.profile_id, "kind": kind, "output_language": OutputLanguage.ES}
     if kind is OverviewReadKind.CALENDAR:
-        values.update(
-            {"from_date": date(CONFORMANCE_PRIOR_YEAR, 1, 1), "to_date": date(CONFORMANCE_PRIOR_YEAR, 12, 31)}
-        )
+        values.update({"from_date": date(2025, 1, 1), "to_date": date(2025, 12, 31)})
     elif kind is OverviewReadKind.AGENDA:
-        values.update({"as_of": date(CONFORMANCE_PRIOR_YEAR, 1, 1), "horizon_days": 30})
+        values.update({"as_of": date(2025, 1, 1), "horizon_days": 30})
     elif kind is OverviewReadKind.BACKLOG:
-        values.update(
-            {"from_date": date(CONFORMANCE_PRIOR_YEAR, 1, 1), "to_date": date(CONFORMANCE_PRIOR_YEAR, 12, 31)}
-        )
+        values.update({"from_date": date(2025, 1, 1), "to_date": date(2025, 12, 31)})
     elif kind is OverviewReadKind.EXPLAIN:
-        values.update({"modelo": "303", "year": CONFORMANCE_PRIOR_YEAR})
+        values.update({"modelo": "303", "year": 2025})
     elif kind is OverviewReadKind.PREPARE:
-        values.update(
-            {
-                "modelo": "303",
-                "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")),
-            }
-        )
+        values.update({"modelo": "303", "period": PublicPeriod.from_period(Period.from_year_and_code(2025, "1T"))})
     return ctx.request(ctx.profile_subject, values)
 
 
 def _overview_pipeline(ctx: PayloadContext) -> PayloadResult:
     ports = compose_ledger_action_ports(bucket_id=str(ctx.profile_id), operation=ctx.operation)
     for booked_date, description in (
-        (date(CONFORMANCE_PRIOR_YEAR, 1, 15), "conformance overview selected-period seed"),
-        (date(CONFORMANCE_PRIOR_YEAR, 4, 15), "conformance overview other-period seed"),
+        (date(2025, 1, 15), "conformance overview selected-period seed"),
+        (date(2025, 4, 15), "conformance overview other-period seed"),
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -446,21 +433,21 @@ def _overview_pipeline(ctx: PayloadContext) -> PayloadResult:
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
             "output_language": OutputLanguage.ES,
         },
     )
 
 
 def _workflow_run_list(ctx: PayloadContext) -> PayloadResult:
-    first_period = Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")
-    second_period = Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "2T")
+    first_period = Period.from_year_and_code(2025, "1T")
+    second_period = Period.from_year_and_code(2025, "2T")
     WorkflowRunRepository().save(
         workflow_result(
             "a" * 16,
             modelo="303",
             period=first_period,
-            started_at=datetime(CONFORMANCE_PRIOR_YEAR, 5, 1, tzinfo=UTC),
+            started_at=datetime(2025, 5, 1, tzinfo=UTC),
         )
     )
     WorkflowRunRepository().save(
@@ -468,7 +455,7 @@ def _workflow_run_list(ctx: PayloadContext) -> PayloadResult:
             "b" * 16,
             modelo="130",
             period=second_period,
-            started_at=datetime(CONFORMANCE_PRIOR_YEAR, 8, 1, tzinfo=UTC),
+            started_at=datetime(2025, 8, 1, tzinfo=UTC),
         )
     )
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
@@ -488,7 +475,7 @@ def _workflow_resume_context(ctx: PayloadContext) -> PayloadResult:
             run_id,
             modelo=unit.modelo,
             period=unit.period,
-            started_at=datetime(CONFORMANCE_YEAR, 1, 1, tzinfo=UTC),
+            started_at=datetime(2026, 1, 1, tzinfo=UTC),
             aborted_reason=WorkflowAbortReason.SITE_UNAVAILABLE,
         )
     )
@@ -555,14 +542,14 @@ def _modelo_work_m303_attestation(ctx: PayloadContext) -> PayloadResult:
     seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     upsert_test_profile_facts(
         str(ctx.profile_id),
-        (UserProfileFact(path="censo.activity_start_date", value=date(CONFORMANCE_PRIOR_YEAR, 1, 1).isoformat()),),
+        (UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),),
     )
     return ctx.request(
         ctx.profile_subject,
         {
             "profile_id": ctx.profile_id,
             "work_unit_id": None,
-            "period": PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "4T")),
+            "period": PublicPeriod.from_period(Period.from_year_and_code(2025, "4T")),
             "observed_at": now(),
             "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         },
@@ -575,7 +562,7 @@ def _modelo_m360_solicitud(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "action": "declare",
-            "filing_year": CONFORMANCE_PRIOR_YEAR,
+            "filing_year": 2025,
             "facts": Modelo360ProfileFacts(
                 solicitud=Modelo360SolicitudFacts(
                     nivel_calidad_datos=M360NivelCalidadDatos.MAXIMA,
@@ -630,7 +617,7 @@ def _modelo_export(ctx: PayloadContext) -> PayloadResult:
         export_revision.work_unit_id,
         {
             "calculation_revision_id": revision_id,
-            "output_path": str(ctx.tmp_path / f"modelo-130-{CONFORMANCE_PRIOR_YEAR}-1T.txt"),
+            "output_path": str(ctx.tmp_path / "modelo-130-2025-1T.txt"),
             "actor": modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         },
     )

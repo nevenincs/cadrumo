@@ -13,8 +13,6 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.operations import (
     OperationEffect,
     OperationFrontendProjection,
@@ -48,8 +46,6 @@ from ..models import (
     LedgerSourceVerificationReport,
 )
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -425,7 +421,7 @@ def _imported_once(operation: PinnedAuthorityOperation, monkeypatch: pytest.Monk
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(_YEAR, 11, 8, 12, 0, tzinfo=UTC),
+        settled_at=datetime(2026, 11, 8, 12, 0, tzinfo=UTC),
         result_ref="secure-result-reference",
     )
     return project_ledger_import_result(results[0], receipt)

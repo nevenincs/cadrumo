@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 from .....application.modelo.m145_communication_records import M145CommunicationCreateCommand
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
 
 __all__ = ["communication_command", "valid_field_values"]
 
@@ -24,6 +21,6 @@ def valid_field_values(**overrides: str) -> dict[str, str]:
 
 def communication_command(*, field_values: dict[str, str] | None = None) -> M145CommunicationCreateCommand:
     return M145CommunicationCreateCommand(
-        communication_year=_YEAR,
+        communication_year=2026,
         field_values=field_values if field_values is not None else valid_field_values(),
     )

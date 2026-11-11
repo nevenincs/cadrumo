@@ -2,29 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
-from .....tests.inventory import FIXTURES_DIR
-
-
-def corpus_specimens(modelo: str, *, role: str | None = None) -> tuple[tuple[str, int, str], ...]:
-    """Return ``(stem, ejercicio, period)`` for each committed specimen of a modelo, oldest first.
-
-    The specimen directory is the inventory: a render is a corpus case because it is
-    committed there, so the cases follow the files rather than a hand-kept list of years.
-    ``role`` keeps only the specimens whose sidecar declares that role.
-    """
-    cases: list[tuple[str, int, str]] = []
-    for pdf_path in (FIXTURES_DIR / "justificantes" / modelo).glob("*.pdf"):
-        if role is not None:
-            sidecar = json.loads(pdf_path.with_suffix(".json").read_text(encoding="utf-8"))
-            if sidecar["role"] != role:
-                continue
-        year_text, _, period = pdf_path.stem.partition("-")
-        cases.append((pdf_path.stem, int(year_text), period))
-    return tuple(sorted(cases, key=lambda case: (case[1], case[2])))
-
-
 M100_EXPECTED_CASILLAS: frozenset[str] = frozenset(
     {
         # First chunk: cuota-chain closure.
@@ -54,13 +31,15 @@ M100_EXPECTED_CASILLAS: frozenset[str] = frozenset(
         "0171",
     },
 )
-M100_CORPUS_PARAMS: tuple[tuple[str, int], ...] = tuple(
-    (stem, year) for stem, year, _period in corpus_specimens("100", role="parser_anchor")
+M100_CORPUS_PARAMS: tuple[tuple[str, int], ...] = (
+    ("2021-0A", 2021),
+    ("2022-0A", 2022),
+    ("2023-0A", 2023),
 )
 M100_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year in M100_CORPUS_PARAMS)
 
-_M100_EXPECTED_VALUES_OLDEST_FIRST: tuple[dict[str, str], ...] = (
-    {
+M100_EXPECTED_VALUES_BY_STEM: dict[str, dict[str, str]] = {
+    "2021-0A": {
         "0171": "58412.37",
         "0180": "61907.44",
         "0218": "12430.55",
@@ -83,7 +62,7 @@ _M100_EXPECTED_VALUES_OLDEST_FIRST: tuple[dict[str, str], ...] = (
         "0610": "1947.62",
         "0670": "1658.04",
     },
-    {
+    "2022-0A": {
         "0171": "63518.92",
         "0180": "66204.17",
         "0218": "13877.41",
@@ -106,7 +85,7 @@ _M100_EXPECTED_VALUES_OLDEST_FIRST: tuple[dict[str, str], ...] = (
         "0610": "3054.75",
         "0670": "2765.17",
     },
-    {
+    "2023-0A": {
         "0171": "71603.48",
         "0180": "74288.73",
         "0218": "15961.97",
@@ -129,10 +108,7 @@ _M100_EXPECTED_VALUES_OLDEST_FIRST: tuple[dict[str, str], ...] = (
         "0610": "4139.31",
         "0670": "3849.73",
     },
-)
-M100_EXPECTED_VALUES_BY_STEM: dict[str, dict[str, str]] = dict(
-    zip(M100_CORPUS_IDS, _M100_EXPECTED_VALUES_OLDEST_FIRST, strict=True)
-)
+}
 """What each committed M100 render prints, per casilla, per ejercicio.
 
 Every value is distinct from every other in the SAME specimen and from the same

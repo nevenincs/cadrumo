@@ -13,9 +13,6 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
 
 BUCKET_ID = "24242424-2424-4424-8424-242424242424"
 
@@ -37,7 +34,7 @@ def create_parent(
 ):
     command = ManualLedgerTransactionCommand(
         bucket_id=BUCKET_ID,
-        booked_date=date(_YEAR, 5, 2),
+        booked_date=date(2026, 5, 2),
         amount=amount,
         direction=direction,
         counterparty="Vendor SL",
@@ -53,5 +50,5 @@ def create_parent(
         return create_manual_transaction(
             command,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )

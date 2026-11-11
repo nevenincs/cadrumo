@@ -19,7 +19,6 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.operations import profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -380,7 +379,7 @@ def test_the_filing_history_reads_the_bucket_event_log(
         actor="operator",
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=unit.work_unit_id,
-        payload={"modelo": "130", "filing_year": str(filing_year_envelope().horizon), "period": "1T"},
+        payload={"modelo": "130", "filing_year": "2026", "period": "1T"},
         payload_version=1,
     )
     unrelated = build_bucket_event(
@@ -538,10 +537,9 @@ def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
     from dataclasses import replace
 
     from ..overview.evidence import AeatCalendarEvidenceSources, CalendarEvidenceReadOutcome
-    from ..overview.tests.calendar_test_support import PERIOD_2025_1T, filed_declaration_observation
+    from ..overview.tests.calendar_test_support import filed_declaration_observation
 
-    filing_year = PERIOD_2025_1T.filing_year
-    captured_at = datetime(filing_year, 4, 16, 8, 0, tzinfo=UTC)
+    captured_at = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
     reads: list[None] = []
 
     def read_captures() -> CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]:
@@ -570,7 +568,7 @@ def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
     projection = generation.aeat_sync.projection
     assert projection is not None
     (row,) = projection.filed_declarations
-    assert (str(row.modelo), row.filing_year, row.period.registry_token) == ("303", filing_year, "1T")
+    assert (str(row.modelo), row.filing_year, row.period.registry_token) == ("303", 2025, "1T")
     assert row.local_filing_state.value == "not_observed"
     assert row.aeat_observation_state.value == "submitted"
     assert row.aeat_observed_at == captured_at

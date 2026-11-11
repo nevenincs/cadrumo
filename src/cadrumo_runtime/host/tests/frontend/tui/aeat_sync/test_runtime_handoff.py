@@ -55,7 +55,6 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -65,14 +64,12 @@ from cadrumo_client.transport.operation_controller import OperationController
 
 from .....frontend.tui.aeat_sync.runtime_handoff import compose_runtime_aeat_sync_handoff
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("bb000000-0000-4000-8000-0000000000bb")
-_TODAY = date(_YEAR, 9, 29)
-_NOW = datetime(_YEAR, 9, 29, tzinfo=UTC)
+_TODAY = date(2026, 9, 29)
+_NOW = datetime(2026, 9, 29, tzinfo=UTC)
 _FILED_ACTION = ActionReference(action_id="operator.live.filed.pull_all")
 _NOTIFICATIONS_LIST_ACTION = ActionReference(action_id="operator.live.notifications.list")
 _CENSAL_REVIEW_ACTION = ActionReference(action_id="operator.profile.edit")

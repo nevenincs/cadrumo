@@ -12,10 +12,6 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
 
 def preflight_transaction(
     provider_id: str,
@@ -28,7 +24,7 @@ def preflight_transaction(
     usage_ratio_id: str | None = None,
 ) -> Transaction:
     """Return one classified April 2026 ledger row for the readiness preflight tests."""
-    booked_date = date(_YEAR, 4, 5)
+    booked_date = date(2026, 4, 5)
     raw = RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=booked_date,
@@ -42,7 +38,7 @@ def preflight_transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
@@ -65,7 +61,7 @@ def preflight_transaction(
             "irpf_category": None,
             "usage_ratio_id": usage_ratio_id,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

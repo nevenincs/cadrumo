@@ -23,7 +23,6 @@ from cadrumo.application.ledger.manual_read import list_manual_transactions
 from cadrumo.application.ledger.read_ports import LedgerReadPorts
 
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -35,8 +34,6 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -52,9 +49,9 @@ def _varied_transaction(index: int) -> Transaction:
     Classification, direction, tax substrate, grouping and lifecycle stamps all
     vary so a dropped or defaulted field would show in the comparison.
     """
-    booked = date(_YEAR, 1, 1) + timedelta(days=(index // 2) * 11)
+    booked = date(2023, 1, 1) + timedelta(days=(index // 2) * 11)
     value_date = None if index % 3 == 0 else booked + timedelta(days=index % 5)
-    created = datetime(1980, 1, 1, 8, 0, tzinfo=UTC) + timedelta(hours=index)
+    created = datetime(2023, 1, 1, 8, 0, tzinfo=UTC) + timedelta(hours=index)
     payload: dict[str, object] = {
         "raw": RawTransaction(
             provider_transaction_id=f"identity-row-{index:03d}",

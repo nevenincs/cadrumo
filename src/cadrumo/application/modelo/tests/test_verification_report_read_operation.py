@@ -24,7 +24,6 @@ from ....core.operations import OperationEffect, OperationFrontendProjection, pr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -70,26 +69,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 _RESULT_REFERENCE = "f" * 64
 
 
 def _revision_and_unit(operation: PinnedAuthorityOperation, period_code: str) -> tuple[CalculationRevision, WorkUnit]:
     """Build one minimal profile-owned calculation at a published coordinate."""
-    period = Period.from_year_and_code(_YEAR, period_code)
-    published_revision = operation.revision_for_context("303", filing_year=_YEAR, period=period_code)
+    period = Period.from_year_and_code(2026, period_code)
+    published_revision = operation.revision_for_context("303", filing_year=2026, period=period_code)
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=str(_PROFILE),
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
             revision_id=published_revision.id,
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=published_revision.id,
         name=f"Synthetic {period_code} work unit",
@@ -111,7 +109,7 @@ def _revision_and_unit(operation: PinnedAuthorityOperation, period_code: str) ->
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id=published_revision.id,
-            modelo_year=_YEAR,
+            modelo_year=2026,
             period=period_code,
         ),
         state=CalculationRevisionState.BORRADOR,

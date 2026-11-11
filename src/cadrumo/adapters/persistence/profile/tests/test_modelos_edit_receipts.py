@@ -37,7 +37,7 @@ def _receipt(*, receipt_id: str = _RECEIPT_ID) -> ModeloEditMutationResultReceip
         work_unit_id=_WORK_UNIT_ID,
         calculation_revision_id=_CALCULATION_REVISION_ID,
         bucket_event_id=_BUCKET_EVENT_ID,
-        committed_at=datetime(1980, 8, 26, 9, 30, 0, tzinfo=UTC),
+        committed_at=datetime(2026, 8, 26, 9, 30, 0, tzinfo=UTC),
         result_destination="modelo/130/2025/1T/edit-result",
     )
 

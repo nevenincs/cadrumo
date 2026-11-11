@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -31,8 +30,7 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_CLOCK = datetime(1980, 5, 21, 10, 0, 0, tzinfo=UTC)
-_YEAR = newest_authored_edition("100")
+_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _BUCKET_ID = _PROFILE_ID
 _CCAA_BINDING = "renta-profile-tax-residence-ccaa"
@@ -46,7 +44,7 @@ def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
 
 @cache
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return published_authority_operation().snapshot("100", filing_year=_YEAR, period="0A")
+    return published_authority_operation().snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
@@ -75,8 +73,8 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )
@@ -86,8 +84,8 @@ def test_profile_source_resolver_fingerprints_storage_loaded_profile(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=snapshot.revision,
         ),
     )

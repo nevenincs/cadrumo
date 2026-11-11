@@ -7,16 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _RATE_21 = IvaRate.from_registry("RATE_21")
@@ -43,7 +39,7 @@ def _build(*, lines: tuple[InvoiceLine, ...] | None = None, taxable_base: Decima
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="LINES-001",
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         currency="EUR",
         rate_provider=exchange_rate_provider(),
         taxable_base=taxable_base,

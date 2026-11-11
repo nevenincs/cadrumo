@@ -12,7 +12,6 @@ from cadrumo.adapters.persistence.profile.participation_index import Transaction
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.participation_writes import build_participation_writes
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.participation_index import TransactionRevisionParticipation
@@ -21,21 +20,20 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "0f4f3a52-9a3b-4f6e-8d0e-6a1b7c2d9e11"
-_EXERCISE = filing_year_envelope().horizon
-_T0 = datetime(1980, 7, 1, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
 _TX_A = "a" * 64
 _TX_B = "b" * 64
 _REVISION_ID = "c" * 64
 _WORK_UNIT_ID = "d" * 64
 _FILING_ID = "e" * 64
-_PERIOD = Period.from_year_and_code(_EXERCISE, "2T")
+_PERIOD = Period.from_year_and_code(2024, "2T")
 
 
 def _work_unit() -> WorkUnit:
     return WorkUnit.model_construct(
         work_unit_id=_WORK_UNIT_ID,
         modelo=ModeloCode("303"),
-        filing_year=_EXERCISE,
+        filing_year=2024,
         period=_PERIOD,
     )
 
@@ -52,7 +50,7 @@ def _expected(state: str, filing_record_id: str | None) -> TransactionRevisionPa
         calculation_revision_id=_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
         modelo=ModeloCode("303"),
-        filing_year=_EXERCISE,
+        filing_year=2024,
         period=_PERIOD,
         revision_state=state,
         filing_record_id=filing_record_id,

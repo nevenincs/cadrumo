@@ -14,7 +14,7 @@ from ..profile_access import status_admits_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AT = datetime(1980, 6, 1, 12, tzinfo=UTC)
+_AT = datetime(2026, 6, 1, 12, tzinfo=UTC)
 _PROFILE = UUID(int=1)
 _SESSION = UUID(int=2)
 

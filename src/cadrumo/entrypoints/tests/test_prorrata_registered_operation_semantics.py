@@ -44,7 +44,6 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.prorrata_register_catalogue import prorrata_sector_letters
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.prorrata_register.register import ProrrataRegister, SectorDefinition
 from .prorrata_operation_test_support import (
     ProrrataWholeSeedRefusalCase,
@@ -57,8 +56,6 @@ _PROFILE_ID = UUID("517e31f8-91b9-47b6-9ac1-3e12cc773c4f")
 _runtime_profile = bucket_scoped_runtime_profile_fixture(str(_PROFILE_ID))
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 @dataclass
@@ -318,7 +315,7 @@ def test_repeating_a_whole_seed_keeps_one_canonical_entry(
     assert first_projection.count == second_projection.count == 1
     assert after_first == after_second
     assert len(after_second.entries) == 1
-    assert after_second.entry_for(_YEAR) == case.expected_entry
+    assert after_second.entry_for(2026) == case.expected_entry
 
 
 def test_settle_sector_without_a_current_entry_refuses_without_writing(
@@ -336,7 +333,7 @@ def test_settle_sector_without_a_current_entry_refuses_without_writing(
         before = service.list_all()
     request = ProrrataSettleSectorRequest(
         profile_id=_PROFILE_ID,
-        ejercicio=_YEAR,
+        ejercicio=2026,
         sector_id=sector_id,
         con_derecho_volume=PublicDecimal(decimal="100"),
         sin_derecho_volume=PublicDecimal(decimal="0"),
@@ -363,7 +360,7 @@ def test_settle_sector_without_a_current_entry_refuses_without_writing(
             operation=authority_operation,
         ).list_all()
     assert after == before
-    assert after.entry_for(_YEAR, sector_id=sector_id) is None
+    assert after.entry_for(2026, sector_id=sector_id) is None
 
 
 def _declare_gross(
@@ -373,13 +370,13 @@ def _declare_gross(
     operation_number: int,
     period: str = "1T",
     amount: str = "400.00",
-    evidence: str = f"operator-evidence:303-{_YEAR}-1T",
+    evidence: str = "operator-evidence:303-2026-1T",
     sector_id: str | None = None,
     replace: bool = False,
 ) -> tuple[str | OperationRefusalEvidence, ProrrataMutationProjection, _Events]:
     request = ProrrataDeclareGrossRequest(
         profile_id=_PROFILE_ID,
-        ejercicio=_YEAR,
+        ejercicio=2026,
         period=period,
         sector_id=sector_id,
         gross_cuota=PublicDecimal(decimal=amount),
@@ -410,7 +407,7 @@ def _register(authority_operation: PinnedAuthorityOperation) -> ProrrataRegister
 
 
 def _q(code: str) -> Period:
-    return Period.from_year_and_code(_YEAR, code)
+    return Period.from_year_and_code(2026, code)
 
 
 def test_declare_gross_persists_an_operator_declared_period_base(
@@ -432,7 +429,7 @@ def test_declare_gross_persists_an_operator_declared_period_base(
     stored = _register(authority_operation).gross_declaration_for(_q("1T"), sector_id=None)
     assert stored is not None
     assert stored.gross_cuota == Decimal("400.00")
-    assert stored.evidence_reference == f"operator-evidence:303-{_YEAR}-1T"
+    assert stored.evidence_reference == "operator-evidence:303-2026-1T"
     assert started <= stored.declared_at <= datetime.now(UTC)
     assert projection.gross_declaration.declared_at == stored.declared_at
 
@@ -450,7 +447,7 @@ def test_declare_gross_refuses_a_duplicate_unless_replacing(
     assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.NONE]
     assert refused.refusal is not None
     assert refused.refusal.reason == "gross_declaration_duplicate"
-    assert refused.refusal.ejercicio == _YEAR
+    assert refused.refusal.ejercicio == 2026
     assert _register(authority_operation) == before
 
     returned, replaced, _ = _declare_gross(
@@ -554,7 +551,7 @@ def test_remove_gross_deletes_only_the_named_declaration_and_refuses_an_absent_o
 
     def remove(period: str, operation_number: int) -> tuple[str | OperationRefusalEvidence, ProrrataMutationProjection]:
         returned, execution, _, identity = _run_executor(
-            ProrrataRemoveGrossRequest(profile_id=_PROFILE_ID, ejercicio=_YEAR, period=period),
+            ProrrataRemoveGrossRequest(profile_id=_PROFILE_ID, ejercicio=2026, period=period),
             definition_id=PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID,
             authority_operation=authority_operation,
             monkeypatch=monkeypatch,

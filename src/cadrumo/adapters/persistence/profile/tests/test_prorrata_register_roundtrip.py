@@ -46,7 +46,6 @@ from .....core.prorrata_register import (
 )
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from .....domain.prorrata_register.register import (
     PRORRATA_REGISTER_SCHEMA_VERSION,
@@ -70,9 +69,6 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
-_EJERCICIO = filing_year_envelope().horizon
-_PRIOR_EJERCICIO = _EJERCICIO - 1
-
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
     return (
@@ -87,32 +83,32 @@ def test_repository_satisfies_the_revisioned_prorrata_port(tmp_path: Path) -> No
 
 def _populated_register() -> ProrrataRegister:
     carried_settled = ProrrataRegisterEntry(
-        ejercicio=_EJERCICIO,
+        ejercicio=2024,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-        source_observation_ref=f"303:{_PRIOR_EJERCICIO}:4T",
-        source_registry_snapshot_refs=(_m303_snapshot_ref(_PRIOR_EJERCICIO),),
+        source_observation_ref="303:2023:4T",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         definitive_percentage=Decimal("77"),
         definitive_volume_con_derecho=Decimal("154000.00"),
         definitive_volume_sin_derecho=Decimal("46000.00"),
     )
     authorised_sector = ProrrataRegisterEntry(
-        ejercicio=_EJERCICIO,
+        ejercicio=2024,
         regime=ProrrataRegisterRegime.from_registry("especial"),
         sector_id="arrendamiento",
         provisional_percentage=Decimal("60"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
-        authorisation_reference=f"AEAT-AUTH-{_EJERCICIO}-0007",
+        authorisation_reference="AEAT-AUTH-2024-0007",
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
-            evidence_reference=f"modelo-303-{_EJERCICIO}-prorrata-opcion",
+            evidence_reference="modelo-303-2024-prorrata-opcion",
         ),
         source_registry_snapshot_refs=(),
     )
     interrupted = ProrrataRegisterEntry(
-        ejercicio=_PRIOR_EJERCICIO,
+        ejercicio=2023,
         regime=ProrrataRegisterRegime.from_registry("ninguna"),
         especial_transition=None,
         interrupted=True,
@@ -124,19 +120,19 @@ def _populated_register() -> ProrrataRegister:
         member_activity_codes=("6820",),
     )
     whole_gross = ProrrataOperatorGrossDeclaration(
-        ejercicio=_EJERCICIO,
-        period=Period.from_year_and_code(_EJERCICIO, "1T"),
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "1T"),
         gross_cuota=Decimal("400.00"),
-        evidence_reference=f"operator-evidence:303-{_EJERCICIO}-1T",
-        declared_at=datetime(1980, 11, 4, 9, 30, tzinfo=UTC),
+        evidence_reference="operator-evidence:303-2024-1T",
+        declared_at=datetime(2024, 11, 4, 9, 30, tzinfo=UTC),
     )
     sector_gross = ProrrataOperatorGrossDeclaration(
-        ejercicio=_EJERCICIO,
-        period=Period.from_year_and_code(_EJERCICIO, "2T"),
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "2T"),
         sector_id="arrendamiento",
         gross_cuota=Decimal("420.15"),
-        evidence_reference=f"operator-evidence:303-{_EJERCICIO}-2T-arrendamiento",
-        declared_at=datetime(1980, 11, 4, 9, 45, tzinfo=UTC),
+        evidence_reference="operator-evidence:303-2024-2T-arrendamiento",
+        declared_at=datetime(2024, 11, 4, 9, 45, tzinfo=UTC),
     )
     return ProrrataRegister(
         entries=(carried_settled, authorised_sector, interrupted),
@@ -147,7 +143,7 @@ def _populated_register() -> ProrrataRegister:
 
 def _activity_row(*, activity_id: str, slot: int) -> ProrrataActivityRow:
     return ProrrataActivityRow(
-        ejercicio=_EJERCICIO,
+        ejercicio=2024,
         activity_id=activity_id,
         slot=slot,
         cnae_code="471",
@@ -164,8 +160,8 @@ def _assert_carried_settled_entry(loaded: ProrrataRegister) -> None:
     assert carried.regime == ProrrataRegisterRegime.from_registry("general")
     assert carried.provisional_percentage == Decimal("80")
     assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
-    assert carried.source_observation_ref == f"303:{_PRIOR_EJERCICIO}:4T"
-    assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(_PRIOR_EJERCICIO),)
+    assert carried.source_observation_ref == "303:2023:4T"
+    assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
     assert carried.definitive_percentage == Decimal("77")
     assert carried.definitive_volume_con_derecho == Decimal("154000.00")
     assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
@@ -176,10 +172,10 @@ def _assert_authorised_sector_entry(loaded: ProrrataRegister) -> None:
     assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
     assert authorised.sector_id == "arrendamiento"
     assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
-    assert authorised.authorisation_reference == f"AEAT-AUTH-{_EJERCICIO}-0007"
+    assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
     assert authorised.especial_transition is not None
     assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
-    assert authorised.especial_transition.evidence_reference == f"modelo-303-{_EJERCICIO}-prorrata-opcion"
+    assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
     assert loaded.is_sectorized is True
     sector_definition = loaded.sector_definition_for("arrendamiento")
     assert sector_definition is not None
@@ -190,18 +186,18 @@ def _assert_authorised_sector_entry(loaded: ProrrataRegister) -> None:
 def _assert_interrupted_and_gross_declarations(loaded: ProrrataRegister) -> None:
     # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
     # encrypted boundary: an inactive ejercicio carries no percentage/volume.
-    interrupted = loaded.entry_for(_PRIOR_EJERCICIO)
+    interrupted = loaded.entry_for(2023)
     assert interrupted is not None
     assert interrupted.interrupted is True
     assert interrupted.provisional_percentage is None
     assert interrupted.definitive_percentage is None
-    sector_gross = loaded.gross_declaration_for(Period.from_year_and_code(_EJERCICIO, "2T"), sector_id="arrendamiento")
+    sector_gross = loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id="arrendamiento")
     assert sector_gross is not None
     assert sector_gross.gross_cuota == Decimal("420.15")
-    assert sector_gross.evidence_reference == f"operator-evidence:303-{_EJERCICIO}-2T-arrendamiento"
+    assert sector_gross.evidence_reference == "operator-evidence:303-2024-2T-arrendamiento"
     assert sector_gross.provenance == "operator_declared"
-    assert sector_gross.declared_at == datetime(1980, 11, 4, 9, 45, tzinfo=UTC)
-    assert loaded.gross_declaration_for(Period.from_year_and_code(_EJERCICIO, "2T"), sector_id=None) is None
+    assert sector_gross.declared_at == datetime(2024, 11, 4, 9, 45, tzinfo=UTC)
+    assert loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id=None) is None
 
 
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
@@ -358,12 +354,12 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="789a648c-8348-42bc-b1b4-425b2de7d703"):
         repository = ProrrataRegisterRepository()
         first = ProrrataRegisterEntry(
-            ejercicio=_EJERCICIO,
+            ejercicio=2024,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-            source_registry_snapshot_refs=(_m303_snapshot_ref(_PRIOR_EJERCICIO),),
+            source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         )
         repository.upsert_entry(first)
         settled = first.model_copy(
@@ -374,8 +370,8 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
             }
         )
         register = repository.upsert_entry(settled)
-        assert len(register.entries_for_ejercicio(_EJERCICIO)) == 1
-        assert register.entry_for(_EJERCICIO) == settled
+        assert len(register.entries_for_ejercicio(2024)) == 1
+        assert register.entry_for(2024) == settled
 
 
 def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None:
@@ -386,7 +382,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
         upsert_activity_row(repo, retail)
         repo.upsert_entry(
             ProrrataRegisterEntry(
-                ejercicio=_EJERCICIO,
+                ejercicio=2024,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -402,10 +398,10 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
         replacement = retail.model_copy(update={"operaciones_total": Decimal("1250.00")})
         saved = upsert_activity_row(repo, replacement)
 
-        assert saved.activity_rows_for_ejercicio(_EJERCICIO) == (replacement,)
+        assert saved.activity_rows_for_ejercicio(2024) == (replacement,)
         loaded = repo.load()
-        assert loaded.activity_rows_for_ejercicio(_EJERCICIO) == (replacement,)
-        assert loaded.entry_for(_EJERCICIO) is not None
+        assert loaded.activity_rows_for_ejercicio(2024) == (replacement,)
+        assert loaded.entry_for(2024) is not None
         assert loaded.sector_definition_for("retail") is not None
 
 

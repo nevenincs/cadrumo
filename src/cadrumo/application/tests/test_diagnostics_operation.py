@@ -67,7 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("3a3a3a3a-3a3a-4a3a-8a3a-3a3a3a3a3a3a")
 _OTHER = UUID("4b4b4b4b-4b4b-4b4b-8b4b-4b4b4b4b4b4b")
 _PIN = cast(PinnedAuthorityOperation, object())
-_NOW = datetime(1980, 10, 1, 12, tzinfo=UTC)
+_NOW = datetime(2026, 10, 1, 12, tzinfo=UTC)
 
 
 class _Runs:
@@ -82,7 +82,7 @@ class _Runs:
                 duration_ms=duration,
                 succeeded=succeeded,
                 error_kind="timeout" if not succeeded else "",
-                started_at=datetime(1980, 4, day, tzinfo=UTC),
+                started_at=datetime(2026, 4, day, tzinfo=UTC),
             )
             for run_id, provider, model, duration, succeeded, day in (
                 ("a", "claude", "model-a", 100, True, 1),
@@ -227,8 +227,8 @@ async def test_read_preserves_complete_canonical_report_and_filters(
         payload=DiagnosticsReadRequest(
             profile_id=_PROFILE,
             kind=kind,
-            since=date(1980, 4, 1),
-            until=date(1980, 4, 2),
+            since=date(2026, 4, 1),
+            until=date(2026, 4, 2),
             provider="claude",
             limit=1 if kind == "runs" else None,
         ),
@@ -332,7 +332,7 @@ def test_strict_read_filters_and_selected_report_refuse_invalid_shapes() -> None
     with pytest.raises(ValidationError):
         DiagnosticsReadRequest(profile_id=_PROFILE, kind="latency", limit=1)
     with pytest.raises(ValidationError):
-        DiagnosticsReadRequest(profile_id=_PROFILE, kind="runs", since=date(1980, 4, 2), until=date(1980, 4, 1))
+        DiagnosticsReadRequest(profile_id=_PROFILE, kind="runs", since=date(2026, 4, 2), until=date(2026, 4, 1))
     with pytest.raises(ValidationError):
         DiagnosticsReadProjection(profile_id=_PROFILE, kind="runs")
     empty = DiagnosticsReadProjection(profile_id=_PROFILE, kind="runs", runs=())

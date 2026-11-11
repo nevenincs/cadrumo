@@ -45,14 +45,13 @@ from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from cadrumo.domain.renta.retencion_soportada_absence import RetencionSoportadaAbsenceState
 from cadrumo.entrypoints.retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _PROFILE = "3f1c8b2e-5d4a-4e6b-9c7d-0a1b2c3d4e5f"
-_EJERCICIO = newest_authored_edition("100")
+_EJERCICIO = 2025
 _NOTE = "Synthetic note: no payer withheld on this income."
 
 
@@ -310,7 +309,7 @@ def test_every_refusal_reason_serves_its_own_sentence_in_the_workers_language(
             RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
             RetencionSoportadaAbsenceAttestRequest(
                 profile_id=UUID(_PROFILE),
-                ejercicio=filing_year_envelope().floor - 1,
+                ejercicio=2000,
                 income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
                 note=_NOTE,
             ),

@@ -7,7 +7,7 @@ document (LIVA art. 75 for accrual, art. 97 and RIVA art. 99 for deduction),
 and the movement only evidences payment.
 
 The figures are a miniature of an independent oracle computed from official
-instructions alone, never from this application: 303 1T declares base
+instructions alone, never from this application: 303 2025 1T declares base
 6000.00 and cuota 1260.00 at 21 % (07, 09), a deductible domestic base 2550.00
 with cuota 535.50 (28, 29), an intra-community supply of 1500.00 (59), and a
 result of 724.50 (46, 71).
@@ -86,7 +86,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.models import Invoice
@@ -113,49 +112,22 @@ from .ready_profile_taxpayer import ready_profile_tax_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET = "44444444-4444-4444-8444-444444444303"
-_YEAR = filing_year_envelope().horizon
-_T0 = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
-_T1 = datetime(_YEAR, 4, 2, 10, 0, tzinfo=UTC)
+_YEAR = 2025
+_T0 = datetime(2025, 4, 2, 9, 0, tzinfo=UTC)
+_T1 = datetime(2025, 4, 2, 10, 0, tzinfo=UTC)
 
 #: Issued invoices: number, date, counterparty, tax id, country, base, rate %, retención.
 _ISSUED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decimal], ...] = (
-    (
-        f"{_YEAR}-001",
-        date(_YEAR, 1, 15),
-        "Alfa SL",
-        "B81000010",
-        "ES",
-        Decimal("2000.00"),
-        Decimal("21"),
-        Decimal("300.00"),
-    ),
-    (f"{_YEAR}-002", date(_YEAR, 1, 31), "Kunde GmbH", "DE123456788", "DE", Decimal("1500.00"), None, Decimal("0")),
-    (
-        f"{_YEAR}-003",
-        date(_YEAR, 2, 14),
-        "Beta SL",
-        "B81000028",
-        "ES",
-        Decimal("2000.00"),
-        Decimal("21"),
-        Decimal("300.00"),
-    ),
-    (
-        f"{_YEAR}-004",
-        date(_YEAR, 3, 14),
-        "Alfa SL",
-        "B81000010",
-        "ES",
-        Decimal("2000.00"),
-        Decimal("21"),
-        Decimal("300.00"),
-    ),
+    ("2025-001", date(2025, 1, 15), "Alfa SL", "B81000010", "ES", Decimal("2000.00"), Decimal("21"), Decimal("300.00")),
+    ("2025-002", date(2025, 1, 31), "Kunde GmbH", "DE123456788", "DE", Decimal("1500.00"), None, Decimal("0")),
+    ("2025-003", date(2025, 2, 14), "Beta SL", "B81000028", "ES", Decimal("2000.00"), Decimal("21"), Decimal("300.00")),
+    ("2025-004", date(2025, 3, 14), "Alfa SL", "B81000010", "ES", Decimal("2000.00"), Decimal("21"), Decimal("300.00")),
 )
 #: Received invoices, same shape.
 _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decimal], ...] = (
     (
-        f"CLO-{_YEAR}-001",
-        date(_YEAR, 1, 5),
+        "CLO-2025-001",
+        date(2025, 1, 5),
         "Cloud Ejemplo SA",
         "A81000051",
         "ES",
@@ -164,8 +136,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("0"),
     ),
     (
-        f"INM-{_YEAR}-001",
-        date(_YEAR, 1, 20),
+        "INM-2025-001",
+        date(2025, 1, 20),
         "Inmobiliaria Ficticia SL",
         "B81000044",
         "ES",
@@ -174,8 +146,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("95.00"),
     ),
     (
-        f"CLO-{_YEAR}-002",
-        date(_YEAR, 2, 5),
+        "CLO-2025-002",
+        date(2025, 2, 5),
         "Cloud Ejemplo SA",
         "A81000051",
         "ES",
@@ -184,8 +156,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("0"),
     ),
     (
-        f"INM-{_YEAR}-002",
-        date(_YEAR, 2, 20),
+        "INM-2025-002",
+        date(2025, 2, 20),
         "Inmobiliaria Ficticia SL",
         "B81000044",
         "ES",
@@ -194,8 +166,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("95.00"),
     ),
     (
-        f"GES-{_YEAR}-001",
-        date(_YEAR, 2, 28),
+        "GES-2025-001",
+        date(2025, 2, 28),
         "Gestoría Ejemplo SLP",
         "B81000069",
         "ES",
@@ -204,8 +176,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("45.00"),
     ),
     (
-        f"CLO-{_YEAR}-003",
-        date(_YEAR, 3, 5),
+        "CLO-2025-003",
+        date(2025, 3, 5),
         "Cloud Ejemplo SA",
         "A81000051",
         "ES",
@@ -214,8 +186,8 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
         Decimal("0"),
     ),
     (
-        f"INM-{_YEAR}-003",
-        date(_YEAR, 3, 20),
+        "INM-2025-003",
+        date(2025, 3, 20),
         "Inmobiliaria Ficticia SL",
         "B81000044",
         "ES",
@@ -225,7 +197,7 @@ _RECEIVED: tuple[tuple[str, date, str, str, str, Decimal, Decimal | None, Decima
     ),
 )
 
-#: The oracle's 303 1T, from official instructions only. The form prints the
+#: The oracle's 303 2025 1T, from official instructions only. The form prints the
 #: régimen general result as [46]; the registry holds it as a computed box under its role.
 _ORACLE: dict[str, Decimal] = {
     "07": Decimal("6000.00"),
@@ -511,8 +483,8 @@ def test_each_invoice_is_declared_once_and_no_movement_is_a_source(
 #: from its figures alone the good may be a bien de inversión, so the invoice cannot ground
 #: the deduction family and the person classifies the movement that paid it.
 _EQUIPMENT = (
-    f"CLO-{_YEAR}-004",
-    date(_YEAR, 3, 10),
+    "CLO-2025-004",
+    date(2025, 3, 10),
     "Cloud Ejemplo SA",
     "A81000051",
     "ES",
@@ -590,7 +562,7 @@ def test_the_to_do_list_names_the_movement_calculation_would_refuse(
 
     assert hold is not None
     assert hold.transaction_id == paying
-    assert f"PAGO Cloud Ejemplo SA CLO-{_YEAR}-004" in hold.words
+    assert "PAGO Cloud Ejemplo SA CLO-2025-004" in hold.words
     assert "clasifica el movimiento" in hold.words
     assert paying not in hold.words
     assert "invoice_deduction_family_unresolved" not in hold.words

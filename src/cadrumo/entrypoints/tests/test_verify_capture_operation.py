@@ -48,7 +48,6 @@ from ...core.operations import (
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
 from .supervised_operation_rig import (
     build_supervised_operation,
@@ -60,7 +59,7 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(filing_year_envelope().horizon, 9, 29, 12, tzinfo=UTC)
+_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 _FOREIGN_PROFILE_ID = UUID("22222222-2222-4222-8222-222222222222")
 _NIF = "B00015016"

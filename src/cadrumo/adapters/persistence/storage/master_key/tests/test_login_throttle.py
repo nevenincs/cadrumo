@@ -39,7 +39,7 @@ from ..login_throttle import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_NOW = datetime(1980, 5, 14, 12, 0, 0, tzinfo=UTC)
+_NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 
 

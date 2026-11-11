@@ -17,12 +17,9 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
 from cadrumo.entrypoints.cli.ledger_support import ledger_invoice_validation_no_recovery
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 _EXPECTED_ACTION = {
@@ -79,7 +76,7 @@ def _invoice_payload(*, counterparty_country: object = "DE") -> dict[str, object
         return {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "S130-ORDINARY-COERCION",
-            "issued_at": date(_YEAR, 3, 15),
+            "issued_at": date(2026, 3, 15),
             "counterparty_name": "Test Counterparty GmbH",
             "counterparty_tax_id": "DE123456789",
             "counterparty_country": counterparty_country,

@@ -69,7 +69,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .observation_seeding_support import save_local_m303_compensacion_filings
 from .ready_profile_taxpayer import ready_profile_tax_id
@@ -87,9 +86,9 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(filing_year_envelope().horizon, 1, 20, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 20, 11, 0, tzinfo=UTC)
-_YEAR = filing_grade_exercises("390")[-1]
+_T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
+_YEAR = 2025
 _TAX_ID = ready_profile_tax_id()
 
 
@@ -205,7 +204,7 @@ _ANNUAL_PARTITION_SOURCE = "iva_compensation_annual_partition"
 
 
 def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
-    """Persist one M303 filing observation per quarter carrying the five fold casillas.
+    """Persist one M303/2025 filing observation per quarter carrying the five fold casillas.
 
     Persisted through the production observation-persistence API
     (:meth:`CalculationObservationRepository.save_observation`) — the same write
@@ -218,7 +217,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
-    """Run the live M390 0A calculate over the seeded bucket.
+    """Run the live M390/2025/0A calculate over the seeded bucket.
 
     The ``relation_prefill`` and ``iva_compensation_annual_partition``
     bindings are deliberately left UNSET
@@ -253,8 +252,8 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
 ) -> None:
     """E2E: filed M303 quarters feed M390 annual relations and compensation partition.
 
-    With four M303 quarterly observations seeded (each carrying the
-    fold casillas with DISTINCT values), a live calculate of the M390 annual
+    With four M303/2025 quarterly observations seeded (each carrying the
+    fold casillas with DISTINCT values), a live calculate of the M390/2025 annual
     draws four ``cross_model_output`` relations through the enrolled
     :class:`RelationPrefillSourceResolver` and the two compensation boxes through
     ``IvaCompensationAnnualPartitionSourceResolver``:

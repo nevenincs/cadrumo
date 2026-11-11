@@ -61,7 +61,6 @@ from ......core.i18n.render import lookup_translation, tr
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema import RegistrySnapshot
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -96,14 +95,12 @@ from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, regi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 _LANGUAGES = tuple(OutputLanguage)
 _EMPTY_KEY = "workspace.modelo.origin.optional_empty"
 _HELD_ZERO_KEY = "workspace.modelo.origin_held_zero.optional_empty"
 _FORM_SET_KEY = "workspace.modelo.origin_source.imported.fixed_by_design"
 _ZERO = "0.00\u00a0€"
-_IMPORTED_AT = datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC)
+_IMPORTED_AT = datetime(2026, 4, 2, 10, 30, tzinfo=UTC)
 
 
 def _empty() -> ModeloFormField:
@@ -459,7 +456,7 @@ def _carried(*, filings: tuple[ModeloFormEarlierFiling, ...] = ()) -> ModeloForm
 @pytest.mark.parametrize("language", _LANGUAGES)
 def test_a_carry_with_no_earlier_declaration_says_so_and_names_no_filing(language: OutputLanguage) -> None:
     none = _carried()
-    named = _carried(filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(_YEAR, "1T")),))
+    named = _carried(filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2026, "1T")),))
     form = _with_fields(synthetic_form(), {"01": none.model_copy(update={"box": "01"})})
     with override_settings(cadrumo_output_language=language.value):
         words = tr("workspace.modelo.origin_source.imported.earlier_filings_none")
@@ -509,7 +506,7 @@ def _real_form(
     operation: PinnedAuthorityOperation,
     modelo: str,
     code: str,
-    year: int = _YEAR,
+    year: int = 2026,
     figure: Decimal | None = None,
     findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
@@ -622,7 +619,7 @@ async def test_enter_on_a_finding_about_the_operator_records_lands_on_the_operat
 def test_a_calculated_rate_box_reads_its_rows_grounded_rate_and_one_with_no_grounded_rate_and_no_base_a_dot(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = _real_form(operation, "303", "1T", _YEAR, Decimal("0"))
+    form = _real_form(operation, "303", "1T", 2026, Decimal("0"))
     with override_settings(cadrumo_output_language="en"):
         entries = {
             item.field.box: item

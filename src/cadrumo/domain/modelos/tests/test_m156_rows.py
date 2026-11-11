@@ -7,7 +7,6 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..m156_rows import Modelo156AfiliadoRow, Modelo156MonthlyContribution
 from ..row_models import ModeloDetailRow
@@ -112,14 +111,14 @@ def test_each_month_fact_participates_in_revision_identity(month: int, field: st
 
 def test_calculation_revision_json_retains_both_member_records() -> None:
     rows = (_member(), _member(number="001234567891", amount=Decimal("0")))
-    timestamp = datetime(1980, 12, 31, tzinfo=UTC)
+    timestamp = datetime(2025, 12, 31, tzinfo=UTC)
     revision = CalculationRevision(
         calculation_revision_id=_identity(*rows),
         work_unit_id="a" * 64,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="156",
-            revision_id=str(revision_covering("156", filing_year_envelope().horizon).id),
-            modelo_year=filing_year_envelope().horizon,
+            revision_id="2003-y-siguientes",
+            modelo_year=2025,
             period="0A",
         ),
         state=CalculationRevisionState.BORRADOR,

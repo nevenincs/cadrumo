@@ -100,7 +100,7 @@ def test_native_profile_history_preserves_full_events_filters_and_exact_target(t
         first = _event(
             profile_id=profile_id,
             event_type=BucketEventType.PROFILE_RENAMED,
-            occurred_at=datetime(1980, 2, 1, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 2, 1, 9, 0, tzinfo=UTC),
             actor="history.first",
             object_id="history-record-1",
             payload={"change": "first", "source": "native-test"},
@@ -108,7 +108,7 @@ def test_native_profile_history_preserves_full_events_filters_and_exact_target(t
         second = _event(
             profile_id=profile_id,
             event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-            occurred_at=datetime(1980, 2, 2, 12, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 2, 2, 12, 0, tzinfo=UTC),
             actor="history.second",
             object_id="history-record-2",
             payload={"change": "second", "source": "native-test"},
@@ -156,9 +156,9 @@ def test_native_profile_history_preserves_full_events_filters_and_exact_target(t
             "--event-type",
             BucketEventType.PROFILE_VALUES_UPDATED.value,
             "--since",
-            "1980-02-02",
+            "2026-02-02",
             "--until",
-            "1980-02-02T23:59:59+00:00",
+            "2026-02-02T23:59:59+00:00",
             "--object-id",
             "history-record-2",
             "--actor",
@@ -169,8 +169,8 @@ def test_native_profile_history_preserves_full_events_filters_and_exact_target(t
             operation="config.bucket.history",
             bucket_id=profile_id,
             event_types=[BucketEventType.PROFILE_VALUES_UPDATED],
-            since=datetime(1980, 2, 2, tzinfo=UTC),
-            until=datetime(1980, 2, 2, 23, 59, 59, tzinfo=UTC),
+            since=datetime(2026, 2, 2, tzinfo=UTC),
+            until=datetime(2026, 2, 2, 23, 59, 59, tzinfo=UTC),
             object_id="history-record-2",
             actor="history.second",
             events=[_event_payload(second)],
@@ -181,8 +181,8 @@ def test_native_profile_history_preserves_full_events_filters_and_exact_target(t
         expected_filtered_projection = BucketHistoryResult.model_validate_json(json.dumps(expected_filtered_payload))
         assert filtered_result == expected_filtered_projection
         assert filtered_result.event_types == [BucketEventType.PROFILE_VALUES_UPDATED]
-        assert filtered_result.since == datetime(1980, 2, 2, tzinfo=UTC)
-        assert filtered_result.until == datetime(1980, 2, 2, 23, 59, 59, tzinfo=UTC)
+        assert filtered_result.since == datetime(2026, 2, 2, tzinfo=UTC)
+        assert filtered_result.until == datetime(2026, 2, 2, 23, 59, 59, tzinfo=UTC)
         assert filtered_result.object_id == "history-record-2"
         assert filtered_result.actor == "history.second"
         assert filtered_result.events == [_event_payload(second)]

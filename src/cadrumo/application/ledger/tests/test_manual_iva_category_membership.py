@@ -20,7 +20,6 @@ from ....domain.attachments.models import Attachment
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
@@ -37,13 +36,11 @@ from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatc
 from ..persistence_ports import LedgerPersistenceConflictError
 from .manual_transaction_support import create_manual_transaction
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "21000000-0000-4000-8000-000000000001"
-_BOOKED = date(_YEAR, 5, 2)
-_NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
+_BOOKED = date(2026, 5, 2)
+_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _ATTACHMENT_ID = "a" * 64
 
 

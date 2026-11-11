@@ -28,16 +28,12 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...calculations.registry.iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ..errors import IvaValidationError
 from ..schema import InvoiceKind, IvaArt69DosService, IvaCategory, IvaRateKind, IvaTerritorialScope
 from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
-_ON = date(_YEAR, 6, 15)
 
 #: The three territories art. 3 places outside the Comunidad, which is the reach
 #: the goods export row needs and the B2B services row shares.
@@ -59,7 +55,7 @@ _SUBJECT_AT_A_SPANISH_RATE = frozenset(
 
 def _art_69_dos_services() -> tuple[IvaArt69DosService, ...]:
     with bundled_indexed_authority().operation() as operation:
-        catalogue = resolve_iva_art69_dos_service_catalogue(effective_date=_ON, authority=operation)
+        catalogue = resolve_iva_art69_dos_service_catalogue(effective_date=date(2025, 6, 15), authority=operation)
     return tuple(definition.token for definition in catalogue.definitions)
 
 
@@ -77,7 +73,7 @@ def _outbound_service(
     """A mainland issuer's general service, billed outward."""
     return IvaInvoiceClassificationCriteria.model_validate(
         {
-            "transaction_date": _ON,
+            "transaction_date": date(2025, 6, 15),
             "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
             "customer_residency": customer_residency,
             "customer_tax_status": customer_tax_status,

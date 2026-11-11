@@ -20,13 +20,10 @@ passes with the boundary broken, this test says so instead of quietly agreeing.
 from __future__ import annotations
 
 import json
-from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
-
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ....core.field_grounding import FieldGroundingOutcome
@@ -43,8 +40,6 @@ from ..invoice_draft_records import (
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,7 +83,7 @@ def fully_populated_draft() -> InvoiceDraft:
         invoice_series="FA",
         rectifies_invoice_number="0028",
         proposed_supply_nature=SupplyNature.SERVICES,
-        invoice_date=date(_YEAR, 3, 14).isoformat(),
+        invoice_date="2026-03-14",
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("210.00"),

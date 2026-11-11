@@ -15,13 +15,10 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,14 +34,14 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="wrong account import",
                 idempotency_key="archive-row",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
         archived = archive_manual_transaction(
             bucket_id=BUCKET_ID,
@@ -52,7 +49,7 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_o
             actor="operator-A",
             reason="wrong account import",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
@@ -83,14 +80,14 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="hold for later classification",
                 idempotency_key="stash-row",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
         stashed = stash_manual_transaction(
             bucket_id=BUCKET_ID,
@@ -98,7 +95,7 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_obj
             actor="operator-A",
             reason="needs supporting statement",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)

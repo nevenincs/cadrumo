@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -17,7 +17,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -35,8 +34,7 @@ __all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_DECIDED_AT = datetime(_YEAR, 4, 1, tzinfo=UTC)
+_DECIDED_AT = datetime(2026, 4, 1, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -61,7 +59,7 @@ def _store_current_profile(
                     UserProfileFact(path="identity.name", value="M303"),
                     UserProfileFact(path="identity.surnames", value="Operator"),
                     UserProfileFact(path="activities.description", value="economic activity"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1).isoformat()),
+                    UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
                     *(
                         (UserProfileFact(path="activities.iae_epigraph", value=iae_epigraph),)
                         if iae_epigraph is not None
@@ -89,7 +87,7 @@ def _m303_work_id() -> str:
             "--modelo",
             "303",
             "--year",
-            str(_YEAR),
+            "2025",
             "--period",
             "1T",
         ]
@@ -104,9 +102,9 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
     IvaWalletDecisionRepository(objects=runtime_profile.repository).save_decision(
         IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
-            target_year=_YEAR,
-            target_period=Period.from_year_and_code(_YEAR, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref,
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "1T"),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
             source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("0.00"),

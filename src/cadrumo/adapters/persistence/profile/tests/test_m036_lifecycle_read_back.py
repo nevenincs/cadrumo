@@ -33,11 +33,8 @@ from cadrumo.application.modelo.m036_lifecycle import (
 )
 from cadrumo.application.modelo.m036_lifecycle_ports import M036LifecyclePorts
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _PROFILE_ID = "30303030-3030-4030-8030-303030303030"
 
@@ -69,7 +66,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
         alta = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
-                declared_on=date(_YEAR, 1, 10),
+                declared_on=date(2026, 1, 10),
                 justificante="ACUSE-ALTA-1",
                 note="Initial registration",
             ),
@@ -79,7 +76,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
         modificacion = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.MODIFICACION,
-                declared_on=date(_YEAR, 3, 15),
+                declared_on=date(2026, 3, 15),
                 justificante="ACUSE-MOD-1",
                 note="Domicilio fiscal update",
             ),
@@ -89,7 +86,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
         baja = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.BAJA,
-                declared_on=date(_YEAR, 12, 31),
+                declared_on=date(2026, 12, 31),
                 justificante="ACUSE-BAJA-1",
                 note="Deregistration",
             ),
@@ -110,7 +107,7 @@ def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
     # Every persisted field round-trips through the encrypted store.
     assert by_id[modificacion.declaration_id].sede_justificante == "ACUSE-MOD-1"
     assert by_id[modificacion.declaration_id].note == "Domicilio fiscal update"
-    assert by_id[modificacion.declaration_id].declared_on == date(_YEAR, 3, 15)
+    assert by_id[modificacion.declaration_id].declared_on == date(2026, 3, 15)
 
 
 def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> None:
@@ -127,14 +124,14 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(_YEAR, 1, 1)),
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 1)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.MODIFICACION,
-                declared_on=date(_YEAR, 5, 20),
+                declared_on=date(2026, 5, 20),
                 justificante="ACUSE-RB-EXACT",
                 note="Read-back exact-equality probe",
             ),
@@ -151,7 +148,7 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
     assert viewed == recorded
     assert viewed.sede_justificante == "ACUSE-RB-EXACT"
     assert viewed.note == "Read-back exact-equality probe"
-    assert viewed.declared_on == date(_YEAR, 5, 20)
+    assert viewed.declared_on == date(2026, 5, 20)
     assert viewed.recorded_at == recorded.recorded_at
 
 
@@ -161,7 +158,7 @@ def test_view_resolves_unambiguous_prefix(tmp_path: Path) -> None:
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
-                declared_on=date(_YEAR, 2, 2),
+                declared_on=date(2026, 2, 2),
                 justificante="ACUSE-PREFIX",
                 note="Prefix-resolution probe",
             ),
@@ -182,7 +179,7 @@ def test_view_unknown_id_refuses(tmp_path: Path) -> None:
     """An id matching no recorded declaration raises the not-found error."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         record_m036_declaration(
-            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(_YEAR, 6, 1)),
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 6, 1)),
             bucket_id=runtime.bucket_id,
             ports=_ports(runtime.bucket_id),
         )
@@ -217,7 +214,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
-                declared_on=date(_YEAR, 4, 4),
+                declared_on=date(2026, 4, 4),
                 justificante="ACUSE-PRESENT",
                 note="present",
             ),
@@ -227,7 +224,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
         never_recorded_id = derive_m036_declaration_id(
             profile_id=_PROFILE_ID,
             event_kind=CensoModeloEventKind.BAJA,
-            declared_on=date(_YEAR + 1, 1, 1),
+            declared_on=date(2027, 1, 1),
             sede_justificante="ACUSE-NEVER",
         )
 

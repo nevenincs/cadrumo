@@ -10,7 +10,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_effects import fields_cleared_by_classification, takes_expense_category
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import TransactionValidationError
@@ -30,11 +29,9 @@ from ..staged_check_contracts import (
 )
 from ..update_contracts import LedgerUpdatePatch, LedgerUpdateRequest
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(_YEAR, 3, 2, 10, tzinfo=UTC)
+_NOW = datetime(2026, 3, 2, 10, tzinfo=UTC)
 
 
 def _stored(
@@ -48,7 +45,7 @@ def _stored(
     built = transaction_from_command(
         ManualLedgerTransactionCommand(
             bucket_id=str(uuid4()),
-            booked_date=date(_YEAR, 3, 2),
+            booked_date=date(2026, 3, 2),
             amount=Decimal("36.30"),
             currency="EUR",
             direction=direction,
@@ -226,7 +223,7 @@ def test_a_staged_direction_decides_who_takes_a_category() -> None:
 def test_draft_category_projection_uses_direction_and_preserves_blockers(
     direction: str | None, expected: bool, missing: tuple[str, ...]
 ) -> None:
-    fields = {"booked_date": date(_YEAR, 3, 2).isoformat(), "amount": "10", "currency": "EUR"}
+    fields = {"booked_date": "2026-03-02", "amount": "10", "currency": "EUR"}
     if direction is not None:
         fields["direction"] = direction
     draft = LedgerStagedDraft(
@@ -271,11 +268,11 @@ def test_a_transfer_is_held_back_for_each_tax_field_it_carries() -> None:
 
 
 def test_an_accrual_date_is_read_back_held_back_on_a_transfer_and_needs_no_classification() -> None:
-    staged = check_stored_row(_row(("accrual_date", date(_YEAR, 3, 30).isoformat())), _stored())
+    staged = check_stored_row(_row(("accrual_date", "2026-03-30")), _stored())
     assert staged.blockers == ()
     assert staged.classifying_fields == ()
     held = check_stored_row(
-        _row(("direction", "INTERNAL_TRANSFER"), ("accrual_date", date(_YEAR, 3, 30).isoformat())),
+        _row(("direction", "INTERNAL_TRANSFER"), ("accrual_date", "2026-03-30")),
         _stored(),
     )
     assert next(blocker for blocker in held.blockers if blocker.kind == "transfer_with_tax").fields == ("accrual_date",)
@@ -283,11 +280,11 @@ def test_an_accrual_date_is_read_back_held_back_on_a_transfer_and_needs_no_class
 
 
 def test_an_operation_date_is_read_back_held_back_on_a_transfer_and_needs_no_classification() -> None:
-    staged = check_stored_row(_row(("operation_date", date(_YEAR, 3, 30).isoformat())), _stored())
+    staged = check_stored_row(_row(("operation_date", "2026-03-30")), _stored())
     assert staged.blockers == ()
     assert staged.classifying_fields == ()
     held = check_stored_row(
-        _row(("direction", "INTERNAL_TRANSFER"), ("operation_date", date(_YEAR, 3, 30).isoformat())),
+        _row(("direction", "INTERNAL_TRANSFER"), ("operation_date", "2026-03-30")),
         _stored(),
     )
     assert next(blocker for blocker in held.blockers if blocker.kind == "transfer_with_tax").fields == (
@@ -300,7 +297,7 @@ def test_the_writer_refuses_the_core_of_what_a_transfer_is_held_back_for() -> No
     bucket = str(uuid4())
     base = {
         "bucket_id": bucket,
-        "booked_date": date(_YEAR, 3, 2),
+        "booked_date": date(2026, 3, 2),
         "amount": Decimal("10"),
         "currency": "EUR",
         "direction": TransactionDirection.INTERNAL_TRANSFER,
@@ -323,9 +320,9 @@ def test_the_writer_refuses_the_core_of_what_a_transfer_is_held_back_for() -> No
         ((("amount", "36.3"),), ()),
         ((("amount", "40"),), ("amount",)),
         ((("description", "OTRA"),), ("description",)),
-        ((("value_date", date(_YEAR, 3, 2).isoformat()),), ()),
-        ((("value_date", date(_YEAR, 3, 3).isoformat()),), ("value_date",)),
-        ((("booked_date", date(_YEAR, 3, 9).isoformat()),), ("booked_date",)),
+        ((("value_date", "2026-03-02"),), ()),
+        ((("value_date", "2026-03-03"),), ("value_date",)),
+        ((("booked_date", "2026-03-09"),), ("booked_date",)),
         ((("own_account_id", "acc-02"),), ("own_account_id",)),
         ((("notes", "x"),), ()),
     ],
@@ -341,7 +338,7 @@ def test_each_identity_verdict_matches_the_id_the_owner_derives() -> None:
     assert derive_transaction_id(changed) != before
     same = raw.model_copy(update={"amount": Decimal("36.3")})
     assert derive_transaction_id(same) == before
-    dated = raw.model_copy(update={"value_date": date(_YEAR, 3, 2)})
+    dated = raw.model_copy(update={"value_date": date(2026, 3, 2)})
     assert derive_transaction_id(dated) == before
 
 
@@ -350,7 +347,7 @@ def test_a_draft_names_what_it_lacks_and_what_a_transfer_cannot_carry() -> None:
     assert bare.blockers[0].kind == "draft_incomplete"
     assert bare.blockers[0].fields == ("booked_date", "amount", "currency", "direction", "description")
     fields = {
-        "booked_date": date(_YEAR, 3, 2).isoformat(),
+        "booked_date": "2026-03-02",
         "amount": "10",
         "currency": "EUR",
         "direction": "INTERNAL_TRANSFER",

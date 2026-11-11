@@ -8,15 +8,12 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ...calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...calculations.registry.schema_references import RegistrySnapshotRef
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _SECURE = {"secure_calculation_revision": True}
-_SNAPSHOT = RegistrySnapshotRef(
-    modelo="369", revision_id="esquema-exterior", modelo_year=filing_year_envelope().horizon, period="EXT-1T"
-)
+_SNAPSHOT = RegistrySnapshotRef(modelo="369", revision_id="esquema-exterior", modelo_year=2025, period="EXT-1T")
 
 
 def _closed() -> ClosedRecordRowSet:
@@ -34,7 +31,7 @@ def _closed() -> ClosedRecordRowSet:
 
 
 def _revision(row_sets: tuple[ClosedRecordRowSet, ...]) -> CalculationRevision:
-    created = datetime(1980, 10, 6, tzinfo=UTC)
+    created = datetime(2026, 10, 6, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id="a" * 64,

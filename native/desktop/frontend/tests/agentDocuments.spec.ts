@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { fixtureInstant, fixtureYear } from "../src/dev/fixtureDates";
 import {
   documentMatches,
   extensionOf,
@@ -21,7 +20,7 @@ const words = (key: string) => key;
 const record = (name: string): AgentDocumentRecord => ({
   name,
   size_bytes: 1,
-  modified_at: fixtureInstant(10, 18, "10:00:00Z"),
+  modified_at: "2026-10-18T10:00:00Z",
   sha256: "0".repeat(64),
   media_type: null,
 });
@@ -65,9 +64,7 @@ test("a failed page fails the whole read", async () => {
 });
 
 test("what follows the @ is found anywhere in a name, ignoring case", () => {
-  expect(
-    documentMatches(`Factura-${fixtureYear}.PDF`, `${fixtureYear}.pdf`),
-  ).toBe(true);
+  expect(documentMatches("Factura-2026.PDF", "2026.pdf")).toBe(true);
   expect(documentMatches("notas del trimestre.txt", "DEL T")).toBe(true);
   expect(documentMatches("extracto.csv", "factura")).toBe(false);
   expect(documentMatches("extracto.csv", "")).toBe(true);

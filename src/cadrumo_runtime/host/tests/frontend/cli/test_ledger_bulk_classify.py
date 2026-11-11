@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Iterator, Sequence
 from contextvars import ContextVar
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +15,6 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree, sealed_tree
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.config import override_settings
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.ledger_rule_results import (
     ClassificationRulePayload,
     RuleApplyAppliedPayload,
@@ -26,8 +24,6 @@ from cadrumo.entrypoints.cli.ledger_rule_results import (
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,7 +37,7 @@ _PROFILE_FACTS = {
     "identity.name": "Bulk",
     "identity.surnames": "Classify",
     "activities.description": "design",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
 }
 
 
@@ -208,7 +204,7 @@ def _classify_with_tax_facts(transaction_id: str) -> None:
 def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
     lines = ["Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"]
     for idx in range(1, count + 1):
-        lines.append(f"{date(_YEAR, 5, idx)},Vendor {idx},INV-{idx:03d},{idx}.00,EUR,many-{idx:03d}")
+        lines.append(f"2026-05-{idx:02d},Vendor {idx},INV-{idx:03d},{idx}.00,EUR,many-{idx:03d}")
     csv_path = tmp_path / "many.csv"
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -509,7 +505,7 @@ def test_rule_add_invalid_regex_rejected() -> None:
             "classification": "BUSINESS",
             "priority": 1,
             "actor": "operator",
-            "created_at": "1980-08-01T12:00:00Z",
+            "created_at": "2026-08-01T12:00:00Z",
         },
         {
             "rule_id": "a" * 64,
@@ -517,7 +513,7 @@ def test_rule_add_invalid_regex_rejected() -> None:
             "classification": "BUSINESS",
             "priority": 1,
             "actor": "operator",
-            "created_at": "1980-08-01T12:00:00Z",
+            "created_at": "2026-08-01T12:00:00Z",
         },
     ),
 )

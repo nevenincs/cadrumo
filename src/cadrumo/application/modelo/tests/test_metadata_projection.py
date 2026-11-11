@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ...operations.registry import OperationSchemaBindingV1
 from ..metadata_projection import ModeloWorkMetadataSnapshot
@@ -18,26 +17,25 @@ from ..work_change_contracts import ModeloWorkDiscardPublicResultV2, ModeloWorkR
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "5aa00000-0000-4000-8000-0000000000aa"
-_EXERCISE = filing_year_envelope().horizon
-_CREATED = datetime(_EXERCISE, 1, 10, 12, 0, tzinfo=UTC)
-_UPDATED = datetime(_EXERCISE, 2, 12, 12, 0, tzinfo=UTC)
+_CREATED = datetime(2026, 1, 10, 12, 0, tzinfo=UTC)
+_UPDATED = datetime(2026, 2, 12, 12, 0, tzinfo=UTC)
 _FILED_REVISION = "a" * 64
 _FILING_RECORD = "b" * 64
 
 
 def _unit(*, discarded: bool = False) -> WorkUnit:
-    period = Period.from_year_and_code(_EXERCISE, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=_EXERCISE,
+            filing_year=2026,
             period=period,
             revision_id="test-revision",
         ),
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_EXERCISE,
+        filing_year=2026,
         period=period,
         revision_id="test-revision",
         name="First-quarter return",
@@ -62,7 +60,7 @@ def test_work_unit_metadata_survives_strict_json_roundtrip(discarded: bool) -> N
 
     assert restored == snapshot
     assert restored.to_work_unit() == unit
-    assert restored.period.filing_year == _EXERCISE
+    assert restored.period.filing_year == 2026
     assert restored.period.code == "1T"
     assert restored.filed_calculation_revision_id == _FILED_REVISION
     assert restored.current_filing_record_id == _FILING_RECORD
@@ -75,8 +73,8 @@ def test_work_unit_metadata_survives_strict_json_roundtrip(discarded: bool) -> N
     [
         ("work_unit_id", "f" * 64),
         ("bucket_id", "6bb00000-0000-4000-8000-0000000000bb"),
-        ("filing_year", _EXERCISE - 1),
-        ("period", {"filing_year": _EXERCISE, "code": "2T"}),
+        ("filing_year", 2025),
+        ("period", {"filing_year": 2026, "code": "2T"}),
         ("state", "descartado"),
     ],
 )

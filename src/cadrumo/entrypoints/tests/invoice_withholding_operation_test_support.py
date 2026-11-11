@@ -41,10 +41,9 @@ from cadrumo.entrypoints.adapter_composition_ports import (
 )
 from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import InvoiceKind
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 

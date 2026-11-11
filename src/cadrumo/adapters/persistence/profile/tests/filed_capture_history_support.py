@@ -56,11 +56,7 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.tests.inventory import FIXTURES_DIR
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
-CAPTURED_AT = datetime(_YEAR, 4, 20, 10, 0, 0, tzinfo=UTC)
+CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 #: A checksum-valid synthetic NIF. This value reaches
 #: ``IvaCompensationPeriodState.taxpayer_nif`` as the captured
 #: ``authenticated_identity``, and that field is a ``SubjectTaxId``, so a
@@ -301,7 +297,7 @@ def stored_justificante_observation(
     purpose: passing a csv other than the one printed in those bytes is how a
     caller reproduces an artefact paired with the wrong filing's receipt.
     """
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     artefact = store.persist_artefact(
         (modelo, 2026, period, expediente_id),
         FiledDeclaracionArtefact(
@@ -316,7 +312,7 @@ def stored_justificante_observation(
     )
     return FiledDeclaracionObservation(
         modelo=modelo,
-        ejercicio=_YEAR,
+        ejercicio=2026,
         period=period,
         expediente_id=expediente_id,
         status="ALTA",
@@ -362,13 +358,13 @@ def _seed_current_filing(
     aeat_accepted: bool = False,
     external_evidence: ExternalEvidence | None = None,
 ) -> ModeloRecord:
-    period = Period.from_year_and_code(_YEAR, "1T")
-    snapshot = published_snapshot(modelo, filing_year=_YEAR, period="1T")
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = published_snapshot(modelo, filing_year=2026, period="1T")
     revision_id = snapshot.revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=revision_id,
     )
@@ -376,7 +372,7 @@ def _seed_current_filing(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=revision_id,
         name=f"{modelo}-2026-1T",
@@ -428,7 +424,7 @@ def _seed_current_filing(
         calculation_revision_id=calculation_revision_id,
         bucket_id=bucket_id,
         modelo=ModeloCode(modelo),
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         filed_at=CAPTURED_AT,
         filed_by="operator",
@@ -451,7 +447,7 @@ def prior_303_observation(
     result: Decimal = Decimal("0.00"),
     final_result: Decimal | None = None,
     generated: Decimal | None = None,
-    year: int = _YEAR,
+    year: int = 2026,
     period: str = "1T",
     expediente_id: str = SYNTHETIC_EXPEDIENTE_ID,
     presented_at: datetime = CAPTURED_AT,
@@ -569,8 +565,8 @@ def filed_declaration(
 ) -> ExpedientesDeclaration:
     return ExpedientesDeclaration(
         modelo="303",
-        ejercicio=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, period),
         expediente_id=expediente_id,
         estado=estado,
         tipo_solicitud=None,

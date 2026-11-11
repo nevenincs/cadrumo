@@ -52,15 +52,12 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(_YEAR, 8, 14, 16, tzinfo=UTC)
+_NOW = datetime(2026, 8, 14, 16, tzinfo=UTC)
 _DEFINITION_ID = "operation.executor.contract"
 
 

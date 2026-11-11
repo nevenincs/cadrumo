@@ -23,14 +23,11 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_split_merge import merge_transactions
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import SplitRole, TransactionLifecycleState
 
 from .merge_test_support import BUCKET_ID, repositories, split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_objects: SecureObjectRepository) -> None:
@@ -49,7 +46,7 @@ def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_obj
             actor="operator-A",
             reason="reverted split",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 5, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
         )
 
     catalogue = transaction_repository.load()
@@ -165,7 +162,7 @@ def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objec
             child_transaction_ids=split.child_transaction_ids,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 5, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
         )
     from cadrumo.domain.buckets.event import BucketEventObjectType
 

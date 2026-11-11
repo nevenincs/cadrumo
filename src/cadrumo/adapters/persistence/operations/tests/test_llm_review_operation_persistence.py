@@ -102,15 +102,12 @@ from cadrumo.domain.transactions.llm import PromptSpec
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _PROFILE = "71111111-1111-4111-8111-111111111117"
-_NOW = datetime(_YEAR, 5, 4, tzinfo=UTC)
+_NOW = datetime(2026, 5, 4, tzinfo=UTC)
 _REASON = "recorded local classification for encrypted continuation"
 
 
@@ -131,7 +128,7 @@ def _movement(provider_id: str, amount: str, *, row: int) -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id=provider_id,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal(amount),
                 currency="EUR",
                 description="synthetic private baseline",

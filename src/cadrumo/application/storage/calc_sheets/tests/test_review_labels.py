@@ -12,7 +12,7 @@ from .....core.i18n.render import MissingTranslationError, override_locales_root
 from ..records import TabName
 from ..review_labels import REVIEW_LABEL_KEYS, ReviewWorkbookLabels
 from ..review_workbook import build_review_workbook
-from .review_fixture import REVIEW_YEAR, review_snapshot
+from .review_fixture import review_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -111,14 +111,14 @@ def test_packaged_catalogues_render_real_calculation_and_ledger_plans(
     plan = build_review_workbook(
         review_snapshot(ledger_only=ledger_only),
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=labels,
     )
     cells = {cell.address.qualified(): cell.value for cell in plan.value_cells}
     if ledger_only:
         assert plan.metadata.title == labels("ledger") + " · aaaaaaaaaaaa"
     else:
-        assert plan.metadata.title == f"Modelo 303 · {REVIEW_YEAR} · 1T · " + labels("not_captured") + " · cccccccccccc"
+        assert plan.metadata.title == "Modelo 303 · 2026 · 1T · " + labels("not_captured") + " · cccccccccccc"
     assert cells["'Guía'!A1"] == overview
     assert cells["'Guía'!B6"] == provisional
     assert cells["'Entradas'!A1"] == review

@@ -38,11 +38,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    newest_authored_edition,
-    revision_covering,
-)
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from ....domain.user_profile.values import (
@@ -57,13 +52,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000476"
 _BUCKET_ID = _PROFILE_ID
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
-_CLOCK = datetime(filing_year_envelope().horizon, 5, 21, 10, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
 @contextmanager
@@ -142,7 +137,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             modelo="100",
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
-            revision_id=str(revision_covering("100", _YEAR).id),
+            revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
             operation=operation,
@@ -179,7 +174,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             modelo="100",
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
-            revision_id=str(revision_covering("100", _YEAR).id),
+            revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
             operation=operation,
@@ -219,7 +214,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
             modelo="100",
             filing_year=_YEAR,
             period=_TYPED_PERIOD,
-            revision_id=str(revision_covering("100", _YEAR).id),
+            revision_id="2025",
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
             operation=operation,

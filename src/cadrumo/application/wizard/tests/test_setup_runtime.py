@@ -16,7 +16,6 @@ import pytest
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
@@ -34,8 +33,6 @@ from ..models import WizardWidget
 from ..persistence import project_answers, serialise_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def default_tokens(*, registry_setup_flow: WizardFlow) -> dict[str, str]:
@@ -430,14 +427,14 @@ def test_payer_fact_answers_still_write_a_declared_yes_or_no(
         "premio-loteria-gravamen-especial-sin-retencion": token,
     }
     if expected:
-        canonical["premio-loteria-gravamen-especial-trimestres"] = f"{_YEAR}-3T|{_YEAR}-1T"
+        canonical["premio-loteria-gravamen-especial-trimestres"] = "2025-3T|2025-1T"
 
     answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
 
     assert answers.third_party_transactions_above_347_threshold is expected
     assert answers.premio_loteria_gravamen_especial_sin_retencion is expected
     if expected:
-        assert answers.premio_loteria_gravamen_especial_trimestres == f"{_YEAR}-1T|{_YEAR}-3T"
+        assert answers.premio_loteria_gravamen_especial_trimestres == "2025-1T|2025-3T"
     else:
         assert "premio-loteria-gravamen-especial-trimestres" not in committed
 
@@ -446,7 +443,7 @@ def test_a_malformed_quarter_answer_is_refused_at_the_boundary(*, registry_setup
     canonical = {
         **individual_declaration_canonical(),
         "premio-loteria-gravamen-especial-sin-retencion": "true",
-        "premio-loteria-gravamen-especial-trimestres": f"{_YEAR}Q1",
+        "premio-loteria-gravamen-especial-trimestres": "2025Q1",
     }
 
     with pytest.raises(FlowSubmitError) as refused:

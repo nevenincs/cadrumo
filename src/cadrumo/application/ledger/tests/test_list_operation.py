@@ -17,7 +17,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
@@ -32,13 +31,11 @@ from ..list_operation import (
 )
 from .registration_access_context_support import registration_access_context
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _unexpected_ports(*, bucket_id: str, operation: PinnedAuthorityOperation) -> LedgerActionPorts:
@@ -137,7 +134,7 @@ def test_list_projection_rejects_nonpositive_limits(limit: int) -> None:
     ("filters", "expected_period"),
     [
         ((), None),
-        (("period=1T", f"year={_YEAR}"), _PERIOD),
+        (("period=1T", "year=2026"), _PERIOD),
     ],
 )
 def test_list_access_uses_period_derived_from_canonical_filter_clauses(
@@ -194,14 +191,14 @@ def test_list_access_refuses_foreign_profile_or_subject(
 
 def test_list_access_refuses_sealed_admission_with_a_tampered_period_scope() -> None:
     registry, registration = _registry()
-    request = _request(filters=("period=1T", f"year={_YEAR}"))
+    request = _request(filters=("period=1T", "year=2026"))
     destination_id = uuid4()
     admitted = OperationAccessRequest(
         profile_id=_PROFILE,
         definition_id=LEDGER_LIST_OPERATION_DEFINITION_ID,
         action=AccessAction.SUBMIT,
         frontend=OperationFrontendProjection.CLI,
-        periods=frozenset({Period.from_year_and_code(_YEAR, "2T")}),
+        periods=frozenset({Period.from_year_and_code(2026, "2T")}),
         period_independent=False,
         destination_id=destination_id,
     )

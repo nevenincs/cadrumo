@@ -10,7 +10,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_split_merge import merge_transactions, split_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
@@ -20,15 +19,13 @@ from .merge_test_support import BUCKET_ID, repositories, split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = repositories(secure_objects)
     # Split into 3 so supplying only 2 proves partial-cohort refusal.
     parent_command = ManualLedgerTransactionCommand(
         bucket_id=BUCKET_ID,
-        booked_date=date(_YEAR, 5, 2),
+        booked_date=date(2026, 5, 2),
         amount=Decimal("100.00"),
         direction=TransactionDirection.OUTGOING,
         counterparty="Vendor SL",
@@ -44,7 +41,7 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
         parent = create_manual_transaction(
             parent_command,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -115,7 +112,7 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
         second_parent = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 9),
+                booked_date=date(2026, 5, 9),
                 amount=Decimal("200.00"),
                 direction=TransactionDirection.OUTGOING,
                 counterparty="Other Vendor",
@@ -123,7 +120,7 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
                 actor="operator-A",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 9, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,

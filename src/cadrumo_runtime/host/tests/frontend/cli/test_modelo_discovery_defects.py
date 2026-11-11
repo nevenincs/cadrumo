@@ -22,17 +22,10 @@ fleet:
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
-)
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    open_ended_revision,
-    revision_covering,
 )
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -51,13 +44,6 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FLOOR = filing_year_envelope().floor
-# The authored Modelo 210 revision just before the open-ended one: it covers no 3T instalment.
-_M210_CLOSED_REVISION = revision_covering("210", open_ended_revision("210").valid_from.year - 1)
-# Modelo 130 has one authored revision, so another modelo's revision id is certainly not its law-determined one.
-_OTHER_MODELO_REVISION = str(open_ended_revision("180").id)
-_HORIZON = filing_year_envelope().horizon
-
 
 _OPERATOR_FACTS = {
     **native_general_iva_facts(),
@@ -65,7 +51,7 @@ _OPERATOR_FACTS = {
     "identity.name": "Operator",
     "identity.surnames": "Operator",
     "activities.description": "design",
-    "censo.activity_start_date": date(_FLOOR, 1, 1).isoformat(),
+    "censo.activity_start_date": "2024-01-01",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "tax_residence.ccaa": "madrid",
     # Modelo 111 readiness requires the colegio concertado answer.
@@ -158,11 +144,11 @@ def test_bindings_list_missing_drops_profile_resolved_bindings(seed_profile: Pro
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     full = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", str(_FLOOR)],
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert full.exit_code == 0, full.output
     missing = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", str(_FLOOR), "--missing"],
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024", "--missing"],
     )
     assert missing.exit_code == 0, missing.output
 
@@ -190,10 +176,10 @@ def test_bindings_list_missing_forwards_as_of_to_profile_readiness(seed_profile:
             "--modelo",
             "100",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--missing",
             "--as-of",
-            date(_FLOOR, 6, 30).isoformat(),
+            "2024-06-30",
         ],
     )
 
@@ -212,7 +198,7 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts(seed_profile
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", str(_FLOOR)],
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
     profile_rows = [
@@ -228,23 +214,23 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts(seed_profile
 
 
 def test_bindings_list_year_resolves_the_year_covering_revision(seed_profile: ProfileSeeder) -> None:
-    """``bindings list --modelo 100 --year <floor>`` reports the revision the
-    floor year's snapshot selects, not the newest authored revision.
+    """``bindings list --modelo 100 --year 2024`` reports the revision a
+    2024 snapshot selects, not the latest (2025) revision.
 
-    Modelo 100 carries one revision per renta year; resolving the newest
-    would list bindings a work unit created for the floor year does not use.
+    Modelo 100 carries one revision per renta year; resolving the latest
+    would list bindings a work unit created with ``--year 2024`` does not use.
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", str(_FLOOR)],
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
     binding_ids = [line.split("\t")[3] for line in result.output.splitlines() if line.startswith("100\t")]
     assert binding_ids, result.output
     # Binding ids are year-free; the revision column names the covering revision.
     revisions = {line.split("\t")[1] for line in result.output.splitlines() if line.startswith("100\t")}
-    assert revisions == {published_snapshot("100", filing_year=_FLOOR, period="0A").revision.id}, revisions
+    assert revisions == {published_snapshot("100", filing_year=2024, period="0A").revision.id}, revisions
 
 
 # ---------------------------------------------------------------------------
@@ -262,8 +248,8 @@ def test_work_create_rejects_censo_tokens_as_non_filing_periods(token: str, seed
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "036", "--year", str(_HORIZON), "--period", token,
-            "--revision", str(open_ended_revision("036").id),
+            "--modelo", "036", "--year", "2025", "--period", token,
+            "--revision", "2025-02-03-y-siguientes",
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -292,8 +278,8 @@ def test_work_create_still_rejects_an_undeclared_censo_token(seed_profile: Profi
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "036", "--year", str(_HORIZON), "--period", "bogus",
-            "--revision", str(open_ended_revision("036").id),
+            "--modelo", "036", "--year", "2025", "--period", "bogus",
+            "--revision", "2025-02-03-y-siguientes",
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -310,12 +296,12 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "303", "--year", str(_FLOOR), "--period", "1T",
-            "--revision", str(published_snapshot("303", filing_year=_FLOOR, period="1T").revision.id),
+            "--modelo", "303", "--year", "2024", "--period", "1T",
+            "--revision", str(published_snapshot("303", filing_year=2024, period="1T").revision.id),
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert unwrap_schema_envelope(result.output)["period"] == {"filing_year": _FLOOR, "code": "1T"}
+    assert unwrap_schema_envelope(result.output)["period"] == {"filing_year": 2024, "code": "1T"}
 
 
 # ---------------------------------------------------------------------------
@@ -330,7 +316,7 @@ def test_bindings_list_names_the_estimation_modality_as_derived_from_the_profile
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", str(_FLOOR)],
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
@@ -355,9 +341,9 @@ def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> 
             "--modelo",
             "111",
             "--revision-id",
-            str(open_ended_revision("111").id),
+            "2019-y-siguientes",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "1T",
         ],
@@ -379,9 +365,9 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
             "--modelo",
             "130",
             "--revision-id",
-            _OTHER_MODELO_REVISION,
+            "2023-y-siguientes",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "1T",
         ],
@@ -390,8 +376,8 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     flat = " ".join(result.output.split())
-    assert _OTHER_MODELO_REVISION in flat
-    assert str(open_ended_revision("130").id) in flat
+    assert "2023-y-siguientes" in flat
+    assert "2019-y-siguientes" in flat
 
 
 def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile: ProfileSeeder) -> None:
@@ -406,9 +392,9 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
             "--modelo",
             "210",
             "--revision-id",
-            str(_M210_CLOSED_REVISION.id),
+            "2025",
             "--year",
-            str(_M210_CLOSED_REVISION.valid_from.year),
+            "2025",
             "--period",
             "3T",
         ],
@@ -418,7 +404,7 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
     assert "Traceback" not in result.output
     flat = " ".join(result.output.split())
     assert "3T" in flat
-    assert str(open_ended_revision("210").id) in flat
+    assert "2026-y-siguientes" in flat
 
 
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
@@ -431,7 +417,7 @@ def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
             "describe",
             "210",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "EVENT-1",
         ],
@@ -440,7 +426,7 @@ def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
     assert result.exit_code == 0, result.output
     assert "Invalid value" not in result.output
     assert "Modelo\t210" in result.output
-    expected_revision = published_snapshot("210", filing_year=_HORIZON, period="EVENT-1").revision.id
+    expected_revision = published_snapshot("210", filing_year=2026, period="EVENT-1").revision.id
     assert f"Revision\t{expected_revision}" in result.output
     assert "Periods\tEVENT-N" in result.output
 
@@ -455,7 +441,7 @@ def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:
             "describe",
             "210",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "evento",
         ],
@@ -483,7 +469,7 @@ def test_bindings_list_m210_legacy_event_token_reports_current_guidance(seed_pro
             "--modelo",
             "210",
             "--year",
-            str(_HORIZON),
+            "2025",
             "--period",
             "evento",
             "--missing",
@@ -511,9 +497,9 @@ def test_modelo_readiness_m210_legacy_event_token_reports_current_guidance(seed_
             "--modelo",
             "210",
             "--revision-id",
-            str(revision_covering("210", _HORIZON).id),
+            "2025",
             "--year",
-            str(_HORIZON),
+            "2025",
             "--period",
             "evento",
         ],
@@ -541,9 +527,9 @@ def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: Pro
             "--modelo",
             "200",
             "--revision-id",
-            str(published_snapshot("200", filing_year=_HORIZON, period="0A").revision.id),
+            str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "0A",
         ],
@@ -581,9 +567,9 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
             "--modelo",
             "200",
             "--revision-id",
-            str(published_snapshot("200", filing_year=_HORIZON, period="0A").revision.id),
+            str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "0A",
         ],
@@ -660,13 +646,13 @@ def _create_202_work_unit(period: str) -> str:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", str(_HORIZON), "--period", period,
-            "--revision", str(revision_covering("202", _HORIZON).id),
+            "--modelo", "202", "--year", "2026", "--period", period,
+            "--revision", "2025-y-siguientes",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
-    assert payload["period"] == {"filing_year": _HORIZON, "code": period}
+    assert payload["period"] == {"filing_year": 2026, "code": period}
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
     return work_unit_id

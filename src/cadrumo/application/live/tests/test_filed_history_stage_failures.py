@@ -25,14 +25,12 @@ from cadrumo.application.live.remote_state_models import IvaWalletCaptureReport
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .filed_observation_test_support import UnavailableIvaRemoteStatePort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 10, 2, tzinfo=UTC)
+_NOW = datetime(2026, 10, 2, tzinfo=UTC)
 _PROFILE_ID = "00000000-0000-4000-8000-000000000001"
 type _Stage = Literal["iva", "notifications"]
 
@@ -96,7 +94,7 @@ class _IvaPort(UnavailableIvaRemoteStatePort):
     ) -> IvaWalletCaptureReport:
         del settings, taxpayer_nif, progress_context
         assert session.identity_nif == "12345678Z"
-        assert target_year == _YEAR and target_period == Period.from_year_and_code(_YEAR, "1T")
+        assert target_year == 2026 and target_period == Period.from_year_and_code(2026, "1T")
         assert output_root is not None
         assert not self.guard.active
         self.captures += 1
@@ -131,7 +129,7 @@ async def _stage(
         port = _IvaPort(failure, local=local, guard=guard)
         result = await capture_filed_history_iva_wallet(
             iva_remote_state_port=port,
-            resolved_today=date(_YEAR, 10, 2),
+            resolved_today=date(2026, 10, 2),
             output_root=tmp_path,
             effect_guard=guard,
         )
@@ -219,7 +217,7 @@ async def test_iva_failure_after_successful_local_write_propagates_exact_error(t
     with pytest.raises(OSError) as caught:
         await capture_filed_history_iva_wallet(
             iva_remote_state_port=port,
-            resolved_today=date(_YEAR, 10, 2),
+            resolved_today=date(2026, 10, 2),
             output_root=tmp_path,
             effect_guard=guard,
         )

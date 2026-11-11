@@ -16,7 +16,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -32,7 +31,7 @@ HOME_OFFICE_SUMINISTRO_RATIO = Decimal("0.06")
 #: statutory factor. It is the row's ``business_pct`` and what IVA deducts.
 HOME_OFFICE_DEGREE_OF_USE = Decimal("0.20")
 
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2025
 
 
 def no_stored_usage_ratios(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:

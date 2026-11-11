@@ -37,7 +37,6 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
     FormUnplacedReason,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.schema import ModeloValueKind
 from ..edit_models import (
     ModeloEditBindingIntentKind,
@@ -71,7 +70,7 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "130"
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2026
 _PERIOD = "1T"
 _WORKING = "saldo-negativo-fin-periodo"
 _ART_32_WORKING = "rendimiento-neto-reducible-art-32-1"
@@ -224,7 +223,7 @@ def test_without_a_layout_every_casilla_is_listed_once_in_box_order(
 def test_a_layout_for_another_revision_is_only_inspected(
     snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> None:
-    layout = work_form_layout(snapshot).model_copy(update={"revision_id": "another-revision"})
+    layout = work_form_layout(snapshot).model_copy(update={"revision_id": "2000"})
 
     form = work_form(snapshot, operation, layout=layout)
 

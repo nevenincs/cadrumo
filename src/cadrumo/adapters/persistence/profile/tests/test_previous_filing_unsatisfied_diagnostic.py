@@ -42,7 +42,6 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.ids import BindingId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -57,8 +56,8 @@ from .relation_prefill_support import empty_profile_read_ports
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "10006042-0000-4000-8000-000000000001"
-_T0 = datetime(1980, 1, 10, 10, 0, tzinfo=UTC)
-_YEAR = filing_year_envelope().horizon
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = 2024
 _TARGET_PERIOD = "2T"
 _PRIOR_QUARTER = "1T"
 _M130_PRIOR_PAGOS_BINDING: BindingId = "modelo-130-pagos-fraccionados-anteriores"

@@ -12,7 +12,6 @@ Expected values are grounded in:
 
 from __future__ import annotations
 
-from calendar import isleap
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -28,7 +27,6 @@ from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.payloads import MappingFactEntry, MappingFactPayload
 from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import RentaValidationError
@@ -62,11 +60,8 @@ _RETMAR_LEGAL_REFS = ("ley-35-2006:art-96",)
 _ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
 _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 _AUTHORITY = PublishedGovernedFactSource()
-_EXERCISE = filing_year_envelope().horizon
-_FILING_PERIOD = date(_EXERCISE, 12, 31)
-_DEVENGO_DATE = date(_EXERCISE, 12, 31)
-_COMMON_YEAR = next(year for year in filing_year_envelope().years if not isleap(year))
-_LEAP_YEAR = next(year for year in filing_year_envelope().years if isleap(year))
+_FILING_PERIOD = date(2025, 12, 31)
+_DEVENGO_DATE = date(2025, 12, 31)
 
 
 @dataclass(slots=True)
@@ -378,10 +373,9 @@ class TestCalculateArt7pExemption:
     @pytest.mark.parametrize(
         ("year", "salary", "expected"),
         [
-            (_COMMON_YEAR, "36500", "10000"),
-            (_LEAP_YEAR, "36600", "10000"),
+            (2023, "36500", "10000"),
+            (2024, "36600", "10000"),
         ],
-        ids=("common-year", "leap-year"),
     )
     def test_the_reparto_runs_over_every_day_of_the_year(self, year: int, salary: str, expected: str) -> None:
         # RIRPF art. 6.2: "un criterio de reparto proporcional teniendo en cuenta el
@@ -403,7 +397,7 @@ class TestCalculateArt7pExemption:
                 facts=self._BASE_FACTS,
                 filing_period=date(year, 12, 31),
             ).value
-            for year in (_COMMON_YEAR, _LEAP_YEAR)
+            for year in (2023, 2024)
         )
         assert isinstance(in_a_common_year, Decimal)
         assert isinstance(in_a_leap_year, Decimal)
@@ -415,7 +409,7 @@ class TestCalculateArt7pExemption:
             annual_salary=Decimal("36600"),
             qualifying_days=366,
             facts=self._BASE_FACTS,
-            filing_period=date(_LEAP_YEAR, 12, 31),
+            filing_period=date(2024, 12, 31),
         )
         assert obs.value == Decimal("36600")
         with pytest.raises(RentaValidationError):
@@ -423,7 +417,7 @@ class TestCalculateArt7pExemption:
                 annual_salary=Decimal("36500"),
                 qualifying_days=366,
                 facts=self._BASE_FACTS,
-                filing_period=date(_COMMON_YEAR, 12, 31),
+                filing_period=date(2023, 12, 31),
             )
 
     def test_standard_case_below_cap(self) -> None:

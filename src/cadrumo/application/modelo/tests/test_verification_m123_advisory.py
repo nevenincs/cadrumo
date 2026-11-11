@@ -10,7 +10,6 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import CAS
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -20,13 +19,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # The shipped id carries the full revision stem. The `modelo-123-2024-...`
 # spelling this replaced matched nothing, and the lookup below reported that
 # as a bare StopIteration naming neither the id nor the revision.
-_M123_REVISION_ID = str(open_ended_revision("123").id)
-_M123_ADVISORY_PREDICATE_ID = f"modelo-123-{_M123_REVISION_ID}-base-total-implica-retenciones-total"
+_M123_ADVISORY_PREDICATE_ID = "modelo-123-2024-y-siguientes-base-total-implica-retenciones-total"
 
 
 def _m123_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M123 silent-under-declaration advisory from the authority."""
-    revision = published_revision("123", _M123_REVISION_ID)
+    revision = published_revision("123", "2024-y-siguientes")
     predicate = next(
         (p for p in revision.verification_predicates if p.predicate_id == _M123_ADVISORY_PREDICATE_ID),
         None,
@@ -41,7 +39,7 @@ def _m123_advisory_predicate() -> VerificationPredicateDefinition:
 
 
 def test_m123_advisory_ships_with_legal_grounding() -> None:
-    """The newest M123 revision carries the C06->C09 silent-under-declaration advisory."""
+    """The M123 2024-y-siguientes revision carries the C06->C09 silent-under-declaration advisory."""
     predicate = _m123_advisory_predicate()
     legal_refs = tuple(str(r) for r in predicate.legal_refs)
     assert "rd-439-2007:art-90" in legal_refs

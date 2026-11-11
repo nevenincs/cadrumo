@@ -27,7 +27,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataProvisionalProvenance
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
@@ -37,9 +36,9 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_KIND = "aeat_sede_justificante"
-_CURRENT_YEAR = filing_year_envelope().horizon
-_PRIOR_YEAR = _CURRENT_YEAR - 1
-_CLOCK = datetime(_CURRENT_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_CURRENT_YEAR = 2026
+_PRIOR_YEAR = 2025
 _SETTLEMENT_PERIOD = "4T"
 _DIVERGENT_REVISION_ID = "not-the-law-determined-m303-2025-4t-revision"
 
@@ -103,7 +102,7 @@ def test_seed_happy_path_uses_prior_settlement_observation(
     assert seed.entry.ejercicio == _CURRENT_YEAR
     assert seed.entry.provisional_percentage == Decimal("87")
     assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
-    assert seed.entry.source_observation_ref == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
+    assert seed.entry.source_observation_ref == "303:2025:4T"
 
 
 def test_seed_divergent_revision_stamp_blocks(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:

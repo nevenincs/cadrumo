@@ -22,7 +22,7 @@ belong on the annual resumen and on the IRPF expense side, not here.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -39,7 +39,6 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import directa
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
@@ -57,10 +56,9 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_WALLET_DECIDED_AT = datetime(_YEAR, 4, 1, 10, tzinfo=UTC)
-_OPERATION_DATE = date(_YEAR, 2, 15).isoformat()
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_WALLET_DECIDED_AT = datetime(2025, 4, 1, 10, tzinfo=UTC)
+_OPERATION_DATE = "2025-02-15"
 
 # One taxable sale, one ordinary taxable purchase, one bien de inversión, and the
 # two rows that bore no cuota. Every gross reconstitutes base plus cuota, which
@@ -79,7 +77,7 @@ _INVESTMENT_ASSET_ID = "BI-2025-ORDENADOR"
 
 
 def profile_facts() -> dict[str, str]:
-    facts = operator_profile_facts(activity_start_date=date(_YEAR, 1, 1).isoformat())
+    facts = operator_profile_facts(activity_start_date="2025-01-01")
     return facts
 
 
@@ -99,12 +97,12 @@ def added_transaction_id(result: Result) -> str:
 
 def seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
     """Record the first-period nil compensation decision 303 asks before calculating."""
-    snapshot_ref = published_snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref
+    snapshot_ref = published_snapshot("303", filing_year=2025, period="1T").snapshot_ref
     with open_test_profile_session(bucket_id):
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
                 taxpayer_nif=directa_normal_tax_id(),
-                target_year=_YEAR,
+                target_year=2025,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,
                 source_registry_snapshot_refs=(),
@@ -294,7 +292,7 @@ def _declare_bien_inversion(acquisition_ledger_id: str) -> None:
             "--description",
             "Ordenador de sobremesa",
             "--acquisition-year",
-            str(_YEAR),
+            "2025",
             "--acquisition-ledger-id",
             acquisition_ledger_id,
             "--cuota-soportada",
@@ -374,7 +372,7 @@ def _add_exempt_premium() -> str:
 
 def _calculate_1t() -> Result:
     created = _invoke(
-        ["app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"],
     )
     assert created.exit_code == 0, created.output
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]

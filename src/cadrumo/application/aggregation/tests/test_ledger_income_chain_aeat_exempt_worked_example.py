@@ -84,7 +84,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -95,7 +94,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
-from ....domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
@@ -114,9 +113,7 @@ from .renta_income_aggregation_support import m130_activity_category_matcher, m1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-# The manual prints this example unchanged in every edition the bundle carries, so the newest edition
-# serves as the exercise the chain is calculated for.
-_FILING_YEAR = newest_authored_edition("100")
+_FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
 _BUCKET = "26535a03-c534-45c1-88cd-f248184acf4f"  # was 'bucket-aeat-exempt-worked-example'
 
@@ -140,13 +137,10 @@ _CASILLA_RENDIMIENTO_NETO_REDUCIDO: CasillaId = validated_casilla_id(
     surface="_CASILLA_RENDIMIENTO_NETO_REDUCIDO",
 )
 
-
-def _rendimiento_neto_formula(revision: ModeloRevision) -> FormulaDefinition:
-    """Return the 0226 formula: the scenario comparison reads its declared provenance off the calculation entry."""
-    return next(
-        formula for formula in revision.formulas if formula.target_casilla_id == _CASILLA_RENDIMIENTO_NETO_REDUCIDO
-    )
-
+# The 0226 formula's own declared provenance, as the scenario comparison reads
+# it off the calculation entry.
+_LEGAL_REFS = ("ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32")
+_SOURCE_REFS = ("lirpf-cuota-chain-authority",)
 
 # The gasto side of the same caso práctico, quoted per box from the manual's
 # "valores fiscales" column. These are inputs to the registry chain exactly as
@@ -182,24 +176,19 @@ _GASTO_LEG_REASON = (
     "drives the INCOME leg through its ledger binding and makes no claim about "
     "the expense aggregation"
 )
-_NON_LEDGER_REASON = (
-    "ingreso the manual states outside the invoiced lines, supplied from its own figure; "
-    "it is not a bank movement, so the ledger chain driven here never produces it"
-)
-
-
-def _hand_typed_bound_casillas(revision: ModeloRevision) -> dict[CasillaId, str]:
-    """Name the casillas this scenario types by hand although the revision binds them, with the reason.
-
-    Which gasto and ingreso boxes the revision binds differs between editions, so the
-    declaration is read off the revision rather than listed once for one edition.
-    """
-    bound = {casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.BOUND}
-    return {
-        **{casilla_id: _GASTO_LEG_REASON for casilla_id in _GASTO_INPUTS if casilla_id in bound},
-        **{casilla_id: _NON_LEDGER_REASON for casilla_id in _NON_LEDGER_INGRESO_INPUTS if casilla_id in bound},
-    }
-
+_HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
+    casilla_id: _GASTO_LEG_REASON
+    for casilla_id in (
+        validated_casilla_id("0186", surface="0186"),
+        validated_casilla_id("0193", surface="0193"),
+        validated_casilla_id("0194", surface="0194"),
+        validated_casilla_id("0202", surface="0202"),
+        validated_casilla_id("0203", surface="0203"),
+        validated_casilla_id("0206", surface="0206"),
+        validated_casilla_id("0208", surface="0208"),
+        validated_casilla_id("0217", surface="0217"),
+    )
+}
 
 # The two ingresos the manual states outside the invoiced lines. They are not
 # bank movements, so the ledger chain never produces them; they enter the
@@ -241,12 +230,6 @@ def _modelo_100_revision() -> ModeloRevision:
     revision could agree with this module and disagree with the filing.
     """
     return published_snapshot("100", filing_year=_FILING_YEAR, period=_PERIOD.registry_token).revision
-
-
-def _edition_bindings(revision: ModeloRevision) -> dict[str, Decimal]:
-    """Return the neutral profile bindings of the edition under test: the ones its revision declares."""
-    declared = {str(binding.id) for binding in revision.bindings}
-    return {binding_id: value for binding_id, value in _BASE_BINDINGS.items() if binding_id in declared}
 
 
 def _income_row(
@@ -351,11 +334,11 @@ def _scenario(
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision=str(revision_covering("100", _FILING_YEAR).id),
+        revision="2024",
         filing_year=_FILING_YEAR,
         period="0A",
         inputs={**_GASTO_INPUTS, **_NON_LEDGER_INGRESO_INPUTS, **bound_inputs},
-        binding_values=_edition_bindings(_modelo_100_revision()),
+        binding_values=dict(_BASE_BINDINGS),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=dict(_RELATIONS),
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
@@ -364,12 +347,12 @@ def _scenario(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_CASILLA_RENDIMIENTO_NETO_REDUCIDO,
                 value=expected_rendimiento_neto,
-                legal_refs=_rendimiento_neto_formula(_modelo_100_revision()).legal_refs,
-                source_refs=_rendimiento_neto_formula(_modelo_100_revision()).source_refs,
+                legal_refs=_LEGAL_REFS,
+                source_refs=_SOURCE_REFS,
             ),
         ),
         notes=("raw_evidence_locator: corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L19807-L19965",),
-        hand_typed_bound_casillas=_hand_typed_bound_casillas(_modelo_100_revision()),
+        hand_typed_bound_casillas=_HAND_TYPED_BOUND_CASILLAS,
         chain_resolved_bound_casillas={
             casilla_id: (
                 "resolved by aggregate_renta_m100_income_ledger over the manual's two printed ingresos lines, "
@@ -459,7 +442,7 @@ def test_the_chain_reaches_the_manuals_printed_total_ingresos() -> None:
 
     report = _run(
         _scenario(
-            f"m100-{_FILING_YEAR}-exempt-worked-example-total-ingresos",
+            "m100-2024-exempt-worked-example-total-ingresos",
             _bound_casilla_inputs(revision, resolved),
             expected_rendimiento_neto=_RENDIMIENTO_NETO,
         ),
@@ -488,7 +471,7 @@ def test_the_chain_reaches_the_manuals_printed_rendimiento_neto() -> None:
 
     report = _run(
         _scenario(
-            f"m100-{_FILING_YEAR}-exempt-worked-example-rendimiento-neto",
+            "m100-2024-exempt-worked-example-rendimiento-neto",
             _bound_casilla_inputs(revision, resolved),
             expected_rendimiento_neto=_RENDIMIENTO_NETO,
         ),
@@ -531,11 +514,11 @@ def test_moving_one_invoice_moves_both_published_totals() -> None:
         return values[_CASILLA_TOTAL_INGRESOS], values[_CASILLA_RENDIMIENTO_NETO_REDUCIDO]
 
     baseline_ingresos, baseline_rendimiento = totals(
-        f"m100-{_FILING_YEAR}-exempt-worked-example-anti-tautology-baseline",
+        "m100-2024-exempt-worked-example-anti-tautology-baseline",
         _HONORARIOS,
     )
     nudged_ingresos, nudged_rendimiento = totals(
-        f"m100-{_FILING_YEAR}-exempt-worked-example-anti-tautology-nudged",
+        "m100-2024-exempt-worked-example-anti-tautology-nudged",
         _HONORARIOS + Decimal("1.00"),
     )
 
@@ -588,7 +571,7 @@ def test_an_unrecorded_base_is_surfaced_and_leaves_the_published_total_intact() 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, degraded.observations)
     values = _run(
         _scenario(
-            f"m100-{_FILING_YEAR}-exempt-worked-example-unrecorded-base",
+            "m100-2024-exempt-worked-example-unrecorded-base",
             _bound_casilla_inputs(revision, resolved),
             expected_rendimiento_neto=_RENDIMIENTO_NETO,
         ),

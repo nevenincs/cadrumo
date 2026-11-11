@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import date
 from types import SimpleNamespace
 from uuid import UUID
 
@@ -23,7 +22,6 @@ from ....application.inventory.registered_requests import InventoryRestoreReques
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.config import override_settings
 from ....core.operations import OperationEffect
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.inventory.records import MovementKind, ValuationMethod
 from .. import common
 from .. import ledger_inventory_commands as commands
@@ -39,8 +37,6 @@ from ..operation_ledger_inventory import ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
 _PROFILE = "5aa00000-0000-4000-8000-0000000000aa"
 _CODE = "ledger.inventory.retired_book_leaves_year_unresolved"
 
@@ -48,14 +44,14 @@ _CODE = "ledger.inventory.retired_book_leaves_year_unresolved"
 def _ledger() -> InventoryLedgerProjection:
     return InventoryLedgerProjection(
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=PublicDecimal(decimal="100.00"),
         opening_layers=(),
         closing_authority_fingerprints=None,
         period_movements=(),
         schema_version="3",
-        advisories=inventory_advisories(year=_YEAR, leaves_year_unresolved=True),
+        advisories=inventory_advisories(year=2026, leaves_year_unresolved=True),
     )
 
 
@@ -138,21 +134,19 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
         if operation == "list":
             commands.inventory_list(ctx)
         elif operation == "create":
-            commands.inventory_create(ctx, "act-1", _YEAR, "fifo", "100.00")
+            commands.inventory_create(ctx, "act-1", 2026, "fifo", "100.00")
         elif operation == "movement":
-            commands.inventory_movement_add(
-                ctx, "act-1", 2026, "move-1", date(_YEAR, 1, 1).isoformat(), MovementKind.PURCHASE, "1"
-            )
+            commands.inventory_movement_add(ctx, "act-1", 2026, "move-1", "2026-01-01", MovementKind.PURCHASE, "1")
         elif operation == "change":
             commands.emit_ledger_change(
                 ctx,
                 command="ledger.inventory.restore",
                 request=InventoryRestoreRequest(
-                    profile_id=UUID(_PROFILE), actividad_id="act-1", year=_YEAR, correction_id="correction-1"
+                    profile_id=UUID(_PROFILE), actividad_id="act-1", year=2026, correction_id="correction-1"
                 ),
             )
         else:
-            commands.inventory_inspect(ctx, "act-1", _YEAR)
+            commands.inventory_inspect(ctx, "act-1", 2026)
     output = capsys.readouterr().out
     if format_name == "json":
         envelope = json.loads(output)
@@ -163,9 +157,9 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
         (notice,) = envelope["notices"]
         assert notice["code"] == _CODE
         assert notice["severity"] == "warning"
-        assert notice["context"] == {"actividad_id": "act-1", "year": str(_YEAR)}
-        assert str(_YEAR) in notice["message"] and "%{" not in notice["message"]
+        assert notice["context"] == {"actividad_id": "act-1", "year": "2026"}
+        assert "2026" in notice["message"] and "%{" not in notice["message"]
     else:
         assert f"notice\t{_CODE}\t" in output
-        assert str(_YEAR) in output
+        assert "2026" in output
         assert "advisory\t" not in output

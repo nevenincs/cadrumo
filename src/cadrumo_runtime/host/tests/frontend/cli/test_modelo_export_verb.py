@@ -38,12 +38,7 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions_where,
-    filing_year_envelope,
-    newest_authored_edition,
-    revision_before_first_declaring,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.filing.software_identity import development_mock_software_identity
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -65,14 +60,6 @@ from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_FLOOR = filing_year_envelope().floor
-_HORIZON = filing_year_envelope().horizon
-_M100_YEAR = newest_authored_edition("100")
-# Modelo 200 revision authored at calculation grade only: a filing-grade export over it is refused.
-_M200_CALCULATION_REVISION = authored_revisions_where(
-    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
-)[-1]
 
 __all__ = ["isolated_cli_backend", "seed_profile"]
 
@@ -103,7 +90,7 @@ def _calculated_screen_stamp(
 
 
 def _seed_work_unit_only(
-    *, modelo: str = "130", filing_year: int = _HORIZON, period: str = "1T", operation: PinnedAuthorityOperation
+    *, modelo: str = "130", filing_year: int = 2026, period: str = "1T", operation: PinnedAuthorityOperation
 ) -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
@@ -152,10 +139,8 @@ def _seed_work_unit_with_draft_revision(*, operation: PinnedAuthorityOperation) 
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id=active_registry_revision_id(
-                modelo="130", filing_year=_HORIZON, period="1T", operation=operation
-            ),
-            modelo_year=_HORIZON,
+            revision_id=active_registry_revision_id(modelo="130", filing_year=2026, period="1T", operation=operation),
+            modelo_year=2026,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,
@@ -318,7 +303,7 @@ def _seed_modelo_111_revisions(
     states: tuple[CalculationRevisionState, ...],
     current_index: int | None = None,
     filed_index: int | None = None,
-    filing_year: int = _HORIZON,
+    filing_year: int = 2026,
     period: str = "1T",
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, tuple[str, ...]]:
@@ -536,11 +521,11 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     _, (calculation_revision_id,) = _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
-        filing_year=_FLOOR,
+        filing_year=2024,
         period="1T",
         operation=operation,
     )
-    out = tmp_path / f"modelo-111-{_FLOOR}-1T.boe"
+    out = tmp_path / "modelo-111-2024-1T.boe"
 
     result = _invoke(
         [
@@ -550,7 +535,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
             "--modelo",
             "111",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--period",
             "1T",
             "--output",
@@ -564,8 +549,8 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     assert "operation\tmodelo.export" in result.output
     assert f"calculation_revision_id\t{calculation_revision_id}" in result.output
     assert "modelo\t111" in result.output
-    assert f"filing_year\t{_FLOOR}" in result.output
-    assert f"period\t{_FLOOR} 1T" in result.output
+    assert "filing_year\t2024" in result.output
+    assert "period\t2024 1T" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
 
@@ -585,11 +570,11 @@ def test_export_refuses_output_path_with_missing_parent_directory(
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
-        filing_year=_FLOOR,
+        filing_year=2024,
         period="1T",
         operation=operation,
     )
-    out = tmp_path / "missing-parent" / f"modelo-111-{_FLOOR}-1T.boe"
+    out = tmp_path / "missing-parent" / "modelo-111-2024-1T.boe"
 
     result = _invoke(
         [
@@ -601,7 +586,7 @@ def test_export_refuses_output_path_with_missing_parent_directory(
             "--modelo",
             "111",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--period",
             "1T",
             "--output",
@@ -631,11 +616,11 @@ def test_export_refuses_an_existing_output_path_without_replace(
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
-        filing_year=_FLOOR,
+        filing_year=2024,
         period="1T",
         operation=operation,
     )
-    out = tmp_path / f"modelo-111-{_FLOOR}-1T.boe"
+    out = tmp_path / "modelo-111-2024-1T.boe"
     out.write_bytes(b"already here")
 
     result = _invoke(
@@ -648,7 +633,7 @@ def test_export_refuses_an_existing_output_path_without_replace(
             "--modelo",
             "111",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--period",
             "1T",
             "--output",
@@ -726,11 +711,11 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     _seed_modelo_111_revisions(
         states=(CalculationRevisionState.VERIFICADO_COMPLETO,),
         current_index=0,
-        filing_year=_FLOOR,
+        filing_year=2024,
         period="1T",
         operation=operation,
     )
-    out = tmp_path / f"modelo-111-{_FLOOR}-1T.boe"
+    out = tmp_path / "modelo-111-2024-1T.boe"
 
     result = _invoke(
         [
@@ -742,7 +727,7 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
             "--modelo",
             "111",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--period",
             "1T",
             "--output",
@@ -871,7 +856,7 @@ def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) 
             "--modelo",
             "100",
             "--year",
-            str(_FLOOR),
+            "2024",
             "--period",
             "INVALID",
             "--output",
@@ -921,7 +906,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
             "--modelo",
             "111",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "1T",
             "--output",
@@ -937,7 +922,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     assert notice["severity"] == "warning"
     assert notice["context"]["evidence_status"] == "local_export_not_official_aeat_filing_evidence"
     assert notice["context"]["modelo"] == "111"
-    assert notice["context"]["filing_year"] == str(_HORIZON)
+    assert notice["context"]["filing_year"] == "2026"
     assert notice["context"]["period"] == "1T"
     assert notice["message"] == expected_notice
     assert notice["action"] is None
@@ -970,7 +955,7 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
             "--modelo",
             "111",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "1T",
             "--output",
@@ -1007,7 +992,7 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
             "--modelo",
             "111",
             "--year",
-            str(_HORIZON),
+            "2026",
             "--period",
             "1T",
             "--output",
@@ -1051,7 +1036,7 @@ def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
 
     _set_export_profile_name()
     work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="200", filing_year=_M200_CALCULATION_REVISION.valid_from.year, period="0A", operation=operation
+        modelo="200", filing_year=2024, period="0A", operation=operation
     )
     out = tmp_path / "modelo-200.txt"
 
@@ -1088,7 +1073,7 @@ def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
     assert evidence_values["declared_authority_grade"] == "calculation"
     assert evidence_values["modelo"] == "200"
     assert evidence_values["requested_authority_grade"] == "filing"
-    assert evidence_values["revision_id"] == str(_M200_CALCULATION_REVISION.id)
+    assert evidence_values["revision_id"] == "2024"
     # Free exception text never crosses the runtime; the catalogue sentence does.
     assert error["message"] == tr(get_registered_error_code_by_code(error["code"]).message_key)
     assert not out.exists()
@@ -1099,7 +1084,7 @@ def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="303", filing_year=_HORIZON, period="1T", operation=operation
+        modelo="303", filing_year=2026, period="1T", operation=operation
     )
     out = tmp_path / "modelo-303.txt"
 
@@ -1133,7 +1118,7 @@ def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="100", filing_year=_M100_YEAR, period="0A", operation=operation
+        modelo="100", filing_year=2025, period="0A", operation=operation
     )
     out = tmp_path / "modelo-100.xml"
 

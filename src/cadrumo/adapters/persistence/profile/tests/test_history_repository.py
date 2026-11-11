@@ -27,23 +27,21 @@ from cadrumo.application.filing.history_ports import FilingHistoryPersistenceErr
 from cadrumo.application.filing.history_repository import ModeloHistoryRepository
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.identifiers import ModeloIdentifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
-_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 
-_FOREIGN_CLASS_WRITTEN_AT = datetime(_YEAR, 5, 26, 17, 30, 0, tzinfo=UTC)
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 30, 0, tzinfo=UTC)
 
 
 def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
-    base = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
+    base = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
     entries = tuple(
         ModeloHistoryEntry(
             modelo=ModeloIdentifier(modelo),
-            period=Period.from_year_and_code(_YEAR, f"{i + 1}T"),
+            period=Period.from_year_and_code(2026, f"{i + 1}T"),
             submitted_at=base.replace(month=1 + 3 * i),
             status="ACCEPTED",
         )
@@ -111,7 +109,7 @@ class TestSaveLoad:
         loaded = _new_repository(_active_bucket_runtime).load("130")
         assert loaded == history
         assert loaded is not None
-        assert loaded.entries[0].period == Period.from_year_and_code(_YEAR, "1T")
+        assert loaded.entries[0].period == Period.from_year_and_code(2026, "1T")
 
     def test_save_idempotent(self, repo: ModeloHistoryRepository) -> None:
         history = _make_history(modelo="130")
@@ -148,16 +146,16 @@ class TestClassificationGate:
         payloads = _database_payloads(_active_bucket_runtime)
         assert payloads
         for payload in payloads:
-            assert f"{_YEAR}Q1".encode() not in payload
-            assert f"{_YEAR} 1T".encode() not in payload
+            assert b"2026Q1" not in payload
+            assert b"2026 1T" not in payload
             assert b"ACCEPTED" not in payload
             assert b"130" not in payload
 
     def test_serialized_payload_stores_structured_period_not_combined_string(self) -> None:
         history = _make_history(modelo="130")
         dumped = history.model_dump(mode="json")
-        assert dumped["entries"][0]["period"] == {"filing_year": _YEAR, "code": "1T"}
-        assert f"{_YEAR}Q1" not in history.model_dump_json()
+        assert dumped["entries"][0]["period"] == {"filing_year": 2026, "code": "1T"}
+        assert "2026Q1" not in history.model_dump_json()
 
     def test_foreign_class_object_refused(
         self,

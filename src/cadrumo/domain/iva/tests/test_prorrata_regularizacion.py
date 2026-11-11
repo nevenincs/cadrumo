@@ -20,7 +20,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..prorrata import (
     ProrrataInputs,
     ProrrataKind,
@@ -32,8 +31,6 @@ from ..prorrata import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -88,7 +85,7 @@ def test_definitiva_percentage_comes_from_the_full_year_art104_substrate() -> No
             operaciones_con_derecho_deduccion=Decimal("90000"),
             operaciones_sin_derecho_deduccion=Decimal("10000"),
         ),
-        year=_YEAR,
+        year=2025,
     )
     assert result.kind == ProrrataKind.from_registry("definitiva")
     assert result.period == "annual"
@@ -106,7 +103,7 @@ def test_definitiva_percentage_rounds_up_per_art_104_dos() -> None:
             operaciones_con_derecho_deduccion=Decimal("70000"),
             operaciones_sin_derecho_deduccion=Decimal("30001"),
         ),
-        year=_YEAR,
+        year=2025,
     )
     assert result.percentage == Decimal("70")
 
@@ -125,7 +122,7 @@ def test_regularizacion_is_deduccion_complementaria_when_definitiva_exceeds_prov
             operaciones_con_derecho_deduccion=Decimal("90000"),
             operaciones_sin_derecho_deduccion=Decimal("10000"),
         ),
-        year=_YEAR,
+        year=2025,
     ).percentage
     provisional = Decimal("80")
 
@@ -158,7 +155,7 @@ def test_aeat_manual_example_regularises_only_the_earlier_quarters() -> None:
             operaciones_con_derecho_deduccion=Decimal("25000"),
             operaciones_sin_derecho_deduccion=Decimal("20000"),
         ),
-        year=_YEAR,
+        year=2025,
     ).percentage
     provisional = Decimal("73")
     quarters = (Decimal("400.00"), Decimal("420.00"), Decimal("460.00"))
@@ -206,7 +203,7 @@ def test_regularizacion_is_ingreso_when_definitiva_below_provisional() -> None:
             operaciones_con_derecho_deduccion=Decimal("70000"),
             operaciones_sin_derecho_deduccion=Decimal("30000"),
         ),
-        year=_YEAR,
+        year=2025,
     ).percentage
     provisional = Decimal("85")
 

@@ -43,10 +43,7 @@ from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    M303_YEAR,
-    build_verified_modelo_303_revision,
-)
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 from .runtime_profile_backend import runtime_cli_profile
@@ -60,7 +57,7 @@ _MAY_REPLAY_PROFILE = "may-replay"
 
 _COMPLETENESS_UNVERIFIED_NOTICE = "modelo.export.completeness_unverified"
 _NOT_OFFICIAL_EVIDENCE_NOTICE = "modelo.export.local_export_not_official_evidence"
-_SUMMARY_EXPORTED_AT = datetime(M303_YEAR, 7, 20, 9, 30, tzinfo=UTC)
+_SUMMARY_EXPORTED_AT = datetime(2026, 7, 20, 9, 30, tzinfo=UTC)
 #: A minute later: inside the unlocked session's idle window, which a frozen
 #: clock would otherwise run past.
 _LATER_SUMMARY_EXPORTED_AT = _SUMMARY_EXPORTED_AT + timedelta(minutes=1)
@@ -129,7 +126,7 @@ def test_the_filing_file_result_states_what_the_command_line_prints(tmp_path: Pa
     # Replay the May fixture at its own as-of date; wallet freshness remains
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
-        frozen_clock(datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC)),
+        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
         runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):

@@ -73,7 +73,6 @@ from .....domain.calculations.registry.schema import BindingDefinition, ModeloRe
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -91,7 +90,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "20260810-0000-4000-8000-000000000001"
 _MODELO = "130"
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2024
 _PERIOD_CODE = "1T"
 
 # Distinct and fixed rather than "now". The revision model documents updated_at
@@ -99,14 +98,14 @@ _PERIOD_CODE = "1T"
 # save-drops-field / load-re-defaults regression collapses to; a differing pair
 # is the value that regression could not produce. Frozen instants also keep the
 # fixture deterministic.
-_CREATED_AT = datetime(1980, 2, 11, 8, 20, 45, tzinfo=UTC)
-_UPDATED_AT = datetime(1980, 4, 27, 16, 5, 9, tzinfo=UTC)
-_WORK_UNIT_CREATED_AT = datetime(1980, 1, 30, 7, 10, 15, tzinfo=UTC)
-_WORK_UNIT_UPDATED_AT = datetime(1980, 5, 2, 19, 55, 40, tzinfo=UTC)
+_CREATED_AT = datetime(2026, 2, 11, 8, 20, 45, tzinfo=UTC)
+_UPDATED_AT = datetime(2026, 4, 27, 16, 5, 9, tzinfo=UTC)
+_WORK_UNIT_CREATED_AT = datetime(2026, 1, 30, 7, 10, 15, tzinfo=UTC)
+_WORK_UNIT_UPDATED_AT = datetime(2026, 5, 2, 19, 55, 40, tzinfo=UTC)
 # The capture instant is the moment AEAT's register row was observed, which is
 # neither of the local calculation's instants and is never "now": a captured_at
 # defaulted at write time would be indistinguishable from a dropped field.
-_CAPTURED_AT = datetime(1980, 3, 18, 11, 42, 3, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 3, 18, 11, 42, 3, tzinfo=UTC)
 
 _SYNTHETIC_TAX_ID = "12345678Z"
 _SYNTHETIC_EXPEDIENTE_ID = f"{_MODELO}{_FILING_YEAR}{_PERIOD_CODE}ABCD1234EFGH567"

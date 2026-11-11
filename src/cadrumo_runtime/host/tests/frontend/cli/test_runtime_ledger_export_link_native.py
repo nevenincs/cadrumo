@@ -7,7 +7,6 @@ import hashlib
 import io
 import json
 import sys
-from datetime import date
 from pathlib import Path
 from typing import cast
 
@@ -30,7 +29,6 @@ from cadrumo.application.ledger.link_operation import (
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession
@@ -40,8 +38,6 @@ from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import (
 )
 
 from ...native_profile_facts import native_general_iva_facts
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -101,7 +97,7 @@ def test_native_export_filter_and_invoice_link_use_the_bound_worker(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 3, 10).isoformat(),
+            "2026-03-10",
             "--amount",
             "121.00",
             "--direction",
@@ -120,7 +116,7 @@ def test_native_export_filter_and_invoice_link_use_the_bound_worker(
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 4, 15).isoformat(),
+            "2026-04-15",
             "--amount",
             "85.00",
             "--direction",
@@ -148,7 +144,7 @@ def test_native_export_filter_and_invoice_link_use_the_bound_worker(
             "--invoice-number",
             "EXPORT-LINK-001",
             "--invoice-date",
-            date(_YEAR, 3, 10).isoformat(),
+            "2026-03-10",
             "--country-code",
             "ES",
             "--taxable-base",
@@ -172,7 +168,7 @@ def test_native_export_filter_and_invoice_link_use_the_bound_worker(
             "--period",
             "1T",
             "--year",
-            str(_YEAR),
+            "2026",
         )
         assert exported.exit_code == 0, exported.output
         export_payload = unwrap_cli_result(exported)

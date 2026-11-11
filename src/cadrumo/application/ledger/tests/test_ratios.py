@@ -9,15 +9,12 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.categories.registry import load_category_profiles
 from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ..ratios import (
     eligible_ratio_categories,
     validate_ratios_profile,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -27,18 +24,18 @@ _BUCKET_ID = "19191919-1919-4919-8919-191919191919"
 class TestEligible:
     def test_eligible_lists_every_eligible_category(self, operation: PinnedAuthorityOperation) -> None:
         empty_profile = UsageRatioProfile()
-        rows = eligible_ratio_categories(empty_profile, year=_YEAR, operation=operation)
+        rows = eligible_ratio_categories(empty_profile, year=2025, operation=operation)
         assert {row.category for row in rows} == set(ELIGIBLE_USAGE_RATIO_CATEGORIES)
 
     def test_eligible_rows_are_sorted_by_category_value(self, operation: PinnedAuthorityOperation) -> None:
-        rows = eligible_ratio_categories(UsageRatioProfile(), year=_YEAR, operation=operation)
+        rows = eligible_ratio_categories(UsageRatioProfile(), year=2025, operation=operation)
         category_values = [row.category.value for row in rows]
         assert category_values == sorted(category_values)
 
     def test_eligible_flags_override_presence(self, operation: PinnedAuthorityOperation) -> None:
         sample_category = next(iter(ELIGIBLE_USAGE_RATIO_CATEGORIES))
         profile = UsageRatioProfile(ratios={sample_category: Decimal("0.40")})
-        rows = eligible_ratio_categories(profile, year=_YEAR, operation=operation)
+        rows = eligible_ratio_categories(profile, year=2025, operation=operation)
         targeted = next(row for row in rows if row.category is sample_category)
         assert targeted.override_present is True
         others = [row for row in rows if row.category is not sample_category]
@@ -52,13 +49,13 @@ class TestEligibleWording:
         english = {
             row.category.value: row
             for row in eligible_ratio_categories(
-                UsageRatioProfile(), year=_YEAR, operation=operation, language=OutputLanguage.EN
+                UsageRatioProfile(), year=2025, operation=operation, language=OutputLanguage.EN
             )
         }
         spanish = {
             row.category.value: row
             for row in eligible_ratio_categories(
-                UsageRatioProfile(), year=_YEAR, operation=operation, language=OutputLanguage.ES
+                UsageRatioProfile(), year=2025, operation=operation, language=OutputLanguage.ES
             )
         }
 
@@ -84,7 +81,7 @@ class TestEligibleWording:
     ) -> None:
         token = I18N_STRICT_MISSING_KEYS.set(True)
         try:
-            rows = eligible_ratio_categories(UsageRatioProfile(), year=_YEAR, operation=operation, language=language)
+            rows = eligible_ratio_categories(UsageRatioProfile(), year=2025, operation=operation, language=language)
         finally:
             I18N_STRICT_MISSING_KEYS.reset(token)
 

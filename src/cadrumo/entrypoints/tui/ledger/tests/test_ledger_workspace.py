@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from datetime import date
 from pathlib import Path
 from typing import cast
 
@@ -23,7 +22,6 @@ from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....core.identity.transaction_ids import TransactionId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -46,8 +44,6 @@ from .workspace_fixtures import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _LOCALE_EXPECTED = {
     OutputLanguage.ES: ("Registros: resumen", "Filtro: todos los estados de revisión", "Revisado"),
@@ -298,7 +294,7 @@ async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_
         assert tuple(widget.id for widget in screen.focus_chain) == ("ledger-navigation", "ledger-entries")
         copy = _all_copy(screen)
         for field in (
-            date(_YEAR, 3, 14).isoformat(),
+            "2026-03-14",
             "1250.00",
             "EUR",
             "outgoing",

@@ -11,14 +11,12 @@ never produce is refused before it reaches an operator.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....application.aggregation.counterpart import CounterpartObservation
 from ....application.aggregation.service import (
@@ -35,9 +33,7 @@ from .aggregate_projection import from_aggregation_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-
-_PERIOD = Period.from_year_and_code(_YEAR, "0A")
+_PERIOD = Period.from_year_and_code(2025, "0A")
 
 
 def _real_result(*, operation: PinnedAuthorityOperation) -> PerModeloAggregationResult:
@@ -52,7 +48,7 @@ def _real_result(*, operation: PinnedAuthorityOperation) -> PerModeloAggregation
         operation_period="0A",
         taxable_base=Decimal("4000.00"),
         invoice_total=Decimal("4840.00"),
-        accrued_on=date(_YEAR, 3, 15).isoformat(),
+        accrued_on="2025-03-15",
     )
     return aggregate_per_modelo(
         PerModeloAggregationCommand(

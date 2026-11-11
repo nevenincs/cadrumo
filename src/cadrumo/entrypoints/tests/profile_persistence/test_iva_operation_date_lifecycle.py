@@ -43,7 +43,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.hierarchy import CadrumoError
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
 from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
@@ -74,10 +73,9 @@ from .verification_repository_support import build_test_certificate_secret_backe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = filing_year_envelope().horizon
 _DEVENGADA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
-_AT = datetime(_YEAR, 4, 6, 10, 0, tzinfo=UTC)
+_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 _MOVEMENT_DATED = "iva_row_placed_on_movement_date"
 _AFTER_MOVEMENT = "iva_operation_date_after_movement"
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -99,7 +97,7 @@ def _sale(
     provider_id: str = _SALE_ON_THE_BOUNDARY,
     *,
     base: Decimal = Decimal("1000.00"),
-    booked: date = date(_YEAR, 4, 2),
+    booked: date = date(2026, 4, 2),
     operation_date: date | None = None,
 ) -> Transaction:
     return iva_transaction(
@@ -194,7 +192,7 @@ def _file(revision_id: str, report: VerificationReport) -> None:
         )
 
 
-def _issued_invoice(*, issued_at: date = date(_YEAR, 3, 30)) -> Invoice:
+def _issued_invoice(*, issued_at: date = date(2026, 3, 30)) -> Invoice:
     base, iva = Decimal("1000.00"), Decimal("210.00")
     grand_total = base + iva
     return Invoice(
@@ -241,7 +239,7 @@ def test_a_sale_on_30_march_collected_on_2_april_moves_to_the_first_quarter(tmp_
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
         assert sale.transaction_id not in revision.source_transaction_ids
 
-        _set_operation_date(objects, sale, date(_YEAR, 3, 30))
+        _set_operation_date(objects, sale, date(2026, 3, 30))
         result = calculate_irene(_work_unit_of(objects, revision))
 
         assert result.revision.casilla_values[_DEVENGADA] == Decimal("210.00")
@@ -251,7 +249,7 @@ def test_a_sale_on_30_march_collected_on_2_april_moves_to_the_first_quarter(tmp_
 
 def test_the_fallback_to_the_bank_date_raises_its_advisory_in_the_receiving_quarter(tmp_path: Path) -> None:
     """Sold on 30 December, banked on 2 January: the first quarter wrongly receives it."""
-    sale = _sale(booked=date(_YEAR, 1, 2))
+    sale = _sale(booked=date(2026, 1, 2))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
         with bundled_indexed_authority().operation() as operation:
@@ -263,7 +261,7 @@ def test_the_fallback_to_the_bank_date_raises_its_advisory_in_the_receiving_quar
         assert "ley-37-1992:art-75" in advisory.asserted_legal_refs
         assert sale.transaction_id[:12] in advisory.message
 
-        _set_operation_date(objects, sale, date(_YEAR - 1, 12, 30))
+        _set_operation_date(objects, sale, date(2025, 12, 30))
         moved = calculate_irene(_work_unit_of(objects, revision))
         assert sale.transaction_id not in moved.revision.source_transaction_ids
 
@@ -278,7 +276,7 @@ def test_a_linked_invoice_of_march_declares_in_the_first_quarter_whether_or_not_
     invoice's cuota from 1T nor, once the row is dated 30 March, adds a second
     210.00 beside it.
     """
-    for label, row in (("undated", _sale()), ("dated", _sale(operation_date=date(_YEAR, 3, 30)))):
+    for label, row in (("undated", _sale()), ("dated", _sale(operation_date=date(2026, 3, 30)))):
         invoice = _issued_invoice().model_copy(update={"linked_transaction_ids": (row.transaction_id,)})
         paying = row.model_copy(update={"invoice_id": invoice.invoice_id})
         with isolated_runtime_profile(tmp_path=tmp_path / label, bucket_id=BUCKET_ID) as profile:
@@ -300,9 +298,9 @@ def test_a_january_payment_of_a_december_invoice_declares_nothing_in_the_first_q
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
-        invoice = _issued_invoice(issued_at=date(_YEAR - 1, 12, 30))
+        invoice = _issued_invoice(issued_at=date(2025, 12, 30))
         InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects).save(build_invoice_catalogue((invoice,)))
-        sale = _sale(booked=date(_YEAR, 1, 2)).model_copy(update={"invoice_id": invoice.invoice_id})
+        sale = _sale(booked=date(2026, 1, 2)).model_copy(update={"invoice_id": invoice.invoice_id})
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
 
@@ -312,8 +310,8 @@ def test_a_january_payment_of_a_december_invoice_declares_nothing_in_the_first_q
 
 def test_an_advance_keeps_its_collection_date_and_its_balance_stays_out_of_the_quarter(tmp_path: Path) -> None:
     """LIVA art. 75.Dos: each row states its own devengo; the field computes neither."""
-    advance = _sale("advance", base=Decimal("500.00"), booked=date(_YEAR, 3, 20), operation_date=date(_YEAR, 3, 20))
-    balance = _sale("balance", base=Decimal("500.00"), booked=date(_YEAR, 4, 15), operation_date=date(_YEAR, 4, 10))
+    advance = _sale("advance", base=Decimal("500.00"), booked=date(2026, 3, 20), operation_date=date(2026, 3, 20))
+    balance = _sale("balance", base=Decimal("500.00"), booked=date(2026, 4, 15), operation_date=date(2026, 4, 10))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(profile.repository, operation=operation, rows=(advance, balance))
@@ -322,10 +320,8 @@ def test_an_advance_keeps_its_collection_date_and_its_balance_stays_out_of_the_q
 
 
 def test_the_balance_of_a_december_advance_carries_only_its_own_cuota(tmp_path: Path) -> None:
-    advance = _sale(
-        "advance", base=Decimal("500.00"), booked=date(_YEAR - 1, 12, 20), operation_date=date(_YEAR - 1, 12, 20)
-    )
-    balance = _sale("balance", base=Decimal("500.00"), booked=date(_YEAR, 1, 15), operation_date=date(_YEAR, 1, 10))
+    advance = _sale("advance", base=Decimal("500.00"), booked=date(2025, 12, 20), operation_date=date(2025, 12, 20))
+    balance = _sale("balance", base=Decimal("500.00"), booked=date(2026, 1, 15), operation_date=date(2026, 1, 10))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(profile.repository, operation=operation, rows=(advance, balance))
@@ -334,7 +330,7 @@ def test_the_balance_of_a_december_advance_carries_only_its_own_cuota(tmp_path: 
 
 
 def test_money_collected_before_a_later_stated_date_is_flagged_as_a_possible_advance(tmp_path: Path) -> None:
-    collected_early = _sale(booked=date(_YEAR, 3, 20), operation_date=date(_YEAR, 3, 28))
+    collected_early = _sale(booked=date(2026, 3, 20), operation_date=date(2026, 3, 28))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(profile.repository, operation=operation, rows=(collected_early,))
@@ -344,7 +340,7 @@ def test_money_collected_before_a_later_stated_date_is_flagged_as_a_possible_adv
 def test_a_row_dated_in_the_quarter_verifies_and_exports_with_its_worked_cuota(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
-        sale = _sale(operation_date=date(_YEAR, 3, 30))
+        sale = _sale(operation_date=date(2026, 3, 30))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
 
@@ -354,7 +350,7 @@ def test_a_row_dated_in_the_quarter_verifies_and_exports_with_its_worked_cuota(t
         assert stored is not None
         assert stored.ledger_filing_evidence is not None
         (row,) = stored.ledger_filing_evidence.rows
-        assert row.operation_date == date(_YEAR, 3, 30).isoformat()
+        assert row.operation_date == "2026-03-30"
         exported = _export(revision.calculation_revision_id, tmp_path / "m303.txt")
         assert exported.startswith(b"<T3030")
         assert b"00000000000021000" in exported
@@ -363,10 +359,10 @@ def test_a_row_dated_in_the_quarter_verifies_and_exports_with_its_worked_cuota(t
 def test_changing_the_operation_date_of_a_draft_row_is_drift(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
-        sale = _sale(booked=date(_YEAR, 3, 30), operation_date=date(_YEAR, 3, 30))
+        sale = _sale(booked=date(2026, 3, 30), operation_date=date(2026, 3, 30))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
-        _set_operation_date(objects, sale, date(_YEAR, 3, 29))
+        _set_operation_date(objects, sale, date(2026, 3, 29))
 
         report = _verify(objects, revision.calculation_revision_id)
 
@@ -380,7 +376,7 @@ def test_detaching_evidence_drifts_where_the_field_set_before_it_stayed_quiet(tm
         "detached",
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("200.00"),
-        booked_date=date(_YEAR, 2, 1),
+        booked_date=date(2026, 2, 1),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
@@ -432,7 +428,7 @@ def _anchor_under_field_set(
 def test_a_revision_anchored_under_an_older_field_set_does_not_drift_spuriously(tmp_path: Path, version: int) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
-        sale = _sale(booked=date(_YEAR, 2, 15))
+        sale = _sale(booked=date(2026, 2, 15))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
         _anchor_under_field_set(objects, revision, sale, version)
@@ -446,11 +442,11 @@ def test_an_operation_date_written_after_an_older_anchor_is_still_seen(tmp_path:
     """A V3 hash cannot see the date, yet it can move the row out of the quarter."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         objects = profile.repository
-        sale = _sale(booked=date(_YEAR, 2, 15))
+        sale = _sale(booked=date(2026, 2, 15))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
         _anchor_under_field_set(objects, revision, sale, 3)
-        _set_operation_date(objects, sale, date(_YEAR, 4, 2))
+        _set_operation_date(objects, sale, date(2026, 4, 2))
 
         report = _verify(objects, revision.calculation_revision_id)
 
@@ -459,9 +455,9 @@ def test_an_operation_date_written_after_an_older_anchor_is_still_seen(tmp_path:
 
 
 def _sealed_with_invoice(objects: SecureObjectRepository) -> tuple[CalculationRevision, Invoice, VerificationReport]:
-    invoice = _issued_invoice(issued_at=date(_YEAR, 2, 15))
+    invoice = _issued_invoice(issued_at=date(2026, 2, 15))
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects).save(build_invoice_catalogue((invoice,)))
-    sale = _sale(booked=date(_YEAR, 2, 15)).model_copy(update={"invoice_id": invoice.invoice_id})
+    sale = _sale(booked=date(2026, 2, 15)).model_copy(update={"invoice_id": invoice.invoice_id})
     with bundled_indexed_authority().operation() as operation:
         revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
     report = _verify(objects, revision.calculation_revision_id)
@@ -486,7 +482,7 @@ def test_a_verified_revision_refuses_the_invoice_edit_and_exports_its_figures(tm
         revision, invoice, _report = _sealed_with_invoice(profile.repository)
         first = _export(revision.calculation_revision_id, tmp_path / "before.txt")
 
-        _refused_edit(invoice, CatalogueInvoicePatch(operation_date=date(_YEAR, 4, 2)))
+        _refused_edit(invoice, CatalogueInvoicePatch(operation_date=date(2026, 4, 2)))
 
         stored = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=profile.repository).load()
         assert stored.get(invoice.invoice_id) == invoice
@@ -503,7 +499,7 @@ def test_a_filed_revision_keeps_its_history_and_refuses_edit_and_removal(tmp_pat
         assert filed is not None
         assert filed.state is CalculationRevisionState.PRESENTADO
 
-        _refused_edit(invoice, CatalogueInvoicePatch(operation_date=date(_YEAR, 4, 2)))
+        _refused_edit(invoice, CatalogueInvoicePatch(operation_date=date(2026, 4, 2)))
         with pytest.raises(CadrumoError) as removal:
             remove_catalogue_invoice(
                 bucket_id=BUCKET_ID,

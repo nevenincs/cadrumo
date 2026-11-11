@@ -19,7 +19,6 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from .....domain.calculations.registry.schema import RegistrySnapshot
@@ -54,25 +53,17 @@ def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:
 # (modelo, filing_year, period, on) — supported modelos whose registry formulas
 # are export-capable (every formula op has a closed-form Sheets translation), so
 # a live-formula workbook can be built and held to official-casilla parity.
-_YEAR = filing_year_envelope().horizon
 _COVERED = [
-    ("130", _YEAR, "1T", date(_YEAR, 4, 1)),  # pagos fraccionados actividad
-    *(("303", year, "1T", date(year, 4, 1)) for year in filing_year_envelope().years),  # IVA trimestral
-    (
-        "390",
-        filing_grade_exercises("390")[-1],
-        "0A",
-        date(filing_grade_exercises("390")[-1] + 1, 1, 20),
-    ),  # IVA resumen anual
-    ("111", _YEAR, "1T", date(_YEAR, 4, 1)),  # retenciones trabajo
-    ("115", _YEAR, "1T", date(_YEAR, 4, 1)),  # retenciones arrendamientos
-    (
-        "200",
-        filing_grade_exercises("200")[-1],
-        "0A",
-        date(filing_grade_exercises("200")[-1] + 1, 7, 1),
-    ),  # sociedades (bracket-by-entity-type translated)
-    # The newest M100 edition is NOT covered: formula 0197 (Art. 85 renta inmobiliaria imputada,
+    ("130", 2025, "1T", date(2025, 4, 1)),  # pagos fraccionados actividad
+    ("303", 2023, "1T", date(2023, 4, 1)),  # IVA trimestral — 2023 epoch
+    ("303", 2024, "1T", date(2024, 4, 1)),  # IVA trimestral
+    ("303", 2025, "1T", date(2025, 4, 1)),  # IVA trimestral
+    ("303", 2026, "1T", date(2026, 4, 1)),  # IVA trimestral
+    ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
+    ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
+    ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
+    ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type translated)
+    # M100 2025 is NOT covered: formula 0197 (Art. 85 renta inmobiliaria imputada,
     # casillas 0083-0089) evaluates through the custom
     # ``m100_resolve_renta_inmobiliaria_imputada`` op, which raises registry
     # validation errors on out-of-range inputs and has no closed-form Sheets

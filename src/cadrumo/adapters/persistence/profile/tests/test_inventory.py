@@ -13,7 +13,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
@@ -34,8 +33,6 @@ _runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _validate_candidate(candidate: InventoryLedger) -> None:
     compute_inventory_valuation(candidate)
@@ -45,7 +42,7 @@ def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> Mo
     value = Decimal(quantity) * Decimal(unit_cost)
     return MovementRecord(
         movement_id=f"{kind.value}-{day}",
-        movement_date=date(_YEAR, 1, day),
+        movement_date=date(2025, 1, day),
         kind=kind,
         quantity=Decimal(quantity),
         unit_cost=Decimal(unit_cost),
@@ -60,7 +57,7 @@ def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> Mo
 def test_inventory_persistence_and_real_movement_append() -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
-        year=_YEAR,
+        year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("150.00"),
         closing_authority_record=None,
@@ -71,7 +68,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
     updated = record_movement(
         "retail",
         _movement(MovementKind.PURCHASE, "2", "10", 1),
-        year=_YEAR,
+        year=2025,
         validate_candidate=_validate_candidate,
     )
 
@@ -82,7 +79,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
 def test_inventory_duplicate_ledger_refusal_is_localized_and_structured() -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
-        year=_YEAR,
+        year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,
@@ -97,13 +94,13 @@ def test_inventory_duplicate_ledger_refusal_is_localized_and_structured() -> Non
         exc_info.value.translated_message
         == "adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists"
     )
-    assert exc_info.value.context == {"actividad_id": "retail", "year": _YEAR}
+    assert exc_info.value.context == {"actividad_id": "retail", "year": 2025}
 
 
 def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
-        year=_YEAR,
+        year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,
@@ -114,7 +111,7 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
     )
 
     with pytest.raises(InventoryLedgerError) as exc_info:
-        record_movement("retail", movement, year=_YEAR, validate_candidate=_validate_candidate)
+        record_movement("retail", movement, year=2025, validate_candidate=_validate_candidate)
 
     assert exc_info.value.translated_message == "adapters.persistence.profile.inventory.errors.movement_already_exists"
     assert exc_info.value.context == {"movement_id": movement.movement_id}
@@ -123,14 +120,14 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
 def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_profile: TestRuntimeProfile) -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
-        year=_YEAR,
+        year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,
         period_movements=(
             MovementRecord(
                 movement_id="purchase-canary",
-                movement_date=date(_YEAR, 1, 2),
+                movement_date=date(2025, 1, 2),
                 kind=MovementKind.PURCHASE,
                 sku="LEAK-CANARY-SKU",
                 quantity=Decimal("1"),

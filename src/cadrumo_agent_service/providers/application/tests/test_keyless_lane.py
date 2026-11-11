@@ -98,7 +98,7 @@ def _record(**fields: object) -> ProviderSettingsRecord:
         "assistant_auth": AssistantAuth.DIRECT_API,
         "credential_state": CredentialState.UNSET,
         "generation": new_settings_generation(),
-        "updated_at": datetime(1980, 10, 25, 9, 0, tzinfo=UTC),
+        "updated_at": datetime(2026, 10, 25, 9, 0, tzinfo=UTC),
     }
     values.update(fields)
     return ProviderSettingsRecord.model_validate(values)
@@ -248,7 +248,7 @@ def test_a_keyless_lane_reads_nothing_until_the_person_selects_a_model_and_needs
         models=(),
         reading=ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL),
         generation=new_settings_generation(),
-        updated_at=datetime(1980, 10, 27, 9, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
     )
     assert model_list.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
 

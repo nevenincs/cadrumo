@@ -17,15 +17,12 @@ import pytest
 from ....core.auth_provider import AuthProviderDescription
 from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import SubmissionPreflightError
 from ..models import ModeloDraftStatus
 from ..preflight import Preflight
 from ..protocols import ModeloFindingLike
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_EXERCISE = filing_year_envelope().horizon
 
 
 class _UnusedDeadlineChecker:
@@ -62,7 +59,7 @@ class _DraftWithFindings:
 
     @property
     def period(self) -> Period:
-        return Period.from_year_and_code(_EXERCISE, "0A")
+        return Period.from_year_and_code(2025, "0A")
 
     @property
     def profile_tax_id(self) -> str:
@@ -86,7 +83,7 @@ def _preflight() -> Preflight:
 
 
 def _check(draft: _DraftWithFindings) -> None:
-    _preflight().check(draft, today=date(_EXERCISE, 6, 1), skip_deadline_window=True, skip_auth_readiness=True)
+    _preflight().check(draft, today=date(2025, 6, 1), skip_deadline_window=True, skip_auth_readiness=True)
 
 
 def test_a_clean_draft_with_only_non_error_findings_passes_gate_2() -> None:

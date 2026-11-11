@@ -26,7 +26,6 @@ from ....application.modelo.verification_report_read_projection import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -39,15 +38,12 @@ from .. import operation_modelo_verification_report_read as bridge
 from ..modelo_rendering import verification_report_lines, verification_report_payload
 from ..modelo_results import VerificationReportListResult, VerificationReportShowResult
 
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(_YEAR, 5, 27, 10, 0, tzinfo=UTC)
+_NOW = datetime(2026, 5, 27, 10, 0, tzinfo=UTC)
 _CALCULATION_REVISION_ID = "b" * 64
 
 
@@ -72,8 +68,8 @@ def _report() -> VerificationReport:
         calculation_revision_id=_CALCULATION_REVISION_ID,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id=revision_serving_period("303", _YEAR, "1T").id,
-            modelo_year=_YEAR,
+            revision_id="2026-y-siguientes",
+            modelo_year=2026,
             period="1T",
         ),
         completeness_status=VerificationCompletenessStatus.BLOCKED,
@@ -285,8 +281,8 @@ def test_list_refuses_malformed_report_row_as_invalid_frame(monkeypatch: pytest.
     valid = ModeloVerificationReportProjection.from_report(_report())
     bad_snapshot = valid.registry_snapshot_ref.model_construct(
         modelo="303",
-        revision_id=revision_serving_period("303", _YEAR, "1T").id,
-        modelo_year=_YEAR,
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
         period="not-a-period",
     )
     malformed_row = valid.model_copy(update={"registry_snapshot_ref": bad_snapshot})

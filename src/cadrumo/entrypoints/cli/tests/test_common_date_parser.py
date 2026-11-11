@@ -19,7 +19,6 @@ from datetime import date
 import pytest
 import typer
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]
@@ -28,22 +27,19 @@ from ..date_parsing import parse_iso_date, parse_iso_date_str, parse_optional_is
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_ISO = f"{_YEAR}-01-15"
-
 # Non-ISO orderings that the gate MUST refuse for an ``invoice_date`` input.
 # The compact and ISO week-date forms are what ``date.fromisoformat`` also admits.
 _REJECTED = (
-    f"15/01/{_YEAR}",
-    f"01-15-{_YEAR}",
-    f"{_YEAR}/01/15",
-    f"15-01-{_YEAR}",
-    f"{_YEAR}.01.15",
+    "15/01/2026",
+    "01-15-2026",
+    "2026/01/15",
+    "15-01-2026",
+    "2026.01.15",
     "not-a-date",
     "",
-    f"{_YEAR}0115",
-    f"{_YEAR}-W03-4",
-    f"{_YEAR}W034",
+    "20260115",
+    "2026-W03-4",
+    "2026W034",
 )
 
 
@@ -54,11 +50,11 @@ def test_parse_iso_date_refuses_non_iso() -> None:
 
 
 def test_parse_iso_date_accepts_iso() -> None:
-    assert parse_iso_date(_ISO, label="invoice-date") == date(_YEAR, 1, 15)
+    assert parse_iso_date("2026-01-15", label="invoice-date") == date(2026, 1, 15)
 
 
 def test_parse_iso_date_accepts_surrounding_whitespace() -> None:
-    assert parse_iso_date(f"  {_ISO}  ", label="invoice-date") == date(_YEAR, 1, 15)
+    assert parse_iso_date("  2026-01-15  ", label="invoice-date") == date(2026, 1, 15)
 
 
 def test_parse_iso_date_str_refuses_non_iso() -> None:
@@ -68,7 +64,7 @@ def test_parse_iso_date_str_refuses_non_iso() -> None:
 
 
 def test_parse_iso_date_str_returns_canonical_string() -> None:
-    assert parse_iso_date_str(_ISO, label="invoice-date") == _ISO
+    assert parse_iso_date_str("2026-01-15", label="invoice-date") == "2026-01-15"
 
 
 def test_parse_optional_iso_date_str_passes_through_none() -> None:
@@ -76,14 +72,14 @@ def test_parse_optional_iso_date_str_passes_through_none() -> None:
 
 
 def test_parse_optional_iso_date_str_validates_when_present() -> None:
-    assert parse_optional_iso_date_str(_ISO, label="invoice-date") == _ISO
+    assert parse_optional_iso_date_str("2026-01-15", label="invoice-date") == "2026-01-15"
     with pytest.raises(typer.BadParameter):
-        parse_optional_iso_date_str(f"15/01/{_YEAR}", label="invoice-date")
+        parse_optional_iso_date_str("15/01/2026", label="invoice-date")
 
 
 def test_refusal_message_names_field_and_raw() -> None:
     with pytest.raises(typer.BadParameter) as excinfo:
-        parse_iso_date(f"15/01/{_YEAR}", label="invoice-date")
+        parse_iso_date("15/01/2026", label="invoice-date")
     message = excinfo.value.message
     assert "invoice-date" in message
-    assert f"15/01/{_YEAR}" in message
+    assert "15/01/2026" in message

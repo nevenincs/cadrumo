@@ -52,7 +52,6 @@ from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.refund_election import RefundElection
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -60,14 +59,12 @@ from cadrumo_client.transport.operation_controller import OperationController
 
 from .....frontend.tui.modelo import runtime_lifecycle
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 _REFUSAL_CODE = "REFUSED_MODELO_M303_EXONERADO_390_ATTESTATION_UNADMISSIBLE"
-_NOW = datetime(_YEAR, 9, 28, tzinfo=UTC)
+_NOW = datetime(2026, 9, 28, tzinfo=UTC)
 
 
 class _StartFailureController:
@@ -342,8 +339,8 @@ def _report_result() -> ModeloExportPublicResultV3:
             verification_report_id=None,
             filing_record_id=None,
             modelo="303",
-            filing_year=_YEAR - 1,
-            period=PublicPeriod.from_period(Period.from_year_and_code(_YEAR - 1, "1T")),
+            filing_year=2025,
+            period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
             document_format=CalculationReportDocumentFormat.CSV,
             report_language=OutputLanguage.ES,
             output_path="C:/exports/report.csv",

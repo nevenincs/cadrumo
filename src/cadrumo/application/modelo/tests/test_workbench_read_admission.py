@@ -14,7 +14,6 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..edit_review_wording import edit_refusal_words
@@ -44,7 +43,7 @@ def _refusal(*facts: str) -> ModeloEditRefusedV1:
 
 
 def _read(operation: PinnedAuthorityOperation, admission: ModeloEditRefusedV1, language: OutputLanguage):
-    form = built_form(operation, "210", filing_year_envelope().horizon, "0A", entered=frozenset(), language=language)
+    form = built_form(operation, "210", 2025, "0A", entered=frozenset(), language=language)
     return ModeloWorkbenchFormReadV1(
         load=ModeloWorkFormLoadV1(form=form, verified=False, filed=False),
         admission=admission,

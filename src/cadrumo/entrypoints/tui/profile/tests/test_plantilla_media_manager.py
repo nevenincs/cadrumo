@@ -19,7 +19,6 @@ from textual.widgets import Button, DataTable, Input, OptionList, Static
 
 from .....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 from .....core.i18n.render import tr
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.user_profile.errors import ProfileSchemaValidationError, UserProfileValidationError
 from .....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from .....domain.user_profile.values import ProfileSetupState
@@ -34,8 +33,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TERMINAL_SIZE = (120, 60)
 _PROFILE = "00000000-0000-4000-8000-0000000000c3"
-_YEAR = filing_year_envelope().horizon
-_UNDECLARED_YEAR = _YEAR - 5
 
 
 @dataclass
@@ -172,11 +169,11 @@ async def test_a_year_is_declared_replaced_and_withdrawn_and_the_page_follows_st
 
         dialog = await _open_dialog(screen, pilot)
         assert _declared_prompts(dialog) == []
-        _fill(dialog, year=str(_YEAR), average_workforce="12.50", state=PlantillaMediaState.OBSERVED)
+        _fill(dialog, year="2024", average_workforce="12.50", state=PlantillaMediaState.OBSERVED)
         dialog.query_one("#btn-plantilla-save", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("set", (_YEAR, Decimal("12.50"), PlantillaMediaState.OBSERVED))
+        assert doors.calls[-1] == ("set", (2024, Decimal("12.50"), PlantillaMediaState.OBSERVED))
         assert isinstance(doors.calls[-1][1], tuple)
         assert isinstance(doors.calls[-1][1][1], Decimal)
         assert screen.overview.record_revision == 4
@@ -187,25 +184,25 @@ async def test_a_year_is_declared_replaced_and_withdrawn_and_the_page_follows_st
         dialog = await _open_dialog(screen, pilot)
         prompts = _declared_prompts(dialog)
         assert len(prompts) == 1
-        assert str(_YEAR) in prompts[0]
+        assert "2024" in prompts[0]
         assert "12.50" in prompts[0]
-        _fill(dialog, year=str(_YEAR), average_workforce="13", state=PlantillaMediaState.COMMITTED)
+        _fill(dialog, year="2024", average_workforce="13", state=PlantillaMediaState.COMMITTED)
         dialog.query_one("#btn-plantilla-save", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("set", (_YEAR, Decimal(13), PlantillaMediaState.COMMITTED))
-        assert list(doors.years) == [_YEAR]
+        assert doors.calls[-1] == ("set", (2024, Decimal(13), PlantillaMediaState.COMMITTED))
+        assert list(doors.years) == [2024]
         rendered = _rendered_values(screen)
         assert rendered["irpf.plantilla_media.0.average_workforce"] == "13"
         assert rendered["irpf.plantilla_media.0.state"] == "committed"
         assert screen.overview.record_revision == 5
 
         dialog = await _open_dialog(screen, pilot)
-        _fill(dialog, year=str(_YEAR))
+        _fill(dialog, year="2024")
         dialog.query_one("#btn-plantilla-remove", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("remove", _YEAR)
+        assert doors.calls[-1] == ("remove", 2024)
         assert doors.years == {}
         assert not any(path.startswith("irpf.plantilla_media.") for path in _rendered_values(screen))
         assert screen.overview.record_revision == 6
@@ -223,12 +220,8 @@ async def test_a_declared_year_selected_in_the_listing_fills_the_dialog() -> Non
     """Replacing a year starts from what the profile holds for it."""
     doors = _FakePlantillaMediaDoors(
         years={
-            _YEAR - 1: PlantillaMediaYear(
-                year=_YEAR - 1, average_workforce=Decimal("7.25"), state=PlantillaMediaState.OBSERVED
-            ),
-            _YEAR + 1: PlantillaMediaYear(
-                year=_YEAR + 1, average_workforce=Decimal(9), state=PlantillaMediaState.COMMITTED
-            ),
+            2023: PlantillaMediaYear(year=2023, average_workforce=Decimal("7.25"), state=PlantillaMediaState.OBSERVED),
+            2025: PlantillaMediaYear(year=2025, average_workforce=Decimal(9), state=PlantillaMediaState.COMMITTED),
         }
     )
     screen = _screen(doors)
@@ -240,7 +233,7 @@ async def test_a_declared_year_selected_in_the_listing_fills_the_dialog() -> Non
         dialog.query_one("#plantilla-declared", OptionList).highlighted = 1
         await settle(pilot)
 
-        assert dialog.query_one("#plantilla-year", Input).value == str(_YEAR + 1)
+        assert dialog.query_one("#plantilla-year", Input).value == "2025"
         assert dialog.query_one("#plantilla-workforce", Input).value == "9"
         assert dialog.query_one("#plantilla-state", OptionList).highlighted == tuple(PlantillaMediaState).index(
             PlantillaMediaState.COMMITTED
@@ -264,11 +257,11 @@ async def test_a_value_the_service_refuses_is_shown_and_the_page_is_not_repainte
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
         await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
-        _fill(dialog, year=str(_YEAR), average_workforce="12.5055", state=PlantillaMediaState.OBSERVED)
+        _fill(dialog, year="2024", average_workforce="12.5055", state=PlantillaMediaState.OBSERVED)
         dialog.query_one("#btn-plantilla-save", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("set", (_YEAR, Decimal("12.5055"), PlantillaMediaState.OBSERVED))
+        assert doors.calls[-1] == ("set", (2024, Decimal("12.5055"), PlantillaMediaState.OBSERVED))
         assert doors.years == {}
         assert screen.overview == opened
         assert _status(screen).tone == "error"
@@ -286,14 +279,14 @@ async def test_withdrawing_an_undeclared_year_is_refused_without_a_success() -> 
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
         await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
-        _fill(dialog, year=str(_UNDECLARED_YEAR))
+        _fill(dialog, year="2019")
         dialog.query_one("#btn-plantilla-remove", Button).press()
         await wait_until_settled(screen, pilot)
 
-        assert doors.calls[-1] == ("remove", _UNDECLARED_YEAR)
+        assert doors.calls[-1] == ("remove", 2019)
         assert screen.overview == opened
         assert _status(screen).tone == "error"
-        assert str(_UNDECLARED_YEAR) in _status(screen).message
+        assert "2019" in _status(screen).message
         pilot.app.exit(None)
 
 
@@ -302,13 +295,13 @@ async def test_withdrawing_an_undeclared_year_is_refused_without_a_success() -> 
     ("year", "average_workforce", "state", "refusal_key"),
     [
         ("20x4", "3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.year_not_whole"),
-        (f"-{_YEAR}", "3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.year_not_whole"),
-        (str(_YEAR), "three", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
-        (str(_YEAR), "NaN", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
-        (str(_YEAR), "1e1", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
-        (str(_YEAR), "+3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
-        (str(_YEAR), "1_0", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
-        (str(_YEAR), "3", None, "flows.manager.plantilla_media.state_required"),
+        ("-2024", "3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.year_not_whole"),
+        ("2024", "three", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "NaN", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "1e1", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "+3", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "1_0", PlantillaMediaState.OBSERVED, "flows.manager.plantilla_media.workforce_not_number"),
+        ("2024", "3", None, "flows.manager.plantilla_media.state_required"),
     ],
 )
 async def test_an_unparseable_answer_is_refused_in_the_dialog_and_no_write_starts(

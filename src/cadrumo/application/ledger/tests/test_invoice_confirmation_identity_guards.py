@@ -11,8 +11,6 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....application.exchange_rate_provider import exchange_rate_provider
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.invoices.catalogue_creation_ports import (
@@ -42,8 +40,6 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,7 +75,7 @@ def _invoice(invoice_number: str, *, operation: PinnedAuthorityOperation) -> Inv
         counterparty_tax_id=_COUNTERPARTY,
         counterparty_country="ES",
         invoice_number=invoice_number,
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -245,7 +241,7 @@ def test_confirmation_boundary_refuses_a_reader_or_operator_self_counterparty(
         supplier_tax_id=_COUNTERPARTY,
         supplier_name="El propio contribuyente",
         invoice_number="F-2026-0142",
-        invoice_date=date(_YEAR, 3, 10).isoformat(),
+        invoice_date="2026-03-10",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
     )

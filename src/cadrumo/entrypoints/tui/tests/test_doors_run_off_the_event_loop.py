@@ -20,7 +20,6 @@ from textual.widgets import Button, DataTable, Static
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.calendar import DeclarationsCalendarScreen
@@ -165,9 +164,7 @@ async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
     base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
-            "recovery_action": declare_next_action(
-                "operator.modelo.work.create", modelo="130", year=filing_year_envelope().horizon, period="1T"
-            )
+            "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
         }
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})

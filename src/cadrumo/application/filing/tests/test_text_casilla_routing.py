@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -66,10 +65,6 @@ _M390_TIPO_DECLARACION_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-_EXERCISE = filing_year_envelope().horizon
-_M390_EXERCISE = filing_grade_exercises("390")[-1]
-
-
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
         scope=m303_regime_composition_simplified_scope("general", authority=PublishedGovernedFactSource()),
@@ -78,7 +73,7 @@ def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
 
 def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
     """M210 ``tipo_renta`` must not enter the Decimal casilla-input channel."""
-    period = Period.from_year_and_code(_EXERCISE, "EVENT-1")
+    period = Period.from_year_and_code(2025, "EVENT-1")
 
     draft = build_draft(
         modelo="210",
@@ -93,7 +88,7 @@ def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
             _GASTOS_DEDUCIBLES_CASILLA: Decimal("0"),
             _RETENCION_PRACTICADA_CASILLA: Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(modelos=("210",), filing_year=_EXERCISE, period=period),
+        schema_provider=build_runtime_schema_provider(modelos=("210",), filing_year=2025, period=period),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -106,14 +101,14 @@ def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
 
 def test_build_draft_routes_and_validates_a_nif_typed_m184_casilla() -> None:
     """A registry-declared NIF reaches its scalar validator, not Decimal parsing."""
-    period = Period.from_year_and_code(_EXERCISE, "0A")
+    period = Period.from_year_and_code(2026, "0A")
 
     draft = build_draft(
         modelo="184",
         period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
         inputs={_M184_NIF_TYPED_CASILLA: "12345678Z"},
-        schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=_EXERCISE, period=period),
+        schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -125,7 +120,7 @@ def test_build_draft_routes_and_validates_a_nif_typed_m184_casilla() -> None:
             period=period,
             profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
             inputs={_M184_NIF_TYPED_CASILLA: "12345678A"},
-            schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=_EXERCISE, period=period),
+            schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
         )
 
     # The wrapper is localized; the wrapped registry error still names the defect.
@@ -135,8 +130,8 @@ def test_build_draft_routes_and_validates_a_nif_typed_m184_casilla() -> None:
 
 def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
     """A registry period-code casilla uses the same typed-string channel as NIF."""
-    period = Period.from_year_and_code(_EXERCISE, "EXT-1T")
-    provider = build_runtime_schema_provider(modelos=("369",), filing_year=_EXERCISE, period=period)
+    period = Period.from_year_and_code(2025, "EXT-1T")
+    provider = build_runtime_schema_provider(modelos=("369",), filing_year=2025, period=period)
     profile = ModeloOperatorProfile(tax_id="12345678Z", display_name="M369 period routing")
 
     draft = build_draft(
@@ -193,8 +188,8 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
     makes ``"1"`` parse as a Decimal and the build succeed, flipping this
     assertion from pass to fail.
     """
-    period = Period.from_year_and_code(_EXERCISE, "1T")
-    provider = build_runtime_schema_provider(modelos=("303",), filing_year=_EXERCISE, period=period)
+    period = Period.from_year_and_code(2026, "1T")
+    provider = build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period)
     profile = ModeloOperatorProfile(tax_id="12345678Z", display_name="M303 stale period value")
 
     with pytest.raises(ModeloBuilderError) as refusal:
@@ -218,9 +213,9 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
     assert "period_code value '1' does not match" in str(refusal.value.__cause__)
 
 
-def _m390_draft(inputs: dict[str, Decimal]):
-    period = Period.from_year_and_code(_M390_EXERCISE, "0A")
-    provider = build_runtime_schema_provider(modelos=("390",), filing_year=_M390_EXERCISE, period=period)
+def _m390_2024_draft(inputs: dict[str, Decimal]):
+    period = Period.from_year_and_code(2024, "0A")
+    provider = build_runtime_schema_provider(modelos=("390",), filing_year=2024, period=period)
     formula_bindings = {
         binding_id
         for formula in provider.get_snapshot("390").revision.formulas
@@ -242,7 +237,7 @@ def test_a_required_text_casilla_the_calculation_supplies_is_an_advisory_never_a
     replayed as the text ``"0"`` and satisfied the required check with a value the
     declaration never had.
     """
-    draft = _m390_draft({_M390_EJERCICIO_CASILLA: Decimal(_M390_EXERCISE)})
+    draft = _m390_2024_draft({_M390_EJERCICIO_CASILLA: Decimal("2024")})
 
     value = next(item for item in draft.values if item.casilla_id == _M390_TIPO_DECLARACION_CASILLA)
     assert value.kind is ModeloValueKind.EMPTY
@@ -255,7 +250,7 @@ def test_a_required_text_casilla_the_calculation_supplies_is_an_advisory_never_a
 
 
 def test_a_required_numeric_casilla_left_empty_still_blocks_the_draft() -> None:
-    draft = _m390_draft({})
+    draft = _m390_2024_draft({})
 
     findings = [finding for finding in draft.findings if finding.casilla_id == _M390_EJERCICIO_CASILLA]
     assert [(finding.code, finding.severity) for finding in findings] == [

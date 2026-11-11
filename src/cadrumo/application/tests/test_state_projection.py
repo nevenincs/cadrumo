@@ -20,18 +20,13 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    newest_authored_edition,
-    projected_exercise,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "100"
 _PERIOD = "0A"
 _QUARTER = "4T"
-_YEAR = filing_year_envelope().horizon
 
 
 class _UnavailableAuthority:
@@ -51,7 +46,7 @@ class _DifferentRevisionAuthority:
 
 
 def test_registry_readiness_refusals_have_no_authored_describe_command() -> None:
-    request = ModeloReadinessRequest(modelo="303", revision_id="rev", filing_year=_YEAR)
+    request = ModeloReadinessRequest(modelo="303", revision_id="rev", filing_year=2025)
     first = registry_readiness_refusal(request, period_token=_QUARTER, exc=RuntimeError("missing"))
     second = registry_readiness_revision_mismatch_refusal(
         request,
@@ -64,7 +59,7 @@ def test_registry_readiness_refusals_have_no_authored_describe_command() -> None
 
 @pytest.mark.parametrize("language", sorted(SUPPORTED_OUTPUT_LANGUAGES))
 def test_registry_readiness_refusals_are_worded_in_every_output_language(language: str) -> None:
-    request = ModeloReadinessRequest(modelo="303", revision_id="requested-revision", filing_year=_YEAR)
+    request = ModeloReadinessRequest(modelo="303", revision_id="requested-revision", filing_year=2025)
     with override_settings(cadrumo_output_language=language):
         unresolved = registry_readiness_refusal(request, period_token=_QUARTER, exc=FileNotFoundError("private"))
         reasoned = registry_readiness_refusal(
@@ -76,7 +71,7 @@ def test_registry_readiness_refusals_are_worded_in_every_output_language(languag
 
     for refusal in (unresolved, reasoned, mismatch):
         assert "303" in refusal
-        assert str(_YEAR) in refusal
+        assert "2025" in refusal
         assert _QUARTER in refusal
         assert "application.modelo.errors" not in refusal, "the catalogue key was echoed instead of words"
         assert "%{" not in refusal
@@ -88,10 +83,10 @@ def test_registry_readiness_refusals_are_worded_in_every_output_language(languag
 
 
 def test_unavailable_snapshot_carries_closed_cause_separate_from_refusal_prose() -> None:
-    request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=_YEAR)
+    request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=2025)
     resolution = resolve_modelo_readiness_registry(
         request,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        period=Period.from_year_and_code(2025, "1T"),
         operation=cast(PinnedAuthorityOperation, _UnavailableAuthority()),
     )
     assert resolution.snapshot is None
@@ -102,10 +97,10 @@ def test_unavailable_snapshot_carries_closed_cause_separate_from_refusal_prose()
 
 
 def test_revision_mismatch_carries_distinct_closed_cause() -> None:
-    request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=_YEAR)
+    request = ModeloReadinessRequest(modelo="303", revision_id="wanted", filing_year=2025)
     resolution = resolve_modelo_readiness_registry(
         request,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        period=Period.from_year_and_code(2025, "1T"),
         operation=cast(PinnedAuthorityOperation, _DifferentRevisionAuthority()),
     )
     assert resolution.snapshot is None

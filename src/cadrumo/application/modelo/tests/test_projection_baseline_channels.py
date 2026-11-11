@@ -8,7 +8,6 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 
-from ....domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 from ..projection import verb_baseline_projection_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -16,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PARAMETER_ENUM = "renta-profile-tax-residence-ccaa"
 
 
-@pytest.mark.parametrize("year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
 def test_the_baseline_supplies_no_profile_sourced_binding_except_the_verbs_own_ccaa(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
         revision = operation.snapshot("100", filing_year=year, period="0A").revision
@@ -32,7 +31,7 @@ def test_the_baseline_supplies_no_profile_sourced_binding_except_the_verbs_own_c
     assert not set(decimal) & set(boolean) & set(enum)
 
 
-@pytest.mark.parametrize("year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("year", [2022, 2023, 2024, 2025])
 def test_every_baseline_binding_travels_on_the_channel_its_registry_declaration_names(year: int) -> None:
     with bundled_indexed_authority().operation() as operation:
         revision = operation.snapshot("100", filing_year=year, period="0A").revision

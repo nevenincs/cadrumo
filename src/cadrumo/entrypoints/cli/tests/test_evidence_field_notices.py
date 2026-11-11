@@ -32,7 +32,6 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..evidence_field_notices import (
     DEGRADED_GROUNDING_OUTCOMES,
     field_degradation_notices,
@@ -68,7 +67,7 @@ def _self_reported() -> FieldProvenance:
         field="invoice_date",
         origin=FieldOrigin.VISION,
         grounding=FieldGroundingOutcome.UNANCHORED,
-        anchor=f"07/10/{filing_year_envelope().horizon}",
+        anchor="07/10/2025",
         anchor_self_reported=True,
     )
 

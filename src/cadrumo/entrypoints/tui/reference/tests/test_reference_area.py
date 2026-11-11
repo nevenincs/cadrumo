@@ -8,7 +8,6 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.async_condition import until
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
@@ -23,7 +22,6 @@ from ..views import view_of
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 50)
-_YEAR = filing_year_envelope().horizon
 
 
 async def _answered(pilot: Pilot[None], *, after: ReferenceReadScreen | None = None) -> ReferenceReadScreen:
@@ -125,7 +123,7 @@ async def test_a_read_asks_for_its_coordinates_and_shows_what_the_reference_refu
 
         asking.query_one("#reference-filter-modelo", Input).value = "130"
         asking.query_one("#reference-filter-casilla", Input).value = "01"
-        asking.query_one("#reference-filter-year", Input).value = str(_YEAR)
+        asking.query_one("#reference-filter-year", Input).value = "2024"
         asking.query_one("#reference-show", Button).press()
         await until(pilot, lambda: filter_label("period") in _status(asking).message)
         assert asking.result is None
@@ -136,7 +134,7 @@ async def test_a_read_asks_for_its_coordinates_and_shows_what_the_reference_refu
         assert answered is asking
         assert _document(asking) == json.loads(
             read_reference(
-                ReferenceQuery(ReferenceRead.CASILLA, modelo="130", casilla="01", year=_YEAR, period="1T")
+                ReferenceQuery(ReferenceRead.CASILLA, modelo="130", casilla="01", year=2024, period="1T")
             ).model_dump_json()
         )
 

@@ -34,16 +34,12 @@ from ...calculations.registry.facts.variants import FactOwnership
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.schema_base import DateAxis
 from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
     resolve_tipo_actividad_selector,
     tipo_actividad_code_set,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,9 +87,9 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     entry would make the file read as a complete partition of art. 95.
     """
     authority = PublishedGovernedFactSource()
-    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(_YEAR, 4, 1))
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selectors = {
-        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(_YEAR, 4, 1), authority=authority)
+        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
         for fact_id in selector_ids
     }
     empty_selector_ids = tuple(fact_id for fact_id, codes in selectors.items() if not codes)
@@ -107,11 +103,11 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
     authority = PublishedGovernedFactSource()
-    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(_YEAR, 4, 1))
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     selected = [
         code
         for codes in {
-            fact_id: tipo_actividad_code_set(fact_id, effective_date=date(_YEAR, 4, 1), authority=authority)
+            fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
             for fact_id in selector_ids
         }.values()
         for code in codes
@@ -123,10 +119,10 @@ def test_no_code_selects_two_partitions() -> None:
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
     authority = PublishedGovernedFactSource()
-    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(_YEAR, 4, 1))
+    selector_ids = _art_95_selector_ids(authority=authority, effective_date=date(2026, 4, 1))
     accepted = {member.value for member in TipoActividad}
     for codes in {
-        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(_YEAR, 4, 1), authority=authority)
+        fact_id: tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1), authority=authority)
         for fact_id in selector_ids
     }.values():
         assert codes <= accepted, sorted(codes - accepted)
@@ -136,11 +132,11 @@ def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
     """The activity partition facade resolves an entity-set fact at its filing coordinate."""
     selector = resolve_tipo_actividad_selector(
         "rirpf-art-95:selector-m036-actividades-profesionales",
-        effective_date=date(_YEAR - 1, 12, 31),
+        effective_date=date(2025, 12, 31),
     )
 
     assert selector.payload.entities == frozenset({"A04", "A05"})
-    assert selector.effective_date == date(_YEAR - 1, 12, 31)
+    assert selector.effective_date == date(2025, 12, 31)
     assert "rd-439-2007:art-95" in selector.legal_refs
     assert selector.authority_digest
 
@@ -170,11 +166,11 @@ def test_non_art_95_activity_selectors_resolve_through_the_same_fact_authority(
     fact_id: str,
     expected_ref: str,
 ) -> None:
-    selector = resolve_tipo_actividad_selector(fact_id, effective_date=date(_YEAR, 4, 1))
+    selector = resolve_tipo_actividad_selector(fact_id, effective_date=date(2026, 4, 1))
 
     assert expected_ref in selector.legal_refs
     assert selector.authority_digest
-    assert tipo_actividad_code_set(fact_id, effective_date=date(_YEAR, 4, 1)) == frozenset(
+    assert tipo_actividad_code_set(fact_id, effective_date=date(2026, 4, 1)) == frozenset(
         TipoActividad(token) for token in selector.payload.entities
     )
 
@@ -186,7 +182,7 @@ def test_selector_resolution_refuses_an_unenrolled_fact() -> None:
     has to mean "declared with no codes", so absence must NOT also produce one.
     """
     with pytest.raises(TransactionValidationError, match="is not declared by the registry catalogue"):
-        tipo_actividad_code_set("rirpf-art-95:selector-missing", effective_date=date(_YEAR - 1, 12, 31))
+        tipo_actividad_code_set("rirpf-art-95:selector-missing", effective_date=date(2025, 12, 31))
 
 
 def test_selector_resolution_refuses_a_non_entity_set_fact(authority_operation: PinnedAuthorityOperation) -> None:
@@ -207,8 +203,8 @@ def test_selector_resolution_refuses_a_non_entity_set_fact(authority_operation: 
                 fact_id="lirpf-art-31:eo-exclusion-compras-eur",
                 variant_id="lirpf-art-31:eo-exclusion-compras-eur.current",
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(_YEAR - 1, 12, 31),
-                valid_from=date(_YEAR - 1, 1, 1),
+                effective_date=date(2025, 12, 31),
+                valid_from=date(2025, 1, 1),
                 payload=ScalarFactPayload(value="250000", unit="EUR"),
                 legal_refs=("ley-35-2006:art-31",),
                 review_status="agent_reviewed",
@@ -221,6 +217,6 @@ def test_selector_resolution_refuses_a_non_entity_set_fact(authority_operation: 
     with pytest.raises(TransactionValidationError, match="did not resolve to an entity-set fact"):
         resolve_tipo_actividad_selector(
             "rirpf-art-95:selector-m036-actividades-profesionales",
-            effective_date=date(_YEAR - 1, 12, 31),
+            effective_date=date(2025, 12, 31),
             authority=cast("GovernedFactSource", ScalarAuthority()),
         )

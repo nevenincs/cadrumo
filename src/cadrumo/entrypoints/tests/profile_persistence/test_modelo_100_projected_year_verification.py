@@ -48,7 +48,6 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
     newest_authored_edition,
     newest_authored_editions,
     projected_exercise,
@@ -78,7 +77,7 @@ _PERIOD = "0A"
 _PROJECTED_KEY = "application.modelo.findings.registry_filing_year_projected"
 _WORK_INCOME = validated_casilla_id("0003")
 _PROFILE_ID = "10010000-0000-4100-8100-000000000504"
-_CLOCK = datetime(filing_year_envelope().horizon, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 _NO_PENDING_NEGATIVE_BASES: dict[BindingId, Decimal] = {
     f"renta-base-liquidable-negativa-general-{origin}": Decimal("0")
     for origin in ("em4-pendiente-inicio", "em3-pendiente-inicio", "em2-pendiente-inicio", "anterior")

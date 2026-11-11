@@ -63,7 +63,7 @@ def _reply(*, taxable_base: str | None, iva_amount: str | None, grand_total: str
         "supplier_tax_id": "B00015016",
         "supplier_name": "Pinturas del Norte SL",
         "invoice_number": "SIN-NUMERO",
-        "invoice_date": "11/06/1980",
+        "invoice_date": "11/06/2026",
         "taxable_base": taxable_base,
         "iva_rate": "21",
         "iva_amount": iva_amount,

@@ -27,7 +27,7 @@ from ....tests.aeat_literal_fixtures import AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CAPTURED_AT = datetime(1980, 6, 1, 8, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
 
 
 def _summary(**overrides: object) -> AuthDiagnosticSummary:

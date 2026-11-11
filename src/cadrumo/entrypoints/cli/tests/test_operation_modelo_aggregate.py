@@ -43,13 +43,9 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_aggregate as bridge
 from ..modelo_query_results import ModeloAggregateResult
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -63,7 +59,7 @@ def _pinned_authority() -> Iterator[None]:
 
 _PROFILE = UUID("35353535-3535-4353-8353-353535353535")
 _OPERATION_ID = "d" * 64
-_PERIOD = Period.from_year_and_code(_YEAR - 1, "1T")
+_PERIOD = Period.from_year_and_code(2025, "1T")
 _PUBLIC_PERIOD = PublicPeriod.from_period(_PERIOD)
 
 
@@ -163,7 +159,7 @@ def _ledger_payment() -> LedgerPaymentWithholdingEvidenceRequest:
             "perceptor_nif": "12345678A",
             "perceptor_name": "Perceptor Sintetico",
             "exigibility_event_id": "exigibility-test",
-            "exigibility_occurred_on": date(_YEAR - 1, 2, 1),
+            "exigibility_occurred_on": date(2025, 2, 1),
         }
     )
 
@@ -257,7 +253,7 @@ def test_bridge_rejects_a_projection_or_receipt_that_disagrees_with_its_request(
     elif mismatch == "modelo":
         projection = _projection(modelo="115")
     elif mismatch == "period":
-        projection = _projection(period=PublicPeriod(filing_year=_YEAR - 2, code="1T"))
+        projection = _projection(period=PublicPeriod(filing_year=2024, code="1T"))
     elif mismatch == "breakdown":
         # A periodic window reads no annual composition, so it cannot carry its breakdown.
         projection = projection.model_copy(
@@ -307,7 +303,7 @@ def test_cli_routes_regular_aggregate_through_the_profile_operation(
     monkeypatch.setattr(aggregate_cli, "run_modelo_aggregate", run)
     monkeypatch.setattr(aggregate_cli, "emit_envelope", lambda _ctx, **kwargs: rendered.update(kwargs))
 
-    aggregate_cli.aggregate_modelo(cast(typer.Context, cast(object, None)), modelo="111", year=_YEAR - 1, period="1T")
+    aggregate_cli.aggregate_modelo(cast(typer.Context, cast(object, None)), modelo="111", year=2025, period="1T")
 
     assert len(submitted) == 1
     command, ledger_payment = submitted[0]
@@ -341,7 +337,7 @@ def test_cli_refuses_mixed_ledger_capture_inputs_before_submitting(
         aggregate_cli.aggregate_modelo(
             cast(typer.Context, cast(object, None)),
             modelo="111",
-            year=_YEAR - 1,
+            year=2025,
             period="1T",
             counterpart_observation=["not-json"],
             ledger_payment_withholding=["not-json"],
@@ -352,7 +348,7 @@ def test_cli_renders_an_annual_summary_breakdown_and_names_each_absent_source(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The per-clave totals and the missing-data warning reach the envelope from the operation's projection."""
-    annual_period = Period.from_year_and_code(_YEAR - 1, "0A")
+    annual_period = Period.from_year_and_code(2025, "0A")
     projection = ModeloAggregateProjection(
         outcome="aggregated",
         profile_id=_PROFILE,
@@ -364,13 +360,13 @@ def test_cli_renders_an_annual_summary_breakdown_and_names_each_absent_source(
         result_row_count=0,
         clave_breakdown=(_clave_totals("A", 2, "2000.00", "300.00"),),
         absent_source_families=(BindingSourceKind.RETENCIONES_AGGREGATION,),
-        calculation_revision_id=revision_covering("190", _YEAR - 1).id,
+        calculation_revision_id="2025-y-siguientes",
     )
     rendered: dict[str, object] = {}
     monkeypatch.setattr(aggregate_cli, "run_modelo_aggregate", lambda *_args, **_kwargs: projection)
     monkeypatch.setattr(aggregate_cli, "emit_envelope", lambda _ctx, **kwargs: rendered.update(kwargs))
 
-    aggregate_cli.aggregate_modelo(cast(typer.Context, cast(object, None)), modelo="190", year=_YEAR - 1, period="0A")
+    aggregate_cli.aggregate_modelo(cast(typer.Context, cast(object, None)), modelo="190", year=2025, period="0A")
 
     result = cast(ModeloAggregateResult, rendered["result"])
     assert [
@@ -385,9 +381,9 @@ def test_cli_renders_an_annual_summary_breakdown_and_names_each_absent_source(
     assert notices[0].severity is NoticeSeverity.WARNING
     assert notices[0].context == {
         "modelo": "190",
-        "filing_year": str(_YEAR - 1),
+        "filing_year": "2025",
         "period": annual_period.registry_token,
-        "revision": revision_covering("190", _YEAR - 1).id,
+        "revision": "2025-y-siguientes",
         "source_family": BindingSourceKind.RETENCIONES_AGGREGATION.value,
         "reason": "stored_rows_absent",
     }

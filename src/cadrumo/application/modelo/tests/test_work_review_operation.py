@@ -16,8 +16,8 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.operations import OperationFrontendProjection
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
@@ -37,18 +37,13 @@ from ..work_review_operation import (
     build_modelo_work_review_definition,
     build_modelo_work_review_registration,
 )
-from .work_operation_support import (
-    FIRST_QUARTER_PERIOD,
-    GuardPhaseReachedError,
-    first_quarter_unit,
-    guarded_executor_context,
-)
+from .work_operation_support import GuardPhaseReachedError, first_quarter_unit, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = FIRST_QUARTER_PERIOD
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _executor_request(unit: WorkUnit, *, subject_ref: str | None = None) -> OperationRequest[ModeloWorkReviewRequest]:
@@ -124,9 +119,7 @@ def test_compact_projection_round_trips_and_refuses_foreign_profile() -> None:
     with pytest.raises(ValidationError):
         ModeloWorkReviewProjection(profile_id=_OTHER, review=snapshot)
     with pytest.raises(ValidationError):
-        ModeloWorkReviewSnapshot.model_validate(
-            snapshot.model_dump(mode="python") | {"filing_year": filing_year_envelope().floor}
-        )
+        ModeloWorkReviewSnapshot.model_validate(snapshot.model_dump(mode="python") | {"filing_year": 2025})
 
 
 @pytest.mark.parametrize("value", ["token", 17, True, Decimal("1.20"), None])

@@ -51,7 +51,6 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -81,15 +80,13 @@ _M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
 )
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
 #: Distinct prior-year BIN stock per source year so a cross-year contamination surfaces.
-_PRIOR_YEAR = _YEAR_N - 1
-
 _BIN_STOCK_BY_SOURCE_YEAR: dict[int, Decimal] = {
-    _PRIOR_YEAR: Decimal("30000.00"),
-    _YEAR_N: Decimal("18000.00"),
+    2024: Decimal("30000.00"),
+    2025: Decimal("18000.00"),
 }
 
 #: The same-year M202 pagos relation the M200 cuota chain reads; zero here (no
@@ -108,7 +105,7 @@ _PROFILE_ENUM_BINDINGS: dict[str, str] = {
     "modelo-200-profile-legal-entity-form": "sl",
 }
 
-_CLOCK = datetime(_YEAR_N_PLUS_1 + 1, 1, 20, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -228,10 +225,10 @@ def test_modelo_200_opening_bin_stock_resolves_from_prior_year(
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_bin_stock(source_year=_PRIOR_YEAR, stock=_BIN_STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR], obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
         resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_200(filing_year=_YEAR_N, relation_values=resolved, operation=operation)
-    assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR]
+    assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
 
 
 def test_modelo_200_bin_stock_enrolls_two_renta_years(
@@ -250,8 +247,8 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_bin_stock(source_year=_PRIOR_YEAR, stock=_BIN_STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR], obs_repo=obs_repo)
-        _seed_m200_bin_stock(source_year=_YEAR_N, stock=_BIN_STOCK_BY_SOURCE_YEAR[_YEAR_N], obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2025, stock=_BIN_STOCK_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
 
         resolved_n = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
         result_n, _produced_n = _calculate_200(
@@ -269,8 +266,8 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(
 
     # Wiring invariant: each year's opening BIN stock equals the prior year's
     # end-of-year stock, year-isolated.
-    assert Decimal(result_n.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[_PRIOR_YEAR]
-    assert Decimal(result_n1.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[_YEAR_N]
+    assert Decimal(result_n.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
+    assert Decimal(result_n1.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2025]
 
 
 # ---------------------------------------------------------------------------
@@ -313,7 +310,7 @@ def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_bin_stock(source_year=_PRIOR_YEAR, stock=prior_year_bin_stock, obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2024, stock=prior_year_bin_stock, obs_repo=obs_repo)
         resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo, operation=operation)
         result, _ = _calculate_200(
             filing_year=_YEAR_N,

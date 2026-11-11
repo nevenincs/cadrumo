@@ -50,7 +50,6 @@ from .aeat_sync_workspace_support import (
     AEAT_SYNC_INTENTIONAL_IDENTICAL_HU,
     BUCKET_ID,
     SUBJECT_KEY,
-    YEAR,
     aeat_sync_catalogue,
     aeat_sync_workspace_contracts,
     aeat_sync_workspace_controller,
@@ -493,7 +492,7 @@ async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_b
 @pytest.mark.asyncio
 async def test_successful_notification_list_projects_capture_times_and_row_counts() -> None:
     """The TUI renders only the registered public summary fields after settlement."""
-    captured_at = datetime(YEAR, 9, 28, 12, 30, tzinfo=UTC)
+    captured_at = datetime(2026, 9, 28, 12, 30, tzinfo=UTC)
     result = NotificationsListPublicResultV1(
         bucket_id=BUCKET_ID,
         count=2,
@@ -560,16 +559,16 @@ async def test_successful_notification_list_projects_capture_times_and_row_count
 async def test_notification_focus_restores_by_projected_identity_across_refresh_resize_and_child_return() -> None:
     first = aeat_sync_workspace_projection(
         notification_specs=(
-            ("notification-alpha", date(YEAR, 1, 1)),
-            ("notification-beta", date(YEAR, 1, 2)),
-            ("notification-gamma", date(YEAR, 1, 3)),
+            ("notification-alpha", date(2026, 1, 1)),
+            ("notification-beta", date(2026, 1, 2)),
+            ("notification-gamma", date(2026, 1, 3)),
         )
     )
     reordered = aeat_sync_workspace_projection(
         notification_specs=(
-            ("notification-gamma", date(YEAR, 1, 1)),
-            ("notification-alpha", date(YEAR, 1, 2)),
-            ("notification-beta", date(YEAR, 1, 3)),
+            ("notification-gamma", date(2026, 1, 1)),
+            ("notification-alpha", date(2026, 1, 2)),
+            ("notification-beta", date(2026, 1, 3)),
         )
     )
     screen = AeatSyncNotificationsScreen(

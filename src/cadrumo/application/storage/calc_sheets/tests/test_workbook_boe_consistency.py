@@ -14,7 +14,7 @@ full calculation surface and legitimately emits casillas the fichero-BOE does no
 file (internal carries the official DR record omits, e.g. Modelo 130
 ``saldo-negativo-fin-periodo``).
 
-Modelo 303 is covered: its módulos (régimen simplificado) advisory-support
+Modelo 303 is covered: its 2025 módulos (régimen simplificado) advisory-support
 figures use a ``keyed_bracket_table`` parameter and custom-runtime keyed-lookup
 ops that have no spreadsheet translation, but they are ``internal_only`` casillas
 the workbook correctly omits from the export (transitively, including the
@@ -34,24 +34,32 @@ from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_exports import ExportLayoutDefinition
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....filing.runtime import build_runtime_schema_provider
 from ..engine import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — fixed-width modelos whose workbook plan and
-# fichero-BOE layout both build. Spanned across every supported filing year (and
-# across revision boundaries) so the cross-transport invariant is locked for every
-# year a revision covers, not just one. Modelo 303 in particular crosses its
-# authored revision boundaries, and every supported year resolves its
-# law-determined revision whose internal-only módulos casillas the workbook must
-# omit.
-_YEARS = filing_year_envelope().years
-_SOCIEDADES_FROM = open_ended_revision("200").valid_from.year
+# fichero-BOE layout both build. Spanned across multiple filing years (and across
+# revision boundaries) so the cross-transport invariant is locked for every year a
+# revision covers, not just one. Modelo 303 in particular crosses the
+# 2022 -> explicit post-2022 epoch boundaries, and 2023-2026 all
+# resolve their law-determined revision whose internal-only módulos casillas the
+# workbook must omit for every one of those years.
 _COVERED = [
-    *((modelo, year, "1T", date(year, 4, 1)) for modelo in ("130", "111", "115", "303") for year in _YEARS),
-    *(("200", year, "0A", date(year + 1, 7, 1)) for year in _YEARS if year >= _SOCIEDADES_FROM),
+    ("130", 2024, "1T", date(2024, 4, 1)),
+    ("130", 2025, "1T", date(2025, 4, 1)),
+    ("111", 2024, "1T", date(2024, 4, 1)),
+    ("111", 2025, "1T", date(2025, 4, 1)),
+    ("115", 2024, "1T", date(2024, 4, 1)),
+    ("115", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2022, "1T", date(2022, 4, 1)),
+    ("303", 2023, "1T", date(2023, 4, 1)),
+    ("303", 2024, "1T", date(2024, 4, 1)),
+    ("303", 2025, "1T", date(2025, 4, 1)),
+    ("303", 2026, "1T", date(2026, 4, 1)),
+    ("200", 2025, "0A", date(2026, 7, 1)),
+    ("200", 2026, "0A", date(2027, 7, 1)),
 ]
 
 

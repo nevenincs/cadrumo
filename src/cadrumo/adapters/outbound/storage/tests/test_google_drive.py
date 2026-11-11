@@ -376,7 +376,7 @@ def test_iter_objects_refuses_malformed_storage_app_properties(
                         "id": "object-id",
                         "name": "aaaaaaaa--payload.bin",
                         "size": "1",
-                        "modifiedTime": "1980-08-02T01:45:29Z",
+                        "modifiedTime": "2026-08-02T01:45:29Z",
                         "appProperties": app_properties,
                     }
                 ]

@@ -10,7 +10,6 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ....core.aggregation import (
     RetencionClave,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 
@@ -18,7 +17,7 @@ def perceptor_observation(nif: str, clave: RetencionClave) -> WithholdingObserva
     return WithholdingObservation(
         source_id=f"row-{nif}-{clave}",
         perceptor_tax_id=nif,
-        transaction_date=date(filing_year_envelope().horizon, 6, 1),
+        transaction_date=date(2024, 6, 1),
         clave=clave,
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),

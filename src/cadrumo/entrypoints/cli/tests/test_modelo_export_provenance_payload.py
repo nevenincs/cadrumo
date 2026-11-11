@@ -10,14 +10,10 @@ import pytest
 from cadrumo.application.modelo.export_contracts import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 from cadrumo.application.modelo.export_projection import ModeloFicheroBoePublicReceipt
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..modelo_query_results import ModeloExportPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
-_PRIOR_YEAR = _YEAR - 1
 
 
 @pytest.mark.parametrize("has_wallet", [True, False])
@@ -27,8 +23,8 @@ def test_cli_export_retains_canonical_redacted_wallet_join(has_wallet: bool) -> 
             decision_ref="sha256:" + "d" * 64,
             selected_authority="official_observation",
             divergence="different_values",
-            target_year=_PRIOR_YEAR,
-            target_period=Period.from_year_and_code(_PRIOR_YEAR, "4T"),
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "4T"),
             authority_source_kinds=("aeat_capture", "app_filing"),
             authority_source_refs=("sha256:" + "e" * 64, "sha256:" + "f" * 64),
         )
@@ -40,13 +36,13 @@ def test_cli_export_retains_canonical_redacted_wallet_join(has_wallet: bool) -> 
         work_unit_id="b" * 64,
         bucket_id="99999999-9999-4999-8999-999999999999",
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         output_path=Path("modelo-303.boe"),
         byte_size=2948,
         file_sha256="c" * 64,
         format="fichero-boe",
-        exported_at=datetime(1980, 4, 1, 9, tzinfo=UTC),
+        exported_at=datetime(2026, 4, 1, 9, tzinfo=UTC),
         actor="docs-sequence-sandbox",
         bucket_event_id="9" * 64,
         resolved_result_disposition=None,
@@ -69,8 +65,8 @@ def test_cli_export_retains_canonical_redacted_wallet_join(has_wallet: bool) -> 
         "decision_ref": "sha256:" + "d" * 64,
         "selected_authority": "official_observation",
         "divergence": "different_values",
-        "target_year": _PRIOR_YEAR,
-        "target_period": {"filing_year": _PRIOR_YEAR, "code": "4T"},
+        "target_year": 2025,
+        "target_period": {"filing_year": 2025, "code": "4T"},
         "authority_source_kinds": ["aeat_capture", "app_filing"],
         "authority_source_refs": ["sha256:" + "e" * 64, "sha256:" + "f" * 64],
     }

@@ -28,14 +28,11 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -113,7 +110,7 @@ def _create_business_row(
         secure_objects,
         ManualLedgerTransactionCommand(
             bucket_id=BUCKET_ID,
-            booked_date=date(_YEAR, 5, 1),
+            booked_date=date(2026, 5, 1),
             amount=Decimal("50.00"),
             direction=TransactionDirection.OUTGOING,
             description="reimbursed personal card charge",
@@ -123,7 +120,7 @@ def _create_business_row(
         ),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     return transaction_repository, event_repository, created
 
@@ -141,7 +138,7 @@ def test_mark_reviewed_excluded_persists_state_quintet_and_event(
         reason="not a business expense",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     # Uniform mutation quintet reflects the exclusion.
@@ -193,7 +190,7 @@ def test_mark_reviewed_excluded_clears_business_pct_and_survives_roundtrip(
         actor="operator-A",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     persisted = _load_transactions(transaction_repository).get(created.ref.transaction_id)
@@ -216,7 +213,7 @@ def test_mark_reviewed_excluded_is_reversible_by_reclassify(
         actor="operator-A",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     reincluded = _update_manual_transaction_fields(
@@ -248,7 +245,7 @@ def test_mark_reviewed_excluded_refuses_already_excluded(
         actor="operator-A",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     with pytest.raises(TransactionValidationError, match="already reviewed-excluded"):
@@ -259,7 +256,7 @@ def test_mark_reviewed_excluded_refuses_already_excluded(
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            occurred_at=datetime(_YEAR, 5, 2, 11, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC),
         )
 
 
@@ -277,7 +274,7 @@ def test_mark_reviewed_excluded_refuses_non_active_row(
         actor="operator-A",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
     with pytest.raises(TransactionValidationError, match="only active ledger transactions"):
@@ -288,5 +285,5 @@ def test_mark_reviewed_excluded_refuses_non_active_row(
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            occurred_at=datetime(_YEAR, 5, 2, 11, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 11, 0, tzinfo=UTC),
         )

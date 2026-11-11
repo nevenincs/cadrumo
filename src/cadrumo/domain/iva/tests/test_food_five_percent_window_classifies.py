@@ -111,16 +111,13 @@ def test_the_successor_rate_still_holds_its_own_window() -> None:
             rate_kinds_for_declared_rate(
                 EUMemberState.from_registry("es"),
                 seven_five,
-                _RDL_4_2024_FIVE_PERCENT_CLOSES - 60 * _DAY,
+                date(2024, 8, 1),
                 operation=_authority_operation_for_test,
             )
             == ()
         )
         assert rate_kinds_for_declared_rate(
-            EUMemberState.from_registry("es"),
-            seven_five,
-            _RDL_4_2024_FIVE_PERCENT_CLOSES + 32 * _DAY,
-            operation=_authority_operation_for_test,
+            EUMemberState.from_registry("es"), seven_five, date(2024, 11, 1), operation=_authority_operation_for_test
         ) == (IvaRateKind("reduced"),)
 
 
@@ -133,12 +130,7 @@ def test_the_two_food_windows_abut_without_a_gap_or_an_overlap() -> None:
     directly so neither is discovered by a downstream symptom.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        for on_date in (
-            _RDL_20_2022_CLOSES - _DAY,
-            _RDL_20_2022_CLOSES,
-            _RDL_4_2024_FIVE_PERCENT_OPENS,
-            _RDL_4_2024_FIVE_PERCENT_OPENS + _DAY,
-        ):
+        for on_date in (date(2024, 6, 29), date(2024, 6, 30), date(2024, 7, 1), date(2024, 7, 2)):
             assert rate_kinds_for_declared_rate(
                 EUMemberState.from_registry("es"), _FIVE, on_date, operation=_authority_operation_for_test
             ) == (IvaRateKind("reduced"),), f"the join between the two food-rate provisions drops {on_date.isoformat()}"

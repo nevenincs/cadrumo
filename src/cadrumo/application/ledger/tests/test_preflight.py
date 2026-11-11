@@ -13,7 +13,6 @@ from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import TransactionCatalogue
@@ -33,8 +32,6 @@ from .preflight_test_support import (
     Q2_2026,
     preflight_transaction,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -144,7 +141,7 @@ def test_preflight_ignores_personal_internal_transfer_and_out_of_period_rows(
     )
     old = preflight_transaction(
         "row-old",
-        booked_date=date(_YEAR, 1, 5),
+        booked_date=date(2026, 1, 5),
         category_id=None,
         taxable_base=None,
         iva_rate=None,

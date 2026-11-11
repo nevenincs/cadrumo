@@ -30,7 +30,6 @@ from ....domain.buckets.event import (
 from ....domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...bucket_event_projection import BucketEventProjection
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
@@ -63,7 +62,7 @@ def _event(*, marker: str, minute: int, actor: str = "operator") -> BucketEvent:
     return build_bucket_event(
         bucket_id=str(_PROFILE),
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-        occurred_at=datetime(1980, 5, 1, 12, minute, tzinfo=UTC),
+        occurred_at=datetime(2026, 5, 1, 12, minute, tzinfo=UTC),
         actor=actor,
         object_type=BucketEventObjectType.PROFILE,
         object_id=marker,
@@ -210,10 +209,7 @@ def test_history_replay_from_a_fresh_process_keeps_the_admitted_scope(action: Ac
         assert all(item.destination_id == fresh_destination for item in replayed.policy.disclosures)
 
     period_scoped = admitted.model_copy(
-        update={
-            "periods": frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "1T")}),
-            "period_independent": False,
-        }
+        update={"periods": frozenset({Period.from_year_and_code(2026, "1T")}), "period_independent": False}
     )
     for foreign in (
         admitted.model_copy(update={"profile_id": _OTHER}),
@@ -236,7 +232,7 @@ def test_history_entry_actions_resolve_under_held_authority_not_the_admission(ac
         definition_id="user-profile.other",
         action=AccessAction.SUBMIT,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        periods=frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "1T")}),
+        periods=frozenset({Period.from_year_and_code(2026, "1T")}),
         period_independent=False,
         destination_id=uuid4(),
     )
@@ -331,8 +327,8 @@ async def test_executor_retains_full_ordered_filtered_events_without_writes(monk
 
     request = _request(
         event_types=(BucketEventType.PROFILE_VALUES_UPDATED, BucketEventType.PROFILE_VALUES_UPDATED),
-        since=datetime(1980, 5, 1, 12, 2, tzinfo=UTC),
-        until=datetime(1980, 5, 1, 12, 3, tzinfo=UTC),
+        since=datetime(2026, 5, 1, 12, 2, tzinfo=UTC),
+        until=datetime(2026, 5, 1, 12, 3, tzinfo=UTC),
         object_id="chosen",
         actor="operator",
     )

@@ -55,9 +55,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _JUSTIFICANTE_FIXTURE = (
     Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
 )
-# The fixture justificantes are real filings of one past exercise, named by it.
-_FIXTURE_YEAR = int(_JUSTIFICANTE_FIXTURE.stem.split("-")[0])
-_SWAPPED_DECLARACION_FIXTURE = _JUSTIFICANTE_FIXTURE.with_name(f"{_FIXTURE_YEAR}-2T.pdf")
+_SWAPPED_DECLARACION_FIXTURE = _JUSTIFICANTE_FIXTURE.with_name("2024-2T.pdf")
 
 
 class CommitWitness:
@@ -365,7 +363,7 @@ def test_a_source_the_guard_does_not_accept_never_reaches_a_parser(
         with pytest.raises(ReconciliationEvidenceInvalidError) as justificante_refusal:
             guarded.parse_justificante(path)
         with pytest.raises(ReconciliationEvidenceInvalidError) as declaracion_refusal:
-            guarded.parse_declaracion(path, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+            guarded.parse_declaracion(path, modelo="130", filing_year=2024, period="1T")
 
         assert _refusal_reason(justificante_refusal.value) == reason
         assert _refusal_reason(declaracion_refusal.value) == reason
@@ -384,22 +382,22 @@ def test_a_declaracion_swapped_while_it_is_parsed_is_parsed_from_its_verified_by
 
     def swap_and_restore() -> None:
         source.write_bytes(swapped_in)
-        swapped.append(composed.parse_declaracion(source, modelo="130", filing_year=_FIXTURE_YEAR, period="2T"))
+        swapped.append(composed.parse_declaracion(source, modelo="130", filing_year=2024, period="2T"))
         source.write_bytes(original)
 
     swapping = _PathSwappingParser(
         swap_and_restore,
         lambda content: composed.parse_declaracion_bytes(
-            content, modelo="130", filing_year=_FIXTURE_YEAR, period="1T", registry_snapshot=None
+            content, modelo="130", filing_year=2024, period="1T", registry_snapshot=None
         ),
     )
 
     with validating_governed_facts(operation):
         observation = HandleVerifiedEvidenceParser(swapping).parse_declaracion(
-            source, modelo="130", filing_year=_FIXTURE_YEAR, period="1T"
+            source, modelo="130", filing_year=2024, period="1T"
         )
         expected = composed.parse_declaracion_bytes(
-            original, modelo="130", filing_year=_FIXTURE_YEAR, period="1T", registry_snapshot=None
+            original, modelo="130", filing_year=2024, period="1T", registry_snapshot=None
         )
 
     assert swapping.parsed == [original]
@@ -425,11 +423,11 @@ def test_a_declaracion_observation_of_other_bytes_is_refused(tmp_path: Path) -> 
 
     with pytest.raises(ReconciliationEvidenceInvalidError) as refusal:
         HandleVerifiedEvidenceParser(_PathSwappingParser(lambda: None, lambda _content: foreign)).parse_declaracion(
-            source, modelo="130", filing_year=_FIXTURE_YEAR, period="1T"
+            source, modelo="130", filing_year=2024, period="1T"
         )
     observation = HandleVerifiedEvidenceParser(
         _PathSwappingParser(lambda: None, lambda _content: bound)
-    ).parse_declaracion(source, modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    ).parse_declaracion(source, modelo="130", filing_year=2024, period="1T")
 
     assert _refusal_reason(refusal.value) == "parsed_digest_mismatch"
     assert observation is bound

@@ -22,15 +22,12 @@ import pytest
 
 from ....application.invoices.simplificada_advisory import SimplificadaTaxIdAdvisory
 from ....core.json_contract import NoticeSeverity
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ..ledger_business_invoice_commands import simplificada_tax_id_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 _BASE = Decimal("10.00")
 _CUOTA = Decimal("2.10")
@@ -42,7 +39,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "kind": InvoiceKind.ISSUED,
         "invoice_class": InvoiceClass.from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
-        "issued_at": date(_YEAR, 5, 3),
+        "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
         "counterparty_tax_id": None,
         "counterparty_country": "ES",

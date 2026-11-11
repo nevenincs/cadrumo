@@ -30,7 +30,6 @@ from ....core.directory_scan import scan_directory
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.schema_base import ThresholdComparison
-from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import ProrrataInputError
 from ..prorrata import (
@@ -52,14 +51,6 @@ from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_YEAR = filing_year_envelope().horizon
-
-
-def _revision_id(year: int) -> str:
-    """The Modelo 303 revision serving the final period, in which the margin is resolved."""
-    return str(revision_serving_period("303", year, "4T").id)
-
-
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
     with bundled_indexed_authority().operation():
@@ -73,8 +64,8 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
     margin_percentage=Decimal("10"),
     comparison=ThresholdComparison.INCLUSIVE,
     modelo_id="303",
-    revision_id=_revision_id(_YEAR),
-    resolved_on=_esp_date(_YEAR, 12, 31),
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
 )
 
 _INPUT_DEDUCTION_CASES = (
@@ -130,13 +121,13 @@ _ESPECIAL_MANDATORY_CASES = (
 
 _ACCEPTED_PRORRATA_REFERENCE_CASES = (
     (
-        f"prorrata:{_YEAR}:provisional:general",
+        "prorrata:2026:provisional:general",
         ProrrataKind.from_registry("provisional"),
         ProrrataRegime("general"),
         None,
     ),
     (
-        f"prorrata:{_YEAR}:definitiva:especial:sector-retail",
+        "prorrata:2026:definitiva:especial:sector-retail",
         ProrrataKind.from_registry("definitiva"),
         ProrrataRegime("especial"),
         "sector-retail",
@@ -158,7 +149,7 @@ def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("100")
@@ -176,7 +167,7 @@ def test_general_percentage_is_zero_when_no_operations_grant_right() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("0")
@@ -198,7 +189,7 @@ def test_general_percentage_aeat_manual_practico_iva_worked_example() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("70")
@@ -216,7 +207,7 @@ def test_general_percentage_zero_total_defaults_to_100() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("100")
@@ -244,7 +235,7 @@ def test_general_percentage_rounds_up_when_fraction_exceeds_whole() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("77")
@@ -263,7 +254,7 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
     )
     result = compute_prorrata_general(
         inputs,
-        year=_YEAR,
+        year=2026,
         kind=ProrrataKind.from_registry("definitiva"),
     )
     assert result.percentage == Decimal("50")
@@ -279,17 +270,17 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _params(comparison: str, year: int = _YEAR) -> ProrrataEspecialMandatoryParameters:
+def _params(comparison: str, year: int = 2025) -> ProrrataEspecialMandatoryParameters:
     """A bundle carrying a ten-point margin with the named comparison, for ``year``.
 
     The rule now refuses a bundle resolved for a different filing year, so the
-    year is a parameter rather than a fixed one.
+    year is a parameter rather than a fixed 2025.
     """
     return ProrrataEspecialMandatoryParameters(
         margin_percentage=Decimal("10"),
         comparison=ThresholdComparison(comparison),
         modelo_id="303",
-        revision_id=_revision_id(year),
+        revision_id="2025",
         resolved_on=_esp_date(year, 12, 31),
     )
 
@@ -301,7 +292,7 @@ def test_especial_mandatory_cases() -> None:
             is_especial_mandatory(
                 general_deduction,
                 especial_deduction,
-                year=_YEAR,
+                year=2025,
                 parameters=_params(comparison),
             )
             == expected
@@ -340,8 +331,8 @@ def test_an_exclusive_margin_must_be_passed_not_merely_reached() -> None:
     disagree at exactly the boundary.
     """
     on_the_margin, especial = Decimal("110.00"), Decimal("100.00")
-    assert is_especial_mandatory(on_the_margin, especial, year=_YEAR, parameters=_params("exclusive")) is False
-    assert is_especial_mandatory(on_the_margin, especial, year=_YEAR, parameters=_params("inclusive")) is True
+    assert is_especial_mandatory(on_the_margin, especial, year=2025, parameters=_params("exclusive")) is False
+    assert is_especial_mandatory(on_the_margin, especial, year=2025, parameters=_params("inclusive")) is True
 
 
 def test_especial_mandatory_rule_reports_the_margin_the_predicate_applied() -> None:
@@ -354,12 +345,12 @@ def test_especial_mandatory_rule_reports_the_margin_the_predicate_applied() -> N
         margin_percentage=Decimal("37"),
         comparison=ThresholdComparison.EXCLUSIVE,
         modelo_id="303",
-        revision_id=_revision_id(_YEAR),
-        resolved_on=_esp_date(_YEAR, 12, 31),
+        revision_id="2025",
+        resolved_on=_esp_date(2025, 12, 31),
     )
-    rule = especial_mandatory_rule(_YEAR, parameters=arbitrary)
+    rule = especial_mandatory_rule(2025, parameters=arbitrary)
     assert (rule.year, rule.multiple, rule.margin_percentage, rule.inclusive) == (
-        _YEAR,
+        2025,
         Decimal("1.37"),
         Decimal("37"),
         False,
@@ -368,9 +359,9 @@ def test_especial_mandatory_rule_reports_the_margin_the_predicate_applied() -> N
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("-1"), Decimal("100"), year=_YEAR, parameters=_ESPECIAL_PARAMS)
+        is_especial_mandatory(Decimal("-1"), Decimal("100"), year=2026, parameters=_ESPECIAL_PARAMS)
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("100"), Decimal("-1"), year=_YEAR, parameters=_ESPECIAL_PARAMS)
+        is_especial_mandatory(Decimal("100"), Decimal("-1"), year=2026, parameters=_ESPECIAL_PARAMS)
 
 
 def test_is_especial_mandatory_rejects_out_of_range_year() -> None:
@@ -430,7 +421,7 @@ def test_result_provisional_requires_period() -> None:
             kind=ProrrataKind.from_registry("provisional"),
             percentage=Decimal("100"),
             inputs=inputs,
-            year=_YEAR,
+            year=2026,
             period=None,
         )
 
@@ -446,7 +437,7 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
             kind=ProrrataKind.from_registry("definitiva"),
             percentage=Decimal("100"),
             inputs=inputs,
-            year=_YEAR,
+            year=2026,
             period="Q1",
         )
 
@@ -457,7 +448,7 @@ def test_validate_prorrata_reference_accepts_canonical_values() -> None:
 
         assert isinstance(reference, ProrrataReference)
         assert reference.reference_id == reference_id
-        assert reference.year == _YEAR
+        assert reference.year == 2026
         assert reference.kind == expected_kind
         assert reference.regime == expected_regime
         assert reference.sector_id == expected_sector_id
@@ -468,9 +459,9 @@ def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() 
         "telefonia_movil",
         "usage_ratio:telefonia_movil",
         "prorrata:1999:provisional:general",
-        f"prorrata:{_YEAR}:usage_ratio_personal:general",
-        f"prorrata:{_YEAR}:provisional:usage_ratio_personal",
-        f"prorrata:{_YEAR}:provisional:general:sector with spaces",
+        "prorrata:2026:usage_ratio_personal:general",
+        "prorrata:2026:provisional:usage_ratio_personal",
+        "prorrata:2026:provisional:general:sector with spaces",
     ):
         with pytest.raises(ProrrataInputError):
             validate_prorrata_reference(reference_id)
@@ -479,8 +470,8 @@ def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() 
 def test_prorrata_reference_schema_rejects_noncanonical_payload() -> None:
     with pytest.raises(ValidationError, match=r"does not match canonical"):
         ProrrataReference(
-            reference_id=f"prorrata:{_YEAR}:definitiva:general",
-            year=_YEAR,
+            reference_id="prorrata:2026:definitiva:general",
+            year=2026,
             kind=ProrrataKind.from_registry("provisional"),
             regime=ProrrataRegime("general"),
         )
@@ -506,7 +497,7 @@ def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
     with pytest.raises(ProrrataInputError, match=r"invalid prorrata result window"):
         compute_prorrata_general(
             inputs,
-            year=_YEAR,
+            year=2026,
             kind=ProrrataKind.from_registry("definitiva"),
             period="Q1",
         )
@@ -653,19 +644,19 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
 
 
 def test_a_settled_register_entry_names_its_definitive_reference() -> None:
-    reference = register_entry_prorrata_reference(ejercicio=_YEAR, regime="general", sector_id=None, settled=True)
+    reference = register_entry_prorrata_reference(ejercicio=2026, regime="general", sector_id=None, settled=True)
 
     assert reference is not None
-    assert reference.reference_id == f"prorrata:{_YEAR}:definitiva:general"
+    assert reference.reference_id == "prorrata:2026:definitiva:general"
 
 
 def test_an_unsettled_register_entry_names_its_provisional_reference() -> None:
     reference = register_entry_prorrata_reference(
-        ejercicio=_YEAR, regime="especial", sector_id="sector-a", settled=False
+        ejercicio=2026, regime="especial", sector_id="sector-a", settled=False
     )
 
     assert reference is not None
-    assert reference.reference_id == f"prorrata:{_YEAR}:provisional:especial:sector-a"
+    assert reference.reference_id == "prorrata:2026:provisional:especial:sector-a"
 
 
 @pytest.mark.parametrize(
@@ -676,11 +667,11 @@ def test_an_unsettled_register_entry_names_its_provisional_reference() -> None:
     ],
 )
 def test_a_register_entry_no_reference_can_name_has_none(regime: str, sector_id: str | None) -> None:
-    assert register_entry_prorrata_reference(ejercicio=_YEAR, regime=regime, sector_id=sector_id, settled=True) is None
+    assert register_entry_prorrata_reference(ejercicio=2026, regime=regime, sector_id=sector_id, settled=True) is None
 
 
 def test_the_longest_register_reference_fits_what_a_request_accepts() -> None:
-    reference = register_entry_prorrata_reference(ejercicio=_YEAR, regime="especial", sector_id="s" * 64, settled=False)
+    reference = register_entry_prorrata_reference(ejercicio=2026, regime="especial", sector_id="s" * 64, settled=False)
 
     assert reference is not None
     assert len(reference.reference_id) <= PRORRATA_REFERENCE_MAX_LENGTH

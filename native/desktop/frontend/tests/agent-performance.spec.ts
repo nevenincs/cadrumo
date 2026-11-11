@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { fixtureInstant } from "../src/dev/fixtureDates";
 import {
   applyStreamEvent,
   coalesceStreamEvents,
@@ -12,7 +11,7 @@ import {
 import type { AgentStreamEvent } from "../src/shell/agentSession";
 import { label } from "./support/strings";
 
-const now = new Date(fixtureInstant(10, 20, "12:00:00Z"));
+const now = new Date("2026-10-20T12:00:00Z");
 const t = (key: string, values?: Record<string, string | number>) =>
   label(key, values);
 
@@ -169,12 +168,7 @@ test("cached rows follow reply state, thoughts, locale, day and duplicate occurr
   });
   const spanish = project(done, "es", t, now);
   expect(spanish[0]).not.toBe(finished[0]);
-  const tomorrow = project(
-    done,
-    "es",
-    t,
-    new Date(fixtureInstant(10, 21, "12:00:00Z")),
-  );
+  const tomorrow = project(done, "es", t, new Date("2026-10-21T12:00:00Z"));
   expect(tomorrow[0]).not.toBe(spanish[0]);
   expect(tomorrow[0]).not.toMatchObject({
     sentAtLabel: (spanish[0] as { sentAtLabel: string }).sentAtLabel,

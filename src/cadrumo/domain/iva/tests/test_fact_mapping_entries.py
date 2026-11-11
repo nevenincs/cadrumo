@@ -14,13 +14,10 @@ from cadrumo.domain.calculations.registry.facts.payloads import MappingFactEntry
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
 from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.errors import IvaValidationError
 from cadrumo.domain.iva.fact_mapping_entries import IvaMappingSubject, mapping_entries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
 
 _SUBJECTS: tuple[IvaMappingSubject, ...] = (
     "IVA classification mapping",
@@ -40,8 +37,8 @@ def _resolved_payload(payload: MappingFactPayload) -> ResolvedMappingFact:
         fact_id="iva-test-mapping",
         variant_id="iva.test.variant",
         date_axis=DateAxis.FILING_PERIOD,
-        effective_date=date(_YEAR, 1, 1),
-        valid_from=date(_YEAR, 1, 1),
+        effective_date=date(2025, 1, 1),
+        valid_from=date(2025, 1, 1),
         review_status=RevisionReviewStatus.PENDING_REVIEW,
         ownership=FactOwnership.AUTHORED,
         authority_digest="a" * 64,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -18,7 +17,6 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileAscendantsOperationRequest,
 )
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -96,7 +94,7 @@ def _replace_with_two_ascendants(
     assert facts[f"{_OBJECT}.0.birth_date"] == "1948-03-04"
     assert facts[f"{_OBJECT}.0.convivientes"] == "2"
     assert facts[f"{_OBJECT}.1.birth_date"] == "1951-11-30"
-    assert facts[f"{_OBJECT}.1.fallecimiento"] == date(filing_year_envelope().horizon, 2, 1).isoformat()
+    assert facts[f"{_OBJECT}.1.fallecimiento"] == "2025-02-01"
     return revision, digest
 
 
@@ -165,9 +163,7 @@ def test_native_ascendants_replace_clear_refuse_and_settle_without_effect(
             )
             with client:
                 older = _row(nif="12345678z", birth_date="1948-03-04", convivientes="2")
-                younger = _row(
-                    birth_date="1951-11-30", fallecimiento=date(filing_year_envelope().horizon, 2, 1).isoformat()
-                )
+                younger = _row(birth_date="1951-11-30", fallecimiento="2025-02-01")
                 revision, digest = _replace_with_two_ascendants(client, profile_id, baseline, (older, younger))
                 unchanged = _replace(client, profile_id, revision, digest, older, younger)
                 assert (unchanged.total, unchanged.changed, unchanged.record_revision) == (2, False, revision)

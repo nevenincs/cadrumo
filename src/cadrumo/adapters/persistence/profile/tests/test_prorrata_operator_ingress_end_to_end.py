@@ -52,7 +52,6 @@ from cadrumo.core.prorrata_register import (
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
@@ -66,22 +65,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 _BUCKET_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
-_EJERCICIO = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_EJERCICIO, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_EJERCICIO = 2026
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _INPUT_CUOTA = Decimal("10.50")
-_REVISION = str(revision_serving_period("303", _EJERCICIO, "1T").id)
+_REVISION = "2022"
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=_EJERCICIO - 1, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _raw(provider_id: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_EJERCICIO, 2, 10),
-        value_date=date(_EJERCICIO, 2, 10),
+        booked_date=date(2026, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=Decimal("60.50"),
         currency="EUR",
         counterparty="Proveedor",
@@ -91,7 +90,7 @@ def _raw(provider_id: str) -> RawTransaction:
             source_sha256="5" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(1980, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -123,7 +122,7 @@ def _purchase(
             ),
             "input_classification": classification,
             "prorrata_sector_id": sector_id,
-            "classified_at": datetime(1980, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

@@ -36,7 +36,6 @@ import pytest
 from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
@@ -62,7 +61,6 @@ def _supported_filing_years() -> tuple[int, ...]:
 
 #: Every supported Modelo 100 filing year; each revision declares the pagos-fraccionados dependency pair.
 _M100_YEARS: tuple[int, ...] = _supported_filing_years()
-_M100_VERDICT_YEAR = newest_authored_edition("100")
 
 _PROFILE_ID = "30030030-0300-4300-8300-300300300300"
 
@@ -209,7 +207,7 @@ class TestVerdictWithinTheCandidateSet:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
             ),
         )
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert not_applicable_source_modelos_for_bucket(
             snapshot,
@@ -229,7 +227,7 @@ class TestVerdictWithinTheCandidateSet:
                 UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"),
             ),
         )
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert not_applicable_source_modelos_for_bucket(
             snapshot,
@@ -249,7 +247,7 @@ class TestVerdictWithinTheCandidateSet:
                 UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
             ),
         )
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert not_applicable_source_modelos_for_bucket(
             snapshot,
@@ -266,7 +264,7 @@ class TestFailClosed:
     def test_absent_profile_suppresses_nothing(self) -> None:
         """No profile for the bucket means no positive not-applicable verdict."""
         bucket_id = _PROFILE_ID
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert (
             not_applicable_source_modelos_for_bucket(
@@ -284,7 +282,7 @@ class TestFailClosed:
         """Undeclared income categories are not a negative declaration."""
         bucket_id = _PROFILE_ID
         profile_reader = _profile_reader((UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),))
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert (
             not_applicable_source_modelos_for_bucket(
@@ -307,7 +305,7 @@ class TestFailClosed:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             ),
         )
-        snapshot = _m100_snapshot(_M100_VERDICT_YEAR)
+        snapshot = _m100_snapshot(2024)
 
         assert (
             not_applicable_source_modelos_for_bucket(
@@ -335,7 +333,7 @@ class TestFailClosed:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
             ),
         )
-        snapshot = published_snapshot(Modelo("303").value, filing_year=filing_year_envelope().horizon, period="1T")
+        snapshot = published_snapshot(Modelo("303").value, filing_year=2024, period="1T")
         assert economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
             "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
         )

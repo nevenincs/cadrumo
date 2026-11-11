@@ -23,34 +23,29 @@ from ....application.operations.public_period import PublicPeriod
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.operations import OperationEffect
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .. import modelo_work_review_cli
 from .. import operation_modelo_work_review as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_REVISION = revision_serving_period("303", _YEAR, "1T").id
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _OPERATION_ID = "a" * 64
 
 
 def _unit() -> WorkUnit:
-    instant = datetime(_YEAR, 3, 10, tzinfo=UTC)
+    instant = datetime(2026, 3, 10, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=_YEAR, period=_PERIOD, revision_id=_REVISION
+            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=_PERIOD,
-        revision_id=_REVISION,
+        revision_id="2026-y-siguientes",
         name="First quarter",
         created_at=instant,
         updated_at=instant,

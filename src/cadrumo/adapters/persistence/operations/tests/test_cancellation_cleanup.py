@@ -55,15 +55,12 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(_YEAR, 8, 28, 9, tzinfo=UTC)
+_NOW = datetime(2026, 8, 28, 9, tzinfo=UTC)
 _DEFINITION_ID = "operation.supervisor.cancellation"
 
 #: Every phase this definition declares. The cancellable-phase sweep is derived

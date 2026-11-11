@@ -36,7 +36,6 @@ from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEventType
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.transactions.enums import BusinessClassification
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -52,9 +51,6 @@ from .conformance_ledger_seed_support import (
     seed_manual_transaction,
 )
 
-_YEAR = filing_year_envelope().horizon
-
-
 # A 1x1 greyscale PNG: the smallest image the on-host document-shape probe
 # classifies as IMAGE, so evidence reading routes to the vision reader.
 _PNG_1X1 = (
@@ -69,7 +65,7 @@ def _prepare_iva_derive(context: ConformanceFamilyContext) -> ConformancePrepara
     # into a 100.00 base and 21.00 of IVA.
     transaction_id = seed_manual_transaction(
         context,
-        booked_date=date(_YEAR, 3, 10),
+        booked_date=date(2025, 3, 10),
         amount=Decimal("121.00"),
         description="operator IVA derivation row",
         business_classification=BusinessClassification.BUSINESS,
@@ -126,7 +122,7 @@ def _prepare_iva_derive(context: ConformanceFamilyContext) -> ConformancePrepara
 
 def _prepare_classify_review(context: ConformanceFamilyContext) -> ConformancePreparation:
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 2, 11), amount=Decimal("18.00"), description="classification review row"
+        context, booked_date=date(2025, 2, 11), amount=Decimal("18.00"), description="classification review row"
     )
     # A preview settles terminally; a full review would otherwise suspend for an
     # operator response before reaching a result.
@@ -146,7 +142,7 @@ def _prepare_classify_review(context: ConformanceFamilyContext) -> ConformancePr
 
 def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePreparation:
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 2, 12), amount=Decimal("60.00"), description="split review row"
+        context, booked_date=date(2025, 2, 12), amount=Decimal("60.00"), description="split review row"
     )
     ports = ledger_action_ports(context)
     # A split proposal is only ever read from image evidence by the on-host vision reader.
@@ -188,8 +184,8 @@ def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePrepa
     )
 
 
-_USAGE_WINDOW_START = date(_YEAR, 4, 1)
-_USAGE_WINDOW_END = date(_YEAR, 4, 30)
+_USAGE_WINDOW_START = date(2026, 4, 1)
+_USAGE_WINDOW_END = date(2026, 4, 30)
 _LOW_CONFIDENCE_FLOOR = "0.7"
 
 
@@ -224,7 +220,7 @@ def _seed_diagnostics_usage() -> None:
         # Dated outside the requested window, so neither may be counted.
         _usage_record(
             "before-window",
-            datetime(_YEAR, 3, 30, 9, 0, tzinfo=UTC),
+            datetime(2026, 3, 30, 9, 0, tzinfo=UTC),
             provider=LLMProvider.AGENT,
             input_tokens=9000,
             output_tokens=900,
@@ -232,7 +228,7 @@ def _seed_diagnostics_usage() -> None:
         ),
         _usage_record(
             "after-window",
-            datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
+            datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
             provider=LLMProvider.AGENT,
             input_tokens=8000,
             output_tokens=800,
@@ -240,7 +236,7 @@ def _seed_diagnostics_usage() -> None:
         ),
         _usage_record(
             "agent-priced-first",
-            datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC),
+            datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
             provider=LLMProvider.AGENT,
             input_tokens=1000,
             output_tokens=200,
@@ -248,7 +244,7 @@ def _seed_diagnostics_usage() -> None:
         ),
         _usage_record(
             "agent-priced-cached",
-            datetime(_YEAR, 4, 5, 9, 0, tzinfo=UTC),
+            datetime(2026, 4, 5, 9, 0, tzinfo=UTC),
             provider=LLMProvider.AGENT,
             input_tokens=500,
             output_tokens=100,
@@ -257,7 +253,7 @@ def _seed_diagnostics_usage() -> None:
         ),
         _usage_record(
             "local-unpriced",
-            datetime(_YEAR, 4, 6, 9, 0, tzinfo=UTC),
+            datetime(2026, 4, 6, 9, 0, tzinfo=UTC),
             # A record written before every call went through the agent.
             provider=RetiredLLMProvider.LOCAL,
             input_tokens=300,
@@ -279,7 +275,7 @@ def _seed_diagnostics_confidence(context: ConformanceFamilyContext) -> None:
     ):
         transaction_id = seed_manual_transaction(
             context,
-            booked_date=date(_YEAR, 4, 10 + index),
+            booked_date=date(2026, 4, 10 + index),
             amount=Decimal("10.00") + index,
             description=f"diagnostics confidence row {index}",
         )
@@ -300,7 +296,7 @@ def _seed_diagnostics_confidence(context: ConformanceFamilyContext) -> None:
     # Manually classified, so it carries no llm: provenance and is not a model decision.
     seed_manual_transaction(
         context,
-        booked_date=date(_YEAR, 4, 20),
+        booked_date=date(2026, 4, 20),
         amount=Decimal("77.00"),
         description="diagnostics non-model row",
         business_classification=BusinessClassification.BUSINESS,

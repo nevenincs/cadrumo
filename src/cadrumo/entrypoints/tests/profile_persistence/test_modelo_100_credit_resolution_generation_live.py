@@ -45,7 +45,6 @@ from ....application.user_profile.profile_record_repository import close_active_
 from ....core.casilla_id import CasillaId
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.shared_authority_isolation import isolated_shared_authority
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
@@ -69,7 +68,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 __all__ = ["secure_objects"]
 
-_AT = datetime(filing_year_envelope().horizon + 1, 4, 3, 9, 0, tzinfo=UTC)
+_AT = datetime(2027, 4, 3, 9, 0, tzinfo=UTC)
 _SESSION = "session-label-one"
 _REASON = "Synthetic reason: the payer's own copy of the certificate states this amount."
 _BORRADOR = {TRABAJO_BINDING: Decimal("1800.00"), CAPITAL_BINDING: Decimal("499.99")}
@@ -77,7 +76,7 @@ _BORRADOR = {TRABAJO_BINDING: Decimal("1800.00"), CAPITAL_BINDING: Decimal("499.
 _MODELO = "100"
 _REVISION = str(YEAR)
 _UNRELATED_MODELO = "130"
-_UNRELATED_REVISION = str(open_ended_revision(_UNRELATED_MODELO).id)
+_UNRELATED_REVISION = "2019-y-siguientes"
 _CORROBORATED_CLASS = "trabajo"
 
 

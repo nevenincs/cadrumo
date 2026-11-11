@@ -83,13 +83,10 @@ from cadrumo.core.operations import (
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 
-_YEAR = filing_year_envelope().horizon
-
-SUPERVISOR_NOW = datetime(_YEAR, 8, 14, 15, tzinfo=UTC)
+SUPERVISOR_NOW = datetime(2026, 8, 14, 15, tzinfo=UTC)
 
 _CONTINUATION_DIGEST = "a" * 64
 

@@ -29,15 +29,14 @@ from ...domain.calculations.registry.authority_store import SQLiteAuthorityReade
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
-from ...domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 OVERRIDE_MODELO: Final = "216"
 """The modelo whose revision the fixture overrides; every other component is published verbatim."""
 
-OVERRIDE_REVISION: Final = str(open_ended_revision(OVERRIDE_MODELO).id)
+OVERRIDE_REVISION: Final = "2024-y-siguientes"
 """The overridden revision -- the modelo's current provider, and open-ended."""
 
-OVERRIDE_YEAR: Final = open_ended_revision(OVERRIDE_MODELO).valid_from.year
+OVERRIDE_YEAR: Final = 2024
 """The filing year whose surface the override replaces."""
 
 DROPPED_PERIOD: Final = "01"

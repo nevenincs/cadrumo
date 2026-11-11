@@ -47,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # A fixed instant the clock seam is frozen to for every deterministic
 # capture; the anti-tautology proof relies on it pinning every
 # ``core.time.now()`` leaf in the emitted envelope.
-_INSTANT = datetime(1980, 4, 14, 9, 30, 0, tzinfo=UTC)
+_INSTANT = datetime(2026, 4, 14, 9, 30, 0, tzinfo=UTC)
 # A caller-minted, fixed profile id — the already-accepted identity lever.
 _PROFILE_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
 

@@ -38,7 +38,6 @@ from cadrumo.application.ledger.models import (
 from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
@@ -49,8 +48,6 @@ from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .split_test_support import BUCKET_ID, create_parent, repositories
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -75,7 +72,7 @@ def test_split_transitions_parent_to_split_and_creates_children(secure_objects: 
             actor="operator-A",
             reason="separate business and personal",
             ports=ports,
-            occurred_at=datetime(1980, 5, 4, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
 
     catalogue = transaction_repository.load()
@@ -192,7 +189,7 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
         other_parent_result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 9),
+                booked_date=date(2026, 5, 9),
                 amount=Decimal("100.00"),
                 direction=TransactionDirection.OUTGOING,
                 counterparty="Vendor SL",
@@ -200,7 +197,7 @@ def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository)
                 actor="operator-A",
             ),
             ports=ports,
-            occurred_at=datetime(1980, 5, 9, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -266,7 +263,7 @@ def test_split_refuses_if_an_unrelated_row_changes_after_its_snapshot(
         unrelated_result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 10),
+                booked_date=date(2026, 5, 10),
                 amount=Decimal("55.00"),
                 direction=TransactionDirection.OUTGOING,
                 counterparty="Other vendor",
@@ -274,7 +271,7 @@ def test_split_refuses_if_an_unrelated_row_changes_after_its_snapshot(
                 actor="operator-A",
             ),
             ports=ports,
-            occurred_at=datetime(1980, 5, 10, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 10, 9, 30, tzinfo=UTC),
         )
 
         original_save = transaction_repository.save_if_revision_with_secure_object_writes

@@ -6,10 +6,6 @@ from datetime import date
 
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
-
-_YEAR = newest_authored_edition("100")
-
 
 def eligible_descendants() -> tuple[DescendantInfo, ...]:
     """Two descendants born well before the filing year, both living with the taxpayer.
@@ -20,6 +16,6 @@ def eligible_descendants() -> tuple[DescendantInfo, ...]:
     projection.
     """
     return (
-        DescendantInfo(birth_date=date(_YEAR - 15, 3, 4)),
-        DescendantInfo(birth_date=date(_YEAR - 11, 9, 18)),
+        DescendantInfo(birth_date=date(2010, 3, 4)),
+        DescendantInfo(birth_date=date(2014, 9, 18)),
     )

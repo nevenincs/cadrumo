@@ -22,15 +22,11 @@ from pydantic import ValidationError
 
 from ....application.review.enums import ReviewSeverity, ReviewState
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..review_results import (
     ReviewQueueResult,
     ReviewQueueRowPayload,
     ReviewViewResult,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,14 +41,14 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         affected_object_id="draft-abc",
         bucket_id="b" * 32,
         modelo="303",
-        period=str(Period.from_year_and_code(_YEAR, "1T")),
+        period=str(Period.from_year_and_code(2025, "1T")),
         severity=ReviewSeverity.HIGH,
         state=ReviewState.PENDING,
         blocking=True,
         reason="missing required casilla",
         current_owner_surface="app modelo",
         canonical_next_command="aeat app modelo work calculate draft-abc",
-        since=datetime(_YEAR, 4, 20, 12, 0, 0, tzinfo=UTC),
+        since=datetime(2025, 4, 20, 12, 0, 0, tzinfo=UTC),
         summary="modelo 303 draft is missing iva.devengado",
         legal_refs=("ley-37-1992:art-21", "ley-37-1992:art-94"),
     )

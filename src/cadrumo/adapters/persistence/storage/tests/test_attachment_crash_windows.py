@@ -34,7 +34,7 @@ from .secure_sql import isolated_runtime_profile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BLOB = b"invoice pdf bytes for the attachment crash window"
-_CAPTURED_AT = datetime(1980, 7, 2, 9, 30, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(2026, 7, 2, 9, 30, 0, tzinfo=UTC)
 
 
 def _manifest_for(sha256: str, *, bytes_size: int) -> Attachment:

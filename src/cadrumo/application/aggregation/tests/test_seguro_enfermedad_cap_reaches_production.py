@@ -26,7 +26,6 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -46,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
-_FILING_YEAR = newest_authored_edition("100")
+_FILING_YEAR = 2025
 _ANNUAL = renta_income_aggregation_period(_FILING_YEAR, "0A")
 
 #: Well above any limb the article grants, so the deducted amount is always the
@@ -158,7 +157,7 @@ def test_a_cohabiting_child_under_twenty_five_joins_the_cap(operation: PinnedAut
         operation=operation,
         **{
             "renta_taxpayer.marital_status": "2",
-            "renta_family.descendiente.0.birth_date": date(_FILING_YEAR - 13, 5, 4).isoformat(),
+            "renta_family.descendiente.0.birth_date": "2012-05-04",
             "renta_family.descendiente.0.convivencia": "true",
         },
     )
@@ -177,7 +176,7 @@ def test_a_child_of_twenty_five_or_more_does_not_raise_the_cap(operation: Pinned
     household = _profile(
         operation=operation,
         **{
-            "renta_family.descendiente.0.birth_date": date(_FILING_YEAR - 30, 5, 4).isoformat(),
+            "renta_family.descendiente.0.birth_date": "1995-05-04",
             "renta_family.descendiente.0.convivencia": "true",
         },
     )

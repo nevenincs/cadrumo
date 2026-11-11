@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
@@ -35,28 +34,26 @@ from ..home import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
-_NOW = datetime(_YEAR, 9, 3, 10, 0, tzinfo=UTC)
+_NOW = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)
 _AVAILABLE = HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=_NOW)
 _ACCOUNT = HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Local profile")
 
 
 def _declaration(*, name: str = "return", work_unit_id: str = "a" * 64) -> HomeDeclarationResume:
-    period = Period.from_year_and_code(_YEAR, "3T")
+    period = Period.from_year_and_code(2026, "3T")
     return HomeDeclarationResume(
         work_unit_id=work_unit_id,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=revision_serving_period("303", _YEAR, "3T").id,
+        revision_id="2026-v1",
         name=name,
         state=HomeDeclarationState.NEEDS_REVIEW,
     )
 
 
 def _calendar_entry(modelo: str, due_on: date, period_code: str) -> OverviewCalendarEntry:
-    period = Period.from_year_and_code(_YEAR, period_code)
+    period = Period.from_year_and_code(2026, period_code)
     return OverviewCalendarEntry(
         modelo=modelo,
         period=period,
@@ -65,10 +62,10 @@ def _calendar_entry(modelo: str, due_on: date, period_code: str) -> OverviewCale
         adjusted_closes_on=due_on,
         shift_reason="none",
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
-        evaluated_on=date(_YEAR, 1, 1),
+        evaluated_on=date(2026, 1, 1),
         status=ObligationStatus.DUE_SOON,
         user_state=OverviewPeriodState.DUE,
-        filing_year=_YEAR,
+        filing_year=2026,
         filing_evidence=OverviewCalendarFilingEvidence(
             local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
             aeat_submission_state=OverviewAeatSubmissionState.ACCEPTED,
@@ -92,7 +89,7 @@ def _input(**updates: object) -> HomeProjectionInput:
         "agenda_state": _AVAILABLE,
         "agenda_evidence_state": _AVAILABLE,
         "overview_agenda": OverviewAgenda(
-            as_of=date(_YEAR, 9, 3),
+            as_of=date(2026, 9, 3),
             horizon_days=60,
             generated_at=_NOW,
             completeness=CalendarCompleteness(),
@@ -182,13 +179,13 @@ def test_duplicate_action_semantic_identity_is_rejected_before_preview_trimming(
 
 def test_agenda_uses_legal_due_date_top_three_and_masks_unobservable_aeat_evidence() -> None:
     entries = (
-        _calendar_entry("390", date(_YEAR, 10, 23), "0A"),
-        _calendar_entry("303", date(_YEAR, 10, 20), "3T"),
-        _calendar_entry("130", date(_YEAR, 10, 20), "3T"),
-        _calendar_entry("111", date(_YEAR, 10, 21), "3T"),
+        _calendar_entry("390", date(2026, 10, 23), "0A"),
+        _calendar_entry("303", date(2026, 10, 20), "3T"),
+        _calendar_entry("130", date(2026, 10, 20), "3T"),
+        _calendar_entry("111", date(2026, 10, 21), "3T"),
     )
     agenda = OverviewAgenda(
-        as_of=date(_YEAR, 9, 3),
+        as_of=date(2026, 9, 3),
         horizon_days=60,
         due_soon=entries,
         generated_at=_NOW,
@@ -204,9 +201,9 @@ def test_agenda_uses_legal_due_date_top_three_and_masks_unobservable_aeat_eviden
     )
 
     assert [(item.due_on, item.modelo) for item in projection.agenda] == [
-        (date(_YEAR, 10, 20), "130"),
-        (date(_YEAR, 10, 20), "303"),
-        (date(_YEAR, 10, 21), "111"),
+        (date(2026, 10, 20), "130"),
+        (date(2026, 10, 20), "303"),
+        (date(2026, 10, 21), "111"),
     ]
     assert all(item.aeat_submission_state is OverviewAeatSubmissionState.NOT_OBSERVED for item in projection.agenda)
 

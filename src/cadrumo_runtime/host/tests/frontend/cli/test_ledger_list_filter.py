@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +28,6 @@ from cadrumo.application.user_profile import profile_summary
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.tests.inventory import FIXTURES_DIR
@@ -37,8 +35,6 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -61,7 +57,7 @@ _PROFILE_FACTS = {
     "identity.name": "Ledger",
     "identity.surnames": "Filter Reader",
     "activities.description": "design",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
 }
 
 
@@ -157,7 +153,7 @@ def test_year_option_without_period_preserves_typed_refusal(_corpus_profile: Nat
     for locale in ("ca", "en", "es", "hu"):
         result = _invoke_cli(
             _corpus_profile,
-            ["--language", locale, "--format", "json", "app", "ledger", "list", "--year", str(_YEAR)],
+            ["--language", locale, "--format", "json", "app", "ledger", "list", "--year", "2025"],
         )
 
         assert result.exit_code != 0
@@ -188,7 +184,7 @@ def test_year_option_without_period_preserves_typed_refusal(_corpus_profile: Nat
 
 def test_year_filter_without_period_refuses_with_typed_no_recovery(_corpus_profile: NativeCliProfileFixture) -> None:
     """A partial period predicate stays typed without reconstructed guidance."""
-    result = _invoke_cli(_corpus_profile, ["app", "ledger", "list", "--filter", f"year={_YEAR}"])
+    result = _invoke_cli(_corpus_profile, ["app", "ledger", "list", "--filter", "year=2026"])
 
     assert result.exit_code != 0
     assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
@@ -310,10 +306,10 @@ def test_period_filter_combined_shape_refuses_with_typed_no_recovery(
     _corpus_profile: NativeCliProfileFixture,
 ) -> None:
     """A combined period token is redacted and carries no invented action."""
-    combined_period = f"{_YEAR}Q1"
+    combined_period = "2026Q1"
     result = _invoke_cli(
         _corpus_profile,
-        ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", f"year={_YEAR}"],
+        ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
     )
 
     assert result.exit_code != 0

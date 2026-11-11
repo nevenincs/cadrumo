@@ -30,7 +30,6 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from ...iva.errors import IvaRateNotFoundError
 from ..enums import iva_rate_percentage
-from .invoice_catalogue_seed import STANDING_DEVENGO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,9 +41,9 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
-#: Inside every ES tier's coverage. RATE_2 stood only for the registry's transitional window, so
+#: Inside every ES tier's coverage. RATE_2 stood only October-December 2024, so
 #: this date reaches the legality branch rather than the coverage branch.
-_COVERED_BUT_OUT_OF_WINDOW = STANDING_DEVENGO
+_COVERED_BUT_OUT_OF_WINDOW = date(2024, 6, 1)
 
 
 def test_not_in_force_refusal_carries_no_authored_sentence() -> None:

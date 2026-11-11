@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from ....core.auth_provider import AuthProviderKind
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.submission.models import ModeloDraftStatus
 from ..engine_helpers import DeadlineRole, FilingWindowState
 from ..run_models import (
@@ -41,10 +40,9 @@ from ..run_projection import RELEASED_DETAIL_FIELDS, WorkflowDetailSnapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = Modelo("303")
-_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_OPENS = date(_YEAR, 4, 1)
-_CLOSES = date(_YEAR, 4, 20)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_OPENS = date(2025, 4, 1)
+_CLOSES = date(2025, 4, 20)
 _SKIPPED = WorkflowAuthCheckDetails(
     kind="auth_check",
     provider_check_skipped=True,
@@ -53,7 +51,7 @@ _SKIPPED = WorkflowAuthCheckDetails(
 _CONFIGURED = WorkflowAuthCheckDetails(
     kind="auth_check",
     provider_kind=AuthProviderKind.CERTIFICATE,
-    cert_not_after=date(_YEAR, 12, 31),
+    cert_not_after=date(2026, 12, 31),
     cert_severity="OK",
     cert_days_until_expiry=400,
 )

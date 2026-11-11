@@ -24,7 +24,6 @@ import json
 import re
 import sys
 from contextlib import AbstractContextManager
-from datetime import date
 from pathlib import Path
 from uuid import UUID
 
@@ -51,7 +50,6 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -66,12 +64,11 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_YEAR = filing_year_envelope().floor
-_FILING_YEAR = str(_YEAR)
+_FILING_YEAR = "2022"
 _ADVISER_NIF = "B00015016"
 _ADVISER_NAME = "Asesoria Profesional SL"
-_QUARTERLY_INVOICE_DATES = tuple(date(_YEAR, month, 20).isoformat() for month in (3, 6, 9, 12))
-_ALL_QUARTERS_ATTESTED = ",".join(f"{_YEAR}:{quarter}T" for quarter in (1, 2, 3, 4))
+_QUARTERLY_INVOICE_DATES = ("2022-03-20", "2022-06-20", "2022-09-20", "2022-12-20")
+_ALL_QUARTERS_ATTESTED = "2022:1T,2022:2T,2022:3T,2022:4T"
 _LEDGER_EVIDENCE_FINDING_KEY = "application.modelo.findings.withholding_detail_absent_against_ledger_evidence"
 
 
@@ -106,7 +103,7 @@ def _profile_session(
             "identity.surnames": "Retenedor",
             "activities.description": "design",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "censo.activity_start_date": date(_YEAR - 2, 1, 1).isoformat(),
+            "censo.activity_start_date": "2020-01-01",
             "withholding.colegio_concertado": "false",
         }
         if attested_periods is not None:
@@ -227,9 +224,7 @@ def test_verify_refuses_an_empty_190_contradicted_by_invoice_retenciones(
     """The four practised retenciones the store never received block the resumen anual."""
     with _profile_session(tmp_path, authority_operation, invoke_cli=run_cadrumo_cli) as session:
         for index, invoice_date in enumerate(_QUARTERLY_INVOICE_DATES, start=1):
-            _add_received_professional_invoice(
-                session, number=f"F-ASESOR-{_YEAR}-{index:03d}", invoice_date=invoice_date
-            )
+            _add_received_professional_invoice(session, number=f"F-ASESOR-2022-{index:03d}", invoice_date=invoice_date)
         calculation_revision_id = _calculate(session, _create_190_work_unit(session))
 
         verified = session.invoke_password(
@@ -246,7 +241,7 @@ def test_verify_refuses_an_empty_190_contradicted_by_invoice_retenciones(
         facts = _finding_facts(verified.output)
         assert facts["severity"] == "blocking"
         assert facts["modelo"] == "190"
-        assert facts["filing_year"] == _FILING_YEAR
+        assert facts["filing_year"] == "2022"
         assert facts["source_family"] == "withholding"
         assert facts["source_modelo"] == "111"
         assert facts["contradicting_invoice_count"] == "4"
@@ -265,9 +260,7 @@ def test_verify_refuses_an_attested_nil_190_contradicted_by_a_ledger_payment(
     with _profile_session(
         tmp_path, authority_operation, invoke_cli=run_cadrumo_cli, attested_periods=_ALL_QUARTERS_ATTESTED
     ) as session:
-        _add_outgoing_professional_payment(
-            session, description="Pago asesoria fiscal 3T", paid_on=date(_YEAR, 7, 4).isoformat()
-        )
+        _add_outgoing_professional_payment(session, description="Pago asesoria fiscal 3T", paid_on="2022-07-04")
         calculation_revision_id = _calculate(session, _create_190_work_unit(session))
 
         verified = session.invoke_password(
@@ -341,7 +334,7 @@ def test_the_refusal_renders_in_every_supported_locale(
     """Transport facts stay stable while the operator-facing prose is translated."""
     with _profile_session(tmp_path, authority_operation, invoke_cli=run_cadrumo_cli) as session:
         _add_received_professional_invoice(
-            session, number=f"F-ASESOR-{_YEAR}-001", invoice_date=_QUARTERLY_INVOICE_DATES[0]
+            session, number="F-ASESOR-2022-001", invoice_date=_QUARTERLY_INVOICE_DATES[0]
         )
         calculation_revision_id = _calculate(session, _create_190_work_unit(session))
 
@@ -381,7 +374,7 @@ def test_a_partially_attested_year_is_still_refused(
         tmp_path,
         authority_operation,
         invoke_cli=run_cadrumo_cli,
-        attested_periods=",".join(f"{_YEAR}:{quarter}T" for quarter in (1, 2, 3)),
+        attested_periods="2022:1T,2022:2T,2022:3T",
     ) as session:
         calculation_revision_id = _calculate(session, _create_190_work_unit(session))
 
@@ -406,7 +399,7 @@ def test_the_refused_revision_cannot_be_filed_locally(
     """The gate closes the filing path, not only the verify report."""
     with _profile_session(tmp_path, authority_operation, invoke_cli=run_cadrumo_cli) as session:
         _add_received_professional_invoice(
-            session, number=f"F-ASESOR-{_YEAR}-001", invoice_date=_QUARTERLY_INVOICE_DATES[0]
+            session, number="F-ASESOR-2022-001", invoice_date=_QUARTERLY_INVOICE_DATES[0]
         )
         calculation_revision_id = _calculate(session, _create_190_work_unit(session))
         refused = session.invoke_password(

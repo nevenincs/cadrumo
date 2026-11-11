@@ -20,11 +20,8 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.time.clock import now
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import ratios_contracts as contracts
 from .. import ratios_operation as ratios
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,16 +55,16 @@ def _registry() -> tuple[OperationRegistry, dict[str, OperationPublicDefinitionR
 def _request(definition_id: str, *, profile_id: UUID = _PROFILE) -> OperationRequest[BaseModel]:
     payload = {
         contracts.LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID: contracts.LedgerRatiosListRequest(
-            profile_id=profile_id, year=_YEAR
+            profile_id=profile_id, year=2026
         ),
         contracts.LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID: contracts.LedgerRatiosSetRequest(
-            profile_id=profile_id, category=_CATEGORY, ratio="0.5", year=_YEAR
+            profile_id=profile_id, category=_CATEGORY, ratio="0.5", year=2026
         ),
         contracts.LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID: contracts.LedgerRatiosUnsetRequest(
             profile_id=profile_id, category=_CATEGORY
         ),
         contracts.LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID: contracts.LedgerRatiosEligibleRequest(
-            profile_id=profile_id, year=_YEAR
+            profile_id=profile_id, year=2026
         ),
         contracts.LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID: contracts.LedgerRatiosValidateRequest(
             profile_id=profile_id
@@ -240,7 +237,7 @@ def test_request_schema_is_closed_and_ratio_is_a_bounded_unit_value() -> None:
         profile_id=_PROFILE,
         category=_CATEGORY,
         ratio="0.50",
-        year=_YEAR,
+        year=2026,
     )
     schema = contracts.LedgerRatiosSetRequest.model_json_schema()
 
@@ -253,14 +250,14 @@ def test_request_schema_is_closed_and_ratio_is_a_bounded_unit_value() -> None:
             profile_id=_PROFILE,
             category=_CATEGORY,
             ratio="1.5",
-            year=_YEAR,
+            year=2026,
         )
     with pytest.raises(ValidationError):
         contracts.LedgerRatiosSetRequest(
             profile_id=_PROFILE,
             category=_CATEGORY,
             ratio="0.5",
-            year=_YEAR,
+            year=2026,
             extra="not registered",
         )
 
@@ -268,7 +265,7 @@ def test_request_schema_is_closed_and_ratio_is_a_bounded_unit_value() -> None:
 def test_list_censo_mismatch_requires_registered_refusal_receipt() -> None:
     result = contracts.LedgerRatiosListResult(
         profile_id=_PROFILE,
-        year=_YEAR,
+        year=2026,
         outcome="censo_mismatch",
         rows=(),
         count=0,

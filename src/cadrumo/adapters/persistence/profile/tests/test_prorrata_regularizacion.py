@@ -51,7 +51,6 @@ from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
 )
 from .....domain.calculations.registry.schema import ModeloRevision
-from .....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
@@ -82,9 +81,9 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET_ID = "52aedff7-7cc1-46ed-a615-afa5e56f6a89"  # was 'prorrata-regularizacion-s27'
-_SETTLEMENT_YEAR = filing_year_envelope().horizon
-_CARRY_YEAR = _SETTLEMENT_YEAR + 1
-_T0 = datetime(_SETTLEMENT_YEAR, 1, 1, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
+_SETTLEMENT_YEAR = 2026
+_CARRY_YEAR = 2027
 _SETTLEMENT_PERIOD = "4T"
 #: A synthetic, checksum-valid NIF: a local M303 filing projects its IVA
 #: compensation history, and so its settlement snapshot, under the taxpayer.
@@ -99,17 +98,8 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 _RESULTADO_ID: CasillaId = validated_casilla_id("iva.resultado", surface="test casilla id")
 
 
-def _shipped_303_revision_windows() -> tuple[tuple[int, str, str], ...]:
-    """One supported (year, quarter, revision id) per shipped M303 revision window."""
-    floor = filing_year_envelope().floor
-    windows: list[tuple[int, str, str]] = []
-    for revision in authored_revisions("303"):
-        year = max(revision.valid_from.year, floor)
-        if revision.valid_to is not None and revision.valid_to.year < year:
-            continue
-        quarter = next(token for token in reversed(revision.period_selector.periods_for_year(year)) if "T" in token)
-        windows.append((year, quarter, str(revision.id)))
-    return tuple(windows)
+def _periods_2026() -> tuple[Period, ...]:
+    return tuple(Period.from_year_and_code(2026, code) for code in ("1T", "2T", "3T", "4T"))
 
 
 def _ledger_observation(
@@ -229,7 +219,7 @@ def _seed_verified_m303_settlement(
         filing_year=_SETTLEMENT_YEAR,
         period=period,
         revision_id=revision_id,
-        name=f"303-{_SETTLEMENT_YEAR}-4T",
+        name="303-2026-4T",
         created_at=_T0,
         updated_at=verified_at,
         current_calculation_revision_id=calculation_revision_id,
@@ -257,7 +247,7 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
     diagnostic = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=_unresolved_prorrata(),
-        ejercicio=_SETTLEMENT_YEAR,
+        ejercicio=2026,
         revision=_settlement_revision(),
     )
 
@@ -285,7 +275,11 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
 
 @pytest.mark.parametrize(
     ("filing_year", "period", "revision_id"),
-    _shipped_303_revision_windows(),
+    (
+        (2024, "2T", "2024-hasta-08-y-2t"),
+        (2024, "4T", "2024-desde-09-y-3t"),
+        (2026, "4T", "2026-y-siguientes"),
+    ),
 )
 def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     filing_year: int,
@@ -308,9 +302,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
 def test_modelo_303_period_below_the_support_floor_refuses() -> None:
     """A filing year below the registry support floor refuses instead of projecting."""
     with pytest.raises(FilingYearOutsideSupportEnvelopeError, match="outside the registry support envelope"):
-        published_authority_operation().snapshot(
-            Modelo("303").value, filing_year=filing_year_envelope().floor - 1, period="4T"
-        )
+        published_authority_operation().snapshot(Modelo("303").value, filing_year=2020, period="4T")
 
 
 def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
@@ -319,7 +311,7 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
     missing_carry = build_prorrata_missing_provisional_advisory(
         applicability=applicability,
         provisional_resolution=_unresolved_prorrata(),
-        ejercicio=_SETTLEMENT_YEAR,
+        ejercicio=2026,
         revision=_settlement_revision(),
     )
 
@@ -395,4 +387,4 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
         assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance.from_registry(
             "carried_prior_definitiva"
         )
-        assert seed.entry.source_observation_ref == f"303:{_SETTLEMENT_YEAR}:4T"
+        assert seed.entry.source_observation_ref == "303:2026:4T"

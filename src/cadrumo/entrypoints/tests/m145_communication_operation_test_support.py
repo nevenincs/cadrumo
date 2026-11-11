@@ -45,10 +45,8 @@ from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-_CREATED_AT = datetime(1980, 5, 8, 10, 15, tzinfo=UTC)
-_COMMUNICATION_YEAR = filing_year_envelope().horizon
+_CREATED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
 _ACTOR = "registered-m145-conformance"
 _FIELD_VALUES = {
     "perceptor.nif": "12345678Z",
@@ -145,7 +143,7 @@ def prepare_m145_communication_operation_conformance_case(
     if action != "create":
         record = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=_COMMUNICATION_YEAR,
+                communication_year=2026,
                 period_token=M145CommunicationPeriod.COMMUNICATION,
                 field_values=_FIELD_VALUES,
                 note="Registered M145 operation conformance row",
@@ -183,7 +181,7 @@ def prepare_m145_communication_operation_conformance_case(
         request: BaseModel = M145CommunicationCreateRequest.from_command(
             profile_id=profile_id,
             command=M145CommunicationCreateCommand(
-                communication_year=_COMMUNICATION_YEAR,
+                communication_year=2026,
                 period_token=M145CommunicationPeriod.COMMUNICATION,
                 field_values=_FIELD_VALUES,
                 note="Registered M145 operation conformance row",

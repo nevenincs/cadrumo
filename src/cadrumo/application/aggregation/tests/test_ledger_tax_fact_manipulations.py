@@ -25,7 +25,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -51,23 +50,22 @@ from .renta_income_aggregation_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CENT = Decimal("0.01")
-_NOW = datetime(1980, 4, 6, 12, 0, tzinfo=UTC)
-_YEAR = newest_authored_edition("100")
+_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
 
 def _period(year: int, code: str) -> Period:
     return Period.from_year_and_code(year, code)
 
 
-_ANNUAL = _period(_YEAR, "0A")
-_Q1 = _period(_YEAR, "1T")
+_ANNUAL_2025 = _period(2025, "0A")
+_Q1_2025 = _period(2025, "1T")
 
 
 def _q(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-def _raw(provider_id: str, *, amount: Decimal, description: str, when: date = date(_YEAR, 2, 10)) -> RawTransaction:
+def _raw(provider_id: str, *, amount: Decimal, description: str, when: date = date(2025, 2, 10)) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=when,
@@ -126,7 +124,7 @@ def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
         catalogue = TransactionCatalogue.from_transactions(tuple(txns))
         result = aggregate_iva_ledger_observations(
             catalogue,
-            period=_Q1,
+            period=_Q1_2025,
             ledger_profile_id="manipulation-test",
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id="manipulation-test",
@@ -162,7 +160,7 @@ def _deductible_total(*, classification: BusinessClassification, business_pct: D
     if business_pct is not None:
         payload["business_pct"] = business_pct
     catalogue = TransactionCatalogue.from_transactions((Transaction.model_validate(payload),))
-    result = aggregate_renta_ledger_expenses(catalogue, InvoiceCatalogue(), bucket_id="corpus", period=_ANNUAL)
+    result = aggregate_renta_ledger_expenses(catalogue, InvoiceCatalogue(), bucket_id="corpus", period=_ANNUAL_2025)
     return sum((o.deductible_amount for o in result.observations), start=Decimal("0"))
 
 
@@ -206,7 +204,7 @@ def _income_observation_count(irpf_category: str) -> int:
     result = aggregate_renta_income_ledger(
         catalogue,
         bucket_id="corpus",
-        period=_Q1,
+        period=_Q1_2025,
         modelo=M130_MODELO,
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,

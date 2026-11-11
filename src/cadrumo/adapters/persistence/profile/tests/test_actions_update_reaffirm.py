@@ -21,14 +21,11 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,7 +45,7 @@ def _create_classified_transaction(
         return create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 1),
+                booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="office supplies",
@@ -59,7 +56,7 @@ def _create_classified_transaction(
                 iva_amount=Decimal("21.00"),
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         )
 
 
@@ -92,7 +89,7 @@ def test_update_manual_transaction_fields_reaffirmation_noop_returns_stored_tran
             source_command="aeat app ledger classify",
             reaffirm=False,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert result.transaction.transaction_id == created.ref.transaction_id
@@ -132,7 +129,7 @@ def test_update_manual_transaction_fields_reaffirm_true_bypasses_outer_guard_but
             source_command="aeat app ledger classify",
             reaffirm=True,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
 
@@ -161,7 +158,7 @@ def test_update_manual_transaction_fields_reaffirm_true_with_net_change_emits_ev
             source_command="aeat app ledger classify",
             reaffirm=True,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert result.bucket_event_ids != ()
@@ -193,7 +190,7 @@ def test_update_manual_transaction_fields_different_classification_bypasses_noop
             source_command="aeat app ledger classify",
             reaffirm=False,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert result.transaction.business_classification is BusinessClassification.PERSONAL
@@ -228,7 +225,7 @@ def test_update_manual_transaction_fields_asset_link_only_patch_is_saved_not_ref
             source_command="aeat app ledger classify",
             reaffirm=False,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert result.bucket_event_ids != ()

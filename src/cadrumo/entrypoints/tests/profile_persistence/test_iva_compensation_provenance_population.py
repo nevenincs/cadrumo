@@ -92,7 +92,6 @@ from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.calculation_revision import (
@@ -113,15 +112,12 @@ _DECLARED_PROVENANCES = frozenset(IvaCompensationStateProvenance)
 _NIF = "12345678Z"
 _AEAT_EXPEDIENTE = "202630300000001Z"
 _AEAT_REGISTER_STATUS = "ALTA"
-#: The four newest supported exercises: the carry chain needs one filing in each of three consecutive
-#: exercises and a capture in the exercise after them.
-*_, _SEED_YEAR, _CORRECTION_YEAR, _APP_FILING_YEAR, _AEAT_CAPTURE_YEAR = filing_year_envelope().years
-_AS_OF_YEAR = _AEAT_CAPTURE_YEAR
+_AS_OF_YEAR = 2026
 
-_SEED_PERIOD = Period.from_year_and_code(_SEED_YEAR, "4T")
-_CORRECTION_PERIOD = Period.from_year_and_code(_CORRECTION_YEAR, "4T")
-_APP_FILING_PERIOD = Period.from_year_and_code(_APP_FILING_YEAR, "4T")
-_AEAT_CAPTURE_PERIOD = Period.from_year_and_code(_AEAT_CAPTURE_YEAR, "1T")
+_SEED_PERIOD = Period.from_year_and_code(2023, "4T")
+_CORRECTION_PERIOD = Period.from_year_and_code(2024, "4T")
+_APP_FILING_PERIOD = Period.from_year_and_code(2025, "4T")
+_AEAT_CAPTURE_PERIOD = Period.from_year_and_code(2026, "1T")
 
 _SEED_AMOUNT = Decimal("120.00")
 _SUPERSEDED_SEED_AMOUNT = Decimal("55.00")
@@ -129,10 +125,10 @@ _CORRECTION_AMOUNT = Decimal("90.00")
 _APP_FILING_RESULTADO = Decimal("-30.00")
 _AEAT_CAPTURE_RESULTADO = Decimal("-40.00")
 
-_SEEDED_AT = datetime(_CORRECTION_YEAR, 1, 15, 9, 0, tzinfo=UTC)
-_CORRECTED_AT = datetime(_APP_FILING_YEAR, 1, 15, 9, 0, tzinfo=UTC)
-_APP_FILED_AT = datetime(_AEAT_CAPTURE_YEAR, 1, 20, 9, 0, tzinfo=UTC)
-_AEAT_PRESENTED_AT = datetime(_AEAT_CAPTURE_YEAR, 4, 18, 9, 0, tzinfo=UTC)
+_SEEDED_AT = datetime(2024, 1, 15, 9, 0, tzinfo=UTC)
+_CORRECTED_AT = datetime(2025, 1, 15, 9, 0, tzinfo=UTC)
+_APP_FILED_AT = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)
+_AEAT_PRESENTED_AT = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
 
 _BUCKET_ID = "0cc751da-f750-4184-84b2-171737aac448"  # was 'bucket-iva-provenance-population'
 
@@ -143,10 +139,10 @@ _BUCKET_ID = "0cc751da-f750-4184-84b2-171737aac448"  # was 'bucket-iva-provenanc
 #: provenance is therefore reached through the resolver, not just the
 #: convenient one.
 _PREFILL_TARGETS = (
-    (_CORRECTION_YEAR, "1T", _SEED_PERIOD),
-    (_APP_FILING_YEAR, "1T", _CORRECTION_PERIOD),
-    (_AEAT_CAPTURE_YEAR, "1T", _APP_FILING_PERIOD),
-    (_AEAT_CAPTURE_YEAR, "2T", _AEAT_CAPTURE_PERIOD),
+    (2024, "1T", _SEED_PERIOD),
+    (2025, "1T", _CORRECTION_PERIOD),
+    (2026, "1T", _APP_FILING_PERIOD),
+    (2026, "2T", _AEAT_CAPTURE_PERIOD),
 )
 
 
@@ -223,7 +219,7 @@ def _app_filed_work_unit() -> WorkUnit:
         filing_year=_APP_FILING_PERIOD.filing_year,
         period=_APP_FILING_PERIOD,
         revision_id=revision_id,
-        name=f"m303-{_APP_FILING_YEAR}-4t",
+        name="m303-2025-4t",
         created_at=_APP_FILED_AT,
         updated_at=_APP_FILED_AT,
     )

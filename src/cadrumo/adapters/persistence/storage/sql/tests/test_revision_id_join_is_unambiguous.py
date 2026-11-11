@@ -69,7 +69,7 @@ def test_the_join_stays_injective_because_only_one_field_is_unconstrained() -> N
     That is the property the migration to the canonical content-hash primitive
     would also provide -- at the cost of restamping every stored revision id.
     """
-    moment = datetime(1980, 1, 1, tzinfo=UTC)
+    moment = datetime(2026, 1, 1, tzinfo=UTC)
     shared = {
         "schema_version": 1,
         "written_at": moment,

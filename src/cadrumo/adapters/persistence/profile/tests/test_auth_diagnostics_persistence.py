@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -25,11 +25,6 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.external_constants import UTF_8_ENCODING, load_external_constants
 from cadrumo.core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
-
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-_PLUS_TWO = timezone(timedelta(hours=2))
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -64,8 +59,8 @@ def _seed_two_diagnostics(repo: SecureObjectRepository) -> None:
         f"{external.domains.www12}{external.clave_movil.autentica_dni_nie_contraste_path}"
         "?qAA=2&ref=%2Fprivate-target&storksp=secret&from=aeat&ts=20260521081409392278"
     )
-    older = datetime(_YEAR, 5, 19, 8, 0, tzinfo=UTC)
-    newer = datetime(_YEAR, 5, 19, 9, 0, tzinfo=UTC)
+    older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
+    newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
     repo.save(
         namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
         object_key="diag-old",
@@ -223,7 +218,7 @@ def test_auth_diagnostic_phone_state_report_is_persisted_and_unknown_states_are_
 def test_rapid_encrypted_diagnostic_captures_list_and_load_individually(tmp_path: Path) -> None:
     """Same-moment captures remain independently addressable after encrypted persistence."""
 
-    captured_at = datetime(_YEAR, 8, 2, 9, 0, tzinfo=UTC)
+    captured_at = datetime(2026, 8, 2, 9, 0, tzinfo=UTC)
     diagnostic_ids = tuple(mint_diagnostic_id(captured_at) for _ in range(8))
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         for sequence, diagnostic_id in enumerate(diagnostic_ids):
@@ -254,7 +249,7 @@ def _store_diagnostic(repo: SecureObjectRepository, *, key: str, payload: dict[s
         object_key=key,
         classification=SensitivityClass.SESSION,
         schema_version=1,
-        written_at=datetime(_YEAR, 5, 19, 8, 0, tzinfo=UTC),
+        written_at=datetime(2026, 5, 19, 8, 0, tzinfo=UTC),
         payload=json.dumps(payload).encode(UTF_8_ENCODING),
     )
 
@@ -264,7 +259,7 @@ def _diagnostic_payload(**overrides: object) -> dict[str, object]:
         "diagnostic_id": "diag",
         "reason": "post-auth-landing-timeout",
         "url": aeat_url("sede", "/"),
-        "captured_at": datetime(_YEAR, 5, 19, 8, 0, tzinfo=UTC).isoformat(),
+        "captured_at": datetime(2026, 5, 19, 8, 0, tzinfo=UTC).isoformat(),
     }
     payload.update(overrides)
     return payload
@@ -286,7 +281,7 @@ class TestPersistedInstantContract:
             _store_diagnostic(
                 profile.repository,
                 key="diag",
-                payload=_diagnostic_payload(captured_at=datetime(_YEAR, 5, 19, 8, 0).isoformat()),
+                payload=_diagnostic_payload(captured_at="2026-05-19T08:00:00"),
             )
 
             with pytest.raises(AuthDiagnosticPayloadError):
@@ -297,7 +292,7 @@ class TestPersistedInstantContract:
             _store_diagnostic(
                 profile.repository,
                 key="diag",
-                payload=_diagnostic_payload(captured_at=datetime(_YEAR, 5, 19, 8, 0, tzinfo=_PLUS_TWO).isoformat()),
+                payload=_diagnostic_payload(captured_at="2026-05-19T08:00:00+02:00"),
             )
 
             with pytest.raises(AuthDiagnosticPayloadError):
@@ -311,7 +306,7 @@ class TestPersistedInstantContract:
                 payload=_diagnostic_payload(
                     operator_report={
                         "phone_state": "app_did_not_prompt",
-                        "reported_at": datetime(_YEAR, 5, 19, 9, 0, tzinfo=_PLUS_TWO).isoformat(),
+                        "reported_at": "2026-05-19T09:00:00+02:00",
                     },
                 ),
             )
@@ -328,7 +323,7 @@ class TestPersistedInstantContract:
                 payload=_diagnostic_payload(
                     operator_report={
                         "phone_state": "app_did_not_prompt",
-                        "reported_at": datetime(_YEAR, 5, 19, 9, 0, tzinfo=UTC).isoformat(),
+                        "reported_at": "2026-05-19T09:00:00+00:00",
                     },
                 ),
             )
@@ -337,8 +332,8 @@ class TestPersistedInstantContract:
 
             assert report.row_count == 1
             row = report.rows[0]
-            assert row.captured_at == datetime(_YEAR, 5, 19, 8, 0, tzinfo=UTC)
-            assert row.phone_state_reported_at == datetime(_YEAR, 5, 19, 9, 0, tzinfo=UTC)
+            assert row.captured_at == datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
+            assert row.phone_state_reported_at == datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
 
 
 class TestPersistedPhoneStateTaxonomy:

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import sys
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -45,7 +44,6 @@ from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -66,8 +64,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -148,7 +144,7 @@ def _seed_ledger_transaction(fixture: NativeCliProfileFixture, label: str) -> tu
             "ledger",
             "add",
             "--date",
-            date(_YEAR, 2, 10).isoformat(),
+            "2026-02-10",
             "--amount",
             "242.00",
             "--direction",
@@ -189,7 +185,7 @@ def _read_cli_surfaces(
     filtered = _invoke_with_human_password(
         fixture,
         label=label,
-        command=("app", "ledger", "status", "--period", "1T", "--year", str(_YEAR)),
+        command=("app", "ledger", "status", "--period", "1T", "--year", "2026"),
     )
     assert filtered.exit_code == 0, filtered.output
     filtered_payload = unwrap_cli_result(filtered)
@@ -319,7 +315,7 @@ def _read_encrypted_oracle(
 def _assert_status_reads_match_oracle(reads: _CliReads, oracle: _EncryptedOracle) -> None:
     _assert_status_matches_canonical_report(reads.unfiltered, oracle.all_report)
     _assert_status_matches_canonical_report(reads.filtered, oracle.period_report)
-    assert reads.filtered["period"] == {"filing_year": _YEAR, "code": "1T"}
+    assert reads.filtered["period"] == {"filing_year": 2026, "code": "1T"}
     assert reads.filtered["checked_transaction_count"] == oracle.period_report.checked_transaction_count == 1
     assert reads.filtered["readiness_issue_count"] == len(oracle.readiness)
     assert reads.filtered["readiness_issues"] == redact_structured_for_cli_output(
@@ -366,14 +362,14 @@ def test_native_human_cli_reads_encrypted_ledger_status_history_view_and_track(
                 "identity.name": "Ledger",
                 "identity.surnames": "Reader",
                 "activities.description": "design",
-                "censo.activity_start_date": date(_YEAR - 1, 1, 1).isoformat(),
+                "censo.activity_start_date": "2025-01-01",
             },
         )
         assert fixture.label is not None
         label = fixture.label
         close_active_bucket_session()
         transaction_id, bucket_id, expected_cli_bucket_id = _seed_ledger_transaction(fixture, label)
-        period = Period.from_year_and_code(_YEAR, "1T")
+        period = Period.from_year_and_code(2026, "1T")
         reads = _read_cli_surfaces(fixture, label, transaction_id, expected_cli_bucket_id)
         oracle = _read_encrypted_oracle(fixture, label, bucket_id, transaction_id, period, authority_operation)
         _assert_status_reads_match_oracle(reads, oracle)
@@ -386,14 +382,14 @@ def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_o
     run_cadrumo_cli,
 ) -> None:
     """A matching CLI period cannot narrow a grant for whole-profile status."""
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
 
     def prepare_profile(profile_id: UUID, root: Path) -> None:
         facts = complete_profile_facts(
             authority_operation.profile_schema(),
             facts=tuple(
                 UserProfileFact(path=path, value=value)
-                for path, value in operator_profile_facts(activity_start_date=date(_YEAR - 1, 1, 1).isoformat()).items()
+                for path, value in operator_profile_facts(activity_start_date="2025-01-01").items()
             ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
@@ -412,7 +408,7 @@ def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_o
                 "ledger",
                 "add",
                 "--date",
-                date(_YEAR, 2, 10).isoformat(),
+                "2026-02-10",
                 "--amount",
                 "242.00",
                 "--direction",
@@ -472,7 +468,7 @@ def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_o
     def whole_profile_scope(client_id: UUID) -> AccessScope:
         return scope_for_destination(client_id, periods=None)
 
-    command = ("app", "ledger", "status", "--period", "1T", "--year", str(_YEAR))
+    command = ("app", "ledger", "status", "--period", "1T", "--year", "2026")
     with native_api_cli_session(
         tmp_path / "finite-period",
         scope_for_destination=finite_period_scope,
@@ -495,6 +491,6 @@ def test_native_api_ledger_status_requires_all_periods_even_when_query_selects_o
         accepted = whole_profile.invoke_credential_reference(*command)
         assert accepted.exit_code == 0, accepted.output
         result = unwrap_cli_result(accepted)
-        assert result["period"] == {"filing_year": _YEAR, "code": "1T"}
+        assert result["period"] == {"filing_year": 2026, "code": "1T"}
         assert result["total_count"] == 1
         assert result["business_expense_total"] == "242"

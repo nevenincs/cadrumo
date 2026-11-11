@@ -7,7 +7,6 @@ from collections.abc import Iterator
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.filing_projection_ref import (
@@ -61,15 +60,14 @@ def _generation_pinned_authority() -> Iterator[None]:
 # address to bind -- but a FilingRecordRenderContext must hang off a REAL
 # snapshot, because its validator checks layout ownership by identity. The
 # snapshot is therefore a carrier, and the only thing it must be is a
-# coordinate the authority still admits at filing grade. Modelo 303 at the support floor is
+# coordinate the authority still admits at filing grade. Modelo 303 / 2025 is
 # used because it files and because the projections under test are M303's own,
 # so the carrier and the subject now name the same modelo.
 _CARRIER_MODELO = "303"
-_FILING_YEAR = filing_year_envelope().horizon
-_CARRIER_YEAR = filing_year_envelope().floor
+_CARRIER_YEAR = 2025
 _CARRIER_PERIOD = "4T"
 _CARRIER_LEGAL_REFS = ("orden-eha-3786-2008:art-1",)
-_CARRIER_SOURCE_REFS = (f"aeat-dr-303-{_CARRIER_YEAR}",)
+_CARRIER_SOURCE_REFS = ("aeat-dr-303-2025",)
 
 
 def _projection_authority() -> tuple[FilingRecordRenderContext, M303ProrrataActivityProjectionRef]:
@@ -194,19 +192,19 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=m303_filing_facts(filing_year=_FILING_YEAR, period_code="1T"),
+        m303_filing_facts=m303_filing_facts(period_code="1T"),
     )
-    snapshot_current = published_snapshot("303", filing_year=_FILING_YEAR, period="1T")
-    snapshot_carrier = published_snapshot("303", filing_year=_CARRIER_YEAR, period=_CARRIER_PERIOD)
+    snapshot_2026 = published_snapshot("303", filing_year=2026, period="1T")
+    snapshot_2025 = published_snapshot("303", filing_year=2025, period="4T")
     with pytest.raises(FilingExportValidationError, match="filing period"):
         build_m303_filing_projection_plan(
-            registry_snapshot=snapshot_carrier,
+            registry_snapshot=snapshot_2025,
             layout=context.layout,
             producer_snapshot=producer,
         )
     with pytest.raises(FilingExportValidationError, match="layout is not owned"):
         build_m303_filing_projection_plan(
-            registry_snapshot=snapshot_current,
+            registry_snapshot=snapshot_2026,
             layout=context.layout,
             producer_snapshot=producer,
         )
@@ -225,7 +223,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
     )
     with pytest.raises(FilingExportValidationError, match="mixes or uses an unsupported"):
         project_filing_record(
-            registry_snapshot=snapshot_current,
+            registry_snapshot=snapshot_2026,
             layout=context.layout,
             record=context.record,
             refs=(admitted_ref, mixed_ref, unsupported_third_family),
@@ -236,7 +234,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
 @pytest.mark.parametrize(
     "orden_update",
     (
-        {"ejercicio": _CARRIER_YEAR},
+        {"ejercicio": 2025},
         {"registry_revision_id": "wrong-revision"},
         {"source_ref": "wrong-source"},
     ),
@@ -252,7 +250,7 @@ def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-        m303_filing_facts=m303_filing_facts(filing_year=_FILING_YEAR),
+        m303_filing_facts=m303_filing_facts(),
     )
     facts = producer.m303_filing_facts
     assert facts is not None
@@ -264,7 +262,7 @@ def test_m303_projection_refuses_wrong_annual_orden_authority(orden_update: dict
     wrong_evidence = evidence.model_copy(update={"regimen_snapshot": wrong_regimen_snapshot})
     wrong_facts = facts.model_copy(update={"regimen_simplificado": wrong_evidence})
     wrong_producer = producer.model_copy(update={"m303_filing_facts": wrong_facts})
-    snapshot = published_snapshot("303", filing_year=_FILING_YEAR, period="1T")
+    snapshot = published_snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(FilingExportValidationError, match="annual Orden"):
         require_regimen_snapshot_matches_registry(snapshot, wrong_producer)

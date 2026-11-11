@@ -84,7 +84,6 @@ from .registered_executor_outcome_context import ExecutorOutcome
 from .registered_executor_result_assertions import (
     assert_calculation_report_verification_projection,
 )
-from .registered_executor_seeding_support import CONFORMANCE_EARLIER_YEAR, CONFORMANCE_PRIOR_YEAR
 
 
 def assert_modelo_aggregate_outcome(ctx: ExecutorOutcome) -> None:
@@ -171,7 +170,7 @@ def assert_modelo_work_list_outcome(ctx: ExecutorOutcome) -> None:
     row = inventory.units[0]
     assert row.bucket_id == str(ctx.profile_id)
     assert row.modelo == "130"
-    assert row.filing_year == CONFORMANCE_PRIOR_YEAR
+    assert row.filing_year == 2025
     assert row.state is WorkUnitState.BORRADOR
 
 
@@ -286,9 +285,9 @@ def assert_modelo_work_m303_attestation_outcome(ctx: ExecutorOutcome) -> None:
     assert isinstance(result, ModeloWorkM303AttestationPublicResultV2)
     assert result.profile_id == ctx.profile_id
     assert result.work_unit_id is None
-    assert result.period == PublicPeriod.from_period(Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "4T"))
+    assert result.period == PublicPeriod.from_period(Period.from_year_and_code(2025, "4T"))
     evidence = parse_m303_exonerado_390_applicability_attestation(AttachmentStore().read_bytes(result.attachment_id))
-    assert evidence.period == Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "4T")
+    assert evidence.period == Period.from_year_and_code(2025, "4T")
     assert evidence.asserted_value is M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE
     assert not WorkUnitCatalogueRepository().load().work_units
 
@@ -302,8 +301,8 @@ def assert_iva_wallet_history_outcome(ctx: ExecutorOutcome) -> None:
     assert history.as_of_year == ctx.payload.as_of_year
     assert history.row_count == 1
     row = history.rows[0]
-    assert row.year == CONFORMANCE_PRIOR_YEAR
-    assert row.period.to_period() == Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")
+    assert row.year == 2025
+    assert row.period.to_period() == Period.from_year_and_code(2025, "1T")
     assert row.provenance is IvaCompensationStateProvenance.APP_FILING
     assert row.generated_amount == "40.00"
     assert history.carry_forward_lot_count == 1
@@ -319,7 +318,7 @@ def assert_modelo_iva_wallet_correction_outcome(ctx: ExecutorOutcome) -> None:
     correction = ctx.resolve(ModeloIvaWalletCorrectionProjection)
     assert isinstance(correction, ModeloIvaWalletCorrectionProjection)
     assert correction.profile_id == ctx.profile_id
-    assert correction.period.to_period() == Period.from_year_and_code(CONFORMANCE_EARLIER_YEAR, "4T")
+    assert correction.period.to_period() == Period.from_year_and_code(2024, "4T")
     assert correction.previous_amount == "500.00"
     assert correction.amount == "1200.50"
     assert correction.provenance is IvaCompensationStateProvenance.OPERATOR_CORRECTION
@@ -337,13 +336,13 @@ def assert_modelo_iva_wallet_balance_outcome(ctx: ExecutorOutcome) -> None:
     balance = ctx.resolve(ModeloIvaWalletBalanceProjection)
     assert isinstance(balance, ModeloIvaWalletBalanceProjection)
     assert balance.profile_id == ctx.profile_id
-    assert balance.as_of_year == CONFORMANCE_EARLIER_YEAR
+    assert balance.as_of_year == 2024
     assert Decimal(balance.total_balance) == Decimal("500.00")
     assert Decimal(balance.active_balance) == Decimal("500.00")
     assert Decimal(balance.expired_balance) == Decimal("0.00")
     assert Decimal(balance.unallocated_applied_amount) == Decimal("0.00")
     assert balance.lot_count == 1
-    assert balance.next_expiry_year == CONFORMANCE_EARLIER_YEAR + 4
+    assert balance.next_expiry_year == 2028
 
 
 def assert_modelo_iva_wallet_seed_outcome(ctx: ExecutorOutcome) -> None:
@@ -351,7 +350,7 @@ def assert_modelo_iva_wallet_seed_outcome(ctx: ExecutorOutcome) -> None:
     seeded = ctx.resolve(ModeloIvaWalletSeedProjection)
     assert isinstance(seeded, ModeloIvaWalletSeedProjection)
     assert seeded.profile_id == ctx.profile_id
-    assert seeded.period.to_period() == Period.from_year_and_code(CONFORMANCE_EARLIER_YEAR, "4T")
+    assert seeded.period.to_period() == Period.from_year_and_code(2024, "4T")
     assert seeded.amount == "500.00"
     assert seeded.provenance is IvaCompensationStateProvenance.OPERATOR_SEED
     persisted_seed = IvaCompensationHistoryRepository(bucket_id=str(ctx.profile_id)).load_period(
@@ -366,7 +365,7 @@ def assert_modelo_iva_wallet_override_outcome(ctx: ExecutorOutcome) -> None:
     overridden = ctx.resolve(ModeloIvaWalletOverrideProjection)
     assert isinstance(overridden, ModeloIvaWalletOverrideProjection)
     assert overridden.profile_id == ctx.profile_id
-    assert overridden.period.to_period() == Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")
+    assert overridden.period.to_period() == Period.from_year_and_code(2025, "1T")
     assert overridden.amount == "450.00"
     assert overridden.reason == "operator asserted prior compensation"
     assert overridden.evidence_locator == "synthetic:conformance:prior-compensation"

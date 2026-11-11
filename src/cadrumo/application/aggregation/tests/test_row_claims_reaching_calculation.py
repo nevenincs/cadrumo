@@ -21,7 +21,6 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_effects import fields_refused_by_classification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -31,9 +30,8 @@ from .ledger_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_Q1 = Period.from_year_and_code(_YEAR, "1T")
-_Q2 = Period.from_year_and_code(_YEAR, "2T")
+_Q1 = Period.from_year_and_code(2026, "1T")
+_Q2 = Period.from_year_and_code(2026, "2T")
 
 
 def _register(row: Transaction) -> BienesInversionIvaRegister:
@@ -42,7 +40,7 @@ def _register(row: Transaction) -> BienesInversionIvaRegister:
             BienInversionIvaRecord(
                 identifier="asset-1",
                 description="Synthetic asset",
-                acquisition_year=_YEAR,
+                acquisition_year=2026,
                 cuota_soportada=Decimal("210.00"),
                 prorrata_inicial_pct=Decimal("100"),
                 kind=BienInversionKind.from_registry("mueble"),

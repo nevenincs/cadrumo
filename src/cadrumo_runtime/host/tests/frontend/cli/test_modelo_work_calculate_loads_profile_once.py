@@ -22,7 +22,7 @@ import json
 import sys
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -67,11 +67,6 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    open_ended_revision,
-    revision_covering,
-)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
@@ -93,11 +88,6 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
-
-_YEAR = filing_year_envelope().horizon
-# A year whose last return is already due, so the exemption attestation observed at its end is in the past.
-_CLOSED_YEAR = filing_year_envelope().years[-2]
-_FLOOR = filing_year_envelope().floor
 
 _OPERATIONS = frozenset(
     {
@@ -208,14 +198,14 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
     The invoice has a 2700.00 base and a 19% retención of 513.00; the settlement is
     its grand total (2700.00 + 21% IVA = 3267.00) less the retención: 2754.00.
     """
-    paid_on = date(_YEAR, 3, 15)
+    paid_on = date(2025, 3, 15)
     exit_code, output = _invoke(
         session,
         "app", "ledger", "invoice", "add",
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
         "--counterparty-nif", "B00015016",
-        "--invoice-number", f"M115-RENT-{_YEAR}-001",
+        "--invoice-number", "M115-RENT-2025-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "2700.00", "--iva-rate", "21",
@@ -231,7 +221,7 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
         scheme="arrendamiento_urbano",
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id=f"m115-rent-payment-{paid_on.isoformat()}",
+        payment_event_id="m115-rent-payment-2025-03-15",
         payment_occurred_on=paid_on,
         allocation_id="m115-rent-allocation-1",
         allocated_base=Decimal("2700.00"),
@@ -255,14 +245,14 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
             ),
             recipient_province_code="28",
             modality="1",
-            accrual_year=_YEAR,
+            accrual_year=2025,
             withholding_percentage=Decimal("19.00"),
         ),
     )
     exit_code, output = _invoke(
         session,
         "app", "modelo", "aggregate",
-        "--modelo", "115", "--year", str(_YEAR), "--period", "1T",
+        "--modelo", "115", "--year", "2025", "--period", "1T",
         "--received-invoice-retencion", request.model_dump_json(),
     )  # fmt: skip
     assert exit_code == 0, output
@@ -278,9 +268,7 @@ def test_m111_calculate_succeeds_through_its_worker_without_a_client_decrypt(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli, profile_decrypts: list[str]
 ) -> None:
     with _operator_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
-        work_unit_id = _create_work_unit(
-            session, modelo="111", year=_YEAR, period="1T", revision=str(open_ended_revision("111").id)
-        )
+        work_unit_id = _create_work_unit(session, modelo="111", year=2025, period="1T", revision="2019-y-siguientes")
         _capture_m111_invoice_withholding(session)
 
         exit_code, output = _calculate(session, profile_decrypts, work_unit_id)
@@ -293,7 +281,7 @@ def test_m115_calculate_succeeds_through_its_worker_without_a_client_decrypt(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli, profile_decrypts: list[str]
 ) -> None:
     with _operator_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
-        work_unit_id = _create_work_unit(session, modelo="115", year=_YEAR, period="1T")
+        work_unit_id = _create_work_unit(session, modelo="115", year=2025, period="1T")
         _capture_m115_invoice_withholding(session)
 
         exit_code, output = _calculate(session, profile_decrypts, work_unit_id, "--casilla", "04=0")
@@ -307,9 +295,7 @@ def test_m100_calculate_reaches_its_outcome_without_a_client_decrypt(
 ) -> None:
     """The Modelo 100 scenario is counted up to whatever outcome the command reaches."""
     with _operator_session(tmp_path, authority_operation, run_cadrumo_cli) as session:
-        work_unit_id = _create_work_unit(
-            session, modelo="100", year=_FLOOR, period="0A", revision=str(revision_covering("100", _FLOOR).id)
-        )
+        work_unit_id = _create_work_unit(session, modelo="100", year=2024, period="0A", revision="2024")
 
         _, output = _calculate(
             session,
@@ -336,13 +322,13 @@ def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_without_a
             "work",
             "attest-m303-exonerado-390",
             "--year",
-            str(_CLOSED_YEAR),
+            "2025",
             # Only the year's last return asks the Modelo 390 exemption
             # (DP30301 Nota 4), so only its period admits the attestation.
             "--period",
             "4T",
             "--observed-at",
-            datetime(_CLOSED_YEAR, 12, 31, 12, tzinfo=UTC).isoformat(),
+            "2025-12-31T12:00:00+00:00",
         )
 
     assert exit_code == 0, output
@@ -351,8 +337,8 @@ def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_without_a
     sha256 = payload["sha256"]
     assert isinstance(attachment_id, str) and len(attachment_id) == 64
     assert attachment_id == sha256
-    assert payload["filing_year"] == _CLOSED_YEAR
-    assert payload["period"] == {"filing_year": _CLOSED_YEAR, "code": "4T"}
+    assert payload["filing_year"] == 2025
+    assert payload["period"] == {"filing_year": 2025, "code": "4T"}
     assert "profile_witness" not in output
     assert "attachment:" not in output
     assert "filing_evidence_reference" not in output
@@ -375,7 +361,7 @@ def _store_one_m111_retencion(bucket_id: str, period: Period) -> None:
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("1000.00"),
                 retencion_amount=Decimal("150.00"),
-                accrued_on=date(period.filing_year, 2, 15).isoformat(),
+                accrued_on="2025-02-15",
             ),
         ),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -384,7 +370,7 @@ def _store_one_m111_retencion(bucket_id: str, period: Period) -> None:
 
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period_code"),
-    (("111", _FLOOR, "1T"), ("130", _YEAR, "1T")),
+    (("111", 2025, "1T"), ("130", 2026, "1T")),
 )
 def test_the_hosted_calculate_executor_decrypts_the_profile_once(
     tmp_path: Path, profile_decrypts: list[str], modelo: str, filing_year: int, period_code: str
@@ -405,7 +391,7 @@ def test_the_hosted_calculate_executor_decrypts_the_profile_once(
 def test_the_readiness_gate_hands_back_the_profile_it_checked(tmp_path: Path) -> None:
     """Consumers downstream of the gate read the very record the gate refused or admitted."""
     with seeded_operator_work(
-        tmp_path, modelo="111", filing_year=_YEAR, period_code="1T", extra_facts=_PAYER_PROFILE_FACTS
+        tmp_path, modelo="111", filing_year=2025, period_code="1T", extra_facts=_PAYER_PROFILE_FACTS
     ) as work:
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None

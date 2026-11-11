@@ -50,17 +50,14 @@ from .....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
 from ..secure_references import operation_secure_reference_repository
 from ..typed_financial_operand_custody import OperationTypedFinancialOperandCustodyFilesystemRepository
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-_NOW = datetime(_YEAR, 10, 5, tzinfo=UTC)
+_NOW = datetime(2026, 10, 5, tzinfo=UTC)
 
 
 class _SafeRequest(CredentialFreeFinancialOperationRequest):

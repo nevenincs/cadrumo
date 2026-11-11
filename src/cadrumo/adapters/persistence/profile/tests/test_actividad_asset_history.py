@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 
 from .....application.actividad_asset.history import ActivityAssetHistory
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     effective_claims,
@@ -35,8 +34,6 @@ from .....domain.renta.actividad_asset.lifecycle import (
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..actividad_asset import ActividadAssetHistoryRepository
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -65,7 +62,7 @@ def _revision(
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="reviewed allocation source",
         ),
-        in_service_date=date(_YEAR, 1, 1),
+        in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -84,9 +81,9 @@ def _claim(revision: ActivityAssetRevision, **overrides: object) -> Amortization
         "asset_id": revision.asset_id,
         "asset_revision_id": revision.revision_id,
         "asset_kind": revision.asset_kind,
-        "tax_year": _YEAR,
-        "covered_from": date(_YEAR, 1, 1),
-        "covered_until": date(_YEAR, 4, 1),
+        "tax_year": 2025,
+        "covered_from": date(2025, 1, 1),
+        "covered_until": date(2025, 4, 1),
         "amount": Decimal("100.00"),
         "schedule_fingerprint": "c" * 64,
         "authority_generation": "2025.1",
@@ -230,8 +227,8 @@ def test_cas_retry_refuses_a_claim_forecasted_against_stale_history(
         concurrent_claim = _claim(revision)
         stale_forecast_claim = _claim(
             revision,
-            covered_from=date(_YEAR, 4, 1),
-            covered_until=date(_YEAR, 7, 1),
+            covered_from=date(2025, 4, 1),
+            covered_until=date(2025, 7, 1),
         )
         original_save_many = repository._storage._objects.save_many
         interloper_written = False
@@ -286,7 +283,7 @@ def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write
             repository.record_claim(first)
 
         reopened = repository.load()
-        assert effective_free_depreciation_claims(reopened.claims, tax_year=_YEAR) == (second,)
+        assert effective_free_depreciation_claims(reopened.claims, tax_year=2025) == (second,)
 
 
 def test_cas_rechecks_the_remaining_basis_after_an_independent_write(
@@ -302,8 +299,8 @@ def test_cas_rechecks_the_remaining_basis_after_an_independent_write(
         first_quarter = _claim(revision, amount=Decimal("600.00"))
         second_quarter = _claim(
             revision,
-            covered_from=date(_YEAR, 4, 1),
-            covered_until=date(_YEAR, 7, 1),
+            covered_from=date(2025, 4, 1),
+            covered_until=date(2025, 7, 1),
             amount=Decimal("600.00"),
         )
         original_mutate = repository._storage.mutate

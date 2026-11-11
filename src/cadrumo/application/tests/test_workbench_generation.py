@@ -45,7 +45,6 @@ from ..workbench_generation_contracts import (
 from .workbench_generation_support import (
     NOW,
     PROFILE_ID,
-    YEAR,
     Repository,
     StableStore,
     admission,
@@ -63,9 +62,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
     """The TUI calendar can select quarterly work from the completed tax year."""
-    assert calendar_module.calendar_query_range(date(YEAR, 9, 21)) == OverviewCalendarRange(
-        from_date=date(YEAR - 1, 1, 1),
-        to_date=date(YEAR, 12, 31),
+    assert calendar_module.calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
+        from_date=date(2025, 1, 1),
+        to_date=date(2026, 12, 31),
     )
 
 

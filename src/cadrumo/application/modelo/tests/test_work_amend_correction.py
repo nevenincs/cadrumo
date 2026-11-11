@@ -10,7 +10,7 @@ is synthetic.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -23,12 +23,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ....domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    authored_revisions_where,
-    filing_year_envelope,
-    open_ended_revision,
-)
 from ....domain.modelos.calculation_revision_amendment import AMENDMENT_DECLARATION_KINDS, M303RectificativaMotive
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -62,23 +56,15 @@ from .test_edit_parsing import baseline
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = "5aa00000-0000-4000-8000-0000000000aa"
-_YEAR = filing_year_envelope().horizon
-_FILED_AT = datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC)
-_NEWEST_100_WITH_A_YEAR_BOX = str(
-    authored_revisions_where("100", lambda revision: any(casilla.data_type == "year" for casilla in revision.casillas))[
-        -1
-    ].id
-)
-_NEWEST_036 = str(authored_revisions("036")[-1].id)
-_OPEN_ENDED_130 = str(open_ended_revision("130").id)
+_FILED_AT = datetime(2026, 4, 18, 9, 0, tzinfo=UTC)
 _FILED = {"01": Decimal("1000.00"), "02": Decimal("250.00")}
 
 
 def _unit_and_record(operation: PinnedAuthorityOperation, modelo: str, code: str) -> tuple[WorkUnit, ModeloRecord]:
-    period = Period.from_year_and_code(_YEAR, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=_YEAR, period=period.registry_token).id)
+    period = Period.from_year_and_code(2026, code)
+    revision_id = str(operation.revision_for_context(modelo, filing_year=2026, period=period.registry_token).id)
     unit_id = derive_work_unit_id(
-        bucket_id=_PROFILE, modelo=modelo, filing_year=_YEAR, period=period, revision_id=revision_id
+        bucket_id=_PROFILE, modelo=modelo, filing_year=2026, period=period, revision_id=revision_id
     )
     head = "a" * 64
     filing_id = derive_filing_record_id(work_unit_id=unit_id, calculation_revision_id=head, filed_by="synthetic")
@@ -86,7 +72,7 @@ def _unit_and_record(operation: PinnedAuthorityOperation, modelo: str, code: str
         work_unit_id=unit_id,
         bucket_id=_PROFILE,
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=revision_id,
         name="Synthetic return",
@@ -102,7 +88,7 @@ def _unit_and_record(operation: PinnedAuthorityOperation, modelo: str, code: str
         calculation_revision_id=head,
         bucket_id=_PROFILE,
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         filed_at=_FILED_AT,
         filed_by="synthetic",
@@ -125,12 +111,12 @@ def _context(
     with validating_governed_facts(operation):
         permitted = permitted_amendment_kind_values_for_period(modelo, unit.period)
     rows = registry_casillas_for_registry_scope(
-        modelo, filing_year=_YEAR, period=unit.period.registry_token, operation=operation
+        modelo, filing_year=2026, period=unit.period.registry_token, operation=operation
     ).rows
     return worded_amendment_context(
         record=record,
         unit=unit,
-        snapshot=modelo_form_snapshot(operation, unit.modelo, _YEAR, unit.period, unit.revision_id),
+        snapshot=modelo_form_snapshot(operation, unit.modelo, 2026, unit.period, unit.revision_id),
         casilla_rows=rows,
         filed_values=_FILED,
         permitted_kinds=tuple(kind for kind in AMENDMENT_DECLARATION_KINDS if kind.value in permitted),
@@ -142,7 +128,7 @@ def _context(
 def test_the_correction_lists_the_boxes_the_wizard_lists_with_their_filed_figures(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    rows = registry_casillas_for_registry_scope("130", filing_year=_YEAR, period="1T", operation=operation).rows
+    rows = registry_casillas_for_registry_scope("130", filing_year=2026, period="1T", operation=operation).rows
     spanish = _context(operation, OutputLanguage.ES)
     english = _context(operation, OutputLanguage.EN)
 
@@ -166,7 +152,7 @@ def test_the_kinds_are_the_period_permits_each_worded_and_motives_only_where_the
     m303_unknown = _context(operation, OutputLanguage.ES, modelo="303", code="1T", motive_applicable=False)
 
     with validating_governed_facts(operation):
-        permitted = permitted_amendment_kind_values_for_period("130", Period.from_year_and_code(_YEAR, "1T"))
+        permitted = permitted_amendment_kind_values_for_period("130", Period.from_year_and_code(2026, "1T"))
     assert {option.kind.value for option in plain.kinds} == permitted
     for english, spanish_option in zip(plain.kinds, spanish.kinds, strict=True):
         assert english.help != spanish_option.help
@@ -181,7 +167,7 @@ def test_the_kinds_are_the_period_permits_each_worded_and_motives_only_where_the
 
 def _read(operation: PinnedAuthorityOperation, text: str, language: OutputLanguage, *, casilla: str = "01"):
     snapshot = modelo_form_snapshot(
-        operation, baseline().modelo, _YEAR, Period.from_year_and_code(_YEAR, "1T"), _OPEN_ENDED_130
+        operation, baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
     )
     return parse_modelo_edit_lexeme(
         ModeloEditParseRequestV1(
@@ -252,7 +238,7 @@ def _read_corrected(casilla_id, grammars, text: str, language: OutputLanguage):
 def test_a_corrected_yes_or_no_reads_the_figure_its_editor_sends(
     operation: PinnedAuthorityOperation, language: OutputLanguage, text: str, expected: Decimal
 ) -> None:
-    casilla_id, grammars = _first_casilla_of_type(operation, "036", _NEWEST_036, "boolean")
+    casilla_id, grammars = _first_casilla_of_type(operation, "036", "2025-02-03-y-siguientes", "boolean")
 
     outcome = _read_corrected(casilla_id, grammars, text, language)
 
@@ -264,10 +250,10 @@ def test_a_corrected_yes_or_no_reads_the_figure_its_editor_sends(
 def test_a_corrected_date_box_reads_a_figure_and_refuses_a_day(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    casilla_id, grammars = _first_casilla_of_type(operation, "036", _NEWEST_036, "date")
+    casilla_id, grammars = _first_casilla_of_type(operation, "036", "2025-02-03-y-siguientes", "date")
 
     figure = _read_corrected(casilla_id, grammars, "5", language)
-    day = _read_corrected(casilla_id, grammars, date(_YEAR, 3, 31).isoformat(), language)
+    day = _read_corrected(casilla_id, grammars, "2025-03-31", language)
 
     assert isinstance(figure, ModeloEditParsedValueV1)
     assert figure.value == Decimal(5)
@@ -279,12 +265,12 @@ def test_a_corrected_date_box_reads_a_figure_and_refuses_a_day(
 def test_a_corrected_year_box_reads_the_four_digits_its_editor_sends(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    casilla_id, grammars = _first_casilla_of_type(operation, "100", _NEWEST_100_WITH_A_YEAR_BOX, "year")
+    casilla_id, grammars = _first_casilla_of_type(operation, "100", "2020", "year")
 
-    outcome = _read_corrected(casilla_id, grammars, str(_YEAR), language)
+    outcome = _read_corrected(casilla_id, grammars, "2025", language)
 
     assert isinstance(outcome, ModeloEditParsedValueV1)
-    assert outcome.value == Decimal(_YEAR)
+    assert outcome.value == Decimal(2025)
 
 
 def test_a_correction_entry_without_its_revisions_grammars_is_not_writable() -> None:
@@ -312,7 +298,7 @@ def test_the_correction_grammar_accepts_exactly_what_the_amendment_override_acce
 ) -> None:
     """The wizard's canonical amounts and the override shape agree with the one correction grammar."""
     snapshot = modelo_form_snapshot(
-        operation, baseline().modelo, _YEAR, Period.from_year_and_code(_YEAR, "1T"), _OPEN_ENDED_130
+        operation, baseline().modelo, 2025, Period.from_year_and_code(2025, "1T"), "2019-y-siguientes"
     )
     grammar = correction_value_grammars(snapshot)[validated_casilla_id("01")]
     amount = try_parse_canonical_decimal(text)

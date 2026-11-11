@@ -35,10 +35,7 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    M303_YEAR,
-    build_verified_modelo_303_revision,
-)
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 
 from .runtime_profile_backend import runtime_cli_profile
@@ -98,7 +95,7 @@ def test_a_modelo_303_revision_exports_identical_bytes_on_both_surfaces(tmp_path
     # Replay the May fixture at its own as-of date; wallet freshness remains
     # enforced. This non-live tax clock does not change monotonic deadlines.
     with (
-        frozen_clock(datetime(M303_YEAR, 5, 21, 12, 3, tzinfo=UTC)),
+        frozen_clock(datetime(2026, 5, 21, 12, 3, tzinfo=UTC)),
         runtime_cli_profile(tmp_path=tmp_path, label=_MAY_REPLAY_PROFILE),
         bundled_indexed_authority().operation() as operation,
     ):

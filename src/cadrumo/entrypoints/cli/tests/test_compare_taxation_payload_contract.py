@@ -27,18 +27,14 @@ from ....application.modelo.taxation_comparison import (
     TaxationRecommendationReason,
 )
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ..modelo_reconcile_results import WorkCompareTaxationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = newest_authored_edition("100")
-_REVISION = revision_covering("100", _YEAR).id
-
 _CANONICAL_FIELDS = {
-    "filing_year": _YEAR,
+    "filing_year": 2025,
     "modelo": Modelo("100"),
-    "revision": _REVISION,
+    "revision": "2025-y-siguientes",
     "conjunta_cuota_resultante": "1200.00",
     "individual_cuota_resultante": "1500.00",
     "conjunta_resultado": "-300.00",
@@ -95,9 +91,9 @@ def test_canonical_result_also_refuses_non_finite_amounts() -> None:
     """Cross-check: the refusal above mirrors the canonical model, not a local rule."""
     with pytest.raises(ValidationError):
         TaxationComparisonResult(
-            filing_year=_YEAR,
+            filing_year=2025,
             modelo=Modelo("100"),
-            revision=_REVISION,
+            revision="2025-y-siguientes",
             conjunta_cuota_resultante=Decimal("NaN"),
             individual_cuota_resultante=Decimal("1500.00"),
             conjunta_resultado=Decimal("-300.00"),

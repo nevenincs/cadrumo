@@ -24,8 +24,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.spending_category import HOME_OFFICE_FAMILIES, SpendingCategory, family_for
 from ....domain.categories.spending_category_catalogue import spending_category_tokens
@@ -37,7 +35,7 @@ from ..ratios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _A_RATIO = Decimal("0.25")
 
 

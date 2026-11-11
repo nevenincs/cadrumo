@@ -14,15 +14,11 @@ from cadrumo.application.live.remote_state_models import (
     LiveIvaReadSurface,
 )
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..app_live_auth_preflight import live_auth_preflight_lines
 from ..app_live_iva_commands import iva_remote_state_capture_lines, live_iva_outcome_label
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_ENVELOPE = filing_year_envelope()
-_YEAR = _ENVELOPE.horizon
 
 
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
@@ -58,10 +54,10 @@ def test_every_live_iva_outcome_has_operator_label() -> None:
 def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels() -> None:
     report = IvaRemoteStateAcquisitionReport(
         output_root="live/iva-read-evidence",
-        year_from=_ENVELOPE.floor,
-        year_to=_YEAR,
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        year_from=2022,
+        year_to=2024,
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
         auth=LiveIvaAuthOutcome(
             status=LiveIvaReadStatus.FAILED,
             outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
@@ -81,7 +77,7 @@ def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels() -> No
                     "progress": {
                         "stage": "walk_declarations_register",
                         "modelo": "303",
-                        "ejercicio": _YEAR,
+                        "ejercicio": 2026,
                     },
                 },
             ),
@@ -107,7 +103,7 @@ def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels() -> No
         line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt") for line in lines
     )
     assert any(
-        f"failure_context=progress={{ejercicio:{_YEAR},modelo:303,stage:walk_declarations_register}}" in line
+        "failure_context=progress={ejercicio:2026,modelo:303,stage:walk_declarations_register}" in line
         for line in lines
     )
     assert any(

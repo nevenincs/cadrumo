@@ -15,14 +15,13 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ....domain.calculations.registry.schema_base import DateAxis
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...operations.error_detail import build_operation_error_detail
 from ..projection import ModeloProjectResultUnresolvedError, m100_projection_result, source_quarter_count
 from ..projection_declaration import projection_declaration_from, registry_projection_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SUPPORTED_YEARS = filing_year_envelope().years
+_SUPPORTED_YEARS = (2022, 2023, 2024, 2025, 2026)
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
@@ -117,7 +116,7 @@ def test_a_mapping_without_a_required_key_is_refused() -> None:
             MappingFactQuery(
                 fact_id="modelo-100-m130-projection-mapping",
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(newest_authored_edition("100"), 12, 31),
+                effective_date=date(2025, 12, 31),
             ),
         )
     assert isinstance(resolved, ResolvedMappingFact)
@@ -131,7 +130,7 @@ def test_a_mapping_without_a_required_key_is_refused() -> None:
 
 def test_a_figure_the_annual_return_left_without_a_value_is_refused_and_its_boxes_named() -> None:
     with bundled_indexed_authority().operation() as operation:
-        declaration = registry_projection_declaration(newest_authored_edition("100"), operation=operation)
+        declaration = registry_projection_declaration(2025, operation=operation)
     left_out = (declaration.cuota_integra_estatal, declaration.cuota_resultante)
     values = {
         box: Decimal("1.00")

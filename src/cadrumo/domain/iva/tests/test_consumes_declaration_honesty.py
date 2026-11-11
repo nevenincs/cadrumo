@@ -58,15 +58,12 @@ from typing import Any
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import classification
 from ..classification import IvaInvoiceClassificationCriteria, PartyFact
 from ..classification_predicates import matches_nothing
 from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-_YEAR = filing_year_envelope().horizon
 
 #: Which party fact each criteria attribute carries, or ``None`` where the
 #: attribute is not a fact about a party at all. Keyed by the criteria model's
@@ -92,7 +89,7 @@ _FACT_BY_CRITERIA_ATTRIBUTE: dict[str, PartyFact | None] = {
 #: a collapse to a handful of rows means the extraction found the wrong object;
 #: an ordinary new rule must not have to edit this number.
 _MINIMUM_RULES = 15
-_RULES_EFFECTIVE_DATE = date(_YEAR, 1, 1)
+_RULES_EFFECTIVE_DATE = date(2025, 1, 1)
 
 
 class _PredicateUnreadableError(AssertionError):

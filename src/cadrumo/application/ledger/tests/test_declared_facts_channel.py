@@ -35,7 +35,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.classifier_input_source import ClassifierInputSource
@@ -49,11 +48,9 @@ from ..classification_assembly import (
 )
 from ..classifier_inputs import ClassifierInputFact, ClassifierInputs
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DATE = date(_YEAR, 3, 10)
+_DATE = date(2026, 3, 10)
 _ASSERTED = ClassifierInputSource.OPERATOR_ASSERTION
 _FROM_DOCUMENT = ClassifierInputSource.DOCUMENT_EVIDENCE
 

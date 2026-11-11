@@ -15,13 +15,12 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.relations import RegistryFoldRequirement
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..relation_prefill_diagnostics import unresolved_relation_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_MODELO = "111"
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2025
 _PERIODS = ("1T", "2T", "3T", "4T")
 _LEGAL_REFS = ("ley-35-2006:art-99",)
 _SOURCE_REFS = ("aeat-dr-190-2025",)
@@ -68,7 +67,7 @@ def test_ten_relations_over_one_absent_source_collapse_to_one_diagnostic() -> No
     assert len(diagnostic.relation_ids) == 10
     assert diagnostic.relation_id == min(diagnostic.relation_ids)
     assert set(diagnostic.relation_ids) == set(requirements)
-    assert f"modelo 111 {_FILING_YEAR}" in diagnostic.message
+    assert "modelo 111 2025" in diagnostic.message
     assert "10 relation(s)" in diagnostic.message
     # The affected facts (what each relation reads) are named in prose, sorted
     # so the earliest ones survive any elision the length cap applies.

@@ -37,11 +37,7 @@ from .registered_executor_scenario_constants import (
     OPERATOR_SCOPE_PORTS,
     ROTATED_CREDENTIAL_INPUT,
 )
-from .registered_executor_seeding_support import (
-    CONFORMANCE_PRIOR_YEAR,
-    profile_baseline,
-    seeded_repeatable_row,
-)
+from .registered_executor_seeding_support import profile_baseline, seeded_repeatable_row
 
 
 def _baselined(ctx: PayloadContext) -> dict[str, object]:
@@ -126,13 +122,13 @@ def _auth_session_end(ctx: PayloadContext) -> PayloadResult:
 
 
 def _ledger_ratios_list(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "year": CONFORMANCE_PRIOR_YEAR})
+    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "year": 2025})
 
 
 def _ledger_ratios_eligible(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.raw_profile_subject,
-        {"profile_id": ctx.profile_id, "year": CONFORMANCE_PRIOR_YEAR, "output_language": OutputLanguage.EN},
+        {"profile_id": ctx.profile_id, "year": 2025, "output_language": OutputLanguage.EN},
     )
 
 
@@ -145,7 +141,7 @@ def _ledger_ratios_set(ctx: PayloadContext) -> PayloadResult:
         ctx.raw_profile_subject,
         {
             "profile_id": ctx.profile_id,
-            "year": CONFORMANCE_PRIOR_YEAR,
+            "year": 2025,
             "category": "arrendamiento_vivienda_afecto",
             "ratio": "0.5",
         },
@@ -181,7 +177,7 @@ def _user_profile_plantilla_media(ctx: PayloadContext) -> PayloadResult:
         ctx.raw_profile_subject,
         {
             **_baselined(ctx),
-            "year": CONFORMANCE_PRIOR_YEAR,
+            "year": 2025,
             "change": {"kind": "set", "average_workforce": "2.50", "state": PlantillaMediaState.OBSERVED},
         },
     )
@@ -207,13 +203,11 @@ def _user_profile_view(ctx: PayloadContext) -> PayloadResult:
 
 
 def _user_profile_imputation_election_read(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "tax_year": CONFORMANCE_PRIOR_YEAR})
+    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "tax_year": 2025})
 
 
 def _user_profile_imputation_election_set(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(
-        ctx.raw_profile_subject, {**_baselined(ctx), "tax_year": CONFORMANCE_PRIOR_YEAR, "criterion": "devengo"}
-    )
+    return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "tax_year": 2025, "criterion": "devengo"})
 
 
 def _workbench_generation(ctx: PayloadContext) -> PayloadResult:

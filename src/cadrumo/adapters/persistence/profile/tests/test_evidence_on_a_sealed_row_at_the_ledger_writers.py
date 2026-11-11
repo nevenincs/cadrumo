@@ -38,7 +38,6 @@ from cadrumo.domain.transactions.classification_origin import ClassificationOrig
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .classification_origin_support import (
     AUTOMATION,
     BUCKET_ID,
@@ -51,8 +50,6 @@ from .classification_origin_support import (
     synthetic_invoice,
 )
 from .ledger_action_persistence_support import persist_verified_revision_citing_transaction
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,7 +70,7 @@ def _seal(ledger: Ledger, row: str) -> LedgerFilingSnapshot:
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=(row,),
         catalogue=ledger.transactions.load(),
-        captured_at=datetime(_YEAR, 2, 1, tzinfo=UTC),
+        captured_at=datetime(2025, 2, 1, tzinfo=UTC),
     )
     assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
     return snapshot

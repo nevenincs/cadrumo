@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from datetime import date
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -17,7 +16,6 @@ from cadrumo.application.ledger.evidence_followup_contracts import (
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.evidence_followup_operation_test_support import (
     prepare_evidence_followup_conformance_case,
 )
@@ -30,8 +28,6 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -46,7 +42,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Followup",
     "activities.description": "design",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2025-01-01",
     "contact.postcode": "28013",
 }
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"

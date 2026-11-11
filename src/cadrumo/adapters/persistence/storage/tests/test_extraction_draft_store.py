@@ -15,7 +15,7 @@ that is new.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -42,14 +42,12 @@ from .....application.ledger.invoice_draft_records import (
 )
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _REFERENCE = "ev-structured-001"
-_INVOICE_DATE = date(filing_year_envelope().horizon - 1, 11, 15).isoformat()
 
 
 def _two_rate_draft() -> InvoiceDraft:
@@ -57,7 +55,7 @@ def _two_rate_draft() -> InvoiceDraft:
     return InvoiceDraft(
         supplier_tax_id="ESB00015016",
         invoice_number="UBL-2024-0042",
-        invoice_date=_INVOICE_DATE,
+        invoice_date="2024-11-15",
         taxable_base=Decimal("150.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("26.00"),
@@ -197,7 +195,7 @@ def test_deleting_a_persisted_field_makes_the_load_refuse() -> None:
                 evidence_reference=_REFERENCE,
                 draft=_two_rate_draft(),
                 extractor="en16931-ubl",
-                drafted_at=datetime(1980, 11, 15, 9, 0, tzinfo=UTC),
+                drafted_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
             ),
         ),
     )
@@ -238,7 +236,7 @@ def test_a_dropped_line_set_is_not_silently_re_defaulted_to_empty() -> None:
                 evidence_reference=_REFERENCE,
                 draft=_two_rate_draft(),
                 extractor="en16931-ubl",
-                drafted_at=datetime(1980, 11, 15, 9, 0, tzinfo=UTC),
+                drafted_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
             ),
         ),
     )
@@ -264,7 +262,7 @@ def _provenance_bearing_draft() -> InvoiceDraft:
         supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
-        invoice_date=_INVOICE_DATE,
+        invoice_date="2024-11-15",
         taxable_base=Decimal("150.00"),
         iva_amount=Decimal("26.00"),
         grand_total=Decimal("176.00"),
@@ -369,7 +367,7 @@ def test_deleting_a_persisted_provenance_field_makes_the_load_refuse() -> None:
                 evidence_reference=_REFERENCE,
                 draft=_provenance_bearing_draft(),
                 extractor="en16931-ubl",
-                drafted_at=datetime(1980, 11, 15, 9, 0, tzinfo=UTC),
+                drafted_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
             ),
         ),
     )
@@ -458,7 +456,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(p
                 evidence_reference=_REFERENCE,
                 draft=_two_rate_draft(),
                 extractor="extract_invoice_draft_from_evidence",
-                drafted_at=datetime(1980, 9, 1, 9, 0, tzinfo=UTC),
+                drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
                 label_reading_fallback=_degraded_fallback(),
             ),
         ),

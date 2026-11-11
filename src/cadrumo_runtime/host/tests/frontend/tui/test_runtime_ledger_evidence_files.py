@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -108,7 +107,6 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 from cadrumo.domain.attachments.enums import AttachmentSource
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.ledger.evidence_files_doors import LedgerEvidenceFilesDoorsV1
 from cadrumo.entrypoints.tui.ledger.tests.evidence_files_fixtures import evidence_transaction
@@ -134,8 +132,6 @@ from .door_session_support import (
     terminal_observation,
 )
 from .unsupported_result import raises_unsupported_result
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -201,8 +197,8 @@ def _record(profile_id: UUID = PROFILE_ID, **changes: object) -> LedgerEvidenceR
         attachment_id=_DIGEST,
         media_kind=MediaKind.PDF,
         supplier="Suministros Delta SL",
-        invoice_number=f"F-{_YEAR}-0001",
-        invoice_date=date(_YEAR, 3, 14).isoformat(),
+        invoice_number="F-2026-0001",
+        invoice_date="2026-03-14",
         taxable_base="100",
         iva_rate="21",
         iva_amount="21",

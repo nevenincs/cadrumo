@@ -11,18 +11,14 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
-_YEAR = filing_year_envelope().horizon
-
-
-T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
+T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = general_iva_profile_facts(
     tax_id="12345678Z",
-    activity_start_date=date(filing_year_envelope().floor, 1, 1),
+    activity_start_date=date(2000, 1, 1),
     name="Ready",
     activity="design services",
 )

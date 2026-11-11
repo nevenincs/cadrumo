@@ -78,7 +78,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -158,8 +157,7 @@ _Repos = tuple[
     ModeloRecordCatalogueRepository,
 ]
 
-_YEAR = filing_year_envelope().horizon
-_CLOCK = datetime(_YEAR, 7, 15, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "13013013-0130-4130-8130-130130130130"
 _BUCKET_ID = _PROFILE_ID
 
@@ -214,13 +212,13 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="professional services"),
         UserProfileFact(path="iva.oss_enrolled", value=False),
-        UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 1, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
         # The regime holds in every ejercicio, the prior year's net income included; the dated cash election
-        # below states the same regime for the filing year only.
+        # below states the same regime for 2026 only.
         UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
         # The operator declares the cobros y pagos criterion for the quarters this module calculates,
         # under the normal modality: the expected carry assumes no art. 30.2.4.a provision in box 02.
-        *cash_criterion_facts(_YEAR, estimation_regime="directa_normal"),
+        *cash_criterion_facts(2026, estimation_regime="directa_normal"),
     )
 )
 
@@ -264,14 +262,14 @@ def _calculate_quarter(
     income: Decimal = Decimal("0"),
     expense: Decimal = Decimal("0"),
 ) -> CalculationRevision:
-    """Calculate one quarter over a ledger whose year-to-date activity reads ``income`` and ``expense``."""
+    """Calculate one 2026 quarter over a ledger whose year-to-date activity reads ``income`` and ``expense``."""
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, _filing_repo = repos
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, period),
-        revision_id=str(open_ended_revision("130").id),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, period),
+        revision_id="2019-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_CLOCK,
         operation=operation,
@@ -295,7 +293,7 @@ def _observation_from_revision(revision: CalculationRevision, *, period: str) ->
         raise AssertionError("calculation revision must carry typed CasillaObservation provenance")
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         observations=revision.observations,
     )
@@ -359,7 +357,7 @@ def _seed_prior_year_m100(
     stamped_revision_id: str,
     source_metadata: Mapping[str, str] | None = None,
 ) -> None:
-    """Record the prior-year annual Renta (M100 of the prior year) net-income observation.
+    """Record the prior-year annual Renta (M100 2025) net-income observation.
 
     M130's casilla-13 minoración reads ``irpf.previous_year_economic_activity_net_income``
     — a ``previous_filing`` binding summing M100 casillas 0224/1479/1553/1577 of
@@ -374,7 +372,7 @@ def _seed_prior_year_m100(
         obs_repo.prepare_observation_envelope(
             registry_grounded_modelo_observation(
                 modelo="100",
-                filing_year=_YEAR - 1,
+                filing_year=2025,
                 period="0A",
                 casilla_values={
                     _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: net_income,
@@ -437,10 +435,10 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(
     )
     _seed_prior_year_m100(
         obs_repo,
-        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=_YEAR - 1, period="0A"),
+        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    q2_snapshot = published_authority_operation().snapshot("130", filing_year=_YEAR, period="2T")
+    q2_snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="2T")
     report = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     )
@@ -475,7 +473,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos, *, operatio
     )
     _seed_prior_year_m100(
         obs_repo,
-        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=_YEAR - 1, period="0A"),
+        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
     # Q2 cumulative (Jan-Jun): ingresos 8000, gastos 3000 -> rendimiento 5000,
@@ -517,14 +515,14 @@ _SOFIA_Q2_UNWITHHELD_INCOME = Decimal("187.00")
 def _seed_sofia_q1_invoiced_receipt() -> None:
     """Book Q1's receipt with its linked issued invoice, which states the retención."""
     with bundled_indexed_authority().operation():
-        rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
+        rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
         assert rate is not None
         receipt = Transaction.model_validate(
             {
                 "raw": RawTransaction(
                     provider_transaction_id="sofia-q1-cobro",
-                    booked_date=date(_YEAR, 2, 10),
-                    value_date=date(_YEAR, 2, 10),
+                    booked_date=date(2026, 2, 10),
+                    value_date=date(2026, 2, 10),
                     amount=_SOFIA_Q1_BASE + _SOFIA_Q1_IVA - _SOFIA_Q1_RETENCION,
                     currency="EUR",
                     counterparty="Cliente SL",
@@ -564,8 +562,8 @@ def _seed_sofia_q1_invoiced_receipt() -> None:
         invoice = Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
-                "invoice_number": f"F-{_YEAR}-S01",
-                "issued_at": date(_YEAR, 2, 10),
+                "invoice_number": "F-2026-S01",
+                "issued_at": date(2026, 2, 10),
                 "counterparty_name": "Cliente SL",
                 "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
@@ -611,7 +609,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
     q1_revision_stamp, q1_source_metadata = _import_official_filing_evidence(
         repos,
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period="1T",
         casilla_values=q1.casilla_values,
         operation=operation,
@@ -634,7 +632,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
     m100_revision_stamp, m100_source_metadata = _import_official_filing_evidence(
         repos,
         modelo="100",
-        filing_year=_YEAR - 1,
+        filing_year=2025,
         period="0A",
         casilla_values=m100_values,
         operation=operation,
@@ -647,7 +645,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         source_metadata=m100_source_metadata,
     )
 
-    q2_snapshot = published_authority_operation().snapshot("130", filing_year=_YEAR, period="2T")
+    q2_snapshot = published_authority_operation().snapshot("130", filing_year=2026, period="2T")
     resolved = _resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
@@ -686,7 +684,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
 
 
 def _seed_sofia_prior_year(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    """Record the prior-year Renta from its official evidence, with the prior-year activity net income Q1 reads."""
+    """Record the 2025 Renta from its official evidence, with the prior-year activity net income Q1 reads."""
     obs_repo = repos[3]
     m100_values = {
         _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
@@ -695,7 +693,7 @@ def _seed_sofia_prior_year(repos: _Repos, *, operation: PinnedAuthorityOperation
         _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
     }
     stamp, metadata = _import_official_filing_evidence(
-        repos, modelo="100", filing_year=_YEAR - 1, period="0A", casilla_values=m100_values, operation=operation
+        repos, modelo="100", filing_year=2025, period="0A", casilla_values=m100_values, operation=operation
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -780,14 +778,14 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     _seed_prior_year_m100(
         obs_repo,
-        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=_YEAR - 1, period="0A"),
+        stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
     save_stamped_observation(
         obs_repo,
         registry_grounded_modelo_observation(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
@@ -802,7 +800,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         obs_repo,
         registry_grounded_modelo_observation(
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="2T",
             casilla_values={
                 _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
@@ -814,7 +812,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         captured_at=_CLOCK,
     )
 
-    snapshot_3t = published_authority_operation().snapshot("130", filing_year=_YEAR, period="3T")
+    snapshot_3t = published_authority_operation().snapshot("130", filing_year=2026, period="3T")
     resolved = _resolve_bindings_from_local_store(
         snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values

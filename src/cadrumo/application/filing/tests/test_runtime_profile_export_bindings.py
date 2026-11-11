@@ -17,17 +17,10 @@ from __future__ import annotations
 import pytest
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    newest_authored_edition,
-    supported_authored_exercises,
-)
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_NEWEST_EXERCISE = newest_authored_edition("100")
 
 
 def _modelo_100_bindings(filing_year: int):
@@ -39,14 +32,14 @@ def _modelo_100_bindings(filing_year: int):
     return provider.get_subview("100").profile_export_bindings
 
 
-@pytest.mark.parametrize("filing_year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("filing_year", range(2022, 2026))
 def test_every_projected_binding_declares_an_export_address(filing_year: int) -> None:
     """The discriminator holds: nothing lands here without somewhere to land."""
     for binding in _modelo_100_bindings(filing_year):
         assert getattr(binding.provider, "dictionary_field", None), binding.id
 
 
-@pytest.mark.parametrize("filing_year", supported_authored_exercises("100"))
+@pytest.mark.parametrize("filing_year", range(2022, 2026))
 def test_the_projection_is_narrower_than_the_revision_binding_set(filing_year: int) -> None:
     """It is a projection, not a second snapshot.
 
@@ -66,7 +59,7 @@ def test_a_fixed_width_modelo_projects_nothing() -> None:
     Keeps the projection honest: a discriminator that matched everything would
     make the assertions above vacuous.
     """
-    period = Period.from_year_and_code(filing_year_envelope().horizon, "4T")
+    period = Period.from_year_and_code(2025, "4T")
     provider = build_runtime_schema_provider(modelos=("303",), filing_year=period.filing_year, period=period)
 
     assert provider.get_subview("303").profile_export_bindings == ()
@@ -79,16 +72,16 @@ def test_the_identity_fields_the_export_needs_are_reachable() -> None:
     Their presence here is what makes replacing those escapes a join rather than
     a relocation of the same hardcoding.
     """
-    addressed = {str(binding.provider.dictionary_field) for binding in _modelo_100_bindings(_NEWEST_EXERCISE)}
+    addressed = {str(binding.provider.dictionary_field) for binding in _modelo_100_bindings(2024)}
 
     assert {"DPNIF_D", "DP_APENOM_D"} <= addressed
 
 
 def test_the_projection_is_ordered_deterministically() -> None:
     """Two reads of the same revision agree, so a consumer cannot depend on luck."""
-    assert [binding.id for binding in _modelo_100_bindings(_NEWEST_EXERCISE)] == [
-        binding.id for binding in _modelo_100_bindings(_NEWEST_EXERCISE)
+    assert [binding.id for binding in _modelo_100_bindings(2024)] == [
+        binding.id for binding in _modelo_100_bindings(2024)
     ]
-    assert [binding.id for binding in _modelo_100_bindings(_NEWEST_EXERCISE)] == sorted(
-        binding.id for binding in _modelo_100_bindings(_NEWEST_EXERCISE)
+    assert [binding.id for binding in _modelo_100_bindings(2024)] == sorted(
+        binding.id for binding in _modelo_100_bindings(2024)
     )

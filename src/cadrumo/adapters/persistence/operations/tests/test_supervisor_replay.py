@@ -30,15 +30,12 @@ from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import supervisor_capabilities
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(_YEAR, 8, 14, 17, tzinfo=UTC)
+_NOW = datetime(2026, 8, 14, 17, tzinfo=UTC)
 _DEFINITION_ID = "operation.supervisor.replay"
 
 

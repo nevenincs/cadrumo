@@ -26,7 +26,6 @@ from cadrumo.domain.transactions.raw_transaction import SourceFormat
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import (
     PROVENANCE_RAW_FIELD_EXPECTATIONS,
     TAXABLE_IVA_EXPECTATIONS,
@@ -37,8 +36,6 @@ from .ledger_action_persistence_support import (
     OTHER_BUCKET_ID,
     repositories,
 )
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -138,13 +135,13 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_obj
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="wrong bucket",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
 
@@ -169,7 +166,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=OTHER_BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="inactive bucket",
@@ -177,7 +174,7 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
                 source_command="aeat app ledger add",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
 
@@ -208,14 +205,14 @@ def test_manual_foreign_currency_row_converts_at_entry(
         result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("1000.00"),
                 currency="GBP",
                 direction=TransactionDirection.INCOMING,
                 description="UK client invoice",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
             currency_normalizer=normalizer,
         )
 
@@ -242,13 +239,13 @@ def test_manual_eur_row_carries_no_conversion_stamp(
         result = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("100.00"),
                 direction=TransactionDirection.INCOMING,
                 description="Domestic invoice",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert result.transaction.raw.currency == "EUR"

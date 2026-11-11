@@ -21,7 +21,6 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -37,7 +36,6 @@ from cadrumo.domain.invoices.enums import InvoiceClass
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 from .invoice_confirmation_test_support import (
@@ -53,10 +51,6 @@ from .invoice_confirmation_test_support import (
 from .invoice_confirmation_test_support import runtime_profile as runtime_profile
 from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
-_YEAR = filing_year_envelope().horizon
-_PRINTED_DATE = date(_YEAR, 3, 10).strftime("%d/%m/%Y")
-_PRINTED_NEXT_DATE = date(_YEAR, 3, 11).strftime("%d/%m/%Y")
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
@@ -68,7 +62,7 @@ _COHERENT_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
     f"NIF: {_SUPPLIER_CIF}",
     "Numero de factura: 2026-0142",
-    f"Fecha: {_PRINTED_DATE}",
+    "Fecha: 10/03/2026",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -82,7 +76,7 @@ _RECARGO_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
     f"NIF: {_SUPPLIER_CIF}",
     "Numero de factura: 2026-0199",
-    f"Fecha: {_PRINTED_NEXT_DATE}",
+    "Fecha: 11/03/2026",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -112,8 +106,8 @@ _COHERENT_FIELDS = {
     "supplier_tax_id_anchor": _SUPPLIER_CIF,
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
-    "invoice_date": date(_YEAR, 3, 10).isoformat(),
-    "invoice_date_anchor": _PRINTED_DATE,
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
     "taxable_base": "100,00",
     "taxable_base_anchor": "100,00",
     "iva_rate": "21",
@@ -128,8 +122,8 @@ _RECARGO_FIELDS = {
     **_COHERENT_FIELDS,
     "invoice_number": "2026-0199",
     "invoice_number_anchor": "2026-0199",
-    "invoice_date": date(_YEAR, 3, 11).isoformat(),
-    "invoice_date_anchor": _PRINTED_NEXT_DATE,
+    "invoice_date": "2026-03-11",
+    "invoice_date_anchor": "11/03/2026",
     "grand_total": "126,20",
     "grand_total_anchor": "126,20",
 }

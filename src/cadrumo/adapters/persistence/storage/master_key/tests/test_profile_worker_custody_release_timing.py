@@ -49,7 +49,7 @@ _MODULE = "cadrumo.adapters.persistence.storage.master_key.tests.test_profile_wo
 _BATCHES = 40
 _BATCH_SIZE = 100
 _PAYLOAD_BYTES = 1536
-_WRITTEN_AT = datetime(1980, 10, 1, 9, 0, tzinfo=UTC)
+_WRITTEN_AT = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
 
 
 class _PhaseRecords(logging.Handler):

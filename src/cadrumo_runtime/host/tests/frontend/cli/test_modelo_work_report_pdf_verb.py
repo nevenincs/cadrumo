@@ -64,7 +64,6 @@ from cadrumo.core.optional_extras import PDF_EXTRA
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -104,8 +103,6 @@ pytestmark = [
     pytest.mark.windows_only,
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
-
-_YEAR = filing_year_envelope().horizon
 
 _REPORT_OPERATIONS = frozenset(
     {
@@ -154,7 +151,7 @@ def _report_session(
             "identity.name": "Report",
             "identity.surnames": "Operator",
             "activities.description": "consulting",
-            "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
+            "censo.activity_start_date": "2026-01-01",
             "withholding.colegio_concertado": "false",
             # The Modelo 111 report seeds the retención withheld from a professional's invoice,
             # and Modelo 111 applies only to a payer of income subject to retención.
@@ -211,14 +208,14 @@ def _seed_current_sealed_revision_in_profile(
     filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> str:
     bucket_id = str(profile_id)
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     if modelo == "111":
         _capture_professional_withholding(bucket_id=bucket_id, operation=operation)
     else:
         assert modelo == "303"
         with validating_governed_facts(operation):
             sale = iva_transaction(
-                f"report-sale-{_YEAR}-1T",
+                "report-sale-2026-1T",
                 direction=TransactionDirection.INCOMING,
                 amount=Decimal("121"),
                 taxable_base=Decimal("100"),
@@ -228,10 +225,10 @@ def _seed_current_sealed_revision_in_profile(
     unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
         revision_id=law_selected_revision_for_work_target(
-            modelo=modelo, filing_year=_YEAR, period=period, requested_revision_id=None, operation=operation
+            modelo=modelo, filing_year=2026, period=period, requested_revision_id=None, operation=operation
         ),
         actor="operator",
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
@@ -261,7 +258,7 @@ def _seed_current_sealed_revision_in_profile(
 
 def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthorityOperation) -> None:
     """Capture the paid perception the canonical Modelo 111 calculation requires."""
-    paid_on = date(_YEAR, 2, 15)
+    paid_on = date(2026, 2, 15)
     with validating_governed_facts(operation):
         line = InvoiceLine(
             description="Report fixture professional service",
@@ -275,7 +272,7 @@ def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthor
             {
                 "kind": InvoiceKind.RECEIVED,
                 "bucket_id": bucket_id,
-                "invoice_number": f"REPORT-PROF-{_YEAR}-001",
+                "invoice_number": "REPORT-PROF-2026-001",
                 "issued_at": paid_on,
                 "counterparty_name": "Synthetic Professional",
                 "counterparty_tax_id": "B00015016",
@@ -298,7 +295,7 @@ def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthor
         assert detail is not None
         evidence = evidence.model_copy(
             update={
-                "payment_event_id": f"report-professional-payment-{date(_YEAR, 2, 15).isoformat()}",
+                "payment_event_id": "report-professional-payment-2026-02-15",
                 "payment_occurred_on": paid_on,
                 "modelo_190_detail": detail.model_copy(
                     update={
@@ -312,9 +309,9 @@ def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthor
         repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
         repository.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
         _, source_revision_id = repository.load_revisioned()
-        cadence = load_bucket_withholding_filer_cadence(bucket_id=bucket_id, filing_year=_YEAR, operation=operation)
+        cadence = load_bucket_withholding_filer_cadence(bucket_id=bucket_id, filing_year=2026, operation=operation)
         capture = build_invoice_withholding_capture(
-            invoice, catalogue_revision_id=source_revision_id, request=evidence, applicable_year=_YEAR, cadence=cadence
+            invoice, catalogue_revision_id=source_revision_id, request=evidence, applicable_year=2026, cadence=cadence
         )
         WithholdingProducer(service=build_withholding_observation_service(bucket_id=bucket_id)).capture(
             capture.command, cadence=cadence, source_catalogue_revision_id=capture.catalogue_read_revision_id
@@ -430,7 +427,7 @@ def test_a_modelo_303_summary_verifies_with_every_check_ok(
 ) -> None:
     """Modelo 303 declares casilla identifiers that break across the casilla column at a hyphen."""
     evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(_YEAR, "1T"),
+        Period.from_year_and_code(2026, "1T"),
         reference="test:calculation-summary-303",
         operation=operation,
     )

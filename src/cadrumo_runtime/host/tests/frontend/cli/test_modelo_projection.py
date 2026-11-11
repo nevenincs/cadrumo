@@ -68,11 +68,7 @@ from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    newest_authored_edition,
-    revision_covering,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
@@ -100,7 +96,7 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
     "19" (resultado final) are formula-computed; their registry entries must
     carry non-empty ``legal_refs`` and ``formula_id``.
     """
-    m130_snapshot = published_snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
+    m130_snapshot = published_snapshot("130", filing_year=2026, period="1T")
     engine_result = calculate_registry_snapshot(
         m130_snapshot,
         inputs={
@@ -118,7 +114,7 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        date_context={"filing_period": date(filing_year_envelope().horizon, 3, 31)},
+        date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),

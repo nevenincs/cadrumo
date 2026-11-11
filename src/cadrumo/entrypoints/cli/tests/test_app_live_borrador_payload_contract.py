@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta, timezone
-
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.aeat_literal_fixtures import BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE
 from ..app_live_borrador_results import (
     Borrador100ImportResult,
@@ -20,8 +17,6 @@ from ..app_live_borrador_results import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
-YEAR = filing_year_envelope().horizon
-CAPTURED_AT = datetime(YEAR, 3, 15, 10, tzinfo=UTC).isoformat()
 _BUCKET_ID = "f64de004-6f34-406e-8e02-58be01c6157c"  # was 'borrador-bucket'
 _SNAPSHOT_ID = "a" * 64
 
@@ -29,9 +24,9 @@ _SNAPSHOT_ID = "a" * 64
 def _snapshot_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "snapshot_id": _SNAPSHOT_ID,
-        "filing_year": YEAR,
-        "period": f"{YEAR} 0A",
-        "captured_at": CAPTURED_AT,
+        "filing_year": 2024,
+        "period": "2024 0A",
+        "captured_at": "2025-03-15T10:00:00+00:00",
         "source_url": BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE,
         "binding_count": 1,
         "state": "active",
@@ -56,9 +51,9 @@ def test_borrador_summary_and_view_accept_canonical_snapshot_json() -> None:
     "field,value",
     [
         ("snapshot_id", "not-a-snapshot"),
-        ("period", f"{YEAR}-0A"),
-        ("captured_at", datetime(YEAR, 3, 15, 10).isoformat()),
-        ("captured_at", datetime(YEAR, 3, 15, 11, tzinfo=timezone(timedelta(hours=1))).isoformat()),
+        ("period", "2024-0A"),
+        ("captured_at", "2025-03-15T10:00:00"),
+        ("captured_at", "2025-03-15T11:00:00+01:00"),
         ("binding_count", -1),
         ("state", "retired"),
     ],
@@ -82,7 +77,7 @@ def test_borrador_list_requires_a_bucket_and_exact_row_count() -> None:
 def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
     """The empty latest response stays sparse; a populated response is active and complete."""
     empty = Borrador100LatestResult.model_validate(
-        {"bucket_id": _BUCKET_ID, "filing_year": YEAR, "snapshot_id": None},
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None},
     )
     populated = Borrador100LatestResult.model_validate(
         _snapshot_payload(bucket_id=_BUCKET_ID),
@@ -90,7 +85,7 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
 
     assert empty.model_dump(mode="json") == {
         "bucket_id": _BUCKET_ID,
-        "filing_year": YEAR,
+        "filing_year": 2024,
         "snapshot_id": None,
         "captured_at": None,
         "period": None,
@@ -102,8 +97,8 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
     }
     assert populated.state == "active"
     for malformed in (
-        {"bucket_id": _BUCKET_ID, "filing_year": YEAR, "snapshot_id": None, "state": "active"},
-        {"bucket_id": _BUCKET_ID, "filing_year": YEAR, "snapshot_id": _SNAPSHOT_ID, "state": "active"},
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None, "state": "active"},
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": _SNAPSHOT_ID, "state": "active"},
         _snapshot_payload(bucket_id=_BUCKET_ID, state="superseded"),
     ):
         with pytest.raises(ValidationError):
@@ -116,7 +111,7 @@ def test_borrador_list_and_latest_carry_an_identity_less_outdated_count() -> Non
         {"bucket_id": _BUCKET_ID, "count": 0, "rows": [], "outdated_stored_snapshots": 2},
     )
     latest = Borrador100LatestResult.model_validate(
-        {"bucket_id": _BUCKET_ID, "filing_year": YEAR, "snapshot_id": None, "outdated_stored_snapshots": 1},
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None, "outdated_stored_snapshots": 1},
     )
 
     assert (listing.outdated_stored_snapshots, latest.outdated_stored_snapshots) == (2, 1)
@@ -135,9 +130,9 @@ def test_borrador_list_and_latest_carry_an_identity_less_outdated_count() -> Non
 def _refused_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "snapshot_id": "b" * 64,
-        "filing_year": YEAR,
-        "period": f"{YEAR} 0A",
-        "captured_at": CAPTURED_AT,
+        "filing_year": 2024,
+        "period": "2024 0A",
+        "captured_at": "2025-03-15T10:00:00+00:00",
         "state": "active",
         "reason": "binding_keys_not_admitted",
     }
@@ -151,14 +146,14 @@ def test_a_refused_snapshot_is_reported_beside_the_rows_and_not_counted_as_one()
         {"bucket_id": _BUCKET_ID, "count": 1, "rows": [_snapshot_payload()], "refused": [_refused_payload()]}
     )
     latest = Borrador100LatestResult.model_validate(
-        {"bucket_id": _BUCKET_ID, "filing_year": YEAR, "snapshot_id": None, "refused": [_refused_payload()]}
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None, "refused": [_refused_payload()]}
     )
 
     assert listing.count == 1
     assert [(item.snapshot_id, item.reason) for item in listing.refused] == [("b" * 64, "binding_keys_not_admitted")]
     assert latest.snapshot_id is None
     assert latest.model_dump(mode="json")["refused"] == [_refused_payload()]
-    for field, value in (("reason", "unknown_reason"), ("snapshot_id", "short"), ("period", f"{YEAR}-0A")):
+    for field, value in (("reason", "unknown_reason"), ("snapshot_id", "short"), ("period", "2024-0A")):
         with pytest.raises(ValidationError):
             Borrador100RefusedSnapshotPayload.model_validate(_refused_payload(**{field: value}))
 

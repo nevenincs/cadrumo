@@ -25,7 +25,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.codes import ModeloCode
@@ -126,14 +125,13 @@ def calendar_backend_omitting_gating_facts(tmp_path: Path, *omitted: str) -> Gen
         yield
 
 
-_YEAR = filing_year_envelope().horizon
 _OBSERVED_CASILLA: CasillaId = validated_casilla_id("01")
 
 
 def _observed_casilla_observations(value: Decimal):
     return registry_grounded_observations(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
         casilla_values={_OBSERVED_CASILLA: value},
     )
@@ -145,7 +143,7 @@ def modelo_record_with_external_justificante(
     bucket_id: str | None = None,
     evidence_kind: ExternalEvidenceKind = ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
 ) -> ModeloRecord:
-    filed_at = datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC)
+    filed_at = datetime(2025, 4, 16, 12, 0, tzinfo=UTC)
     return ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id=_WORK_UNIT_ID,
@@ -156,8 +154,8 @@ def modelo_record_with_external_justificante(
         calculation_revision_id=_CALCULATION_REVISION_ID,
         bucket_id=PRIMARY_PROFILE_ID if bucket_id is None else bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
         filed_at=filed_at,
         filed_by="aeat-import",
         origin=FilingOrigin.AEAT,
@@ -179,17 +177,17 @@ def justificante_metadata(*, csv: str, tax_id: str = "X0001500M") -> Justificant
         return Justificante(
             csv=csv,
             modelo="303",
-            period=Period.from_year_and_code(_YEAR, "1T"),
-            ejercicio=str(_YEAR),
+            period=Period.from_year_and_code(2025, "1T"),
+            ejercicio="2025",
             presentation_id=None,
-            presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
+            presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
             tax_id=tax_id,
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
             source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
             source_pdf_sha256=source_pdf_sha256,
-            parsed_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
+            parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         )
 
 

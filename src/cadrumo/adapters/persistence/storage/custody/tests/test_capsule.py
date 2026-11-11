@@ -324,7 +324,7 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
     )
     recovery = _supervised_recovery_envelope(settings)
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
-    published_at = datetime(1980, 8, 13, 12, 34, 56, 123456, tzinfo=UTC)
+    published_at = datetime(2026, 8, 13, 12, 34, 56, 123456, tzinfo=UTC)
 
     capsule = publish_profile_custody_capsule(
         profile_id=_PROFILE_ID,
@@ -340,7 +340,7 @@ def test_committed_capsule_is_published_once_with_immutable_marker_and_password_
 
     marker = parse_profile_custody_commit((capsule / "profile.commit.v1.json").read_bytes())
     assert marker.profile_id == _PROFILE_ID
-    assert marker.published_at == "1980-08-13T12:34:56.123456Z"
+    assert marker.published_at == "2026-08-13T12:34:56.123456Z"
     assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) == capsule
     recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
     assert recovery_path.read_bytes() == recovery.canonical_json_bytes()

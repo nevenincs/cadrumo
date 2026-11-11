@@ -12,15 +12,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-_YEAR = filing_year_envelope().horizon
 
 PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
@@ -29,7 +25,7 @@ def current_transaction(provider_transaction_id: str = "input-rule-row") -> Tran
     """Build a domain-valid active row for an executor to read."""
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id,
-        booked_date=date(_YEAR, 4, 15),
+        booked_date=date(2026, 4, 15),
         value_date=None,
         amount=Decimal("121.00"),
         currency="EUR",
@@ -40,7 +36,7 @@ def current_transaction(provider_transaction_id: str = "input-rule-row") -> Tran
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 15, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={"source": "test"},

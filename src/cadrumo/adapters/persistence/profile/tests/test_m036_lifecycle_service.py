@@ -32,12 +32,9 @@ from cadrumo.application.modelo.m036_lifecycle import (
 from cadrumo.application.modelo.m036_lifecycle_ports import M036LifecyclePorts
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
-
-_YEAR = filing_year_envelope().horizon
 _PROFILE_ID = "32323232-3232-4232-8232-323232323232"
 
 
@@ -45,7 +42,7 @@ def _alta_command(*, justificante: str | None = None) -> M036DeclarationCommand:
     return M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(_YEAR, 6, 4),
+        declared_on=date(2026, 6, 4),
         sede_justificante=justificante,
     )
 
@@ -74,11 +71,11 @@ def test_record_alta_persists_result_with_bucket_scope(tmp_path: Path) -> None:
     assert result.bucket_id == runtime.bucket_id
     assert result.event_kind is CensoModeloEventKind.ALTA
     assert result.profile_id == _PROFILE_ID
-    assert result.declared_on == date(_YEAR, 6, 4)
+    assert result.declared_on == date(2026, 6, 4)
     assert result.declaration_id == derive_m036_declaration_id(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(_YEAR, 6, 4),
+        declared_on=date(2026, 6, 4),
         sede_justificante=None,
     )
 
@@ -114,7 +111,7 @@ def test_record_alta_emits_bucket_event_of_matching_kind(tmp_path: Path) -> None
     event = matching[0]
     assert event.bucket_id == runtime.bucket_id
     assert event.payload["profile_id"] == _PROFILE_ID
-    assert event.payload["declared_on"] == date(_YEAR, 6, 4).isoformat()
+    assert event.payload["declared_on"] == "2026-06-04"
 
 
 def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
@@ -128,7 +125,7 @@ def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
     command = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.MODIFICACION,
-        declared_on=date(_YEAR, 6, 5),
+        declared_on=date(2026, 6, 5),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         _record(_alta_command(), bucket_id=runtime.bucket_id)
@@ -151,7 +148,7 @@ def test_record_baja_emits_baja_event(tmp_path: Path) -> None:
     command = M036DeclarationCommand(
         profile_id=_PROFILE_ID,
         event_kind=CensoModeloEventKind.BAJA,
-        declared_on=date(_YEAR, 6, 5),
+        declared_on=date(2026, 6, 5),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         _record(_alta_command(), bucket_id=runtime.bucket_id)
@@ -218,7 +215,7 @@ def test_record_refuses_a_command_profile_that_does_not_own_the_bucket(
     command = M036DeclarationCommand(
         profile_id=foreign_profile,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(_YEAR, 6, 4),
+        declared_on=date(2026, 6, 4),
         sede_justificante=None,
     )
 
@@ -248,13 +245,13 @@ def test_record_refuses_before_deriving_the_declaration_id(tmp_path: Path) -> No
     foreign_declaration_id = derive_m036_declaration_id(
         profile_id=foreign_profile,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(_YEAR, 6, 4),
+        declared_on=date(2026, 6, 4),
         sede_justificante=None,
     )
     command = M036DeclarationCommand(
         profile_id=foreign_profile,
         event_kind=CensoModeloEventKind.ALTA,
-        declared_on=date(_YEAR, 6, 4),
+        declared_on=date(2026, 6, 4),
         sede_justificante=None,
     )
 

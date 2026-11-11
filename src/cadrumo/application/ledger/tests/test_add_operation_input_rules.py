@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 from pydantic import ValidationError
-
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -16,8 +12,6 @@ from ..ledger_add_command import resolve_ledger_add_flow, resolve_ledger_add_irp
 from ..ledger_add_contracts import LedgerAddRequest
 from .ledger_input_rule_support import PROFILE
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -25,7 +19,7 @@ def _request(**values: str) -> LedgerAddRequest:
     return LedgerAddRequest.model_validate(
         {
             "profile_id": PROFILE,
-            "booked_date": date(_YEAR, 4, 15).isoformat(),
+            "booked_date": "2026-04-15",
             "amount": "10.00",
             "direction": "OUTGOING",
             "description": "Office materials",
@@ -89,11 +83,11 @@ def test_an_absent_or_blank_category_is_no_category(operation: PinnedAuthorityOp
 @pytest.mark.usefixtures("operation")
 def test_an_added_row_prorrata_reference_must_use_the_reference_grammar() -> None:
     assert (
-        _request(prorrata_reference=f"prorrata:{_YEAR}:definitiva:general").prorrata_reference
-        == f"prorrata:{_YEAR}:definitiva:general"
+        _request(prorrata_reference="prorrata:2026:definitiva:general").prorrata_reference
+        == "prorrata:2026:definitiva:general"
     )
 
-    for malformed in ("telefonia_movil", f"prorrata:{_YEAR}:provisional:nonexistent", f"prorrata:{_YEAR}:definitiva"):
+    for malformed in ("telefonia_movil", "prorrata:2026:provisional:nonexistent", "prorrata:2026:definitiva"):
         with pytest.raises(ValidationError, match="prorrata_reference"):
             _request(prorrata_reference=malformed)
 

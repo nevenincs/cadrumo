@@ -12,7 +12,6 @@ from ...application.ledger.history_operation import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEventObjectType
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -22,16 +21,13 @@ from .conformance_family_contract import (
 )
 from .conformance_ledger_seed_support import SEED_ACTOR, ledger_action_ports, seed_manual_transaction
 
-_YEAR = filing_year_envelope().horizon
-
-
 _SEED_DESCRIPTION = "conformance typed history seed"
 
 
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile_id = context.profile_id
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 1, 15), amount=Decimal("12.00"), description=_SEED_DESCRIPTION
+        context, booked_date=date(2025, 1, 15), amount=Decimal("12.00"), description=_SEED_DESCRIPTION
     )
     # The production writer's own stored events are the expectation: every
     # entry it wrote must be one the typed result declares.

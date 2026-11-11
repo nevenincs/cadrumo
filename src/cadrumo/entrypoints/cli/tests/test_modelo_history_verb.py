@@ -21,16 +21,13 @@ from ....domain.buckets.event import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
 
-_YEAR = filing_year_envelope().horizon
-
-_EVENT_OCCURRED_AT = datetime(1980, 5, 28, 13, 20, 0, tzinfo=UTC)
+_EVENT_OCCURRED_AT = datetime(2026, 5, 28, 13, 20, 0, tzinfo=UTC)
 
 
 def _seed_event(
@@ -102,14 +99,14 @@ def test_history_filters_events_to_requested_modelo() -> None:
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
         modelo="303",
-        year=str(_YEAR),
+        year="2026",
         period="1T",
     )
     _seed_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
         modelo="130",
-        year=str(_YEAR),
+        year="2026",
         period="1T",
         offset_seconds=1,
     )
@@ -131,14 +128,14 @@ def test_history_year_and_period_filters_narrow_results() -> None:
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_FILED,
         modelo="303",
-        year=str(_YEAR),
+        year="2026",
         period="1T",
     )
     _seed_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_FILED,
         modelo="303",
-        year=str(_YEAR),
+        year="2026",
         period="2T",
         offset_seconds=1,
     )
@@ -146,13 +143,13 @@ def test_history_year_and_period_filters_narrow_results() -> None:
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_FILED,
         modelo="303",
-        year=str(_YEAR - 1),
+        year="2025",
         period="1T",
         offset_seconds=2,
     )
 
     result = invoke_cached_cli(
-        ["app", "modelo", "history", "--modelo", "303", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "history", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     assert "count\t1" in result.output, result.output
@@ -168,7 +165,7 @@ def test_history_year_filter_includes_real_lifecycle_filing_year_payloads() -> N
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
         modelo="303",
-        year=str(_YEAR),
+        year="2026",
         period="1T",
         year_payload_key="filing_year",
     )
@@ -176,7 +173,7 @@ def test_history_year_filter_includes_real_lifecycle_filing_year_payloads() -> N
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_EXPORTED,
         modelo="303",
-        year=str(_YEAR),
+        year="2026",
         period="1T",
         year_payload_key="filing_year",
         offset_seconds=1,
@@ -185,14 +182,14 @@ def test_history_year_filter_includes_real_lifecycle_filing_year_payloads() -> N
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_EXPORTED,
         modelo="303",
-        year=str(_YEAR - 1),
+        year="2025",
         period="1T",
         year_payload_key="filing_year",
         offset_seconds=2,
     )
 
     result = invoke_cached_cli(
-        ["app", "modelo", "history", "--modelo", "303", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "history", "--modelo", "303", "--year", "2026", "--period", "1T"],
     )
 
     assert result.exit_code == 0, result.output

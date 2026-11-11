@@ -63,7 +63,7 @@ from .settling import settle, settle_until
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(1980, 10, 7, tzinfo=UTC)
+_NOW = datetime(2026, 10, 7, tzinfo=UTC)
 _OPERATION = "a" * 64
 _INTERACTION = "b" * 64
 

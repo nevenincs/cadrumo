@@ -23,7 +23,6 @@ from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
@@ -43,11 +42,6 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
-_YEAR = filing_year_envelope().horizon
-_MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
-#: The ejercicio the receipt fixture prints, read off its own name so the observations seeded for it
-#: address the exercise the document declares.
-_FIXTURE_YEAR = int(_MODELO_130_FIXTURE.stem.rpartition("_")[2][:4])
 
 
 def _registry_snapshot_ref(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshotRef:
@@ -61,12 +55,12 @@ def _registry_snapshot_ref(*, modelo: str, filing_year: int, period: Period) -> 
 def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -> None:
     observation = RegistryModeloObservation(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="1T",
-        filing_period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_period=Period.from_year_and_code(2025, "1T"),
         observations=registry_grounded_observations(
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2025,
             period="1T",
             casilla_values={validated_casilla_id("iva.resultado"): Decimal("10.00")},
         ),
@@ -76,8 +70,8 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             CalculationObservationRepository().prepare_observation_envelope(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
-                stamped_revision_id=str(published_snapshot("303", filing_year=_YEAR, period="1T").revision.id),
+                captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                stamped_revision_id=str(published_snapshot("303", filing_year=2025, period="1T").revision.id),
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "12345678901234567890",
@@ -93,43 +87,43 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 ),
             )
         )
-        artefact_body = f"modelo-303-{_YEAR}-1T-justificante".encode()
+        artefact_body = b"modelo-303-2025-1T-justificante"
         store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         artefact = store.persist_artefact(
-            ("303", _YEAR, Period.from_year_and_code(_YEAR, "1T"), "12345678901234567890"),
+            ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(artefact_body),
                 sha256=hashlib.sha256(artefact_body).hexdigest(),
-                captured_at=datetime(_YEAR, 4, 16, 12, 1, tzinfo=UTC),
+                captured_at=datetime(2025, 4, 16, 12, 1, tzinfo=UTC),
             ),
             artefact_body,
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="303",
-                ejercicio=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "1T"),
                 expediente_id="12345678901234567890",
                 status="ALTA",
-                presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X0001500M",
                 artefacts=(artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="303", filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, "1T")
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "1T")
                 ),
             ),
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="303",
-                ejercicio=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "2T"),
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "2T"),
                 expediente_id="12345678901234567891",
                 status="ALTA",
-                presented_at=datetime(_YEAR, 7, 15, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2025, 7, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X0001500M",
                 artefacts=(
                     FiledDeclaracionArtefact(
@@ -138,68 +132,68 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                         content_type="application/pdf",
                         byte_count=32,
                         sha256="f" * 64,
-                        captured_at=datetime(_YEAR, 7, 16, 12, 1, tzinfo=UTC),
+                        captured_at=datetime(2025, 7, 16, 12, 1, tzinfo=UTC),
                         storage_ref="secure-object:financial:" + "f" * 64,
                     ),
                 ),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="303", filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, "2T")
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "2T")
                 ),
             ),
         )
-        wrong_identity_body = f"modelo-303-{_YEAR}-3T-justificante".encode()
+        wrong_identity_body = b"modelo-303-2025-3T-justificante"
         wrong_identity_artefact = store.persist_artefact(
-            ("303", _YEAR, Period.from_year_and_code(_YEAR, "3T"), "12345678901234567892"),
+            ("303", 2025, Period.from_year_and_code(2025, "3T"), "12345678901234567892"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(wrong_identity_body),
                 sha256=hashlib.sha256(wrong_identity_body).hexdigest(),
-                captured_at=datetime(_YEAR, 10, 16, 12, 1, tzinfo=UTC),
+                captured_at=datetime(2025, 10, 16, 12, 1, tzinfo=UTC),
             ),
             wrong_identity_body,
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="303",
-                ejercicio=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "3T"),
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "3T"),
                 expediente_id="12345678901234567892",
                 status="ALTA",
-                presented_at=datetime(_YEAR, 10, 15, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="Y0001503E",
                 artefacts=(wrong_identity_artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="303", filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, "3T")
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "3T")
                 ),
             ),
         )
-        non_active_body = f"modelo-303-{_YEAR}-4T-non-active-justificante".encode()
+        non_active_body = b"modelo-303-2025-4T-non-active-justificante"
         non_active_artefact = store.persist_artefact(
-            ("303", _YEAR, Period.from_year_and_code(_YEAR, "4T"), "12345678901234567893"),
+            ("303", 2025, Period.from_year_and_code(2025, "4T"), "12345678901234567893"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(non_active_body),
                 sha256=hashlib.sha256(non_active_body).hexdigest(),
-                captured_at=datetime(_YEAR + 1, 1, 16, 12, 1, tzinfo=UTC),
+                captured_at=datetime(2026, 1, 16, 12, 1, tzinfo=UTC),
             ),
             non_active_body,
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="303",
-                ejercicio=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "4T"),
+                ejercicio=2025,
+                period=Period.from_year_and_code(2025, "4T"),
                 expediente_id="12345678901234567893",
                 status="BAJA",
-                presented_at=datetime(_YEAR + 1, 1, 15, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2026, 1, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X0001500M",
                 artefacts=(non_active_artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="303", filing_year=_YEAR, period=Period.from_year_and_code(_YEAR, "4T")
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "4T")
                 ),
             ),
         )
@@ -226,14 +220,14 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
     assert sorted(
         (row.modelo, row.filing_year, row.period.registry_token) for row in operator_evidence if row.period is not None
     ) == [
-        ("303", _YEAR, "1T"),
-        ("303", _YEAR, "2T"),
-        ("303", _YEAR, "4T"),
+        ("303", 2025, "1T"),
+        ("303", 2025, "2T"),
+        ("303", 2025, "4T"),
     ], operator_evidence
-    period_1t = Period.from_year_and_code(_YEAR, "1T")
-    period_2t = Period.from_year_and_code(_YEAR, "2T")
-    period_3t = Period.from_year_and_code(_YEAR, "3T")
-    period_4t = Period.from_year_and_code(_YEAR, "4T")
+    period_1t = Period.from_year_and_code(2025, "1T")
+    period_2t = Period.from_year_and_code(2025, "2T")
+    period_3t = Period.from_year_and_code(2025, "3T")
+    period_4t = Period.from_year_and_code(2025, "4T")
     assert by_period[period_1t].aeat_submission_state.value == "submitted_observed"
     assert by_period[period_1t].justificante_verified is False
     assert by_period[period_2t].aeat_submission_state.value == "submitted_observed"
@@ -247,48 +241,48 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 
 
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
-    pdf_bytes = (_MODELO_130_FIXTURE).read_bytes()
+    pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         store = FiledDeclaracionObservationStore(storage_path(StorageCategory.FILED_DECLARATIONS))
         artefact = store.persist_artefact(
-            ("130", _FIXTURE_YEAR, Period.from_year_and_code(_FIXTURE_YEAR, "1T"), f"{_FIXTURE_YEAR}13000010001A"),
+            ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
             FiledDeclaracionArtefact(
                 kind="justificante_pdf",
                 source_url=SOURCE_URL,
                 content_type="application/pdf",
                 byte_count=len(pdf_bytes),
                 sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-                captured_at=datetime(_FIXTURE_YEAR, 4, 18, 12, 1, tzinfo=UTC),
+                captured_at=datetime(2026, 4, 18, 12, 1, tzinfo=UTC),
             ),
             pdf_bytes,
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="130",
-                ejercicio=_FIXTURE_YEAR,
-                period=Period.from_year_and_code(_FIXTURE_YEAR, "1T"),
-                expediente_id=f"{_FIXTURE_YEAR}13000010001A",
+                ejercicio=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                expediente_id="202613000010001A",
                 status="ALTA",
-                presented_at=datetime(_FIXTURE_YEAR, 4, 18, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
                 authenticated_identity="00000000T",
                 artefacts=(artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="130", filing_year=_FIXTURE_YEAR, period=Period.from_year_and_code(_FIXTURE_YEAR, "1T")
+                    modelo="130", filing_year=2026, period=Period.from_year_and_code(2026, "1T")
                 ),
             ),
         )
         store.persist_observation(
             FiledDeclaracionObservation(
                 modelo="130",
-                ejercicio=_FIXTURE_YEAR,
-                period=Period.from_year_and_code(_FIXTURE_YEAR, "2T"),
-                expediente_id=f"{_FIXTURE_YEAR}13000010002A",
+                ejercicio=2026,
+                period=Period.from_year_and_code(2026, "2T"),
+                expediente_id="202613000010002A",
                 status="ALTA",
-                presented_at=datetime(_FIXTURE_YEAR, 7, 18, 9, 30, tzinfo=UTC),
+                presented_at=datetime(2026, 7, 18, 9, 30, tzinfo=UTC),
                 authenticated_identity="00000000T",
                 artefacts=(artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
-                    modelo="130", filing_year=_FIXTURE_YEAR, period=Period.from_year_and_code(_FIXTURE_YEAR, "2T")
+                    modelo="130", filing_year=2026, period=Period.from_year_and_code(2026, "2T")
                 ),
             ),
         )
@@ -304,9 +298,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
     matching = [
         row
         for row in evidence
-        if row.modelo == "130"
-        and row.filing_year == _FIXTURE_YEAR
-        and row.period == Period.from_year_and_code(_FIXTURE_YEAR, "1T")
+        if row.modelo == "130" and row.filing_year == 2026 and row.period == Period.from_year_and_code(2026, "1T")
     ]
     assert len(matching) == 1
     assert matching[0].aeat_submission_state.value == "justificante_verified"
@@ -314,9 +306,7 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
     mismatched = [
         row
         for row in evidence
-        if row.modelo == "130"
-        and row.filing_year == _FIXTURE_YEAR
-        and row.period == Period.from_year_and_code(_FIXTURE_YEAR, "2T")
+        if row.modelo == "130" and row.filing_year == 2026 and row.period == Period.from_year_and_code(2026, "2T")
     ]
     assert len(mismatched) == 1
     assert mismatched[0].aeat_submission_state.value == "submitted_observed"
@@ -341,7 +331,7 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
     matching = [
         row
         for row in evidence
-        if row.modelo == "303" and row.filing_year == _YEAR and row.period == Period.from_year_and_code(_YEAR, "1T")
+        if row.modelo == "303" and row.filing_year == 2025 and row.period == Period.from_year_and_code(2025, "1T")
     ]
     assert len(matching) == 1
     row = matching[0]

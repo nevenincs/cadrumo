@@ -37,7 +37,6 @@ from .....application.filing.producer_snapshot_m360 import (
     Modelo360SolicitudRegister,
 )
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.models import RefundAccount
 from ...storage.secure_object_namespaces import PROFILE_MODELO_360_SOLICITUD_NAMESPACE
 from ...storage.sql.engine import get_engine
@@ -51,8 +50,8 @@ from ..modelo_360_solicitud import Modelo360SolicitudRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PERIOD_CURRENT = Period.from_year_and_code(filing_year_envelope().horizon, "0A")
-_PERIOD_PRIOR = Period.from_year_and_code(filing_year_envelope().horizon - 1, "0A")
+_PERIOD_2025 = Period.from_year_and_code(2025, "0A")
+_PERIOD_2024 = Period.from_year_and_code(2024, "0A")
 #: Synthetic, checksum-valid IBANs: the ISO 13616 published example and a German sibling.
 _IBAN = "ES9121000418450200051332"
 _OTHER_VALID_IBAN = "DE89370400440532013000"
@@ -101,7 +100,7 @@ def _account() -> RefundAccount:
     )
 
 
-def _entry(period: Period = _PERIOD_CURRENT, *, refund_account: RefundAccount | None = None) -> Modelo360SolicitudEntry:
+def _entry(period: Period = _PERIOD_2025, *, refund_account: RefundAccount | None = None) -> Modelo360SolicitudEntry:
     return Modelo360SolicitudEntry(
         period=period,
         facts=_facts(),
@@ -121,20 +120,20 @@ def test_an_absent_register_loads_empty_and_names_no_period(tmp_path: Path) -> N
         register = Modelo360SolicitudRepository().load()
 
     assert register == Modelo360SolicitudRegister()
-    assert register.entry_for(_PERIOD_CURRENT) is None
+    assert register.entry_for(_PERIOD_2025) is None
 
 
 def test_the_register_survives_encrypted_storage_field_for_field(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1a2b3c4d-5e6f-4a70-8b81-360000000002"):
         repository = Modelo360SolicitudRepository()
-        repository.declare(_entry(_PERIOD_CURRENT))
-        written = repository.declare(_entry(_PERIOD_PRIOR))
+        repository.declare(_entry(_PERIOD_2025))
+        written = repository.declare(_entry(_PERIOD_2024))
 
         loaded = Modelo360SolicitudRepository().load()
 
     assert loaded == written
-    assert loaded.entries == (_entry(_PERIOD_PRIOR), _entry(_PERIOD_CURRENT))
-    entry = loaded.entry_for(_PERIOD_CURRENT)
+    assert loaded.entries == (_entry(_PERIOD_2024), _entry(_PERIOD_2025))
+    entry = loaded.entry_for(_PERIOD_2025)
     assert entry is not None
     assert entry.account == Modelo360RepresentanteAccountChoice(account=_account())
     assert entry.facts.representante is not None
@@ -144,9 +143,9 @@ def test_the_register_survives_encrypted_storage_field_for_field(tmp_path: Path)
 def test_an_entry_without_an_account_stays_undeclared_rather_than_empty(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1a2b3c4d-5e6f-4a70-8b81-360000000003"):
         repository = Modelo360SolicitudRepository()
-        repository.declare(Modelo360SolicitudEntry(period=_PERIOD_CURRENT, facts=_facts()))
+        repository.declare(Modelo360SolicitudEntry(period=_PERIOD_2025, facts=_facts()))
 
-        entry = Modelo360SolicitudRepository().load().entry_for(_PERIOD_CURRENT)
+        entry = Modelo360SolicitudRepository().load().entry_for(_PERIOD_2025)
 
     assert entry is not None
     assert entry.account is None
@@ -155,10 +154,10 @@ def test_an_entry_without_an_account_stays_undeclared_rather_than_empty(tmp_path
 def test_redeclaring_a_period_replaces_its_entry_and_keeps_the_others(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1a2b3c4d-5e6f-4a70-8b81-360000000004"):
         repository = Modelo360SolicitudRepository()
-        repository.declare(_entry(_PERIOD_PRIOR))
-        repository.declare(_entry(_PERIOD_CURRENT))
+        repository.declare(_entry(_PERIOD_2024))
+        repository.declare(_entry(_PERIOD_2025))
         corrected = Modelo360SolicitudEntry(
-            period=_PERIOD_CURRENT,
+            period=_PERIOD_2025,
             facts=_facts(pais_destino="IT"),
             account=Modelo360RepresentanteAccountChoice(account=_account()),
         )
@@ -166,12 +165,12 @@ def test_redeclaring_a_period_replaces_its_entry_and_keeps_the_others(tmp_path: 
 
         loaded = repository.load()
 
-    assert loaded.entries == (_entry(_PERIOD_PRIOR), corrected)
+    assert loaded.entries == (_entry(_PERIOD_2024), corrected)
 
 
 def test_a_register_with_two_entries_for_one_period_is_refused() -> None:
     with pytest.raises(pydantic.ValidationError, match="two entries for one period"):
-        Modelo360SolicitudRegister(entries=(_entry(_PERIOD_CURRENT), _entry(_PERIOD_CURRENT)))
+        Modelo360SolicitudRegister(entries=(_entry(_PERIOD_2025), _entry(_PERIOD_2025)))
 
 
 def test_a_rewritten_iban_surfaces_on_reload(tmp_path: Path) -> None:
@@ -189,7 +188,7 @@ def test_a_rewritten_iban_surfaces_on_reload(tmp_path: Path) -> None:
         reloaded = repository.load()
 
     assert reloaded != written
-    entry = reloaded.entry_for(_PERIOD_CURRENT)
+    entry = reloaded.entry_for(_PERIOD_2025)
     assert entry is not None
     assert isinstance(entry.account, Modelo360RepresentanteAccountChoice)
     assert entry.account.account.iban == _OTHER_VALID_IBAN
@@ -222,13 +221,13 @@ def test_an_own_account_reference_survives_as_its_opaque_id_only(tmp_path: Path)
         }
     )
     entry = Modelo360SolicitudEntry(
-        period=_PERIOD_CURRENT,
+        period=_PERIOD_2025,
         facts=solicitante_facts,
         account=Modelo360OwnAccountChoice(own_account_id="acc-03"),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1a2b3c4d-5e6f-4a70-8b81-360000000007"):
         Modelo360SolicitudRepository().declare(entry)
-        loaded = Modelo360SolicitudRepository().load().entry_for(_PERIOD_CURRENT)
+        loaded = Modelo360SolicitudRepository().load().entry_for(_PERIOD_2025)
 
     assert loaded == entry
     assert loaded is not None
@@ -249,4 +248,4 @@ def test_one_profile_never_reads_another_profiles_solicitud(tmp_path: Path) -> N
             secondary.declare(_entry(refund_account=RefundAccount(iban=_OTHER_VALID_IBAN, swift_bic="DEUTDEFFXXX")))
         primary = Modelo360SolicitudRepository(objects=runtime.primary.repository).load()
 
-    assert primary.entry_for(_PERIOD_CURRENT) == _entry()
+    assert primary.entry_for(_PERIOD_2025) == _entry()

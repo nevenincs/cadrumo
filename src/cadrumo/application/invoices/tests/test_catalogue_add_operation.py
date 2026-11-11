@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -54,8 +53,6 @@ from ..catalogue_add_operation import (
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ..tests.catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -69,7 +66,7 @@ def _request(**overrides: object) -> InvoiceAddRequest:
         "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "invoice_number": "ADD-2026-001",
-        "issued_at": date(_YEAR, 4, 15),
+        "issued_at": date(2026, 4, 15),
         "taxable_base": PublicDecimal(decimal="100.00"),
         "iva_rate": PublicDecimal(decimal="21"),
         "currency": "EUR",
@@ -210,12 +207,11 @@ def test_an_invoice_older_than_the_filing_years_reads_its_published_rate_and_is_
     )
 
     with private_authority_lease() as authority_operation:
-        floor = authority_operation.supported_filing_years().date_envelope().floor
         context = _Context(authority_operation)
         request = OperationRequest[InvoiceAddRequest](
             definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
-            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=floor - timedelta(days=366)),
+            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=date(2020, 12, 31)),
         )
         result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
 

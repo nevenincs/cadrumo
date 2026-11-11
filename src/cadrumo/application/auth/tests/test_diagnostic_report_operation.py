@@ -18,7 +18,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
@@ -40,8 +39,6 @@ from ..diagnostics import (
     prepare_auth_diagnostic_phone_state,
 )
 from ..diagnostics_ports import AuthDiagnosticPersistenceRecord
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -120,7 +117,7 @@ def test_report_public_definition_is_a_real_human_mutation() -> None:
 
 
 _PIN = cast(PinnedAuthorityOperation, object())
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 def _report_registry() -> OperationRegistry:

@@ -34,7 +34,6 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
-from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -47,8 +46,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "714"
 _SOURCE_MODELO = "100"
-_RENTA_YEARS = tuple(filing_grade_exercises("714")[-2:])
-_CAPTURED_AT = datetime(_RENTA_YEARS[-1] + 1, 6, 20, 10, 0, 0, tzinfo=UTC)
+_RENTA_YEARS = (2023, 2024)
+_CAPTURED_AT = datetime(2025, 6, 20, 10, 0, 0, tzinfo=UTC)
 
 
 _M100_BASE_IMPONIBLE_GENERAL: CasillaId = validated_casilla_id("0435", surface="M714 enrollment casilla id")
@@ -125,8 +124,8 @@ class JointLimitScenario:
 
 
 _SCENARIOS: dict[int, JointLimitScenario] = {
-    _RENTA_YEARS[0]: JointLimitScenario(
-        filing_year=_RENTA_YEARS[0],
+    2023: JointLimitScenario(
+        filing_year=2023,
         base_liquidable=Decimal("1000000.00"),
         m100_base_general=Decimal("10000.00"),
         m100_base_ahorro=Decimal("20000.00"),
@@ -145,8 +144,8 @@ _SCENARIOS: dict[int, JointLimitScenario] = {
         expected_suelo_80=Decimal("4392.29"),
         expected_total_cuota=Decimal("4000.00"),
     ),
-    _RENTA_YEARS[1]: JointLimitScenario(
-        filing_year=_RENTA_YEARS[1],
+    2024: JointLimitScenario(
+        filing_year=2024,
         base_liquidable=Decimal("700000.00"),
         m100_base_general=Decimal("8000.00"),
         m100_base_ahorro=Decimal("7000.00"),
@@ -237,7 +236,7 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M714 resolves same-year M100 outputs from the local store and calculates casilla 40."""
-    scenario = _SCENARIOS[_RENTA_YEARS[0]]
+    scenario = _SCENARIOS[2023]
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         save_app_filing_observation(repo, _m100_observation(scenario), captured_at=_CAPTURED_AT)

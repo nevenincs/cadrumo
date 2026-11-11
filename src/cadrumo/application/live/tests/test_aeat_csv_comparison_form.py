@@ -34,7 +34,6 @@ import pytest
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from ....domain.modelos.filing_record import (
@@ -52,12 +51,10 @@ from ...modelo.filing_chain_reconciliation import recorded_chain_entry
 from ..filed_observation_persistence import filed_observation_source_metadata
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390390"
-_CLOCK = datetime(_YEAR, 1, 20, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 
 #: One identifier in three spellings. The canonical form is what AEAT prints and
 #: what the cotejo endpoint must receive back; the others are what a trimming-only
@@ -99,8 +96,8 @@ def _prior_303_observation(
     del pending_compensation, result
     return _PriorObservation(
         modelo="303",
-        ejercicio=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         expediente_id="200030300000000Z",
         status="ALTA",
         presented_at=_CLOCK,
@@ -111,8 +108,8 @@ def _prior_303_observation(
         headers=(),
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id=str(_YEAR),
-            modelo_year=_YEAR,
+            revision_id="2026",
+            modelo_year=2026,
             period="1T",
         ),
     )
@@ -131,8 +128,8 @@ def _filing_pointing_at(reference_id: str, *, kind: ExternalEvidenceKind) -> Mod
         calculation_revision_id=revision_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
         origin=FilingOrigin.AEAT,

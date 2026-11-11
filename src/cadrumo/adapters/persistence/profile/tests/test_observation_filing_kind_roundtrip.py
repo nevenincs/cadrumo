@@ -28,7 +28,6 @@ from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.modelos.filing_kind_evidence import (
     UNKNOWN_FILING_KIND,
@@ -43,9 +42,8 @@ from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-_CAPTURED_AT = datetime(1980, 4, 21, 9, 0, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "3T")
+_CAPTURED_AT = datetime(2026, 4, 21, 9, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "3T")
 _MEMBER = "B12345678"
 _MARKER_LOCATOR = "modelo-130-fichero-boe:modelo-130-page-01:modelo-130-page-01-declaracion-complementaria:432:1"
 
@@ -58,7 +56,7 @@ def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
 def _observation() -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2025,
         period="3T",
         observations=(
             CasillaObservation(

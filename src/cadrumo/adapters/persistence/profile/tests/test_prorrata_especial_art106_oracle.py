@@ -53,7 +53,6 @@ from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
@@ -63,8 +62,6 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_EXERCISE = filing_year_envelope().horizon
-
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
 #: advisory wording, not the law; whether 10 inclusive is what art. 103.Dos.2
@@ -73,13 +70,13 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
     margin_percentage=Decimal("10"),
     comparison=ThresholdComparison.INCLUSIVE,
     modelo_id="303",
-    revision_id=str(revision_serving_period("303", _EXERCISE - 1, "4T").id),
-    resolved_on=_esp_date(_EXERCISE - 1, 12, 31),
+    revision_id="2025",
+    resolved_on=_esp_date(2025, 12, 31),
 )
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=_EXERCISE - 1, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
@@ -92,7 +89,7 @@ def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
 
 
 _BUCKET_ID = "79797979-7979-4979-8979-797979797979"
-_PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 _GENERAL_PERCENTAGE = Decimal("60")
 _INPUT_CUOTA = Decimal("10.50")
@@ -103,8 +100,8 @@ def _raw(provider_id: str):
 
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_EXERCISE, 2, 10),
-        value_date=date(_EXERCISE, 2, 10),
+        booked_date=date(2026, 2, 10),
+        value_date=date(2026, 2, 10),
         amount=Decimal("60.50"),
         currency="EUR",
         counterparty="Proveedor",
@@ -114,7 +111,7 @@ def _raw(provider_id: str):
             source_sha256="7" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_EXERCISE, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -143,7 +140,7 @@ def _classified_purchase(provider_id: str, classification: InputClassification):
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="7" * 64,
             ),
-            "classified_at": datetime(_EXERCISE, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -154,12 +151,12 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
         ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
-                    ejercicio=_EXERCISE,
+                    ejercicio=2026,
                     regime=regime,
                     especial_transition=None,
                     provisional_percentage=_GENERAL_PERCENTAGE,
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                    source_observation_ref=f"303:{_EXERCISE - 1}:4T",
+                    source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
             ),
@@ -170,9 +167,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation) -> Decimal:
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = published_authority_operation().revision_with_export_layouts(
-        "303", str(revision_serving_period("303", _EXERCISE, "1T").id)
-    )
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(_txns()))
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -243,9 +238,7 @@ def test_each_art106_regla_isolated(
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = published_authority_operation().revision_with_export_layouts(
-        "303", str(revision_serving_period("303", _EXERCISE, "1T").id)
-    )
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime.from_registry("especial"))
@@ -289,8 +282,8 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
     notice = build_prorrata_especial_mandatory_advisory(
         deduction_under_general=general_cuota,
         deduction_under_especial=especial_cuota,
-        ejercicio=_EXERCISE,
-        parameters=_especial_params_for(_EXERCISE),
+        ejercicio=2026,
+        parameters=_especial_params_for(2026),
         operation=authority_operation,
     )
 
@@ -304,8 +297,8 @@ def test_plus_ten_percent_advisory_fires_on_production_general_vs_especial_total
         build_prorrata_especial_mandatory_advisory(
             deduction_under_general=especial_cuota,
             deduction_under_especial=especial_cuota,
-            ejercicio=_EXERCISE,
-            parameters=_especial_params_for(_EXERCISE),
+            ejercicio=2026,
+            parameters=_especial_params_for(2026),
             operation=authority_operation,
         )
         is None

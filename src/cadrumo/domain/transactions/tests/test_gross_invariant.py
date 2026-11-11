@@ -27,16 +27,12 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import IvaCategory
 from ..enums import BusinessClassification, TransactionDirection
 from ..gross_validation import GROSS_NEEDS_WITHHOLDING_CATEGORY_DETAIL
 from ..irpf_categories import ledger_irpf_category, normalize_irpf_category
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,14 +49,14 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-_NOW = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
 
 def _raw(*, amount: Decimal, currency: str = "EUR") -> RawTransaction:
     return RawTransaction(
         provider_transaction_id="row-invariant",
-        booked_date=date(_YEAR - 1, 2, 10),
-        value_date=date(_YEAR - 1, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=amount,
         currency=currency,
         counterparty="Contraparte SL",
@@ -428,7 +424,7 @@ def test_invariant_uses_native_raw_amount_not_value_in_eur() -> None:
             "fx_rate": Decimal("1.10"),
             "value_in_eur": Decimal("110.00"),
             "rate_source": "ecb_reference",
-            "rate_date": date(_YEAR - 1, 2, 10).isoformat(),
+            "rate_date": "2025-02-10",
             "taxable_base": Decimal("82.64"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("17.36"),
@@ -453,7 +449,7 @@ def test_invariant_against_native_amount_rejects_eur_split() -> None:
                 "fx_rate": Decimal("1.10"),
                 "value_in_eur": Decimal("110.00"),
                 "rate_source": "ecb_reference",
-                "rate_date": date(_YEAR - 1, 2, 10).isoformat(),
+                "rate_date": "2025-02-10",
                 # Splits the 110.00 EUR value, not the 100.00 native gross.
                 "taxable_base": Decimal("90.91"),
                 "iva_rate": Decimal("0.21"),

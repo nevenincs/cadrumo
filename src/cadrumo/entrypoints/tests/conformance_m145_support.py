@@ -47,7 +47,6 @@ from ...domain.calculations.registry.export import resolve_export_layout
 from ...domain.calculations.registry.fixed_width_codec import ExportEncoding
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,
@@ -60,7 +59,7 @@ from .m145_communication_operation_test_support import (
     prepare_m145_communication_operation_conformance_case,
 )
 
-_COMMUNICATION_YEAR = filing_year_envelope().horizon
+_COMMUNICATION_YEAR = 2026
 _PERIOD = M145CommunicationPeriod.COMMUNICATION
 # Modelo bucket events persist the modelo-wide payload version (revision_persistence.py:144).
 _MODELO_EVENT_PAYLOAD_VERSION = 2
@@ -403,9 +402,7 @@ def _retained_m145_prepare(context: ConformanceFamilyContext) -> ConformancePrep
     profile = str(context.profile_id)
     operation_id = context.definition.definition_id
     command = M145CommunicationCreateCommand(
-        communication_year=_COMMUNICATION_YEAR,
-        field_values=_RETAINED_M145_VALUES,
-        note="conformance local communication",
+        communication_year=2026, field_values=_RETAINED_M145_VALUES, note="conformance local communication"
     )
     ports = build_m145_communication_records_ports(bucket_id=profile)
     record_id: str | None = None
@@ -444,7 +441,7 @@ def _retained_m145_prepare(context: ConformanceFamilyContext) -> ConformancePrep
         assert actual.profile_id == context.profile_id and actual.operation_id == operation_id
         assert actual.outcome == "completed" and actual.result is not None
         result = actual.result
-        assert result.bucket_id == profile and result.communication_year == _COMMUNICATION_YEAR
+        assert result.bucket_id == profile and result.communication_year == 2026
         if record_id is not None:
             assert result.communication_record_id == record_id
         persisted = read_m145_communication_record(

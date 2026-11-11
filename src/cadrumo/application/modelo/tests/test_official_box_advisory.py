@@ -12,8 +12,7 @@ from ....domain.calculations.registry.schema_verification import (
     VerificationPredicateDefinition,
     VerificationPredicateOperator,
 )
-from ....domain.calculations.registry.tests.authored_editions import open_ended_revision
-from ....domain.calculations.registry.tests.published_authority import published_revision
+from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ..action_errors import ModeloVerificationPredicateMalformedError
 from ..official_box_advisory import collect_official_box_unpopulated_diagnostics
 from ..verification_predicates import VerificationPredicateRefusal, VerificationPredicateRoute
@@ -33,9 +32,7 @@ def _revision_with(expression: str, *, finding_kind: str = "ADVISORY") -> Modelo
         expression=expression,
         finding_kind=finding_kind,
     )
-    return published_revision("303", str(open_ended_revision("303").id)).model_copy(
-        update={"verification_predicates": (predicate,)}
-    )
+    return published_authored_revision("303", year=2025).model_copy(update={"verification_predicates": (predicate,)})
 
 
 def test_a_well_formed_official_box_advisory_still_reports_the_unpopulated_boxes() -> None:

@@ -36,7 +36,6 @@ from cadrumo.core.period import Period, PeriodKind
 from cadrumo.domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -44,13 +43,9 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
-_CLOCK = datetime(1980, 4, 1, 10, tzinfo=UTC)
-_FLOOR_YEAR = filing_year_envelope().floor
-#: The supported year before the horizon: a year whose last period has closed.
-_PRIOR_YEAR = filing_year_envelope().horizon - 1
-_HORIZON_YEAR = filing_year_envelope().horizon
-_FIRST_QUARTER = Period.from_year_and_code(_PRIOR_YEAR, "1T")
-_LAST_QUARTER = Period.from_year_and_code(_PRIOR_YEAR, "4T")
+_CLOCK = datetime(2025, 4, 1, 10, tzinfo=UTC)
+_FIRST_QUARTER = Period.from_year_and_code(2025, "1T")
+_LAST_QUARTER = Period.from_year_and_code(2025, "4T")
 _OUTSIDE_LAST_PERIOD = "modelo.work.calculate.m303_filing_evidence.exonerado_390_attestation_outside_last_period"
 
 
@@ -123,7 +118,7 @@ def _request(period: Period, reference: FilingEvidenceReference | None) -> Ordin
 
 @pytest.mark.parametrize(
     ("filing_year", "code"),
-    [(_FLOOR_YEAR, "1T"), (_PRIOR_YEAR, "1T"), (_HORIZON_YEAR, "1T"), (_PRIOR_YEAR, "11"), (_HORIZON_YEAR, "01")],
+    [(2022, "1T"), (2025, "1T"), (2026, "1T"), (2025, "11"), (2026, "01")],
     ids=["earliest-quarter", "quarter", "latest-quarter", "month-before-12", "latest-month"],
 )
 def test_a_period_before_the_last_authors_without_the_exemption_question(
@@ -151,9 +146,7 @@ def test_a_period_before_the_last_authors_without_the_exemption_question(
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "code"),
-    [(_FLOOR_YEAR, "4T"), (_PRIOR_YEAR, "4T"), (_PRIOR_YEAR, "12")],
-    ids=["earliest", "quarter", "month"],
+    ("filing_year", "code"), [(2022, "4T"), (2025, "4T"), (2025, "12")], ids=["earliest", "quarter", "month"]
 )
 def test_the_last_period_authors_the_attested_exemption(
     tmp_path: Path, operation: PinnedAuthorityOperation, filing_year: int, code: str
@@ -295,7 +288,7 @@ def test_a_period_outside_the_profile_filing_schedule_is_refused(
     tmp_path: Path, operation: PinnedAuthorityOperation, code: str, monthly_filer: bool
 ) -> None:
     """RD 1624/1992 art. 71 settles REDEME and large-company filers monthly and everyone else quarterly."""
-    period = Period.from_year_and_code(_PRIOR_YEAR, code)
+    period = Period.from_year_and_code(2025, code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         with bound_test_profile_record(_BUCKET_ID) as profiles:

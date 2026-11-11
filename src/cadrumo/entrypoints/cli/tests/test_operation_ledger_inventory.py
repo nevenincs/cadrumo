@@ -25,12 +25,8 @@ from ....application.inventory.registered_requests import (
 )
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.inventory.records import ValuationMethod
 from .. import operation_ledger_inventory as bridge
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -45,7 +41,7 @@ def _ctx() -> typer.Context:
 def _projection() -> InventoryCreateProjection:
     ledger = InventoryLedgerProjection(
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=PublicDecimal(decimal="100.00"),
         opening_layers=(),
@@ -91,7 +87,7 @@ def _request() -> InventoryCreateRequest:
     return InventoryCreateRequest(
         profile_id=_PROFILE,
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method="fifo",
         opening_stock=PublicDecimal(decimal="100.00"),
     )
@@ -128,7 +124,7 @@ def test_create_bridge_preserves_registered_validation_refusal(monkeypatch: pyte
         code=INVENTORY_VALIDATION_REFUSAL_CODE,
         reason="inventory_validation",
         actividad_id="act-1",
-        year=_YEAR,
+        year=2026,
         valuation_method="lifo",
     )
     completion = RegisteredOperationCompletion(
@@ -151,6 +147,6 @@ def test_create_bridge_preserves_registered_validation_refusal(monkeypatch: pyte
         "refusal_code": INVENTORY_VALIDATION_REFUSAL_CODE,
         "reason": "inventory_validation",
         "actividad_id": "act-1",
-        "year": str(_YEAR),
+        "year": "2026",
         "valuation_method": "lifo",
     }

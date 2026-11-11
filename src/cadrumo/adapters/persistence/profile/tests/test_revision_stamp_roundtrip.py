@@ -28,7 +28,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.persistence_errors import PersistenceDegradationError
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .....application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .....application.calculations.observations_repository import observation_key
@@ -48,10 +47,10 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "303"
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2025
 _PERIOD = "1T"
 _SOURCE_KIND = "aeat_sede_justificante"
-_CLOCK = datetime(_YEAR + 1, 1, 10, 10, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 
@@ -254,7 +253,7 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
 # - matching stamp on 1T → carry proceeds cleanly.
 # ---------------------------------------------------------------------------
 
-_M303_CARRY_YEAR = _YEAR
+_M303_CARRY_YEAR = 2025
 _M303_CARRY_TARGET_PERIOD = "2T"
 _M303_CARRY_SOURCE_PERIOD = "1T"  # offset -1 from 2T
 _M303_CARRY_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"

@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -48,11 +47,8 @@ from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .invoice_confirmation_test_support import invoice_draft_extraction_ports, serving_a_loopback_reader
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -679,7 +675,7 @@ class TestInferencePacing:
                     {
                         "supplier_tax_id": _SUPPLIER_CIF,
                         "invoice_number": "2026-0777",
-                        "invoice_date": date(_YEAR, 4, 2).isoformat(),
+                        "invoice_date": "2026-04-02",
                         "taxable_base": "100,00",
                         "iva_rate": "21",
                         "iva_amount": "21,00",

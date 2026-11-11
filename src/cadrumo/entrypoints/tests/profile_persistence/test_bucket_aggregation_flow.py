@@ -9,8 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -54,12 +52,10 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .ready_profile_taxpayer import persona_tax_id, ready_profile_tax_id
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET_ID = "26262626-2626-4262-8262-262626262626"
 
 __all__ = ["secure_objects"]
@@ -117,7 +113,7 @@ def _calculation_ports():
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(_YEAR, 2, 10),
+    booked_date: date = date(2026, 2, 10),
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
@@ -133,7 +129,7 @@ def _raw_transaction(
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -147,7 +143,7 @@ def _transaction(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    booked_date: date = date(_YEAR, 2, 10),
+    booked_date: date = date(2026, 2, 10),
 ) -> Transaction:
     return Transaction.model_validate(
         {
@@ -177,7 +173,7 @@ def _transaction(
                 if direction is TransactionDirection.OUTGOING
                 else None
             ),
-            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -190,16 +186,16 @@ def _seed_303_work_unit(
     period: str = "1T",
     operation: PinnedAuthorityOperation,
 ):
-    typed_period = Period.from_year_and_code(_YEAR, period)
+    typed_period = Period.from_year_and_code(2026, period)
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=typed_period,
-        # The exercise may be served by two M303 editions; the calc-time assertion
+        # 2026 is served by two M303 editions; the calc-time assertion
         # (snapshot.revision.id == work_unit.revision_id) refuses any other pin.
         revision_id=law_selected_revision_for_work_target(
-            modelo="303", filing_year=_YEAR, period=typed_period, requested_revision_id=None, operation=operation
+            modelo="303", filing_year=2026, period=typed_period, requested_revision_id=None, operation=operation
         ),
         ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository,
@@ -213,10 +209,10 @@ def _seed_303_work_unit(
 def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=ready_profile_tax_id(),
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, period),
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, period),
         target_registry_snapshot_ref=published_authority_operation()
-        .snapshot("303", filing_year=_YEAR, period=period)
+        .snapshot("303", filing_year=2026, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
@@ -425,7 +421,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("242.00"),
             taxable_base=Decimal("200.00"),
             iva_amount=Decimal("42.00"),
-            booked_date=date(_YEAR, 2, 10),
+            booked_date=date(2026, 2, 10),
         ),
         _transaction(
             "q1-purchase",
@@ -433,7 +429,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("60.50"),
             taxable_base=Decimal("50.00"),
             iva_amount=Decimal("10.50"),
-            booked_date=date(_YEAR, 2, 12),
+            booked_date=date(2026, 2, 12),
         ),
         _transaction(
             "q2-sale",
@@ -441,7 +437,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("60.50"),
             taxable_base=Decimal("50.00"),
             iva_amount=Decimal("10.50"),
-            booked_date=date(_YEAR, 5, 10),
+            booked_date=date(2026, 5, 10),
         ),
         _transaction(
             "q2-purchase",
@@ -449,7 +445,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
-            booked_date=date(_YEAR, 5, 12),
+            booked_date=date(2026, 5, 12),
         ),
         _transaction(
             "q3-sale",
@@ -457,7 +453,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
-            booked_date=date(_YEAR, 8, 10),
+            booked_date=date(2026, 8, 10),
         ),
         _transaction(
             "q3-purchase",
@@ -465,7 +461,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
-            booked_date=date(_YEAR, 8, 12),
+            booked_date=date(2026, 8, 12),
         ),
         _transaction(
             "q4-sale",
@@ -473,7 +469,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("242.00"),
             taxable_base=Decimal("200.00"),
             iva_amount=Decimal("42.00"),
-            booked_date=date(_YEAR, 11, 10),
+            booked_date=date(2026, 11, 10),
         ),
         _transaction(
             "q4-purchase",
@@ -481,7 +477,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             amount=Decimal("121.00"),
             taxable_base=Decimal("100.00"),
             iva_amount=Decimal("21.00"),
-            booked_date=date(_YEAR, 11, 12),
+            booked_date=date(2026, 11, 12),
         ),
     )
     tx_repo.save(TransactionCatalogue.from_transactions(ledger_rows))
@@ -507,7 +503,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(_YEAR, "1T"), operation=operation),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "1T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q1_decision,
             clock=_T1,
@@ -521,7 +517,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(_YEAR, "2T"), operation=operation),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "2T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q2_decision,
             clock=_T1,
@@ -535,7 +531,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(_YEAR, "3T"), operation=operation),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "3T"), operation=operation),
             binding_values=_baseline_303_bindings,
             iva_compensation_decision=q3_decision,
             clock=_T1,
@@ -549,7 +545,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             ).work_unit_id,
             ports=ports,
             actor="operator-A",
-            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(_YEAR, "4T"), operation=operation),
+            filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "4T"), operation=operation),
             binding_values={
                 **_baseline_303_bindings,
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("7.00"),
@@ -712,7 +708,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     # so prior compensation was grounded rather than silently assumed.
     decision = IvaWalletDecisionRepository(objects=secure_objects).load_decision(
         persona_tax_id("alta.titular"),
-        Period.from_year_and_code(_YEAR, "1T"),
+        Period.from_year_and_code(2026, "1T"),
     )
     assert decision is not None
     assert decision.blocked is False

@@ -23,7 +23,6 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
@@ -39,9 +38,8 @@ from ..participation_index import TransactionParticipationIndexRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "93939393-9393-4393-8393-939393939393"
-_EXERCISE = filing_year_envelope().horizon
-_NOW = datetime(1980, 5, 20, 9, 0, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_EXERCISE, "2T")
+_NOW = datetime(2026, 5, 20, 9, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2024, "2T")
 
 
 def _hex(seed: str) -> str:
@@ -63,7 +61,7 @@ def _index(transaction_id: str, *, revision_seed: str) -> TransactionRevisionPar
                 calculation_revision_id=_hex(revision_seed),
                 work_unit_id=_hex("c"),
                 modelo=ModeloCode("303"),
-                filing_year=_EXERCISE,
+                filing_year=2024,
                 period=_PERIOD,
                 revision_state="presentado",
                 filing_record_id=_hex("d"),

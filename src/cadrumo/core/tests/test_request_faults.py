@@ -155,7 +155,7 @@ def test_a_registered_error_is_one_fault_for_the_whole_request_with_the_code_and
     None
 ):
     with pytest.raises(PeriodError) as raised:
-        Period.from_year_and_code(1985, "evento")
+        Period.from_year_and_code(2025, "evento")
     printed = build_error_envelope(raised.value)
 
     fault = registered_error_fault(raised.value)

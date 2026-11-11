@@ -45,7 +45,6 @@ from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCapture,
     RegistryAuthorityCurrentCoordinate,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import revision_serving_period
 
 from .published_authority_support import published_authority_operation
 from .workspace_support import (
@@ -61,8 +60,6 @@ from .workspace_support import (
 from .workspace_support import (
     workspace_repos as workspace_repos,
 )
-
-_REVISION_303_ID = revision_serving_period("303", FILING_YEAR, "1T").id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -286,7 +283,7 @@ def _real_calculation_revision_with_row_materialization():
         modelo="303",
         filing_year=FILING_YEAR,
         period=Period.from_year_and_code(FILING_YEAR, "1T"),
-        revision_id=_REVISION_303_ID,
+        revision_id="2022",
     )
     row_identity = RowSourceIdentity(
         source_kind=BindingSourceKind.INVENTORY,
@@ -302,7 +299,7 @@ def _real_calculation_revision_with_row_materialization():
             source_row_index=1,
             source_identity=row_identity,
             materialization_rule_id="inventory-operation-0181",
-            materialization_rule_version=_REVISION_303_ID,
+            materialization_rule_version="2022",
         )
     }
     revision_id = derive_calculation_revision_id(
@@ -322,7 +319,7 @@ def _real_calculation_revision_with_row_materialization():
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id=_REVISION_303_ID,
+            revision_id="2022",
             modelo_year=FILING_YEAR,
             period="1T",
         ),
@@ -522,7 +519,7 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
         )
 
 
-def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = _REVISION_303_ID):
+def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceResolvedTargetV1,
         ModeloWorkspaceRevisionAssertionV1,
@@ -576,7 +573,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id=_REVISION_303_ID,
+            revision_id="2022",
             modelo_year=FILING_YEAR,
             period="1T",
         ),

@@ -75,13 +75,12 @@ def test_leap_day_filed_at_clamps_to_28_february() -> None:
     leap_year = next(year for year in _supported_years() if isleap(year) and isleap(year + _LGT_FLOOR_YEARS))
     assert _safe_erase_date(_dt(leap_year, 2, 29)) == _dt(leap_year + _LGT_FLOOR_YEARS, 2, 29)
     # A one-year floor from a leap day into a non-leap year clamps to 28 Feb.
-    assert shift_by_calendar_years(_dt(leap_year, 2, 29), 1) == _dt(leap_year + 1, 2, 28)
+    assert shift_by_calendar_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 
 
 def test_prescription_year_addition_preserves_date_or_datetime_kind() -> None:
-    leap_year = next(year for year in _supported_years() if isleap(year))
-    assert shift_by_calendar_years(date(leap_year, 2, 29), 1) == date(leap_year + 1, 2, 28)
-    assert shift_by_calendar_years(_dt(leap_year, 2, 29), 1) == _dt(leap_year + 1, 2, 28)
+    assert shift_by_calendar_years(date(2020, 2, 29), 1) == date(2021, 2, 28)
+    assert shift_by_calendar_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 
 
 def test_record_inside_window_blocks_erase() -> None:

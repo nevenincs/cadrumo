@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_recorded_amount_is_not_recalculated_from_ledger() -> None:
     snapshot = review_snapshot(amount="99.75")
     plan = build_review_workbook(
-        snapshot, publication_id=UUID(int=2), exported_at=datetime(1980, 10, 5, tzinfo=UTC), label=review_label
+        snapshot, publication_id=UUID(int=2), exported_at=datetime(2026, 10, 5, tzinfo=UTC), label=review_label
     )
     cells = {
         address.qualified(): value for block in plan_value_blocks(plan) for address, value in block.addressed_values()
@@ -41,7 +41,7 @@ def test_ledger_review_never_invents_a_calculation() -> None:
     plan = build_review_workbook(
         review_snapshot(ledger_only=True),
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert TabName.CALCULOS not in plan.tabs
@@ -58,7 +58,7 @@ def test_empty_ledger_has_headers_and_editable_review_rows() -> None:
     plan = build_review_workbook(
         seal_review_snapshot(content),
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert next(item for item in plan.auto_filters if item.tab is TabName.DETALLE).end_row == 4
@@ -68,7 +68,7 @@ def test_empty_ledger_has_headers_and_editable_review_rows() -> None:
 
 def test_formula_looking_source_text_remains_a_literal_plan_value() -> None:
     plan = build_review_workbook(
-        review_snapshot(), publication_id=UUID(int=2), exported_at=datetime(1980, 10, 5, tzinfo=UTC), label=review_label
+        review_snapshot(), publication_id=UUID(int=2), exported_at=datetime(2026, 10, 5, tzinfo=UTC), label=review_label
     )
     text = next(cell for cell in plan.value_cells if cell.address.qualified() == "'Detalle'!K5")
     assert text.value == '=IMPORTXML("https://example.invalid", "x")'
@@ -80,7 +80,7 @@ def test_text_output_limit_refuses_instead_of_truncating() -> None:
         build_review_workbook(
             review_snapshot(),
             publication_id=UUID(int=2),
-            exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+            exported_at=datetime(2026, 10, 5, tzinfo=UTC),
             label=lambda _: "x" * 40_001,
         )
 
@@ -95,7 +95,7 @@ def test_large_ledger_is_bounded_and_contains_last_captured_row() -> None:
     plan = build_review_workbook(
         seal_review_snapshot(content),
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert (
@@ -108,7 +108,7 @@ def test_proven_zero_keeps_numeric_zero_and_exact_decimal_text() -> None:
     plan = build_review_workbook(
         review_snapshot(amount="0.00"),
         publication_id=UUID(int=2),
-        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
+        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     cells = {cell.address.qualified(): cell.value for cell in plan.value_cells}

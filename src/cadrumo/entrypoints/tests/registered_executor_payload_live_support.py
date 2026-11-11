@@ -14,7 +14,6 @@ from ...core.time.clock import now
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
 from .registered_executor_seeding_support import (
-    CONFORMANCE_PRIOR_YEAR,
     seeded_expedientes_snapshot,
     seeded_justificante_snapshot,
     seeded_notification_document,
@@ -30,20 +29,13 @@ def _live_sede_view(ctx: PayloadContext) -> PayloadResult:
 
 
 def _live_expedientes_capture_single(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(
-        ctx.profile_subject, {"profile_id": ctx.profile_id, "modelo": "303", "year": CONFORMANCE_PRIOR_YEAR}
-    )
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "modelo": "303", "year": 2025})
 
 
 def _live_expedientes_capture_bulk(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
-        {
-            "profile_id": ctx.profile_id,
-            "modelos": ("303",),
-            "year_from": CONFORMANCE_PRIOR_YEAR,
-            "year_to": CONFORMANCE_PRIOR_YEAR,
-        },
+        {"profile_id": ctx.profile_id, "modelos": ("303",), "year_from": 2025, "year_to": 2025},
     )
 
 
@@ -54,7 +46,7 @@ def _live_filed_capture_single(ctx: PayloadContext) -> PayloadResult:
             "profile_id": ctx.profile_id,
             "output_root": ctx.tmp_path / "filed-single",
             "modelo": "303",
-            "year": CONFORMANCE_PRIOR_YEAR,
+            "year": 2025,
             "period": "1T",
         },
     )
@@ -66,8 +58,8 @@ def _live_filed_capture_bulk(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "output_root": ctx.tmp_path / "filed-bulk",
-            "year_from": CONFORMANCE_PRIOR_YEAR,
-            "year_to": CONFORMANCE_PRIOR_YEAR,
+            "year_from": 2025,
+            "year_to": 2025,
             "modelos": ("303",),
         },
     )
@@ -80,7 +72,7 @@ def _live_filed_capture_source(ctx: PayloadContext) -> PayloadResult:
             "profile_id": ctx.profile_id,
             "output_root": ctx.tmp_path / "filed-source",
             "modelo": "303",
-            "year": CONFORMANCE_PRIOR_YEAR,
+            "year": 2025,
             "period": "1T",
         },
     )
@@ -89,12 +81,7 @@ def _live_filed_capture_source(ctx: PayloadContext) -> PayloadResult:
 def _live_filed_list(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
-        {
-            "profile_id": ctx.profile_id,
-            "modelo": "303",
-            "year_from": CONFORMANCE_PRIOR_YEAR,
-            "year_to": CONFORMANCE_PRIOR_YEAR,
-        },
+        {"profile_id": ctx.profile_id, "modelo": "303", "year_from": 2025, "year_to": 2025},
     )
 
 
@@ -110,7 +97,7 @@ def _live_justificante_list(ctx: PayloadContext) -> PayloadResult:
 def _live_justificante_capture(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
-        {"profile_id": ctx.profile_id, "modelo": "130", "year": CONFORMANCE_PRIOR_YEAR, "period": "1T"},
+        {"profile_id": ctx.profile_id, "modelo": "130", "year": 2025, "period": "1T"},
     )
 
 
@@ -181,14 +168,14 @@ def _live_filed_history_pull(ctx: PayloadContext) -> PayloadResult:
 
 
 def _live_iva_wallet_history(ctx: PayloadContext) -> PayloadResult:
-    period = Period.from_year_and_code(CONFORMANCE_PRIOR_YEAR, "1T")
+    period = Period.from_year_and_code(2025, "1T")
     history_state = IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.APP_FILING,
         taxpayer_nif="12345678Z",
-        filing_year=CONFORMANCE_PRIOR_YEAR,
+        filing_year=2025,
         period=period,
         registry_snapshot_ref=ctx.operation.snapshot(
-            "303", filing_year=CONFORMANCE_PRIOR_YEAR, period=period.registry_token
+            "303", filing_year=2025, period=period.registry_token
         ).snapshot_ref,
         presented_at=now(),
         prior_pending_amount=Decimal("0"),
@@ -201,13 +188,13 @@ def _live_iva_wallet_history(ctx: PayloadContext) -> PayloadResult:
         source_observation_key="conformance:iva-history:2025:1T",
     )
     IvaCompensationHistoryRepository().save_period(history_state)
-    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "as_of_year": CONFORMANCE_PRIOR_YEAR})
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "as_of_year": 2025})
 
 
 def _live_iva_wallet_capture(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
-        {"profile_id": ctx.profile_id, "target_year": CONFORMANCE_PRIOR_YEAR, "target_period": "1T"},
+        {"profile_id": ctx.profile_id, "target_year": 2025, "target_period": "1T"},
     )
 
 
@@ -217,9 +204,9 @@ def _live_iva_wallet_evidence_capture(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "output_root": ctx.tmp_path / "iva-evidence",
-            "year_from": CONFORMANCE_PRIOR_YEAR,
-            "year_to": CONFORMANCE_PRIOR_YEAR,
-            "target_year": CONFORMANCE_PRIOR_YEAR,
+            "year_from": 2025,
+            "year_to": 2025,
+            "target_year": 2025,
             "target_period": "1T",
         },
     )
@@ -231,8 +218,8 @@ def _live_iva_wallet_history_capture(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "output_root": ctx.tmp_path / "iva-history-capture",
-            "year_from": CONFORMANCE_PRIOR_YEAR,
-            "year_to": CONFORMANCE_PRIOR_YEAR,
+            "year_from": 2025,
+            "year_to": 2025,
         },
     )
 
@@ -240,13 +227,7 @@ def _live_iva_wallet_history_capture(ctx: PayloadContext) -> PayloadResult:
 def _export_google_sheets(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.raw_profile_subject,
-        {
-            "profile_id": ctx.profile_id,
-            "modelo": "130",
-            "filing_year": CONFORMANCE_PRIOR_YEAR,
-            "period": "1T",
-            "dry_run": False,
-        },
+        {"profile_id": ctx.profile_id, "modelo": "130", "filing_year": 2025, "period": "1T", "dry_run": False},
     )
 
 

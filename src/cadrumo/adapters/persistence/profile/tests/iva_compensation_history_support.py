@@ -31,10 +31,7 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
-from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from .published_authority_support import published_authority_operation
-
-_YEAR = filing_year_envelope().horizon
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -80,7 +77,7 @@ M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("8
 #: The ejercicio these fixtures summarise. Modelo 390 is annual, so the
 #: ejercicio must be one AEAT has published a design for; the annual instrument
 #: for a given ejercicio appears late in that same year.
-_M390_EJERCICIO = filing_grade_exercises("390")[-1]
+_M390_EJERCICIO = 2025
 
 BOX_85_BINDING = "modelo-390-prev-303-compensacion-ejercicio-anterior"
 BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
@@ -138,14 +135,12 @@ def period_state(
         )
 
 
-def _wallet(
-    amount: Decimal, *, generation_year: int = filing_year_envelope().floor
-) -> IvaCompensationWalletObservation:
+def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
         taxpayer_nif=TAXPAYER_REF,
         authenticated_identity=TAXPAYER_REF,
-        target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
         rows=(
             IvaCompensationWalletRow(
                 generation_year=generation_year,
@@ -158,7 +153,7 @@ def _wallet(
         ),
         total_pending=amount,
         source_url=AnyHttpUrl(WALLET_URL),
-        captured_at=datetime(_YEAR, 5, 19, 10, 0, tzinfo=UTC),
+        captured_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
         raw_sha256="a" * 64,
     )
 
@@ -166,11 +161,11 @@ def _wallet(
 def filed_observation(modelo: str) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo=modelo,
-        ejercicio=_M390_EJERCICIO,
-        period=Period.from_year_and_code(_M390_EJERCICIO, "4T"),
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "4T"),
         expediente_id="202410013522456T",
         status="filed",
-        presented_at=datetime(_M390_EJERCICIO + 1, 1, 20, 12, 0, tzinfo=UTC),
+        presented_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
         authenticated_identity=TAXPAYER_REF,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -179,13 +174,13 @@ def filed_observation(modelo: str) -> FiledDeclaracionObservation:
                 content_type="text/html",
                 byte_count=0,
                 sha256="a" * 64,
-                captured_at=datetime(_M390_EJERCICIO + 1, 1, 20, 12, 0, tzinfo=UTC),
+                captured_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
             ),
         ),
         registry_snapshot_ref=published_authority_operation()
         .snapshot(
             modelo,
-            filing_year=_M390_EJERCICIO,
+            filing_year=2024,
             period="4T",
         )
         .snapshot_ref,

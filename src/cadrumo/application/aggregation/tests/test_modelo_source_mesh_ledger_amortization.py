@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import calendar
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 import pytest
 
@@ -18,11 +17,6 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.calculations.registry.tests.authored_editions import (
-    newest_authored_edition,
-    open_ended_revision,
-    revision_covering,
-)
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
@@ -97,29 +91,9 @@ from .usage_ratio_support import no_stored_usage_ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = newest_authored_edition("100")
-_M100 = str(revision_covering("100", _YEAR).id)
-_M130 = str(open_ended_revision("130").id)
-
-
-def _accrued_through(last_day: date) -> Decimal:
-    """A 12,000 element at a 10 % linear coefficient, in service on 1 January, charged through ``last_day``.
-
-    The days held count both ends and the denominator is the real length of the year.
-    """
-    days_held = (last_day - date(_YEAR, 1, 1)).days + 1
-    year_days = 366 if calendar.isleap(_YEAR) else 365
-    accrued = Decimal("12000") * Decimal("0.10") * Decimal(days_held) / Decimal(year_days)
-    return accrued.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-
-_FIRST_QUARTER_ACCRUAL = _accrued_through(date(_YEAR, 3, 31))
-_FIRST_HALF_ACCRUAL = _accrued_through(date(_YEAR, 6, 30))
-_REST_OF_YEAR_ACCRUAL = Decimal("1200.00") - _FIRST_HALF_ACCRUAL
-
 
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance() -> None:
-    revision = ledger_source_mesh_revision("100", _M100)
+    revision = ledger_source_mesh_revision("100", "2025")
     tx_repo = InMemoryTransactionCatalogueRepository(
         bucket_id=BUCKET_ID,
     )
@@ -139,10 +113,10 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
-            profile=cash_criterion_profile(_YEAR),
+            profile=cash_criterion_profile(2025),
         ),
     )
 
@@ -175,7 +149,7 @@ def _computer_asset_history(
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger-business-allocation",
         ),
-        in_service_date=date(_YEAR, 1, 1),
+        in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -191,13 +165,13 @@ def _computer_asset_history(
         asset_id=asset.asset_id,
         asset_revision_id=asset.revision_id,
         asset_kind=asset.asset_kind,
-        tax_year=_YEAR,
-        covered_from=date(_YEAR, 1, 1),
-        covered_until=date(_YEAR + 1, 1, 1),
+        tax_year=2025,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
         amount=Decimal("500.00"),
         schedule_fingerprint=schedule_fingerprint,
         authority_generation="published-test-generation",
-        source_reference=f"modelo-100:{_YEAR}:parameter:computer",
+        source_reference="modelo-100:2025:parameter:computer",
         creating_operation="record-amortization",
     )
     return ActivityAssetHistory(revisions=(asset,), claims=(claim,))
@@ -205,7 +179,7 @@ def _computer_asset_history(
 
 def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_it() -> None:
     """A depreciation row the register does not own carries a blocking note and reaches no box."""
-    revision = ledger_source_mesh_revision("100", _M100)
+    revision = ledger_source_mesh_revision("100", "2025")
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     acquisition = renta_transaction(
         "asset-acquisition",
@@ -238,8 +212,8 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
         ),
     )
@@ -251,7 +225,7 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
 
 
 def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> None:
-    revision = ledger_source_mesh_revision("100", _M100)
+    revision = ledger_source_mesh_revision("100", "2025")
     history = _computer_asset_history(
         observed_transaction_id="c" * 64, evidence_fingerprint="d" * 64, schedule_fingerprint="e" * 64
     )
@@ -265,8 +239,8 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
         ),
     )
@@ -291,7 +265,7 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
     purchase row the operator tagged ``hardware_amortizable`` yields to it. The
     withholding is reported rather than silent.
     """
-    revision = ledger_source_mesh_revision("100", _M100)
+    revision = ledger_source_mesh_revision("100", "2025")
     acquisition = machine_acquisition_transaction("hardware_amortizable")
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
@@ -312,8 +286,8 @@ def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisit
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
         ),
     )
@@ -346,10 +320,10 @@ def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="130",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, period),
-            revision=ledger_source_mesh_revision("130", _M130),
-            profile=cash_criterion_profile(_YEAR),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, period),
+            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
+            profile=cash_criterion_profile(2025),
         )
     )
     held_back = [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "source_domain_not_ready"]
@@ -380,8 +354,8 @@ def _resolve_m130_gastos(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="130",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "4T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
             revision=revision,
         ),
     )
@@ -389,7 +363,7 @@ def _resolve_m130_gastos(
 
 def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
     """Modelo 130 casilla 02 carries the same 120,00 charge and not the 1.000,00 purchase."""
-    revision = ledger_source_mesh_revision("130", _M130)
+    revision = ledger_source_mesh_revision("130", "2019-y-siguientes")
     acquisition = machine_acquisition_transaction("hardware_amortizable")
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
@@ -415,7 +389,7 @@ def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_ac
 
 def test_renta_gasto_source_mesh_reports_a_separate_depreciation_row_without_refusing() -> None:
     """A depreciation row outside the register's own acquisition is a finding and adds nothing to casilla 02."""
-    revision = ledger_source_mesh_revision("130", _M130)
+    revision = ledger_source_mesh_revision("130", "2019-y-siguientes")
     acquisition = machine_acquisition_transaction("hardware_amortizable")
     separate_depreciation = machine_acquisition_transaction(
         "mobiliario_amortizable",
@@ -439,9 +413,10 @@ def test_renta_gasto_source_mesh_reports_a_separate_depreciation_row_without_ref
 @pytest.mark.parametrize(
     ("period", "expected"),
     [
-        # 12.000 x 10 % over the days held from 1 January to the end of the quarter.
-        ("1T", _FIRST_QUARTER_ACCRUAL),
-        ("2T", _FIRST_HALF_ACCRUAL),
+        # 12.000 x 10 % x 90 / 365 = 295,890...
+        ("1T", Decimal("295.89")),
+        # 12.000 x 10 % x 181 / 365 = 595,068...
+        ("2T", Decimal("595.07")),
     ],
 )
 def test_m130_accrues_from_the_schedule_with_no_claim_and_creates_none(period: str, expected: Decimal) -> None:
@@ -463,14 +438,14 @@ def test_m130_accrual_ignores_a_later_years_claim_and_a_claim_inside_the_year() 
     in_year = register_claim(
         asset,
         amount=Decimal("1000.00"),
-        covered_from=date(_YEAR, 1, 1),
-        covered_until=date(_YEAR, 11, 1),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2025, 11, 1),
     )
-    later = register_claim(asset, amount=Decimal("1200.00"), tax_year=_YEAR + 1)
+    later = register_claim(asset, amount=Decimal("1200.00"), tax_year=2026)
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(asset,), claims=(in_year, later)), "1T")
 
-    assert m130_box(resolution) == _FIRST_QUARTER_ACCRUAL
+    assert m130_box(resolution) == Decimal("295.89")
 
 
 def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_activity() -> None:
@@ -482,7 +457,7 @@ def test_m130_excludes_an_agrarian_element_but_keeps_the_same_taxpayers_other_ac
 
     resolution = resolve_m130(ActivityAssetHistory(revisions=(farm, office)), "1T", rows=(farm_row, office_row))
 
-    assert m130_box(resolution) == _FIRST_QUARTER_ACCRUAL
+    assert m130_box(resolution) == Decimal("295.89")
     excluded = [item for item in resolution.diagnostics if item.reason == "activity_asset_agrarian_excluded"]
     assert [item.source_ref for item in excluded] == ["activity-asset:farm-machine"]
 
@@ -496,9 +471,9 @@ def test_m130_counts_an_element_with_no_declared_activity_and_says_so_only_besid
     alone = resolve_m130(ActivityAssetHistory(revisions=(silent,)), "1T", rows=(silent_row,))
     beside = resolve_m130(ActivityAssetHistory(revisions=(silent, farm)), "1T", rows=(silent_row, farm_row))
 
-    assert m130_box(alone) == _FIRST_QUARTER_ACCRUAL
+    assert m130_box(alone) == Decimal("295.89")
     assert reasons(alone) == [PRIOR_YEAR_ROW_NOTE]
-    assert m130_box(beside) == _FIRST_QUARTER_ACCRUAL
+    assert m130_box(beside) == Decimal("295.89")
     assert "activity_asset_activity_undeclared" in reasons(beside)
 
 
@@ -509,14 +484,14 @@ def test_m130_free_method_contributes_only_its_claims_ending_within_the_span() -
     within = register_claim(
         asset,
         amount=Decimal("700.00"),
-        covered_from=date(_YEAR, 1, 1),
-        covered_until=date(_YEAR, 4, 1),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2025, 4, 1),
     )
     beyond = register_claim(
         asset,
         amount=Decimal("300.00"),
-        covered_from=date(_YEAR, 4, 1),
-        covered_until=date(_YEAR, 7, 1),
+        covered_from=date(2025, 4, 1),
+        covered_until=date(2025, 7, 1),
     )
     claimed = resolve_m130(ActivityAssetHistory(revisions=(asset,), claims=(within, beyond)), "1T")
 
@@ -545,13 +520,13 @@ def test_m100_with_no_claims_invents_nothing_and_reports_the_gap_without_refusin
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)))
 
-    box = renta_expense_binding_id(ledger_source_mesh_revision("100", _M100), "0208")
+    box = renta_expense_binding_id(ledger_source_mesh_revision("100", "2025"), "0208")
     assert resolution.binding_values.get(box, Decimal("0")) == Decimal("0")
     assert resolution.provenance == ()
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
     assert "furniture" in gaps[0].message
-    assert f"{date(_YEAR, 1, 1)} to {date(_YEAR, 12, 31)}" in gaps[0].message
+    assert "2025-01-01 to 2025-12-31" in gaps[0].message
     assert "1200.00 EUR accrued" in gaps[0].message
     assert gaps[0].casilla_id == "0208"
     assert "activity_asset_claim_gap" not in GATE_REFUSED_REASONS
@@ -563,26 +538,26 @@ def test_m100_reports_only_the_uncovered_part_of_the_year_at_its_cumulative_amou
     asset = register_asset("furniture", transaction_id="c" * 64)
     first_half = register_claim(
         asset,
-        amount=_FIRST_HALF_ACCRUAL,
-        covered_from=date(_YEAR, 1, 1),
-        covered_until=date(_YEAR, 7, 1),
+        amount=Decimal("595.07"),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2025, 7, 1),
     )
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,), claims=(first_half,)))
 
     gaps = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
     assert len(gaps) == 1
-    assert f"{date(_YEAR, 7, 1)} to {date(_YEAR, 12, 31)}" in gaps[0].message
-    # 1.200,00 less the first half's rounded charge.
-    assert f"{_REST_OF_YEAR_ACCRUAL} EUR accrued" in gaps[0].message
+    assert "2025-07-01 to 2025-12-31" in gaps[0].message
+    # 1.200,00 less the 595,07 the first half rounds to.
+    assert "604.93 EUR accrued" in gaps[0].message
     # A box that does carry a claim keeps its figure rather than reading as unworked.
     assert gaps[0].casilla_id is None
-    box = renta_expense_binding_id(ledger_source_mesh_revision("100", _M100), "0208")
-    assert resolution.binding_values[box] == _FIRST_HALF_ACCRUAL
+    box = renta_expense_binding_id(ledger_source_mesh_revision("100", "2025"), "0208")
+    assert resolution.binding_values[box] == Decimal("595.07")
 
 
 def test_a_gap_in_a_past_year_neither_blocks_nor_is_reported_in_a_later_year() -> None:
-    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(_YEAR - 1, 1, 1))
+    asset = register_asset("furniture", transaction_id="c" * 64, in_service=date(2024, 1, 1))
     current_year = register_claim(asset, amount=Decimal("1200.00"))
 
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,), claims=(current_year,)))
@@ -615,7 +590,7 @@ def test_with_complete_claims_m130_fourth_quarter_equals_0208_plus_0227() -> Non
     annual = resolve_m100(history)
     quarterly = resolve_m130(history, "4T")
 
-    revision = ledger_source_mesh_revision("100", _M100)
+    revision = ledger_source_mesh_revision("100", "2025")
     material_box = annual.binding_values[renta_expense_binding_id(revision, "0208")]
     assert material_box == Decimal("1200.00")
     assert m130_box(quarterly) == Decimal("1250.00")
@@ -671,7 +646,7 @@ def test_an_unowned_amortization_row_is_a_finding_on_both_returns_with_no_regist
         assert resolution.source_transaction_ids == ()
     assert (
         annual.binding_values.get(
-            renta_expense_binding_id(ledger_source_mesh_revision("100", _M100), "0208"), Decimal("0")
+            renta_expense_binding_id(ledger_source_mesh_revision("100", "2025"), "0208"), Decimal("0")
         )
         == 0
     )
@@ -700,7 +675,7 @@ def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="tax_residence.ccaa", value="navarra"),
-                *cash_criterion_facts(_YEAR),
+                *cash_criterion_facts(2025),
             ),
             context=leased_profile_create_context(),
         ),
@@ -730,7 +705,7 @@ def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(res
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="tax_residence.ccaa", value="not-a-region"),
-                *cash_criterion_facts(_YEAR),
+                *cash_criterion_facts(2025),
             ),
             context=leased_profile_create_context(),
         ),
@@ -757,9 +732,9 @@ def test_an_unreadable_history_surfaces_as_a_typed_diagnostic_on_both_resolvers(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
-            revision=ledger_source_mesh_revision("100", _M100),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=ledger_source_mesh_revision("100", "2025"),
         ),
     )
     quarterly = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
@@ -772,9 +747,9 @@ def test_an_unreadable_history_surfaces_as_a_typed_diagnostic_on_both_resolvers(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="130",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "1T"),
-            revision=ledger_source_mesh_revision("130", _M130),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
         ),
     )
 
@@ -852,23 +827,23 @@ def test_a_register_owned_row_without_a_claim_yields_a_non_blocking_gap_and_no_d
 
 
 def test_an_edition_without_a_box_for_a_kind_names_the_element_and_keeps_the_kind_it_does_bind() -> None:
-    bound = m100_revision(_YEAR)
+    bound = m100_revision(2025)
     unbound_kind = renta_expense_binding_id(bound, "0208")
     revision = bound.model_copy(
         update={"bindings": tuple(binding for binding in bound.bindings if binding.id != unbound_kind)}
     )
-    material = register_asset("furniture", transaction_id="c" * 64, in_service=date(_YEAR, 1, 1))
+    material = register_asset("furniture", transaction_id="c" * 64, in_service=date(2025, 1, 1))
     intangible = register_asset(
         "licence",
         transaction_id="d" * 64,
-        in_service=date(_YEAR, 1, 1),
+        in_service=date(2025, 1, 1),
         kind=AssetKind.INTANGIBLE,
     )
     history = ActivityAssetHistory(
         revisions=(material, intangible),
         claims=(
-            register_claim(material, amount=Decimal("1200.00"), tax_year=_YEAR),
-            register_claim(intangible, amount=Decimal("700.00"), tax_year=_YEAR),
+            register_claim(material, amount=Decimal("1200.00"), tax_year=2025),
+            register_claim(intangible, amount=Decimal("700.00"), tax_year=2025),
         ),
     )
 
@@ -884,8 +859,8 @@ def test_an_edition_without_a_box_for_a_kind_names_the_element_and_keeps_the_kin
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="100",
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
         ),
     )
@@ -907,7 +882,7 @@ def test_an_edition_without_a_box_for_a_kind_names_the_element_and_keeps_the_kin
     assert not [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
 
 
-def _resolve_without_the_material_box(*assets: ActivityAssetRevision, year: int = _YEAR) -> CalculationSourceResolution:
+def _resolve_without_the_material_box(*assets: ActivityAssetRevision, year: int = 2025) -> CalculationSourceResolution:
     bound = m100_revision(year)
     revision = bound.model_copy(
         update={
@@ -944,11 +919,11 @@ def _unbound_findings(resolution: CalculationSourceResolution) -> list[str]:
 @pytest.mark.parametrize(
     ("in_service", "flagged"),
     (
-        (date(_YEAR, 1, 1), True),
-        (date(_YEAR, 12, 31), True),
-        (date(_YEAR - 1, 3, 1), True),
-        (date(_YEAR + 1, 1, 1), False),
-        (date(_YEAR + 5, 5, 1), False),
+        (date(2025, 1, 1), True),
+        (date(2025, 12, 31), True),
+        (date(2024, 3, 1), True),
+        (date(2026, 1, 1), False),
+        (date(2030, 5, 1), False),
     ),
 )
 def test_an_element_is_named_for_a_missing_box_only_when_it_was_in_service_that_year(
@@ -962,10 +937,10 @@ def test_an_element_is_named_for_a_missing_box_only_when_it_was_in_service_that_
 
 
 def test_a_claim_gap_names_the_last_day_it_covers_in_the_message_as_it_does_in_the_fact() -> None:
-    asset = register_asset("furniture", transaction_id="e" * 64, in_service=date(_YEAR, 1, 1))
+    asset = register_asset("furniture", transaction_id="e" * 64, in_service=date(2025, 1, 1))
 
-    resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)), year=_YEAR)
+    resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,)), year=2025)
 
     (gap,) = [item for item in resolution.diagnostics if item.reason == "activity_asset_claim_gap"]
-    assert f"{date(_YEAR, 1, 1)} to {date(_YEAR, 12, 31)}" in gap.message
-    assert f"{date(_YEAR + 1, 1, 1)}" not in gap.message
+    assert "2025-01-01 to 2025-12-31" in gap.message
+    assert "2026-01-01" not in gap.message

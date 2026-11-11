@@ -18,7 +18,6 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
@@ -61,16 +60,14 @@ from .work_form_fixture import built_form, read_before_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _EN = OutputLanguage.EN
 _ES = OutputLanguage.ES
 _INCOME = "rendimientos_integros"
 _KIND = "tipo_renta"
 _HELD: dict[str, Decimal | str] = {_INCOME: Decimal("1200.00"), _KIND: "01"}
 _CALCULATION = "c" * 64
-_EXPORTED_AT = datetime(_YEAR, 4, 2, 9, tzinfo=UTC)
-_TODAY = date(_YEAR, 4, 8)
+_EXPORTED_AT = datetime(2026, 4, 2, 9, tzinfo=UTC)
+_TODAY = date(2026, 4, 8)
 _FILE_ACTIONS = frozenset(
     {ModeloFormNextAction.EXPORT, ModeloFormNextAction.EXPORT_AGAIN, ModeloFormNextAction.RECORD_AFTER_FILE}
 )
@@ -78,7 +75,7 @@ _FILE_ACTIONS = frozenset(
 
 def _entered(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     """The income and its kind entered by the filer, so nothing is missing or assumed."""
-    return built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset(_HELD))
+    return built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset(_HELD))
 
 
 def _calculated(form: ModeloWorkForm, **update: object) -> ModeloWorkForm:
@@ -105,8 +102,8 @@ def _result_box(form: ModeloWorkForm, change: ModeloFormOrigin) -> ModeloWorkFor
 
 
 def test_the_counts_are_the_next_steps_own_said_in_the_forms_language(operation: PinnedAuthorityOperation) -> None:
-    empty = built_form(operation, "210", _YEAR, "0A", entered=frozenset())
-    assumed = built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset({_KIND}))
+    empty = built_form(operation, "210", 2025, "0A", entered=frozenset())
+    assumed = built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND}))
 
     english = {count.level: count for count in attention_counts(empty, _EN, recorded=False)}
     spanish = {count.level: count for count in attention_counts(empty, _ES, recorded=False)}
@@ -193,7 +190,7 @@ def _settled(form: ModeloWorkForm, direction: ModeloFormResultDirection, value: 
 
 
 def test_a_settled_result_reads_its_declared_direction_and_never_the_sign(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "130", _YEAR, "1T", entered=frozenset())
+    form = built_form(operation, "130", 2026, "1T", entered=frozenset())
 
     refund = result_view(_settled(form, ModeloFormResultDirection.TO_REFUND, Decimal("-250.00")), _EN, recorded=False)
     unknown = result_view(_settled(form, ModeloFormResultDirection.UNKNOWN, Decimal("-250.00")), _EN, recorded=False)
@@ -243,7 +240,7 @@ def test_the_file_is_held_back_exactly_where_the_next_step_does_not_offer_it(
     entered = _entered(operation)
     verified = _calculated(entered, verification=VerificationCompletenessStatus.COMPLETE)
     assumed = _calculated(
-        built_form(operation, "210", _YEAR, "0A", held=_HELD, entered=frozenset({_KIND})),
+        built_form(operation, "210", 2025, "0A", held=_HELD, entered=frozenset({_KIND})),
         verification=VerificationCompletenessStatus.COMPLETE,
     )
     blocked = verified.model_copy(update={"calculation_notes": (_note(sorted(GATE_REFUSED_REASONS)[0]),)})
@@ -265,16 +262,12 @@ def test_the_file_is_held_back_exactly_where_the_next_step_does_not_offer_it(
             hold,
         )
         assert offered == (hold is None), (reason, hold)
-    filed = built_form(
-        operation, "210", _YEAR, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO
-    )
+    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
     assert export_hold(filed, _EN, verified=False, recorded=True) is None
 
 
 def test_a_recorded_declaration_states_its_result_and_nothing_left_to_do(operation: PinnedAuthorityOperation) -> None:
-    filed = built_form(
-        operation, "210", _YEAR, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO
-    )
+    filed = built_form(operation, "210", 2025, "0A", entered=frozenset(), lifecycle=CalculationRevisionState.PRESENTADO)
     header = form_header(filed.model_copy(update={"deadline": _deadline(3)}), _EN, verified=True, filed=True)
 
     assert header.attention == ()
@@ -282,7 +275,7 @@ def test_a_recorded_declaration_states_its_result_and_nothing_left_to_do(operati
 
 
 def test_the_public_read_carries_the_header_in_the_forms_language(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "210", _YEAR, "0A", entered=frozenset(), language=_ES)
+    form = built_form(operation, "210", 2025, "0A", entered=frozenset(), language=_ES)
     read = read_before_calculation(form, operation)
 
     projection = project_modelo_workbench_form(UUID("13000000-0000-4000-8000-000000000455"), form.work_unit_id, read)

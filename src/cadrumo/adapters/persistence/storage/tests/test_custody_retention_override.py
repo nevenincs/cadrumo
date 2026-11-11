@@ -25,7 +25,6 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyRetentionOverride
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .test_config_reset import (
     OVERRIDE_REASON,
@@ -35,9 +34,6 @@ from .test_config_reset import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-#: The supported year before the horizon: its filings are inside the four-year retention window.
-_PRIOR_YEAR = filing_year_envelope().horizon - 1
 
 _PROFILE_ID = "31313131-3131-4131-8131-313131313131"
 
@@ -53,7 +49,7 @@ def _override(*, retained: int = 1) -> ProfileCustodyRetentionOverride:
 def _held_profile(root: Path) -> None:
     """Seed one profile carrying a filing, so the retention floor blocks it."""
     create_profile(_PROFILE_ID, label="Retention held", tax_id="00001501Y")
-    persist_filing(_PROFILE_ID, filing_year=_PRIOR_YEAR, seed="3")
+    persist_filing(_PROFILE_ID, filing_year=2025, seed="3")
 
 
 def _bucket_dir(root: Path) -> Path:

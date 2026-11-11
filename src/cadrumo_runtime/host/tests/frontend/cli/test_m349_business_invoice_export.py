@@ -6,7 +6,6 @@ import json
 import sys
 from collections.abc import Iterator, Sequence
 from contextvars import ContextVar
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -22,12 +21,9 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -105,7 +101,7 @@ def _add_business_invoice(
             "--invoice-number",
             invoice_number,
             "--invoice-date",
-            date(_YEAR, 3, 10).isoformat(),
+            "2026-03-10",
             "--taxable-base",
             taxable_base,
             "--iva-rate",
@@ -175,11 +171,11 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
             "--modelo",
             "349",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
             "--revision",
-            str(revision_covering("349", _YEAR).id),
+            "2020-y-siguientes",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -193,7 +189,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
             "--modelo",
             "349",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
         ],
@@ -222,7 +218,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
             "--modelo",
             "349",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
         ],
@@ -238,7 +234,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
             "--modelo",
             "349",
             "--year",
-            str(_YEAR),
+            "2026",
             "--period",
             "1T",
             "--output",
@@ -293,7 +289,7 @@ def test_emilio_catalogue_service_invoice_feeds_m349(authority_operation: Pinned
                 "--invoice-number",
                 "OUT-2024-Q1-DE-S",
                 "--invoice-date",
-                date(_YEAR, 1, 18).isoformat(),
+                "2024-01-18",
                 "--taxable-base",
                 "4000.00",
                 "--iva-rate",
@@ -323,11 +319,9 @@ def test_emilio_catalogue_service_invoice_feeds_m349(authority_operation: Pinned
             CalculationSourceContext(
                 bucket_id=stored.bucket_id,
                 modelo="349",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
-                revision=authority_operation.revision_with_export_layouts(
-                    "349", str(revision_covering("349", _YEAR).id)
-                ),
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1T"),
+                revision=authority_operation.revision_with_export_layouts("349", "2020-y-siguientes"),
             ),
         )
 

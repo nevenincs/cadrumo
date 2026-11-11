@@ -15,7 +15,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.retencion_soportada import RetencionSoportadaCantidad, RetencionSoportadaClase
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -26,7 +25,7 @@ _FINGERPRINT = "b" * 64
 
 def _payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
-        "ejercicio": filing_year_envelope().horizon,
+        "ejercicio": 2025,
         "payer_tax_id": "B00010082",
         "payer_legal_name": "Pagador Sintetico SL",
         "payer_ref": _PAYER_REF,
@@ -38,7 +37,7 @@ def _payload(**overrides: object) -> dict[str, object]:
         "ingreso_a_cuenta_repercutido": "300.00",
         "origin": "payer_certificate",
         "evidence_fingerprint": _FINGERPRINT,
-        "captured_at": datetime(1980, 4, 2, 9, 0, tzinfo=UTC).isoformat(),
+        "captured_at": datetime(2026, 4, 2, 9, 0, tzinfo=UTC).isoformat(),
     }
     payload.update(overrides)
     return payload

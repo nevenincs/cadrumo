@@ -26,7 +26,6 @@ from ....core.period import Period, accepted_filing_period_codes
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
 from ....domain.calculations.registry.modelo_localization import binding_locale_key
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import (
@@ -45,10 +44,6 @@ from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
-_YEAR_390 = filing_grade_exercises("390")[-1]
-"""The newest exercise whose Modelo 390 edition reaches filing grade."""
 
 
 def _reachable_contexts(operation: PinnedAuthorityOperation) -> dict[tuple[str, str], tuple[int, str]]:
@@ -147,7 +142,7 @@ def test_a_box_the_design_fixes_is_shown_fixed_and_never_invents_its_figure(
     02 shows the official 4% rather than the literal's raw digits or an engine
     figure. A zero placeholder still claims no printed rate.
     """
-    form, _declared = _form(operation, "303", _YEAR, "1T")
+    form, _declared = _form(operation, "303", 2026, "1T")
     rate = next(field for field in form.fields() if address_key(field.address) == ("casilla", "02"))
 
     assert rate.editability is ModeloFormEditability.DESIGN_CONSTANT
@@ -181,7 +176,7 @@ def test_no_field_of_any_reachable_revision_is_labelled_with_its_identifier(
 def test_modelo_390s_named_first_page_inputs_keep_their_identifier_and_their_kind(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form, _declared = _form(operation, "390", _YEAR_390, "0A")
+    form, _declared = _form(operation, "390", 2025, "0A")
     flag = next(
         field
         for field in form.fields()

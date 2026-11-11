@@ -34,7 +34,6 @@ from ....application.tests.operation_host_fakes import (
 )
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind
 from ...adapter_composition_work_ports import build_ledger_evidence_ports
 
@@ -59,7 +58,7 @@ def _seed_invoice(objects: SecureObjectRepository, *, operation: PinnedAuthority
         counterparty_tax_id="B00015016",
         counterparty_country="ES",
         invoice_number="F2026-0042",
-        issued_at=date(filing_year_envelope().horizon, 2, 15),
+        issued_at=date(2026, 2, 15),
         taxable_base=Decimal("200.00"),
         iva_rate=Decimal("21"),
         currency="EUR",

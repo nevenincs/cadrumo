@@ -23,7 +23,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -53,8 +52,6 @@ from ..own_account_operation import (
 from ..own_account_ports import OwnAccountRepositoryProtocol
 from ..transaction_repository import bind_transaction_catalogue_repository_factory
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE = UUID("7a1c0e52-3b64-4d85-9e96-0acc00000a01")
@@ -67,7 +64,7 @@ _ACTION_FIELDS: dict[str, dict[str, object]] = {
     "list": {},
     "show": {"own_account_id": "acc-01"},
     "update": {"own_account_id": "acc-01", "label": "renamed"},
-    "close": {"own_account_id": "acc-01", "closed_on": date(_YEAR, 6, 30)},
+    "close": {"own_account_id": "acc-01", "closed_on": date(2026, 6, 30)},
     "remove": {"own_account_id": "acc-01"},
     "designate": {"own_account_id": "acc-01", "role": OwnAccountRole.CHARGE},
     "undesignate": {"role": OwnAccountRole.CHARGE},
@@ -222,11 +219,11 @@ def test_update_replaces_only_the_named_details() -> None:
     register = _Register()
     _add(register)
 
-    result = _apply(register, "update", own_account_id="acc-01", label="renamed", opened_on=date(1980, 2, 1))
+    result = _apply(register, "update", own_account_id="acc-01", label="renamed", opened_on=date(2020, 2, 1))
 
     stored = register.document.account("acc-01")
     assert result.changed is True
-    assert (stored.label, stored.iban, stored.opened_on) == ("renamed", _ES_IBAN, date(1980, 2, 1))
+    assert (stored.label, stored.iban, stored.opened_on) == ("renamed", _ES_IBAN, date(2020, 2, 1))
 
 
 def test_an_unchanged_update_reports_no_change() -> None:
@@ -245,10 +242,10 @@ def test_close_then_designations_and_their_removal() -> None:
 
     _apply(register, "designate", own_account_id="acc-01", role=OwnAccountRole.CHARGE)
     scoped = _apply(register, "designate", own_account_id="acc-02", role=OwnAccountRole.REFUND, modelo="303")
-    closed = _apply(register, "close", own_account_id="acc-02", closed_on=date(_YEAR, 6, 30))
+    closed = _apply(register, "close", own_account_id="acc-02", closed_on=date(2026, 6, 30))
 
     assert [(item.role, item.modelo) for item in scoped.designations] == [(OwnAccountRole.REFUND, "303")]
-    assert closed.accounts[0].closed_on == date(_YEAR, 6, 30)
+    assert closed.accounts[0].closed_on == date(2026, 6, 30)
     assert len(register.document.designations) == 2
 
     with pytest.raises(OwnAccountRegisterValidationError, match="redesignate before removing"):
@@ -269,7 +266,7 @@ def test_an_unknown_account_is_refused() -> None:
 def test_an_account_referenced_by_transactions_is_refused_removal() -> None:
     register = _Register()
     _add(register)
-    booked = date(_YEAR, 1, 5)
+    booked = date(2026, 1, 5)
     with bundled_indexed_authority().operation():
         referencing = Transaction.model_validate(
             {
@@ -286,7 +283,7 @@ def test_an_account_referenced_by_transactions_is_refused_removal() -> None:
                         source_sha256="c" * 64,
                         source_row_index=1,
                         source_format=SourceFormat.CSV,
-                        ingested_at=datetime(_YEAR, 1, 6, 9, 0, tzinfo=UTC),
+                        ingested_at=datetime(2026, 1, 6, 9, 0, tzinfo=UTC),
                         provider_name="synthetic provider",
                     ),
                     raw_fields={},

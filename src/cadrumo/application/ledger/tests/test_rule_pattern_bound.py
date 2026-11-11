@@ -21,7 +21,6 @@ from pydantic import BaseModel
 from ....core import pattern_search
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, LedgerClassificationRule
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -60,14 +59,12 @@ from ..rule_trial_operation import (
     LedgerRuleTrialRequest,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE: Final = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _CATASTROPHIC: Final = r"(a+)+$"
 _STUCK_TEXT: Final = "a" * 27 + "!"
-_MOMENT: Final = datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC)
+_MOMENT: Final = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
 _MOST_THE_LOOP_MAY_STALL: Final = 0.5
 _RESULT_REF: Final = "d" * 64
 
@@ -77,8 +74,8 @@ def _row(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=description,
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2024, 4, 10),
+        value_date=date(2024, 4, 10),
         amount=Decimal("10.00"),
         currency="EUR",
         counterparty="Supplier SL",
@@ -517,7 +514,7 @@ def test_removal_is_refused_when_the_rule_was_saved_again_since_it_was_listed(
     stored = _rule(_CATASTROPHIC, 2)
     rules = _Rules(stored)
 
-    effects, answer = _remove(monkeypatch, rules, rule_id=stored.rule_id, created_at=datetime(1980, 1, 1, tzinfo=UTC))
+    effects, answer = _remove(monkeypatch, rules, rule_id=stored.rule_id, created_at=datetime(2020, 1, 1, tzinfo=UTC))
 
     assert effects == [OperationEffect.NONE]
     assert answer.outcome == "stale"

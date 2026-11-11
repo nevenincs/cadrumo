@@ -18,8 +18,6 @@ from pathlib import Path
 from typing import Any, Final, Literal, get_args
 from uuid import uuid4
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.external_constants import OutputLanguage
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -29,8 +27,6 @@ from ..staged_check import check_draft, check_stored_row
 from ..staged_check_contracts import LedgerStagedDraft, LedgerStagedRow, LedgerStagedRowAnswer, StagedBlockerKind
 from ..staged_check_words import blocker_words, share_refusal_words
 
-_YEAR = filing_year_envelope().horizon
-
 _REPOSITORY: Final = Path(__file__).resolve().parents[5]
 QUESTIONS: Final = _REPOSITORY / "dev/fixtures/ledger-staged-check-questions/questions.jsonl"
 NOTE: Final = (
@@ -38,7 +34,7 @@ NOTE: Final = (
     "by exactly what was asked. Written by scripts/ledger_staged_check.py from "
     "dev/fixtures/ledger-staged-check-questions."
 )
-_NOW: Final = datetime(_YEAR, 3, 2, 10, tzinfo=UTC)
+_NOW: Final = datetime(2026, 3, 2, 10, tzinfo=UTC)
 _ID: Final = "a" * 64
 
 QuestionKind = Literal["row", "draft"]

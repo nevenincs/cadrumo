@@ -28,11 +28,8 @@ from time import perf_counter
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.facts.payloads import MappingFactPayload
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva import lookup
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....tests.attribute_scope import scoped_attribute
@@ -42,12 +39,10 @@ from ..invoice_extraction_authority import (
     resolve_invoice_extraction_authority_values,
 )
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_ANNUAL_HORIZON = Period.from_year_and_code(_YEAR, "0A")
-_MUTATION_PERIOD = Period.from_year_and_code(_YEAR, "02")
+_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_MUTATION_PERIOD = Period.from_year_and_code(2026, "02")
 
 # A percentage no Spanish IVA tier carries, so its appearance in a rendered
 # prompt can only have come through the argument under test.
@@ -55,28 +50,10 @@ _FABRICATED_PCT = Decimal("37.25")
 _FABRICATED_RETENCION_PCT = Decimal("41.75")
 
 
-def _last_quarter_of_the_five_percent_window() -> Period:
-    """Return the quarter in which the registry's last published 5 % Spanish window closes."""
-    with bundled_indexed_authority().operation() as pinned:
-        fact = pinned.governed_fact("iva-rate-schedule")
-    closes = [
-        variant.valid_to
-        for variant in fact.variants
-        if any(selector.name == "member_state" and selector.value == "es" for selector in variant.selectors)
-        and isinstance(variant.payload, MappingFactPayload)
-        and any(entry.key == "pct" and entry.value == Decimal(5) for entry in variant.payload.entries)
-        and variant.valid_to is not None
-    ]
-    assert closes, "the registry publishes no closed 5 % Spanish window"
-    closing = max(closes)
-    assert closing.month % 3 == 0, "the window is expected to close on a quarter end"
-    return Period.from_year_and_code(closing.year, f"{closing.month // 3}T")
-
-
 def _fabricated_values() -> InvoiceExtractionAuthorityValues:
     """Return values that share no figure with the real registry."""
     return InvoiceExtractionAuthorityValues(
-        period=_ANNUAL_HORIZON,
+        period=_ANNUAL_2026,
         iva_rate_pcts=(_FABRICATED_PCT,),
         retencion_rate_pcts=(_FABRICATED_RETENCION_PCT,),
         no_printed_tax_categories=(IvaCategory("domestic_exempt"),),
@@ -93,7 +70,7 @@ class TestTheResolverFollowsTheRateAuthority:
         A concurrent sweep therefore cannot commit it, and a crashed run leaves
         no residue -- the shared-tree-safe form of a mutation proof.
         """
-        baseline = resolve_invoice_extraction_authority_values(period=_ANNUAL_HORIZON, operation=operation)
+        baseline = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
         assert _FABRICATED_PCT not in baseline.iva_rate_pcts, (
             "positive control: pick a percentage the registry does not already carry"
         )
@@ -132,11 +109,11 @@ class TestTheResolverFollowsTheRateAuthority:
         self,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_HORIZON, operation=operation)
+        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
 
         started = perf_counter()
         repeated = [
-            resolve_invoice_extraction_authority_values(period=_ANNUAL_HORIZON, operation=operation) for _ in range(100)
+            resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation) for _ in range(100)
         ]
         elapsed = perf_counter() - started
 
@@ -151,16 +128,17 @@ class TestTheResolverFollowsTheRateAuthority:
         which stays true when the registry moves. Hand-copied percentages would
         pass over a resolver that ignored the period entirely.
         """
-        closing_quarter = _last_quarter_of_the_five_percent_window()
         annual = resolve_invoice_extraction_authority_values(
-            period=Period.from_year_and_code(closing_quarter.filing_year, "0A"),
+            period=Period.from_year_and_code(2024, "0A"),
             operation=operation,
         )
-        quarter = resolve_invoice_extraction_authority_values(period=closing_quarter, operation=operation)
+        quarter = resolve_invoice_extraction_authority_values(
+            period=Period.from_year_and_code(2024, "3T"),
+            operation=operation,
+        )
 
         assert set(quarter.iva_rate_pcts) < set(annual.iva_rate_pcts), (
-            "the year the 5 % window closed stepped the reducido tiers mid-year, so an annual window must union "
-            "what the closing quarter alone carries"
+            "2024 stepped the reducido tiers mid-year, so an annual window must union what Q3 alone carries"
         )
 
     def test_the_no_printed_tax_vocabulary_is_the_registry_closed_set(
@@ -168,7 +146,7 @@ class TestTheResolverFollowsTheRateAuthority:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """Members, not rendered prose, and drawn from the canonical closed set."""
-        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_HORIZON, operation=operation)
+        resolved = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
 
         assert all(isinstance(member, IvaCategory) for member in resolved.no_printed_tax_categories)
 

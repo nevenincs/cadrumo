@@ -41,7 +41,7 @@ from ..store import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_UPDATED_AT = datetime(1980, 10, 27, 9, 0, tzinfo=UTC)
+_UPDATED_AT = datetime(2026, 10, 27, 9, 0, tzinfo=UTC)
 
 
 class _Records:
@@ -146,7 +146,7 @@ def _model_list_v2(*, reading: ListedModel | None = _OTHER) -> bytes:
         "models": [{"lane": _ADDED.lane, "model": _ADDED.model}],
         "reading": None if reading is None else {"lane": reading.lane, "model": reading.model},
         "generation": "d" * 64,
-        "updated_at": "1980-10-26T09:00:00Z",
+        "updated_at": "2026-10-26T09:00:00Z",
     }
     return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -158,7 +158,7 @@ def _role_choices(*choices: tuple[str, str, str]) -> bytes:
             "schema_version": 1,
             "selections": [{"role": role, "lane": lane, "model": model} for role, lane, model in choices],
             "generation": "e" * 64,
-            "updated_at": "1980-10-25T09:00:00Z",
+            "updated_at": "2026-10-25T09:00:00Z",
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -227,7 +227,7 @@ def test_a_stored_model_list_record_without_an_engine_setting_reads_as_unchosen_
     assert read.record.models == (_ADDED,)
     assert read.record.reading == _OTHER
     assert read.record.generation == "d" * 64
-    assert read.record.updated_at == datetime(1980, 10, 26, 9, 0, tzinfo=UTC)
+    assert read.record.updated_at == datetime(2026, 10, 26, 9, 0, tzinfo=UTC)
     assert (read.record.engine, read.record.placement) == (None, None)
     assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
 

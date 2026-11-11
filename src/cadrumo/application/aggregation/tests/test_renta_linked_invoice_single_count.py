@@ -27,7 +27,6 @@ import pytest
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -52,7 +51,7 @@ from .renta_ledger_support import ledger_expense_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = newest_authored_edition("100")
+_YEAR = 2025
 _CATEGORY = SpendingCategory.from_registry("arrendamiento_local")
 _OTHER_CATEGORY = SpendingCategory.from_registry("asesoria_contable")
 _BASE = Decimal("1000.00")
@@ -130,9 +129,7 @@ def test_the_expense_box_of_modelo_130_counts_the_linked_invoice_once() -> None:
     resolution = resolve_m130(ActivityAssetHistory(), "4T", rows=(row, _others()), invoices=_invoices(invoice))
 
     assert (
-        resolution.binding_values[
-            m130_binding_id(ledger_source_mesh_revision("130", str(open_ended_revision("130").id)))
-        ]
+        resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))]
         == _BASE + _OTHERS
     )
 

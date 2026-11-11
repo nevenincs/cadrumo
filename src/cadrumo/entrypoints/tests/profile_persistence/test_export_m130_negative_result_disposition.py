@@ -37,14 +37,13 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_FILING_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = 2026
 _INGRESOS_CASILLA = validated_casilla_id("01", surface="m130 negative result test")
 _GASTOS_CASILLA = validated_casilla_id("gastos-deducibles-previos", surface="m130 negative result test")
 _M130_RESULT_CASILLA = validated_casilla_id("19", surface="m130 negative result test")

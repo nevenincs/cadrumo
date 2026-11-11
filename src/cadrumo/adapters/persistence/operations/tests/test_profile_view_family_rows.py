@@ -29,16 +29,12 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.contribuyente.renta_codes import RentaDeclaracionType, RentaDisabilityGrade
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_FLOOR_YEAR = filing_year_envelope().floor
-_BIRTH_DATE = date(_FLOOR_YEAR, 5, 17)
 _PROFILE_CREDENTIAL = "profile-family-rows-test-passphrase"
 _DECLARATION_TYPE_PATH = "renta_filing.declaration_type"
 _TAXPAYER_DISABILITY_PATH = "renta_taxpayer.disability_grade"
@@ -66,13 +62,13 @@ def _descendant_facts() -> tuple[UserProfileFact, ...]:
         stored = descendant_facts_from_list(
             (
                 DescendantInfo(
-                    birth_date=_BIRTH_DATE,
+                    birth_date=date(2021, 5, 17),
                     discapacidad_grado=33,
                     convive_con_contribuyente=False,
                     rentas_anuales_euros=Decimal("1200.50"),
                     nif="12345678Z",
                 ),
-                DescendantInfo(birth_date=date(_FLOOR_YEAR, 1, 2)),
+                DescendantInfo(birth_date=date(2024, 1, 2)),
             ),
             authority=authority,
         )
@@ -132,7 +128,7 @@ def test_descendants_are_served_as_stored_rows_in_the_wizard_words(tmp_path: Pat
     first, second = rows
     assert (first.row_index, second.row_index) == ("0", "1")
     stated = {fact.leaf: fact.value for fact in first.facts}
-    assert stated["birth_date"] == _BIRTH_DATE.isoformat()
+    assert stated["birth_date"] == "2021-05-17"
     assert stated["discapacidad"] == "33"
     assert stated["convivencia"] == "false"
     assert stated["rentas_anuales"] == "1200.50"

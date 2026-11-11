@@ -80,7 +80,6 @@ from cadrumo.application.modelo.review_package_signing import ensure_review_pack
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
@@ -88,7 +87,7 @@ from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(1980, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_feedback")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_feedback")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-FEEDBACK-ROUNDTRIP-TEST"
@@ -103,12 +102,11 @@ def _signing_capability(runtime, *, bucket_id: str) -> ReviewPackageSigningKeypa
 #: encrypt/decrypt primitive (no real work unit or revision is built), still
 #: well-formed 64-char hex identifiers so the strict pydantic field
 #: constraints on ``WorkUnitId`` / ``CalculationRevisionId`` are satisfied.
-_YEAR = filing_year_envelope().horizon
 _PLACEHOLDER_WORK_UNIT_ID = derive_work_unit_id(
     bucket_id="originator-bucket",
     modelo="303",
-    filing_year=_YEAR,
-    period=Period.from_year_and_code(_YEAR, "1T"),
+    filing_year=2026,
+    period=Period.from_year_and_code(2026, "1T"),
     revision_id="feedback-placeholder-revision",
 )
 _CRYPTO_CAPABILITY = RecipientEncryptionAdapter()

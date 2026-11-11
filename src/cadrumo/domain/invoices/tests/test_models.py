@@ -13,7 +13,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.identity.documents import IdentityError
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import InvoiceKind, IvaRateKind
@@ -29,7 +28,6 @@ from ..models import (
     derive_invoice_id,
 )
 from ..normalization import normalise_invoice_monetary_fields
-from .invoice_catalogue_seed import STANDING_DEVENGO, window_middle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,8 +40,6 @@ def _authority_operation() -> Iterator[None]:
 
 
 _DEFAULT_RATE_21 = IvaRate.from_registry("RATE_21")
-_ISSUED = date(filing_year_envelope().horizon, 4, 1)
-_RATE_2_DAY = window_middle("RATE_2")
 
 
 def _valid_line(
@@ -52,7 +48,7 @@ def _valid_line(
     quantity: str = "1",
     unit_price: str = "100.00",
     iva_rate: IvaRate = _DEFAULT_RATE_21,
-    on_date: date = _ISSUED,
+    on_date: date = date(2026, 4, 1),
 ) -> InvoiceLine:
     quantity_dec = Decimal(quantity)
     unit_price_dec = Decimal(unit_price)
@@ -73,7 +69,7 @@ def _valid_invoice(
     *,
     kind: InvoiceKind = InvoiceKind.ISSUED,
     invoice_number: str = "INV-001",
-    issued_at: date = _ISSUED,
+    issued_at: date = date(2026, 4, 1),
     counterparty_name: str = "Cliente SL",
     counterparty_tax_id: str = "B00015016",
     counterparty_country: str = "ES",
@@ -106,7 +102,7 @@ def _valid_invoice(
 
 
 def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
-    """A sale at 2 % inside its window is recordable as an invoice, not just as a ledger row.
+    """A November 2024 sale at 2 % is recordable as an invoice, not just as a ledger row.
 
     RD-ley 4/2024 art. 1 put certain foodstuffs at 2 % while the rest of the
     super-reducido tier stayed at 4 %. The ledger accepted such a row while the
@@ -114,8 +110,8 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
     could not record a legal sale. This is that asymmetry closed.
     """
     invoice = _valid_invoice(
-        issued_at=_RATE_2_DAY,
-        lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=_RATE_2_DAY),),
+        issued_at=date(2024, 11, 15),
+        lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
     )
 
     assert invoice.lines[0].iva_rate == IvaRate.from_registry("RATE_2")
@@ -123,18 +119,18 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
 
 
 def test_invoice_refuses_a_transitional_food_rate_outside_its_window() -> None:
-    """The same 2 % line on an invoice dated after the window is refused rather than silently re-rated.
+    """The same 2 % line on a 2025 invoice is refused rather than silently re-rated.
 
     The window is what makes the transitional slots safe to carry. Without this
-    check the slot would resolve on any date, letting a later invoice claim a
+    check the slot would resolve on any date, letting a 2025 invoice claim a
     rate the statute had already withdrawn -- and the pre-fix implementation
     was worse still, silently returning the tier's ordinary 4 % for a line the
     operator marked 2 %.
     """
     with pytest.raises(ValidationError, match=r"was not in force"):
         _valid_invoice(
-            issued_at=STANDING_DEVENGO,
-            lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=_RATE_2_DAY),),
+            issued_at=date(2025, 6, 1),
+            lines=(_valid_line(iva_rate=IvaRate.from_registry("RATE_2"), on_date=date(2024, 11, 15)),),
         )
 
 
@@ -236,7 +232,7 @@ def test_invoice_accepts_oss_axes_and_destination_rate_line() -> None:
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "OSS-DE-001",
-            "issued_at": _ISSUED,
+            "issued_at": date(2026, 4, 1),
             "counterparty_name": "DE consumer",
             "counterparty_tax_id": "DE123456789",
             "counterparty_country": "DE",
@@ -274,7 +270,7 @@ def test_invoice_refuses_explicit_oss_axes_for_northern_ireland_goods_destinatio
             {
                 "kind": InvoiceKind.ISSUED,
                 "invoice_number": "OSS-XI-GOODS-001",
-                "issued_at": _ISSUED,
+                "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Northern Ireland customer",
                 "counterparty_tax_id": "XI123456789",
                 "counterparty_country": "XI",
@@ -335,7 +331,7 @@ def test_invoice_rejects_invalid_core_fields() -> None:
         payload = {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "INV-001",
-            "issued_at": _ISSUED,
+            "issued_at": date(2026, 4, 1),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -363,7 +359,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
         from ...iva.lookup import lookup_rate
         from ...iva.schema import EUMemberState, IvaRateKind
 
-        sample_date = STANDING_DEVENGO
+        sample_date = date(2025, 6, 15)
 
         assert iva_rate_percentage(IvaRate.from_registry("RATE_0"), on_date=sample_date) == Decimal("0")
         assert iva_rate_percentage(IvaRate.from_registry("EXEMPT"), on_date=sample_date) is None
@@ -406,7 +402,7 @@ def test_invoice_requires_exact_invoice_level_totals() -> None:
             {
                 "kind": InvoiceKind.ISSUED,
                 "invoice_number": "INV-001",
-                "issued_at": _ISSUED,
+                "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Cliente SL",
                 "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
@@ -448,7 +444,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
             {
                 "kind": InvoiceKind.ISSUED,
                 "invoice_number": "INV-001",
-                "issued_at": _ISSUED,
+                "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Cliente SL",
                 "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
@@ -543,7 +539,7 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
     first = derive_invoice_id(
         kind=InvoiceKind.ISSUED,
         invoice_number="INV-001",
-        issued_at=_ISSUED,
+        issued_at=date(2026, 4, 1),
         counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
@@ -551,7 +547,7 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
     second = derive_invoice_id(
         kind=InvoiceKind.ISSUED,
         invoice_number="INV-001",
-        issued_at=_ISSUED,
+        issued_at=date(2026, 4, 1),
         counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121"),

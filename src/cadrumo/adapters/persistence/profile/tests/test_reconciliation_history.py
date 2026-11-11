@@ -43,9 +43,7 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
-#: The ejercicio the fixture prints, read off the fixture's own name.
-_FIXTURE_YEAR = int(MODELO_130_FIXTURE.stem.rpartition("_")[2][:4])
-_WORK_UNIT_TIMESTAMP = datetime(1980, 5, 28, 13, 30, 0, tzinfo=UTC)
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 
@@ -94,8 +92,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields(
     modelo diff). The history projects both with the right verdict, source kind,
     diff count, and actor.
     """
-    matching_unit = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
-    mismatching_unit = _seed_work_unit(modelo="303", filing_year=_FIXTURE_YEAR, period="1T")
+    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
     _reconcile(matching_unit, operation=operation)
     _reconcile(mismatching_unit, operation=operation)
 
@@ -120,8 +118,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields(
 
 def test_history_narrows_to_one_work_unit(operation: PinnedAuthorityOperation) -> None:
     """The optional work_unit_id filter narrows the history to one work unit."""
-    unit_a = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
-    unit_b = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="2T")
+    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
     _reconcile(unit_a, operation=operation)
     _reconcile(unit_b, operation=operation)
 
@@ -137,7 +135,7 @@ def test_history_narrows_to_one_work_unit(operation: PinnedAuthorityOperation) -
 
 def test_history_orders_oldest_first(operation: PinnedAuthorityOperation) -> None:
     """Repeated reconciliations of one unit list oldest-first by reconciled_at."""
-    unit = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
+    unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _reconcile(unit, operation=operation)
     _reconcile(unit, operation=operation)
 
@@ -169,8 +167,8 @@ def test_anti_tautology_unreconciled_unit_absent_from_history(
     reconcile it, then assert the history lists only the first. If this passed
     with the unreconciled unit present, the read-back would be tautological.
     """
-    reconciled_unit = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="1T")
-    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=_FIXTURE_YEAR, period="3T")
+    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T")
     _reconcile(reconciled_unit, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:

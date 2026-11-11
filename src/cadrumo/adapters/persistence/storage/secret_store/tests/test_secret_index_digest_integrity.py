@@ -29,7 +29,7 @@ Real encrypted stores over real blob stores and a real master key.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -46,9 +46,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _KEY = "aeat:test:index-digest-integrity"
 _VALUE = b"index-digest-integrity-secret"
-_CREATED_AT = datetime(1980, 5, 28, 11, 55, 0, tzinfo=UTC)
-# Far-future expiry: 26663 days after creation, so no case reaches it.
-_EXPIRES_AT = _CREATED_AT + timedelta(days=26663)
+_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
+_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
 #: A perfectly well-formed digest that is simply not this entry's key. The
 #: canonical field type accepts it, so only the agreement check can refuse it.

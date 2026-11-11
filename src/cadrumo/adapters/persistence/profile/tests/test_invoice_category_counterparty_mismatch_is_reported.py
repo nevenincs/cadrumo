@@ -50,7 +50,6 @@ from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueRead
 from .....core.aggregation import IntracomOperationType
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind, IvaCategory
 from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.models import TransactionCatalogue
@@ -65,7 +64,7 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "e5cd70fc-3d46-4768-a775-f9443282596d"  # was 'bucket-category-counterparty-mismatch'
-_YEAR = filing_year_envelope().horizon
+_YEAR = 2024
 _PERIOD = "1T"
 _BASE = Decimal("4500.00")
 

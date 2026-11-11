@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 import pytest
 from click.testing import Result
@@ -20,7 +20,6 @@ from pydantic import ValidationError
 
 from ....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ....application.modelo.reconciliation_records import ModeloReconciliationVerdict
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ..modelo_m036_commands import m036_alta, m036_baja, m036_modificacion
 from ..modelo_results_m036 import (
@@ -30,8 +29,6 @@ from ..modelo_results_m036 import (
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 _M036_VERBS = ("alta", "modificacion", "baja")
 _M036_VERB_HANDLERS = (m036_alta, m036_modificacion, m036_baja)
@@ -82,7 +79,7 @@ def test_m036_refuses_without_active_profile() -> None:
     """No active profile -> the cold-start guard refuses with a translated message."""
     for verb in _M036_VERBS:
         result = _invoke(
-            ["app", "modelo", "m036", verb, "--declared-on", date(_YEAR, 6, 4).isoformat()],
+            ["app", "modelo", "m036", verb, "--declared-on", "2026-06-04"],
         )
         assert result.exit_code != 0, verb
         # The translated guard message is locale-dependent; the assertion
@@ -111,7 +108,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
         verdict=ModeloReconciliationVerdict.MATCHES,
         diff_count=0,
         actor="operator",
-        reconciled_at=datetime(1980, 1, 1, tzinfo=UTC),
+        reconciled_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
     row = ModeloReconciliationHistoryRowPayload.model_validate(base)
     assert row.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE

@@ -15,7 +15,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
 from ..rates import load_iva_rate_table
@@ -23,14 +22,12 @@ from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(filing_year_envelope().horizon, 6, 1)
-
 
 def test_rate_table_covers_all_27_member_states() -> None:
     """The rate table carries entries for EU member states, not the XI prefix."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         catalogue = resolve_eu_member_state_catalogue(
-            effective_date=_ON,
+            effective_date=date(2025, 6, 1),
             authority=_authority_operation_for_test,
         )
         northern_ireland = catalogue.require("xi")
@@ -52,7 +49,7 @@ def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
             lookup_rate(
                 EUMemberState.from_registry("xi"),
                 IvaRateKind("general"),
-                _ON,
+                date(2025, 6, 1),
                 operation=_authority_operation_for_test,
             )
 
@@ -61,7 +58,7 @@ def test_lookup_rate_raises_for_northern_ireland_prefix() -> None:
             "member_state": "xi",
             "member_state_registered": False,
             "rate_kind": IvaRateKind("general").value,
-            "on_date": _ON.isoformat(),
+            "on_date": "2025-06-01",
         }
 
 
@@ -88,12 +85,12 @@ def test_es_rate_table_fully_expanded() -> None:
 
 
 def test_lookup_rate_returns_spain_general_21() -> None:
-    """`lookup_rate` resolves the Spanish general rate for mid-year."""
+    """`lookup_rate` resolves the Spanish general rate for mid-2025."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         rate = lookup_rate(
             EUMemberState.from_registry("es"),
             IvaRateKind("general"),
-            _ON,
+            date(2025, 6, 1),
             operation=_authority_operation_for_test,
         )
         assert rate.pct == Decimal("21")
@@ -112,7 +109,7 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
             lookup_rate(
                 EUMemberState.from_registry("dk"),
                 IvaRateKind("reduced"),
-                _ON,
+                date(2025, 6, 1),
                 operation=_authority_operation_for_test,
             )
 
@@ -121,7 +118,7 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
             "member_state": "dk",
             "member_state_registered": True,
             "rate_kind": IvaRateKind("reduced").value,
-            "on_date": _ON.isoformat(),
+            "on_date": "2025-06-01",
         }
 
 

@@ -192,7 +192,7 @@ def test_replacing_the_path_after_the_open_does_not_change_what_is_read(tmp_path
 def test_directory_confinement_accepts_what_is_really_inside_and_refuses_a_file_in_the_way(tmp_path: Path) -> None:
     root, _outside = _tree(tmp_path)
 
-    assert confined_directory_refusal(root / "captures" / "1985", root=root) is None
+    assert confined_directory_refusal(root / "captures" / "2025", root=root) is None
     assert not (root / "captures").exists()
     behind_a_file = confined_directory_refusal(root / "inbox" / "document.pdf" / "nested", root=root)
     assert behind_a_file is HostPathRefusal.NOT_DIRECTORY

@@ -16,12 +16,9 @@ import json
 import pytest
 
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def _envelope_result(args: list[str]) -> dict[str, object]:
@@ -38,7 +35,7 @@ def test_casilla_describe_surfaces_grounding_for_bound_casilla() -> None:
     """A bound casilla returns its label, input kind, and legal / source grounding."""
 
     result = _envelope_result(
-        ["app", "modelo", "casilla", "130", "01", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "casilla", "130", "01", "--year", "2025", "--period", "1T"],
     )
 
     assert result["modelo"] == "130"
@@ -58,7 +55,7 @@ def test_casilla_describe_carries_formula_expression_for_computed_casilla() -> N
     """A computed casilla resolves its formula id and structured expression."""
 
     result = _envelope_result(
-        ["app", "modelo", "casilla", "130", "03", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "casilla", "130", "03", "--year", "2025", "--period", "1T"],
     )
 
     assert result["casilla_id"] == "03"
@@ -76,7 +73,7 @@ def test_casilla_describe_refuses_unknown_casilla_instructively() -> None:
     """An unknown casilla id is refused with guidance to the casillas verb."""
 
     invocation = invoke_cached_cli(
-        ["app", "modelo", "casilla", "130", "ZZZ999", "--year", str(_YEAR), "--period", "1T"],
+        ["app", "modelo", "casilla", "130", "ZZZ999", "--year", "2025", "--period", "1T"],
     )
 
     assert invocation.exit_code != 0, invocation.output

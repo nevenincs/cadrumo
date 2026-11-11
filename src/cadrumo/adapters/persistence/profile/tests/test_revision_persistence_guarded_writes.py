@@ -31,7 +31,6 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.errors import ModeloValidationError
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -40,14 +39,14 @@ from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _MODELO = "130"
-_FILING_YEAR = filing_year_envelope().horizon
-_REVISION_ID = revision_covering(_MODELO, _FILING_YEAR).id
+_FILING_YEAR = 2025
+_REVISION_ID = "2019-y-siguientes"
 _ACTOR = "test-operator"
 
 
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_FILING_YEAR, "1T")
-    now = datetime(1980, 1, 10, tzinfo=UTC)
+    now = datetime(2026, 1, 10, tzinfo=UTC)
     bucket_id = "revision-persistence-bucket"
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -75,8 +74,8 @@ def _receipt(
         work_unit_id=_work_unit().work_unit_id,
         calculation_revision_id=calculation_revision_id,
         bucket_event_id=bucket_event_id,
-        committed_at=datetime(1980, 1, 10, 1, 0, tzinfo=UTC),
-        result_destination=f"modelo/{_MODELO}/{_FILING_YEAR}/1T/edit-result",
+        committed_at=datetime(2026, 1, 10, 1, 0, tzinfo=UTC),
+        result_destination="modelo/130/2025/1T/edit-result",
     )
 
 
@@ -176,7 +175,7 @@ def test_publisher_preserves_closed_rows_only_in_the_admitted_scope(
                 work_unit_repository=work_units_repository,
                 bucket_event_repository=events,
                 operation=operation,
-                now=datetime(1980, 1, 10, 2, 0, tzinfo=UTC),
+                now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
                 input_value="100.00",
                 closed_record_row_sets=(closed,),
             )
@@ -218,7 +217,7 @@ def test_new_revision_co_commits_additional_writes_atomically(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             operation=operation,
-            now=datetime(1980, 1, 10, 2, 0, tzinfo=UTC),
+            now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
             additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
                 receipt_repository.to_secure_object_write(
@@ -265,7 +264,7 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             operation=operation,
-            now=datetime(1980, 1, 10, 2, 0, tzinfo=UTC),
+            now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
         )
 
@@ -280,7 +279,7 @@ def test_duplicate_branch_confirms_pointer_under_guard_and_co_commits(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             operation=operation,
-            now=datetime(1980, 1, 10, 3, 0, tzinfo=UTC),
+            now=datetime(2026, 1, 10, 3, 0, tzinfo=UTC),
             input_value="100.00",
             additional_secure_object_writes_for_revision=lambda revision_id, bucket_event_id: (
                 receipt_repository.to_secure_object_write(
@@ -327,7 +326,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(
             work_unit_repository=work_unit_repository,
             bucket_event_repository=bucket_event_repository,
             operation=operation,
-            now=datetime(1980, 1, 10, 2, 0, tzinfo=UTC),
+            now=datetime(2026, 1, 10, 2, 0, tzinfo=UTC),
             input_value="100.00",
         )
 
@@ -353,7 +352,7 @@ def test_duplicate_branch_refuses_a_real_conflicting_pointer_write(
                 work_unit_repository=work_unit_repository,
                 bucket_event_repository=bucket_event_repository,
                 operation=operation,
-                now=datetime(1980, 1, 10, 4, 0, tzinfo=UTC),
+                now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
                 input_value="100.00",
             )
 
@@ -383,7 +382,7 @@ def test_duplicate_publication_reports_actual_transaction(
                 work_unit_repository=work_repository,
                 bucket_event_repository=event_repository,
                 operation=operation,
-                now=datetime(1980, 1, 10, 4, 0, tzinfo=UTC),
+                now=datetime(2026, 1, 10, 4, 0, tzinfo=UTC),
                 input_value=value,
                 additional_secure_object_writes_for_revision=(
                     lambda calculation_id, event_id: (

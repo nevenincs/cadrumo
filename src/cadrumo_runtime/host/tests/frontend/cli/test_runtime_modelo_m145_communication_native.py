@@ -31,7 +31,6 @@ from cadrumo.domain.buckets.event import (
 )
 from cadrumo.domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.modelo_results_m145 import (
     M145CommunicationExportResultPayload,
     M145CommunicationRecordPayload,
@@ -43,8 +42,6 @@ from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile_revealing
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -247,7 +244,7 @@ def _create_record(session: _Session) -> tuple[str, M145CommunicationRecord]:
         "m145",
         "create",
         "--year",
-        str(_YEAR),
+        "2026",
         "--casilla",
         "perceptor.nif=12345678Z",
         "--casilla",

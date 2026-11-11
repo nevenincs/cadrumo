@@ -10,7 +10,6 @@ import pytest
 from .....application.ledger.manual_update import update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import TransactionDirection
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..transactions import TransactionCatalogueRepository
@@ -21,8 +20,6 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
@@ -39,14 +36,14 @@ def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(_YEAR, 5, 2),
+                booked_date=date(2026, 5, 2),
                 amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="Original detail",
                 idempotency_key="guarded-detail-edit",
             ),
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         )
         baseline = created.transaction
         updated = update_manual_transaction_fields(
@@ -57,7 +54,7 @@ def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
             source_command="tui.ledger.transaction.update",
             expected_current=baseline,
             ports=ports,
-            occurred_at=datetime(_YEAR, 5, 2, 9, 1, tzinfo=UTC),
+            occurred_at=datetime(2026, 5, 2, 9, 1, tzinfo=UTC),
         )
 
     reopened = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).load()

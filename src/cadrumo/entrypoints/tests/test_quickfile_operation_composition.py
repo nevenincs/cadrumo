@@ -32,7 +32,6 @@ from ...core.period import Period
 from ...domain.calculations.registry import authority as authority_module
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import quickfile_operation_composition as composition
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -45,7 +44,7 @@ def _request(tmp_path: Path) -> OperationRequest[QuickfileRequest]:
         payload=QuickfileRequest(
             profile_id=PROFILE_ID,
             modelo="130",
-            period=PublicPeriod.from_period(Period.from_year_and_code(filing_year_envelope().horizon, "1T")),
+            period=PublicPeriod.from_period(Period.from_year_and_code(2026, "1T")),
             output_path=str(tmp_path / "human-filing.txt"),
             actor="synthetic-human",
             inputs=QuickfileCalculationInputs(

@@ -34,14 +34,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors.error_codes import get_registered_error_code
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import repository
 from ..errors import LedgerNoActiveBucketError, LedgerStorageError
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..repository import transaction_index_object_key, transaction_object_key
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -277,7 +273,7 @@ class TestTheNonNegativeAmountRefusalStillBites:
     def _raw(amount: Decimal) -> RawTransaction:
         return RawTransaction(
             provider_transaction_id="row-1",
-            booked_date=date(_YEAR, 4, 6),
+            booked_date=date(2026, 4, 6),
             amount=amount,
             currency="EUR",
             description="statement row",
@@ -286,7 +282,7 @@ class TestTheNonNegativeAmountRefusalStillBites:
                 source_sha256="e" * 64,
                 source_row_index=1,
                 source_format=SourceFormat.MANUAL,
-                ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+                ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
                 provider_name="manual",
             ),
             raw_fields={"amount": str(amount)},

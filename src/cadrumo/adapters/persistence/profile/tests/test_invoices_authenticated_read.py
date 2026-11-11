@@ -13,15 +13,13 @@ from __future__ import annotations
 import ast
 import json
 from collections.abc import Callable
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from typing import Any, Final
 
 import pytest
 from pydantic import ValidationError
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from .....domain.calculations.registry.tests.m390_formula_support import spanish_temporary_rate_window
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.models import Invoice
 from .....domain.invoices.tests.invoice_catalogue_seed import SeedCase, fields_set, seed_payload, seed_payloads
@@ -36,8 +34,6 @@ from ...storage.tests.secure_sql import (
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
 
 _DERIVED_ID_REFUSAL: Final = "invoice_id must match the stable hash derived from identity fields"
 
@@ -104,7 +100,7 @@ def test_every_write_path_reads_the_stored_catalogue_through_full_validation(
     del authority_operation
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = InvoiceCatalogueRepository()
-        original = _catalogue([seed_payload(SeedCase(1, date(_YEAR, 7, 7), ("RATE_21",)))])
+        original = _catalogue([seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))])
         repo.save(original)
         (invoice_id,) = original.invoices
 
@@ -129,24 +125,22 @@ def test_a_rate_not_in_force_still_refuses_the_invoice_an_authenticated_read_ret
     del authority_operation
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = InvoiceCatalogueRepository()
-        window_start, window_end = spanish_temporary_rate_window("2")
-        out_of_window = window_end + timedelta(days=1)
-        stale = seed_payload(SeedCase(1, window_start, ("RATE_2",)))
-        fine = seed_payload(SeedCase(2, date(_YEAR, 7, 7), ("RATE_21",)))
+        stale = seed_payload(SeedCase(1, date(2024, 11, 15), ("RATE_2",)))
+        fine = seed_payload(SeedCase(2, date(2025, 7, 7), ("RATE_21",)))
         catalogue = _catalogue([stale, fine])
         repo.save(catalogue)
         stale_id, fine_id = catalogue.invoices
 
         def move_out_of_window(envelope: dict[str, Any]) -> None:
-            envelope["payload"]["invoices"][stale_id]["issued_at"] = out_of_window.isoformat()
+            envelope["payload"]["invoices"][stale_id]["issued_at"] = "2025-02-03"
 
         _mutate_stored(profile, move_out_of_window)
         trusted = repo.load_authenticated()
 
         assert trusted.require(fine_id).invoice_id == fine_id
-        with pytest.raises(ValidationError, match=f"line rate RATE_2 was not in force on {out_of_window.isoformat()}"):
+        with pytest.raises(ValidationError, match="line rate RATE_2 was not in force on 2025-02-03"):
             trusted.require(stale_id)
-        with pytest.raises(ValidationError, match=f"line rate RATE_2 was not in force on {out_of_window.isoformat()}"):
+        with pytest.raises(ValidationError, match="line rate RATE_2 was not in force on 2025-02-03"):
             trusted.values()
 
 
@@ -157,7 +151,7 @@ def test_an_inner_schema_stamp_other_than_current_is_refused_before_anything_is_
     del authority_operation
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = InvoiceCatalogueRepository()
-        original = _catalogue([seed_payload(SeedCase(1, date(_YEAR, 7, 7), ("RATE_21",)))])
+        original = _catalogue([seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))])
         repo.save(original)
         (invoice_id,) = original.invoices
 
@@ -182,8 +176,8 @@ def test_a_foreign_record_refuses_the_read_though_no_read_returns_it(
         repo = InvoiceCatalogueRepository()
         catalogue = _catalogue(
             [
-                seed_payload(SeedCase(1, date(_YEAR, 7, 7), ("RATE_21",))),
-                seed_payload(SeedCase(2, date(_YEAR, 7, 7), ("RATE_21",))),
+                seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",))),
+                seed_payload(SeedCase(2, date(2025, 7, 7), ("RATE_21",))),
             ],
             bucket_id=profile.bucket_id,
         )

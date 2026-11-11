@@ -24,7 +24,6 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.period import Period
-from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
@@ -41,8 +40,6 @@ from .form_edits import replace_fields
 from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_PRIOR_YEAR = filing_year_envelope().floor
 
 
 @pytest.mark.asyncio
@@ -63,7 +60,7 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
                 "source": ModeloFormValueSource(
                     family=SourceFamily.EARLIER_FILINGS,
                     earlier_filings=(
-                        ModeloFormEarlierFiling(modelo="100", period=Period.from_year_and_code(_PRIOR_YEAR, "0A")),
+                        ModeloFormEarlierFiling(modelo="100", period=Period.from_year_and_code(2024, "0A")),
                     ),
                 ),
             }
@@ -95,7 +92,7 @@ async def test_the_named_recovery_key_leads_to_the_source_box_and_keeps_the_stag
             diagnostic = issues._lines[0]
             assert diagnostic.key == address_key(source.address)
             assert diagnostic.technical == "" and "prior-general-loss" not in diagnostic.message
-            assert "[1391]" in diagnostic.message and str(_PRIOR_YEAR) in diagnostic.message
+            assert "[1391]" in diagnostic.message and "2024" in diagnostic.message
             assert diagnostic.action == tr("workspace.modelo.apply_prerequisite.action")
             assert diagnostic.action_targets_box
             await pilot.press("enter")

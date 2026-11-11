@@ -64,7 +64,6 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
@@ -80,10 +79,9 @@ from .eligible_descendants_support import eligible_descendants
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "51300000-0000-4000-8000-000000000513"
-# The second-newest authored edition: the newest does not calculate from this test's profile.
-_YEAR = newest_authored_editions("100", 2)[0]
+_YEAR = 2024
 _PERIOD_CODE = "0A"
-_T0 = datetime(_YEAR + 1, 8, 4, 10, 0, tzinfo=UTC)
+_T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
 
 #: The estatal Art. 58/61 aggregate casilla the derived path feeds.
 _ESTATAL_CASILLA = "0513"
@@ -159,7 +157,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
 
 def _calculate_estatal_minimo() -> Decimal:
-    """Run the real M100 annual calculate action and return casilla 0513.
+    """Run the real M100/2024/0A calculate action and return casilla 0513.
 
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.

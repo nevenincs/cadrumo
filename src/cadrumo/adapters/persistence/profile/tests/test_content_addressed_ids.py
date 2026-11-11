@@ -19,7 +19,7 @@ runtime.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -30,7 +30,6 @@ from cadrumo.application.ledger.evidence import derive_purchase_invoice_evidence
 from cadrumo.core.config import Settings
 from cadrumo.core.time.clock import frozen_clock
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .evidence_test_support import (
     BUCKET_ID,
     isolated_settings,
@@ -40,12 +39,10 @@ from .evidence_test_support import (
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]
 
-_INSTANT = datetime(_YEAR, 4, 14, 9, 30, 0, tzinfo=UTC)
+_INSTANT = datetime(2026, 4, 14, 9, 30, 0, tzinfo=UTC)
 
 
 class TestEvidenceIdContentAddressed:
@@ -66,7 +63,7 @@ class TestEvidenceIdContentAddressed:
                 source_path=pdf_file,
                 supplier="Acme S.L.",
                 invoice_number="INV-001",
-                invoice_date=date(_YEAR, 1, 15).isoformat(),
+                invoice_date="2026-01-15",
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("0.21"),
                 iva_amount=Decimal("21.00"),

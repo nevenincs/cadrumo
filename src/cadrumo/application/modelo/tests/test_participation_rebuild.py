@@ -19,7 +19,6 @@ from ....core.period import Period
 from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -56,8 +55,7 @@ from ..participation_index_rebuild_ports import ParticipationIndexRebuildPorts, 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "1cfbce2c-6cf7-43fe-a1a0-60c2e44cd95b"  # was 'modelo-participation-rebuild'
-_EXERCISE = filing_year_envelope().horizon
-_T0 = datetime(_EXERCISE, 7, 1, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 _TX_FILED = "1" * 64
 _TX_VERIFIED = "2" * 64
@@ -334,11 +332,11 @@ class _ParticipationIndexRepository:
 
 
 def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
-    typed_period = Period.from_year_and_code(_EXERCISE, period)
+    typed_period = Period.from_year_and_code(2024, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
-        filing_year=_EXERCISE,
+        filing_year=2024,
         period=typed_period,
         revision_id=revision_seed,
     )
@@ -346,10 +344,10 @@ def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode(modelo),
-        filing_year=_EXERCISE,
+        filing_year=2024,
         period=typed_period,
         revision_id=revision_seed,
-        name=f"{modelo}-{_EXERCISE}-{period}",
+        name=f"{modelo}-2024-{period}",
         created_at=_T0,
         updated_at=_T0,
     )
@@ -454,8 +452,8 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
         calculation_revision_id=filed_rev.calculation_revision_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=_EXERCISE,
-        period=Period.from_year_and_code(_EXERCISE, "1T"),
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "1T"),
         filed_at=_T0 + timedelta(hours=2),
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,

@@ -45,21 +45,16 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_year_envelope,
-    newest_authored_edition,
-    revision_covering,
-)
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
-_T2 = datetime(filing_year_envelope().horizon, 1, 10, 12, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_T2 = datetime(2026, 1, 10, 12, 0, tzinfo=UTC)
 _BUCKET_ID = "34700000-0000-4000-8000-000000000347"
-_FILING_YEAR = newest_authored_edition("347")
-_REVISION_ID = str(revision_covering("347", _FILING_YEAR).id)
+_FILING_YEAR = 2025
+_REVISION_ID = "2025-y-siguientes"
 _ROW_PREFIX = "modelo-347-contraparte-row-"
 
 
@@ -70,7 +65,7 @@ def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
             UserProfileFact(path="identity.name", value="Ready"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="m347-declarado-rows"),
-            UserProfileFact(path="censo.activity_start_date", value=date(_FILING_YEAR - 5, 1, 1)),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             UserProfileFact(path="withholding.colegio_concertado", value=False),
         )
     )

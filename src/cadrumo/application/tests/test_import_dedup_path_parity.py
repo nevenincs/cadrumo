@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.import_fingerprints import derive_import_fingerprint
 from ...domain.transactions.models import TransactionCatalogue, derive_transaction_id
@@ -35,8 +34,6 @@ from .parsed_ledger_row_support import ParsedLedgerRowFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _BUCKET = "0dac9c08-a56b-41bf-9752-636041072300"  # was 'bucket-parity'
 _SOURCE = Path("project/data/parity.csv")
 _DIRECTION = TransactionDirection.OUTGOING
@@ -46,8 +43,8 @@ def _raw(provider_id: str, *, amount: Decimal = Decimal("121.00"), description: 
     """Build a EUR row. EUR keeps the FX normalizer out of the comparison."""
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 4, 5),
-        value_date=date(_YEAR, 4, 5),
+        booked_date=date(2025, 4, 5),
+        value_date=date(2025, 4, 5),
         amount=amount,
         currency="EUR",
         counterparty="Proveedor SL",
@@ -57,7 +54,7 @@ def _raw(provider_id: str, *, amount: Decimal = Decimal("121.00"), description: 
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},

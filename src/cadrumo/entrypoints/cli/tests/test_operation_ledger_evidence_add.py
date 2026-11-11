@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,17 +20,12 @@ from ....application.ledger.evidence_add_operation import (
 )
 from ....application.ledger.evidence_read_operation import LedgerEvidenceRecordProjection
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_ledger_evidence_add as bridge
-
-_YEAR = filing_year_envelope().horizon
-_INVOICE_DATE = date(_YEAR, 5, 8).isoformat()
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _record(**changes: object) -> LedgerEvidenceRecordProjection:
@@ -43,7 +38,7 @@ def _record(**changes: object) -> LedgerEvidenceRecordProjection:
         "media_kind": MediaKind.PDF,
         "supplier": "Supplier SL",
         "invoice_number": "INV-2026-05",
-        "invoice_date": _INVOICE_DATE,
+        "invoice_date": "2026-05-08",
         "taxable_base": "100.00",
         "iva_rate": "21",
         "iva_amount": "21.00",
@@ -101,7 +96,7 @@ def test_add_bridge_uses_canonical_decimal_wire_text_and_correlates_record(
         source_path="invoices/invoice.pdf",
         supplier="Supplier SL",
         invoice_number="INV-2026-05",
-        invoice_date=_INVOICE_DATE,
+        invoice_date="2026-05-08",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21.00"),
         iva_amount=Decimal("21.00"),
@@ -136,7 +131,7 @@ def test_keyed_add_replay_allows_original_path_and_empty_event_but_requires_upda
         source_path="newer/location/same.pdf",
         supplier="Supplier SL",
         invoice_number="INV-2026-05",
-        invoice_date=_INVOICE_DATE,
+        invoice_date="2026-05-08",
         taxable_base=Decimal("100"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21"),

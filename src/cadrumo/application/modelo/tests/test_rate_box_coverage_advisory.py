@@ -30,7 +30,6 @@ from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import (
     IvaCashAccountingTreatment,
@@ -53,12 +52,12 @@ pytestmark = [
 ]
 
 _BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
-_FILING_YEAR = filing_grade_exercises("390")[-1]
+_FILING_YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _REASON = "rate_boxes_underaccount_total"
 
 _LEGAL = ("ley-37-1992:art-91",)
-_SOURCE = (f"aeat-dr-390-{_FILING_YEAR}",)
+_SOURCE = ("aeat-dr-390-2025",)
 
 _TOTAL_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.repercutido.super-reducido",
@@ -108,10 +107,10 @@ def _casilla(casilla_id: CasillaId, *, number: str, binding: str, exports: bool)
 def _split_revision() -> ModeloRevision:
     """A tier split into a rate-blind total layer and one rate-specific box."""
     return ModeloRevision(
-        id="synthetic-y-siguientes",
-        localization_key="test.schema.revision.synthetic-y-siguientes.label",
-        valid_from=date(_FILING_YEAR, 1, 1),
-        period_selector=PeriodSelector(year_from=_FILING_YEAR, periods=(_ANNUAL_PERIOD,)),
+        id="2010-y-siguientes",
+        localization_key="test.schema.revision.2010-y-siguientes.label",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=(_ANNUAL_PERIOD,)),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
         bindings=(

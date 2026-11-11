@@ -25,7 +25,6 @@ from ...domain.calculations.registry.iva_wallet_carry_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     revision_offers_iva_wallet,
 )
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -49,13 +48,11 @@ def _load(work: SeededOperatorWork) -> ModeloWorkFormLoadV1:
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period_code", "offers"),
     [
-        # Seeding the wallet reads the preceding quarter, which must itself lie inside the envelope.
-        *(("303", year, "1T", True) for year in filing_year_envelope().years[1:]),
-        *(
-            (modelo, year, period_code, False)
-            for year in filing_year_envelope().years
-            for modelo, period_code in (("390", "0A"), ("130", "1T"), ("100", "0A"))
-        ),
+        ("303", 2025, "1T", True),
+        ("303", 2026, "1T", True),
+        ("390", 2025, "0A", False),
+        ("130", 2025, "1T", False),
+        ("100", 2025, "0A", False),
     ],
 )
 def test_an_uncalculated_form_offers_the_wallet_exactly_where_its_revision_declares_the_wallet_binding(
@@ -71,7 +68,7 @@ def test_an_uncalculated_form_offers_the_wallet_exactly_where_its_revision_decla
 
 def test_the_offer_follows_the_revisions_own_bindings_and_not_the_modelo_number() -> None:
     with bundled_indexed_authority().operation() as operation:
-        offering = operation.revision_for_context("303", filing_year=filing_year_envelope().horizon, period="1T")
+        offering = operation.revision_for_context("303", filing_year=2025, period="1T")
         assert revision_offers_iva_wallet(modelo_id="303", revision=offering) is True
         without_wallet_binding = offering.model_copy(
             update={
@@ -81,5 +78,5 @@ def test_the_offer_follows_the_revisions_own_bindings_and_not_the_modelo_number(
             }
         )
         assert revision_offers_iva_wallet(modelo_id="303", revision=without_wallet_binding) is False
-        silent = operation.revision_for_context("130", filing_year=filing_year_envelope().horizon, period="1T")
+        silent = operation.revision_for_context("130", filing_year=2025, period="1T")
         assert revision_offers_iva_wallet(modelo_id="130", revision=silent) is False

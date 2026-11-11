@@ -122,7 +122,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
@@ -141,12 +140,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000190"
 _PROFILE_LABEL = "Renta annual reconciliation profile"
-_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = 2024
 # The first exercise whose Modelo 190 totals fold the Modelo 111 quarters.
-_M190_YEAR = open_ended_revision("190").valid_from.year
-# The exercise before it, whose Modelo 180 and Modelo 193 editions the other folds run on.
-_YEAR = _M190_YEAR - 1
+_M190_YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"

@@ -16,7 +16,6 @@ from pydantic import ValidationError
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
@@ -32,8 +31,6 @@ from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
 
 def _populated_invoice(
     invoice_number: str = "F-2025-001",
@@ -46,7 +43,7 @@ def _populated_invoice(
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": invoice_number,
-            "issued_at": date(_YEAR, 3, 15),
+            "issued_at": date(2025, 3, 15),
             "counterparty_name": "Test Counterparty GmbH",
             # German IVA id; bypasses the AEAT CIF checksum since the
             # invoice domain accepts any non-Spanish counterparty.
@@ -89,7 +86,7 @@ def test_invoice_catalogue_reopens_bulk_source_provenance_from_encrypted_storage
                     source_sha256="a" * 64,
                     source_row_index=7,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_YEAR, 9, 21, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 9, 21, 12, 0, tzinfo=UTC),
                     provider_name="bulk-invoice-import",
                 ),
             },

@@ -12,13 +12,11 @@ persistence adapter seam.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 from ....domain.transactions.models import TransactionCatalogue
 from ..ledger_filing_snapshot import (
@@ -111,8 +109,8 @@ def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
     row = LedgerEvidenceRow(
         transaction_id="1" * 64,
         fingerprint="a" * 64,
-        booked_date=date(filing_year_envelope().horizon, 2, 10).isoformat(),
-        value_date=date(filing_year_envelope().horizon, 2, 11).isoformat(),
+        booked_date="2025-02-10",
+        value_date="2025-02-11",
         amount=Decimal("121.00"),
         currency="EUR",
         direction="OUTGOING",

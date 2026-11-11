@@ -94,7 +94,6 @@ import {
   VEHICLE_ELEMENT,
   WHOLE_PROPERTY,
 } from "./support/assetContract";
-import { fixtureDay } from "../src/dev/fixtureDates";
 
 // The Assets tab's forms: typed text, the requests they make, how a write
 // ended, the words they draw and the facts they state.
@@ -121,10 +120,10 @@ test("typed text becomes the values of its control, and nothing typed is not zer
   });
   expect(parseField(field("amount"), "")).toEqual({ kind: "empty" });
   expect(parseField(field("amount"), "1,2,3").kind).toBe("refused");
-  expect(parseField(field("date"), fixtureDay(2, 30)).kind).toBe("refused");
-  expect(parseField(field("date"), fixtureDay(2, 28))).toEqual({
+  expect(parseField(field("date"), "2026-02-30").kind).toBe("refused");
+  expect(parseField(field("date"), "2026-02-28")).toEqual({
     kind: "value",
-    value: fixtureDay(2, 28),
+    value: "2026-02-28",
   });
   expect(parseField(field("whole"), "12")).toEqual({
     kind: "value",
@@ -241,7 +240,7 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
   const dispose = await port.submit(DISPOSE, {
     asset_id: "taladro",
     disposal: {
-      disposal_date: fixtureDay(9, 30),
+      disposal_date: "2026-09-30",
       reason: "sale",
       proceeds: { decimal: "100.00" },
       transmission_costs: { decimal: "0.00" },
@@ -253,12 +252,12 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
   expect(dispose.kind).toBe("settled");
   const disposed = await inspect("taladro");
   const recorded = disposed.revision.disposal;
-  expect(recorded).toMatchObject({ disposal_date: fixtureDay(9, 30) });
+  expect(recorded).toMatchObject({ disposal_date: "2026-09-30" });
   const row = (await listOf(port)).find(
     (found) => found.asset_id === "taladro",
   )!;
   expect(row.disposal).toMatchObject({
-    disposal_date: fixtureDay(9, 30),
+    disposal_date: "2026-09-30",
     reason: "sale",
     reason_key: "ledger.actividad_asset.disposal_reason.sale",
   });
@@ -291,13 +290,13 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
   expect(
     (await listOf(port)).find((found) => found.asset_id === "taladro")!
       .disposal,
-  ).toMatchObject({ disposal_date: fixtureDay(9, 30) });
+  ).toMatchObject({ disposal_date: "2026-09-30" });
   const latest = await inspect("taladro");
   expect(latest.revision.disposal).toEqual(recorded);
 
   // A baja is changed by stating another, and removed by stating none.
   const moved = bajaRequest(latest, {
-    disposal_date: fixtureDay(6, 30),
+    disposal_date: "2026-06-30",
     reason: "sale",
     proceeds: { decimal: "100.00" },
     transmission_costs: { decimal: "0.00" },
@@ -307,7 +306,7 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
   })!;
   expect(moved.revision).toMatchObject({
     supersedes_revision_id: latest.revision_id,
-    disposal: { disposal_date: fixtureDay(6, 30) },
+    disposal: { disposal_date: "2026-06-30" },
   });
   expect(moved.revision).not.toHaveProperty("revision_number");
   expect(moved.superseding_claims).toEqual([]);
@@ -318,7 +317,7 @@ test("a cleared fact is taken out of the corrected revision, and the baja the re
   expect(
     (await listOf(port)).find((found) => found.asset_id === "taladro")!
       .disposal,
-  ).toMatchObject({ disposal_date: fixtureDay(6, 30) });
+  ).toMatchObject({ disposal_date: "2026-06-30" });
   const removal = bajaRequest(await inspect("taladro"), null)!;
   expect(removal.revision.disposal).toBeNull();
   expect(removal.revision).not.toHaveProperty("revision_number");
@@ -406,12 +405,12 @@ test("each act's fields and requests come from the backend's choices", () => {
   )!.rows.find((row) => row.tax_year === scenarioYear)!;
   const claim = claimFields(plan, null);
   expect(claim.map((found) => [found.key, found.current])).toEqual([
-    ["covered_from", fixtureDay(7, 1)],
-    ["covered_through", fixtureDay(12, 31)],
+    ["covered_from", "2026-07-01"],
+    ["covered_through", "2026-12-31"],
   ]);
   // The span starts from the backend's own, and is shown by its last day.
   expect(claimSpans(plan, null)).toEqual([
-    { from: fixtureDay(7, 1), through: fixtureDay(12, 31) },
+    { from: "2026-07-01", through: "2026-12-31" },
   ]);
   const free = SCENARIO_ELEMENTS.find((seed) => seed.id === "impresora")!
     .rows[0]!;
@@ -424,24 +423,22 @@ test("each act's fields and requests come from the backend's choices", () => {
     forecastRequest(
       "a",
       {
-        covered_from: fixtureDay(1, 1),
-        covered_through: fixtureDay(6, 30),
+        covered_from: "2026-01-01",
+        covered_through: "2026-06-30",
         free_amount: { decimal: "5.00" },
       },
       "c",
     ),
   ).toEqual({
     asset_id: "a",
-    covered_from: fixtureDay(1, 1),
-    covered_through: fixtureDay(6, 30),
+    covered_from: "2026-01-01",
+    covered_through: "2026-06-30",
     requested_free_amount: { decimal: "5.00" },
     supersedes_claim_id: "c",
   });
+  expect(forecastRequest("a", { covered_from: "2026-01-01" }, null)).toBeNull();
   expect(
-    forecastRequest("a", { covered_from: fixtureDay(1, 1) }, null),
-  ).toBeNull();
-  expect(
-    forecastRequest("a", { covered_through: fixtureDay(6, 30) }, null),
+    forecastRequest("a", { covered_through: "2026-06-30" }, null),
   ).toBeNull();
   expect(
     describeRequest("a", { name: "Sierra", serial_number: "S1" }).descriptor,
@@ -717,7 +714,7 @@ test("a value the backend worded by key is drawn by that key, and anything else 
       "business_allocated",
     ),
   ).toBe("Allocated to the activity");
-  expect(keyedText(t, null, fixtureDay(1, 1))).toBe(fixtureDay(1, 1));
+  expect(keyedText(t, null, "2026-01-01")).toBe("2026-01-01");
   expect(keyedText(t, undefined, "x")).toBe("x");
   // A key outside the families, or one the table lacks, is never drawn.
   expect(keyedText(t, "tui.ledger.activity_asset.plan", "stated")).toBe(
@@ -789,7 +786,7 @@ test("an element bought outside the ledger names its document, its date and its 
   // The day it was bought cannot follow the day it entered service.
   const late = await newRequest(
     port,
-    { ...outside, declared_acquisition_date: fixtureDay(7, 1) },
+    { ...outside, declared_acquisition_date: "2026-07-01" },
     "made-7",
   );
   const refusal = await refused(port.submit(CREATE, late as never));

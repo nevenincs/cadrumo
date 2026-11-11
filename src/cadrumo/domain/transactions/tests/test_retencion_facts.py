@@ -34,7 +34,6 @@ from ....core.toml import load_toml
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.facts.resolution import ScalarFactQuery
 from ...calculations.registry.schema_base import DateAxis
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..retencion_facts import (
@@ -43,9 +42,6 @@ from ..retencion_facts import (
     maximum_supported_activity_retencion_rate,
     retencion_effective_date,
 )
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -60,7 +56,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 _GENERAL_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
 _INICIO_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-inicio"
 _LEGAL_REF = "rd-439-2007:art-95"
-_CURRENT_EFFECTIVE_DATE = date(_YEAR, 4, 1)
+_CURRENT_EFFECTIVE_DATE = date(2026, 4, 1)
 
 
 def _resolved_fact(fact_id: str):
@@ -157,13 +153,13 @@ def test_the_rate_is_chosen_by_the_caller_date_inside_the_supported_span() -> No
 
 def test_a_date_before_the_first_edition_reads_it() -> None:
     """RIRPF art. 95 as authored from 1 April 2007 states 15 %; an earlier date carries it back."""
-    assert load_retencion_actividades_rates(effective_date=date.min).general_rate == Decimal("0.15")
+    assert load_retencion_actividades_rates(effective_date=date(2007, 3, 31)).general_rate == Decimal("0.15")
 
 
 def test_transaction_coordinate_prefers_value_date_and_refuses_when_absent() -> None:
     """Settlement evidence is explicit; neither a book date nor the clock is invented."""
-    assert retencion_effective_date(value_date=date(_YEAR, 2, 1), booked_date=date(_YEAR, 2, 2)) == date(_YEAR, 2, 1)
-    assert retencion_effective_date(value_date=None, booked_date=date(_YEAR, 2, 2)) == date(_YEAR, 2, 2)
+    assert retencion_effective_date(value_date=date(2024, 2, 1), booked_date=date(2024, 2, 2)) == date(2024, 2, 1)
+    assert retencion_effective_date(value_date=None, booked_date=date(2024, 2, 2)) == date(2024, 2, 2)
     with pytest.raises(TransactionValidationError, match="requires a transaction value or booked date"):
         retencion_effective_date(value_date=None, booked_date=None)
 

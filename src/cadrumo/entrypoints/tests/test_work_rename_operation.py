@@ -70,7 +70,6 @@ from ...core.operations import OperationCancellation, OperationDurability, Opera
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
 from ...domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -96,8 +95,6 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_YEAR = filing_year_envelope().horizon
 
 
 def _test_profile_resolver(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
@@ -142,7 +139,7 @@ def test_the_request_refuses_an_empty_unit_or_name() -> None:
             new_name="Q1",
             actor="operator",
             observed_name="Q1",
-            observed_updated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            observed_updated_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
     with pytest.raises(ValidationError):
         ModeloWorkRenameRequest(
@@ -150,7 +147,7 @@ def test_the_request_refuses_an_empty_unit_or_name() -> None:
             new_name="",
             actor="operator",
             observed_name="Q1",
-            observed_updated_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            observed_updated_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
 
 
@@ -242,8 +239,8 @@ def test_a_discard_baseline_carries_what_the_operator_actually_saw() -> None:
     """The observed timestamp is what makes a stale approval refusable."""
     baseline = ModeloWorkDiscardBaseline(
         work_unit_id="unit-1",
-        name=f"130 {_YEAR} 1T",
-        observed_updated_at=datetime(_YEAR, 3, 4, 9, 0, tzinfo=UTC),
+        name="130 2026 1T",
+        observed_updated_at=datetime(2026, 3, 4, 9, 0, tzinfo=UTC),
     )
 
     assert baseline.observed_updated_at.tzinfo is not None
@@ -330,11 +327,11 @@ def test_the_verify_result_round_trips_the_exact_report_and_refuses_false_summar
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", revision_id=revision_serving_period("303", _YEAR, "1T").id, modelo_year=_YEAR, period="1T"
+            modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1T"
         ),
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
-        run_at=datetime(_YEAR, 4, 1, tzinfo=UTC),
+        run_at=datetime(2026, 4, 1, tzinfo=UTC),
         verified_by="operator",
         granted_verificado_completo=True,
     )
@@ -346,7 +343,7 @@ def test_the_verify_result_round_trips_the_exact_report_and_refuses_false_summar
             work_unit_id="b" * 64,
             calculation_revision_id=revision_id,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
         ),
         verification_report_id=report_id,
@@ -420,9 +417,9 @@ def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
         calculation_revision_id=revision_id,
         bucket_id="91fb7268-c9d4-4309-879c-d44fa7970f9d",
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
-        filed_at=datetime(_YEAR, 4, 1, tzinfo=UTC),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        filed_at=datetime(2026, 4, 1, tzinfo=UTC),
         filed_by="operator",
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
@@ -435,7 +432,7 @@ def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
             work_unit_id=work_unit_id,
             calculation_revision_id=revision_id,
             modelo="303",
-            filing_year=_YEAR,
+            filing_year=2026,
             period="1T",
         ),
         published=True,

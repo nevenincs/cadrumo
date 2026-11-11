@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { fixtureInstant } from "../src/dev/fixtureDates";
 import {
   documentAttachmentReference,
   movementDocuments,
@@ -15,8 +14,8 @@ const record: EvidenceRecord = {
   attachment_id: hexId("b"),
   media_kind: "pdf",
   source_path: "synthetic-purchase.pdf",
-  created_at: fixtureInstant(2, 20, "12:00:00Z"),
-  updated_at: fixtureInstant(2, 20, "12:00:00Z"),
+  created_at: "2026-02-20T12:00:00Z",
+  updated_at: "2026-02-20T12:00:00Z",
 };
 
 test("linked purchase evidence is shown even without a supplementary attachment", () => {

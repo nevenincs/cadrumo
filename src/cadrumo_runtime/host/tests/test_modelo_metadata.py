@@ -38,7 +38,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
@@ -81,11 +80,9 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_YEAR = filing_year_envelope().horizon
-_REVISION = str(open_ended_revision("130").id)
-_FIRST = Period.from_year_and_code(_YEAR, "1T")
-_SECOND = Period.from_year_and_code(_YEAR, "2T")
-_CREATED = datetime(1980, 1, 1, tzinfo=UTC)
+_FIRST = Period.from_year_and_code(2026, "1T")
+_SECOND = Period.from_year_and_code(2026, "2T")
+_CREATED = datetime(2020, 1, 1, tzinfo=UTC)
 _RENAME = MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 _DISCARD = MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID
 
@@ -95,15 +92,15 @@ def _unit(profile_id: UUID, period: Period) -> WorkUnit:
         work_unit_id=derive_work_unit_id(
             bucket_id=str(profile_id),
             modelo="130",
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
-            revision_id=_REVISION,
+            revision_id="2019-y-siguientes",
         ),
         bucket_id=str(profile_id),
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION,
+        revision_id="2019-y-siguientes",
         name=f"M130 {period.registry_token}",
         created_at=_CREATED,
         updated_at=_CREATED,

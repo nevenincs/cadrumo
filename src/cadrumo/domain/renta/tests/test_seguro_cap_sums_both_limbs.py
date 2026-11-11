@@ -30,7 +30,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...categories.registry import load_category_profiles
 from ...categories.spending_category import SpendingCategory
 from ..errors import RentaValidationError
@@ -51,7 +50,7 @@ def _cap(*, operation: PinnedAuthorityOperation, **counts: int) -> Decimal | Non
     return resolve_statutory_cap(
         rule=_rule(operation=operation),
         context=RentaDeductibilityContext(
-            profile_year=filing_year_envelope().horizon,
+            profile_year=2025,
             statutory_cap_variant_person_counts=counts,
         ),
     )
@@ -125,12 +124,12 @@ def test_uncounted_populations_fall_back_to_the_ordinary_limb_not_to_zero(
 
     assert resolve_statutory_cap(
         rule=_rule(operation=operation),
-        context=RentaDeductibilityContext(profile_year=filing_year_envelope().horizon, statutory_cap_person_count=1),
+        context=RentaDeductibilityContext(profile_year=2025, statutory_cap_person_count=1),
     ) == Decimal("500")
 
     assert resolve_statutory_cap(
         rule=_rule(operation=operation),
-        context=RentaDeductibilityContext(profile_year=filing_year_envelope().horizon, statutory_cap_person_count=3),
+        context=RentaDeductibilityContext(profile_year=2025, statutory_cap_person_count=3),
     ) == Decimal("1500")
 
 
@@ -141,7 +140,7 @@ def test_a_count_naming_a_variant_the_rule_does_not_declare_is_refused(*, operat
         resolve_statutory_cap(
             rule=_rule(operation=operation),
             context=RentaDeductibilityContext(
-                profile_year=filing_year_envelope().horizon,
+                profile_year=2025,
                 statutory_cap_variant_person_counts={"discapacidadd": 1},
             ),
         )

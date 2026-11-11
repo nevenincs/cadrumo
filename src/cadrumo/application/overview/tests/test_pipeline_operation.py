@@ -20,7 +20,6 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
@@ -42,11 +41,9 @@ from ..pipeline_read_ports import PipelineReadPortsFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = filing_year_envelope().horizon
-
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 def _registry():
@@ -190,7 +187,7 @@ def test_request_private_result_and_public_projection_are_distinct() -> None:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(1980, 3, 10, tzinfo=UTC),
+        settled_at=datetime(2026, 3, 10, tzinfo=UTC),
         result_ref="f" * 64,
     )
     projection = project_overview_pipeline_result(result, receipt)
@@ -198,7 +195,7 @@ def test_request_private_result_and_public_projection_are_distinct() -> None:
     assert OverviewPipelineProjection.model_validate_json(projection.model_dump_json()) == projection
     with pytest.raises(ProfileAccessRefusedError) as refused:
         project_overview_pipeline_result(
-            result.model_copy(update={"period": PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "2T"))}),
+            result.model_copy(update={"period": PublicPeriod.from_period(Period.from_year_and_code(2025, "2T"))}),
             receipt,
         )
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE

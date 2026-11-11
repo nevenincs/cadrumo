@@ -24,7 +24,7 @@ _PROFILE = UUID("00000000-0000-4000-8000-000000000001")
 
 def _record(name: str) -> CertificateSourceRecord:
     return CertificateSourceRecord(
-        name=name, certificate_path="cert.p12", registered_at=datetime(1980, 1, 1, tzinfo=UTC)
+        name=name, certificate_path="cert.p12", registered_at=datetime(2026, 1, 1, tzinfo=UTC)
     )
 
 

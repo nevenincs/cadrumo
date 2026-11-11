@@ -127,12 +127,6 @@ from ....application.tests.operator_scope_fakes import (
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from ....domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    revision_covering,
-    revision_serving_period,
-)
 from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -149,10 +143,10 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_YEAR = filing_grade_exercises("390")[-1]
-_T0 = datetime(filing_year_envelope().horizon, 8, 14, 9, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 8, 14, 10, 0, tzinfo=UTC)
-_T2 = datetime(filing_year_envelope().horizon, 8, 14, 11, 0, tzinfo=UTC)
+_YEAR = 2025
+_T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
+_T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
+_T2 = datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
 _TAX_ID = "12345678Z"
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
 
@@ -197,7 +191,7 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
                     UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
                     UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
                     UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 )
             ),
             created_at=_T0,
@@ -1023,7 +1017,7 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering(*, operation: P
         source_bucket_id=_BUCKET_ID,
         source_work_unit_id="a" * 64,
         source_calculation_revision_id="b" * 64,
-        source_registry_revision_id=str(revision_serving_period("303", _YEAR, "4T").id),
+        source_registry_revision_id="2010-y-siguientes",
         source_filing_year=_YEAR,
         source_modelo="303",
         source_period_code="4T",
@@ -1033,7 +1027,7 @@ def test_handoff_digest_and_post_identity_stamp_refuse_tampering(*, operation: P
         ),
         target_bucket_id=_BUCKET_ID,
         target_work_unit_id="c" * 64,
-        target_registry_revision_id=str(revision_covering("390", _YEAR).id),
+        target_registry_revision_id="2010-y-siguientes",
         target_filing_year=_YEAR,
         target_modelo="390",
         target_period_code="0A",

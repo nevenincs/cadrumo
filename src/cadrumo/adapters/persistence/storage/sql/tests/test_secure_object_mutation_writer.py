@@ -24,7 +24,7 @@ from .secure_objects_support import repo_at
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.quickfile.writer.test"
-_INSTANT = datetime(1980, 10, 1, 11, tzinfo=UTC)
+_INSTANT = datetime(2026, 10, 1, 11, tzinfo=UTC)
 
 
 def _write(key: str, *, expected: str | None = None) -> SecureObjectWrite:

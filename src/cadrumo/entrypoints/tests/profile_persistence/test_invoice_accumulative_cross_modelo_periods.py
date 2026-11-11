@@ -87,7 +87,6 @@ from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import IvaCategory
@@ -119,22 +118,7 @@ def bucket_id() -> str:
 
 _TAX_ID = "12345678Z"
 _M100_SUFFERED_WITHHOLDING_CREDIT_CASILLAS = ("0596", "0597", "0603")
-
-
-def _newest_exercise_without_inventory_books() -> int:
-    """Return the newest filing-grade exercise whose Modelo 100 reads no inventory books.
-
-    This persona keeps no inventory ledger, and an edition that sources the Anexo D casillas from
-    those books leaves the activity net income unresolved, which is not what this test measures.
-    """
-    for exercise in reversed(filing_grade_exercises("390")):
-        snapshot = published_authority_operation().snapshot("100", filing_year=exercise, period="0A")
-        if all(str(binding.source) != "inventory" for binding in snapshot.revision.bindings):
-            return exercise
-    raise LookupError("no filing-grade exercise of Modelo 390 has a Modelo 100 without inventory books")
-
-
-_YEAR = _newest_exercise_without_inventory_books()
+_YEAR = 2024
 _PRIOR_YEAR = _YEAR - 1
 _T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC)

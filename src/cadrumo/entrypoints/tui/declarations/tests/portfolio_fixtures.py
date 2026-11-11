@@ -37,15 +37,13 @@ from .....application.overview.coverage import AdvisedObligation, CoverageAdvice
 from .....application.overview.home import HomeAvailability
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from .....domain.deadlines.models import ObligationStatus
 from .....domain.modelos.work_unit import WorkUnitState
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 4, 30, 12, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(_YEAR, "1T")
-_NEXT = Period.from_year_and_code(_YEAR, "2T")
+_NOW = datetime(2025, 4, 30, 12, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_NEXT = Period.from_year_and_code(2025, "2T")
 _BUCKET = "13000000-0000-4000-8000-000000000890"
 
 
@@ -61,7 +59,7 @@ def portfolio_projection() -> tuple[DeclarationsWorkspaceProjectionV1, Declarati
         DeclarationsWorkspaceDeclarationRefV1(
             work_unit_id=digit * 64,
             modelo=modelo,
-            filing_year=_YEAR,
+            filing_year=2025,
             period=_PERIOD,
             state=WorkUnitState.BORRADOR,
             has_current_calculation=True,
@@ -101,14 +99,14 @@ def portfolio_projection() -> tuple[DeclarationsWorkspaceProjectionV1, Declarati
         lifecycle=(),
     )
     entries = (
-        _calendar_entry("303", _PERIOD, date(_YEAR, 4, 21), external=True),
-        _calendar_entry("349", _NEXT, date(_YEAR, 7, 21)),
-        _calendar_entry("390", Period.from_year_and_code(_YEAR - 1, "0A"), date(_YEAR, 1, 30), concern=True),
+        _calendar_entry("303", _PERIOD, date(2025, 4, 21), external=True),
+        _calendar_entry("349", _NEXT, date(2025, 7, 21)),
+        _calendar_entry("390", Period.from_year_and_code(2024, "0A"), date(2025, 1, 30), concern=True),
     )
     calendar = DeclarationsCalendarProjectionV1(
         as_of=_NOW.date(),
         generated_at=_NOW,
-        query_range=OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
+        query_range=OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
         sources=tuple(
             DeclarationsCalendarSourceStateV1(
                 source=source,
@@ -155,8 +153,8 @@ def _calendar_entry(
         aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED
         if external
         else OverviewAeatSubmissionState.NOT_OBSERVED,
-        aeat_submitted_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC) if external else None,
-        aeat_reference_id=f"{_YEAR}0000000000000001" if external else None,
+        aeat_submitted_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC) if external else None,
+        aeat_reference_id="20250000000000000001" if external else None,
         aeat_needs_check=concern,
         justificante_verified=False,
         evidence_conflicted=False,

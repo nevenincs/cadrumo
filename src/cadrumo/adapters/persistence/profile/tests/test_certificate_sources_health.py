@@ -31,7 +31,6 @@ from cadrumo.application.tests.operator_scope_fakes import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -40,8 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _PROFILE_LABEL = "gestor-cert-rotation"
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR + 1, 5, 28, 14, 10, 0, tzinfo=UTC)
+_NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 

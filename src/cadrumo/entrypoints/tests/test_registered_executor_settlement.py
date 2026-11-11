@@ -37,7 +37,6 @@ from ...core.operations import (
 )
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
@@ -70,7 +69,7 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=str(profile_id),
-                booked_date=date(filing_year_envelope().horizon, 1, 15),
+                booked_date=date(2025, 1, 15),
                 amount=Decimal("12.00"),
                 direction=TransactionDirection.INCOMING,
                 description="conformance track empty-index seed",

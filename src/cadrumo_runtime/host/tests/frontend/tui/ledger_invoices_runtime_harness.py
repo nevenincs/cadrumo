@@ -61,20 +61,17 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import INVOICES_PROFILE_ID
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
-
-_YEAR = filing_year_envelope().horizon
 
 OTHER_PROFILE_ID = UUID("4ee00000-0000-4000-8000-0000000000ee")
 SESSION_ID = UUID("6dd00000-0000-4000-8000-0000000000dd")
 LAPSED_SESSION_ID = UUID("7dd00000-0000-4000-8000-0000000000dd")
 PROFILE_LABEL = "Fixture profile"
 _OPERATION_ID = "d" * 64
-_NOW = datetime(_YEAR, 10, 22, tzinfo=UTC)
+_NOW = datetime(2026, 10, 22, tzinfo=UTC)
 
 
 def _unused[T](kind: type[T]) -> T:

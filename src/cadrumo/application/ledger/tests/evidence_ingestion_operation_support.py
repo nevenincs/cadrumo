@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Never
 from uuid import UUID
-
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.config import Settings, load_settings
 from ....core.document_shape import DocumentShape
@@ -34,8 +31,6 @@ from ..structured_invoice_ports import StructuredInvoiceRecord
 from .bulk_classify_operation_support import PROFILE_ID
 from .export_link_operation_support import Events
 from .export_link_operation_support import Subject as ActionSubject
-
-_YEAR = filing_year_envelope().horizon
 
 
 def unused(*args: object, **kwargs: object) -> Never:
@@ -261,7 +256,7 @@ class Subject(ActionSubject):
                 invoice_series=None,
                 invoice_classification=None,
                 rectifies_invoice_number=None,
-                invoice_date=date(_YEAR, 1, 1).isoformat(),
+                invoice_date="2026-01-01",
                 currency="EUR",
                 taxable_base=Decimal("100"),
                 iva_amount=Decimal("21"),

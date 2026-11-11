@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
@@ -48,8 +47,6 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.time.clock import now
 from .registration_access_context_support import registration_access_context
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -87,13 +84,13 @@ def _record(**changes: object) -> PurchaseInvoiceEvidence:
         "media_kind": MediaKind.PDF,
         "supplier": "Supplier SL",
         "invoice_number": "INV-001",
-        "invoice_date": date(_YEAR, 4, 1).isoformat(),
+        "invoice_date": "2026-04-01",
         "taxable_base": Decimal("100.00"),
         "iva_rate": Decimal("0.21"),
         "iva_amount": Decimal("21.00"),
         "notes": "read fixture",
-        "created_at": datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC),
-        "updated_at": datetime(_YEAR, 4, 2, 10, 30, tzinfo=UTC),
+        "created_at": datetime(2026, 4, 2, 10, 30, tzinfo=UTC),
+        "updated_at": datetime(2026, 4, 2, 10, 30, tzinfo=UTC),
     }
     data.update(changes)
     return PurchaseInvoiceEvidence.model_validate(data)

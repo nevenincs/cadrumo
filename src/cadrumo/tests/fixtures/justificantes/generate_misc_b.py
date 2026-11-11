@@ -9,16 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from .generate_base import (
-    SEDE_ORIGIN,
-    authored_revision_starts,
-    declared_filing_years,
-    open_ended_revision_start,
-)
-
-#: The exercise the specimens without a design-specific year are filed for: the
-#: second before the declared horizon.
-_SPECIMEN_EXERCISE = declared_filing_years().horizon - 2
+from .generate_base import SEDE_ORIGIN
 
 
 @dataclass(frozen=True)
@@ -47,22 +38,18 @@ class Modelo232Fixture:
     full_name: str
 
 
-#: One specimen for the first exercise of each Modelo 232 design the registry authors.
-_M232_FIRST_DESIGN_EXERCISE = authored_revision_starts("232")[0].year
-_M232_CURRENT_DESIGN_EXERCISE = open_ended_revision_start("232").year
-
 MODELO_232_FIXTURES: tuple[Modelo232Fixture, ...] = (
     Modelo232Fixture(
-        filename=f"232/{_M232_FIRST_DESIGN_EXERCISE}-0A.pdf",
-        ejercicio=str(_M232_FIRST_DESIGN_EXERCISE),
+        filename="232/2016-0A.pdf",
+        ejercicio="2016",
         tipo_ejercicio="1",
         cnae="6201",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
     Modelo232Fixture(
-        filename=f"232/{_M232_CURRENT_DESIGN_EXERCISE}-0A.pdf",
-        ejercicio=str(_M232_CURRENT_DESIGN_EXERCISE),
+        filename="232/2018-0A.pdf",
+        ejercicio="2018",
         tipo_ejercicio="1",
         cnae="6201",
         tax_id="Y0001006P",
@@ -207,22 +194,18 @@ _MODELO_123_2023_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     (validated_casilla_id("08", surface="justificante fixture casilla id"), "08", "1.520,00"),
 )
 
-#: The first exercise of the Modelo 123 design the registry leaves open; the
-#: exercise before it is the last the predecessor design serves.
-_M123_CURRENT_DESIGN_EXERCISE = open_ended_revision_start("123").year
-
 MODELO_123_FIXTURES: tuple[Modelo123Fixture, ...] = (
     Modelo123Fixture(
-        filename=f"123/{_M123_CURRENT_DESIGN_EXERCISE}-1T.pdf",
-        ejercicio=str(_M123_CURRENT_DESIGN_EXERCISE),
+        filename="123/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
         render_rows=_MODELO_123_2024_RENDER_ROWS,
     ),
     Modelo123Fixture(
-        filename=f"123/{_M123_CURRENT_DESIGN_EXERCISE - 1}-1T.pdf",
-        ejercicio=str(_M123_CURRENT_DESIGN_EXERCISE - 1),
+        filename="123/2023-1T.pdf",
+        ejercicio="2023",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
@@ -313,8 +296,8 @@ class Modelo347Fixture:
 
 MODELO_347_FIXTURES: tuple[Modelo347Fixture, ...] = (
     Modelo347Fixture(
-        filename=f"347/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="347/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
@@ -408,8 +391,8 @@ class Modelo184Fixture:
 
 MODELO_184_FIXTURES: tuple[Modelo184Fixture, ...] = (
     Modelo184Fixture(
-        filename=f"184/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="184/2024-0A.pdf",
+        ejercicio="2024",
         tax_id="Y0001006P",
         full_name="DEMO EMPRESA SL",
     ),
@@ -535,8 +518,8 @@ MODELO_131_FIXTURES: tuple[Modelo131Fixture, ...] = (
         # ejercicio assertion (filepath stem "2024-1T" â†’ ejercicio_expected "2024").
         # The declaracion parser tests use aÃ±o_override=2026 explicitly, so they
         # are not affected by the ejercicio value printed in the PDF.
-        filename=f"131/{_SPECIMEN_EXERCISE}-1T.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="131/2024-1T.pdf",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0001006P",
         full_name="DEMO AUTONOMO EO",
@@ -630,8 +613,8 @@ class Modelo840Fixture:
 
 MODELO_840_FIXTURES: tuple[Modelo840Fixture, ...] = (
     Modelo840Fixture(
-        filename=f"840/{_SPECIMEN_EXERCISE}-0A.pdf",
-        ejercicio=str(_SPECIMEN_EXERCISE),
+        filename="840/2024-0A.pdf",
+        ejercicio="2024",
         tipo_declaracion="Alta",
         tax_id="Y0001006P",
         full_name="DEMO AUTONOMO UNO",
@@ -722,13 +705,10 @@ _MODELO_202_PRINTED_ROWS: tuple[tuple[str, str, str], ...] = (
     ("34", "Mod. 40.3 LIS Cantidad a ingresar", "29.400,00"),
 )
 
-#: The first exercise of the Modelo 202 design the registry leaves open.
-_M202_CURRENT_DESIGN_EXERCISE = open_ended_revision_start("202").year
-
 MODELO_202_FIXTURES: tuple[Modelo202Fixture, ...] = (
     Modelo202Fixture(
-        filename=f"202/{_M202_CURRENT_DESIGN_EXERCISE}-1P.pdf",
-        ejercicio=str(_M202_CURRENT_DESIGN_EXERCISE),
+        filename="202/2025-1P.pdf",
+        ejercicio="2025",
         periodo="1P",
         tax_id="B00010082",
         full_name="DEMO SOCIEDAD SL",

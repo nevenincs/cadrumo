@@ -31,36 +31,32 @@ from cadrumo.application.modelo.work_lifecycle import (
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventObjectType
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-
-_YEAR = filing_year_envelope().horizon
-_REVISION_ID = revision_covering("130", _YEAR).id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_A = "5aa00000-0000-4000-8000-0000000000aa"
 _BUCKET_B = "5bb00000-0000-4000-8000-0000000000bb"
-_T0 = datetime(1980, 2, 1, 9, 0, tzinfo=UTC)
+_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
 
 
 def _unit(bucket_id: str, *, modelo: str = "130") -> WorkUnit:
-    period = Period.from_year_and_code(_YEAR, "1T")
+    period = Period.from_year_and_code(2026, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo=modelo,
-            filing_year=_YEAR,
+            filing_year=2026,
             period=period,
-            revision_id=_REVISION_ID,
+            revision_id="2019-y-siguientes",
         ),
         bucket_id=bucket_id,
-        name=f"{modelo}-{_YEAR}-1T",
+        name=f"{modelo}-2026-1T",
         modelo=modelo,
-        filing_year=_YEAR,
+        filing_year=2026,
         period=period,
-        revision_id=_REVISION_ID,
+        revision_id="2019-y-siguientes",
         created_at=_T0,
         updated_at=_T0,
     )

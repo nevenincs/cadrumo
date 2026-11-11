@@ -15,7 +15,6 @@ from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ...profile.submission import (
     SubmissionRepository,
@@ -29,9 +28,8 @@ _runtime_profile = default_bucket_runtime_profile_fixture()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
-_HORIZON_YEAR = filing_year_envelope().horizon
-_PERIOD = Period.from_year_and_code(_HORIZON_YEAR, "1T")
-_FOREIGN_CLASS_WRITTEN_AT = datetime(1980, 5, 26, 15, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 0, 0, tzinfo=UTC)
 
 
 def _make_filing(
@@ -41,7 +39,7 @@ def _make_filing(
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
 ) -> ModeloPresentado:
-    submitted_at = datetime(1980, 4, 27, 10, 0, tzinfo=UTC)
+    submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.{attempt_ordinal}",
         started_at=submitted_at,

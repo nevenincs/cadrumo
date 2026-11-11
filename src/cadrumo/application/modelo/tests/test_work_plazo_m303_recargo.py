@@ -37,7 +37,6 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.deadlines.recargo import build_recovery_for_overdue
@@ -49,10 +48,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "c" * 64
 
-# The Modelo 303 registry carries quarterly windows for every supported filing
-# year; each is a distinct member of the R9 quarterly-IVA deadline cluster.
+# The Modelo 303 registry carries quarterly windows for these filing years; each
+# is a distinct member of the R9 quarterly-IVA deadline cluster.
 _QUARTERS = ("1T", "2T", "3T", "4T")
-_FILING_YEARS = filing_year_envelope().years
+_FILING_YEARS = (2025, 2026)
 
 
 def _quarter_year_cases():

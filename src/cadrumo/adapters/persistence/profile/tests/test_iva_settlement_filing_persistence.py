@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -33,8 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 _BUCKET_ID = "30330300-0000-4000-8000-000000000903"
 _WORK_UNIT_ID = "a" * 64
 _REVISION_ID = "b" * 64
-_YEAR = filing_year_envelope().horizon
-_AT = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+_AT = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 
 
 def test_encrypted_filing_catalogue_roundtrips_an_iva_settlement_snapshot(tmp_path: Path) -> None:
@@ -69,8 +67,8 @@ def test_encrypted_filing_catalogue_roundtrips_an_iva_settlement_snapshot(tmp_pa
         calculation_revision_id=_REVISION_ID,
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=_AT,
         filed_by="operator-A",
         origin=FilingOrigin.LOCAL,

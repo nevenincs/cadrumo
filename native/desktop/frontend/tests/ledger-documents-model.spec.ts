@@ -18,11 +18,6 @@ import {
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
 import { hexId } from "./support/ledger";
-import {
-  fixtureDay,
-  fixtureInstant,
-  fixtureYear,
-} from "../src/dev/fixtureDates";
 
 // The Documents section's rules: a confirmation always names its kind and
 // country, sends only corrections that change the reading, in the
@@ -35,7 +30,7 @@ const draft: EvidenceDraft = {
   supplier_tax_id: "B12000045",
   supplier_country_code: "ES",
   invoice_number: "PT-0412",
-  invoice_date: fixtureDay(10, 15),
+  invoice_date: "2026-10-15",
   taxable_base: { decimal: "30.00" },
   iva_rate: { decimal: "21" },
   iva_amount: { decimal: "6.30" },
@@ -272,8 +267,8 @@ test("a record's correction sends only what changed and clears with a blank", ()
     iva_rate: "21",
     iva_amount: null,
     notes: "",
-    created_at: fixtureInstant(10, 1, "00:00:00Z"),
-    updated_at: fixtureInstant(10, 1, "00:00:00Z"),
+    created_at: "2026-10-01T00:00:00Z",
+    updated_at: "2026-10-01T00:00:00Z",
     source_path: "factura.pdf",
   };
   expect(
@@ -292,9 +287,7 @@ test("a record's correction sends only what changed and clears with a blank", ()
       patch_fields: ["supplier", "iva_amount", "iva_rate"],
     },
   });
-  expect(
-    recordUpdate(record, { invoice_date: `15/10/${fixtureYear}` }),
-  ).toEqual({
+  expect(recordUpdate(record, { invoice_date: "15/10/2026" })).toEqual({
     kind: "refused",
     fields: ["invoice_date"],
   });

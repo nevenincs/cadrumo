@@ -31,7 +31,6 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from .....application.aggregation.renta_income_evidence import income_withheld_amount, sales_invoice_evidence_payload
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....core.aggregation import LedgerWithholdingDerivation
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction
@@ -48,8 +47,6 @@ from .invoice_confirmation_test_support import (
     seed_filer_profile,
 )
 from .invoice_confirmation_test_support import runtime_profile as runtime_profile
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -231,7 +228,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
                     source_sha256="d" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
                     provider_name="CSV provider",
                 ),
                 raw_fields={},
@@ -242,7 +239,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

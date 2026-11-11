@@ -14,20 +14,17 @@ from cadrumo.application.calculations.iva_compensation_history import iva_compen
 from cadrumo.application.calculations.iva_compensation_history_ports import IvaCompensationHistoryPersistenceError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
 from .iva_compensation_history_support import period_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_YEAR = filing_year_envelope().horizon
-
 _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000305"
 
 
 def test_iva_compensation_history_round_trips_a_period_bound_encrypted_payload(tmp_path: Path) -> None:
-    state = period_state(filing_year=_YEAR, period="2T", generated=Decimal("47.00"))
+    state = period_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
@@ -44,7 +41,7 @@ def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """An identical recalculation/replay replaces one period key, not the wallet history."""
-    state = period_state(filing_year=_YEAR, period="2T", generated=Decimal("47.00"))
+    state = period_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
@@ -52,7 +49,7 @@ def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(
         repository.save_period(state)
 
         listed = repository.list_periods()
-    report = build_iva_compensation_carry_forward_report(listed, as_of_year=_YEAR, operation=operation)
+    report = build_iva_compensation_carry_forward_report(listed, as_of_year=2026, operation=operation)
 
     assert listed == (state,)
     assert len(report.lots) == 1
@@ -60,8 +57,8 @@ def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(
 
 
 def test_iva_compensation_history_refuses_a_period_payload_rekeyed_under_foreign_storage_key(tmp_path: Path) -> None:
-    state = period_state(filing_year=_YEAR, period="2T", generated=Decimal("47.00"))
-    foreign_period = Period.from_year_and_code(_YEAR - 1, "1T")
+    state = period_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
+    foreign_period = Period.from_year_and_code(2025, "1T")
     foreign_key = iva_compensation_period_key(foreign_period)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID) as profile:

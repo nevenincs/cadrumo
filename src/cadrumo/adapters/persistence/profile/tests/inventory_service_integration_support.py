@@ -15,7 +15,6 @@ from cadrumo.application.inventory.ports import InventoryServicePorts
 from cadrumo.application.inventory.service import InventoryService
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -33,10 +32,6 @@ from .....domain.contribuyente.inventory.records import (
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
 )
-
-_YEAR = filing_year_envelope().horizon
-_FILING_YEAR = _YEAR - 1
-_PRIOR_FILING_YEAR = _FILING_YEAR - 1
 
 if TYPE_CHECKING:
     from cadrumo.domain.contribuyente.inventory import closing_authority_records
@@ -130,12 +125,12 @@ def authority_record(
         decision=InventoryClosingAuthorityDecision(
             decision_id="decision-2025",
             actividad_id="A1",
-            filing_year=_FILING_YEAR,
+            filing_year=2025,
             authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
             reason=reason,
             actor="inventory-reviewer",
             source_command="inventory.closing.authority.decide",
-            decided_at=datetime(_YEAR, 1, 2, tzinfo=UTC),
+            decided_at=datetime(2026, 1, 2, tzinfo=UTC),
             evidence=(
                 InventoryClosingDecisionEvidence(
                     reference=FilingEvidenceReference(reference="decision-evidence"),
@@ -146,14 +141,14 @@ def authority_record(
         ),
         prior_closing_link=PriorAuthoritativeClosingLink(
             actividad_id="A1",
-            current_filing_year=_FILING_YEAR,
-            prior_filing_year=_PRIOR_FILING_YEAR,
+            current_filing_year=2025,
+            prior_filing_year=2024,
             prior_authoritative_closing_value=Decimal("100.00"),
             current_opening_value=Decimal("100.00"),
             prior_authoritative_source_fingerprint="c" * 64,
             prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
                 actividad_id="A1",
-                filing_year=_PRIOR_FILING_YEAR,
+                filing_year=2024,
                 authoritative_closing_value=Decimal("100.00"),
                 authoritative_source_fingerprint="c" * 64,
                 evidence=continuity_evidence,
@@ -169,10 +164,10 @@ def physical_authority_record() -> closing_authority_records.InventoryClosingAut
     base = authority_record()
     observation = PhysicalClosingObservation(
         observation_id="physical-2025",
-        observed_on=date(_YEAR, 1, 1),
-        as_of_date=date(_FILING_YEAR, 12, 31),
+        observed_on=date(2026, 1, 1),
+        as_of_date=date(2025, 12, 31),
         actividad_id="A1",
-        filing_year=_FILING_YEAR,
+        filing_year=2025,
         closing_value=Decimal("101.00"),
         valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
         evidence=(

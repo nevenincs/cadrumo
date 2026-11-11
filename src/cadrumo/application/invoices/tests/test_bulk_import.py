@@ -22,15 +22,12 @@ from __future__ import annotations
 import zipfile
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from openpyxl import Workbook
 from pydantic import ValidationError
-
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.hashing import sha256_hex
 from ....domain.invoices.errors import InvoiceValidationError
@@ -40,10 +37,6 @@ from ....tests.xls_fixtures import XlsFormula, xls_workbook_bytes
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
-
-_YEAR = filing_year_envelope().horizon
-_DAY = date(_YEAR, 5, 1).isoformat()
-_NEXT_DAY = date(_YEAR, 5, 2).isoformat()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -77,7 +70,7 @@ def test_import_invoices_from_rows_refuses_malformed_row_names_field(
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-C-001,{_DAY},100.00,21\n"
+            f"{_CIF},Papeleria Sol SL,BULK-C-001,2026-05-01,100.00,21\n"
             f"{_CIF},Papeleria Sol SL,BULK-C-002,not-a-date,50.00,10\n",
             tmp_path,
         )
@@ -97,7 +90,7 @@ def test_import_invoices_from_rows_refuses_unsupported_iva_rate(tmp_path: Path) 
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-D-001,{_DAY},100.00,13\n",
+            f"{_CIF},Papeleria Sol SL,BULK-D-001,2026-05-01,100.00,13\n",
             tmp_path,
         )
         result = import_invoices_from_rows(
@@ -126,7 +119,7 @@ def test_import_refuses_the_spanish_thousands_amount_instead_of_reading_it_as_ce
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-ES-001,{_DAY},1.234,21\n",
+            f"{_CIF},Papeleria Sol SL,BULK-ES-001,2026-05-01,1.234,21\n",
             tmp_path,
         )
         result = import_invoices_from_rows(
@@ -157,7 +150,7 @@ def test_import_refuses_every_spanish_amount_grammar(taxable_base: str, tmp_path
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f'{_CIF},Papeleria Sol SL,BULK-ES-002,{_DAY},"{taxable_base}",21\n',
+            f'{_CIF},Papeleria Sol SL,BULK-ES-002,2026-05-01,"{taxable_base}",21\n',
             tmp_path,
         )
         result = import_invoices_from_rows(
@@ -181,7 +174,7 @@ def test_the_amount_refusal_teaches_the_grammar_it_wants(tmp_path: Path) -> None
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-ES-005,{_DAY},1.234,21\n",
+            f"{_CIF},Papeleria Sol SL,BULK-ES-005,2026-05-01,1.234,21\n",
             tmp_path,
         )
         result = import_invoices_from_rows(
@@ -204,7 +197,7 @@ def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-            f"{_CIF},Papeleria Sol SL,BULK-ES-003,{_DAY},1234.56,21\n",
+            f"{_CIF},Papeleria Sol SL,BULK-ES-003,2026-05-01,1234.56,21\n",
             tmp_path,
         )
         result = import_invoices_from_rows(
@@ -225,7 +218,7 @@ def test_bulk_import_attaches_canonical_source_provenance_to_accepted_invoice(
     csv_path.parent.mkdir()
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-        f"{_CIF},Papeleria Sol SL,BULK-PROV-001,{_DAY},100.00,21\n",
+        f"{_CIF},Papeleria Sol SL,BULK-PROV-001,2026-05-01,100.00,21\n",
         encoding="utf-8",
     )
 
@@ -269,7 +262,7 @@ def test_bulk_import_without_source_identity_keeps_manual_invoice_provenance_emp
     del authority_operation
     source = _csv_source(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-        f"{_CIF},Papeleria Sol SL,BULK-PROV-002,{_DAY},100.00,21\n",
+        f"{_CIF},Papeleria Sol SL,BULK-PROV-002,2026-05-01,100.00,21\n",
         tmp_path,
     )
     source = source.model_copy(
@@ -308,7 +301,7 @@ def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) 
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )
-    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-004", date(_YEAR, 5, 1).isoformat(), 1000 / 3, 21])
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-004", "2026-05-01", 1000 / 3, 21])
     workbook.save(xlsx_path)
 
     with _in_memory_ports() as ports:
@@ -326,7 +319,7 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     csv_path = tmp_path / "invoices.csv"
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-        f"{_CIF},Papeleria Sol SL,BULK-E-001,{_DAY},100.00,21\n",
+        f"{_CIF},Papeleria Sol SL,BULK-E-001,2026-05-01,100.00,21\n",
         encoding="utf-8",
     )
     xlsx_path = tmp_path / "invoices.xlsx"
@@ -336,12 +329,12 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )
-    sheet.append([_CIF, "Papeleria Sol SL", "BULK-E-001", date(_YEAR, 5, 1).isoformat(), 100.00, 21])
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-E-001", "2026-05-01", 100.00, 21])
     workbook.save(xlsx_path)
     tsv_path = tmp_path / "invoices.tsv"
     tsv_path.write_text(
         "counterparty_nif\tcounterparty_name\tinvoice_number\tinvoice_date\ttaxable_base\tiva_rate\n"
-        f"{_CIF}\tPapeleria Sol SL\tBULK-E-001\t{_DAY}\t100.00\t21\n",
+        f"{_CIF}\tPapeleria Sol SL\tBULK-E-001\t2026-05-01\t100.00\t21\n",
         encoding="utf-8",
     )
 
@@ -391,7 +384,7 @@ def test_read_bulk_invoice_import_source_reads_file_bytes_once(
     csv_path = tmp_path / "once.csv"
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-        f"{_CIF},Papeleria Sol SL,BULK-ONCE-001,{_DAY},100.00,21\n",
+        f"{_CIF},Papeleria Sol SL,BULK-ONCE-001,2026-05-01,100.00,21\n",
         encoding="utf-8",
     )
     original_read_bytes = Path.read_bytes
@@ -428,7 +421,7 @@ def test_an_unrecognised_column_is_reported_and_the_file_still_imports(tmp_path:
     csv_path = tmp_path / "invoices.csv"
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,bogus\n"
-        f"{_CIF},Papeleria Sol SL,BULK-F-001,{_DAY},100.00,xyz\n",
+        f"{_CIF},Papeleria Sol SL,BULK-F-001,2026-05-01,100.00,xyz\n",
         encoding="utf-8",
     )
     source = read_bulk_invoice_import_source(csv_path)
@@ -454,7 +447,8 @@ def test_a_file_with_no_column_for_a_required_field_still_refuses(tmp_path: Path
     """
     csv_path = tmp_path / "invoices.csv"
     csv_path.write_text(
-        f"counterparty_nif,counterparty_name,invoice_number,invoice_date\n{_CIF},Papeleria Sol SL,BULK-F-002,{_DAY}\n",
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date\n"
+        f"{_CIF},Papeleria Sol SL,BULK-F-002,2026-05-01\n",
         encoding="utf-8",
     )
     with pytest.raises(InvoiceValidationError, match="taxable_base"):
@@ -477,7 +471,7 @@ def _workbook_with_stale_cached_formula(tmp_path: Path) -> Path:
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )
-    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-005", date(_YEAR, 5, 1).isoformat(), "=500*2", 21])
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-005", "2026-05-01", "=500*2", 21])
     workbook.save(authored)
 
     stale = tmp_path / "stale.xlsx"
@@ -528,7 +522,7 @@ def test_import_refuses_an_uncomputed_formula_naming_the_formula_not_the_amount(
     sheet.append(
         ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
     )
-    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-006", date(_YEAR, 5, 1).isoformat(), "=500*2", 21])
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-006", "2026-05-01", "=500*2", 21])
     workbook.save(xlsx_path)
 
     with pytest.raises(InvoiceValidationError) as exc_info:
@@ -549,15 +543,15 @@ def test_import_refuses_an_uncomputed_formula_naming_the_formula_not_the_amount(
 # than a blank-cell one.
 _EXPORT_WITHOUT_COUNTRY_COLUMN = (
     "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
-    f"{_CIF},Papeleria Sol SL,BULK-CTY-001,{_DAY},100.00,21\n"
+    f"{_CIF},Papeleria Sol SL,BULK-CTY-001,2026-05-01,100.00,21\n"
 )
 
 # The same export from a book that DOES carry the column, with one EU supplier
 # whose country the export left empty -- the row-level omission.
 _EXPORT_WITH_COUNTRY_COLUMN_ONE_BLANK = (
     "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,country_code\n"
-    f"{_CIF},Papeleria Sol SL,BULK-CTY-010,{_DAY},100.00,21,ES\n"
-    f"DE811907980,Papier Nord GmbH,BULK-CTY-011,{_NEXT_DAY},200.00,21,\n"
+    f"{_CIF},Papeleria Sol SL,BULK-CTY-010,2026-05-01,100.00,21,ES\n"
+    "DE811907980,Papier Nord GmbH,BULK-CTY-011,2026-05-02,200.00,21,\n"
 )
 
 
@@ -632,10 +626,7 @@ def test_an_xls_book_reads_and_imports_like_the_same_xlsx_book(
 ) -> None:
     """An Excel 97-2003 book yields the XLSX reader's values, row identity and an accepted invoice."""
     del authority_operation
-    rows: list[list[object]] = [
-        _XLS_HEADER,
-        [_CIF, "Papeleria Sol SL", "BULK-XLS-001", date(_YEAR, 5, 1).isoformat(), 100.0, 21],
-    ]
+    rows: list[list[object]] = [_XLS_HEADER, [_CIF, "Papeleria Sol SL", "BULK-XLS-001", "2026-05-01", 100.0, 21]]
     xls_path = tmp_path / "invoices.xls"
     xls_path.write_bytes(xls_workbook_bytes([("Invoices", rows)]))
     xlsx_path = tmp_path / "invoices.xlsx"
@@ -678,10 +669,7 @@ def test_an_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
             [
                 (
                     "Invoices",
-                    [
-                        _XLS_HEADER,
-                        [_CIF, "Papeleria Sol SL", "BULK-XLS-002", date(_YEAR, 5, 1).isoformat(), XlsFormula(9000), 21],
-                    ],
+                    [_XLS_HEADER, [_CIF, "Papeleria Sol SL", "BULK-XLS-002", "2026-05-01", XlsFormula(9000), 21]],
                 )
             ]
         )
@@ -711,7 +699,7 @@ def _retention_rate_row(rate: str, tmp_path: Path):
     """Return the real import result for one received row stating a retención rate."""
     rows = _csv_source(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,retencion_amount,retencion_rate\n"
-        f"{_CIF},Papeleria Sol SL,BULK-R-001,{_DAY},100.00,21,1.00,{rate}\n",
+        f"{_CIF},Papeleria Sol SL,BULK-R-001,2026-05-01,100.00,21,1.00,{rate}\n",
         tmp_path,
     )
     with _in_memory_ports() as ports:

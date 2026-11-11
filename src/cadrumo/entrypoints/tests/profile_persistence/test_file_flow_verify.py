@@ -44,11 +44,6 @@ from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetai
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    filing_grade_exercises,
-    filing_year_envelope,
-    revision_covering,
-)
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -106,10 +101,6 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-# An exercise whose filing windows closed before the fixtures' clock.
-_CLOSED_PAST_YEAR = T2.year - 1
-_M347_YEAR = filing_grade_exercises("347")[-1]
-
 
 def _verification_repositories_for_test(repos: Repos):
     """Compose verification capabilities while retaining fixture repositories."""
@@ -166,17 +157,17 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
 def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monkeypatch: pytest.MonkeyPatch) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
-    A modelo 130 calculation for a Q1 of the year before the clock's —
-    whose filing window closed in April of that year — is verified at the
-    fixtures' clock. ``compute_obligation`` derives the schedule from
-    ``today.year``, so no obligation exists for that earlier period at all. The pre-deadline-independence
+    A modelo 130 calculation for 2024 Q1 — whose filing window closed
+    in April 2024 — is verified at a 2026 clock. ``compute_obligation``
+    derives the schedule from ``today.year`` (2026), so no obligation
+    exists for the 2024 period at all. The pre-deadline-independence
     behaviour aborted here with ``NO_PENDING_OBLIGATION``; verify must
     now still grant ``VERIFICADO_COMPLETO`` because the calculation is
     sound and verification does not depend on the filing window.
     """
 
     wu_repo, cr_repo, _, _vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=_CLOSED_PAST_YEAR)
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
     revision = calculate_baseline_130_revision(work_unit)
 
@@ -328,7 +319,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
     """
 
     wu_repo, _cr_repo, _, _, _bv_repo = repos
-    work_unit = seed_work_unit(wu_repo, filing_year=_CLOSED_PAST_YEAR)
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
@@ -371,7 +362,7 @@ def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
 def test_verify_grants_when_all_required_casillas_present_real_registry(
     repos: Repos,
 ) -> None:
-    """Real e2e: registry resolves modelo 180 (0A); every required
+    """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
     in encrypted storage; the calculation revision transitions
     DRAFT → VERIFICADO_COMPLETO. No mocks, no in-memory fakes — the
@@ -514,7 +505,7 @@ def test_work_unit_creation_refuses_unresolvable_registry_snapshot_before_verify
         seed_work_unit(
             wu_repo,
             modelo=VERIFY_MODELO,
-            filing_year=filing_year_envelope().floor - 1,
+            filing_year=2010,
             period=VERIFY_PERIOD,
             revision_id=VERIFY_REVISION,
         )
@@ -752,17 +743,11 @@ def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_regist
     row carries them would be refused for want of scalars it cannot accept.
     """
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(
-        wu_repo,
-        modelo="347",
-        filing_year=_M347_YEAR,
-        period="0A",
-        revision_id=str(revision_covering("347", _M347_YEAR).id),
-    )
+    work_unit = seed_work_unit(wu_repo, modelo="347", filing_year=2024, period="0A", revision_id="2011-2024")
     # Four received invoices of 3.000,00 from one supplier, one per quarter: a declarable
     # 12.000,00 counterparty (clave A) that the invoice resolver puts on the row channel.
     invoices = tuple(
-        _received_invoice(work_unit.bucket_id, number=f"P-{quarter}", issued_at=date(_M347_YEAR, 3 * quarter - 1, 10))
+        _received_invoice(work_unit.bucket_id, number=f"P-{quarter}", issued_at=date(2024, 3 * quarter - 1, 10))
         for quarter in (1, 2, 3, 4)
     )
     InvoiceCatalogueRepository(bucket_id=work_unit.bucket_id).save(build_invoice_catalogue(invoices))

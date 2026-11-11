@@ -11,16 +11,12 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification_origin import ClassificationOrigin
 from ..enums import BusinessClassification, TransactionDirection
 from ..errors import TransactionCatalogueError
 from ..models import Transaction, TransactionCatalogue
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..service import link_invoice, set_classification
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,8 +31,8 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
         amount=amount,
         currency="EUR",
         counterparty="Supplier SL",
@@ -46,7 +42,7 @@ def _sample_raw(*, provider_id: str, amount: Decimal, description: str) -> RawTr
             source_sha256="b" * 64,
             source_row_index=7,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
@@ -294,8 +290,8 @@ def _bare_transaction() -> Transaction:
     """Return an unclassified transaction helper for the confidence tests."""
     raw = RawTransaction(
         provider_transaction_id="provider-row-1",
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(2026, 4, 10),
+        value_date=date(2026, 4, 10),
         amount=Decimal("12.00"),
         currency="EUR",
         counterparty="Vendor SL",
@@ -305,7 +301,7 @@ def _bare_transaction() -> Transaction:
             source_sha256="f" * 64,
             source_row_index=2,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": "Expense"},

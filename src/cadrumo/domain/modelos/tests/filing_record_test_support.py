@@ -7,7 +7,6 @@ from decimal import Decimal
 from typing import Final
 
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -21,11 +20,10 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 
-_FILING_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "30330300-0000-4000-8000-000000000901"
 _WORK_UNIT_ID = "a" * 64
 _REVISION_ID = "b" * 64
-FILING_RECORD_TEST_AT: Final[datetime] = datetime(_FILING_YEAR, 4, 10, 9, 0, tzinfo=UTC)
+FILING_RECORD_TEST_AT: Final[datetime] = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
 
 
 def build_iva_settlement_snapshot_for_test(**updates: object) -> IvaSettlementSnapshot:
@@ -69,8 +67,8 @@ def build_modelo_filing_record_for_test(
         calculation_revision_id=_REVISION_ID,
         bucket_id=_BUCKET_ID,
         modelo=modelo,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
         filed_at=FILING_RECORD_TEST_AT,
         filed_by="operator-A",
         origin=FilingOrigin.LOCAL,

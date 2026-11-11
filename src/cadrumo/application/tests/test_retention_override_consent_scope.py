@@ -18,13 +18,10 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..config_reset import retention_decision_from_record
 from ..config_reset_models import ConfigResetRetentionDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_YEAR = filing_year_envelope().horizon
 
 _REASON = "Court order requiring erasure before the statutory retention date."
 
@@ -40,7 +37,7 @@ def _assessment(*, records: int):
             RetentionBlockingRecord(
                 filing_record_id=f"{index:064x}",
                 modelo="303",
-                filing_year=_YEAR,
+                filing_year=2025,
                 filed_at=now,
                 earliest_safe_erase_date=now + timedelta(days=365),
             )

@@ -192,7 +192,7 @@ def _retained_archive_prepare(context: ConformanceFamilyContext) -> ConformanceP
         staged = profile_export_staged_path(destination, process_id=os.getpid(), nonce="a" * 8)
         staged.write_bytes(b"synthetic unpublished bundle")
         export_target = ProfileBundleExportTarget(destination=destination)
-        instant = datetime(1980, 4, 1, tzinfo=UTC)
+        instant = datetime(2026, 4, 1, tzinfo=UTC)
         purpose = ProfileBundleExportPurpose.PORTABLE_TRANSFER
         journal = ProfileBundleExportJournalRepository()
         pending = ProfileBundleExportOperation(
@@ -245,7 +245,7 @@ def _retained_archive_prepare(context: ConformanceFamilyContext) -> ConformanceP
             actor="conformance-history",
             payload={"synthetic": "selected"},
             payload_version=1,
-            occurred_at=datetime(1980, 4, 1, tzinfo=UTC),
+            occurred_at=datetime(2026, 4, 1, tzinfo=UTC),
         )
         excluded = build_bucket_event(
             bucket_id=profile,
@@ -255,7 +255,7 @@ def _retained_archive_prepare(context: ConformanceFamilyContext) -> ConformanceP
             actor="other-history",
             payload={"synthetic": "excluded"},
             payload_version=1,
-            occurred_at=datetime(1980, 4, 2, tzinfo=UTC),
+            occurred_at=datetime(2026, 4, 2, tzinfo=UTC),
         )
         catalogue = repository.load()
         catalogue = catalogue.model_copy(

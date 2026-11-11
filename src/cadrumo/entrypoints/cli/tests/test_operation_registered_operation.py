@@ -99,17 +99,12 @@ from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _INTERACTION = "d" * 64
-_NOW = datetime(_YEAR, 9, 29, tzinfo=UTC)
+_NOW = datetime(2026, 9, 29, tzinfo=UTC)
 
 
 class _ReplyIds(TypedDict):

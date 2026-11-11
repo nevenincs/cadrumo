@@ -20,15 +20,11 @@ from ....application.overview.calendar_models import OverviewCalendarEvent, Over
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.post_filing_event import PostFilingEventKind
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     published_legal_evidence_text,
     published_legal_reference,
 )
 from ..overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,7 +38,7 @@ def _notificacion(
     return OverviewCalendarEvent(
         event_type=OverviewCalendarEventType.MESSAGE,
         post_filing_kind=kind,
-        event_date=date(_YEAR, 3, 12),
+        event_date=date(2025, 3, 12),
         source="aeat_sede_notifications",
         summary="AEAT notificación",
         reference_id=reference_id,

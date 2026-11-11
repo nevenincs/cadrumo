@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -25,17 +24,13 @@ from cadrumo.entrypoints.cli.retencion_soportada_absence_results import (
 from cadrumo.entrypoints.cli.retencion_soportada_results import RetencionSoportadaListResult
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
-
-_YEAR = filing_year_envelope().horizon
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "12345678Z"
 _PAYER = "B00010090"
-_EJERCICIO = str(_YEAR)
+_EJERCICIO = "2025"
 _NOTE = "Synthetic note: the bank paid no interest subject to withholding."
 _ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE"
 _REVISION_CODE = "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"
@@ -51,7 +46,7 @@ _PROFILE_FACTS = {
     "identity.surnames": "Absences",
     "identity.tax_id": _TAXPAYER,
     "activities.description": "synthetic absence attestation profile",
-    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
+    "censo.activity_start_date": "2020-01-01",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -278,5 +273,5 @@ def test_native_withdrawn_absence_is_reattested_and_listed_per_ejercicio(
     assert active_row.state == "active"
     assert active_row.revision_id == reattested.attestation.revision_id
     assert active_row.note == _NOTE
-    assert _listed(profile, str(_YEAR - 1)).attestations == []
+    assert _listed(profile, "2024").attestations == []
     assert _NOTE.encode() not in _stored_bytes(profile)

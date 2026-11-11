@@ -25,13 +25,10 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.censo_modelos import censo_ownership_refusing_work_units
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_T0 = datetime(1980, 6, 5, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "13000000-0000-4000-8000-000000000037"
 _SUPERSEDED = "037"
 _SUCCESSOR = "036"
@@ -78,9 +75,9 @@ def test_the_canonical_creation_door_refuses_and_writes_nothing(
         create_work_unit(
             bucket_id=bucket_id,
             modelo=_SUPERSEDED,
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
-            revision_id=str(_YEAR),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision_id="2026",
             ports=_ports(repo),
             clock=_T0,
             operation=operation,
@@ -99,8 +96,8 @@ def test_the_resume_or_create_path_refuses_before_resolving_a_revision(
         ensure_modelo_work_unit_for_active_target(
             bucket_id=bucket_id,
             modelo=_SUPERSEDED,
-            filing_year=_YEAR,
-            period=Period.from_year_and_code(_YEAR, "0A"),
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
             registry_revision_id=None,
             catalogue=repo.load(),
             ports=_ports(repo),

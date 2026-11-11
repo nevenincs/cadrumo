@@ -37,7 +37,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import resolve_error_message
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -56,10 +55,10 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(filing_year_envelope().horizon, 1, 14, 10, 0, tzinfo=UTC)
-_T1 = datetime(filing_year_envelope().horizon, 1, 14, 11, 0, tzinfo=UTC)
+_T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"
-_FILING_YEAR = newest_authored_edition("200")
+_FILING_YEAR = 2025
 _RESULTADO_CONTABLE: CasillaId = validated_casilla_id("DP200012:00501", surface="_RESULTADO_CONTABLE")
 _BASE_IMPONIBLE: CasillaId = validated_casilla_id("DP200014:00552", surface="_BASE_IMPONIBLE")
 _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_CUOTA_EJERCICIO")

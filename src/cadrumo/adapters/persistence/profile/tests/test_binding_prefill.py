@@ -42,7 +42,6 @@ from .....domain.calculations.registry.ledger_iva_bindings import (
 )
 from .....domain.calculations.registry.result_casillas import derive_result_disposition, result_disposition_casilla_ids
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
@@ -54,8 +53,6 @@ from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
 from .published_authority_support import published_authority_operation
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -87,7 +84,7 @@ def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obl
 ) -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
-            snapshot = _snapshot("130", _YEAR, "1T")
+            snapshot = _snapshot("130", 2026, "1T")
             empty_report = resolve_bindings_from_local_store(
                 snapshot,
                 repository=CalculationObservationRepository(),
@@ -97,7 +94,7 @@ def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obl
             scoped_report = resolve_bindings_from_local_store(
                 snapshot,
                 repository=CalculationObservationRepository(),
-                activity_start_date=date(_YEAR, 1, 1),
+                activity_start_date=date(2026, 1, 1),
                 iva_history_repository=IvaCompensationHistoryRepository(),
                 operation=_authority_operation_for_test,
             )
@@ -108,7 +105,7 @@ def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obl
         prefilled = {item.binding_id: item for item in scoped_report.prefilled}
         assert prefilled[binding_id].source_kind == "pre_activity_no_prior_obligation"
         assert prefilled[binding_id].source_modelo == "100"
-        assert prefilled[binding_id].source_filing_year == _YEAR - 1
+        assert prefilled[binding_id].source_filing_year == 2025
         assert prefilled[binding_id].source_periods == ("0A",)
 
 
@@ -214,29 +211,29 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     ):
         quarterly_observations = {
             "1T": (
-                _observation(ledger_id="q1-output", txn_date=date(_YEAR - 1, 2, 15), iva=Decimal("21.00")),
+                _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
                 _observation(
                     ledger_id="q1-input",
-                    txn_date=date(_YEAR - 1, 3, 1),
+                    txn_date=date(2025, 3, 1),
                     flow=IvaFlowDirection.from_registry("soportado"),
                     iva=Decimal("42.00"),
                 ),
             ),
             "2T": (
-                _observation(ledger_id="q2-output", txn_date=date(_YEAR - 1, 5, 10), iva=Decimal("10.00")),
+                _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")),
                 _observation(
                     ledger_id="q2-input",
-                    txn_date=date(_YEAR - 1, 6, 20),
+                    txn_date=date(2025, 6, 20),
                     flow=IvaFlowDirection.from_registry("soportado"),
                     iva=Decimal("30.00"),
                 ),
             ),
-            "3T": (_observation(ledger_id="q3-output", txn_date=date(_YEAR - 1, 8, 12), iva=Decimal("50.00")),),
+            "3T": (_observation(ledger_id="q3-output", txn_date=date(2025, 8, 12), iva=Decimal("50.00")),),
             "4T": (
-                _observation(ledger_id="q4-output", txn_date=date(_YEAR - 1, 11, 4), iva=Decimal("15.00")),
+                _observation(ledger_id="q4-output", txn_date=date(2025, 11, 4), iva=Decimal("15.00")),
                 _observation(
                     ledger_id="q4-input",
-                    txn_date=date(_YEAR - 1, 12, 12),
+                    txn_date=date(2025, 12, 12),
                     flow=IvaFlowDirection.from_registry("soportado"),
                     iva=Decimal("45.00"),
                 ),
@@ -244,7 +241,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         }
         quarterly_results = {
             period: _calculate_303_from_observations(
-                filing_year=_YEAR - 1,
+                filing_year=2025,
                 period=period,
                 observations=observations,
             )
@@ -254,18 +251,18 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         for period, result in quarterly_results.items():
             repository.save(
                 repository.prepare_observation_envelope(
-                    _registry_observation(filing_year=_YEAR - 1, period=period, result=result),
+                    _registry_observation(filing_year=2025, period=period, result=result),
                     source_kind="app_filing",
-                    stamped_revision_id=_snapshot("303", _YEAR - 1, period).revision.id,
+                    stamped_revision_id=_snapshot("303", 2025, period).revision.id,
                     result_disposition=ResultDispositionProjection(
-                        disposition=_filing_result_disposition(result, filing_year=_YEAR - 1, period=period),
+                        disposition=_filing_result_disposition(result, filing_year=2025, period=period),
                         provenance_kind="app_filing",
-                        provenance_locator=f"test-local-filing:{_YEAR - 1}:{period}",
+                        provenance_locator=f"test-local-filing:2025:{period}",
                     ),
                 )
             )
 
-        snapshot = _snapshot("390", _YEAR - 1, "0A")
+        snapshot = _snapshot("390", 2025, "0A")
 
         # The ordinary M390←M303 annual totals are relation_prefill; the
         # compensation carry partition is owned by iva_compensation_annual_partition.
@@ -304,8 +301,8 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             CalculationSourceContext(
                 bucket_id="m390-binding-prefill",
                 modelo="390",
-                filing_year=_YEAR - 1,
-                period=Period.from_year_and_code(_YEAR - 1, "0A"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
                 revision=snapshot.revision,
             ),
         )
@@ -323,8 +320,8 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             CalculationSourceContext(
                 bucket_id=profile.bucket_id,
                 modelo="390",
-                filing_year=_YEAR - 1,
-                period=Period.from_year_and_code(_YEAR - 1, "0A"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
                 revision=snapshot.revision,
             ),
         )
@@ -343,7 +340,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             snapshot,
             inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             binding_values=binding_values,
-            date_context={"filing_period": date(_YEAR - 1, 12, 31)},
+            date_context={"filing_period": date(2025, 12, 31)},
         )
 
         assert (
@@ -370,12 +367,12 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                 IvaCompensationPeriodState(
                     provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                     taxpayer_nif="12345678Z",
-                    filing_year=_YEAR - 1,
-                    period=Period.from_year_and_code(_YEAR - 1, "4T"),
-                    registry_snapshot_ref=_snapshot("303", _YEAR - 1, "4T").snapshot_ref,
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "4T"),
+                    registry_snapshot_ref=_snapshot("303", 2025, "4T").snapshot_ref,
                     expediente_id="30320254T0000000000",
                     status="presentada",
-                    presented_at=datetime(_YEAR, 1, 20, 10, 0, tzinfo=UTC),
+                    presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
                     prior_pending_amount=Decimal("100.00"),
                     applied_amount=Decimal("25.00"),
                     pending_for_later_amount=Decimal("75.00"),
@@ -383,16 +380,16 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                     final_result_amount=Decimal("0.00"),
                     generated_amount=Decimal("0.00"),
                     available_end_amount=Decimal("75.00"),
-                    source_observation_key=f"303:{_YEAR - 1}:4T:history-source",
+                    source_observation_key="303:2025:4T:history-source",
                 ),
             )
-            snapshot = _snapshot("303", _YEAR, "1T")
+            snapshot = _snapshot("303", 2026, "1T")
 
             recurrence, report = extract_modelo_303_local_iva_compensation_recurrence(
                 snapshot,
                 repository=CalculationObservationRepository(),
                 iva_history_repository=iva_history_repository,
-                captured_at=datetime(_YEAR, 4, 1, 8, 0, tzinfo=UTC),
+                captured_at=datetime(2026, 4, 1, 8, 0, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
 
@@ -400,16 +397,16 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
         assert recurrence.amount == Decimal("75.00")
         assert recurrence.source_kind == "aeat_sede_iva_compensation_history"
         assert recurrence.source_modelo == "303"
-        assert recurrence.source_filing_year == _YEAR - 1
-        assert recurrence.source_periods == (Period.from_year_and_code(_YEAR - 1, "4T"),)
-        assert recurrence.source_registry_snapshot_refs == (_snapshot("303", _YEAR - 1, "4T").snapshot_ref,)
+        assert recurrence.source_filing_year == 2025
+        assert recurrence.source_periods == (Period.from_year_and_code(2025, "4T"),)
+        assert recurrence.source_registry_snapshot_refs == (_snapshot("303", 2025, "4T").snapshot_ref,)
         assert report.prefilled
         assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
 
 
 def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -> None:
     """Secure IVA history must not emit an ungrounded casilla observation."""
-    snapshot = _snapshot("303", _YEAR - 1, "4T")
+    snapshot = _snapshot("303", 2025, "4T")
     casillas = {item.id: item for item in snapshot.revision.casillas}
     assert _M303_RESULTADO_CASILLA in casillas, "real M303 registry must declare the oracle casilla"
     casillas_without_resultado = {
@@ -435,12 +432,12 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
         state = IvaCompensationPeriodState(
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             taxpayer_nif="12345678Z",
-            filing_year=_YEAR - 1,
-            period=Period.from_year_and_code(_YEAR - 1, "4T"),
-            registry_snapshot_ref=_snapshot("303", _YEAR - 1, "4T").snapshot_ref,
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
+            registry_snapshot_ref=_snapshot("303", 2025, "4T").snapshot_ref,
             expediente_id="30320254T0000000000",
             status="presentada",
-            presented_at=datetime(_YEAR, 1, 20, 10, 0, tzinfo=UTC),
+            presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
             prior_pending_amount=Decimal("100.00"),
             applied_amount=Decimal("25.00"),
             pending_for_later_amount=Decimal("75.00"),
@@ -448,7 +445,7 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
             final_result_amount=Decimal("0.00"),
             generated_amount=Decimal("75.00"),
             available_end_amount=Decimal("150.00"),
-            source_observation_key=f"303:{_YEAR - 1}:4T:history-source",
+            source_observation_key="303:2025:4T:history-source",
         )
 
         observation = observation_from_iva_compensation_history(state, operation=_authority_operation_for_test)
@@ -476,7 +473,7 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
 
 
 def test_iva_history_observation_rejects_mismatched_formula_operand_projection() -> None:
-    snapshot = _snapshot("303", _YEAR - 1, "4T")
+    snapshot = _snapshot("303", 2025, "4T")
     casillas = {item.id: item for item in snapshot.revision.casillas}
     formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 

@@ -59,7 +59,7 @@ from cadrumo.application.calculations.observations_repository import ResultDispo
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, split_exercise_revisions
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 
 from .....application.calculations.observations_repository import observation_key
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -94,8 +94,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "303"
 
 #: The two distinct renta years the carry spans (4T/N -> 1T/N+1 wrap).
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
 # The 2024 intra-year boundary changes M303's official diseño after 2T. The
 # source 2T is governed by ``aeat-dr-303-2024-early`` and the target 3T by
@@ -120,7 +120,7 @@ _M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = validated_casilla_id("iva.comp
 _M303_SALDO_COMPENSACION_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
-_CLOCK = datetime(_YEAR_N_PLUS_1, 5, 1, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 
 #: Manual section-total casillas that drive the régimen-general result on the
 #: printed M303 form: [46] = total cuota devengada - total a deducir (Orden

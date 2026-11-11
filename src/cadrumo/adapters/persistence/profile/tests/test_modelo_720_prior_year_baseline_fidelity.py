@@ -72,7 +72,6 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -97,8 +96,8 @@ _MODELO = "720"
 #: The two distinct renta ejercicios the fidelity test spans.
 #: Grounded in A3 contract scenario: Year N declares cuentas 60k + valores 55k;
 #: Year N+1 declares cuentas 85k (+25k > €20k delta) + valores 65k (+10k ≤ €20k).
-_YEAR_N_PLUS_1 = filing_year_envelope().horizon
-_YEAR_N = _YEAR_N_PLUS_1 - 1
+_YEAR_N = 2023
+_YEAR_N_PLUS_1 = 2024
 
 #: Context label for the cross-year observation (non-calculation / data-fidelity mode).
 _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cycles"
@@ -139,8 +138,8 @@ _CUENTAS_IDENTIFIER = Decimal("12345678901234")  # numeric part of IBAN
 # Asset identifier for valores row (ISIN-style, numeric part).
 _VALORES_IDENTIFIER = Decimal("98765432109876")
 
-_CLOCK_N = datetime(_YEAR_N_PLUS_1, 3, 15, 10, 0, 0, tzinfo=UTC)  # M720 deadline: 1-Mar to 31-Mar
-_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 3, 15, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(2024, 3, 15, 10, 0, 0, tzinfo=UTC)  # M720 deadline: 1-Mar to 31-Mar
+_CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 10, 0, 0, tzinfo=UTC)
 
 
 _EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")

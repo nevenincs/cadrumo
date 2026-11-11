@@ -30,7 +30,6 @@ from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -44,10 +43,7 @@ from .conformance_family_contract import (
 )
 from .conformance_ledger_seed_support import SEED_ACTOR, ledger_action_ports, seed_manual_transaction
 
-_YEAR = filing_year_envelope().horizon
-
-
-_FIRST_QUARTER = Period.from_year_and_code(_YEAR, "1T")
+_FIRST_QUARTER = Period.from_year_and_code(2025, "1T")
 _CSV_MEDIA_TYPE = "text/csv"
 
 
@@ -58,18 +54,18 @@ def _new_events(context: ConformanceFamilyContext, before_ids: frozenset[str]) -
 
 def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation:
     early = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 1, 15), amount=Decimal("12.50"), description="export row early in period"
+        context, booked_date=date(2025, 1, 15), amount=Decimal("12.50"), description="export row early in period"
     )
     late = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 3, 20), amount=Decimal("30.00"), description="export row late in period"
+        context, booked_date=date(2025, 3, 20), amount=Decimal("30.00"), description="export row late in period"
     )
     # Neither of these may reach the artifact: one is booked after the period
     # and the other is inside it but no longer active.
     seed_manual_transaction(
-        context, booked_date=date(_YEAR, 4, 10), amount=Decimal("44.00"), description="export row after period"
+        context, booked_date=date(2025, 4, 10), amount=Decimal("44.00"), description="export row after period"
     )
     archived = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 2, 1), amount=Decimal("55.00"), description="export row archived in period"
+        context, booked_date=date(2025, 2, 1), amount=Decimal("55.00"), description="export row archived in period"
     )
     ports = ledger_action_ports(context)
     archive_manual_transaction(
@@ -129,8 +125,8 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
         {
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": str(context.profile_id),
-            "invoice_number": f"LINK-{_YEAR}-001",
-            "issued_at": date(_YEAR, 5, 1),
+            "invoice_number": "LINK-2025-001",
+            "issued_at": date(2025, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -160,7 +156,7 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
 def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
     bucket_id = str(context.profile_id)
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(_YEAR, 5, 1), amount=Decimal("121.00"), description="link row"
+        context, booked_date=date(2025, 5, 1), amount=Decimal("121.00"), description="link row"
     )
     invoice = _seed_invoice(context)
     ports = ledger_action_ports(context)

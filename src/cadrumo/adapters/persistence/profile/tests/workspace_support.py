@@ -31,7 +31,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
 )
-from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_supported_filing_years,
 )
@@ -62,7 +61,7 @@ _WORKSPACE_PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 T0 = datetime(FILING_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 
 
-LAW_SELECTED_REVISION_ID = revision_covering("130", FILING_YEAR).id
+LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
@@ -222,7 +221,7 @@ def assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalo
     schema_identity = resolve_static_inspection_schema_identity(inspection)
     locale = capture_modelo_workspace_locale_summary(target, output_language=OutputLanguage.ES)
     locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
-        translation_key=f"modelo.schema.130.revision.{LAW_SELECTED_REVISION_ID}.field.label",
+        translation_key="modelo.schema.130.revision.2019-y-siguientes.field.label",
         locale=OutputLanguage.ES.value,
     ).capture_projection_with_epoch()
     field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=inspection).capture_projection_with_epoch()

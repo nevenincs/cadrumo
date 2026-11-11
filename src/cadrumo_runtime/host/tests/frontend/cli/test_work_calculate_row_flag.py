@@ -21,7 +21,6 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.redaction.rules import redact_for_cli_output
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
@@ -29,8 +28,6 @@ from cadrumo.domain.modelos.row_models import (
 )
 from cadrumo.tests.subprocess_cli import run_cadrumo_subprocess
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -168,7 +165,7 @@ class TestRevisionViewSurfacesDetailRows:
         )
 
     def _create_m349_work(self, tmp_path: Path, profile_name: str) -> None:
-        """Create an intra-community profile, complete its setup and open the first-quarter M349 work unit."""
+        """Create an intra-community profile, complete its setup and open the 2026 first-quarter M349 work unit."""
         setup = self._run_cli(
             tmp_path,
             [
@@ -214,11 +211,11 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
                 "--revision",
-                revision_covering("349", _YEAR).id,
+                "2020-y-siguientes",
             ],
         )
         assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
@@ -259,7 +256,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
                 "--row",
@@ -300,7 +297,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
             ],
@@ -365,11 +362,11 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "184",
                 "--year",
-                str(_YEAR),
+                "2024",
                 "--period",
                 "0A",
                 "--revision",
-                revision_covering("184", _YEAR).id,
+                "2023-2024",
             ],
         )
         assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
@@ -418,7 +415,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
                 "--row",
@@ -450,7 +447,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
             ],
@@ -468,7 +465,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
                 "--output",
@@ -505,7 +502,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "--modelo",
                 "349",
                 "--year",
-                str(_YEAR),
+                "2026",
                 "--period",
                 "1T",
                 "--row",

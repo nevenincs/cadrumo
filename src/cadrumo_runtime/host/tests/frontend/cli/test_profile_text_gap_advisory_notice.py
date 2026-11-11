@@ -27,7 +27,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.json_contract import Notice
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -35,8 +34,6 @@ from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
-
-_RENTA = newest_authored_edition("100")
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -90,7 +87,7 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
     seed_payer_certificate(
         operation=published_authority_operation(),
         taxpayer_tax_id="12345678Z",
-        ejercicio=_RENTA,
+        ejercicio=2025,
         payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("2400"),
@@ -98,10 +95,8 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
     )
 
 
-def _calculate_m100_annual() -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="100", filing_year=_RENTA, period="0A", revision=revision_covering("100", _RENTA).id
-    )
+def _calculate_m100_2025() -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2025, period="0A", revision="2025")
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS]
     )
@@ -125,7 +120,7 @@ def test_an_undeclared_name_reaches_the_operator_as_a_valid_advisory_notice(
 ) -> None:
     _seed_salaried_profile(runtime_profile)
 
-    payload, notices = _calculate_m100_annual()
+    payload, notices = _calculate_m100_2025()
 
     assert _DECLARANTE_NAME not in payload["input_values_by_casilla_id"]
     advisory = _profile_gap_notices(notices)[_DECLARANTE_NAME]
@@ -152,7 +147,7 @@ def test_a_declared_profile_raises_no_gap_advisory(runtime_profile: TestRuntimeP
         UserProfileFact(path="identity.surnames", value="Perez Gil"),
     )
 
-    payload, notices = _calculate_m100_annual()
+    payload, notices = _calculate_m100_2025()
 
     held = payload["input_values_by_casilla_id"]
     assert held[_DECLARANTE_NAME] == "Perez Gil Ana"

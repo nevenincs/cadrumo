@@ -13,7 +13,6 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
@@ -35,8 +34,6 @@ from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
 from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -61,7 +58,7 @@ def _build(invoice_number: str) -> Invoice:
         counterparty_tax_id=_COUNTERPARTY_CIF,
         counterparty_country="ES",
         invoice_number=invoice_number,
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -113,7 +110,7 @@ def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
     members: list[Invoice] = []
     seen: dict[str, Invoice] = {}
     for index in range(64):
-        invoice = _build(f"{_YEAR}-{index:04d}")
+        invoice = _build(f"2026-{index:04d}")
         head = invoice.invoice_id[0]
         members.append(invoice)
         if head in seen:
@@ -166,7 +163,7 @@ def test_unrelated_invoice_update_preserves_the_nested_lease_and_stable_identity
         counterparty_tax_id=_COUNTERPARTY_CIF,
         counterparty_country="ES",
         invoice_number="LEASE-001",
-        issued_at=date(_YEAR, 3, 10),
+        issued_at=date(2026, 3, 10),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",

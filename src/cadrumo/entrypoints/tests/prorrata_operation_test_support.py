@@ -78,7 +78,6 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     revocacion_prorrata_transition,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.provisional_catalogue import aeat_autorizada_prorrata_provenance
 from ...domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...domain.prorrata_register.register import (
@@ -89,11 +88,11 @@ from ...domain.prorrata_register.register import (
     SectorDefinition,
 )
 
+_CAPTURED_AT = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_GROSS_DECLARED_AT = datetime(2026, 4, 25, 9, 0, tzinfo=UTC)
 _SOURCE_KIND = "aeat_sede_justificante"
-_SEED_TARGET_YEAR = filing_year_envelope().horizon
+_SEED_TARGET_YEAR = 2026
 _SEED_PRIOR_YEAR = _SEED_TARGET_YEAR - 1
-_CAPTURED_AT = datetime(_SEED_TARGET_YEAR, 1, 10, 10, 0, tzinfo=UTC)
-_GROSS_DECLARED_AT = datetime(_SEED_TARGET_YEAR, 4, 25, 9, 0, tzinfo=UTC)
 _SEED_SETTLEMENT_PERIOD = "4T"
 _SEED_PERCENTAGE = Decimal("87.25")
 _PRORRATA_PERCENTAGE_ID: CasillaId = validated_casilla_id(
@@ -379,12 +378,12 @@ def _prepare_case(
     if definition_id == PRORRATA_LIST_OPERATION_DEFINITION_ID:
         sector = _sector_definition()
         entry = _entry(
-            year=_SEED_PRIOR_YEAR,
+            year=2025,
             regime=general_prorrata_register_regime(),
             provenance=carried_prior_definitiva_prorrata_provenance(),
             percentage=Decimal("76.50"),
-            source_observation_ref=f"303:{_SEED_PRIOR_YEAR - 1}:4T",
-            source_registry_snapshot_refs=(_snapshot(operation, _SEED_PRIOR_YEAR - 1),),
+            source_observation_ref="303:2024:4T",
+            source_registry_snapshot_refs=(_snapshot(operation, 2024),),
         )
         service.declare_sector(sector)
         service.declare(entry)
@@ -414,73 +413,73 @@ def _prepare_case(
         )
     elif definition_id == PRORRATA_ELECT_ESPECIAL_OPERATION_DEFINITION_ID:
         expected_entry = _entry(
-            year=_SEED_TARGET_YEAR,
+            year=2026,
             regime=especial_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("64.25"),
-            authorisation_reference=f"AEAT-PRORRATA-CONFORMANCE-{_SEED_TARGET_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-CONFORMANCE-2026",
             transition=ProrrataEspecialTransitionEvidence(
                 kind=opcion_prorrata_transition(),
-                evidence_reference=f"option-evidence-conformance-{_SEED_TARGET_YEAR}",
+                evidence_reference="option-evidence-conformance-2026",
             ),
         )
         request = ProrrataElectEspecialRequest(
             profile_id=profile_id,
-            ejercicio=_SEED_TARGET_YEAR,
+            ejercicio=2026,
             percentage=PublicDecimal(decimal="64.25"),
             provenance=aeat_autorizada_prorrata_provenance().value,
-            reference=f"AEAT-PRORRATA-CONFORMANCE-{_SEED_TARGET_YEAR}",
-            evidence_reference=f"option-evidence-conformance-{_SEED_TARGET_YEAR}",
+            reference="AEAT-PRORRATA-CONFORMANCE-2026",
+            evidence_reference="option-evidence-conformance-2026",
         )
         register = _register_with_entry(register, expected_entry)
     elif definition_id == PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID:
         expected_entry = _entry(
-            year=_SEED_TARGET_YEAR,
+            year=2026,
             regime=general_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("63.75"),
-            authorisation_reference=f"AEAT-PRORRATA-CONFORMANCE-GENERAL-{_SEED_TARGET_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-CONFORMANCE-GENERAL-2026",
         )
         request = ProrrataElectGeneralRequest(
             profile_id=profile_id,
-            ejercicio=_SEED_TARGET_YEAR,
+            ejercicio=2026,
             percentage=PublicDecimal(decimal="63.75"),
             provenance=aeat_autorizada_prorrata_provenance().value,
-            reference=f"AEAT-PRORRATA-CONFORMANCE-GENERAL-{_SEED_TARGET_YEAR}",
+            reference="AEAT-PRORRATA-CONFORMANCE-GENERAL-2026",
         )
         register = _register_with_entry(register, expected_entry)
     elif definition_id == PRORRATA_REVOKE_ESPECIAL_OPERATION_DEFINITION_ID:
         previous = _entry(
-            year=_SEED_PRIOR_YEAR,
+            year=2025,
             regime=especial_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("60"),
-            authorisation_reference=f"AEAT-PRORRATA-CONFORMANCE-SPECIAL-{_SEED_PRIOR_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-CONFORMANCE-SPECIAL-2025",
             transition=ProrrataEspecialTransitionEvidence(
                 kind=opcion_prorrata_transition(),
-                evidence_reference=f"option-evidence-conformance-{_SEED_PRIOR_YEAR}",
+                evidence_reference="option-evidence-conformance-2025",
             ),
         )
         service.declare_especial_transition(previous)
         register = service.list_all()
         expected_entry = _entry(
-            year=_SEED_TARGET_YEAR,
+            year=2026,
             regime=general_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("60"),
-            authorisation_reference=f"AEAT-PRORRATA-CONFORMANCE-REVOKE-{_SEED_TARGET_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-CONFORMANCE-REVOKE-2026",
             transition=ProrrataEspecialTransitionEvidence(
                 kind=revocacion_prorrata_transition(),
-                evidence_reference=f"revocation-evidence-conformance-{_SEED_TARGET_YEAR}",
+                evidence_reference="revocation-evidence-conformance-2026",
             ),
         )
         request = ProrrataRevokeEspecialRequest(
             profile_id=profile_id,
-            ejercicio=_SEED_TARGET_YEAR,
+            ejercicio=2026,
             percentage=PublicDecimal(decimal="60"),
             provenance=aeat_autorizada_prorrata_provenance().value,
-            reference=f"AEAT-PRORRATA-CONFORMANCE-REVOKE-{_SEED_TARGET_YEAR}",
-            evidence_reference=f"revocation-evidence-conformance-{_SEED_TARGET_YEAR}",
+            reference="AEAT-PRORRATA-CONFORMANCE-REVOKE-2026",
+            evidence_reference="revocation-evidence-conformance-2026",
         )
         register = _register_with_entry(register, expected_entry)
     elif definition_id == PRORRATA_SEED_OPERATION_DEFINITION_ID:
@@ -509,20 +508,20 @@ def _prepare_case(
         sector = _sector_definition()
         service.declare_sector(sector)
         prior = _entry(
-            year=_SEED_PRIOR_YEAR,
+            year=2025,
             regime=general_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("61"),
-            authorisation_reference=f"AEAT-PRORRATA-SECTOR-{_SEED_PRIOR_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-SECTOR-2025",
             sector_id=sector.sector_id,
         )
         service.declare(prior)
         service.settle_sector(
-            _SEED_PRIOR_YEAR,
+            2025,
             sector.sector_id,
             con_derecho_volume=Decimal("125.00"),
             sin_derecho_volume=Decimal("75.00"),
-            producing_snapshot_ref=_snapshot(operation, _SEED_PRIOR_YEAR),
+            producing_snapshot_ref=_snapshot(operation, 2025),
         )
         register = service.list_all()
         expected_entry = seed_sector_carried_definitive_from_register(
@@ -547,7 +546,7 @@ def _prepare_case(
             regime=general_prorrata_register_regime(),
             provenance=aeat_autorizada_prorrata_provenance(),
             percentage=Decimal("59.75"),
-            authorisation_reference=f"AEAT-PRORRATA-SETTLE-{_SEED_TARGET_YEAR}",
+            authorisation_reference="AEAT-PRORRATA-SETTLE-2026",
             sector_id=sector.sector_id,
         )
         service.declare(provisional)
@@ -689,7 +688,7 @@ def prepare_prorrata_whole_seed_refusal_case(
                 service,
                 ejercicio=_SEED_TARGET_YEAR,
                 provisional_percentage=Decimal("55.00"),
-                authorisation_reference=f"AEAT-PRORRATA-STANDING-{_SEED_TARGET_YEAR}",
+                authorisation_reference="AEAT-PRORRATA-STANDING-2026",
             )
             standing = register.entry_for(_SEED_TARGET_YEAR)
             if standing is None or standing.provisional_provenance is None:

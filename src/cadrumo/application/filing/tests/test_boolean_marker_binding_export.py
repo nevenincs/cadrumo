@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.casilla_id import validated_casilla_id
@@ -57,7 +56,7 @@ def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answe
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2026, period="1T", modelos=("131",))
     inputs: dict[str, ModeloInputValue] = {
         validated_casilla_id("03", surface="test_m131_marker.casilla"): Decimal("1000"),
         validated_casilla_id("05", surface="test_m131_marker.casilla"): Decimal("500"),
@@ -107,9 +106,7 @@ def test_the_answered_box_exports_one_marker_byte(
     ("answer", "expected"), [(True, "X"), (False, " "), (None, " ")], ids=("true", "false", "absent")
 )
 def test_modelo_184_member_at_year_end_slot_writes_the_design_marker(answer: bool | None, expected: str) -> None:
-    snapshot = published_snapshot(
-        "184", filing_year=max(open_ended_revision("184").valid_from.year, filing_year_envelope().floor), period="0A"
-    )
+    snapshot = published_snapshot("184", filing_year=2025, period="0A")
     [field] = [
         candidate
         for layout in snapshot.revision.export_layouts

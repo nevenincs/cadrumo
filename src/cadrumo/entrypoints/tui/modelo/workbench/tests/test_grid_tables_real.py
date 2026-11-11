@@ -43,7 +43,6 @@ from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind
-from ......domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
@@ -75,9 +74,6 @@ from .workbench_fixture import FakeReader, form_field, registry_form_of, synthet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_YEAR_390 = filing_grade_exercises("390")[-1]
-
 
 @pytest.fixture(autouse=True)
 def _in_english() -> Iterator[None]:
@@ -93,7 +89,7 @@ _PRORRATAS_PAGE: Final[str] = "dp30305"
 
 
 def _form(
-    operation: PinnedAuthorityOperation, modelo: str = "303", year: int = _YEAR, code: str = "1T"
+    operation: PinnedAuthorityOperation, modelo: str = "303", year: int = 2026, code: str = "1T"
 ) -> ModeloWorkForm:
     return registry_form_of(
         operation,
@@ -309,7 +305,7 @@ async def test_the_prorratas_grid_is_a_table_only_where_it_fits(
 
 @pytest.mark.asyncio
 async def test_390_page_2_draws_each_group_as_its_own_base_and_tax_table(operation: PinnedAuthorityOperation) -> None:
-    page = _page(_form(operation, "390", _YEAR_390, "0A"), "pag-2")
+    page = _page(_form(operation, "390", 2025, "0A"), "pag-2")
     grids = _grids(page)
     lines = await _drawn(page_items(page, staged={}), 120)
 
@@ -520,7 +516,7 @@ async def test_section_headings_take_the_colour_of_their_most_severe_level(opera
 
 
 def test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word(operation: PinnedAuthorityOperation) -> None:
-    forms = (_form(operation), _form(operation, "390", _YEAR_390, "0A"), _form(operation, "349", _YEAR, "1T"))
+    forms = (_form(operation), _form(operation, "390", 2025, "0A"), _form(operation, "349", 2026, "1T"))
     checked = 0
     for language in OutputLanguage:
         with override_settings(cadrumo_output_language=language.value):
@@ -640,7 +636,7 @@ _RECORDS: Final[tuple[tuple[int, Mapping[str | None, ModeloFormScalar]], ...]] =
 
 @pytest.mark.asyncio
 async def test_records_whose_number_is_not_known_are_never_counted_as_none(operation: PinnedAuthorityOperation) -> None:
-    form = _form(operation, "349", _YEAR, "1T")
+    form = _form(operation, "349", 2026, "1T")
     lines = await _drawn(page_items(_records_page(form, None), staged={}), 120)
     unknown = lookup_translation("workspace.modelo.grid.records_unknown", locale="en")
     counted = lookup_translation("workspace.modelo.repeating", locale="en")
@@ -654,7 +650,7 @@ async def test_records_whose_number_is_not_known_are_never_counted_as_none(opera
 async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_and_help(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    screen = ModeloWorkbenchScreen(FakeReader(form=_form(operation, "349", _YEAR, "1T")))
+    screen = ModeloWorkbenchScreen(FakeReader(form=_form(operation, "349", 2026, "1T")))
     async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
         await settle(pilot)
         await pilot.press("]")
@@ -675,7 +671,7 @@ async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_
 async def test_known_records_are_a_read_only_table_with_an_index_column(
     operation: PinnedAuthorityOperation, width: int, table: bool
 ) -> None:
-    form = _form(operation, "349", _YEAR, "1T")
+    form = _form(operation, "349", 2026, "1T")
     page = _records_page(form, _RECORDS)
     items = page_items(page, staged={})
     lines = await _drawn(items, width)

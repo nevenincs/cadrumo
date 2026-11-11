@@ -13,15 +13,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
-
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
-
-_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,8 +31,8 @@ def test_operator_asserted_facts_resolve_under_the_explicit_operation() -> None:
             counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number="EXPLICIT-2026-001",
-            issued_at=date(_YEAR, 3, 15),
-            operation_date=date(_YEAR, 3, 14),
+            issued_at=date(2026, 3, 15),
+            operation_date=date(2026, 3, 14),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("21"),
             currency="EUR",
@@ -44,7 +40,7 @@ def test_operator_asserted_facts_resolve_under_the_explicit_operation() -> None:
             operation=operation,
         )
 
-    assert invoice.operation_date == date(_YEAR, 3, 14)
+    assert invoice.operation_date == date(2026, 3, 14)
     assert invoice.operation_date_role is not None
     assert invoice.grand_total == Decimal("121.00")
 
@@ -59,7 +55,7 @@ def test_the_modelo_349_clave_rule_resolves_under_the_explicit_operation() -> No
             counterparty_tax_id="DE123456789",
             counterparty_country="DE",
             invoice_number="EXPLICIT-2026-002",
-            issued_at=date(_YEAR, 3, 15),
+            issued_at=date(2026, 3, 15),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("0"),
             operation_type=IntracomOperationType.E,

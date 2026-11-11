@@ -74,7 +74,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-_FILING_WALLET_CAPTURED_AT = datetime(TARGET_YEAR, 7, 15, 8, 0, 0, tzinfo=UTC)
+_FILING_WALLET_CAPTURED_AT = datetime(2026, 7, 15, 8, 0, 0, tzinfo=UTC)
 
 
 def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(
@@ -121,7 +121,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 },
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=report.decision,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_97,
                 clock=_FILING_WALLET_CAPTURED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -148,7 +148,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
                 ),
-                clock=datetime(TARGET_YEAR, 7, 15, 9, 0, 0, tzinfo=UTC),
+                clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).report
@@ -166,7 +166,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
                 ),
-                clock=datetime(TARGET_YEAR, 7, 15, 10, 0, 0, tzinfo=UTC),
+                clock=datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).record
@@ -238,7 +238,7 @@ def _calculate_verify_and_file_303_with_wallet_credit(
             },
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             iva_compensation_decision=report.decision,
-            filing_period_date=date(TARGET_YEAR, 6, 30),
+            filing_period_date=date(2026, 6, 30),
             ports=calculation_ports,
             clock=_FILING_WALLET_CAPTURED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
@@ -352,12 +352,12 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
     """
     taxpayer_nif = "X0001500M"
     verification_times = (
-        datetime(TARGET_YEAR, 7, 15, 9, 0, 0, tzinfo=UTC),
-        datetime(TARGET_YEAR, 7, 16, 9, 0, 0, tzinfo=UTC),
+        datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
+        datetime(2026, 7, 16, 9, 0, 0, tzinfo=UTC),
     )
     filing_times = (
-        datetime(TARGET_YEAR, 7, 15, 10, 0, 0, tzinfo=UTC),
-        datetime(TARGET_YEAR, 7, 16, 10, 0, 0, tzinfo=UTC),
+        datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
+        datetime(2026, 7, 16, 10, 0, 0, tzinfo=UTC),
     )
     with frozen_clock(_FILING_WALLET_CAPTURED_AT), secure_backend(tmp_path):
         store_operator_profile_with_tax_id(taxpayer_nif)
@@ -403,9 +403,9 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
 ) -> None:
     taxpayer_nif = "X0001500M"
     filed_period = period(TARGET_YEAR, "1T")
-    decided_1t_at = datetime(TARGET_YEAR, 3, 19, 12, 0, 0, tzinfo=UTC)
+    decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
     filing_profile = workflow_profile(taxpayer_nif).model_copy(
-        update={"activity_start_date": date(TARGET_YEAR, 1, 1)},
+        update={"activity_start_date": date(2026, 1, 1)},
     )
     with frozen_clock(DECIDED_AT), secure_backend(tmp_path):
         store_operator_profile_with_tax_id(taxpayer_nif)
@@ -446,7 +446,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 iva_compensation_decision=report_1t.decision,
-                filing_period_date=date(TARGET_YEAR, 3, 31),
+                filing_period_date=date(2026, 3, 31),
                 ports=_calculation_ports_210,
                 clock=decided_1t_at,
                 filing_instance_evidence=general_m303_filing_evidence(
@@ -468,7 +468,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
                 ),
-                clock=datetime(TARGET_YEAR, 4, 15, 9, 0, 0, tzinfo=UTC),
+                clock=datetime(2026, 4, 15, 9, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).report
@@ -486,7 +486,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                     cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
                     cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
                 ),
-                clock=datetime(TARGET_YEAR, 4, 15, 10, 0, 0, tzinfo=UTC),
+                clock=datetime(2026, 4, 15, 10, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).record
@@ -507,7 +507,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert filing.settlement.refund_election_intent is False
         assert filing.settlement.refund_state is IvaSettlementRefundState.NOT_REQUESTED
         balance = query_iva_wallet_balance(
-            as_of_year=TARGET_YEAR,
+            as_of_year=2026,
             repository=IvaCompensationHistoryRepository(),
             operation=operation,
         )
@@ -532,7 +532,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 casilla_inputs={},
                 binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
-                filing_period_date=date(TARGET_YEAR, 6, 30),
+                filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_279,
                 clock=DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(

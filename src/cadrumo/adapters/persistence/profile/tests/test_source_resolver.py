@@ -21,11 +21,6 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.m347_threshold import m347_threshold_decimal
 from cadrumo.domain.calculations.registry.temporal import select_revision
-from cadrumo.domain.calculations.registry.tests.authored_editions import (
-    authored_revisions,
-    filing_year_envelope,
-    revision_covering,
-)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -49,10 +44,6 @@ from .source_resolver_test_support import (
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_YEAR = filing_year_envelope().horizon
-# The design Modelo 347 used before its newest authored edition.
-_M347_OLD_DESIGN = authored_revisions("347")[-2].id
 
 
 class TestInvoiceDirectionToSourceKind:
@@ -82,7 +73,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     declarable = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-001",
-        issued_at=date(_YEAR, 1, 15),
+        issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -90,7 +81,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     other_bucket = source_resolver_invoice(
         bucket_id=OTHER_BUCKET_ID,
         invoice_number="F-2026-002",
-        issued_at=date(_YEAR, 1, 16),
+        issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
         base_total=Decimal("500.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -98,7 +89,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     domestic = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-003",
-        issued_at=date(_YEAR, 1, 17),
+        issued_at=date(2026, 1, 17),
         counterparty_tax_id="DE111111125",
         base_total=Decimal("250.00"),
         iva_category=IvaCategory("domestic_zero"),
@@ -129,7 +120,7 @@ def test_invoice_catalogue_source_resolver_counts_received_acquisition_for_m349(
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="R-2026-001",
-        issued_at=date(_YEAR, 1, 20),
+        issued_at=date(2026, 1, 20),
         counterparty_name="EU Supplier GmbH",
         counterparty_tax_id="DE222222222",
         base_total=Decimal("1200.00"),
@@ -163,7 +154,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-001",
-        issued_at=date(_YEAR - 1, 2, 10),
+        issued_at=date(2025, 2, 10),
         counterparty_tax_id="B00015016",
         counterparty_name="Cliente M347 SL",
         base_total=Decimal("1500.00"),
@@ -173,7 +164,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-P-2025-001",
-        issued_at=date(_YEAR - 1, 3, 10),
+        issued_at=date(2025, 3, 10),
         counterparty_tax_id="B00015016",
         counterparty_name="Cliente M347 SL",
         base_total=Decimal("983.53"),
@@ -183,7 +174,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-002",
-        issued_at=date(_YEAR - 1, 3, 15),
+        issued_at=date(2025, 3, 15),
         counterparty_tax_id="B00010157",
         counterparty_name="At Floor SL",
         base_total=Decimal("2483.52"),
@@ -192,18 +183,18 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((collectible, payable, floor_control)))
     resolver = source_resolver(repository)
-    m347_revision = modelo_revision("347", _M347_OLD_DESIGN)
+    m347_revision = modelo_revision("347", "2011-2024")
 
     with bundled_indexed_authority().operation() as operation:
         m347_threshold = m347_threshold_decimal(
-            resolve_m347_counterparty_annual_threshold(effective_date=date(_YEAR - 1, 12, 31), authority=operation),
+            resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31), authority=operation),
         )
         m347_resolution = resolver.resolve(
             CalculationSourceContext(
                 bucket_id=secure_profile.bucket_id,
                 modelo="347",
-                filing_year=_YEAR - 1,
-                period=Period.from_year_and_code(_YEAR - 1, "0A"),
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
                 revision=m347_revision,
             ),
         )
@@ -224,13 +215,13 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         f"collectible_invoice:{floor_control.invoice_id}",
     }
 
-    m349_revision = modelo_revision("349", revision_covering("349", _YEAR).id)
+    m349_revision = modelo_revision("349", "2020-y-siguientes")
     m349_resolution = resolver.resolve(
         CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="349",
-            filing_year=_YEAR - 1,
-            period=Period.from_year_and_code(_YEAR - 1, "1T"),
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
             revision=m349_revision,
         ),
     )
@@ -252,7 +243,7 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
                     bucket_id=secure_profile.bucket_id,
                     kind=InvoiceKind.RECEIVED,
                     invoice_number="DE-RECT-2026-001",
-                    issued_at=date(_YEAR, 3, 10),
+                    issued_at=date(2026, 3, 10),
                     counterparty_tax_id="DE222222222",
                     counterparty_name="Supplier GmbH",
                     counterparty_country="DE",
@@ -265,15 +256,15 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
     )
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=_YEAR, period="1T"))
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
 
     with pytest.raises(RegistryValidationError, match="source kind 'payable_invoice'"):
         source_resolver(repository).resolve(
             CalculationSourceContext(
                 bucket_id=secure_profile.bucket_id,
                 modelo="349",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
                 revision=snapshot.revision,
             ),
         )
@@ -286,7 +277,7 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
     declarable = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-XI-001",
-        issued_at=date(_YEAR, 1, 15),
+        issued_at=date(2026, 1, 15),
         counterparty_tax_id="XI123456789",
         counterparty_country="XI",
         base_total=Decimal("3000.00"),
@@ -307,7 +298,7 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
     declarable = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-GB-001",
-        issued_at=date(_YEAR, 1, 15),
+        issued_at=date(2026, 1, 15),
         counterparty_tax_id="GB123456789",
         counterparty_country="GB",
         base_total=Decimal("3000.00"),
@@ -316,15 +307,15 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
     repository.save(build_invoice_catalogue((declarable,)))
     _modelos, _catalogues = bundled_registry_tree()
     _modelo_349 = next(candidate for candidate in _modelos if candidate.id == "349")
-    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=_YEAR, period="1T"))
+    snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
 
     with pytest.raises(Modelo349CountryPrefixContextError) as exc:
         source_resolver(repository).resolve(
             CalculationSourceContext(
                 bucket_id=BUCKET_ID,
                 modelo="349",
-                filing_year=_YEAR,
-                period=Period.from_year_and_code(_YEAR, "1T"),
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
                 revision=snapshot.revision,
             ),
         )

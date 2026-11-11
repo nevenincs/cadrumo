@@ -4,13 +4,13 @@ The sibling worked example of exempt services drives the INCOME leg and types ca
 hand, so it says nothing about amortization. This module is the amortization counterpart: the
 element and its claim come from the activity-asset register, the real expense resolver turns them
 into casilla 0208, and the registry's own formulas carry that figure to the total of gastos and
-the rendimiento neto of the estimacion directa normal.
+the rendimiento neto of the 2025 estimacion directa normal.
 
 Hand-worked figures (none is read back from the code under test):
 
     element basis                       12.000,00
     linear coefficient                  10 % (mobiliario)
-    claim for the exercise (full year) 12.000,00 x 10 % = 1.200,00
+    claim for 2025 (full year)          12.000,00 x 10 % = 1.200,00
     ingresos de explotacion (0171)      30.000,00   (income leg: typed, covered by the sibling module)
     gastos previos (0218)               1.200,00    (0208 is the only expense)
     total gastos, normal (0220)         1.200,00 + 0 provisions = 1.200,00
@@ -29,7 +29,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -48,8 +47,7 @@ from .ledger_source_mesh_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_FILING_YEAR = newest_authored_edition("100")
-_REVISION_ID = str(revision_covering("100", _FILING_YEAR).id)
+_FILING_YEAR = 2025
 _CLAIM = Decimal("1200.00")
 _INGRESOS = Decimal("30000.00")
 _RENDIMIENTO_NETO = Decimal("28800.00")
@@ -79,14 +77,14 @@ def _chain(claim_amount: Decimal = _CLAIM, *, expected: Decimal = _RENDIMIENTO_N
     claim = register_claim(asset, amount=claim_amount)
     resolution = resolve_m100(ActivityAssetHistory(revisions=(asset,), claims=(claim,)))
     material = resolution.binding_values[
-        renta_expense_binding_id(ledger_source_mesh_revision("100", _REVISION_ID), "0208")
+        renta_expense_binding_id(ledger_source_mesh_revision("100", str(_FILING_YEAR)), "0208")
     ]
 
     return run_registry_calculation_scenario(
         RegistryCalculationScenario(
-            id=f"m100-{_FILING_YEAR}-register-amortization-chain",
+            id="m100-2025-register-amortization-chain",
             modelo="100",
-            revision=_REVISION_ID,
+            revision=str(_FILING_YEAR),
             filing_year=_FILING_YEAR,
             period="0A",
             inputs={_casilla("0171"): _INGRESOS, _casilla("0208"): material},

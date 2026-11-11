@@ -18,7 +18,6 @@ from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.models import Invoice
@@ -34,12 +33,10 @@ from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
 
-_YEAR = filing_year_envelope().horizon
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(_YEAR, 2, 10, 12, 0, tzinfo=UTC)
-_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
+_Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 _M303_IMPORT_BASE_BINDING = "modelo-303-iva-soportado-importaciones-base"
 _M303_IMPORT_CUOTA_BINDING = "modelo-303-iva-soportado-importaciones-cuota"
@@ -75,7 +72,7 @@ def _resolver(repository: TransactionCatalogueRepository) -> LedgerIvaAggregatio
 def _revision(modelo_id: str) -> ModeloRevision:
     """The committed revision governing each modelo's IVA ledger bindings."""
     period = "1T" if modelo_id == "303" else "0A"
-    return published_authority_operation().snapshot(modelo_id, filing_year=_Q1.filing_year, period=period).revision
+    return published_authority_operation().snapshot(modelo_id, filing_year=_Q1_2025.filing_year, period=period).revision
 
 
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
@@ -127,8 +124,8 @@ def _sale(
     gross = Decimal(base) + Decimal(iva) + (recargo_amount or Decimal("0"))
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=gross,
         currency="EUR",
         counterparty="Minorista Recargo SL",
@@ -165,8 +162,8 @@ def _third_country_import() -> Transaction:
     """A third-country import carrying a base that only the quantity screen sees."""
     raw = RawTransaction(
         provider_transaction_id="import-1",
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
         amount=Decimal("1000.00"),
         currency="EUR",
         counterparty="Proveedor extracomunitario",
@@ -216,8 +213,8 @@ def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
-                period=_Q1,
+                filing_year=2025,
+                period=_Q1_2025,
                 revision=_revision_without_fact(_revision("303"), "base_amount_sum"),
             ),
         )
@@ -242,8 +239,8 @@ def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Pat
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
-                period=_Q1,
+                filing_year=2025,
+                period=_Q1_2025,
                 revision=_revision("303"),
             ),
         )
@@ -267,8 +264,8 @@ def test_the_import_base_lands_in_box_32_on_the_committed_revision(tmp_path: Pat
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
-                period=_Q1,
+                filing_year=2025,
+                period=_Q1_2025,
                 revision=revision,
             ),
         )
@@ -296,7 +293,7 @@ def _uncategorised_eu_service() -> Invoice:
             "bucket_id": _BUCKET_ID,
             "kind": InvoiceKind.ISSUED.value,
             "invoice_number": "2025-002",
-            "issued_at": date(_YEAR, 1, 31).isoformat(),
+            "issued_at": "2025-01-31",
             "counterparty_name": "Kunde GmbH",
             "counterparty_tax_id": "DE123456788",
             "counterparty_country": "DE",
@@ -342,8 +339,8 @@ def test_an_unrouted_invoice_base_is_named_by_its_invoice_date_and_amount(tmp_pa
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
-                period=_Q1,
+                filing_year=2025,
+                period=_Q1_2025,
                 revision=_revision("303"),
             ),
         )
@@ -355,7 +352,7 @@ def test_an_unrouted_invoice_base_is_named_by_its_invoice_date_and_amount(tmp_pa
     assert note.fact == CalculationNoteFact.of(
         CalculationNoteSentence.UNROUTED_IVA_BASE,
         rows=(f"invoice:{invoice.invoice_id}:0",),
-        row_date=date(_YEAR, 1, 31).isoformat(),
+        row_date="2025-01-31",
         row_amount=Decimal("1500.00"),
     )
     assert "base_amount_sum" in note.message
@@ -381,8 +378,8 @@ def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) 
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
-                filing_year=_YEAR,
-                period=_Q1,
+                filing_year=2025,
+                period=_Q1_2025,
                 revision=revision,
             ),
         )

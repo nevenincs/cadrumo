@@ -43,7 +43,6 @@ from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -64,8 +63,7 @@ from .....adapters.persistence.profile.tests.llm_saturation_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = filing_year_envelope().horizon
-_NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
+_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "a8de1d73-fd40-4766-bc01-b591ea364997"  # was 'bucket-review-workflow'
 
 
@@ -101,8 +99,8 @@ def _run_in_fresh_profile[T](
 def _seed_parent(repository: TransactionCatalogueRepository) -> str:
     raw = RawTransaction(
         provider_transaction_id="row-review",
-        booked_date=date(_YEAR, 5, 1),
-        value_date=date(_YEAR, 5, 2),
+        booked_date=date(2025, 5, 1),
+        value_date=date(2026, 5, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",

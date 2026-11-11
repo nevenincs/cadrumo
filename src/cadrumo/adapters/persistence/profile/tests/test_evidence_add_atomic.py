@@ -24,10 +24,7 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 
-from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .evidence_test_support import pdf_file
-
-_YEAR = filing_year_envelope().horizon
 
 __all__ = ["pdf_file"]
 
@@ -35,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
 _CONCURRENT_ID = "evidence-concurrent"
-_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _record(evidence_id: str) -> PurchaseInvoiceEvidence:

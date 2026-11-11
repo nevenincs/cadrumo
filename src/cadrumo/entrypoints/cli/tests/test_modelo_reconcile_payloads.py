@@ -29,7 +29,7 @@ def _result_kwargs(**overrides: object) -> dict[str, object]:
         "source_path": "receipt.pdf",
         "verdict": ModeloReconciliationVerdict.MATCHES,
         "diffs": (),
-        "reconciled_at": datetime(1980, 6, 1, 12, 0, tzinfo=UTC),
+        "reconciled_at": datetime(2026, 6, 1, 12, 0, tzinfo=UTC),
         "narrative": "",
     }
     base.update(overrides)

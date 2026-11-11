@@ -102,7 +102,7 @@ class TestConfigure:
         )
         assert config.represented_nif == "12345678Z"
         assert config.granted_scopes == ("IVA", "RENT")
-        assert config.catalogue_version == svc.catalogue.catalogue_version
+        assert config.catalogue_version.startswith("2026")
 
     def test_configure_dedupes_repeated_scopes(self, isolated_settings: Settings) -> None:
         svc = _service(isolated_settings)

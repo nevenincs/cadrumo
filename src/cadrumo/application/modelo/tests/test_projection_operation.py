@@ -22,7 +22,6 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...ledger.persistence_ports import LedgerPersistenceConflictError
 from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueRepository
@@ -57,7 +56,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_YEAR_A, _YEAR_B = filing_year_envelope().years[-2:]
 
 
 def _unused_factory(*, bucket_id: str, operation: PinnedAuthorityOperation) -> CalculationActionPorts:
@@ -92,8 +90,8 @@ def _request(payload: ModeloProjectOperationRequest | ModeloCompareOperationRequ
 def test_closed_public_contracts_and_all_period_commit_access(authority_operation: PinnedAuthorityOperation) -> None:
     registry = _public_registry()
     for payload in (
-        ModeloProjectOperationRequest(profile_id=_PROFILE, year=_YEAR_B, ccaa="Madrid"),
-        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="303", years=(_YEAR_A, _YEAR_B)),
+        ModeloProjectOperationRequest(profile_id=_PROFILE, year=2025, ccaa="Madrid"),
+        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="303", years=(2024, 2025)),
     ):
         request = _request(payload)
         contract = registry.lookup_public_contract(request.definition_id)
@@ -126,8 +124,8 @@ def test_external_client_result_access_requires_exact_destination_and_tax_values
     registry = _public_registry()
     destination = uuid4()
     for payload in (
-        ModeloProjectOperationRequest(profile_id=_PROFILE, year=_YEAR_B, ccaa="madrid"),
-        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="130", years=(_YEAR_A, _YEAR_B)),
+        ModeloProjectOperationRequest(profile_id=_PROFILE, year=2025, ccaa="madrid"),
+        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="130", years=(2025, 2026)),
     ):
         request = _request(payload)
         contract = registry.lookup_public_contract(request.definition_id)
@@ -165,18 +163,18 @@ def test_public_request_and_result_validators_reject_incomplete_values() -> None
     with pytest.raises(ValidationError):
         ModeloProjectOperationRequest(
             profile_id=_PROFILE,
-            year=_YEAR_B,
+            year=2025,
             ccaa="Madrid",
             casilla_overrides=(ProjectionOverride(key="0505", value="1"), ProjectionOverride(key="0505", value="2")),
         )
     with pytest.raises(ValidationError):
-        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="303", years=(_YEAR_A,))
+        ModeloCompareOperationRequest(profile_id=_PROFILE, modelo="303", years=(2024,))
     with pytest.raises(ValidationError):
         ModeloProjectOperationProjection.model_validate(
             {
                 "authority_generation": "c" * 64,
                 "profile_id": str(_PROFILE),
-                "year": _YEAR_B,
+                "year": 2025,
                 "ccaa": "Madrid",
                 "quarters_filed": 2,
                 "quarters_available": ["1T"],
@@ -228,8 +226,8 @@ def test_comparison_public_result_retains_order_and_every_provenance_reference()
         authority_generation="c" * 64,
         profile_id=_PROFILE,
         modelo="100",
-        year_a=_YEAR_A,
-        year_b=_YEAR_B,
+        year_a=2024,
+        year_b=2025,
         year_a_revision_id="a" * 64,
         year_b_revision_id="b" * 64,
         year_a_is_draft=False,
@@ -403,7 +401,7 @@ async def test_confirmed_migration_remains_updated_if_later_projection_fails(
     executor = ModeloProjectExecutor(
         cast(CalculationActionPortsFactory, factory), cast(ProjectionMigrationPort, migration)
     )
-    payload = ModeloProjectOperationRequest(profile_id=_PROFILE, year=_YEAR_B, ccaa="Madrid")
+    payload = ModeloProjectOperationRequest(profile_id=_PROFILE, year=2025, ccaa="Madrid")
     request = OperationRequest[ModeloProjectOperationRequest](
         definition_id=MODELO_PROJECT_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
