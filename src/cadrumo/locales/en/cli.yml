@@ -1580,6 +1580,9 @@ cli:
           declaration for the last period of the year (period code 12 or 4T), and
           print its identifier and SHA-256 for `work calculate`. Other periods do
           not ask it.
+        attest_no_amount_help: State that one carry from an earlier filing holds no
+          amount. Shows the check of the change; with --yes it records the carry as
+          a 0 you stated, apart from a figure you typed.
         attest_prior_carries_confirm: Nothing was stated yet. Run `aeat app modelo
           work attest-prior-carries %{work_unit_id} --yes` to state it.
         attest_prior_carries_help: State that no amount from earlier years is still
@@ -1596,6 +1599,9 @@ cli:
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be
           a decimal amount; received: {value}. Use a dot decimal separator with no
           thousands grouping, e.g. 1234.56.'
+        binding_option_help: Value for a box input, as KEY=VALUE (repeatable); run
+          `aeat app modelo bindings list --missing` to see the values the calculation
+          needs.
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
           Its values fill only the boxes whose source is marked aeat_prefilled in
           the modelo definitions; values you give with --binding always take precedence.
@@ -1684,6 +1690,16 @@ cli:
           `pdf` for the signed calculation summary (needs the optional `pdf` extra).'
         document_only_help: Check the document alone, without opening the active profile's
           store; without --trusted-key a valid result stays unpinned.
+        entry_binding_help: Input of the declaration, by its identifier (see `aeat
+          app modelo bindings list`).
+        entry_binding_unknown: '%{binding} is not an input identifier.'
+        entry_casilla_help: Box of the declaration, by its registry identifier (see
+          `aeat app modelo casillas`).
+        entry_casilla_unknown: '%{casilla} is not a box identifier.'
+        entry_confirm: Nothing was recorded yet. Run `%{command}` to record it.
+        entry_value_help: The value, written as in your output language (for example
+          1.234,56 in Spanish or 1,234.56 in English).
+        entry_yes_help: Confirm the change and record it on the declaration
         file:
           verification_report_ambiguous: More than one granting verification report
             matches this revision. Resolve the verification conflict before filing.
@@ -1810,8 +1826,10 @@ cli:
         output_help: Path to write the calculation report to; its parent directory
           must exist.
         output_language_help: Output language for rendered messages.
-        override_help: Value for a box input, as KEY=VALUE (repeatable); run `aeat
-          app modelo bindings list --missing` to see the values the calculation needs.
+        override_help: State the value of an input of a declaration yourself, over
+          what its source supplies or in place of a source that supplied nothing,
+          such as an earlier return that is not stored. Shows the value and the check
+          of the change; with --yes it records it, keeping every other value you entered.
         payment_election_help: 'Choose how a positive Modelo 303 result is paid: ordinary
           payment or direct debit.'
         period_help: 'Period code of the declaration: 0A annual, 1T-4T quarters, 01-12
@@ -2007,6 +2025,9 @@ cli:
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
+        set_value_help: Type a value into a box you fill on a declaration, the way
+          its form takes it. Shows the value as the box reads it and the check of
+          the change; with --yes it records it, keeping every other value you entered.
         state_label_borrador: draft
         state_label_descartado: discarded
         state_label_presentado: recorded as filed
@@ -3274,9 +3295,10 @@ cli:
       reason_help: Free-text reason recorded as the transaction notes and as the reason
         behind the classification decision (visible on `aeat app ledger view`), or
         with a `--reject` decision.
-      recargo_amount_help: Recargo de equivalencia charged on this movement (LIVA art. 161).
-        On a purchase it is taken only when the profile's IVA regime is the recargo de
-        equivalencia; with the base and the IVA amount it must make up the movement's amount
+      recargo_amount_help: Recargo de equivalencia charged on this movement (LIVA
+        art. 161). On a purchase it is taken only when the profile's IVA regime is
+        the recargo de equivalencia; with the base and the IVA amount it must make
+        up the movement's amount
       reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
         a declined suggestion, apply records an accepted one.'
       reject_help: Record an explicit rejection of the LLM suggestion as an audit

@@ -3167,6 +3167,8 @@
         "cadrumo.entrypoints.cli.modelo_work_disagreement_payloads",
         "cadrumo.entrypoints.cli.modelo_work_lifecycle_cli",
         "cadrumo.entrypoints.cli.modelo_work_m303_attestation_cli",
+        "cadrumo.entrypoints.cli.modelo_work_manual_entry_cli",
+        "cadrumo.entrypoints.cli.modelo_work_manual_entry_payloads",
         "cadrumo.entrypoints.cli.modelo_work_report_cli",
         "cadrumo.entrypoints.cli.modelo_work_review_cli",
         "cadrumo.entrypoints.cli.modelo_work_revision_cli",
