@@ -1,12 +1,14 @@
-"""An ascendant stored without a NIF refuses checking, filing and export with a typed refusal that names the fact.
+"""An ascendant stored without a NIF, or a descendant or ascendant without a name, refuses checking, filing and export with a typed refusal that names the fact.
 
 The profile door admits the ascendant as a draft; the Modelo 100 design requires
 its NIF on every ascendant row. The profile record goes through the production
 profile resolver, its diagnostics persist as the revision's notes the way a
 calculation persists them, and the application's own gate decides each action.
 The refusal carries the profile door where the NIF is stated, and the NIF is
-never replaced by a stand-in. A household with the NIF stated, with no ascendants,
-or with only a child without a NIF is not refused.
+never replaced by a stand-in. The design also requires the surnames and name of every
+descendant and ascendant, so a row that omits them is refused with the door for its
+member kind. A household with those facts stated, with no ascendants, or with only a
+child without a NIF is not refused.
 """
 
 from __future__ import annotations
@@ -220,6 +222,68 @@ def test_a_child_without_a_nif_is_not_refused_because_the_design_does_not_requir
         _gate(operation, year, revision, "export")
 
 
+def _descendant(year: int, *, name: str | None) -> tuple[UserProfileFact, ...]:
+    child = "renta_family.descendiente.0"
+    return (
+        UserProfileFact(path="renta_family.descendientes_count", value="1"),
+        UserProfileFact(path=f"{child}.birth_date", value=date(year - 9, 3, 14).isoformat()),
+        *(() if name is None else (UserProfileFact(path=f"{child}.apellidos_nombre", value=name),)),
+    )
+
+
+def test_a_descendant_without_a_name_refuses_every_action_with_the_descendant_door(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    years = _filing_years(operation)
+    assert years
+    for year in years:
+        revision = _revision(operation, year, _record(operation, *_descendant(year, name=None)))
+
+        assert [issue.reason for issue in blocking_calculation_issues(revision)] == ["household_row_fact_unstated"], (
+            year
+        )
+        for action, leaf in _ACTIONS.items():
+            with pytest.raises(ModeloHouseholdRowFactUnstatedError) as refused:
+                _gate(operation, year, revision, action)
+
+            error = refused.value
+            assert get_registered_error_code(error).code == "REFUSED_MODELO_HOUSEHOLD_ROW_FACT_UNSTATED"
+            assert _context(error) == {"field": "renta_family.descendiente.apellidos_nombre", "count": "1"}
+            failure = error.precondition_failure
+            assert failure is not None
+            assert failure.subject_leaf_key == leaf
+            assert failure.verdict.action is not None
+            assert failure.verdict.action.action_id == "operator.profile.descendiente"
+
+
+def test_a_descendant_with_its_name_is_not_refused(operation: PinnedAuthorityOperation) -> None:
+    for year in _filing_years(operation):
+        revision = _revision(operation, year, _record(operation, *_descendant(year, name="Ortega Navarro Pablo")))
+
+        assert _household_reasons(revision) == [], year
+        for action in _ACTIONS:
+            _gate(operation, year, revision, action)
+
+
+def test_an_ascendant_without_a_name_is_refused_with_the_ascendant_door(operation: PinnedAuthorityOperation) -> None:
+    for year in _filing_years(operation):
+        facts = tuple(fact for fact in _ascendant(year, nif=_NIF) if not fact.path.endswith("apellidos_nombre"))
+        revision = _revision(operation, year, _record(operation, *facts))
+
+        with pytest.raises(ModeloHouseholdRowFactUnstatedError) as refused:
+            _gate(operation, year, revision, "export")
+
+        assert _context(refused.value) == {"field": "renta_family.ascendiente.apellidos_nombre", "count": "1"}
+        failure = refused.value.precondition_failure
+        assert failure is not None
+        assert failure.verdict.action is not None
+        assert failure.verdict.action.action_id == "operator.profile.ascendiente"
+
+
+def test_the_descendant_door_is_the_descendant_list_command() -> None:
+    assert lookup_action("operator.profile.descendiente").target_command_key == "config.profile.descendiente.list"
+
+
 def test_only_the_ascendant_rows_that_omit_the_nif_are_counted(operation: PinnedAuthorityOperation) -> None:
     year = _filing_years(operation)[-1]
     first = "renta_family.ascendiente.0"
@@ -228,6 +292,8 @@ def test_only_the_ascendant_rows_that_omit_the_nif_are_counted(operation: Pinned
         UserProfileFact(path="renta_family.ascendientes_count", value="2"),
         UserProfileFact(path=f"{first}.birth_date", value=date(year - 78, 1, 8).isoformat()),
         UserProfileFact(path=f"{first}.nif", value=_NIF),
+        UserProfileFact(path=f"{first}.apellidos_nombre", value="Navarro Gil Carmen"),
+        UserProfileFact(path=f"{second}.apellidos_nombre", value="Navarro Gil Pedro"),
         UserProfileFact(path=f"{second}.birth_date", value=date(year - 80, 2, 9).isoformat()),
     )
     revision = _revision(operation, year, _record(operation, *facts))

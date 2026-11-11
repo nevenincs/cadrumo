@@ -2,7 +2,7 @@
 
 The profile door admits an ascendant before the filer has stated every fact the
 declaration needs, because the filer can add the rest later. The Modelo 100 design
-requires some of those facts on every row, such as an ascendant's NIF, so a
+requires some of those facts on every row, such as an ascendant's NIF or a descendant's surnames and name, so a
 calculation records each omission as a ``household_row_fact_unstated`` note. While
 the current calculation carries one, checking, local filing and export refuse with
 one typed reason that names the missing fact and the profile door where it is
@@ -40,6 +40,7 @@ _STAGE_LEAVES: Final[dict[str, str]] = {
 
 _GROUP_DOORS: Final[dict[str, tuple[str, str]]] = {
     "renta_family.ascendiente": ("ascendiente_unstated", "operator.profile.ascendiente"),
+    "renta_family.descendiente": ("descendiente_unstated", "operator.profile.descendiente"),
 }
 """The declared scenario and profile door of each household group that has a required fact.
 

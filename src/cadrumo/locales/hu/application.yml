@@ -2084,6 +2084,7 @@ application:
         adó (Impuesto sobre Sociedades) alá tartozik. Ellenőrizd a számla adószámát.
     calc_diagnostic_words:
       household_leaf:
+        apellidos_nombre: vezetéknév és keresztnév
         nif: NIF
       income_class:
         actividad_economica: Gazdasági tevékenységből származó

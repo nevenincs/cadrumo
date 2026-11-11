@@ -2120,6 +2120,7 @@ application:
         tributa per l'IRPF o per l'Impost sobre Societats. Comprova el NIF de la factura.
     calc_diagnostic_words:
       household_leaf:
+        apellidos_nombre: cognoms i nom
         nif: NIF
       income_class:
         actividad_economica: activitats econòmiques

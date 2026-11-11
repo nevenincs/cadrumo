@@ -2017,6 +2017,7 @@ application:
         pays IRPF or Impuesto sobre Sociedades. Check the invoice's NIF.
     calc_diagnostic_words:
       household_leaf:
+        apellidos_nombre: surnames and name
         nif: tax ID (NIF)
       income_class:
         actividad_economica: economic activities

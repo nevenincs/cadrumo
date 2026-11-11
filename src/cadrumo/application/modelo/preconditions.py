@@ -397,10 +397,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     *(
         _profile(
             leaf,
-            f"{leaf}.household_row_facts.stated",
-            f"{leaf}.household_row_facts.ascendiente_unstated",
-            action_id="operator.profile.ascendiente",
+            f"{leaf}.household_row_facts.{member}_stated",
+            f"{leaf}.household_row_facts.{member}_unstated",
+            action_id=f"operator.profile.{member}",
         )
+        for member in ("ascendiente", "descendiente")
         for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
     # No action: a settled prior-accrual Modelo 193 row needs an official
