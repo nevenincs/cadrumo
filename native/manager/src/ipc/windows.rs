@@ -441,16 +441,43 @@ pub struct Server {
     agent_service: Option<PathBuf>,
     /// The desktop images whose agent service may demand the local AI server.
     desktops: Vec<PathBuf>,
+    /// The desktop processes this server admitted, newest last: the one hosting it, and
+    /// each one whose request it took. Only their agent service may demand the server.
+    desktop_processes: Vec<DesktopProcess>,
 }
 
 /// The entrypoint the desktop starts as its agent service.
 const AGENT_SERVICE: &str = "cadrumo-agent-service";
 
-/// The images a server admits, and which of them may demand the local AI server.
+/// The most admitted desktop processes a server remembers.
+const DESKTOP_PROCESSES_KEPT: usize = 8;
+
+/// One process by its PID and creation time, which together name it even after the PID
+/// is reused.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct DesktopProcess {
+    pid: u32,
+    created: u64,
+}
+
+impl DesktopProcess {
+    fn of(pid: u32) -> io::Result<Self> {
+        let opened = crate::supervision::process::open_process(pid)
+            .map_err(|_| io::Error::from(io::ErrorKind::PermissionDenied))?;
+        Ok(Self {
+            pid,
+            created: opened.identity.created,
+        })
+    }
+}
+
+/// The images a server admits, which of them may demand the local AI server, and the
+/// desktop processes admitted before any request.
 struct Admitted {
     images: Vec<PathBuf>,
     agent_service: Option<PathBuf>,
     desktops: Vec<PathBuf>,
+    desktop_processes: Vec<DesktopProcess>,
 }
 
 impl Admitted {
@@ -460,6 +487,7 @@ impl Admitted {
             images,
             agent_service: None,
             desktops: Vec::new(),
+            desktop_processes: Vec::new(),
         }
     }
 }
@@ -540,6 +568,12 @@ impl Server {
         let mut images = vec![manager.clone()];
         images.extend(desktops.iter().cloned());
         images.extend(agent_service.iter().cloned());
+        // A desktop hosting this core is the desktop it serves.
+        let desktop_processes = if embedded {
+            vec![DesktopProcess::of(std::process::id())?]
+        } else {
+            Vec::new()
+        };
         Self::bind(
             manager_id,
             ManagerSession::current()?,
@@ -547,6 +581,7 @@ impl Server {
                 images,
                 agent_service,
                 desktops,
+                desktop_processes,
             },
             if embedded { current } else { manager },
         )
@@ -572,6 +607,7 @@ impl Server {
             images,
             agent_service,
             desktops,
+            desktop_processes,
         } = admitted;
         let name = wide(&endpoint(manager_id, &session)?);
         let sddl = wide(&format!("O:{}D:P(A;;GA;;;{})", session.user, session.user));
@@ -618,22 +654,43 @@ impl Server {
             manager,
             agent_service,
             desktops,
+            desktop_processes,
         })
     }
 
-    /// Whether the agent service at `pid` was started by a live desktop of this
-    /// package in this session. The process list records the parent; holding both
-    /// processes and comparing their creation times keeps a reused PID from passing.
+    /// Whether the agent service at `pid` was started by a desktop process this server
+    /// admitted, still live in this session. The process list records the parent;
+    /// holding both processes and matching the parent's creation time to the admitted
+    /// one keeps a reused PID, and another copy of the desktop, from passing.
     fn started_by_desktop(&self, pid: u32) -> io::Result<()> {
         use crate::supervision::process::open_process;
         let denied = || io::Error::from(io::ErrorKind::PermissionDenied);
         let child = open_process(pid).map_err(|_| denied())?;
         let parent_pid = crate::cutover_windows::parent(pid)?.ok_or_else(denied)?;
         let parent = open_process(parent_pid).map_err(|_| denied())?;
-        if parent.identity.created > child.identity.created {
+        let admitted = DesktopProcess {
+            pid: parent_pid,
+            created: parent.identity.created,
+        };
+        if admitted.created > child.identity.created || !self.desktop_processes.contains(&admitted)
+        {
             return Err(denied());
         }
         inspect_peer(parent_pid, &self.session, &self.desktops).map(drop)
+    }
+
+    /// Remembers the desktop process at `pid`, whose request this server admitted.
+    fn admit_desktop(&mut self, pid: u32) {
+        let Ok(process) = DesktopProcess::of(pid) else {
+            return;
+        };
+        self.desktop_processes.retain(|known| known.pid != pid);
+        self.desktop_processes.push(process);
+        let excess = self
+            .desktop_processes
+            .len()
+            .saturating_sub(DESKTOP_PROCESSES_KEPT);
+        self.desktop_processes.drain(..excess);
     }
 
     fn reconnect(&mut self) -> io::Result<()> {
@@ -702,7 +759,7 @@ impl Server {
     }
 
     fn advance(
-        &self,
+        &mut self,
         state: State,
         handle: &mut impl FnMut(u32, Request) -> Response,
     ) -> io::Result<(State, bool)> {
@@ -747,6 +804,13 @@ impl Server {
                     }
                     _ if agent_service => return Err(io::ErrorKind::PermissionDenied.into()),
                     _ => {}
+                }
+                if self
+                    .desktops
+                    .iter()
+                    .any(|image| same_image(&peer.image, image))
+                {
+                    self.admit_desktop(pid);
                 }
                 let response =
                     serde_json::to_vec(&handle(pid, request)).map_err(io::Error::other)?;
@@ -1018,31 +1082,94 @@ mod tests {
             .expect("the test runner outlives its test process")
             .identity
             .image;
-        let admitted = |agent_service: bool, desktops: Vec<PathBuf>| Admitted {
+        let started_by = DesktopProcess::of(parent).expect("the test runner is live");
+        let admitted = |agent_service: bool,
+                        desktops: Vec<PathBuf>,
+                        desktop_processes: Vec<DesktopProcess>| Admitted {
             images: vec![image.clone()],
             agent_service: agent_service.then(|| image.clone()),
             desktops,
+            desktop_processes,
         };
         let demand = || Request::DemandLocalAi { schema: 1 };
 
-        let (response, acted) = act(admitted(true, vec![desktop.clone()]), demand());
+        let (response, acted) = act(
+            admitted(true, vec![desktop.clone()], vec![started_by]),
+            demand(),
+        );
         assert_eq!(response.unwrap().outcome, Outcome::LocalAiDemanded);
         assert_eq!(acted, 1);
 
-        // Started by a process that is not an admitted desktop.
-        let (response, acted) = act(admitted(true, vec![]), demand());
+        // Started by a process of the desktop's image that this server never admitted,
+        // such as another copy of the desktop.
+        let (response, acted) = act(admitted(true, vec![desktop.clone()], vec![]), demand());
+        assert!(response.is_err());
+        assert_eq!(acted, 0);
+
+        // Started by the admitted PID, but not by the process admitted under it.
+        let reused = DesktopProcess {
+            created: started_by.created + 1,
+            ..started_by
+        };
+        let (response, acted) = act(
+            admitted(true, vec![desktop.clone()], vec![reused]),
+            demand(),
+        );
+        assert!(response.is_err());
+        assert_eq!(acted, 0);
+
+        // Started by an admitted process that is no desktop image.
+        let (response, acted) = act(admitted(true, vec![], vec![started_by]), demand());
         assert!(response.is_err());
         assert_eq!(acted, 0);
 
         // An admitted image that is not the agent service, even the desktop's own child.
-        let (response, acted) = act(admitted(false, vec![desktop]), demand());
+        let (response, acted) = act(admitted(false, vec![desktop], vec![started_by]), demand());
         assert!(response.is_err());
         assert_eq!(acted, 0);
 
         // The agent service is admitted for nothing else.
-        let (response, acted) = act(admitted(true, vec![]), Request::Retry { schema: 1 });
+        let (response, acted) = act(admitted(true, vec![], vec![]), Request::Retry { schema: 1 });
         assert!(response.is_err());
         assert_eq!(acted, 0);
+    }
+
+    #[test]
+    fn a_desktop_whose_request_the_server_admitted_is_remembered_by_its_process() {
+        let name = name();
+        let image = fs::canonicalize(std::env::current_exe().unwrap()).unwrap();
+        let mut server = Server::bind(
+            &name,
+            ManagerSession::current().unwrap(),
+            Admitted {
+                images: vec![image.clone()],
+                agent_service: None,
+                desktops: vec![image.clone()],
+                desktop_processes: Vec::new(),
+            },
+            image.clone(),
+        )
+        .unwrap();
+        let (send, receive) = mpsc::channel();
+        let client = thread::spawn(move || {
+            send.send(request_to(&name, &image, &Request::Status { schema: 1 }))
+                .unwrap()
+        });
+        let deadline = Instant::now() + Duration::from_secs(4);
+        let result = loop {
+            server.poll(|request| respond(request, || Ok(()))).unwrap();
+            if let Ok(result) = receive.try_recv() {
+                break result;
+            }
+            assert!(Instant::now() < deadline, "client must be bounded");
+            thread::sleep(Duration::from_millis(5));
+        };
+        client.join().unwrap();
+        result.unwrap();
+        assert_eq!(
+            server.desktop_processes,
+            [DesktopProcess::of(std::process::id()).unwrap()]
+        );
     }
 
     #[test]
