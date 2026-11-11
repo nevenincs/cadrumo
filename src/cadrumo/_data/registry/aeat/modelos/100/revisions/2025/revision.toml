@@ -7661,7 +7661,7 @@ selector = {revision = "2024", id = "renta-final-settlement"}
 fields = {bindings = ["renta-modelo-130-pagos-fraccionados", "renta-modelo-131-pagos-fraccionados"], casilla_ids = ["0585", "0586", "0587", "0588", "0414", "0589", "0590", "0591", "0595", "0592", "0593", "0594", "0596", "0597", "0598", "0599", "0600", "0601", "0602", "0603", "0604", "0605", "0606", "0609", "0610", "0611", "0612", "0613", "0623", "0624", "0636", "0637", "0248", "0249", "0660", "0661", "0662", "0663", "0664", "0666", "0669", "0670"]}
 removed_fields = ["application_links"]
 sequence_additions = {formulas = ["renta-pagos-fraccionados-ingresados"], legal_refs = ["ley-35-2006:art-81-bis", "orden-eha-672-2007:art-3", "orden-hac-277-2026:art-3", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "rd-439-2007:art-80", "rd-439-2007:art-86", "rd-439-2007:art-90", "rd-439-2007:art-95", "rd-439-2007:art-108", "ley-35-2006:art-67", "ley-35-2006:art-77", "ley-35-2006:art-97", "orden-eha-3127-2009:art-1", "orden-eha-3377-2011:art-1", "orden-hac-1431-2025:art-2", "orden-eha-672-2007:art-1"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form", "aeat-modelo-130-instructions", "aeat-modelo-131-instructions"]}
-sequence_removals = {formulas = [10], source_refs = [0, 1, 2, 3, 4]}
+sequence_removals = {formulas = [10], legal_refs = [15], source_refs = [0, 1, 2, 3, 4]}
 sequence_order = {formulas = [0, 2, 1, 11, 3, 4, 5, 6, 7, 8, 9, 10], legal_refs = [3, 4, 5, 6, 15, 8, 10, 11, 12, 13, 16, 17, 9, 18, 19, 20, 21, 0, 1, 2, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 7, 36, 37, 38, 39, 40, 41, 42, 14]}
 
 [[revisions."2025".family_overrides]]
@@ -8749,10 +8749,6 @@ selector = {revision = "2024", id = "renta-mini-model-actividades-economicas-dir
 [[revisions."2025".family_removals]]
 family = "constructs"
 selector = {revision = "2024", id = "renta-mini-model-trabajo"}
-
-[[revisions."2025".family_removals]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-profile-cotizaciones-ss-madre"}
 
 [[revisions."2025".family_removals]]
 family = "bindings"

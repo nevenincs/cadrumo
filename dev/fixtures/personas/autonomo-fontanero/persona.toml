@@ -60,12 +60,6 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "does-intracomunitario" = false
 "third-party-transactions-above-347-threshold" = true
 
-# The cap term of the art. 81 LIRPF deduction for a mother of a child under
-# three. He has no child, so no contribution counts towards it: a stated zero,
-# not an unknown.
-[fields]
-"renta_family.cotizaciones_ss_madre_2024" = "0"
-
 # The censal tipo de actividad (Modelo 036 casillas 403 and 404, AEAT guide
 # "aeat-m036-activity-code-table-2026-03-26"), which Modelo 100 casilla 0166 states:
 # IAE sección primera, epígrafe 504.2: actividad empresarial, so A03.
