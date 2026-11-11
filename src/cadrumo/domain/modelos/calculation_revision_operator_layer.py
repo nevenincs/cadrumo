@@ -54,14 +54,8 @@ OPERATOR_LAYER_IDENTITY_KEY: Final = "operator_layer"
 """The revision-identity payload key the layer contributes when it is present."""
 
 
-class ValueAttestation(BaseModel):
-    """The earlier filing an operator-stated carry value stands in for.
-
-    Attributes:
-        source_modelo: The modelo of the earlier filing the carry would be read from.
-        source_filing_year: The filing year of that earlier filing.
-        source_period: The registry period token of that earlier filing.
-    """
+class AttestedSource(BaseModel):
+    """One earlier filing, named by modelo, filing year and registry period token."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -76,6 +70,55 @@ class ValueAttestation(BaseModel):
             "source_filing_year": self.source_filing_year,
             "source_period": self.source_period,
         }
+
+
+class ValueAttestation(BaseModel):
+    """The earlier filing or filings an operator-stated carry value stands in for.
+
+    A previous-filing carry stands in for one filing, named by the three
+    ``source_*`` fields. A relation-prefill carry folds several source periods,
+    so ``further_sources`` names the rest; the statement then covers every one.
+
+    Attributes:
+        source_modelo: The modelo of the first earlier filing the carry would be read from.
+        source_filing_year: The filing year of that earlier filing.
+        source_period: The registry period token of that earlier filing.
+        further_sources: Any other earlier filings the same statement covers.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: str = Field(min_length=1, max_length=16)
+    source_filing_year: FilingYear
+    source_period: RegistrySelectorPeriodCode
+    further_sources: tuple[AttestedSource, ...] = ()
+
+    @property
+    def sources(self) -> tuple[AttestedSource, ...]:
+        """Return every earlier filing this statement covers, the first one leading."""
+        return (
+            AttestedSource(
+                source_modelo=self.source_modelo,
+                source_filing_year=self.source_filing_year,
+                source_period=self.source_period,
+            ),
+            *self.further_sources,
+        )
+
+    def identity_payload(self) -> dict[str, object]:
+        """Return the projection the revision identity hashes.
+
+        ``further_sources`` is named only when present, so a single-source
+        statement keeps the identity it had before relation statements existed.
+        """
+        payload: dict[str, object] = {
+            "source_modelo": self.source_modelo,
+            "source_filing_year": self.source_filing_year,
+            "source_period": self.source_period,
+        }
+        if self.further_sources:
+            payload["further_sources"] = [source.identity_payload() for source in self.further_sources]
+        return payload
 
 
 class CalculationOperatorLayer(BaseModel):
@@ -173,4 +216,10 @@ class CalculationOperatorLayer(BaseModel):
         return payload
 
 
-__all__ = ["ATTESTED_ZERO", "OPERATOR_LAYER_IDENTITY_KEY", "CalculationOperatorLayer", "ValueAttestation"]
+__all__ = [
+    "ATTESTED_ZERO",
+    "OPERATOR_LAYER_IDENTITY_KEY",
+    "AttestedSource",
+    "CalculationOperatorLayer",
+    "ValueAttestation",
+]

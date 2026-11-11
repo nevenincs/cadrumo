@@ -16,7 +16,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
-from ...core.period import Period, RegistrySelectorPeriodCode
+from ...core.period import Period
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -25,6 +25,7 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision_operator_layer import AttestedSource
 from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
@@ -390,9 +391,17 @@ class OperatorAttestedValue(BaseModel):
 
     binding_id: BindingId
     value: str = Field(min_length=1)
-    source_modelo: str = Field(min_length=1, max_length=16)
-    source_filing_year: FilingYear
-    source_period: RegistrySelectorPeriodCode
+    sources: tuple[AttestedSource, ...] = Field(min_length=1)
+    """Every earlier filing the statement covers: one for a previous-filing carry, each period of a relation."""
+
+    def covers(self, *, source_modelo: str, filing_year: int, period_token: str) -> bool:
+        """Report whether this statement names the given earlier filing."""
+        return any(
+            source.source_modelo == source_modelo
+            and source.source_filing_year == filing_year
+            and source.source_period == period_token
+            for source in self.sources
+        )
 
 
 class CrossPeriodDependencyEvidence(BaseModel):

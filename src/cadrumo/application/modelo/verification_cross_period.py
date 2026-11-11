@@ -289,9 +289,7 @@ def operator_value_attestations(target: CalculationRevision | None) -> dict[str,
         binding_id: OperatorAttestedValue(
             binding_id=binding_id,
             value=layer.binding_overrides[binding_id],
-            source_modelo=attestation.source_modelo,
-            source_filing_year=attestation.source_filing_year,
-            source_period=attestation.source_period,
+            sources=attestation.sources,
         )
         for binding_id, attestation in layer.value_attestations.items()
     }

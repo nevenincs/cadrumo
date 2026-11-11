@@ -25,6 +25,7 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.period import Period, is_filing_period_token
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
@@ -544,36 +545,62 @@ def upstream_source_absent(
     )
 
 
-def attestable_previous_filing_sources(
+_ATTESTABLE_ORIGINS: Final[frozenset[CrossPeriodDependencyOrigin]] = frozenset(
+    {CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING, CrossPeriodDependencyOrigin.REGISTRY_RELATION}
+)
+"""The origins whose scalar carries an operator may state a figure for when no source is held."""
+
+_ATTESTABLE_BINDING_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
+    {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL}
+)
+
+
+def attestable_carry_sources(
     snapshot: RegistrySnapshot,
     *,
     operation: PinnedAuthorityOperation,
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     work_catalogue: WorkUnitCatalogue,
-) -> dict[BindingId, CrossPeriodDependencyRequirement]:
-    """Return, per binding, the previous-filing requirement the application holds no source for.
+) -> dict[BindingId, tuple[CrossPeriodDependencyRequirement, ...]]:
+    """Return, per scalar carry binding, the source requirements the application holds nothing of.
 
-    Only such a carry can take the operator's stated figure. Where a source
-    exists the dependency follows it, so nothing is offered.
+    A previous-filing binding reads one earlier filing; a relation-prefill
+    binding folds several source periods. A binding is offered only when
+    *every* one of its sources is absent: where any is held the carry follows
+    the sources, and a partial statement is not admitted. Row-set bindings stay
+    sourced from records and are never offered.
     """
-    if not any(binding.source is BindingSourceKind.PREVIOUS_FILING for binding in snapshot.revision.bindings):
+    scalar_binding_ids = {
+        binding.id
+        for binding in snapshot.revision.bindings
+        if binding.source in _ATTESTABLE_BINDING_SOURCES and binding.value.channel is not BindingValueChannel.ROW_SET
+    }
+    if not scalar_binding_ids:
         return {}
+    by_binding: dict[BindingId, list[CrossPeriodDependencyRequirement]] = {}
+    for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years()):
+        if requirement.origin not in _ATTESTABLE_ORIGINS:
+            continue
+        for binding_id in requirement.origin_ids:
+            if binding_id in scalar_binding_ids:
+                by_binding.setdefault(binding_id, []).append(requirement)
     return {
-        binding_id: requirement
-        for requirement in cross_period_dependency_requirements(snapshot, support=operation.supported_filing_years())
-        if requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
-        and upstream_source_absent(
-            requirement,
-            observation_repository=observation_repository,
-            filing_catalogue=filing_catalogue,
-            work_catalogue=work_catalogue,
+        binding_id: tuple(requirements)
+        for binding_id, requirements in by_binding.items()
+        if all(
+            upstream_source_absent(
+                requirement,
+                observation_repository=observation_repository,
+                filing_catalogue=filing_catalogue,
+                work_catalogue=work_catalogue,
+            )
+            for requirement in requirements
         )
-        for binding_id in requirement.origin_ids
     }
 
 
-def attestable_previous_filing_binding_ids(
+def attestable_carry_binding_ids(
     snapshot: RegistrySnapshot,
     *,
     operation: PinnedAuthorityOperation,
@@ -583,7 +610,7 @@ def attestable_previous_filing_binding_ids(
 ) -> frozenset[BindingId]:
     """Return the bindings an operator may state a figure for."""
     return frozenset(
-        attestable_previous_filing_sources(
+        attestable_carry_sources(
             snapshot,
             operation=operation,
             observation_repository=observation_repository,
@@ -599,20 +626,23 @@ def _stated_values_for(
 ) -> tuple[OperatorAttestedValue, ...]:
     """Return the figures the operator stated for every origin binding of ``requirement``, or none.
 
-    An attestation counts only for the source filing it names.
+    An attestation counts only for the source filings it names, so one that
+    does not cover this requirement's source period leaves it unsatisfied.
     """
     if (
         operator_value_attestations is None
         or len(operator_value_attestations) == 0
-        or requirement.origin is not CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+        or requirement.origin not in _ATTESTABLE_ORIGINS
     ):
         return ()
     stated = tuple(operator_value_attestations.get(origin_id) for origin_id in requirement.origin_ids)
     if all(
         item is not None
-        and item.source_modelo == requirement.source_modelo
-        and item.source_filing_year == requirement.filing_year
-        and item.source_period == requirement.period.registry_token
+        and item.covers(
+            source_modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period_token=requirement.period.registry_token,
+        )
         for item in stated
     ):
         return tuple(item for item in stated if item is not None)
@@ -624,7 +654,15 @@ def _attestation_conflicts(
     stated: tuple[OperatorAttestedValue, ...],
     observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[OperatorAttestedValue, ...]:
-    """Return the stated figures that differ from the observation that now exists for the source."""
+    """Return the stated figures that conflict with the source that now exists.
+
+    A relation folds several sources into one figure, so a single held source
+    cannot be compared with the stated total: the relation follows its sources
+    and any held source makes the statement conflict. A previous-filing carry
+    conflicts only when the observation's value differs.
+    """
+    if requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION:
+        return stated
     layers = observation_repository.load_observation_layers(requirement.source_modelo, requirement.period)
     effective = layers.effective
     if effective is None or len(stated) != 1:
@@ -927,15 +965,16 @@ def evaluate_cross_period_clean_state(
     exact M111 periods; nonzero and unknown periods remain fully evaluated.
 
     ``operator_value_attestations`` carries, per binding id, the figure the
-    operator stated for an earlier filing. It satisfies a previous-filing
-    dependency only while the application holds no source for it (no work unit
-    in ``work_catalogue``, no filing record, no observation), whether the source
-    year is inside the support envelope or not, and only when every origin
-    binding of the requirement is attested for that very source. The requirement
-    then yields a clean row of kind ``operator_attested_absent_upstream``. Where
-    a source exists the dependency follows it as before; a source whose value
-    differs from the recorded figure is a conflict that blocks. A plain override
-    or a blank binding never satisfies it.
+    operator stated for earlier filings. It satisfies a scalar previous-filing or
+    relation-prefill dependency only while the application holds no source for
+    it (no work unit in ``work_catalogue``, no filing record, no observation),
+    whether the source year is inside the support envelope or not, and only when
+    every origin binding of the requirement is attested for that very source
+    period. The requirement then yields a clean row of kind
+    ``operator_attested_absent_upstream``. Where a source exists the dependency
+    follows it as before; a previous-filing source whose value differs from the
+    recorded figure, or any held source of a relation, is a conflict that
+    blocks. A plain override or a blank binding never satisfies it.
     """
     repositories = _load_clean_state_repositories(
         operation=operation,
@@ -1045,8 +1084,8 @@ def _expected_member_sets_by_key(
 
 
 __all__ = [
-    "attestable_previous_filing_binding_ids",
-    "attestable_previous_filing_sources",
+    "attestable_carry_binding_ids",
+    "attestable_carry_sources",
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",

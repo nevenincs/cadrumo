@@ -74,6 +74,7 @@ if TYPE_CHECKING:
     )
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+    from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReader
     from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
     from ..live.borrador_100 import Borrador100SnapshotRepository
@@ -124,6 +125,9 @@ class ModeloWorkbenchReadPorts:
     facts are folded from, as its export folds them.
     ``reconciliation_sources`` reads where each declaration an annual summary
     sums stands, the same reader its calculation's refusal names them from.
+    ``observations`` is the profile's store of captured filed observations; with
+    ``filings`` it shows which earlier declarations the application holds nothing
+    of, so the form offers a stated figure for a carry that follows them.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -139,6 +143,7 @@ class ModeloWorkbenchReadPorts:
     profile: Callable[[], ModeloWorkProfile | None] | None = None
     ledger: ModeloWorkbenchLedgerPorts | None = None
     reconciliation_sources: Callable[[WorkUnit, RegistrySnapshot], tuple[ReconciliationSourceNeed, ...]] | None = None
+    observations: CalculationObservationRepositoryProtocol | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -259,6 +264,8 @@ def read_modelo_workbench_form(
         calculation_catalogue=calculation_catalogue,
         operation=operation,
         operation_contracts=operation_contracts,
+        observation_repository=ports.observations,
+        filing_catalogue=None if ports.filings is None else ports.filings.load(),
     )
     loaded = load_modelo_work_form(
         bucket_id,

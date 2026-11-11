@@ -20,7 +20,7 @@ from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...modelo.tests.advisory_diagnostic_repositories import EmptyObservationRepository
 from ..cross_period_clean_state import (
-    attestable_previous_filing_sources,
+    attestable_carry_sources,
     cross_period_dependency_requirements,
 )
 from ..cross_period_models import CrossPeriodDependencyOrigin
@@ -32,7 +32,7 @@ _BINDING = "irpf.previous_year_economic_activity_net_income"
 
 
 def _attestable(snapshot, operation, *units):
-    return attestable_previous_filing_sources(
+    return attestable_carry_sources(
         snapshot,
         operation=operation,
         observation_repository=EmptyObservationRepository(),
@@ -68,7 +68,7 @@ def test_a_source_nothing_is_held_for_is_attestable_and_one_held_is_not(offset: 
         held = _attestable(snapshot, operation, _held(year - 1))
 
     assert set(absent) == {_BINDING}
-    source = absent[_BINDING]
+    (source,) = absent[_BINDING]
     assert source.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
     assert (source.source_modelo, source.filing_year, source.period.registry_token) == ("100", year - 1, "0A")
     assert held == {}
