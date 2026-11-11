@@ -3,7 +3,6 @@
 casilla-member|100|0150|formula|present=2024|absent=2023
 casilla-member|100|0150|formula|present=2024|absent=2025
 casilla-member|100|0611|formula|present=2023|absent=2022
-casilla-member|100|0613|formula|present=2023|absent=2022
 casilla-member|100|1039|formula|present=2025|absent=2024
 casilla-member|200|00670|binding|present=2024|absent=2023
 casilla-member|200|01494|binding|present=2024|absent=2023
@@ -24,13 +23,11 @@ casilla-member|303|18|binding|present=2023|absent=2025
 edition-only|036|application_links|modelo-036-workflow|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|036|bindings|modelo-036-profile-censo-status|2025-02-03-y-siguientes|uncited appearing boundary
 edition-only|100|application_links|modelo-100-portal|2025|uncited appearing boundary
-edition-only|100|bindings|renta-inventory-activity-acquisition-cost-0181|2025|uncited appearing boundary
-edition-only|100|bindings|renta-inventory-activity-closing-decrease-0182|2025|uncited appearing boundary
-edition-only|100|bindings|renta-inventory-activity-closing-increase-0177|2025|uncited appearing boundary
 edition-only|100|bindings|renta-maritime-annual-salary|2025|uncited appearing boundary
 edition-only|100|bindings|renta-maritime-gross-navigation-income|2025|uncited appearing boundary
 edition-only|100|bindings|renta-maritime-path-rebeca|2025|uncited appearing boundary
 edition-only|100|bindings|renta-maritime-qualifying-days|2025|uncited appearing boundary
+edition-only|100|bindings|renta-profile-cotizaciones-ss-madre|2022|uncited disappearing boundary
 edition-only|100|bindings|renta-profile-madrid-nacimiento-adopcion-eligible-count|2025|uncited appearing boundary
 edition-only|100|bindings|renta-profile-unidad-familiar-otros-miembros-base|2025|uncited appearing boundary
 edition-only|100|bindings|renta-rental-reduccion-art-23-2-tier|2024|uncited disappearing boundary
@@ -162,6 +159,8 @@ period-overlap|036|baja|2025
 period-overlap|036|modificacion|2023
 period-overlap|036|modificacion|2025
 year-in-profile-key|100|2022|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2022
+year-in-profile-key|100|2022|renta-profile-cotizaciones-ss-madre|renta_family.cotizaciones_ss_madre_2022
+year-in-profile-key|100|2022|renta-profile-incremento-guarderia|renta_family.incremento_guarderia_2022
 year-in-profile-key|100|2022|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2022
 year-in-profile-key|100|2022|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2022
 year-in-profile-key|100|2023|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2023
@@ -180,6 +179,5 @@ year-in-profile-key|100|2025|renta-profile-deduccion-maternidad|renta_family.ded
 year-in-profile-key|100|2025|renta-profile-incremento-guarderia|renta_family.incremento_guarderia_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2025
 year-in-profile-key|100|2025|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2025
-year-valued-fact|inventory-anexo-d-applicability|inventory-anexo-d-applicability:2025-01-01|2025
 year-valued-fact|lirpf-objective-estimation-settled-year-max|lirpf-objective-estimation-settled-year-max:2016-01-01|2026
 year-valued-fact|madrid-nacimiento-adopcion-applicability|madrid-nacimiento-adopcion-applicability:2025-01-01|2025
