@@ -70,6 +70,7 @@ from cadrumo.core.foreign_asset_obligation import M720AssetClassCode
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.foreign_assets.register import (
     ForeignAssetDeclarationEntry,
@@ -92,8 +93,9 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
 
 _BUCKET_ID = "34900000-0000-4000-8000-000000000349"
 
@@ -127,7 +129,7 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
     UserProfileFact(path="attribution_entity_socios.1.participe_clave", value="1"),
     UserProfileFact(path="attribution_entity_socios.1.clave", value="D"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 6, 1, 1)),
     # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
     # carries the row as filer data, so it must be stated rather than assumed.
     # False is the truthful value for this natural-person filer.
@@ -230,14 +232,14 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
     # all enrolled.  Gate must not raise.
-    revision = published_authority_operation().snapshot("303", filing_year=2026, period="1T").revision
+    revision = published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T").revision
     assert_no_novel_source_kinds(revision)  # no exception
 
 
 def test_s26_assert_no_novel_source_kinds_accepts_deferred_revision() -> None:
     """A revision whose bindings use deferred source kinds still passes the gate."""
     # M190 uses 'withholding' — explicitly deferred.  Gate must not raise.
-    revision = _revision("190", "2025-y-siguientes")
+    revision = _revision("190", str(revision_covering("190", _YEAR).id))
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -247,7 +249,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
 
-    revision = published_authority_operation().snapshot("303", filing_year=2026, period="1T").revision
+    revision = published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T").revision
     # The typed provider union is closed, so a novel kind only exists as a
     # stand-in exposing the one attribute the gate reads.
     synthetic_binding = SimpleNamespace(id="synthetic-test-binding", source="synthetic_novel_source_xyz")
@@ -278,7 +280,9 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     """M184 ``atribucion_member`` rows resolve from real attribution-entity profile facts."""
     _seed_attribution_entity_profile()
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
-    work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
+    work_unit = _seed(
+        wu_repo, modelo="184", filing_year=_YEAR, period="0A", revision_id=str(revision_covering("184", _YEAR).id)
+    )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         calculation_repository=cr_repo,
@@ -351,7 +355,9 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
             ),
         )
         wu_repo, cr_repo, tx_repo, invoice_repo = _repos(objects)
-        work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
+        work_unit = _seed(
+            wu_repo, modelo="184", filing_year=_YEAR, period="0A", revision_id=str(revision_covering("184", _YEAR).id)
+        )
 
         seed_test_profile_record(
             create_user_profile_record(
@@ -433,12 +439,12 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     from cadrumo.core.period import Period
 
     _wu_repo, _cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
-    revision = _revision("130", "2019-y-siguientes")
+    revision = _revision("130", str(revision_covering("130", _YEAR).id))
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision=revision,
         calculated_at=_T1,
     )
@@ -458,7 +464,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
             operation=operation,
             repository=CalculationObservationRepository(objects=secure_objects),
             iva_history_repository=IvaCompensationHistoryRepository(objects=secure_objects),
-            registry_snapshot=operation.snapshot("130", filing_year=2026, period="1T"),
+            registry_snapshot=operation.snapshot("130", filing_year=_YEAR, period="1T"),
             profile_read_ports=empty_profile_read_ports(),
         ).resolve(context)
 
@@ -525,7 +531,7 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
     owned source so the binding does not appear as unhandled on source_diagnostics.
     """
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(oss_enrolled_objects)
-    work_unit = _seed(wu_repo, modelo="369", filing_year=2026, period="1T", revision_id="esquema-union")
+    work_unit = _seed(wu_repo, modelo="369", filing_year=_YEAR, period="1T", revision_id="esquema-union")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         calculation_repository=cr_repo,
@@ -564,7 +570,9 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     claims its owned sources so 'collectible_invoice' does not appear as unhandled.
     """
     wu_repo, cr_repo, tx_repo, invoice_repo = _repos(intracommunity_objects)
-    work_unit = _seed(wu_repo, modelo="349", filing_year=2026, period="1T", revision_id="2020-y-siguientes")
+    work_unit = _seed(
+        wu_repo, modelo="349", filing_year=_YEAR, period="1T", revision_id=str(revision_covering("349", _YEAR).id)
+    )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
         calculation_repository=cr_repo,
@@ -589,7 +597,7 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
         "InvoiceCatalogueSourceResolver is enrolled but invoice source kinds "
         f"still appeared as unhandled: {unrouted_invoice}"
     )
-    revision = _revision("349", "2020-y-siguientes")
+    revision = _revision("349", str(revision_covering("349", _YEAR).id))
     assert any(str(b.source) == "m349_intracommunity_operation" for b in revision.bindings), (
         "M349 revision should contain intracommunity-operation invoice bindings for this test to be non-tautological"
     )
@@ -635,7 +643,7 @@ def _register_sole_holder(
                     scheme=M720IdentifierScheme.ACCOUNT_CODE, value=observation.asset_external_id
                 ),
                 description=f"Account at {observation.issuer_or_institution}",
-                held_since=date(2015, 1, 1),
+                held_since=date(_YEAR - 11, 1, 1),
             ),
         )
         declare_foreign_asset(
@@ -656,14 +664,14 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             "a" * 64,
             country="AD",
             valuation="40000.00",
-            acquisition_date="2020-01-15",
+            acquisition_date=date(_YEAR - 6, 1, 15).isoformat(),
         ),
         _foreign_asset_observation(
             BindingSourceKind.PAYABLE_INVOICE,
             "asset-ch-002",
             country="CH",
             valuation="15000.00",
-            acquisition_date="2021-02-20",
+            acquisition_date=date(_YEAR - 5, 2, 20).isoformat(),
         ),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -680,9 +688,9 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             work_unit = create_work_unit(
                 bucket_id=_BUCKET_ID,
                 modelo="720",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
-                revision_id="2013-y-siguientes",
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
+                revision_id=str(revision_covering("720", _YEAR).id),
                 ports=WorkLifecyclePorts(
                     work_unit_repository=wu_repo,
                     bucket_event_repository=BucketEventHistoryRepository(),
@@ -722,9 +730,9 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     """M190 'withholding' bindings are handled by the enrolled withholding resolver."""
     from cadrumo.application.aggregation.source_resolution_operations import collect_unhandled_source_diagnostics
 
-    revision = _revision("190", "2025-y-siguientes")
+    revision = _revision("190", str(revision_covering("190", _YEAR).id))
     assert any(str(b.source) == "withholding" for b in revision.bindings), (
-        "M190 2025-y-siguientes must declare withholding bindings for this test to be non-vacuous"
+        "M190 revision must declare withholding bindings for this test to be non-vacuous"
     )
     handled = frozenset(
         {

@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import (
@@ -36,9 +37,10 @@ Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+_HORIZON = filing_year_envelope().horizon
+T0 = datetime(_HORIZON, 1, 15, 12, 0, 0, tzinfo=UTC)
+T1 = datetime(_HORIZON, 1, 15, 13, 0, 0, tzinfo=UTC)
+T2 = datetime(_HORIZON, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 
 CASILLA_01: CasillaId = validated_casilla_id("01")

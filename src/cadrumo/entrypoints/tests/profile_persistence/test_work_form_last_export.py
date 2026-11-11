@@ -35,6 +35,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
@@ -45,7 +46,7 @@ __all__ = ["isolated_backend"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _M130_RESULT_CASILLA = validated_casilla_id("19", surface="m130 last export test")
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD_CODE = "4T"
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, _PERIOD_CODE)
 _MODELO = ModeloCode("130")
