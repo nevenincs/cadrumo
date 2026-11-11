@@ -56,7 +56,7 @@ from ..runner import (
     execute_page_sequences,
     execute_sequence,
 )
-from ..runtime_fixture import SANDBOX_INSTANT
+from ..runtime_fixture import sandbox_instant
 from ..sandbox import SANDBOX_PROFILE_ID, SANDBOX_REPLACEMENT_PROFILE_ID, sequence_sandbox
 from ..schema import CommandProgram, FrameKind, ParsedSequence
 
@@ -225,7 +225,7 @@ def test_sandbox_runtime_admits_fresh_password_and_releases_real_profile_view(tm
             assert admitted.status.profile_id == UUID(SANDBOX_PROFILE_ID)
             assert admitted.status.credential_authenticated
             assert admitted.human_login is not None
-            assert admitted.human_login.authenticated_at == SANDBOX_INSTANT
+            assert admitted.human_login.authenticated_at == sandbox_instant()
             assert not admitted.human_login.session_persisted
             assert not admitted.human_login.resumed
             assert proof == bytearray(len(proof))

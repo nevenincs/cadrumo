@@ -104,9 +104,10 @@ class TextLLMClassifier:
         Returns:
             A validated, allow-list-guarded :class:`LLMClassificationResponse`.
         """
-        prompt = self._spec.render(transaction, evidence_text=evidence_text)
+        spec = self._spec.for_direction(transaction.direction)
+        prompt = spec.render(transaction, evidence_text=evidence_text)
         response = asyncio.run(self._client.complete(self._request(prompt)))
-        return parse_response(response.text, spec=self._spec)
+        return parse_response(response.text, spec=spec)
 
     def propose_split(self, transaction: Transaction, *, evidence_text: str | None) -> LLMSplitResponse:
         """Propose a split for ``transaction`` from its extracted evidence text.
@@ -118,9 +119,10 @@ class TextLLMClassifier:
         Returns:
             A validated, allow-list-guarded :class:`LLMSplitResponse`.
         """
-        prompt = build_split_prompt(transaction, spec=self._spec, evidence_text=evidence_text)
+        spec = self._spec.for_direction(transaction.direction)
+        prompt = build_split_prompt(transaction, spec=spec, evidence_text=evidence_text)
         response = asyncio.run(self._client.complete(self._request(prompt)))
-        return parse_split_response(response.text, spec=self._spec)
+        return parse_split_response(response.text, spec=spec)
 
     def _request(self, prompt: str) -> LLMRequest:
         """Build a text extraction request for the agent; no images, always marked as evidence."""

@@ -53,7 +53,7 @@ from dev.test_runs.paths import scratch_base
 from .errors import SequenceExecutionError
 from .persona_profile import sandbox_profile_facts
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
-from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
+from .runtime_fixture import sandbox_instant, sequence_runtime
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
 #: distinct from the shared test-fixture bucket ids). With the clock frozen and
@@ -373,7 +373,7 @@ def sandbox_template() -> Path:
             isolated_profile_storage_root(tmp_path=template),
             composed_profile_persistence_ports(),
             isolated_diagnostic_log(),
-            frozen_clock(SANDBOX_INSTANT),
+            frozen_clock(sandbox_instant()),
             _provisioned_sandbox_profile(),
         ):
             pass
@@ -554,7 +554,7 @@ def sequence_sandbox(
     """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
     Inside the scope: an isolated real-crypto storage root, the frozen
-    :data:`SANDBOX_INSTANT`, the deterministic :data:`SANDBOX_PROFILE_ID`
+    :func:`sandbox_instant`, the deterministic :data:`SANDBOX_PROFILE_ID`
     registered and active, ``cadrumo_output_language`` pinned to English, the
     operator's ambient ``CADRUMO_*`` / ``AEAT_*`` environment scrubbed for the
     whole scope (restored on exit; the storage-root isolation pin survives), the
@@ -635,7 +635,7 @@ def sequence_sandbox(
         # every golden depend on the day's reference rates.
         bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
         isolated_diagnostic_log(),
-        frozen_clock(SANDBOX_INSTANT),
+        frozen_clock(sandbox_instant()),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
         sequence_receipt_store(Path(load_settings().cadrumo_storage_root), enabled=persistent_sign_in),
@@ -652,7 +652,7 @@ def sequence_sandbox(
                     storage_root=Path(effective_settings.cadrumo_storage_root),
                     workdir=workdir.resolve(),
                     profile_id=SANDBOX_PROFILE_ID,
-                    frozen_instant=SANDBOX_INSTANT,
+                    frozen_instant=sandbox_instant(),
                 )
             finally:
                 close_active_bucket_session()

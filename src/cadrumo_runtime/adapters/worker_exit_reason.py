@@ -7,7 +7,7 @@ from threading import Lock, Thread
 from typing import BinaryIO, Final
 
 from cadrumo.core.diagnostic_log import DiagnosticValue
-from cadrumo.core.traceback_summary import TRACEBACK_FRAMES, TRACEBACK_HEADER, TracebackReader, TracebackSummary
+from cadrumo.core.traceback_summary import SUMMARY_FRAMES, TRACEBACK_HEADER, TracebackReader, TracebackSummary
 
 WORKER_STANDARD_ERROR_BYTES: Final = 4096
 """How much of a worker's standard error is held in memory, only as the source an exit account parses."""
@@ -80,7 +80,7 @@ def worker_exit_fields(*, exit_code: int | None, standard_error: bytes | None) -
     if summary.origin is not None:
         fields["worker_error_origin"] = summary.origin
     if summary.frames:
-        fields["worker_error_frames"] = " <- ".join(summary.frames[:TRACEBACK_FRAMES])
+        fields["worker_error_frames"] = " <- ".join(summary.frames[:SUMMARY_FRAMES])
     return fields
 
 

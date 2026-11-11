@@ -165,9 +165,47 @@ errors:
     certificado_not_a_pdf: A megadott fájl nem PDF; a Sede-ről letöltött Certificado
       de Situación Censal szükséges.
   context_labels:
+    accepted: elfogadott
+    actual_value: tényleges érték
     area: terület
+    candidate: jelölt
+    casilla_id: rovat
+    casilla_ids: rovatok
+    casillas: rovatok
+    count: darabszám
+    currency: pénznem
+    detail: részlet
+    ejercicio: adóév
     entry_count: bejegyzések száma
+    expected: várt
+    export_format: exportálási formátum
+    field: mező
+    fields: mezők
+    filing_period: bevallási időszak
+    filing_year: bevallási év
+    got: kapott
+    key: kulcs
+    kind: típus
+    limit: korlát
+    match_count: találatok száma
+    modelo: modell
+    name: név
+    operation: művelet
+    path: elérési út
+    period: időszak
+    position: pozíció
+    profile: profil
+    provider: szolgáltató
     reason: ok
+    remedy: teendő
+    revision: revízió
+    row: sor
+    section: szakasz
+    state: állapot
+    status: állapot
+    tax_year: adóév
+    value: érték
+    year: év
   error:
     canonical_tui_operation_outcome_unknown: 'A(z) %{operation_id} műveletet elküldtük,
       de az eredménye ismeretlen: a módosítás lehet, hogy teljesen, részben vagy egyáltalán

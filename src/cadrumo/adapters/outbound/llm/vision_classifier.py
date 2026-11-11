@@ -113,8 +113,9 @@ class VisionLLMClassifier:
         Returns:
             A validated :class:`LLMClassificationResponse` (allow-list-guarded).
         """
-        prompt = self._spec.render(transaction, evidence_image_present=True)
-        return parse_response(self._complete(prompt, evidence_images), spec=self._spec)
+        spec = self._spec.for_direction(transaction.direction)
+        prompt = spec.render(transaction, evidence_image_present=True)
+        return parse_response(self._complete(prompt, evidence_images), spec=spec)
 
     def propose_split(
         self,
@@ -132,8 +133,9 @@ class VisionLLMClassifier:
         Returns:
             A validated :class:`LLMSplitResponse` (allow-list-guarded).
         """
-        prompt = build_split_prompt(transaction, spec=self._spec, evidence_image_present=True)
-        return parse_split_response(self._complete(prompt, evidence_images), spec=self._spec)
+        spec = self._spec.for_direction(transaction.direction)
+        prompt = build_split_prompt(transaction, spec=spec, evidence_image_present=True)
+        return parse_split_response(self._complete(prompt, evidence_images), spec=spec)
 
     def _complete(self, prompt: str, evidence_images: tuple[MultimodalImageInput, ...]) -> str:
         response = asyncio.run(self._client.complete(self._request(prompt, evidence_images)))

@@ -18,6 +18,7 @@ from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+from ...host.launch_environment import AUTH_BROWSER_EXECUTABLE_VARIABLE, HOSTED_ROOT_VARIABLE
 from .. import provider_login
 from ..agent_programs import PACKAGE_AGENT_VARIABLE, AgentProgramRefusalError, profile_agent_root
 from ..provider_login import ProviderLoginRefusalError, main, prepare_provider_login, selected_profile_id
@@ -104,8 +105,8 @@ def test_the_launch_names_the_agents_login_the_profiles_hosted_root_and_no_brows
     assert launch.executable == shim
     assert launch.arguments == ("-m", "cadrumo_agent.cli.main", "auth", "login", "--provider", "codex", "--device")
     assert launch.directory == root
-    assert launch.environment["CADRUMO_AGENT_HOSTED_ROOT"] == str(root)
-    assert "CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE" not in launch.environment
+    assert launch.environment[HOSTED_ROOT_VARIABLE] == str(root)
+    assert AUTH_BROWSER_EXECUTABLE_VARIABLE not in launch.environment
     assert _AMBIENT_VARIABLE not in launch.environment
 
 
@@ -199,7 +200,7 @@ def test_the_console_door_inherits_the_terminal_and_records_the_hosted_root_and_
     assert "shim-output-line" in capfd.readouterr().out
     assert "--provider codex --device" in (root / "arguments.txt").read_text()
     names = (root / "names.txt").read_text()
-    assert f"CADRUMO_AGENT_HOSTED_ROOT={root}" in names
+    assert f"{HOSTED_ROOT_VARIABLE}={root}" in names
     assert "AUTH_BROWSER_EXECUTABLE" not in names
     assert not (root / "leaked.txt").exists()
 

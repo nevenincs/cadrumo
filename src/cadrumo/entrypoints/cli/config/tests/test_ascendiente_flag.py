@@ -26,12 +26,9 @@ def test_each_key_maps_to_exactly_one_stored_leaf() -> None:
     }
 
 
-def test_the_birth_date_is_the_only_required_key() -> None:
+def test_the_grammar_leaves_the_required_birth_date_to_the_operation() -> None:
     assert _leaves("NACIMIENTO=1948-03-04") == {"birth_date": "1948-03-04"}
-    with pytest.raises(CliRefusedBoundaryError) as refused:
-        parse_ascendiente_flag("NIF=12345678Z")
-    assert refused.value.translated_message == "cli.config.profile.ascendiente.invalid_flag"
-    assert refused.value.context == {"key": "NACIMIENTO"}
+    assert _leaves("NIF=12345678Z") == {"nif": "12345678Z"}
 
 
 @pytest.mark.parametrize(

@@ -19,7 +19,8 @@ from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
-from .....domain.transactions.enums import BusinessClassification
+from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.errors import LLMClassifierError
 from .....domain.transactions.llm import PromptSpec, prompt_spec_with_every_spending_category
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.tests.vision_evidence_support import vision_transaction
@@ -74,6 +75,32 @@ def test_an_on_host_lane_reads_the_evidence_without_consent(tmp_path: Path) -> N
     assert header.role == ModelRole.TEXT_EXTRACTION.value
     assert header.consent is None
     assert "Office supplies 12,10 EUR" in body.prompt
+
+
+def test_an_incoming_row_is_read_without_the_expense_categories(tmp_path: Path) -> None:
+    """Money received is named as such, and an expense category the model proposes for it is refused."""
+    spec = _spec()
+    proposed = json.loads(_REPLY) | {"category": spec.categories[0].value.value}
+    reader = _reader(tmp_path, spec)
+    with (
+        bundled_indexed_authority().operation() as operation,
+        validating_governed_facts(operation),
+        serving_agent(replies=(json.dumps(proposed),), lane=ON_HOST_LANE) as service,
+    ):
+        row = Transaction.model_validate(
+            {
+                "raw": _transaction().raw,
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+            },
+        )
+        with pytest.raises(LLMClassifierError, match="unexpected category"):
+            reader.classify(row, evidence_text=None)
+
+    ((_, body),) = service.runs
+    assert "Direction: INCOMING" in body.prompt
+    assert "SpendingCategory" not in body.prompt
 
 
 def test_an_off_host_lane_without_consent_refuses_before_anything_is_sent(tmp_path: Path) -> None:

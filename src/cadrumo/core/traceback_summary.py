@@ -12,7 +12,7 @@ from .log_scrubbing import scrub_text
 TRACEBACK_HEADER: Final = "Traceback (most recent call last):"
 """The exact line that opens a traceback block."""
 
-TRACEBACK_FRAMES: Final = 8
+SUMMARY_FRAMES: Final = 8
 """How many of a traceback's innermost frames a summary names."""
 
 _FRAME_LINE: Final = re.compile(r'^\s+File "(?P<file>[^"]+)", line (?P<line>\d+), in (?P<name>.+?)\s*$')
@@ -31,7 +31,7 @@ _DIGIT_RUN: Final = re.compile(r"[0-9]{5,}")
 _EXCEPTION_LINE: Final = re.compile(r"^(?P<type>[^:\s]+)(?::|$)")
 
 _EXCEPTION_TYPE: Final = re.compile(
-    r"^(?:[A-Za-z_][A-Za-z0-9_]*\.){0,6}"
+    r"^(?:[A-Za-z_][A-Za-z0-9_]*\.)*"
     r"[A-Za-z_][A-Za-z0-9_]{0,80}(?:Error|Exception|Exit|Interrupt|Warning|Iteration|Group)$"
 )
 
@@ -44,7 +44,7 @@ class TracebackSummary:
     """The exception type, or ``None`` when the exception line is not a strict type name."""
 
     frames: tuple[str, ...]
-    """Up to :data:`TRACEBACK_FRAMES` admitted ``file.py:line:function`` frames, innermost first."""
+    """Up to :data:`SUMMARY_FRAMES` admitted ``file.py:line:function`` frames, innermost first."""
 
     innermost_admitted: bool
     """Whether the last frame line read was admitted, so that ``frames[0]`` is the true innermost frame."""
@@ -64,7 +64,7 @@ class TracebackReader:
 
     def __init__(self) -> None:
         """Start a body that has read no line."""
-        self._frames: deque[str] = deque(maxlen=TRACEBACK_FRAMES)
+        self._frames: deque[str] = deque(maxlen=SUMMARY_FRAMES)
         self._innermost_admitted = False
 
     def read(self, line: str) -> TracebackSummary | None:
