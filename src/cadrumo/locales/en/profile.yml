@@ -152,6 +152,19 @@ profile:
           label: Activity description
         iae_epigraph:
           label: IAE epigraph
+        tipo_actividad:
+          choices:
+            A01: Lessors of real estate
+            A02: Independent livestock farming
+            A03: Other business activities not included elsewhere
+            A04: Artistic or sporting professional activities
+            A05: Other professional activities
+            B01: Agricultural activity
+            B02: Dependent livestock activity
+            B03: Forestry activity
+            B04: Raft mussel farming
+            B05: Fishing activity, except raft mussel farming
+          label: Activity type (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base

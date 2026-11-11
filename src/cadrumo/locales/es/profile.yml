@@ -152,6 +152,19 @@ profile:
           label: Descripción de la actividad
         iae_epigraph:
           label: Epígrafe IAE
+        tipo_actividad:
+          choices:
+            A01: Arrendadores de bienes inmuebles
+            A02: Ganadería independiente
+            A03: Resto de actividades empresariales no incluidas en otros apartados
+            A04: Actividades profesionales de carácter artístico o deportivo
+            A05: Resto de actividades profesionales
+            B01: Actividad agrícola
+            B02: Actividad ganadera dependiente
+            B03: Actividad forestal
+            B04: Producción de mejillón en batea
+            B05: Actividad pesquera, excepto la producción de mejillón en batea
+          label: Tipo de actividad (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imponible atribuida al socio
