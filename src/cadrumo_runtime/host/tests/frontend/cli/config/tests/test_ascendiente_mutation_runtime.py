@@ -87,6 +87,8 @@ def _assert_rows_round_trip(run: Callable[..., Any], label: str) -> None:
     assert (first["convivientes"], second["death_date"]) == (1, "2025-02-01")
     assert profile_persisted_facts()["renta_family.ascendiente.0.nif"] == _NIF
 
+
+def _assert_append_keeps_the_stored_identifier(run: Callable[..., Any]) -> None:
     # Appending rewrites the whole set, so the stored identifier must survive the round trip.
     third = run("add", "--ascendiente", "NACIMIENTO=1940-01-01")
     assert third.exit_code == 0, third.output
@@ -122,11 +124,27 @@ def test_ascendants_are_added_listed_and_removed_with_a_stated_empty_state(tmp_p
             _assert_unknown_then_stated_empty(run, label)
             _assert_refusals_change_nothing(run)
             _assert_rows_round_trip(run, label)
+            _assert_append_keeps_the_stored_identifier(run)
             _assert_none_closed_then_removal_restates_empty(run, label)
 
         facts = profile_persisted_facts()
         assert facts["renta_family.ascendientes_count"] == "0"
         assert not any(path.startswith("renta_family.ascendiente.") for path in facts)
+
+
+def _assert_descendants_stated_empty_then_closed_by_a_row(run: Callable[..., Any]) -> None:
+    assert unwrap_schema_envelope(run("list").output)["state"] == "unknown"
+
+    stated = run("add", "--none")
+    assert stated.exit_code == 0, stated.output
+    assert unwrap_schema_envelope(stated.output)["none_declared"] is True
+    assert unwrap_schema_envelope(run("list").output)["state"] == "none_declared"
+    assert run("add").exit_code != 0
+    assert run("add", "--none", "--descendiente", "NACIMIENTO=2015-04-01").exit_code != 0
+
+    assert run("add", "--descendiente", "NACIMIENTO=2015-04-01").exit_code == 0
+    assert run("add", "--none").exit_code == 2
+    assert unwrap_schema_envelope(run("list").output)["state"] == "rows"
 
 
 def test_descendants_can_be_stated_empty_without_touching_the_ascendants(tmp_path: Path) -> None:
@@ -140,19 +158,7 @@ def test_descendants_can_be_stated_empty_without_touching_the_ascendants(tmp_pat
             return _household_cli("descendiente", *args, label=label, passphrase=passphrase)
 
         with native_profile_view_server(root):
-            before = unwrap_schema_envelope(run("list").output)
-            assert before["state"] == "unknown"
-
-            stated = run("add", "--none")
-            assert stated.exit_code == 0, stated.output
-            assert unwrap_schema_envelope(stated.output)["none_declared"] is True
-            assert unwrap_schema_envelope(run("list").output)["state"] == "none_declared"
-            assert run("add").exit_code != 0
-            assert run("add", "--none", "--descendiente", "NACIMIENTO=2015-04-01").exit_code != 0
-
-            assert run("add", "--descendiente", "NACIMIENTO=2015-04-01").exit_code == 0
-            assert run("add", "--none").exit_code == 2
-            assert unwrap_schema_envelope(run("list").output)["state"] == "rows"
+            _assert_descendants_stated_empty_then_closed_by_a_row(run)
 
         facts = profile_persisted_facts()
         assert facts["renta_family.descendientes_count"] == "1"
