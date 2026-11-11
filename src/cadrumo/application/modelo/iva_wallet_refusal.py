@@ -35,6 +35,8 @@ from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import (
     IVA_WALLET_OPENING_BALANCE_ACTION_ID,
     IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_ACTION_ID,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
     ModeloPreconditionFailure,
     build_modelo_precondition_failure,
 )
@@ -241,9 +243,11 @@ def raise_iva_wallet_precondition(
     ``carry_period`` is the Modelo 303 period whose carry the gate was settling.
     Where the reason is one the wallet's opening balance settles, the refusal
     carries the step that opens that entry and names the catalogue action that
-    declares it, so every frontend is offered the same remedy; a refusal for
-    such a reason that does not name the period is an invariant breach. Nothing
-    is written either way.
+    declares it, so every frontend is offered the same remedy. Where the reason
+    is one only the taxpayer's override settles, the refusal names the override
+    action for that period, leaving the figure and its justification to them. A
+    refusal for either kind of reason that does not name the period is an
+    invariant breach. Nothing is written either way.
     """
     action_id: str | None = None
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None
@@ -257,6 +261,15 @@ def raise_iva_wallet_precondition(
         action_id = IVA_WALLET_OPENING_BALANCE_ACTION_ID
         action_argument_values = {"filing_year": carry_period.filing_year, "period": carry_period.registry_token}
         missing_action_arguments = ("amount",)
+    elif reason_code in IVA_WALLET_OVERRIDE_SCENARIOS:
+        if carry_period is None:
+            raise InternalInvariantError(
+                f"iva wallet refusal {reason_code} is settled by an override of a period it did not name",
+            )
+        # The figure, why and where its evidence lies are the taxpayer's own statement.
+        action_id = IVA_WALLET_OVERRIDE_ACTION_ID
+        action_argument_values = {"filing_year": carry_period.filing_year, "period": carry_period.registry_token}
+        missing_action_arguments = ("amount", "reason", "evidence_locator")
     error = error_type(
         translated_message=translated_message,
         context=context,
