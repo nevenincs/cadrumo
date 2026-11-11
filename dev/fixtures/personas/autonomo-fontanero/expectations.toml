@@ -582,3 +582,15 @@ Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they 
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
 grounding = "verified"
 reason = "Casilla 0604 sums the pagos fraccionados of this year's Modelo 130 returns as filed (LIRPF art. 99, RIRPF art. 110), and none is filed: the first quarter cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation leaves 0604 unresolved for that missing input; the figure is what the filed quarters would give."
+
+[[values]]
+modelo = "180"
+period = "0A"
+year = "horizon-1"
+casillas = { "decl.total-perceptores" = "1", "decl.base-total" = "7200.00", "decl.retenciones-total" = "1368.00" }
+derivation = """
+The summary of the registro de tipo 1: one perceptor, the workshop's landlord (01); base 7200.00, the twelve
+monthly rents of 600.00 (02); retenciones 1368.00, 19 % of it and the sum of the four Modelo 115 casillas 03 (03).
+"""
+legal_ref = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-101", "rd-439-2007:art-108"]
+grounding = "cited"
