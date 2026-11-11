@@ -10,6 +10,7 @@ from click.testing import Result
 
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from ...tests.ledger_corpus_support import (
@@ -48,6 +49,8 @@ _bbva_origin, bbva_world = recorded_fx_seeded_backend(
 __all__ = ["_bbva_origin", "_corpus_origin", "bbva_world", "corpus_world"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 # --- Split, merge, archive, stash, remove, and track ------------------------
@@ -336,12 +339,12 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
 
-    period = Period.from_year_and_code(2025, "1T")
-    registry_revision_id = operation.revision_for_context("303", filing_year=2025, period=period.registry_token).id
+    period = Period.from_year_and_code(_YEAR, "1T")
+    registry_revision_id = operation.revision_for_context("303", filing_year=_YEAR, period=period.registry_token).id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=registry_revision_id,
     )
@@ -357,7 +360,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
-    now = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
+    now = datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC)
     WorkUnitCatalogueRepository().save(
         build_work_unit_catalogue(
             (
@@ -365,10 +368,10 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
                     work_unit_id=work_unit_id,
                     bucket_id=bucket_id,
                     modelo=ModeloCode("303"),
-                    filing_year=2025,
+                    filing_year=_YEAR,
                     period=period,
                     revision_id=registry_revision_id,
-                    name="303-2025-1T",
+                    name=f"303-{_YEAR}-1T",
                     created_at=now,
                     updated_at=now,
                     current_calculation_revision_id=revision_id,
@@ -385,7 +388,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
                     registry_snapshot_ref=RegistrySnapshotRef(
                         modelo="303",
                         revision_id=registry_revision_id,
-                        modelo_year=2025,
+                        modelo_year=_YEAR,
                         period="1T",
                     ),
                     state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -395,7 +398,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo(
                     casilla_values={CORPUS_REVISION_CASILLA_ID: Decimal("1")},
                     observations=registry_grounded_observations(
                         modelo="303",
-                        filing_year=2025,
+                        filing_year=_YEAR,
                         period=period.registry_token,
                         casilla_values={CORPUS_REVISION_CASILLA_ID: Decimal("1")},
                     ),

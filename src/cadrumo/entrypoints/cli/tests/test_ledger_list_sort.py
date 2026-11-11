@@ -32,6 +32,7 @@ from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....core.output_rendering import render_command_output
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -40,6 +41,8 @@ from ..ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _transaction(
     *,
@@ -47,11 +50,11 @@ def _transaction(
     amount: Decimal,
     description: str,
     created_at: datetime,
-    value_date: date | None = date(2024, 4, 10),
+    value_date: date | None = date(_YEAR, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
         value_date=value_date,
         amount=amount,
         currency="EUR",
@@ -62,7 +65,7 @@ def _transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={"Concepto": description},
@@ -101,7 +104,7 @@ def test_sort_by_equal_key_falls_back_to_transaction_id_ascending() -> None:
                 provider_id=f"row-{n}",
                 amount=Decimal("10.00"),
                 description="same description",
-                created_at=datetime(2024, 1, 1, tzinfo=UTC),
+                created_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
             ),
         )
         for n in range(3)
@@ -123,7 +126,7 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
             provider_id="high",
             amount=Decimal("300.00"),
             description="charlie",
-            created_at=datetime(2024, 3, 1, tzinfo=UTC),
+            created_at=datetime(_YEAR, 3, 1, tzinfo=UTC),
         ),
     )
     mid = _result(
@@ -131,7 +134,7 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
             provider_id="mid",
             amount=Decimal("200.00"),
             description="bravo",
-            created_at=datetime(2024, 2, 1, tzinfo=UTC),
+            created_at=datetime(_YEAR, 2, 1, tzinfo=UTC),
         ),
     )
     low = _result(
@@ -139,7 +142,7 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
             provider_id="low",
             amount=Decimal("100.00"),
             description="alpha",
-            created_at=datetime(2024, 1, 1, tzinfo=UTC),
+            created_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
         ),
     )
     rows = (high, mid, low)
@@ -158,9 +161,9 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
     ]
     by_created_asc = sort_ledger_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
     assert [r.transaction.created_at for r in by_created_asc] == [
-        datetime(2024, 1, 1, tzinfo=UTC),
-        datetime(2024, 2, 1, tzinfo=UTC),
-        datetime(2024, 3, 1, tzinfo=UTC),
+        datetime(_YEAR, 1, 1, tzinfo=UTC),
+        datetime(_YEAR, 2, 1, tzinfo=UTC),
+        datetime(_YEAR, 3, 1, tzinfo=UTC),
     ]
 
 
@@ -171,8 +174,8 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
             provider_id="early",
             amount=Decimal("10.00"),
             description="x",
-            created_at=datetime(2024, 1, 1, tzinfo=UTC),
-            value_date=date(2024, 1, 1),
+            created_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
+            value_date=date(_YEAR, 1, 1),
         ),
     )
     with_key_late = _result(
@@ -180,8 +183,8 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
             provider_id="late",
             amount=Decimal("10.00"),
             description="x",
-            created_at=datetime(2024, 6, 1, tzinfo=UTC),
-            value_date=date(2024, 6, 1),
+            created_at=datetime(_YEAR, 6, 1, tzinfo=UTC),
+            value_date=date(_YEAR, 6, 1),
         ),
     )
     missing = _result(
@@ -189,7 +192,7 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
             provider_id="missing",
             amount=Decimal("10.00"),
             description="x",
-            created_at=datetime(2024, 3, 1, tzinfo=UTC),
+            created_at=datetime(_YEAR, 3, 1, tzinfo=UTC),
             value_date=None,
         ),
     )
@@ -202,8 +205,8 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
     assert asc[-1].transaction.raw.value_date is None
     assert desc[-1].transaction.raw.value_date is None
     # Present keys order correctly within their block.
-    assert [r.transaction.raw.value_date for r in asc[:2]] == [date(2024, 1, 1), date(2024, 6, 1)]
-    assert [r.transaction.raw.value_date for r in desc[:2]] == [date(2024, 6, 1), date(2024, 1, 1)]
+    assert [r.transaction.raw.value_date for r in asc[:2]] == [date(_YEAR, 1, 1), date(_YEAR, 6, 1)]
+    assert [r.transaction.raw.value_date for r in desc[:2]] == [date(_YEAR, 6, 1), date(_YEAR, 1, 1)]
 
 
 def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_repository(
@@ -225,7 +228,7 @@ def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_reposito
                 provider_id=f"row-{label}",
                 amount=amount,
                 description=label,
-                created_at=datetime(2024, 1, 1, tzinfo=UTC),
+                created_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
             )
             for label, amount in (("b", Decimal("200.00")), ("c", Decimal("300.00")), ("a", Decimal("100.00")))
         ]
@@ -280,7 +283,7 @@ def test_project_ledger_list_renders_imported_terminal_controls_inert(
                         provider_id="hostile",
                         amount=Decimal("10.00"),
                         description=hostile,
-                        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+                        created_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
                     ),
                 ],
             ),
