@@ -86,17 +86,40 @@ def _human_admission_cancelled(
 
 
 def _log_person_activity(outcome: AccessSession | AccessDenied) -> None:
-    """Record whether the person's input report renewed their session, and how long it now has."""
+    """Record whether the person's input report renewed their session, and how long it now has.
+
+    At INFO, because whether a person's session outlived their input is a question a field log must answer.
+    """
     if isinstance(outcome, AccessDenied):
         diagnostic_event(
-            _LOGGER, "person_activity_denied", fields={"denial_code": outcome.code.value}, level=logging.DEBUG
+            _LOGGER, "person_activity_denied", fields={"denial_code": outcome.code.value}, level=logging.INFO
         )
         return
     diagnostic_event(
         _LOGGER,
         "person_activity_noted",
-        fields={"idle_seconds_left": round((outcome.expires_at - now()).total_seconds())},
-        level=logging.DEBUG,
+        fields={
+            "session_ref": outcome.session_id.hex[:8],
+            "idle_seconds_left": round((outcome.expires_at - now()).total_seconds()),
+        },
+        level=logging.INFO,
+    )
+
+
+def _log_human_issuance(request: ProfileLogin, admitted: AccessSession | AccessDenied) -> None:
+    """Record every person's session the runtime issues, and what proved it, at INFO."""
+    if isinstance(admitted, AccessDenied):
+        return
+    diagnostic_event(
+        _LOGGER,
+        "human_session_issued",
+        fields={
+            "cause": "password" if request.method == "password" else "stored_sign_in",
+            "frontend": request.frontend.value,
+            "session_ref": admitted.session_id.hex[:8],
+            "idle_seconds_left": round((admitted.expires_at - now()).total_seconds()),
+        },
+        level=logging.INFO,
     )
 
 
@@ -176,6 +199,7 @@ class ProfileConnectionSessionMixin:
             return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         if request.method in {"password", "receipt"}:
             admitted = self.admit_human_login(connection, host, context, secret, control, deadline)
+            _log_human_issuance(request, admitted)
         else:
             admitted = self._admit_api_login(connection, host, context, request, secret, control)
             if isinstance(admitted, AccessDenied):

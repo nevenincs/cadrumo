@@ -39,8 +39,11 @@ from cadrumo_client.contracts.operation_access import (
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus
 from cadrumo_client.contracts.session_events import ConnectionEvent, SessionEvent, SignInChanged
 from cadrumo_client.contracts.sign_in import SignInPresence, SignInStatusRequest
+from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from .. import profile_host
 from .stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [
@@ -339,3 +342,90 @@ def test_an_idle_expired_session_refuses_a_change_and_stays_ended(
         assert not (isinstance(activity, ProfileStatus) and activity.status.denial is None), activity
         assert not runtime.leases()
         assert runtime.sign_in(runtime.connect()).presence is SignInPresence.ABSENT
+
+
+class _BothClocks:
+    """The runtime's monotonic clock, moved with its wall clock so a lease lapses by either."""
+
+    def __init__(self, runtime: StoredSignInRuntime) -> None:
+        self._runtime = runtime
+        self._origin = runtime.clock.ahead
+
+    def monotonic(self) -> float:
+        return time.monotonic() + (self._runtime.clock.ahead - self._origin).total_seconds()
+
+    def __getattr__(self, name: str) -> object:
+        return getattr(time, name)
+
+
+def test_an_attended_child_and_window_reads_never_keep_an_idle_person_signed_in(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Without the person's input their session ends at the idle deadline, whatever else keeps running.
+
+    An attended client keeps asking for and holding a child of the person's
+    session and the window keeps reading. Neither is the person's input, so at
+    the idle deadline the person's session and its child both end, the next
+    read is refused, and a later activity report revives nothing.
+    """
+    with stored_sign_in_runtime(tmp_path, monkeypatch) as runtime:
+        monkeypatch.setattr(profile_host, "time", _BothClocks(runtime))
+        person = _person(runtime, OperationFrontendProjection.TUI)
+        person.note_activity()
+        signed_in = runtime.lease(person.session_id).expires_at
+        attended = FrontendClient(
+            runtime.connect(),
+            profile_id=runtime.profile_id,
+            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+            scope=AccessScope(
+                operations=frozenset({"ledger.rule.list"}),
+                actions=frozenset({AccessAction.SUBMIT, AccessAction.START}),
+                disclosures=frozenset(),
+                periods=None,
+                allow_period_independent=True,
+                allow_delegation=False,
+            ),
+        )
+        assert person.attendance_inventory().candidates == ()
+        pending = attended.request_attendance()
+        assert isinstance(pending, AttendancePending), pending
+        assert person.decide_attendance(pending.attendance_id, approve=True).approved
+        admitted = attended.attendance_status(pending.attendance_id)
+        assert isinstance(admitted, ProfileStatus) and admitted.status.denial is None, admitted
+        child = admitted.status.session_id
+        assert child is not None and runtime.lease(child).parent_session_id == person.session_id
+
+        # Short of the deadline, the window keeps reading and the child keeps working; nothing renews.
+        while runtime.clock() + timedelta(minutes=2) < signed_in:
+            runtime.clock.ahead += timedelta(minutes=1)
+            runtime.profiles.lifecycle_changed()
+            runtime.profiles.poll()
+            listed = _settled(
+                person, _submit(person, "ledger.rule.list", LedgerRuleListRequest(profile_id=runtime.profile_id))
+            )
+            assert listed.effect is OperationEffect.NONE
+            assert person.status().status.denial is None
+            assert runtime.lease(person.session_id).expires_at == signed_in
+
+        runtime.clock.ahead += signed_in - runtime.clock() + timedelta(seconds=1)
+        runtime.profiles.lifecycle_changed()
+        runtime.profiles.poll()
+        # Admission refuses the read whether or not a sweep has retired the lease yet.
+        with pytest.raises(FrontendRefusedError) as refused:
+            _submit(person, "ledger.rule.list", LedgerRuleListRequest(profile_id=runtime.profile_id))
+        assert refused.value.reason == AccessDenialCode.SESSION_EXPIRED.value
+        with pytest.raises(FrontendRefusedError):
+            person.note_activity()
+        assert not runtime.leases()
+        # Nor may the stored sign-in mint a new person's session without the person.
+        assert runtime.sign_in(runtime.connect()).presence is SignInPresence.ABSENT
+        resumed = FrontendClient(
+            runtime.connect(), profile_id=runtime.profile_id, frontend=OperationFrontendProjection.TUI
+        )
+        try:
+            outcome = resumed.resume_receipt()
+        except ProfileReceiptRefusedError as error:
+            outcome = error
+            assert error.reason.value == "expired_idle"
+        assert not (isinstance(outcome, ProfileStatus) and outcome.status.denial is None), outcome
+        assert not runtime.leases()
