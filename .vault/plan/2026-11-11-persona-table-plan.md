@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:495cc0e68dbb387d65d1c07ba4cca1c3d4fa17caa2ee82b3796f2a74e265ee3f'
+body_hash: 'sha256:a7b0fec86619d7cef9b87bb6d65b4903c445b1a3be2207d5f56cd30d76414b65'
 ---
 
 # `persona-table` plan
@@ -68,6 +68,7 @@ Real backend work that the tree does not yet do, checked against the code on 202
 - [ ] `P02.S22` - Serve every word, tax fact and capability from backend operations so that no surface authors them; `src/cadrumo/application`.
 - [ ] `P02.S23` - Import datos fiscales and reconcile Modelo 100 credits against them, once the operator supplies a specimen; `src/cadrumo/adapters/inbound, src/cadrumo/application/live`.
 - [ ] `P02.S24` - Finish moving login, session, access and custody authority from the tax package into the runtime package; `src/cadrumo/application/user_profile, src/cadrumo_runtime`.
+- [ ] `P02.S32` - Re-land the test year-literal clean-up with test years derived from a closed year, proving the runtime-host tests in root (reverted 2026-11-11 as 25d6f78646; batch 0ca3be17c7 is in history); `src, dev/quality`.
 
 ### Phase `P03` - Desktop re-entry
 
