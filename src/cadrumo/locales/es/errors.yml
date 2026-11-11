@@ -1398,6 +1398,10 @@ errors:
       plazos: hace falta un resultado a ingresar que deje un segundo plazo de al menos
       un céntimo, que no sea rectificativa y se presente dentro de plazo y, si domicilias
       el segundo plazo, una cuenta española tuya.'
+    refused_modelo_inventory_purchase_ledger_row: 'La declaración sigue rechazada:
+      una compra de tu inventario no indica qué movimiento la registra, o indica uno
+      que no coincide. Indica qué movimiento registra cada compra, o que ninguno la
+      registra, y vuelve a calcular.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'El Modelo 303 no puede calcularse
       hasta que la compensación de periodos anteriores tenga respaldo: regístrala
       en el Saldo de IVA.'

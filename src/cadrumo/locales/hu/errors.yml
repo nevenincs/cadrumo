@@ -1322,6 +1322,10 @@ errors:
       cent marad, a bevallás nem lehet helyesbítő, határidőn belül kell benyújtanod,
       és ha a második részletet csoportos beszedéssel fizeted, saját spanyol számla
       is kell.'
+    refused_modelo_inventory_purchase_ledger_row: 'A bevallás továbbra is elutasított:
+      a készleted egy vásárlása nem mondja meg, melyik tétel rögzíti, vagy olyat jelöl
+      meg, amely nem egyezik vele. Add meg minden vásárlásnál, melyik tétel rögzíti,
+      vagy hogy egyik sem, majd számíts újra.'
     refused_modelo_iva_wallet_reconciliation_blocked: 'A Modelo 303 nem számítható
       ki, amíg a korábbi időszakokból áthozott kompenzációnak nincs forrása: rögzítsd
       az IVA-egyenlegben.'

@@ -2016,6 +2016,10 @@ application:
       household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
+      inventory_purchase_claim_refused: A(z) {year}. évi készlet {count} vásárlása
+        olyan tételt jelöl meg, amely nem egyezik velük.
+      inventory_purchase_ledger_row_unstated: A(z) {year}. évi készlet {count} vásárlása
+        nem mondja meg, melyik tétel rögzíti őket.
       m347_provincia_unrecorded: 'Tartománykód nélküli partnerek: {parties}.'
       m347_provincia_unstated: Hiányzik {party} adóügyi lakcímének tartománya.
       m349_operation_unclassified: A(z) {invoice} számla ({party}) nem tünteti fel,

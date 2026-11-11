@@ -78,6 +78,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.inventory_purchase_claim_gate.ModeloInventoryPurchaseLedgerRowError",
+        ErrorCode(
+            code="REFUSED_MODELO_INVENTORY_PURCHASE_LEDGER_ROW",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_inventory_purchase_ledger_row",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.lifecycle_clock_gate.ModeloLifecycleClockPrecedesError",
         ErrorCode(
             code="REFUSED_MODELO_LIFECYCLE_CLOCK_PRECEDES",

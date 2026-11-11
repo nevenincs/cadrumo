@@ -398,6 +398,37 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.inventory.movement.claim",
+            target_command_key="ledger.inventory.movement.claim",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="actividad_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="actividad_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="correction_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="correction_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="ledger_row",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="ledger_row",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="movement_id",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="movement_id",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.preflight",
             target_command_key="ledger.preflight",
             argument_specifications=(

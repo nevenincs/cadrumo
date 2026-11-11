@@ -69,6 +69,7 @@ from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticRe
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from .disagreement_words import CROSS_CHECK_LABEL_LOCALE_KEYS, sources_facts_words, value_facts_words
+from .inventory_purchase_claim_gate import inventory_purchase_claim_verdict
 from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
 
@@ -356,6 +357,9 @@ operation, so the note names the invoice and never the clave.
 
 def note_record_verdict(diagnostic: CalculationSourceDiagnostic) -> PreconditionVerdict | None:
     """The door to the record a note names, where its reason has one and its fact names exactly one row."""
+    inventory_door = inventory_purchase_claim_verdict(diagnostic.fact)
+    if inventory_door is not None:
+        return inventory_door
     declared = _RECORD_NOTE_ACTIONS.get(diagnostic.reason)
     fact = diagnostic.fact
     if declared is None or fact is None or len(fact.row_refs) != 1:

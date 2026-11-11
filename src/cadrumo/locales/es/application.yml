@@ -2058,6 +2058,10 @@ application:
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
+      inventory_purchase_claim_refused: '{count} compras del inventario de {year}
+        indican un movimiento que no coincide con ellas.'
+      inventory_purchase_ledger_row_unstated: '{count} compras del inventario de {year}
+        no indican qué movimiento las registra.'
       m347_provincia_unrecorded: 'Declarados sin código de provincia: {parties}.'
       m347_provincia_unstated: Falta la provincia del domicilio fiscal de {party}.
       m349_operation_unclassified: La factura {invoice} con {party} no indica qué

@@ -216,6 +216,10 @@ class CalculationNoteSentence(StrEnum):
     """One IVA record's cuota that no box of the declaration draws for its category."""
     UNROUTED_IVA_RECARGO = "unrouted_iva_recargo"
     """One IVA record's recargo de equivalencia that no box of the declaration draws for its category."""
+    INVENTORY_PURCHASE_LEDGER_ROW_UNSTATED = "inventory_purchase_ledger_row_unstated"
+    """Purchases of an inventory book state nothing about the ledger entry that books them."""
+    INVENTORY_PURCHASE_CLAIM_REFUSED = "inventory_purchase_claim_refused"
+    """Purchases of an inventory book name a ledger entry that cannot stand as the one that books them."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

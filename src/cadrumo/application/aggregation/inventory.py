@@ -29,6 +29,7 @@ from ...domain.calculations.row_source_identity import RowSourceIdentity
 from ...domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from ...domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument
 from ...domain.contribuyente.inventory.valuation import compute_inventory_anexo_d_projection
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.user_profile.values import UserProfileRecord
 from ..inventory.movement_claim_checks import InventoryClaimLedgerReads
 from .inventory_claim_findings import inventory_claim_findings
@@ -219,7 +220,12 @@ def _activity_books_refusal(
 
 
 def _diagnostic(
-    *, reason: CalculationSourceDiagnosticReason, state: str, message: str, remedy: str | None = None
+    *,
+    reason: CalculationSourceDiagnosticReason,
+    state: str,
+    message: str,
+    remedy: str | None = None,
+    fact: CalculationNoteFact | None = None,
 ) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason=reason,
@@ -227,6 +233,7 @@ def _diagnostic(
         resolver_id=InventorySourceResolver.resolver_id,
         message=f"inventory source {state}: {message}",
         remedy=remedy,
+        fact=fact,
     )
 
 
@@ -768,8 +775,14 @@ class InventorySourceResolver:
             owned_sources=self.owned_sources,
             unresolved_binding_ids=binding_ids,
             diagnostics=tuple(
-                _diagnostic(reason="source_domain_not_ready", state=state, message=message, remedy=remedy)
-                for state, message, remedy in findings
+                _diagnostic(
+                    reason="source_domain_not_ready",
+                    state=finding.state,
+                    message=finding.message,
+                    remedy=finding.remedy,
+                    fact=finding.fact,
+                )
+                for finding in findings
             ),
         )
 

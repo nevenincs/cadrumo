@@ -1952,6 +1952,10 @@ application:
       household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
+      inventory_purchase_claim_refused: '{count} purchases of the {year} inventory
+        name a ledger entry that does not match them.'
+      inventory_purchase_ledger_row_unstated: '{count} purchases of the {year} inventory
+        do not say which ledger entry books them.'
       m347_provincia_unrecorded: 'Declared parties without a province code: {parties}.'
       m347_provincia_unstated: The province of {party}'s tax domicile is missing.
       m349_operation_unclassified: Invoice {invoice} with {party} does not say which

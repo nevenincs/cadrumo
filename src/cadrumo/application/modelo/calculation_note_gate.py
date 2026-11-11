@@ -54,6 +54,7 @@ from .calculation_screen import (
     calculation_screen_stamp,
 )
 from .household_row_fact_gate import household_row_fact_refusal
+from .inventory_purchase_claim_gate import inventory_purchase_claim_refusal
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 
 
@@ -182,12 +183,16 @@ def require_no_blocking_calculation_notes(
 
     A household row that omits a fact the official design requires is refused
     with its own typed error, which names the fact and the profile door that
-    states it.
+    states it. An inventory purchase that states no ledger entry that stands is
+    refused with its own typed error, which names the inventory command that
+    corrects the purchase.
 
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
         ModeloHouseholdRowFactUnstatedError: The blocking note is a required
             household fact the profile has not stated.
+        ModeloInventoryPurchaseLedgerRowError: The blocking note is an inventory
+            purchase whose ledger entry is unstated or cannot stand.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -199,6 +204,9 @@ def require_no_blocking_calculation_notes(
     household_refusal = household_row_fact_refusal(revision, blocking, action=action)
     if household_refusal is not None:
         raise household_refusal
+    inventory_refusal = inventory_purchase_claim_refusal(revision, blocking, action=action)
+    if inventory_refusal is not None:
+        raise inventory_refusal
     first = blocking[0]
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),

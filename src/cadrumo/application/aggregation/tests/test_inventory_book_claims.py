@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.period import Period
+from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.contribuyente.inventory.ledger_claims import InventoryPurchaseClaim
@@ -45,7 +46,7 @@ from ..activity_asset_expense_reconciliation import (
     register_acquisition_transaction_ids,
 )
 from ..inventory import InventorySourceResolver
-from ..source_mesh import CalculationSourceContext
+from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -131,7 +132,7 @@ def _binding(operation: InventoryProjectionOperation, target: str) -> BindingDef
     )
 
 
-def _context() -> CalculationSourceContext:
+def _context(*, activities: int = 1) -> CalculationSourceContext:
     revision = published_snapshot("100", filing_year=YEAR, period="0A").revision.model_copy(
         update={
             "bindings": (
@@ -147,11 +148,11 @@ def _context() -> CalculationSourceContext:
         filing_year=YEAR,
         period=Period.from_year_and_code(YEAR, "0A"),
         revision=revision,
-        profile=published_work_profile_declaring_activities(1),
+        profile=published_work_profile_declaring_activities(activities),
     )
 
 
-def _expense_row(*, base: str) -> Transaction:
+def _expense_row(*, base: str, activity: TipoActividad | None = None) -> Transaction:
     gross = Decimal(base) + Decimal("21.00")
     return Transaction.model_validate(
         {
@@ -179,6 +180,7 @@ def _expense_row(*, base: str) -> Transaction:
             "business_classification": BusinessClassification.BUSINESS,
             "taxable_base": Decimal(base),
             "iva_amount": Decimal("21.00"),
+            "tipo_actividad": activity,
         },
     )
 
@@ -196,20 +198,32 @@ def _claiming(ledger: InventoryLedger, transaction_id: str) -> InventoryLedger:
 
 
 class _Books:
-    def __init__(self, ledger: InventoryLedger) -> None:
-        self.document = InventoryLedgerDocument(ledgers=(ledger,))
+    def __init__(self, *ledgers: InventoryLedger) -> None:
+        self.document = InventoryLedgerDocument(ledgers=ledgers)
 
     def load(self) -> InventoryLedgerDocument:
         return self.document
 
 
-def _resolve(ledger: InventoryLedger, *rows: Transaction):
+def _resolve(ledger: InventoryLedger, *rows: Transaction) -> CalculationSourceResolution:
+    return _resolve_books((ledger,), *rows)
+
+
+def _resolve_books(ledgers: tuple[InventoryLedger, ...], *rows: Transaction) -> CalculationSourceResolution:
     catalogue = TransactionCatalogue.from_transactions(list(rows))
     reads = InventoryClaimLedgerReads(transactions=lambda: catalogue, asset_revisions=tuple)
-    return InventorySourceResolver(inventory_repository=_Books(ledger), claim_reads=reads).resolve(_context())
+    return InventorySourceResolver(inventory_repository=_Books(*ledgers), claim_reads=reads).resolve(
+        _context(activities=len(ledgers))
+    )
 
 
-def _states(resolution) -> list[str]:
+def _stating_no_ledger_row(ledger: InventoryLedger) -> InventoryLedger:
+    (purchase,) = ledger.period_movements
+    stated = MovementRecord.model_validate({**purchase.model_dump(), "ledger_row": PurchaseLedgerRow.NONE})
+    return ledger.model_copy(update={"period_movements": (stated,)})
+
+
+def _states(resolution: CalculationSourceResolution) -> list[str]:
     return [diagnostic.message.split(":")[0] for diagnostic in resolution.diagnostics]
 
 
@@ -244,3 +258,55 @@ def test_a_claim_that_does_not_match_its_row_holds_the_rows_back() -> None:
 
     assert resolution.row_binding_values == {}
     assert _states(resolution) == ["inventory source purchase_ledger_claim_refused"]
+
+
+_RETAIL = TipoActividad.A03_RESTO_EMPRESARIALES
+_CRAFT = TipoActividad.A05_PROFESIONALES
+
+
+def test_an_unstated_purchase_of_an_activity_without_ledger_expense_rows_does_not_block() -> None:
+    quiet = inventory_ledger(_RETAIL.value)
+    busy = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
+
+    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00", activity=_CRAFT))
+
+    assert resolution.unresolved_binding_ids == ()
+    assert resolution.diagnostics == ()
+    assert resolution.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
+
+
+def test_an_unstated_purchase_of_an_activity_with_ledger_expense_rows_blocks() -> None:
+    quiet = _stating_no_ledger_row(inventory_ledger(_RETAIL.value))
+    busy = inventory_ledger(_CRAFT.value)
+
+    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00", activity=_CRAFT))
+
+    assert resolution.row_binding_values == {}
+    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
+    (diagnostic,) = resolution.diagnostics
+    assert diagnostic.fact is not None
+    assert diagnostic.fact.values == (("count", "1"), ("year", str(YEAR)))
+
+
+def test_a_ledger_row_declaring_no_activity_counts_for_every_book() -> None:
+    quiet = inventory_ledger(_RETAIL.value)
+    busy = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
+
+    resolution = _resolve_books((quiet, busy), _expense_row(base="100.00"))
+
+    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
+
+
+def test_a_book_stating_no_activity_is_held_back_by_a_row_of_any_activity() -> None:
+    unnamed = inventory_ledger("comercio")
+    named = _stating_no_ledger_row(inventory_ledger(_CRAFT.value))
+
+    resolution = _resolve_books((unnamed, named), _expense_row(base="100.00", activity=_CRAFT))
+
+    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]
+
+
+def test_with_one_book_a_row_of_any_activity_holds_an_unstated_purchase_back() -> None:
+    resolution = _resolve(inventory_ledger(_RETAIL.value), _expense_row(base="100.00", activity=_CRAFT))
+
+    assert _states(resolution) == ["inventory source purchase_ledger_row_unstated"]

@@ -2053,6 +2053,10 @@ application:
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
+      inventory_purchase_claim_refused: '{count} compres de l''inventari de {year}
+        indiquen un moviment que no hi coincideix.'
+      inventory_purchase_ledger_row_unstated: '{count} compres de l''inventari de
+        {year} no indiquen quin moviment les registra.'
       m347_provincia_unrecorded: 'Declarats sense codi de província: {parties}.'
       m347_provincia_unstated: Falta la província del domicili fiscal de {party}.
       m349_operation_unclassified: La factura {invoice} amb {party} no indica quina
