@@ -5,7 +5,7 @@ tags:
 date: '2026-11-11'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d3ac389023b80207d0f1e3a236b008c93e136184ee19c5b1e057aa545b7d6d3'
+body_hash: 'sha256:349749f0a0dba7163be284f13cca81939f09023f9bf702189b4e3962e71d0260'
 related:
   - "[[2026-11-11-profile-password-custody-plan]]"
 ---
@@ -53,3 +53,17 @@ related:
 - `S02` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_strengthening_mint.py`
 - `S02` `verify:` `pytest custody rotation, replacement, crash-recovery, kdf supervision, background-yield and strengthening-mint tests` -> `pass`
 - `S02` `by:` `PERF-CUSTODY`
+- `S03` `M` `src/cadrumo/application/user_profile/passphrase_rotation.py`
+- `S03` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S03` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S03` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_retirement.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_login.py`
+- `S03` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_password_kdf_sign_in_strengthening.py`
+- `S03` `verify:` `pytest custody/tests test_profile_view_kdf_fallback_notice` -> `pass`
+- `S03` `verify:` `ruff ty radon lint-imports` -> `pass`
+- `S03` `by:` `PERF-CUSTODY`
+
+## Notes
+
+- `S03` `test_profile_worker` browser-descendant tests fail in this worktree: worker resolves Chromium under the worktree var/storage/components, absent outside root
