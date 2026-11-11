@@ -2605,8 +2605,6 @@ cli:
         help: Declara els ascendents del contribuent per a la secció de família del
           model 100.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
-        invalid_flag: El valor de --ascendiente no és vàlid. Cada fila ha de declarar
-          NACIMIENTO=AAAA-MM-DD; NIF, FALLECIMIENTO i CONVIVIENTES són opcionals.
         invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
           CLAU=VALOR amb les claus NACIMIENTO, NIF, FALLECIMIENTO i CONVIVIENTES,
           cadascuna com a màxim una vegada i amb valor; el context de l'error indica
