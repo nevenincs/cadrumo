@@ -265,6 +265,14 @@ class ReplayScope(StrEnum):
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
     """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    RECORDS = "records"
+    """The full scope, then the records the persona's returns read, without the returns.
+
+    The local observations, the Modelo 303 compensation carried in, the rent
+    and professional withholding and the returns filed with the AEAT are
+    recorded; no return is created. A consumer that takes the persona's
+    returns through their own operations, in order, replays this scope.
+    """
     HISTORY = "history"
     """The full scope, then the persona's return history.
 
@@ -1350,13 +1358,21 @@ def _capture_aeat_filings(persona: Persona, world: PersonaWorld) -> None:
                 )
 
 
-def _replay_history(
+def _replay_records(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
+) -> None:
+    """Record what the persona's returns read: observations, compensation carried in, withholding and AEAT filings."""
+    _seed_compensation_carried_in(persona, world)
+    _record_local_observations(persona, world)
+    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_aeat_filings(persona, world)
 
-    The local observations, the rent and professional withholding and the
-    returns filed with the AEAT are recorded first. Then each
+
+def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, str], dict[str, str]]:
+    """Replay the persona's returns; returns the filed and the calculated returns, key to revision id.
+
+    The records of :func:`_replay_records` come first. Then each
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
@@ -1365,11 +1381,6 @@ def _replay_history(
     reason, never overridden. Local filing records a PRESENTADO revision whose
     AEAT status stays pending; no receipt is made.
     """
-    _seed_compensation_carried_in(persona, world)
-    _record_local_observations(persona, world)
-    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_aeat_filings(persona, world)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
     for year, period, filed in history_periods(persona, world.envelope):
@@ -1474,16 +1485,26 @@ def _complete_setup(world: PersonaWorld) -> bool:
     return load_profile_record(world).setup_state is ProfileSetupState.COMPLETE
 
 
-def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | None) -> tuple[NotLoaded, ...]:
+def _not_loaded(
+    persona: Persona, scope: ReplayScope, envelope: YearEnvelope, *, setup_complete: bool | None
+) -> tuple[NotLoaded, ...]:
     """The persona facts no production operation recorded within ``scope``, and why.
 
     A block outside the scope was never attempted, so it is absent from the
-    scope's result rather than reported as one no operation can record.
+    scope's result rather than reported as one no operation can record. A
+    return-history record a lowered horizon put below the floor is reported
+    within the records scope: the application refuses its year.
     """
     found = [
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
+    if scope.includes(ReplayScope.RECORDS):
+        found.extend(
+            NotLoaded(block=record.block, reason=record.reason(envelope))
+            for record in persona.below_floor
+            if record.history
+        )
     if setup_complete is False:
         found.append(
             NotLoaded(
@@ -1541,12 +1562,14 @@ def materialise_persona(
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world)
         setup_complete = _complete_setup(world) if complete_setup else None
-        if scope.includes(ReplayScope.HISTORY) and (
+        if scope.includes(ReplayScope.RECORDS) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
-            filings, calculations = _replay_history(persona, world, transactions=transactions, invoices=invoices)
+            _replay_records(persona, world, transactions=transactions, invoices=invoices)
+            if scope.includes(ReplayScope.HISTORY):
+                filings, calculations = _replay_history(persona, world)
     return MaterialisedPersona(
         persona=persona,
         world=world,
@@ -1554,7 +1577,7 @@ def materialise_persona(
         transactions=transactions,
         invoices=invoices,
         evidence=evidence,
-        not_loaded=_not_loaded(persona, scope, setup_complete=setup_complete),
+        not_loaded=_not_loaded(persona, scope, world.envelope, setup_complete=setup_complete),
         filings=filings,
         calculations=calculations,
     )
@@ -1645,7 +1668,7 @@ def _reused_persona_world(
                         transactions=ids["transactions"],
                         invoices=ids["invoices"],
                         evidence=ids["evidence"],
-                        not_loaded=_not_loaded(persona, scope, setup_complete=ids["setup_complete"]),
+                        not_loaded=_not_loaded(persona, scope, envelope, setup_complete=ids["setup_complete"]),
                         filings=ids["filings"],
                         calculations=ids["calculations"],
                     )
@@ -1681,15 +1704,20 @@ def materialised_persona(
     With ``horizon`` the persona is read as if the registry's horizon were that
     earlier supported year: its year tokens and its scenario clock move down
     with it, so a scenario written against ``horizon-1`` is replayed for an
-    earlier supported year. The floor stays the registry's own.
+    earlier supported year. The floor stays the registry's own, so a return
+    history record or expectation that moves below it is left out of the
+    replay and listed in :attr:`Persona.below_floor`, its history records
+    also in :attr:`MaterialisedPersona.not_loaded`; a return that depends on
+    one meets the application's own refusal.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
+    lowered = horizon is not None and horizon != envelope.horizon
     if horizon is not None:
         if not envelope.floor <= horizon <= envelope.horizon:
             raise PersonaMaterialisationError(f"horizon {horizon} lies outside {envelope.floor}..{envelope.horizon}")
         envelope = dataclasses.replace(envelope, horizon=horizon)
-    persona = read_persona(persona_id, envelope=envelope)
+    persona = read_persona(persona_id, envelope=envelope, omit_below_floor=lowered)
     as_of = scenario_instant(persona, envelope) if read_on is None else read_on
     if reuse:
         with _reused_persona_world(

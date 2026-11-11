@@ -4352,6 +4352,7 @@
         "dev.acceptance.ledger.scenario",
         "dev.acceptance.persona_table",
         "dev.acceptance.persona_table.__main__",
+        "dev.acceptance.persona_table.counterparties",
         "dev.acceptance.persona_table.diff",
         "dev.acceptance.persona_table.render",
         "dev.acceptance.persona_table.rows",
