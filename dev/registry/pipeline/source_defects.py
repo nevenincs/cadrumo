@@ -725,6 +725,38 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             ("Pág. 4", "A62"),
         )
     ),
+    "aeat-dr-390-2026": tuple(
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-390-2026",
+            source_sha256="5ce047995347c2b5ad6e5d4e407f126eeb9bd214602ed7c99e9f85175176ec15",
+            sheet=sheet,
+            published_content="Nota 2",
+            note_cell=note_cell,
+            note_statement="Nota 2: estas casillas deben estar rellenas a 0",
+            integer_digits=14,
+            decimal_digits=2,
+            sign_policy=_N_PREFIX_SIGN_POLICY,
+            mandated_values=("0",),
+            evidence=(
+                "Re-read in the 'Ejercicio 2026 y siguientes' design rather than carried by digest: Pág. 2, "
+                "Pág. 2 bis, Pág. 3 and Pág. 4 keep every row, Tipo, length and Contenido of the preceding "
+                "design, the expired temporary-rate slots (0%, 2%, 5% and 7,5% and the 0%, 0,26%, 0,62% and "
+                "1% recargo rows) still point at 'Nota 2', and A119, A44, A120 and A62 still read 'Nota 2: "
+                "estas casillas deben estar rellenas a 0'. The adjudication of the preceding design therefore "
+                "applies unchanged: the note mandates the value zero and states no representation, the "
+                "surrounding run still spells '15 enteros 2 decimales' on the surviving 4%, 10% and 21% "
+                "amounts, and the type column still types these slots N, so the slot is N plus fourteen "
+                "integer digits and two decimals closed to the unit quantity zero, which reaches the wire as "
+                "seventeen zero bytes."
+            ),
+        )
+        for sheet, note_cell in (
+            ("Pág. 2", "A119"),
+            ("Pág. 2 bis", "A44"),
+            ("Pág. 3", "A120"),
+            ("Pág. 4", "A62"),
+        )
+    ),
 }
 
 
