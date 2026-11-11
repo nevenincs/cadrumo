@@ -60,12 +60,16 @@ def _read_single_mark(
     marks: ModeloEditLocaleMarks,
     normalisations: list[ModeloEditNormalisation],
     sign: str,
+    fraction_limit: int | None,
 ) -> str:
     """Read a number carrying one kind of separator, once or repeatedly.
 
     A single mark that could group thousands or separate decimals is refused
     with both readings, the whole number and the one in this locale's decimal
     mark, each carrying the entry's ``sign``, so the filer can type the one meant.
+    The locale's own decimal mark is two-way readable too when the address
+    takes fewer than three fraction digits (``fraction_limit``), since a
+    thousands group would then fit where a decimal reading never could.
     """
     count = body.count(mark)
     if count > 1:
@@ -75,10 +79,13 @@ def _read_single_mark(
     lead, _, tail = body.partition(mark)
     if not lead or not tail.isdigit() or not lead.isdigit():
         raise ModeloEditParseRefusedError(ModeloEditParseReason.BAD_GROUPING)
-    if mark == marks.decimal:
+    ambiguous = european_thousands_reading_is_ambiguous(f"{lead}.{tail}")
+    two_way_decimal = ambiguous and fraction_limit is not None and fraction_limit < len(tail)
+    if mark == marks.decimal and not two_way_decimal:
         return f"{lead}.{tail}"
-    # The mark is this locale's grouping or the other convention's decimal mark.
-    if european_thousands_reading_is_ambiguous(f"{lead}.{tail}"):
+    # The mark is this locale's grouping, the other convention's decimal mark,
+    # or this locale's decimal mark where a thousands group fits as well.
+    if ambiguous:
         raise ModeloEditParseRefusedError(
             ModeloEditParseReason.AMBIGUOUS_SEPARATOR_READINGS,
             f"{sign}{lead}{tail}",
@@ -89,14 +96,24 @@ def _read_single_mark(
 
 
 def read_edit_number_lexeme(
-    lexeme: str, locale: OutputLanguage, normalisations: list[ModeloEditNormalisation]
+    lexeme: str,
+    locale: OutputLanguage,
+    normalisations: list[ModeloEditNormalisation],
+    *,
+    fraction_limit: int | None = None,
 ) -> Decimal:
-    """Read one localized number into a decimal, refusing anything two-way readable."""
+    """Read one localized number into a decimal, refusing anything two-way readable.
+
+    ``fraction_limit`` is the count of fraction digits the address takes, ``None``
+    when it has no cap; it decides whether a lone decimal mark is ambiguous.
+    """
     text = lexeme.strip()
     if text.startswith(SCREEN_MINUS_SIGN):
         text = f"-{text[1:]}"
     negative, body = _checked_number_lexeme_shape(text)
-    canonical = _localized_number_body(body, locale, normalisations, sign="-" if negative else "")
+    canonical = _localized_number_body(
+        body, locale, normalisations, sign="-" if negative else "", fraction_limit=fraction_limit
+    )
     if not _CANONICAL_DECIMAL_RE.fullmatch(canonical):
         raise ModeloEditParseRefusedError(ModeloEditParseReason.NOT_A_NUMBER)
     return _finite(f"-{canonical}" if negative else canonical)
@@ -123,6 +140,7 @@ def _localized_number_body(
     normalisations: list[ModeloEditNormalisation],
     *,
     sign: str,
+    fraction_limit: int | None,
 ) -> str:
     marks = locale_marks(locale)
     canonical = _space_grouped_body(body, marks, normalisations)
@@ -131,7 +149,7 @@ def _localized_number_body(
     canonical = _mixed_mark_body(body, marks, normalisations)
     if canonical is not None:
         return canonical
-    canonical = _single_mark_body(body, marks, normalisations, sign=sign)
+    canonical = _single_mark_body(body, marks, normalisations, sign=sign, fraction_limit=fraction_limit)
     return body if canonical is None else canonical
 
 
@@ -178,11 +196,12 @@ def _single_mark_body(
     normalisations: list[ModeloEditNormalisation],
     *,
     sign: str,
+    fraction_limit: int | None,
 ) -> str | None:
     if "." not in body and "," not in body:
         return None
     mark = "." if "." in body else ","
-    return _read_single_mark(body, mark, marks, normalisations, sign)
+    return _read_single_mark(body, mark, marks, normalisations, sign, fraction_limit)
 
 
 def _finite(canonical: str) -> Decimal:
@@ -193,6 +212,26 @@ def _finite(canonical: str) -> Decimal:
     if not value.is_finite():
         raise ModeloEditParseRefusedError(ModeloEditParseReason.NON_FINITE)
     return value
+
+
+def read_entry_number(
+    lexeme: str,
+    locale: OutputLanguage,
+    normalisations: list[ModeloEditNormalisation],
+    grammar: ModeloEditValueGrammarV1,
+) -> Decimal:
+    """Read what an operator typed against its address and validate it, never rounding.
+
+    Unlike a typed value from the wire, a lexeme's fraction digits count as
+    typed: ``1.5000`` on a two-digit address is refused although it equals
+    ``1.50``, and ``1.000`` is two-way readable where fewer than three are taken.
+    """
+    integer = grammar.family is ModeloEditValueFamily.INTEGER
+    limit = 0 if integer else grammar.max_fraction_digits
+    number = read_edit_number_lexeme(lexeme, locale, normalisations, fraction_limit=limit)
+    if not integer and limit is not None and _fraction_digits(number) > limit:
+        raise ModeloEditParseRefusedError(ModeloEditParseReason.TOO_MANY_DECIMALS, str(limit))
+    return validate_edit_number(number, grammar)
 
 
 def read_typed_edit_number(value: ModeloScalar) -> Decimal:
@@ -273,4 +312,4 @@ def _check_money_operand(value: Decimal, grammar: ModeloEditValueGrammarV1) -> N
         )
 
 
-__all__ = ["read_edit_number_lexeme", "read_typed_edit_number", "validate_edit_number"]
+__all__ = ["read_edit_number_lexeme", "read_entry_number", "read_typed_edit_number", "validate_edit_number"]
