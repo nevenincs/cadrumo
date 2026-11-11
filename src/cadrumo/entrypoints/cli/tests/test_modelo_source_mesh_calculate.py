@@ -35,7 +35,7 @@ from cadrumo.core.redaction.rules import redact_for_cli_output
 from cadrumo.core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_selected_for
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -435,7 +435,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "--period",
             "0A",
             "--revision",
-            revision_covering("100", exercise).id,
+            revision_selected_for("100", exercise, "0A").id,
         )
         assert work_unit.exit_code == 0, work_unit.output
         work_unit_payload = unwrap_schema_envelope(work_unit.output)
@@ -1189,7 +1189,7 @@ def _m100_work_unit(profile: RegisteredCliProfile) -> str:
         "--period",
         "0A",
         "--revision",
-        revision_covering("100", exercise).id,
+        revision_selected_for("100", exercise, "0A").id,
     )
     assert result.exit_code == 0, result.output
     return str(unwrap_schema_envelope(result.output)["work_unit_id"])
@@ -1231,7 +1231,7 @@ def test_work_calculate_refuses_a_modelo_303_option_on_modelo_100_at_the_boundar
                 "--period",
                 "0A",
                 "--revision",
-                revision_covering("100", _m100_exercise()).id,
+                revision_selected_for("100", _m100_exercise(), "0A").id,
             )
         )
         refused = _cli(profile, "--language", "en", "app", "modelo", "work", "calculate", *address, *option_arguments)
