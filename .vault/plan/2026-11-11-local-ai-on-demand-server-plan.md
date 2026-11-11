@@ -10,7 +10,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:ef0b3a44a200e1730bb74adcdc7549715b3fe74b99cf28408224ee8da48ee375'
+body_hash: 'sha256:e425d5101bd77206783f17deb9fa30bf7fdb86f92fa592abc33ded73456bd455'
 ---
 
 <!-- LINK RULES:
@@ -127,7 +127,7 @@ The demand is a lease. Each demand keeps the server for 5 minutes, and the agent
 - [ ] `S02` - Run the manager's local AI host dormant at start, carry a demand command to its supervision thread, treat dormant as idle in its loop, and update the host tests; `native/manager/src/supervision/local_ai.rs`.
 - [ ] `S03` - Add the closed demand_local_ai manager request and its outcomes, admit it only for the digest-verified agent-service image whose parent is the admitted desktop, and serve it from both the installed and the desktop-hosted manager; `native/manager/src/ipc.rs`.
 - [ ] `S04` - Serve dormant as its own local AI state in the quick check instead of program_not_running, with backend words in every locale; `native/application/src/provisioning/local_ai/models.rs`.
-- [ ] `S05` - Make setup verify the program and models from files without leaving a server running, and re-scope program_not_running and server_wait_expired to a failed demanded start; `native/application/src/provisioning/engine.rs`.
+- [ ] `S05` - Make setup verify the program and models from files without leaving a server running, serve the local engine as ready only when a model file it can run exists (build 15 showed 'Listo' on the lane and the setup dialog with zero models), and re-scope program_not_running and server_wait_expired to a failed demanded start; `native/application/src/provisioning/engine.rs`.
 - [ ] `S06` - Add the agent service's manager-pipe client, demand the server before a local-lane run and renew it while the run lasts, and refuse with a served reason when the manager cannot be reached; `src/cadrumo_agent_service/host`.
 - [ ] `S07` - Update the desktop setup fixture and scenarios for the dormant state and hand the native build and Playwright to DESKTOP; `native/desktop/frontend/src/dev/setupFixture.ts`.
 
