@@ -13,15 +13,12 @@ from collections.abc import Callable, Mapping
 from enum import Enum
 from functools import cache, partial
 from types import GenericAlias
-from typing import Any, Final, cast, override
+from typing import Any, Final, Literal, cast
 
 import typer
 from pydantic import TypeAdapter, ValidationError
-from typer._click.core import Context as TyContext
-from typer._click.core import Parameter as TyParameter
-from typer._click.types import ParamType as TyParamType
-from typer._types import TyperChoice
 
+from cadrumo.core.cli_value_parsers import CliChoice, refuse_cli_value
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
 from cadrumo_client.commands.graph import CommandSpecGraph
@@ -42,51 +39,41 @@ class CommandSpecTyperGroup(CadrumoTyperGroup):
     """Runtime group whose lazy table is namespaced to CommandSpec authority."""
 
 
-class _PydanticStringParamType(TyParamType):
-    """Convert an opaque string annotation through its declared Pydantic schema.
-
-    Subclasses Typer's vendored Click type: Typer wraps any other object in a
-    function adapter, which loses this type's name in help and raises the
-    wrong ``BadParameter`` class on a refused value.
-    """
-
-    name = "registry value"
+class _RegistryStringParser:
+    """Convert an opaque string annotation through its declared Pydantic schema."""
 
     def __init__(self, annotation: type[str]) -> None:
         self._adapter = TypeAdapter(annotation)
-        self.name = annotation.__name__
 
-    @override
-    def convert(self, value: Any, param: TyParameter | None, ctx: TyContext | None) -> str:
+    def __call__(self, value: object) -> str:
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
         # Registry-declared string types validate against governed facts, and
-        # Click converts before the command body leases its authority.
+        # Typer converts before the command body leases its authority.
         try:
             with bundled_indexed_authority().operation():
                 return self._adapter.validate_python(value)
-        except (TypeError, ValueError, ValidationError) as exc:
-            self.fail(str(exc), param, ctx)
+        except ValidationError as exc:
+            errors = exc.errors()
+            reason = str(errors[0]["msg"]) if errors else str(exc)
+            refuse_cli_value(f"{value!r}: {reason}")
+        except (TypeError, ValueError) as exc:
+            refuse_cli_value(str(exc))
 
 
-class _NonBlankTextParamType(TyParamType):
+def _non_blank_text(value: object) -> str:
     """Refuse an empty or blank text value at the parse boundary and normalise the rest.
 
-    Click's ``BadParameter`` names the failing option or argument, so an operator
+    Typer's ``BadParameter`` names the failing option or argument, so an operator
     who passes ``--invoice-id ""`` is told which parameter was empty instead of
     the value reaching a request model that rejects it as an internal fault. The
     surrounding whitespace of an accepted value is stripped, so every downstream
     comparison sees the same selector the operator meant.
     """
-
-    name = "text"
-
-    @override
-    def convert(self, value: Any, param: TyParameter | None, ctx: TyContext | None) -> str:
-        text = str(value).strip()
-        if not text:
-            self.fail(tr("cli.common.errors.blank_value"), param, ctx)
-        return text
+    text = str(value).strip()
+    if not text:
+        refuse_cli_value(tr("cli.common.errors.blank_value"))
+    return text
 
 
 @cache
@@ -149,7 +136,6 @@ def _shared_parameter_kwargs(
     default_factory: Callable[[], object] | None,
     metavar: str | None,
     parser: object | None,
-    click_type: object | None,
 ) -> dict[str, object]:
     """Project the Typer kwargs shared by positional and named parameters."""
     kwargs: dict[str, object] = {
@@ -172,45 +158,54 @@ def _shared_parameter_kwargs(
     }
     if parser is not None:
         kwargs["parser"] = parser
-    if click_type is not None:
-        kwargs["click_type"] = click_type
     return kwargs
 
 
 def _parameter_value_projection(
     spec: ArgumentSpec | OptionSpec,
     resolver: TargetResolver,
-) -> tuple[object, object | None, object | None, str | None]:
-    """Resolve annotation, parser, Click type, and choice metavar from a spec."""
+) -> tuple[object, object | None, str | None]:
+    """Resolve annotation, value parser, and choice metavar from a spec."""
     annotation = _annotation(spec.value.annotation, resolver)
+    parser = _declared_parser(spec, resolver, annotation)
+    if spec.value.choices:
+        # A Literal annotation lets Typer complete and describe the declared
+        # set; the parser keeps the refusal sentence the error contract reads.
+        annotation = cast(Any, Literal).__getitem__(tuple(spec.value.choices))
+    if spec.constraint.non_blank:
+        parser = _non_blank_parser(spec, annotation=annotation, parser=parser)
     if isinstance(spec, OptionSpec) and spec.multiple:
         annotation = GenericAlias(list, (annotation,))
-    parser = None if spec.value.parser is None else resolver(spec.value.parser)
-    click_type = _materialize_projected_click_type(_declared_click_type(spec, resolver), annotation)
-    if spec.constraint.non_blank:
-        click_type = _non_blank_click_type(spec, annotation=annotation, click_type=click_type, parser=parser)
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
-    return annotation, parser, click_type, choice_metavar
+    return annotation, parser, choice_metavar
 
 
-def _declared_click_type(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> object | None:
-    """The Click type a spec declares: a choice set, a resolved custom type, or none."""
+def _declared_parser(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver, annotation: object) -> object | None:
+    """The parser a spec declares: a choice set, a resolved parser, a registry string, or none."""
     if spec.value.choices:
-        return TyperChoice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
-    return None if spec.value.click_type is None else resolver(spec.value.click_type)
+        return CliChoice.of(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
+    if spec.value.parser is not None:
+        return resolver(spec.value.parser)
+    if (
+        isinstance(annotation, type)
+        and annotation is not str
+        and issubclass(annotation, str)
+        and not issubclass(annotation, Enum)
+    ):
+        return _RegistryStringParser(annotation)
+    return None
 
 
-def _non_blank_click_type(
+def _non_blank_parser(
     spec: ArgumentSpec | OptionSpec,
     *,
     annotation: object,
-    click_type: object | None,
     parser: object | None,
-) -> _NonBlankTextParamType:
-    """The non-blank text type, refusing a parameter that is not plain text."""
-    if annotation not in (str, GenericAlias(list, (str,))) or click_type is not None or parser is not None:
+) -> Callable[[object], str]:
+    """The non-blank text parser, refusing a parameter that is not plain text."""
+    if annotation is not str or parser is not None:
         raise TypeError(f"non-blank constraint needs a plain text parameter: {spec.name!r}")
-    return _NonBlankTextParamType()
+    return _non_blank_text
 
 
 def _argument_parameter(
@@ -220,7 +215,6 @@ def _argument_parameter(
     default_factory: Callable[[], object] | None,
     annotation: object,
     parser: object | None,
-    click_type: object | None,
     choice_metavar: str | None,
 ) -> inspect.Parameter:
     """Materialize one positional argument from its production spec."""
@@ -231,7 +225,6 @@ def _argument_parameter(
         default_factory=default_factory,
         metavar=spec.metavar or argument_choice_metavar,
         parser=parser,
-        click_type=click_type,
     )
     typer_default = argument_factory(default, **argument_kwargs)
     return inspect.Parameter(
@@ -249,7 +242,6 @@ def _option_parameter(
     default_factory: Callable[[], object] | None,
     annotation: object,
     parser: object | None,
-    click_type: object | None,
     choice_metavar: str | None,
     resolver: TargetResolver,
 ) -> inspect.Parameter:
@@ -262,7 +254,6 @@ def _option_parameter(
         default_factory=default_factory,
         metavar=spec.metavar or choice_metavar,
         parser=parser,
-        click_type=click_type,
     )
     option_kwargs.update(
         {
@@ -298,7 +289,7 @@ def _option_parameter(
 def _parameter(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> inspect.Parameter:
     """Materialize one spec-owned argument or option parameter."""
     default, default_factory = _parameter_default(spec.default, resolver)
-    annotation, parser, click_type, choice_metavar = _parameter_value_projection(spec, resolver)
+    annotation, parser, choice_metavar = _parameter_value_projection(spec, resolver)
     if isinstance(spec, ArgumentSpec):
         return _argument_parameter(
             spec,
@@ -306,7 +297,6 @@ def _parameter(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> ins
             default_factory=default_factory,
             annotation=annotation,
             parser=parser,
-            click_type=click_type,
             choice_metavar=choice_metavar,
         )
     return _option_parameter(
@@ -315,7 +305,6 @@ def _parameter(spec: ArgumentSpec | OptionSpec, resolver: TargetResolver) -> ins
         default_factory=default_factory,
         annotation=annotation,
         parser=parser,
-        click_type=click_type,
         choice_metavar=choice_metavar,
         resolver=resolver,
     )
@@ -580,21 +569,6 @@ __all__ = [
     "refuse_declared_live_write",
     "runs_in_governed_fact_scope",
 ]
-
-
-def _materialize_projected_click_type(click_type: object | None, annotation: object) -> object | None:
-    """Apply the existing Pydantic string type and deferred type instantiation rules."""
-    if (
-        click_type is None
-        and isinstance(annotation, type)
-        and annotation is not str
-        and issubclass(annotation, str)
-        and not issubclass(annotation, Enum)
-    ):
-        click_type = _PydanticStringParamType(annotation)
-    if isinstance(click_type, type):
-        click_type = click_type()
-    return click_type
 
 
 def _option_declarations(spec: OptionSpec) -> tuple[str, ...]:

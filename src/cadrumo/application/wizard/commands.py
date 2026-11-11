@@ -13,7 +13,7 @@ Flag derivation per question kind:
 * ``INTEGER`` → ``--<question-id>`` ``int`` option;
 * ``CONFIRM`` → ``--<question-id>/--no-<question-id>`` boolean pair;
 * ``SELECT`` → ``--<question-id>`` option with
-  ``click.Choice([c.value for c in choices])``;
+  a parser admitting ``[c.value for c in choices]``;
 * ``CHECKBOX`` → repeated ``--<question-id>`` option that accumulates
   a ``list[str]``.
 

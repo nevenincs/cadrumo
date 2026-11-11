@@ -1162,8 +1162,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    import click
-
+    from ....core.cli_value_parsers import CliChoice
     from ...wizard.catalogue import build_setup_flow
     from ...wizard.command_parameters import SETUP_OPTION_INFOS
     from ...wizard.commands import build_wizard_command
@@ -1179,8 +1178,8 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     build_wizard_command(flow, mode="create", operation=operation)
     option = SETUP_OPTION_INFOS["iva-regime"]
     assert option is not None, "the command builder materialized no --iva-regime option"
-    choice_type = option.click_type
-    assert isinstance(choice_type, click.Choice)
+    choice_type = option.parser
+    assert isinstance(choice_type, CliChoice)
     choice_set = set(choice_type.choices)
     assert choice_set == wizard_values
     assert IVARegime("NO_APLICA").value not in choice_set

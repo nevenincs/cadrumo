@@ -35,7 +35,7 @@ from ...core.transport_locus import TransportLocus, TransportRole, TransportShap
 LANGUAGE = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
 _MODELO = ValueContract(
     DeferredTarget("builtins", "str"),
-    click_type=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
+    parser=DeferredTarget(".common", "MODELO_CODE_CHOICE", __package__),
 )
 _M210_SOURCE = ValueContract(DeferredTarget("...core.irnr", "M210GrossIncomeSourceMode", __package__))
 _RESCATE_TYPE = ValueContract(DeferredTarget("...core.rescate_type", "RescateType", __package__))
