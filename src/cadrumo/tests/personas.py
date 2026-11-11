@@ -72,15 +72,40 @@ def _fail(where: str, message: str) -> PersonaCatalogueError:
 
 
 @dataclass(frozen=True, slots=True)
+class ProvisionPeriods:
+    """The tax periods one legal provision governs, as the registry's legal register declares them."""
+
+    first: date
+    last: date | None
+
+    def governs(self, year: int) -> bool:
+        """Whether the provision governs any tax period of calendar ``year``."""
+        return self.first <= date(year, 12, 31) and (self.last is None or self.last >= date(year, 1, 1))
+
+
+@dataclass(frozen=True, slots=True)
 class YearEnvelope:
-    """The registry's supported filing-year bounds, as the caller read them."""
+    """The registry's supported filing-year bounds, as the caller read them.
+
+    ``provisions`` carries the governed periods of each legal provision a stated value is
+    limited to (``governed_by``), so a value can follow a law that holds for some years only
+    without the catalogue naming a year.
+    """
 
     floor: int
     horizon: int
+    provisions: tuple[tuple[str, ProvisionPeriods], ...] = ()
 
     def __post_init__(self) -> None:
         if self.floor > self.horizon:
             raise PersonaCatalogueError(f"envelope floor {self.floor} lies above its horizon {self.horizon}")
+
+    def governs(self, provision: str, year: int) -> bool:
+        """Whether ``provision`` governs ``year``; a provision the caller did not read is refused."""
+        for reference, periods in self.provisions:
+            if reference == provision:
+                return periods.governs(year)
+        raise PersonaCatalogueError(f"the envelope does not carry the governed periods of {provision!r}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -452,6 +477,10 @@ class ExpectedValue:
     #: Casillas with the figure the law gives that the calculation leaves unresolved;
     #: ``reason`` states the gap. They are asserted not to carry that figure.
     not_sourced: tuple[tuple[str, str], ...] = ()
+    #: A legal provision that holds for some tax periods only. The value replaces the one
+    #: stated without it for the same modelo, period, year and counterparty in each year the
+    #: provision governs, and states nothing in the other years.
+    governed_by: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1240,10 +1269,15 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "reason",
                     "refusal",
                     "not_sourced",
+                    "governed_by",
                 }
             ),
         )
         grounding = _choice(_string(table, "grounding", here), _GROUNDING, here)
+        governed_by = _optional_string(table, "governed_by", here)
+        legal_ref = _strings(table, "legal_ref", here)
+        if governed_by is not None and governed_by not in legal_ref:
+            raise _fail(here, "the provision a value is governed by is one of its legal references")
         reason = _optional_string(table, "reason", here)
         if grounding == "unverified" and reason is None:
             raise _fail(here, "an unverified expectation says what is missing in its reason")
@@ -1272,14 +1306,64 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 concepts=_string_map(table, "concepts", here),
                 parameters=_string_map(table, "parameters", here),
                 derivation=_optional_string(table, "derivation", here),
-                legal_ref=_strings(table, "legal_ref", here),
+                legal_ref=legal_ref,
                 grounding=grounding,
                 reason=reason,
                 refusal=refusal,
                 not_sourced=not_sourced,
+                governed_by=governed_by,
             )
         )
     return Expectations(obligations=tuple(obligations), deadlines=tuple(deadlines), values=tuple(values))
+
+
+def _value_key(value: ExpectedValue) -> tuple[str, str, str, str | None]:
+    return (value.modelo, value.period, str(value.year), value.counterparty)
+
+
+def values_in_force(values: tuple[ExpectedValue, ...], envelope: YearEnvelope) -> tuple[tuple[int, ExpectedValue], ...]:
+    """Each stated value with its resolved year, as the law of that year holds it.
+
+    Values limited to a provision (``governed_by``) replace every plain value of their
+    modelo, period, year and counterparty in a year the provision governs, and are dropped
+    in the other years. Values of one key following two different provisions in the same
+    year are refused, since the catalogue could not say which law the figures follow.
+    """
+    resolved: list[tuple[int, ExpectedValue]] = []
+    for value in values:
+        year = value.year.resolve(envelope)
+        governing = {
+            other.governed_by
+            for other in values
+            if other.governed_by is not None
+            and _value_key(other) == _value_key(value)
+            and envelope.governs(other.governed_by, year)
+        }
+        if len(governing) > 1:
+            raise PersonaCatalogueError(
+                f"{value.modelo} {value.period} {value.year}: values follow {sorted(governing)} in the same year"
+            )
+        if value.governed_by is None if not governing else value.governed_by in governing:
+            resolved.append((year, value))
+    return tuple(resolved)
+
+
+def governed_provisions() -> frozenset[str]:
+    """Every provision a stated value of the catalogue is limited to, read before any persona is validated.
+
+    The caller reads these provisions' governed periods from the registry into the
+    :class:`YearEnvelope` that validation and :func:`values_in_force` take.
+    """
+    provisions: set[str] = set()
+    for persona_id in persona_ids():
+        path = PERSONAS_ROOT / persona_id / "expectations.toml"
+        if not path.is_file():
+            continue
+        for index, table in enumerate(_tables(_read_toml(path).get("values"), str(path))):
+            governed_by = _optional_string(table, "governed_by", f"{path} values[{index}]")
+            if governed_by is not None:
+                provisions.add(governed_by)
+    return frozenset(provisions)
 
 
 # -- assembly ------------------------------------------------------------------------------------------------------

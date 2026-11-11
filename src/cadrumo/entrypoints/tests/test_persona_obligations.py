@@ -63,7 +63,7 @@ from ...application.overview.read_result import OverviewReadProjection
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.personas import ExpectedObligation, Persona, YearEnvelope, persona_ids, read_persona
+from ...tests.personas import ExpectedObligation, Persona, YearEnvelope, persona_ids, read_persona, values_in_force
 from .persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -127,8 +127,8 @@ def _obligation_years(persona: Persona) -> set[int]:
 def _value_years(persona: Persona) -> set[int]:
     envelope = _envelope()
     return {
-        value.year.resolve(envelope)
-        for value in persona.expectations.values
+        year
+        for year, value in values_in_force(persona.expectations.values, envelope)
         if (value.casillas or value.not_sourced or value.refusal is not None) and value.grounding != "unverified"
     }
 
@@ -354,10 +354,10 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     envelope = _envelope()
     stated = [
         value
-        for value in persona.expectations.values
+        for year, value in values_in_force(persona.expectations.values, envelope)
         if (value.casillas or value.not_sourced or value.refusal is not None)
         and value.grounding != "unverified"
-        and value.year.resolve(envelope) == case.year
+        and year == case.year
     ]
     expected = {
         (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.casillas}
