@@ -1036,6 +1036,7 @@ application:
         undetermined_establishment: No consta on està establerta una de les parts
         unmodelled_invoice_class: La classe de factura que declara no té representació
           aquí
+        unnumbered_invoice: El número de factura llegit no és un número
         unresolved_direction: No està clar quina part va emetre el document
     entry_options:
       deduction_fact_kind:

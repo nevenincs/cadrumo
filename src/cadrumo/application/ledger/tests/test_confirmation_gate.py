@@ -89,6 +89,7 @@ def test_a_document_raising_no_finding_confirms_cleanly() -> None:
         (DraftDiscrepancyKind.ROLE_UNRESOLVED, ConfirmationBlockReason.UNRESOLVED_DIRECTION),
         (DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED, ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS),
         (DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED, ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS),
+        (DraftDiscrepancyKind.INVOICE_NUMBER_UNNUMBERED, ConfirmationBlockReason.UNNUMBERED_INVOICE),
     ],
 )
 def test_each_finding_class_refuses_the_confirm_until_it_is_answered(

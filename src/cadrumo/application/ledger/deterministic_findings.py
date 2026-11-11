@@ -56,8 +56,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...domain.iva.regime_legend import RegimeLegend
 from .closure_findings import closure_findings
+from .invoice_draft_records import DraftDiscrepancyFinding
 from .postal_shape_finding import postal_shape_findings
 from .regime_contradiction import regime_contradiction_finding
 
@@ -65,7 +67,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
+    from .invoice_draft_records import InvoiceDraft
 
 __all__ = ["DETERMINISTIC_CHECKS", "DeterministicCheck", "deterministic_check_names", "deterministic_findings"]
 
@@ -117,10 +119,32 @@ def _postal_code_shape(
     return postal_shape_findings(draft, operation=operation)
 
 
+def _invoice_number_shape(
+    draft: InvoiceDraft,
+    _legends: tuple[RegimeLegend, ...],
+    _operation: PinnedAuthorityOperation,
+) -> tuple[DraftDiscrepancyFinding, ...]:
+    """Refuse an invoice number that holds no digit, which no correlative number can be."""
+    number = draft.invoice_number
+    if number is None or not number.strip() or any(character.isdigit() for character in number):
+        return ()
+    return (
+        DraftDiscrepancyFinding(
+            kind=DraftDiscrepancyKind.INVOICE_NUMBER_UNNUMBERED,
+            field="invoice_number",
+            detail=(
+                f"the invoice number read, {number!r}, contains no digit, so it cannot be the document's "
+                f"correlative number; it is likely a heading or label read in its place"
+            ),
+        ),
+    )
+
+
 DETERMINISTIC_CHECKS: tuple[DeterministicCheck, ...] = (
     DeterministicCheck("closure_identities", _closure_identities),
     DeterministicCheck("regime_contradiction", _regime_contradiction),
     DeterministicCheck("postal_code_shape", _postal_code_shape),
+    DeterministicCheck("invoice_number_shape", _invoice_number_shape),
 )
 """Every draft-only check, as data rather than as a sequence of calls.
 

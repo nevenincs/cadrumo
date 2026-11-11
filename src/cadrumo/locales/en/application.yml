@@ -976,6 +976,7 @@ application:
         undetermined_establishment: Where a party is established is not determined
         unmodelled_invoice_class: The invoice class it declares has no representation
           here
+        unnumbered_invoice: The invoice number read is not a number
         unresolved_direction: It is not clear which party issued the document
     entry_options:
       deduction_fact_kind:
