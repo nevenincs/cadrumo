@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 
-from ..domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .personas import (
     PERSONAS_ROOT,
     Persona,
@@ -791,7 +790,7 @@ def test_an_attested_prior_value_is_admitted_with_its_source_and_derivation() ->
         ({"value": "12.846,30"}, "canonical decimal"),
         ({"value": 12846.3}, "canonical decimal"),
         ({"period": "5T"}, "is not one of"),
-        ({"year": str(filing_year_envelope().floor)}, "not a year token"),
+        ({"year": str(_ENVELOPE.floor)}, "not a year token"),
         ({"source": {"modelo": "100", "year": "horizon-2"}}, "missing fields"),
         ({"source": {"modelo": "100", "year": "horizon-2", "period": "0A", "csv": "x"}}, "unknown fields"),
         ({"source": {"modelo": "100", "year": "horizon-1", "period": "0A"}}, "does not precede"),
