@@ -2554,6 +2554,8 @@ application:
       source_owned_binding_override: You entered a value in a box that comes from
         your records; remove it or correct the record it comes from.
       verification_report_not_found: No check report found with id=%{verification_report_id}.
+      work_create_not_applicable: 'Modelo %{modelo} does not apply to you according
+        to your profile: %{reason} No declaration was created.'
       work_period_token_invalid: '--period ''%{token}'' is not a valid period token
         for modelo %{modelo}. Pass --year %{year} separately and use one of: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
