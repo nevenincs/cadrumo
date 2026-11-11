@@ -48,6 +48,12 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
+from ...core.operator_action_enums import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+)
 from ...domain.modelos.calculation_revision_sources import (
     DISAGREEMENT_REASONS,
     CalculationNoteFact,
@@ -61,6 +67,7 @@ from ...domain.user_profile.labels import profile_field_label_key
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from .disagreement_words import CROSS_CHECK_LABEL_LOCALE_KEYS, sources_facts_words, value_facts_words
 from .value_presentation import format_casilla_value
 from .work_form_findings import ModeloFormAttention
@@ -75,6 +82,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unrouted_observation",
         "unrouted_declarable_quantity",
         "invoice_reverse_charge_cuota_not_derivable",
+        "m349_operation_unclassified",
         "unresolved_binding",
         "unhandled_binding_source",
         "source_domain_not_ready",
@@ -85,7 +93,8 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
 
-A figure left out or unworked, or a figure whose binding's declared grade cap
+A figure left out or unworked, an intra-community operation whose clave no
+record states, or a figure whose binding's declared grade cap
 stops it at calculation; a capped figure the resolver proved to be zero is the
 one such note the gate passes (:func:`note_attention`).
 """
@@ -231,6 +240,7 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
         "iva_row_placed_on_movement_date",
         "iva_operation_date_after_movement",
         "m349_clave_inferred_from_category",
+        "m349_operation_unclassified",
         "inferred_retencion_rate_unmatched",
         "inferred_retencion_sectoral_rate_unconfirmed",
         "administrador_retencion_rate_mismatch",
@@ -314,6 +324,61 @@ _SOURCES_VALUE: Final[str] = "sources"
 _logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
+
+
+_RECORD_NOTE_ACTIONS: Final[Mapping[str, tuple[str, str, tuple[str, ...]]]] = MappingProxyType(
+    {
+        "m349_operation_unclassified": (
+            "operator.ledger.invoice.update.operation_type",
+            "invoice_id",
+            ("operation_type",),
+        ),
+    }
+)
+"""The catalogue action that puts right the one record a note names, by reason.
+
+Each names the action, the argument its record fills, and the arguments only
+the filer can state: which operation an invoice records is a fact of the
+operation, so the note names the invoice and never the clave.
+"""
+
+
+def note_record_verdict(diagnostic: CalculationSourceDiagnostic) -> PreconditionVerdict | None:
+    """The door to the record a note names, where its reason has one and its fact names exactly one row."""
+    declared = _RECORD_NOTE_ACTIONS.get(diagnostic.reason)
+    fact = diagnostic.fact
+    if declared is None or fact is None or len(fact.row_refs) != 1:
+        return None
+    action_id, row_argument, operator_arguments = declared
+    (row_ref,) = fact.row_refs
+    condition_id = f"modelo.work.calculate.{diagnostic.reason}.stated"
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"modelo.work.calculate.{diagnostic.reason}",
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                values={row_argument: row_ref},
+            ),
+        ),
+        action=ActionReference(action_id=action_id),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name=row_argument,
+                status=ActionArgumentStatus.RESOLVED,
+                value=row_ref,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key=row_argument,
+            ),
+            *(
+                ActionArgumentBinding(argument_name=name, status=ActionArgumentStatus.MISSING)
+                for name in operator_arguments
+            ),
+        ),
+        missing_argument_names=operator_arguments,
+        conditionality=ActionConditionality.REQUIRES_ARGUMENTS,
+    )
 
 
 def capped_value_proven_zero(reason: str, outcome: BindingValueOutcome | None) -> bool:
@@ -526,6 +591,8 @@ def _require_total_levels() -> None:
         raise ValueError("only an assumed box is confirmed; no calculation note waits for a confirmation")
     if not PRINTED_BOX_REASONS <= GATE_REFUSED_REASONS:
         raise ValueError("a reason that blocks only on a printed box must be one the gate refuses")
+    if not set(_RECORD_NOTE_ACTIONS) <= RECORDS_REASONS:
+        raise ValueError("a note with a door to its record is a note whose cause is in the records")
     if DERIVED_GATE_REASONS & (reasons | set(CALCULATION_NOTE_ATTENTION) | BLOCKING_REASONS):
         raise ValueError("a derived gate reason is never a diagnostic reason, a placed note or a persisted one")
 
@@ -555,6 +622,7 @@ __all__ = [
     "fact_locale_key",
     "note_attention",
     "note_fact_text",
+    "note_record_verdict",
     "read_element_names",
     "read_recorded_notes",
     "what_locale_key",

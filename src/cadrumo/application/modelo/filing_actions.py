@@ -696,6 +696,7 @@ def _require_filing_preconditions(
         target_revision=target,
         subject_leaf_key="modelo.work.file",
         operation=operation,
+        work_unit_repository=ports.work_unit_repository,
     )
 
 

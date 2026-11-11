@@ -141,6 +141,7 @@ def _validated_decision_amount(
             },
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
             carry_period=target.period,
+            local_amount=decision.local_recurrence_amount,
             carry_revision=target.revision,
         )
     if decision.selected_amount is None:

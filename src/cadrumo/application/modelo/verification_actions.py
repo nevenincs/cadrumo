@@ -306,6 +306,7 @@ def verify_modelo_revision_with_preconditions(
             work_profile=checked_profile,
             ledger_membership_ports=repos.ledger_membership_ports,
             evaluated_at=now,
+            work_unit_repository=repos.work_unit,
         )
     )
     # A registry-snapshot refusal already stands as a blocking finding, and
