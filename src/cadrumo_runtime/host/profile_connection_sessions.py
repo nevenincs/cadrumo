@@ -476,6 +476,7 @@ class ProfileConnectionSessionMixin:
         return self._status(connection, host, request.request_id, request.session_id)
 
     def _retired(self: RuntimeProfileConnections, identities: tuple[UUID, ...]) -> None:
+        """Release what the retired leases held; each published lease already cued its own watchers."""
         self._views.unbind_sessions(identities)
         with self._guard:
             hosts = tuple(self._profiles.values())
@@ -484,8 +485,6 @@ class ProfileConnectionSessionMixin:
                     connection.session_id = None
         for host in hosts:
             host.approvals.retire_sessions(identities)
-        if identities:
-            self._sign_in_changed()
 
     def _profile_selection(
         self: RuntimeProfileConnections,
