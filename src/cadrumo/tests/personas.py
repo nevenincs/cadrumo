@@ -513,9 +513,12 @@ class ExpectedValue:
     legal_ref: tuple[str, ...]
     grounding: Literal["verified", "cited", "unverified"]
     reason: str | None
-    #: The error code the application refuses this period's calculation with; ``reason``
-    #: states why. The casillas then record what the law gives, and are not compared.
+    #: The error code the application refuses this period with; ``reason`` states why.
+    #: The casillas then record what the law gives, and are not compared.
     refusal: str | None = None
+    #: The stage that refuses: the calculation itself, or its verification or export
+    #: once the calculation has completed (a value wider than its export slot).
+    refusal_stage: Literal["calculate", "verify", "export"] = "calculate"
     #: Casillas with the figure the law gives that the calculation leaves unresolved;
     #: ``reason`` states the gap. They are asserted not to carry that figure.
     not_sourced: tuple[tuple[str, str], ...] = ()
@@ -1353,6 +1356,7 @@ def _documents(document: _Table, where: str, persona_id: str, refs: frozenset[st
 
 
 _GROUNDING: tuple[Literal["verified", "cited", "unverified"], ...] = ("verified", "cited", "unverified")
+_REFUSAL_STAGES: tuple[Literal["calculate", "verify", "export"], ...] = ("calculate", "verify", "export")
 
 
 def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) -> Expectations:
@@ -1431,6 +1435,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                     "derivation",
                     "reason",
                     "refusal",
+                    "refusal_stage",
                     "not_sourced",
                     "governed_by",
                 }
@@ -1450,6 +1455,9 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 raise _fail(here, "a refusal names the application error code")
             if reason is None:
                 raise _fail(here, "a refusal says in its reason why the application refuses")
+        refusal_stage = _choice(_optional_string(table, "refusal_stage", here) or "calculate", _REFUSAL_STAGES, here)
+        if refusal is None and "refusal_stage" in table:
+            raise _fail(here, "a refusal stage belongs to a stated refusal")
         casillas = _string_map(table, "casillas", here)
         not_sourced = _string_map(table, "not_sourced", here)
         if not_sourced:
@@ -1473,6 +1481,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 grounding=grounding,
                 reason=reason,
                 refusal=refusal,
+                refusal_stage=refusal_stage,
                 not_sourced=not_sourced,
                 governed_by=governed_by,
             )

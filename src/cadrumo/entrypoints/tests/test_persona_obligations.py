@@ -11,7 +11,9 @@ copied: nothing here edits an expected value to agree with a run.
 An expectation grounded ``unverified`` is a known gap and is not asserted. A
 value stated only as named concepts, or per counterparty, carries no registry
 casilla and is not re-derived here. A value that states a ``refusal`` asserts
-that the application refuses the period with that error code; a casilla stated
+that the application refuses the period's calculation with that error code, or,
+when its ``refusal_stage`` is verify or export, that the calculation completes
+(the persona table asserts the later stage's refusal); a casilla stated
 ``not_sourced`` asserts that the application does not yet carry the figure the
 law gives; an obligation that states a ``calendar_advice`` asserts that the
 calendar advises it instead of showing a window row.
@@ -438,6 +440,7 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     }
     legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
     refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
+    refusal_stages = {(value.modelo, value.period): value.refusal_stage for value in stated}
     not_sourced = {
         (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.not_sourced}
         for value in stated
@@ -458,6 +461,12 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
                 left_unfiled[modelo] = f"{period} left unfiled: {unfiled}"
             where = f"Modelo {modelo} {case.year} {period} ({legal_refs[modelo, period]})"
             if (refusal := refusals.get((modelo, period))) is not None:
+                if refusal_stages[modelo, period] != "calculate":
+                    # A later stage refuses a completed calculation; the persona
+                    # table asserts that stage's refusal against the written file.
+                    if "refusal" in calculated:
+                        problems.append(f"{where}: calculation refused: {calculated['refusal']}")
+                    continue
                 if refusal not in str(calculated.get("refusal", "")):
                     problems.append(
                         f"{where}: expected the stated refusal {refusal}, got "

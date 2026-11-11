@@ -457,6 +457,22 @@ def test_a_stated_refusal_names_the_error_code_and_its_reason() -> None:
         }
     )
     assert expectations.values[0].refusal == "ERROR_MODELO_WORK_INPUT_REQUIRED"
+    assert expectations.values[0].refusal_stage == "calculate"
+
+
+def test_a_stated_refusal_names_the_stage_that_refuses_a_completed_calculation() -> None:
+    expectations = _expectations_with(
+        value={
+            "refusal": "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW",
+            "refusal_stage": "export",
+            "reason": "El nombre no cabe en su campo del diseño",
+            "not_sourced": {},
+        }
+    )
+    assert (expectations.values[0].refusal, expectations.values[0].refusal_stage) == (
+        "REFUSED_MODELO_EXPORT_VALUE_OVERFLOW",
+        "export",
+    )
 
 
 @pytest.mark.parametrize(
@@ -464,6 +480,11 @@ def test_a_stated_refusal_names_the_error_code_and_its_reason() -> None:
     [
         ({"refusal": "input required", "reason": "Casilla pendiente"}, "names the application error code"),
         ({"refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED"}, "says in its reason why"),
+        (
+            {"refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED", "refusal_stage": "file", "reason": "Pendiente"},
+            "is not one of",
+        ),
+        ({"refusal_stage": "export", "reason": "Pendiente"}, "belongs to a stated refusal"),
     ],
 )
 def test_a_malformed_refusal_is_refused(value: dict[str, object], message: str) -> None:
