@@ -8,7 +8,7 @@ and candidate screening required by that resolver.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from typing import Protocol
@@ -791,6 +791,26 @@ def screened_invoice_iva_observations(
     )
 
 
+@dataclass(slots=True)
+class _FlaggedInvoices:
+    """The invoices each screen flag names, gathered whether or not the invoice is declared."""
+
+    reverse_charge_underivable: list[Invoice] = field(default_factory=list)
+    recargo_rate_divergences: list[_RecargoRateDivergence] = field(default_factory=list)
+    recargo_split_unresolved: list[Invoice] = field(default_factory=list)
+    recargo_not_declarable: list[Invoice] = field(default_factory=list)
+
+    def record(self, invoice: Invoice, screened: _ScreenedInvoiceIvaResult) -> None:
+        if screened.reverse_charge_underivable:
+            self.reverse_charge_underivable.append(invoice)
+        if screened.recargo_rate_divergence is not None:
+            self.recargo_rate_divergences.append(screened.recargo_rate_divergence)
+        if screened.recargo_split_unresolved:
+            self.recargo_split_unresolved.append(invoice)
+        if screened.recargo_not_declarable:
+            self.recargo_not_declarable.append(invoice)
+
+
 def _collect_screened_invoice_results(
     invoices: Iterable[Invoice],
     *,
@@ -801,11 +821,8 @@ def _collect_screened_invoice_results(
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
     category_counterparty_mismatches: list[Invoice] = []
-    reverse_charge_underivable: list[Invoice] = []
     deduction_authority_missing: list[Invoice] = []
-    recargo_rate_divergences: list[_RecargoRateDivergence] = []
-    recargo_split_unresolved: list[Invoice] = []
-    recargo_not_declarable: list[Invoice] = []
+    flagged = _FlaggedInvoices()
     for stored in invoices:
         paying = tuple(
             movement
@@ -816,14 +833,7 @@ def _collect_screened_invoice_results(
         # the category the projection actually read.
         invoice = invoice_with_paying_movement_category(stored, paying)
         screened = screened_invoice_iva_result(invoice, linked_movements=paying, operation=operation)
-        if screened.reverse_charge_underivable:
-            reverse_charge_underivable.append(invoice)
-        if screened.recargo_rate_divergence is not None:
-            recargo_rate_divergences.append(screened.recargo_rate_divergence)
-        if screened.recargo_split_unresolved:
-            recargo_split_unresolved.append(invoice)
-        if screened.recargo_not_declarable:
-            recargo_not_declarable.append(invoice)
+        flagged.record(invoice, screened)
         if screened.deduction_authority_missing:
             deduction_authority_missing.append(invoice)
             continue
@@ -838,11 +848,11 @@ def _collect_screened_invoice_results(
         invoice_ids=tuple(sorted(invoice_ids)),
         compared=tuple(compared_invoices),
         category_counterparty_mismatches=tuple(category_counterparty_mismatches),
-        reverse_charge_underivable=tuple(reverse_charge_underivable),
+        reverse_charge_underivable=tuple(flagged.reverse_charge_underivable),
         deduction_authority_missing=tuple(deduction_authority_missing),
-        recargo_rate_divergences=tuple(recargo_rate_divergences),
-        recargo_split_unresolved=tuple(recargo_split_unresolved),
-        recargo_not_declarable=tuple(recargo_not_declarable),
+        recargo_rate_divergences=tuple(flagged.recargo_rate_divergences),
+        recargo_split_unresolved=tuple(flagged.recargo_split_unresolved),
+        recargo_not_declarable=tuple(flagged.recargo_not_declarable),
     )
 
 
