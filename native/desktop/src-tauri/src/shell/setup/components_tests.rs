@@ -1623,7 +1623,7 @@ async fn removing_the_local_ai_hands_the_engine_the_models_on_the_lists_and_read
     );
     assert_eq!(refusal(components.remove(Removal::LocalAi).await), Ok(()));
     let asked = replies.asked();
-    for action in ["status", "catalog", "local_models"] {
+    for action in ["provider_lanes", "catalog", "local_models"] {
         assert!(
             asked.iter().any(|seen| seen == action),
             "{action}: {asked:?}"
@@ -1721,7 +1721,7 @@ async fn explicit_download_plans_only_that_model_and_a_resume_keeps_it() {
     );
     assert_eq!(plan.entries[0].download_bytes, Some(PROGRAM_BYTES + 3 * GB));
     assert_eq!(fixture.downloads(), 0);
-    assert_eq!(replies.asked(), vec!["status", "catalog"]);
+    assert_eq!(replies.asked(), vec!["provider_lanes", "catalog"]);
     decline(&components, &operation, &plan).await;
     // A resumed request uses the same download and digest, without substituting TEXT.
     components
