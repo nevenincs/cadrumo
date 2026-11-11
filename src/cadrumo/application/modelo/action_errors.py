@@ -117,7 +117,28 @@ class WorkUnitMutationRefusedError(ModeloPreconditionErrorMixin, ModeloError):
 
 
 class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError, CoreNotFoundError):
-    """Raised when a calculation revision lookup fails."""
+    """Raised when a calculation revision lookup fails.
+
+    A raise site that knows a sharper door, such as the declaration an
+    identifier turned out to name, carries its own failure. Every other lookup
+    serves the default: the declarations list, from which the right revision
+    can be addressed.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the carried verdict, or the default door of an absent revision."""
+        failure = self.precondition_failure
+        if failure is not None:
+            return failure.verdict
+        return build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.revisions",
+            scenario_id="modelo.work.revisions.calculation_revision.absent",
+            evidence_id="modelo.work.revisions.calculation_revision",
+            evidence_values={"stored": False},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ).verdict
 
 
 class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):

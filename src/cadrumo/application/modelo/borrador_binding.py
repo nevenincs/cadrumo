@@ -59,7 +59,7 @@ from ..live.borrador_100_keys import borrador_admitted_bindings
 from ..persistence_errors import PersistenceDegradationError
 from .action_errors import ModeloPreconditionErrorMixin
 from .decimal_parsing import decimal_from_string
-from .preconditions import build_modelo_precondition_failure
+from .preconditions import build_modelo_calculate_refusal_failure, build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -179,6 +179,13 @@ def _assert_borrador_bindings_allowed(
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.forbidden_bindings",
             context={"bindings": unknown_or_forbidden},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.bindings_forbidden",
+                evidence_values={
+                    "forbidden_binding_count": len(unknown_or_forbidden),
+                    "forbidden_binding_ids": "|".join(unknown_or_forbidden),
+                },
+            ),
         )
 
 
@@ -286,6 +293,10 @@ def resolve_modelo_100_borrador_bindings(
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.unsupported_modelo",
             context={"modelo": target_modelo},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.modelo_unsupported",
+                evidence_values={"modelo": target_modelo, "borrador_capability": False},
+            ),
         )
     _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
     snapshot = _load_active_borrador_snapshot(
@@ -411,6 +422,10 @@ def _assert_same_axis(
     if snapshot.bucket_id != expected_bucket:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_bucket_mismatch",
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.bucket_mismatch",
+                evidence_values={"snapshot_in_active_bucket": False},
+            ),
         )
     if snapshot.filing_year != filing_year or snapshot.period != period:
         raise Modelo100BorradorBindingError(
@@ -421,6 +436,15 @@ def _assert_same_axis(
                 "filing_year": filing_year,
                 "period": period.registry_token,
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.axis_mismatch",
+                evidence_values={
+                    "snapshot_year": snapshot.filing_year,
+                    "snapshot_period": snapshot.period.registry_token,
+                    "year": filing_year,
+                    "period": period.registry_token,
+                },
+            ),
         )
 
 
@@ -436,6 +460,13 @@ def _assert_registry_snapshot_axis(
                 "snapshot_modelo": registry_snapshot.modelo.id,
                 "command_modelo": command.modelo.strip(),
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.registry_modelo_mismatch",
+                evidence_values={
+                    "registry_modelo": registry_snapshot.modelo.id,
+                    "requested_modelo": command.modelo.strip(),
+                },
+            ),
         )
     if (
         registry_snapshot.filing_year != command.filing_year
@@ -449,6 +480,15 @@ def _assert_registry_snapshot_axis(
                 "filing_year": command.filing_year,
                 "period": command.period.registry_token,
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.registry_axis_mismatch",
+                evidence_values={
+                    "registry_year": registry_snapshot.filing_year,
+                    "registry_period": registry_snapshot.period,
+                    "year": command.filing_year,
+                    "period": command.period.registry_token,
+                },
+            ),
         )
 
 
@@ -460,6 +500,10 @@ def decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
         error_factory=lambda _message: Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.decimal_value_invalid",
             context={"binding_id": binding_id},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.value_invalid",
+                evidence_values={"binding_id": binding_id},
+            ),
         ),
         pipeline_label="borrador value",
     )
