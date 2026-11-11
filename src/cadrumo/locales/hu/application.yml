@@ -2535,6 +2535,8 @@ application:
         származik; töröld, vagy javítsd a forrásbejegyzést.
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
+      work_create_not_applicable: 'A Modelo %{modelo} a profilod szerint nem vonatkozik
+        rád: %{reason} A bevallás nem jött létre.'
       work_period_token_invalid: 'A --period ''%{token}'' nem érvényes időszak-token
         a Modelo %{modelo} bevalláshoz. Add meg külön: --year %{year}, és használd
         ezek egyikét: %{tokens}.'

@@ -12,6 +12,8 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.async_cleanup import await_cancellation_complete
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
@@ -27,6 +29,7 @@ from ..operations.access_resolution import (
     bind_operation_access_profile,
 )
 from ..operations.capabilities import RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import served_words_language
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import (
     OperationRequest,
@@ -67,6 +70,7 @@ from .work_profile import ModeloWorkProfile
 
 MODELO_WORK_CREATE_OPERATION_DEFINITION_ID = "modelo.work.create"
 MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE = "REFUSED_MODELO_WORK_CREATE_APPLICABILITY"
+_NOT_APPLICABLE_WORDS_LOCALE_KEY = "application.modelo.errors.work_create_not_applicable"
 
 
 class ModeloWorkCreateRequest(BaseModel):
@@ -111,13 +115,33 @@ class ModeloWorkCreateSuccess(BaseModel):
 
 
 class ModeloWorkCreateRefusal(BaseModel):
-    """Only the canonical applicability reason crosses the refusal detail door."""
+    """Only the canonical applicability reason, and the words that say it, cross the refusal detail door.
+
+    ``refusal_words`` tell the filer why no declaration was created, in
+    ``refusal_words_language``, the language the worker's catalogue renders,
+    so a frontend shows them and words none of its own. The refusal names no
+    next step: whether a modelo applies is the AEAT's rule, read from the
+    profile, not a choice the filer makes here.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["refused"] = "refused"
     modelo: ModeloCodeText
     reason: Annotated[str, Field(min_length=1, max_length=2048)]
+    refusal_words: Annotated[str, Field(min_length=1, max_length=4096)]
+    refusal_words_language: OutputLanguage
+
+
+def _work_create_refusal(modelo: str, reason: str) -> ModeloWorkCreateRefusal:
+    """The applicability refusal of ``modelo``, worded in the language the worker's catalogue renders."""
+    language = served_words_language()
+    return ModeloWorkCreateRefusal(
+        modelo=modelo,
+        reason=reason,
+        refusal_words=tr(_NOT_APPLICABLE_WORDS_LOCALE_KEY, locale=language.value, modelo=modelo, reason=reason),
+        refusal_words_language=language,
+    )
 
 
 def modelo_work_create_effect(*, reused: bool, name_applied: str | None) -> OperationEffect:
@@ -282,7 +306,7 @@ class ModeloWorkCreateExecutor:
                 return (
                     ports,
                     profile,
-                    ModeloWorkCreateRefusal(modelo=applicability.modelo, reason=applicability.reason),
+                    _work_create_refusal(applicability.modelo, applicability.reason),
                     None,
                     (),
                 )

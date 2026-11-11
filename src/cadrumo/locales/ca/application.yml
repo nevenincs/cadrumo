@@ -2577,6 +2577,8 @@ application:
         dels teus registres; treu-lo o corregeix el registre del qual prové.
       verification_report_not_found: No s'ha trobat cap informe de comprovació amb
         id=%{verification_report_id}.
+      work_create_not_applicable: 'El model %{modelo} no et correspon segons el teu
+        perfil: %{reason} No s''ha creat la declaració.'
       work_period_token_invalid: '--period ''%{token}'' no és un token de període
         vàlid per al model %{modelo}. Indica --year %{year} per separat i usa un de:
         %{tokens}.'

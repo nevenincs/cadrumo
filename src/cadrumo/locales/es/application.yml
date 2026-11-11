@@ -2575,6 +2575,8 @@ application:
         obtiene de tus registros; quítalo o corrige el registro del que procede.
       verification_report_not_found: No existe ningún informe de comprobación con
         id=%{verification_report_id}.
+      work_create_not_applicable: 'El Modelo %{modelo} no te corresponde según tu
+        perfil: %{reason} No se ha creado la declaración.'
       work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
         válido para el modelo %{modelo}. Indica --year %{year} por separado y usa
         uno de: %{tokens}.'
