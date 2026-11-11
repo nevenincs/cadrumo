@@ -299,10 +299,8 @@ export function AgentColumn({
     }),
     [openModelPicker],
   );
-  const { localModelHost, readingHost, listChanges } = useLocalModelHosts(
-    session,
-    ready,
-  );
+  const { localModelHost, readingHost, listChanges, engineChanges } =
+    useLocalModelHosts(session, ready);
   // The agent's settings belong to the signed-in profile, and are read only
   // while they are open: the first time behind one loader, and after that
   // again behind what was read last, each time they open.
@@ -321,6 +319,14 @@ export function AgentColumn({
     settingsOpen && shown,
     opened,
   );
+  // The lanes the agent serves follow the engine it runs under. Once an engine
+  // is chosen the provider settings are read again, and again each time the
+  // agent is ready after that, so the lanes served for the new engine show
+  // without the settings being opened again.
+  const refreshSettings = settings.refresh;
+  useEffect(() => {
+    if (engineChanges > 0 && ready) refreshSettings();
+  }, [engineChanges, ready, refreshSettings]);
   const ranWith =
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
