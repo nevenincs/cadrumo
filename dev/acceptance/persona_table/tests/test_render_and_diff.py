@@ -57,6 +57,14 @@ def test_the_table_lists_every_row_with_its_verdict() -> None:
     assert "| persona | 303 | 7 | 2T | history-filed |" in text
 
 
+def test_each_lane_carries_its_unchecked_rows_beside_green_and_total() -> None:
+    unchecked = dataclasses.replace(_GREEN, period="3T", unchecked=("role:dr303-46",))
+    assert unchecked.verdict is Verdict.UNCHECKED
+    text = render_table([_GREEN, _HISTORY, unchecked], head="abc", lanes={"303": "IVA"})
+    assert "IVA 1/3 (unchecked 1)" in text
+    assert "Summary: green 1 / 3," in text
+
+
 def test_the_diff_separates_green_regression_and_stage_moves() -> None:
     before = {row.key: row for row in (_GREEN, _RED_VERIFY, _RED_CALCULATE)}
     after = {

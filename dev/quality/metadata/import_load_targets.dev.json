@@ -163,6 +163,7 @@
         "dev.acceptance.persona_table.export_text",
         "dev.acceptance.persona_table.provenance",
         "dev.acceptance.persona_table.render",
+        "dev.acceptance.persona_table.roles",
         "dev.acceptance.persona_table.rows",
         "dev.acceptance.persona_table.sweep",
         "dev.acceptance.persona_table.unchecked",

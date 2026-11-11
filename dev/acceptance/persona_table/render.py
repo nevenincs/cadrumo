@@ -32,16 +32,23 @@ def counts(rows: Iterable[TableRow]) -> Counter[str]:
     return counted
 
 
-def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str, tuple[int, int]]:
-    """Green and total rows per lane, the lane of a row being the one ``lanes`` maps its modelo to."""
+def lane_counts(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> dict[str, tuple[int, int, int]]:
+    """Green, total and unchecked rows per lane, the lane of a row being the one ``lanes`` maps its modelo to."""
     totals: dict[str, list[int]] = {}
     for row in rows:
-        lane = lanes.get(row.modelo, "other")
-        held = totals.setdefault(lane, [0, 0])
+        held = totals.setdefault(lanes.get(row.modelo, "other"), [0, 0, 0])
+        held[0] += row.verdict in GREEN
         held[1] += 1
-        if row.verdict in GREEN:
-            held[0] += 1
-    return {lane: (green, total) for lane, (green, total) in sorted(totals.items())}
+        held[2] += row.verdict is Verdict.UNCHECKED
+    return {lane: (green, total, unchecked) for lane, (green, total, unchecked) in sorted(totals.items())}
+
+
+def lane_line(rows: Iterable[TableRow], lanes: Mapping[str, str]) -> str:
+    """The per-lane sentence: each lane's green and total rows, and its rows held back as unchecked."""
+    return "By lane (green/total, green = pass; unchecked rows in brackets): " + ", ".join(
+        f"{lane} {green}/{total} (unchecked {unchecked})"
+        for lane, (green, total, unchecked) in lane_counts(rows, lanes).items()
+    )
 
 
 def summary_line(rows: list[TableRow]) -> str:
@@ -93,11 +100,7 @@ def render_table(
         "",
     ]
     if lanes is not None:
-        lines += [
-            "By lane (green/total, green = pass): "
-            + ", ".join(f"{lane} {green}/{total}" for lane, (green, total) in lane_counts(ordered, lanes).items()),
-            "",
-        ]
+        lines += [lane_line(ordered, lanes), ""]
     lines += _unchecked_section(ordered)
     lines += ["Verdicts:", ""]
     lines += [f"- `{verdict.value}`: {meaning}." for verdict, meaning in VERDICT_MEANING.items()]
@@ -133,4 +136,4 @@ def render_table(
     return "\n".join(lines) + "\n"
 
 
-__all__ = ["counts", "lane_counts", "red_stage", "render_table", "row_label", "summary_line"]
+__all__ = ["counts", "lane_counts", "lane_line", "red_stage", "render_table", "row_label", "summary_line"]

@@ -366,14 +366,15 @@ def _read_or_none(persona_id: str, horizon: int, envelope: YearEnvelope) -> Pers
 def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, int | None, str], list[ExpectedValue]]:
     """The values in force per return, leaving out per-counterparty values the table cannot compare.
 
-    A return with only concepts maps to none.
+    A return with only concepts maps to none; a stated role is stated content even when it resolves to no casilla,
+    which the unchecked items then name.
     """
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
     for year, value in in_force(persona.expectations.values, envelope):
         if value.counterparty is not None and not is_compared(value):
             continue
         found = stated.setdefault((value.modelo, year, value.period), [])
-        if value.casillas or value.not_sourced or value.refusal is not None or is_compared(value):
+        if value.casillas or value.roles or value.not_sourced or value.refusal is not None or is_compared(value):
             found.append(value)
     return stated
 
