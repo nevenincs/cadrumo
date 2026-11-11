@@ -405,10 +405,11 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0599" = "1005.00", "0604" = "5850.58" }
-concepts = { ingresos_actividad = "41200.00", gastos_actividad = "5118.00", provision_dificil_justificacion = "1804.10", rendimiento_neto_actividad = "34277.90", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1804.10", "irpf_ed_rdto_neto" = "34277.90", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 Rendimiento neto = 41200.00 - 5118.00 - 1804.10 = 34277.90.
 0599 = 15 % of domestic bases 6700.00 = 1005.00. 0604 = 1275.27 + 1747.27 + 966.27 + 1861.77 = 5850.58.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
@@ -419,13 +420,14 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:da-56"
 casillas = { "0599" = "1005.00", "0604" = "5811.40" }
-concepts = { ingresos_actividad = "41200.00", gastos_actividad = "5118.00", provision_dificil_justificacion = "2000.00", rendimiento_neto_actividad = "34082.00", minimo_personal = "5550.00" }
+roles = { "irpf_ed_total_ingresos_computables" = "41200.00", "irpf_ed_suma_gastos_previos" = "5118.00", "irpf_ed_provisiones_gastos_dificil_justificacion" = "2000.00", "irpf_ed_rdto_neto" = "34082.00", "irpf_minimo_contribuyente_estatal" = "5550.00" }
 derivation = """
 The same year as the value above where LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2)
 governs: provisión = 7 % of 36082.00 = 2525.74, capped at the 2000.00 annual limit, so the rendimiento neto is
 41200.00 - 5118.00 - 2000.00 = 34082.00. 0599 = 15 % of domestic bases 6700.00 = 1005.00.
 0604 sums the pagos fraccionados of the year's filed Modelo 130 returns under the same rate:
 1242.74 + 1703.54 + 942.13 + 1922.99 = 5811.40.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_actividad = irpf_ed_rdto_neto (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"

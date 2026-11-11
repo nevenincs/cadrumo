@@ -42,10 +42,11 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0596" = "2180.00" }
-concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 Pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00, retención 2180.00; the ledger holds 14 net payments
 totalling 19660.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
@@ -71,10 +72,11 @@ reason = "Arithmetic and provisions verified (art. 23 text in the bundled corpus
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "23231.00" }
+roles = { "irpf_minimo_contribuyente_estatal" = "6700.00", "irpf_base_liquidable_general" = "23231.00" }
 derivation = """
 Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
 Base liquidable general = 19840.00 + 3391.00 = 23231.00 (no reductions of the base). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
 """
 legal_ref = ["ley-35-2006:art-57"]
 grounding = "verified"
@@ -89,10 +91,11 @@ period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
 casillas = { "0596" = "2180.00" }
-concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+roles = { "irpf_rendimiento_trabajo_importe_integro_dinerario" = "21840.00", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_rendimiento_neto" = "19840.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 Unchanged by the art. 23.2 wording: pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00,
 retención 2180.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): pension_integra = irpf_rendimiento_trabajo_importe_integro_dinerario (LIRPF art. 17); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); rendimiento_neto_trabajo = irpf_rendimiento_trabajo_rendimiento_neto (LIRPF art. 19); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-23-2021"]
 grounding = "verified"
@@ -116,10 +119,11 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 governed_by = "ley-35-2006:art-23-2021"
-concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "22552.80" }
+roles = { "irpf_minimo_contribuyente_estatal" = "6700.00", "irpf_base_liquidable_general" = "22552.80" }
 derivation = """
 Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
 Base liquidable general = 19840.00 + 2712.80 = 22552.80 (no reductions of the base). Cuota is not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); base_liquidable_general = irpf_base_liquidable_general (LIRPF art. 50).
 """
 legal_ref = ["ley-35-2006:art-57", "ley-35-2006:art-23-2021"]
 grounding = "verified"

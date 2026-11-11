@@ -34,12 +34,13 @@ period = "0A"
 year = "horizon-1"
 casillas = { "0596" = "5412.00" }
 not_sourced = { "0003" = "36000.00", "0013" = "2332.80" }
-concepts = { rendimiento_neto_previo_trabajo = "33667.20", otros_gastos_trabajo = "2000.00", reduccion_rendimientos_trabajo = "0.00", rendimiento_neto_reducido_trabajo = "31667.20" }
+roles = { "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
 derivation = """
 From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
 The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
 Rendimiento neto previo = 36000.00 - 2332.80 = 33667.20; otros gastos art. 19.2.f 2000.00; neto = 31667.20.
 The art. 20 reduction is zero because the net exceeds the top of its band.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): rendimiento_neto_previo_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_previo (LIRPF art. 19); otros_gastos_trabajo = irpf_rendimiento_trabajo_gasto_otros (LIRPF art. 19.2.f); reduccion_rendimientos_trabajo = irpf_rendimiento_trabajo_reduccion_gastos_generales (LIRPF art. 20); rendimiento_neto_reducido_trabajo = irpf_rendimiento_trabajo_rendimiento_neto_reducido (LIRPF arts. 18-20).
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
@@ -49,7 +50,7 @@ reason = "The application sources neither figure from the employer's certificate
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { minimo_contribuyente = "5550.00", minimo_descendientes = "3950.00", minimo_ascendientes = "2550.00", minimo_personal_familiar = "12050.00" }
+roles = { "irpf_minimo_contribuyente_estatal" = "5550.00", "irpf_minimo_descendientes_estatal" = "3950.00", "irpf_minimo_ascendientes_estatal" = "2550.00", "irpf_minimo_personal_familiar_estatal" = "12050.00" }
 derivation = """
 Contribuyente under 65: 5550.00 (art. 57).
 Descendientes (art. 58): first 2400.00 + second 2700.00 + 2800.00 for the second being under three = 7900.00; both parents live with
@@ -57,6 +58,7 @@ them, so each applies half: 3950.00.
 Ascendiente (art. 59): mother aged 78 at year end, living with the taxpayer all year, annual income 7200.00 (pension, below 8000.00;
 not a profile leaf, stated here as a scenario fact), sole descendant with right: 1150.00 + 1400.00 (over 75) = 2550.00.
 Total 12050.00. These are the state amounts; the autonomic amounts Madrid may set under art. 56.3 and the cuota are not asserted.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): minimo_contribuyente = irpf_minimo_contribuyente_estatal (LIRPF art. 57); minimo_descendientes = irpf_minimo_descendientes_estatal (LIRPF art. 58); minimo_ascendientes = irpf_minimo_ascendientes_estatal (LIRPF art. 59); minimo_personal_familiar = irpf_minimo_personal_familiar_estatal (LIRPF art. 56).
 """
 legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-61"]
 grounding = "verified"
@@ -66,7 +68,8 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0613" = "916.67" }
-concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
+roles = { "irpf_deduccion_maternidad" = "1200.00" }
+concepts = { deduccion_maternidad_total = "2116.67" }
 derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
 Guardería increment: up to 83.33 euros (1000.00 / 12) for each month in which the art. 81.1 and 81.2 requirements hold
@@ -78,6 +81,7 @@ Total 1200.00 + 916.67 = 2116.67.
 Until ejercicio 2022 the increment is also limited, for each child, by the cotizaciones devengadas after the birth (2022 manual
 lines 62690 to 62700, a) and b)); the daughter's row states 2332.80, which is above 916.67, so 0613 is 916.67 in 2022 too.
 Casilla 0613 is asserted as a casilla, so the row checks the product rather than a named concept.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): deduccion_maternidad = irpf_deduccion_maternidad (LIRPF art. 81). deduccion_maternidad_total stays a concept: no casilla carries the sum of casillas 0611 and 0613 in any edition. incremento_guarderia is carried by the casilla asserted above (0613), so its concept is not repeated.
 """
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"
