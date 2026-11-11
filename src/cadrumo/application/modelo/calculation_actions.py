@@ -126,7 +126,7 @@ from .printed_boxes import snapshot_printed_boxes
 from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .reconciliation_sources import ReconciliationSourceNeed, reconciliation_source_needs
 from .revision_persistence import persist_calculation_revision
-from .work_missing_input import ModeloWorkMissingInputError, prior_carry_absence_unstated
+from .work_missing_input import ModeloWorkMissingInputError, prior_carry_absence_unstated, prior_period_unfiled
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
@@ -870,9 +870,20 @@ def _evaluate_prepared_calculation(
             boxes=snapshot_printed_boxes(ports.operation, snapshot),
             unresolved_binding_ids=frozenset(unresolved_binding_ids).difference(prepared.channels.bindings),
         )
+        if unstated is not None:
+            raise unstated from error
+        # A carry from an earlier period of this ejercicio waits on that
+        # period's filed return, which the refusal opens or offers to create.
+        unfiled = prior_period_unfiled(
+            missing,
+            work_unit=work_unit,
+            snapshot=snapshot,
+            observations=ports.observation_repository,
+            work_units=ports.work_unit_repository.load().work_units.values(),
+        )
         # This boundary precedes revision publication. Earlier migrations may
         # already have written state; later advisory failures never enter it.
-        raise (missing if unstated is None else unstated) from error
+        raise (missing if unfiled is None else unfiled) from error
 
     replay_payloads = build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,

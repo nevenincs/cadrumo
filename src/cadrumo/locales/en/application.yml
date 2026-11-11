@@ -2393,6 +2393,10 @@ application:
           from earlier years are still pending offset (boxes %{boxes}). Store the
           previous year''s return, or state in the declaration that none is pending.
           Nothing was saved.'
+      prior_period_unfiled: 'Modelo %{modelo} %{period} %{filing_year} cannot be calculated
+        yet: it carries figures from the return for %{unfiled_period}, which has not
+        been filed. File %{unfiled_period} first, then calculate again. Nothing was
+        saved.'
       profile_readiness_missing: 'Profile is incomplete for Modelo %{modelo} %{period}
         %{filing_year}; complete these profile facts first: %{profile_requirements}.'
       profile_readiness_not_applicable: 'Modelo %{modelo} is not applicable to the

@@ -2479,6 +2479,10 @@ application:
           egyenlített negatív általános adóalap (%{boxes}. mező). Mentsd el az előző
           évi bevallást, vagy jelezd a bevallásban, hogy nincs függőben lévő összeg.
           Semmi sem lett mentve.'
+      prior_period_unfiled: 'A(z) %{modelo} %{period} %{filing_year} nyomtatvány még
+        nem számolható ki: összegeket visz át a(z) %{unfiled_period} bevallásából,
+        amely még nincs benyújtva. Előbb nyújtsd be a(z) %{unfiled_period} bevallást,
+        majd számolj újra. Semmi nem lett mentve.'
       profile_readiness_missing: 'A profil hiányos a Modelo %{modelo} (%{period} %{filing_year})
         bevalláshoz; előbb töltsd ki ezeket a profiladatokat: %{profile_requirements}.'
       profile_readiness_not_applicable: 'A Modelo %{modelo} nem alkalmazható az aktív

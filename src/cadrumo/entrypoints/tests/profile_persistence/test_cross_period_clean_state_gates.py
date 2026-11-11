@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple
@@ -48,6 +48,7 @@ from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_cross_period import cross_period_clean_state_findings
+from ....application.modelo.verification_preconditions import ModeloVerificationResult
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -238,6 +239,30 @@ def _verify_with_fixture_repositories(
     taxpayer: TaxpayerProfile,
 ) -> VerificationReport:
     """Verify one revision over the fixture repositories under a freshly pinned authority."""
+    return _verification_result_with_fixture_repositories(
+        revision_id,
+        work_units=work_units,
+        calculations=calculations,
+        filings=filings,
+        reports=reports,
+        observations=observations,
+        events=events,
+        taxpayer=taxpayer,
+    ).report
+
+
+def _verification_result_with_fixture_repositories(
+    revision_id: str,
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+    reports: VerificationReportCatalogueRepository,
+    observations: CalculationObservationRepository,
+    events: BucketEventHistoryRepository,
+    taxpayer: TaxpayerProfile,
+) -> ModeloVerificationResult:
+    """Verify one revision and keep each finding's precondition beside the report."""
     with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision_with_preconditions(
             revision_id,
@@ -255,7 +280,7 @@ def _verify_with_fixture_repositories(
             clock=_CLOCK,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        ).report
+        )
 
 
 def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
@@ -552,6 +577,51 @@ def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior
     assert all("next_action" not in finding.model_dump(mode="json") for finding in cross_period_findings)
     assert len(stored_reports) == 1
     assert stored_reports[0] == report
+
+
+def test_each_unclean_prior_filing_offers_to_open_the_declaration_it_rests_on(
+    tmp_path: Path,
+) -> None:
+    """The door of a missing prior 303 opens that 303's declaration, creating it when it does not exist yet."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        work_units, calculations, filings, reports, observations, events = _fixture_repositories(profile.repository)
+        revision_id = _persist_390_draft(work_unit_repository=work_units, calculation_repository=calculations)
+        (annual,) = work_units.load().work_units.values()
+        # An activity begun well before the ejercicio, so every missing prior 303 is a filing owed, not a first filer's.
+        activity_start = date(annual.filing_year - 5, 1, 1)
+        _store_ready_profile_record(activity_start_date=activity_start.isoformat())
+
+        result = _verification_result_with_fixture_repositories(
+            revision_id,
+            work_units=work_units,
+            calculations=calculations,
+            filings=filings,
+            reports=reports,
+            observations=observations,
+            events=events,
+            taxpayer=workflow_profile().model_copy(update={"activity_start_date": activity_start}),
+        )
+
+    unclean = tuple(
+        projection
+        for projection in result.finding_preconditions
+        if projection.finding.kind.value == "cross_period_dependency_unclean"
+    )
+    assert unclean
+    for projection in unclean:
+        failure = projection.precondition_failure
+        assert failure is not None
+        assert failure.scenario_id == "modelo.work.verify.cross_period_dependency.unclean"
+        verdict = failure.verdict
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.modelo.work.create"
+        facts = projection.finding.message_facts
+        assert {item.argument_name: item.value for item in verdict.argument_bindings} == {
+            "modelo": facts["source_modelo"],
+            "period": facts["source_period"],
+            "year": facts["source_filing_year"],
+        }
+        assert verdict.missing_argument_names == ()
 
 
 def test_verify_modelo_390_refuses_csv_register_prior_filing_without_justificante(

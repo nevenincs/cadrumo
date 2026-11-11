@@ -238,6 +238,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.work_missing_input.ModeloPriorPeriodUnfiledError",
+        ErrorCode(
+            code="REFUSED_MODELO_PRIOR_PERIOD_UNFILED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.prior_period_unfiled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
         ErrorCode(
             code="ERROR_MODELO_WORK_INPUT_REQUIRED",

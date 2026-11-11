@@ -2520,6 +2520,10 @@ application:
           de ejercicios anteriores pendientes de compensar (casillas %{boxes}). Guarda
           la declaración del año anterior o indica en la declaración que no queda
           ninguna pendiente. No se ha guardado nada.'
+      prior_period_unfiled: 'Todavía no se puede calcular el Modelo %{modelo} %{period}
+        %{filing_year}: arrastra importes de la declaración de %{unfiled_period},
+        que no está presentada. Presenta primero %{unfiled_period} y vuelve a calcular.
+        No se ha guardado nada.'
       profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
         %{period} %{filing_year}; completa antes estos datos de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El Modelo %{modelo} no es aplicable al perfil

@@ -2522,6 +2522,10 @@ application:
           d''exercicis anteriors pendents de compensar (caselles %{boxes}). Desa la
           declaració de l''any anterior o indica a la declaració que no en queda cap
           de pendent. No s''ha desat res.'
+      prior_period_unfiled: 'Encara no es pot calcular el Model %{modelo} %{period}
+        %{filing_year}: arrossega imports de la declaració de %{unfiled_period}, que
+        no està presentada. Presenta primer %{unfiled_period} i torna a calcular.
+        No s''ha desat res.'
       profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{period}
         %{filing_year}; completa abans aquestes dades de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil

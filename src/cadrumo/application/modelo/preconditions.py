@@ -385,6 +385,20 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
         action_id="operator.modelo.work.attest_prior_carries",
     ),
+    # A carry from an earlier period of the same ejercicio is read from that
+    # period's filed return; filing it, or first creating it, is the way on.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_period.filed",
+        "modelo.work.calculate.prior_period.unfiled",
+        action_id="operator.modelo.work.file",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_period.filed",
+        "modelo.work.calculate.prior_period.unfiled_without_work",
+        action_id="operator.modelo.work.create",
+    ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
@@ -488,6 +502,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.file",
         "modelo.work.file.cross_period_dependency.clean",
         "modelo.work.file.cross_period_dependency.unclean",
+        action_id="operator.modelo.work.create",
     ),
     _profile(
         "modelo.work.file",
@@ -673,6 +688,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.cross_period_dependency.clean",
         "modelo.work.verify.cross_period_dependency.unclean",
+        action_id="operator.modelo.work.create",
     ),
     _profile(
         "modelo.work.verify",
