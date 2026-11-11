@@ -2406,6 +2406,12 @@ application:
         the amount settled does not go the way the result does, as when part of the
         amount to pay is suspended against your spouse''s refund or you waive a refund.
         Cadrumo does not yet compute the remainder for this year''s form.'
+      export_text_unrepresentable_character: 'Nothing was written: «%{field_value}»
+        holds the character «%{character}» (%{code_point}), which the AEAT record
+        design cannot write at positions %{first_position}-%{last_position} of the
+        «%{record_type}» record. Dropping or replacing it would declare something
+        else. Correct it where you recorded it, as it appears in the AEAT census,
+        and export again.'
       export_text_value_overflow: 'Nothing was written: «%{field_value}» has %{value_length}
         characters and the AEAT record design allows only %{field_length} at positions
         %{first_position}-%{last_position} of the «%{record_type}» record. Cutting

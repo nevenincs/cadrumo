@@ -52,6 +52,7 @@ from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_loading import load_render_profile_for_revision
 from .render_profile_model import RenderProfile
 from .render_profile_source_reader import load_render_profile_source_evidence
+from .render_profile_statement import verify_alphanumeric_text_statement
 from .semantic_map import (
     SemanticMap,
     load_semantic_map_for_revision,
@@ -621,6 +622,7 @@ def build_revision_render_inputs(
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     verify_requirement_statements(semantic_map, source_root=source_root, sources=design_sources)
+    verify_alphanumeric_text_statement(render_profile, source_root=source_root, sources=sources)
     evidence = load_render_profile_source_evidence(
         source_root / sources[selected_source_ref].corpus_path,
         render_profile,

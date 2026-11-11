@@ -400,6 +400,7 @@ def render_records(
                     "discriminator": joined_record.semantic_record.discriminator,
                     "order": order,
                     "encoding": transport_profile.encoding,
+                    **_alphanumeric_text_declaration(render_profile),
                     "line_ending": transport_profile.line_ending,
                     "fields": tuple(item.field for item in record_derivations),
                 },
@@ -408,6 +409,17 @@ def render_records(
     if not records:
         raise RegistryValidationError("joined record design contains no records to render")
     return tuple(records), tuple(derivations)
+
+
+def _alphanumeric_text_declaration(render_profile: RenderProfile) -> dict[str, object]:
+    """The design's text rule, declared on every record it lays out, citing the design that states it."""
+    rule = render_profile.alphanumeric_text_rule
+    if rule is None:
+        return {}
+    return {
+        "alphanumeric_text": rule.alphanumeric_text,
+        "alphanumeric_text_source_ref": render_profile.design_identity.source_ref,
+    }
 
 
 def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> None:

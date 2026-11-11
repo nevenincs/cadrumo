@@ -2489,6 +2489,12 @@ application:
         például amikor a fizetendő összeg egy részét a házastársad visszatérítésének
         terhére felfüggesztik, vagy lemondasz egy visszatérítésről. A Cadrumo az idei
         nyomtatvány maradékát még nem számolja ki.'
+      export_text_unrepresentable_character: 'Semmi sem íródott ki: a(z) „%{field_value}”
+        a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
+        rekordterve a(z) „%{record_type}” rekord %{first_position}-%{last_position}.
+        pozícióján nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.
+        Javítsd ott, ahol rögzítetted, úgy, ahogy az AEAT adózói nyilvántartásában
+        (censo) szerepel, és exportálj újra.'
       export_text_value_overflow: 'Semmi sem íródott ki: a(z) „%{field_value}” %{value_length}
         karakter hosszú, az AEAT rekordterve viszont a(z) „%{record_type}” rekord
         %{first_position}-%{last_position}. pozícióján csak %{field_length} karaktert

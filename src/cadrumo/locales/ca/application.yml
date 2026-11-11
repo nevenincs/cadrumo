@@ -2530,6 +2530,12 @@ application:
         com quan se suspèn una part de l''import a ingressar a càrrec de la devolució
         del teu cònjuge o renuncies a una devolució. Cadrumo encara no calcula el
         romanent per al model d''aquest exercici.'
+      export_text_unrepresentable_character: 'No s''ha escrit res: «%{field_value}»
+        conté el caràcter «%{character}» (%{code_point}), que el disseny de registre
+        de l''AEAT no permet escriure a les posicions %{first_position}-%{last_position}
+        del registre «%{record_type}». Treure''l o substituir-lo declararia una altra
+        dada. Corregeix aquesta dada on la vas registrar, tal com figura al cens de
+        l''AEAT, i torna a exportar.'
       export_text_value_overflow: 'No s''ha escrit res: «%{field_value}» té %{value_length}
         caràcters i el disseny de registre de l''AEAT només n''admet %{field_length}
         a les posicions %{first_position}-%{last_position} del registre «%{record_type}».

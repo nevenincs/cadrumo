@@ -278,6 +278,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.export.instalment_election.admitted",
         "modelo.export.instalment_election.refused",
     ),
+    # The character sits in a name the operator recorded on a profile fact, a
+    # ledger entry or an invoice; the layout field does not say which, so no
+    # single catalogued edit action reaches it.
+    _profile(
+        "modelo.export",
+        "modelo.export.text_value.writable",
+        "modelo.export.text_value.unrepresentable_character",
+    ),
     _profile(
         "modelo.export",
         "modelo.export.period.maps_to_filing_period",

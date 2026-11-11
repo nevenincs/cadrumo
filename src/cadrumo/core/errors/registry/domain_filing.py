@@ -488,6 +488,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportUnrepresentableCharacterError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_UNREPRESENTABLE_CHARACTER",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.errors.IvaValidationError",
         ErrorCode(
             code="ERROR_IVA_VALIDATION",

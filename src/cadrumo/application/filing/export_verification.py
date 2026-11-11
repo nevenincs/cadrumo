@@ -25,7 +25,11 @@ from ...domain.calculations.registry.export_parse import parse_export_payload
 from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
 from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from .export_xml_dictionary import (
@@ -403,8 +407,10 @@ def exported_casilla_provenance(
     )
 
 
-def _export_fields_by_identity(layout: ExportLayoutDefinition) -> dict[tuple[str, str], ExportFieldDefinition]:
-    return {(record.id, field.id): field for record in layout.records for field in record.fields}
+def _export_fields_by_identity(
+    layout: ExportLayoutDefinition,
+) -> dict[tuple[str, str], tuple[ExportRecordDefinition, ExportFieldDefinition]]:
+    return {(record.id, field.id): (record, field) for record in layout.records for field in record.fields}
 
 
 def mismatched_casilla_ids(
@@ -433,12 +439,12 @@ def mismatched_casilla_ids(
         checked.append(parsed.casilla_id)
         expected = values.get(parsed.casilla_id)
         try:
-            field = fields_by_identity[(parsed.record_id, parsed.field_id)]
+            record, field = fields_by_identity[(parsed.record_id, parsed.field_id)]
             if field.required_with is not None and values.get(field.required_with) is None:
                 # An occurrence block the draft leaves empty renders its blank fill.
                 expected_wire = render_empty_block_slot(field)
             else:
-                expected_wire = render_fixed_width_export_field(field, expected)
+                expected_wire = render_fixed_width_export_field(field, expected, record=record)
         except (KeyError, RegistryValidationError) as exc:
             raise FilingExportValidationError(
                 f"export field {parsed.field_id!r} could not render its expected verification value"

@@ -41,7 +41,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -220,6 +220,19 @@ class ModeloExportNoActiveBucketError(ModeloError):
 
 class ModeloExportEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Raised when a ledger-derived revision lacks exportable evidence."""
+
+
+class ModeloExportUnrepresentableCharacterError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Refused: a text value holds a character its official record design cannot write.
+
+    The file would only be writable by dropping or replacing the character,
+    which would declare something else, so nothing is written. The value is
+    put right where it was recorded.
+    """
+
+    # The value holding the character is the filer's own content (a
+    # counterparty's name); only the in-process envelope may show it.
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
 class ModeloExportUnsupportedError(ModeloExportError):

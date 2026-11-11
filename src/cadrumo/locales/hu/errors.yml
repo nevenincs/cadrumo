@@ -1310,6 +1310,10 @@ errors:
     refused_modelo_export_required_record_absent: A hivatalos terv legalább egy %{export_record_id}
       rekordot ír elő, de ebben a bevallásban egy sincs, így ebben a formátumban nincs
       mit kiírni, és semmi sem íródott ki.
+    refused_modelo_export_unrepresentable_character: 'Semmi sem íródott ki: a(z) %{field_id}
+      mező a(z) „%{character}” (%{code_point}) karaktert tartalmazza, amelyet az AEAT
+      rekordterve nem enged leírni. Elhagyása vagy cseréje más adatot vallana be.
+      Javítsd az adatot ott, ahol rögzítetted, és exportálj újra.'
     refused_modelo_export_value_overflow: 'Semmi sem íródott ki: egy érték nem fér
       el a(z) %{field_id} mezőben, amelynek az AEAT rekordterve %{field_length} pozíciót
       ad. A levágás más adatot vallana be. Ellenőrizd az adatot vagy az összeget,

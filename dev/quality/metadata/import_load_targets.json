@@ -5586,6 +5586,7 @@
         "dev.registry.pipeline.render_profile_model_base",
         "dev.registry.pipeline.render_profile_rules",
         "dev.registry.pipeline.render_profile_source_reader",
+        "dev.registry.pipeline.render_profile_statement",
         "dev.registry.pipeline.render_profile_validation",
         "dev.registry.pipeline.semantic_map",
         "dev.registry.pipeline.semantic_map_validation",

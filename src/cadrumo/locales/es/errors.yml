@@ -1387,6 +1387,10 @@ errors:
     refused_modelo_export_required_record_absent: El diseño oficial exige al menos
       un registro %{export_record_id}, pero esta declaración no tiene ninguno, así
       que no hay nada que escribir en este formato y no se ha escrito nada.
+    refused_modelo_export_unrepresentable_character: 'No se ha escrito nada: el campo
+      %{field_id} contiene el carácter «%{character}» (%{code_point}), que el diseño
+      de registro de la AEAT no permite escribir. Quitarlo o sustituirlo declararía
+      otro dato. Corrige ese dato donde lo registraste y vuelve a exportar.'
     refused_modelo_export_value_overflow: 'No se ha escrito nada: un valor no cabe
       en el campo %{field_id}, al que el diseño de registro de la AEAT da %{field_length}
       posiciones. Recortarlo declararía otro dato. Revisa ese dato o importe y vuelve
