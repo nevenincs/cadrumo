@@ -25,6 +25,7 @@ class ProfileAscendientePayload(OutputSchema):
 
     index: NonNegativeInt
     nif: str | None = None
+    apellidos_nombre: str | None = None
     birth_date: date
     death_date: date | None = None
     convivientes: NonNegativeInt | None = None
