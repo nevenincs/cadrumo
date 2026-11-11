@@ -47,7 +47,6 @@ from ..draft_construction import (
     string_inputs_for_ids,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from .export_support import filer_with_nothing_else
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -162,20 +161,34 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
         modelo="100",
         period=period,
         profile=_profile(),
-        inputs=filer_with_nothing_else(
-            provider,
-            {
-                "0003": Decimal("10000"),
-                _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
-                _M100_BIRTH_DATE_BINDING: "1975-06-15",
-                _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
-                "renta-profile-has-economic-activity": "1",
-                "renta-profile-estimacion-directa": "1",
-                "renta-profile-declaration-type": Decimal("1"),
-                "renta-modelo-130-pagos-fraccionados": Decimal("0"),
-                "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-            },
-        ),
+        inputs={
+            "0003": Decimal("10000"),
+            _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
+            _M100_BIRTH_DATE_BINDING: "1975-06-15",
+            _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
+            "renta-profile-has-economic-activity": "1",
+            "renta-profile-estimacion-directa": "1",
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": False,
+            "renta-profile-incremento-guarderia": Decimal("0"),
+            "renta-profile-marriage-full-year": False,
+            "renta-profile-deduccion-maternidad": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-profile-anualidades-sin-minimo-descendientes": False,
+            # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
+            # is zero.
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            # Parte autonómica: non-Madrid profile mirrors the estatal zero.
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+        },
         schema_provider=provider,
     )
 

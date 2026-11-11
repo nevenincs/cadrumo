@@ -212,7 +212,6 @@ _NON_LEDGER_INGRESO_INPUTS: dict[CasillaId, Decimal] = {
 
 _BASE_BINDINGS: dict[str, Decimal] = {
     "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),

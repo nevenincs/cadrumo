@@ -181,7 +181,12 @@ def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields()
     revision = published_snapshot("100", filing_year=_M100_YEAR, period="0A").revision
     facts = _fact_index(UserProfileFact(path="identity.tax_id", value="12345678Z"))
 
-    diagnostics = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids=frozenset())
+    diagnostics = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids=frozenset(),
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
 
     (advisory,) = (diagnostic for diagnostic in diagnostics if diagnostic.casilla_id == _DECLARANTE_NAME)
     assert (advisory.reason, advisory.source_kind) == ("unresolved_binding", "profile")
@@ -190,7 +195,12 @@ def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields()
         assert field in str(advisory.message)
         assert field in advisory.remedy
     assert advisory.legal_refs
-    supplied = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids={_DECLARANTE_NAME})
+    supplied = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids={_DECLARANTE_NAME},
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
     assert _DECLARANTE_NAME not in {diagnostic.casilla_id for diagnostic in supplied}
 
 

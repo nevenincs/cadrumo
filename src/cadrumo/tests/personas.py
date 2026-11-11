@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Final, Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
+from ..core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from .inventory import REPO_ROOT
 from .run_artifact import file_inputs_digest
 
@@ -252,6 +253,24 @@ class Election:
     question: str
     value: str
     year: YearToken
+
+
+@dataclass(frozen=True, slots=True)
+class OwnAccountDesignation:
+    """The modelo role an own account is designated for; an absent ``modelo`` covers every modelo."""
+
+    role: Literal["charge", "refund"]
+    modelo: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class OwnAccount:
+    """A bank account the persona holds, with the roles it is designated for."""
+
+    label: str
+    holding: Literal["titular", "cotitular"]
+    iban: str
+    designations: tuple[OwnAccountDesignation, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -536,7 +555,6 @@ class Expectations:
 
 type BelowFloorBlock = Literal[
     "filed_returns",
-    "filed_returns.iva_compensation_carried_in",
     "calculated_returns",
     "local_observations",
     "aeat_filings",
@@ -546,13 +564,7 @@ type BelowFloorBlock = Literal[
 ]
 
 _HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
-    {
-        "filed_returns",
-        "filed_returns.iva_compensation_carried_in",
-        "calculated_returns",
-        "local_observations",
-        "aeat_filings",
-    }
+    {"filed_returns", "calculated_returns", "local_observations", "aeat_filings"}
 )
 
 
@@ -606,6 +618,8 @@ class Persona:
     A family the persona lists as empty is a declaration that it has no member;
     a family it leaves out is unstated.
     """
+    own_accounts: tuple[OwnAccount, ...]
+    """The bank accounts the persona states as its own, each with the charge and refund roles it is designated for."""
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
@@ -821,6 +835,7 @@ _PERSONA_TABLES = frozenset(
         "activities",
         "elections",
         "household",
+        "own_accounts",
         "withholding_certificates",
         "rental_properties",
         "officers",
@@ -908,6 +923,39 @@ def _household(rows: object, where: str, leaves: frozenset[str], roles: _Roles) 
     return tuple(members)
 
 
+def _own_account_designation(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccountDesignation:
+    _keys(table, where, required=frozenset({"role"}), optional=frozenset({"modelo"}))
+    modelo = _optional_string(table, "modelo", where)
+    if modelo is not None and modelo not in modelos:
+        raise _fail(where, f"modelo {modelo!r} is not one of the persona's modelos {list(modelos)}")
+    return OwnAccountDesignation(
+        role=_choice(_string(table, "role", where), ("charge", "refund"), where), modelo=modelo
+    )
+
+
+def _own_account(table: _Table, where: str, modelos: tuple[str, ...]) -> OwnAccount:
+    _keys(table, where, required=frozenset({"label", "holding", "iban"}), optional=frozenset({"designations"}))
+    iban = normalise_iban(_string(table, "iban", where))
+    if not IBAN_SHAPE_RE.match(iban) or iban_mod_97(iban) != 1:
+        raise _fail(where, "iban is not a checksum-valid ISO 13616 account number")
+    return OwnAccount(
+        label=_string(table, "label", where),
+        holding=_choice(_string(table, "holding", where), ("titular", "cotitular"), where),
+        iban=iban,
+        designations=tuple(
+            _own_account_designation(item, f"{where} designations[{index}]", modelos)
+            for index, item in enumerate(_tables(table.get("designations"), where))
+        ),
+    )
+
+
+def _check_designations(accounts: tuple[OwnAccount, ...], where: str) -> None:
+    """Refuse two designations of one role and scope, which the register holds once."""
+    keys = [(item.role, item.modelo) for account in accounts for item in account.designations]
+    if len(keys) != len(set(keys)):
+        raise _fail(where, "two designations state one role and scope")
+
+
 def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertificate:
     _keys(
         table,
@@ -972,9 +1020,6 @@ def _officer(table: _Table, where: str, roles: _Roles) -> Officer:
 _FILED_PERIODS: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T", "0A")
 """The period codes a filed return may name, in the order their windows close within a year."""
 _IVA_COMPENSATION_MODELO: Final[str] = "303"
-_FIRST_QUARTER: Final[str] = "1T"
-_LAST_QUARTER: Final[str] = "4T"
-"""A first quarter carries compensation in from the last quarter of the year before."""
 
 
 def _filed_returns(table: _Table, where: str) -> FiledReturns:
@@ -1553,9 +1598,8 @@ def parse_persona(
     A year outside the envelope is refused. With ``omit_below_floor``, for a
     read under a horizon lowered below the registry's own, a return-history
     record or an expectation whose year falls below the floor is left out and
-    listed in :attr:`Persona.below_floor` instead, as is a Modelo 303
-    compensation carried in from a quarter below the floor; every other token
-    stays refused there.
+    listed in :attr:`Persona.below_floor` instead; every other token stays
+    refused there.
     """
     where = f"{persona_id}/persona.toml"
     if persona_document.get("format") != CATALOGUE_FORMAT:
@@ -1594,6 +1638,12 @@ def parse_persona(
                 year=YearToken.parse(table["year"], where=f"{here}.year"),
             )
         )
+    modelos = _strings(head, "modelos", where)
+    own_accounts = tuple(
+        _own_account(table, f"{where} own_accounts[{index}]", modelos)
+        for index, table in enumerate(_tables(persona_document.get("own_accounts"), where))
+    )
+    _check_designations(own_accounts, f"{where} own_accounts")
     ledger = _parse_ledger(ledger_text, where=f"{persona_id}/ledger.csv", roles=roles)
     persona = Persona(
         id=persona_id,
@@ -1601,7 +1651,7 @@ def parse_persona(
         summary=_string(head, "summary", where),
         taxpayer=roles(head["taxpayer"], where),
         fiscal_year=YearToken.parse(head["fiscal_year"], where=f"{where}.fiscal_year"),
-        modelos=_strings(head, "modelos", where),
+        modelos=modelos,
         as_of=_date(clock["as_of"], f"{where} [clock].as_of", biographical=False),
         profile=tuple(
             ProfileAnswer(question_id=key, value=_profile_value(key, value, f"{where} [profile].{key}", roles))
@@ -1613,6 +1663,7 @@ def parse_persona(
         descendants=_household(household.get("descendants"), f"{where} descendants", _DESCENDANT_LEAVES, roles),
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
         household_families=tuple(family for family in ("descendants", "ascendants") if family in household),
+        own_accounts=own_accounts,
         withholding_certificates=tuple(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
@@ -1706,27 +1757,10 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
                 inside.append(record)
         return tuple(inside)
 
-    def carried_in_kept(block: FiledReturns) -> FiledReturns:
-        """``block``, without the compensation it carries in from a quarter below the floor."""
-        if block.iva_compensation_carried_in is None or block.periods[0] != _FIRST_QUARTER:
-            return block
-        prior = YearToken(anchor=block.year.anchor, offset=block.year.offset - 1)
-        if not prior.precedes_floor(envelope):
-            return block
-        dropped.append(
-            BelowFloorRecord(
-                block="filed_returns.iva_compensation_carried_in",
-                modelo=block.modelo,
-                year=prior,
-                periods=(_LAST_QUARTER,),
-            )
-        )
-        return dataclasses.replace(block, iva_compensation_carried_in=None)
-
     expectations = persona.expectations
     return dataclasses.replace(
         persona,
-        filed_returns=tuple(carried_in_kept(block) for block in kept("filed_returns", persona.filed_returns)),
+        filed_returns=kept("filed_returns", persona.filed_returns),
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
@@ -1876,6 +1910,8 @@ __all__ = [
     "LedgerRow",
     "LocalObservation",
     "Officer",
+    "OwnAccount",
+    "OwnAccountDesignation",
     "Persona",
     "PersonaCatalogueError",
     "PersonaDate",

@@ -68,7 +68,6 @@ _FILING_YEAR = _authored_renta_filing_years()[0]
 _WORKED_EXAMPLE_BINDINGS: dict[str, Decimal] = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-profile-incremento-guarderia": Decimal("0"),
-    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),

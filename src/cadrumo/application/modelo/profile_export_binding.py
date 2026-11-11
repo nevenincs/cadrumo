@@ -44,7 +44,11 @@ from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.deadlines.errors import ProfileError
 from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
-from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.schema import (
+    ProfileDerivedSelectorDefinition,
+    ProfileSchemaDefinition,
+    derived_selector_for_path,
+)
 from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..filing.export_producer_m303 import M303ProfileLexicals, m303_profile_lexicals
@@ -56,7 +60,11 @@ from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentit
 from ..user_profile.projections import profile_fact_index, projection_for_taxpayer
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
-from .profile_derived_facts import inject_derived_cash_election_fact, inject_derived_estimation_modality_fact
+from .profile_derived_facts import (
+    inject_derived_activity_tipo_clave_fact,
+    inject_derived_cash_election_fact,
+    inject_derived_estimation_modality_fact,
+)
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
@@ -156,11 +164,13 @@ def profile_text_fact_index(
 ) -> dict[str, UserProfileFactValue]:
     """Return the fact index a bound text casilla reads, with its engine-derived claves.
 
-    Casilla 0168's modality clave is derived from the declared estimation regime, so
-    the text channel reads the derived value and never one stored at the path.
+    Casilla 0168's modality clave is derived from the declared estimation regime and
+    casilla 0166's tipo de actividad clave from the activities' censal tipo under it,
+    so the text channel reads the derived values and never ones stored at the paths.
     """
     fact_index = profile_fact_index(record, schema)
     inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    inject_derived_activity_tipo_clave_fact(fact_index)
     return fact_index
 
 
@@ -256,6 +266,7 @@ def profile_text_casilla_gap_diagnostics(
     fact_index: Mapping[str, UserProfileFactValue],
     *,
     supplied_casilla_ids: Collection[CasillaId],
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on each required profile-bound text casilla the profile leaves empty.
 
@@ -263,12 +274,15 @@ def profile_text_casilla_gap_diagnostics(
     which profile fact would fill it. A casilla the calculation holds a value
     for through any other channel -- the operator's own text, or a bound value
     -- is not a gap, because that value is what the calculation files for it.
+    A binding that reads an engine-derived path names the facts that path is
+    derived from, because those are what the operator can declare.
 
     Args:
         revision: The calculated :class:`ModeloRevision`.
         fact_index: The declarant's profile fact index.
         supplied_casilla_ids: Casillas the calculated revision holds an input
             value for, whichever channel supplied it.
+        derived_selectors: The profile schema's engine-derived paths.
 
     Returns:
         One ``unresolved_binding`` advisory per empty required casilla, carrying
@@ -282,7 +296,7 @@ def profile_text_casilla_gap_diagnostics(
             continue
         casilla = casillas[gap.casilla_id]
         binding = bindings[gap.binding_id]
-        fields = ", ".join(gap.profile_fields)
+        fields = ", ".join(_settable_profile_fields(gap.profile_fields, derived_selectors))
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="unresolved_binding",
@@ -302,6 +316,18 @@ def profile_text_casilla_gap_diagnostics(
             ),
         )
     return tuple(diagnostics)
+
+
+def _settable_profile_fields(
+    fields: tuple[str, ...],
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...],
+) -> tuple[str, ...]:
+    """Replace each engine-derived path by the profile facts it is derived from."""
+    settable: list[str] = []
+    for field in fields:
+        derived = derived_selector_for_path(field, derived_selectors)
+        settable.extend(derived.derived_from if derived is not None else (field,))
+    return tuple(dict.fromkeys(settable))
 
 
 def _profile_export_binding_applies(
@@ -747,5 +773,6 @@ def _resolve_profile_export_values(
     fact_index = profile_fact_index(record, resolved_schema)
     inject_derived_cash_election_fact(fact_index, record, filing_year, operation=operation)
     inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    inject_derived_activity_tipo_clave_fact(fact_index)
 
     return _profile_export_values_from_facts(bindings, fact_index)

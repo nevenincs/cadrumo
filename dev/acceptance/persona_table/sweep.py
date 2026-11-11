@@ -81,6 +81,7 @@ from cadrumo.tests.personas import (
 )
 
 from .counterparties import DESIGNS, counterparty_mismatches, is_compared
+from .export_text import check_export_text, violation_reason
 from .rows import (
     PlannedRow,
     Stage,
@@ -420,7 +421,17 @@ def _export(
     if not isinstance(exported, ModeloExportPublicResultV3):
         return Stage.REFUSED, "", f"export: published {type(exported).__name__}, not ModeloExportPublicResultV3"
     detail = f"{exported.export_format}, {exported.byte_size} B, {exported.completeness}, {exported.evidence_status}"
+    text_reason = _text_reason(plan, output)
+    if text_reason:
+        return Stage.REFUSED, detail, text_reason
     return Stage.PASSED, detail, ""
+
+
+def _text_reason(plan: PlannedRow, output: Path) -> str:
+    """The first character-rule violation of the written fichero against its design, or empty when clean."""
+    with bundled_indexed_authority().operation() as operation:
+        layout = _export_layout(operation, plan)
+        return violation_reason(check_export_text(layout, output.read_bytes()))
 
 
 def _file_locally(

@@ -87,7 +87,6 @@ _ORACLE_ONE_HIJO_TWELVE_MONTHS = Decimal("1200")
 _REQUIRED_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",

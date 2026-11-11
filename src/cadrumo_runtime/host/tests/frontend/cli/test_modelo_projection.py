@@ -593,7 +593,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
-            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             # Art. 81.1 follows the same derived-profile protocol: with no
             # declared descendants the resolved per-child fold is zero.
             "renta-profile-deduccion-maternidad": Decimal("0"),
@@ -648,7 +647,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         # zero retenciones, zero minor-children-in-unit) with the
         # profile-resolver projection of the seeded profile facts
         # (marriage-* derived from no marriage_date = zeros,
-        # descendientes-guarderia / guarderia / cotizaciones-ss-madre =
+        # descendientes-guarderia / guarderia =
         # explicit zero defaults). The oracle must supply the same keys so
         # the comparison exercises an identical engine input set.
         binding_values=oracle_binding_values,

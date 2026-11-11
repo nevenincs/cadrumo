@@ -73,7 +73,6 @@ _SHAPE_COLLECTOR_KINDS = frozenset(
     {
         _KIND,
         "guarderia_segundo_ciclo_month_undeclared",
-        "guarderia_cotizaciones_ceiling_unbounded",
     },
 )
 

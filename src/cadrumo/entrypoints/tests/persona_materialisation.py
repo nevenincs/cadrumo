@@ -3,7 +3,7 @@
 A persona (``dev/fixtures/personas``, read by :mod:`cadrumo.tests.personas`)
 reaches its profile the way an operator's input does: the registered wizard
 patch, field and repeatable-row mutations, the household replacements, the
-suffered-withholding record, the statement import, single classification,
+own bank accounts and their designations, the suffered-withholding record, the statement import, single classification,
 invoice recording and linking, evidence intake and attachment, and, in the
 history scope, the local observations of returns the taxpayer holds, the
 withholding capture of every rent payment on leased premises, the filed
@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from enum import StrEnum
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import cast
@@ -123,6 +123,10 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
 )
+from ...application.modelo.iva_wallet_override_operation import (
+    MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+    ModeloIvaWalletOverrideRequest,
+)
 from ...application.modelo.iva_wallet_seed_operation import (
     MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
     ModeloIvaWalletSeedRequest,
@@ -160,6 +164,7 @@ from ...application.modelo.work_filing_contracts import (
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.composition import OperationComposedServices, compose_operation_services
+from ...application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -202,7 +207,11 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
@@ -246,6 +255,7 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
+from .persona_own_accounts import replay_own_accounts
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -269,7 +279,7 @@ class ReplayScope(StrEnum):
     HOUSEHOLD = "household"
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
-    """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    """The household scope, the own bank accounts, the declared withholding, the statement import, invoices, evidence and inventory books."""
     RECORDS = "records"
     """The full scope, then the records the persona's returns read, without the returns.
 
@@ -511,9 +521,60 @@ def settle_operation(
             if terminal.terminal_condition is OperationTerminalCondition.REFUSED
             else terminal.failure_error_code
         )
-        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
+        detail = _served_words(world, terminal)
+        if detail is None and result is not None:
+            # A refusal a definition records as its own typed result carries its sentence in that result.
+            detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
+            detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
+        if detail is None:
+            detail = "no detail"
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+def _result_words(value: object) -> str | None:
+    """The ``refusal_words`` sentence a typed refusal result carries, on one line, wherever it nests."""
+    if isinstance(value, Mapping):
+        words = str(value.get("refusal_words") or "")
+        if words.strip():
+            return " ".join(words.split())
+        children: Sequence[object] = tuple(value.values())
+    elif isinstance(value, list | tuple):
+        children = value
+    else:
+        return None
+    found: str | None = None
+    for child in children:
+        found = _result_words(child)
+        if found is not None:
+            break
+    return found
+
+
+def _served_words(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> str | None:
+    """The sentence the application serves an operator for a refused or failed operation, on one line.
+
+    This reads the recorded error detail through the settled-result read, as the command line and the
+    workbench do, so the words are those a frontend shows. ``None`` when the operation recorded none.
+    """
+    if terminal.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+        return None
+    contract = terminal.definition_contract
+    resolved = asyncio.run(
+        world.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=terminal.operation_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=operation_error_detail_schema(),
+            ),
+            OperationErrorDetailV1,
+        )
+    )
+    if not isinstance(resolved, OperationResultProjectionSuccessV1):
+        return None
+    words = resolved.projection.refusal_words if isinstance(resolved.projection, OperationErrorDetailV1) else None
+    return None if words is None else " ".join(words.split())
 
 
 def run_operation[Projection: BaseModel](
@@ -1061,17 +1122,33 @@ def _m303_evidence(
 
 
 def _seed_compensation_carried_in(persona: Persona, world: PersonaWorld) -> None:
-    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one."""
+    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one.
+
+    A balance carried into the first supported quarter comes from a quarter below the registry's support floor,
+    which has no Modelo 303 edition to seed; it is stated as the taxpayer's override on the consuming period.
+    """
     for filed in persona.filed_returns:
         if filed.iva_compensation_carried_in is None:
             continue
+        year = filed.year.resolve(world.envelope)
+        amount = _decimal_text(filed.iva_compensation_carried_in.normalize())
+        preceding = preceding_quarter(year, filed.periods[0])
+        if preceding.filing_year >= world.envelope.floor:
+            settle_operation(
+                world,
+                MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletSeedRequest(profile_id=world.profile_id, period=preceding, amount=amount),
+            )
+            continue
         settle_operation(
             world,
-            MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
-            ModeloIvaWalletSeedRequest(
+            MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+            ModeloIvaWalletOverrideRequest(
                 profile_id=world.profile_id,
-                period=preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
-                amount=_decimal_text(filed.iva_compensation_carried_in.normalize()),
+                period=PublicPeriod(filing_year=year, code=filed.periods[0]),
+                amount=amount,
+                reason="Compensation balance carried in from before the first supported period, as the taxpayer states it",
+                evidence_locator=f"synthetic:persona:{persona.id}:iva-compensation-carried-in",
             ),
         )
 
@@ -1576,6 +1653,7 @@ def materialise_persona(
         if scope.includes(ReplayScope.HOUSEHOLD):
             _replay_household(persona, world)
         if scope.includes(ReplayScope.FULL):
+            replay_own_accounts(persona, world.profile_id, partial(settle_operation, world))
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)

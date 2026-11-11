@@ -478,6 +478,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportRequiredRecordAbsentError",
+        ErrorCode(
+            code="ERROR_FILING_EXPORT_REQUIRED_RECORD_ABSENT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva.errors.IvaValidationError",
         ErrorCode(
             code="ERROR_IVA_VALIDATION",
@@ -645,6 +655,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_VALUE_OVERFLOW",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_export_value_overflow",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.modelos.errors.ModeloExportRequiredRecordAbsentError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_REQUIRED_RECORD_ABSENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_required_record_absent",
             retryable=False,
             runbook_id=None,
         ),

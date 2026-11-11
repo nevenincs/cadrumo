@@ -152,7 +152,7 @@ def test_a_history_record_below_the_floor_is_refused_unless_a_lowered_horizon_om
 
 def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon() -> None:
     document = _with_filed_returns(
-        {"modelo": "303", "year": "horizon-1", "periods": ["2T"], "iva_compensation_carried_in": "0.00"},
+        {"modelo": "303", "year": "horizon-1", "periods": ["1T"], "iva_compensation_carried_in": "0.00"},
         {"modelo": "303", "year": "horizon-2", "periods": ["4T"], "iva_compensation_carried_in": "0.00"},
     )
     expectations = copy.deepcopy(_document("expectations.toml"))
@@ -165,7 +165,7 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
     persona = _parse(document, envelope=_LOWERED, expectations_document=expectations, omit_below_floor=True)
 
     assert unchanged.below_floor == ()
-    assert persona.filed_returns == unchanged.filed_returns[:1]
+    assert [(block.modelo, str(block.year)) for block in persona.filed_returns] == [("303", "horizon-1")]
     for kept, every in (
         (persona.expectations.values, unchanged.expectations.values),
         (persona.expectations.obligations, unchanged.expectations.obligations),
@@ -183,24 +183,6 @@ def test_records_and_expectations_of_supported_years_survive_a_lowered_horizon()
         "filed_returns",
         "local_observations",
     ]
-
-
-def test_a_compensation_carried_in_from_below_the_floor_is_left_out_of_its_first_quarter() -> None:
-    document = _with_filed_returns(
-        {"modelo": "303", "year": "horizon-1", "periods": ["1T", "2T"], "iva_compensation_carried_in": "0.00"}
-    )
-    raised = YearEnvelope(floor=_LOWERED.floor, horizon=_LOWERED.horizon + 1)
-
-    (lowered,) = _parse(document, envelope=_LOWERED, omit_below_floor=True).filed_returns
-    below = _parse(document, envelope=_LOWERED, omit_below_floor=True).below_floor
-    (kept,) = _parse(document, envelope=raised, omit_below_floor=True).filed_returns
-
-    assert lowered.periods == ("1T", "2T") and lowered.iva_compensation_carried_in is None
-    carried = [item for item in below if item.block == "filed_returns.iva_compensation_carried_in"]
-    assert [(item.modelo, str(item.year), item.periods, item.history) for item in carried] == [
-        ("303", "horizon-2", ("4T",), True)
-    ]
-    assert kept.iva_compensation_carried_in == Decimal("0.00")
 
 
 @pytest.mark.parametrize(
@@ -319,6 +301,43 @@ def test_leased_premises_with_a_valid_cadastral_reference_are_admitted() -> None
 def test_malformed_leased_premises_are_refused(changes: dict[str, object], message: str) -> None:
     with pytest.raises(PersonaCatalogueError, match=message):
         _parse(_with_leased_premises(**changes))
+
+
+def _with_own_accounts(*accounts: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["own_accounts"] = list(accounts)
+    return document
+
+
+def _own_account(**changes: object) -> dict[str, object]:
+    account: dict[str, object] = {
+        "label": "Cuenta",
+        "holding": "titular",
+        "iban": "ES5500000000000000000001",
+        "designations": [{"role": "refund", "modelo": "100"}],
+    }
+    account.update(changes)
+    return account
+
+
+def test_an_own_account_with_a_designation_is_admitted() -> None:
+    _parse(_with_own_accounts(_own_account(iban="ES55 0000 0000 0000 0000 0001")))
+
+
+@pytest.mark.parametrize(
+    ("accounts", "message"),
+    [
+        ((_own_account(iban="ES5600000000000000000001"),), "checksum-valid"),
+        ((_own_account(holding="apoderado"),), "is not one of"),
+        ((_own_account(designations=[{"role": "payout"}]),), "is not one of"),
+        ((_own_account(designations=[{"role": "refund", "modelo": "303"}]),), "persona's modelos"),
+        ((_own_account(designations=[{"role": "refund", "year": "horizon"}]),), "unknown fields"),
+        ((_own_account(), _own_account(iban="ES2800000000000000000002")), "one role and scope"),
+    ],
+)
+def test_a_malformed_own_account_is_refused(accounts: tuple[dict[str, object], ...], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_own_accounts(*accounts))
 
 
 def test_a_local_observation_needs_canonical_casilla_amounts() -> None:

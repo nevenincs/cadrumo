@@ -53,10 +53,6 @@ from .scenario import money
 _ACTOR: Final[str] = "persona-acceptance"
 _M100_ANNUAL_PERIOD: Final[str] = "0A"
 _NORMAL_MODALITY_BINDING: Final[str] = "renta-modelo-100-estimacion-directa-es-normal"
-# An edition whose maternity-deduction ceiling rests on the mother's social-security contributions asks for them
-# as an operator figure. These taxpayers have no such deduction, so where the selected edition declares the
-# figure the journey states the zero a filer without children declares, and the calculation must take it as given.
-_COTIZACIONES_BINDING: Final[str] = "renta-profile-cotizaciones-ss-madre"
 _ACTIVITY_CHAIN_CASILLAS: Final[tuple[str, ...]] = ("0171", "0180", "0218", "0220", "0224")
 _CREDIT_CASILLAS: Final[tuple[str, ...]] = ("0596", "0597", "0598", "0599", "0603", "0604", "0609")
 _ACTIVITY_INVENTORY: Final[str] = "actividad-servicios"
@@ -98,12 +94,6 @@ class JourneyEdition:
     """Each binding the selected annual Modelo 100 revision declares, with the kind of source it reads."""
     m100_prior_return_casillas: Mapping[str, str]
     """The ``previous_filing`` bindings that read last year's Modelo 100, each with the casilla it reads."""
-
-    def declared_bindings(self, *assignments: tuple[str, str]) -> tuple[str, ...]:
-        """Return ``--binding`` options for the assignments this edition declares, dropping the rest."""
-        return _binding_options(
-            (binding, value) for binding, value in assignments if binding in self.m100_binding_sources
-        )
 
     def manual_bindings(self, *assignments: tuple[str, str]) -> tuple[str, ...]:
         """Return ``--binding`` options only for assignments this edition takes as the operator's own input.
@@ -459,7 +449,6 @@ def run_employee(cli: InstalledCli, *, year: int, directory: Path, edition: Jour
         extra=(
             *_zero_relations(),
             *edition.manual_bindings((_NORMAL_MODALITY_BINDING, "1")),
-            *edition.declared_bindings((_COTIZACIONES_BINDING, "0")),
             *edition.prior_return_bindings(_PRIOR_RETURN_ROWS),
         ),
     )
@@ -584,7 +573,6 @@ def run_employee_autonomo(
         ),
         extra=(
             *edition.manual_bindings((_NORMAL_MODALITY_BINDING, "0")),
-            *edition.declared_bindings((_COTIZACIONES_BINDING, "0")),
             *edition.prior_return_bindings(_PRIOR_RETURN_ROWS),
         ),
     )

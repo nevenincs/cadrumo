@@ -95,10 +95,6 @@ _SPOUSE_TAX_ID = "00001005Q"
 _YEAR = newest_authored_edition("100")
 _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
-_YEAR_OPERATOR_FACTS: dict[int, tuple[UserProfileFact, ...]] = {
-    2024: (UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),),
-}
-"""The operator inputs a year's own design adds, which the 2024 nursery-cap term reads and no profile derives."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
 _SAVINGS_INCOME: CasillaId = "0429"
@@ -390,7 +386,7 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
             year: int = _YEAR,
         ) -> _Profile:
             _seed_taxpayer(
-                (*(_married_facts() if renta_facts is None else renta_facts), *_YEAR_OPERATOR_FACTS.get(year, ())),
+                _married_facts() if renta_facts is None else renta_facts,
                 economic_activity=economic_activity,
             )
             return _Profile(

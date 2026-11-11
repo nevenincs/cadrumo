@@ -58,6 +58,7 @@ from ...user_profile.projections import profile_fact_index
 from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
 from ..profile_derived_facts import (
+    inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
@@ -164,6 +165,10 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0168 renta-modelo-100-estimacion-directa-modalidad-clave (derived from the regime, for a filer
             # with economic-activity income)
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            # 0166 renta-modelo-100-estimacion-directa-actividad-tipo-clave (derived from the activity's
+            # censal tipo de actividad under the direct-estimation regime)
+            UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
+            UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
         ),
@@ -268,6 +273,8 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)
     # Casilla 0168's modality follows the same declared regime.
     inject_derived_estimation_modality_fact(fact_index, operation=authority_operation)
+    # Casilla 0166's tipo de actividad clave follows the regime and the activity's censal tipo.
+    inject_derived_activity_tipo_clave_fact(fact_index)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
     absent = {

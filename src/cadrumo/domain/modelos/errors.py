@@ -64,6 +64,14 @@ class ModeloExportValueOverflowError(ModeloExportError):
     process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"field_value"})
 
 
+class ModeloExportRequiredRecordAbsentError(ModeloExportError):
+    """Refused: the official design requires a record this return has nothing to state in.
+
+    Without at least one occurrence of that record the design cannot be
+    written, so nothing is written in this format.
+    """
+
+
 class ModeloExportProducerFactsRefusedError(ModeloExportError):
     """Refused: the facts the file states about the filer or the filing are incomplete.
 
@@ -119,6 +127,7 @@ __all__ = [
     "ModeloExportError",
     "ModeloExportManifestError",
     "ModeloExportProducerFactsRefusedError",
+    "ModeloExportRequiredRecordAbsentError",
     "ModeloExportValueOverflowError",
     "ModeloValidationError",
     "raise_catalogue_integrity_error",

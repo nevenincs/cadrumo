@@ -10,14 +10,17 @@ whose constraint could change what the box means. So the registry must derive th
 in every edition, not leave one edition asking the operator for a figure it already
 resolves.
 
-Two neighbouring box families deliberately do NOT follow that shape, and this module
-pins the distinction so a later sweep does not "fix" them:
+Boxes [03], [06] and [09], the cuotas of the régimen general rate rows, are derived
+in every edition as well. The 2022 design leaves their paired `Tipo %` box a free
+field and later designs pin it to a constant, but the design adds the three cuotas
+into [27] in every edition, and the rows' bases [01], [04] and [07] already come
+from the ledger at the row's rate in every edition. A cuota left to the operator
+beside a derived base breaks the printed total, so the row's cuota is the cuota
+carrier of the same population.
 
-- Boxes [03], [06] and [09] are the cuotas of the régimen general rate rows. Their
-  meaning comes from the paired `Tipo %` box, which the 2022 design leaves a free
-  three-integer-two-decimal field and every later design pins to a constant. Only
-  once the rate is pinned does row one mean super-reducido, row two reducido and row
-  three general, so only then may the registry project a rate-specific carrier.
+One neighbouring box deliberately does NOT follow that shape, and this module
+pins the distinction so a later sweep does not "fix" it:
+
 - Box [18] is the recargo de equivalencia cuota, whose paired `Tipo % [17]` is a free
   wire field in 2022, while LIVA art. 161.3 fixes the super-reduced population's
   recargo. That population remains ledger-bound. The field is an enumeration of
@@ -82,19 +85,22 @@ _ANNUAL_COORDINATES = [
 #: The boxes this module requires every edition to derive, and the carrier or
 #: binding each one restates.
 _DERIVED_BOXES = {
+    "03": ("computed", "modelo-303-dr303-03-projection"),
+    "06": ("computed", "modelo-303-dr303-06-projection"),
+    "09": ("computed", "modelo-303-dr303-09-projection"),
     "11": ("computed", "modelo-303-dr303-11-projection"),
     "13": ("computed", "modelo-303-dr303-13-projection"),
     "122": ("bound", "modelo-303-casilla-122-inversion-sujeto-pasivo-base"),
 }
-#: The rate-row cuotas whose meaning depends on the paired Tipo % constraint.
-_RATE_ROW_BOXES = ("03", "06", "09")
-_RATE_FIELD_BY_BOX = {"03": "02", "06": "05", "09": "08"}
-#: A free rate field states only its own width; a pinned one names a constant.
-_FREE_RATE_FIELD = "3 enteros y 2 decimales"
+#: The rate-row cuotas and the base box of the same row.
+_BASE_BOX_BY_RATE_ROW_CUOTA = {"03": "01", "06": "04", "09": "07"}
 #: The wording each derived box keeps in every design. Its printed POSITION moves as
 #: later designs insert rows before it, which is a layout fact, not a change of
 #: meaning; the width, the type and this wording are what must not move.
 _BOX_CONCEPT = {
+    "03": "Regimen General - IVA Devengado - Régimen general - Cuota",
+    "06": "Regimen General - IVA Devengado - Régimen general - Cuota",
+    "09": "Regimen General - IVA Devengado - Régimen general - Cuota",
     "11": "Adquisiciones intracomunitarias de bienes y servicios - Cuota",
     "13": "inversión del sujeto pasivo (excepto. adq. intracom) - Cuota",
     "120": "no sujetas por reglas de localización",
@@ -145,20 +151,18 @@ def test_every_design_prints_a_derived_box_with_one_unchanging_shape(box: str) -
     assert len(shapes) == 1, f"[{box}] changes width or type across designs: {sorted(shapes)}"
 
 
-def test_the_rate_row_cuotas_are_derived_only_where_the_design_pins_their_rate() -> None:
-    """The kept divergence: a free Tipo % field cannot carry a rate-specific carrier."""
+def test_the_rate_row_cuotas_are_derived_wherever_their_row_base_is() -> None:
+    """The cuota of a rate row is derived in every edition that derives the row's base."""
     for revision_id in _REVISIONS:
+        total_row = _design_row(revision_id, "27")
+        for box in _BASE_BOX_BY_RATE_ROW_CUOTA:
+            assert f"[{box}]" in total_row, f"{revision_id}: [27] no longer adds [{box}]"
         revision = _revision(revision_id)
-        for box in _RATE_ROW_BOXES:
-            rate_row = _design_row(revision_id, _RATE_FIELD_BY_BOX[box])
-            pinned = "Constante" in rate_row
-            assert (_FREE_RATE_FIELD in rate_row) != pinned, (
-                f"{revision_id}: [{_RATE_FIELD_BY_BOX[box]}] is neither a free field nor a constant"
-            )
-            kind, _source = _derived_state(revision, box)
-            assert (kind == "computed") == pinned, (
-                f"{revision_id}: [{box}] is {kind} while its rate field "
-                f"{'pins a constant' if pinned else 'is a free field'}"
+        for box, base_box in _BASE_BOX_BY_RATE_ROW_CUOTA.items():
+            base_kind, _source = _derived_state(revision, base_box)
+            assert base_kind == "computed", f"{revision_id}: [{base_box}] is {base_kind}"
+            assert _derived_state(revision, box) == _DERIVED_BOXES[box], (
+                f"{revision_id}: [{box}] is {_derived_state(revision, box)} while [{base_box}] is derived"
             )
 
 

@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:80e3b9bfd4a457888f005b5434555c7b2fd68d7fe9a0ac02d5afb50e275a9557'
+body_hash: 'sha256:681c1163b01919f38ed8213f2cfc05048ec51f69fa81e0fc58ab2ec7ee89b7ad'
 ---
 
 # `persona-table` plan
@@ -54,6 +54,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S15` - Make an export after a granted verification always end in a written file or a typed refusal (lane LIFECYCLE, cause L1); `src/cadrumo/application/modelo/export.py`.
 - [ ] `P01.S16` - Add a gate that fails when a modelo operation refusal or error code has no door or no served words, then fix what it finds (lane LIFECYCLE); `src/cadrumo/application/modelo, src/cadrumo/core/errors`.
 - [ ] `P01.S17` - Run the full Python gate set green on a head where the persona table is green (lane INTEGRATOR); `justfile`.
+- [ ] `P01.S30` - Write fixed-width export text as each official design requires (upper case, no accents, ISO-8859-1 where the design says so) from one shared rule, and make the persona table's export stage assert it (lanes LIFECYCLE and ACCEPTANCE); `src/cadrumo/application/filing, dev/acceptance/persona_table`.
 
 ### Phase `P02` - Deferred backend scope
 

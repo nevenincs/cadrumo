@@ -95,3 +95,19 @@ class FilingExportValueOverflowError(FilingExportValidationError):
             data_type=self.data_type,
             record_type=record_type,
         )
+
+
+class FilingExportRequiredRecordAbsentError(FilingExportValidationError):
+    """Raised when the layout requires a record this return has no occurrence of.
+
+    The official design cannot be written without that record, so a return
+    with nothing to state in it has nothing to file in this format.
+    """
+
+    def __init__(self, *, export_record_id: str) -> None:
+        """Record which required record has no occurrence."""
+        self.export_record_id: str = export_record_id
+        super().__init__(
+            f"required export record {export_record_id!r} has no applicable occurrence",
+            context={"export_record_id": export_record_id},
+        )

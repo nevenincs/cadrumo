@@ -117,23 +117,12 @@ _MESH_OWNED_SOURCES = frozenset(
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
 
-#: Profile-sourced bindings this profile leaves unresolved and that the M100
-#: formula chain nonetheless requires a value for. They are unrelated to the
-#: Art. 58 aggregate under test and are supplied as caller zeros -- exactly as
-#: the sibling engine test does -- so the calculation reaches casilla 0513. The
-#: two mínimo bindings are deliberately NOT in this set: caller-supplying either
-#: would decide the very question the probe asks.
-_UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = ("renta-profile-cotizaciones-ss-madre",)
-
-
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
-    values: dict[BindingId, Decimal] = {
+    return {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
-    values.update(dict.fromkeys(_UNRELATED_PROFILE_BINDINGS, Decimal("0")))
-    return values
 
 
 @pytest.fixture

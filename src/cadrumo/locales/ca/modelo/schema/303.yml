@@ -811,6 +811,8 @@ modelo:
             heading: Ingrés, devolució i compte bancari
           pais-banco:
             heading: Codi del país
+          prorrata-especial-no:
+            heading: No / no es pregunta en aquest període
           reagp:
             heading: Compensacions en règim especial d’agricultura, ramaderia i pesca
           rectificacion-devolucion:

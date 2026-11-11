@@ -12,14 +12,9 @@ from ..schema import RegistrySnapshot
 from .authored_editions import authored_revisions_where, manual_editions_printing
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 
-# The Art. 81.2 guardería profile bindings the fixture supplies beside the
+# The Art. 81.2 guardería profile binding the fixture supplies beside the
 # maternidad binding.
-FIXTURE_GUARDERIA_BINDINGS = frozenset(
-    {
-        "renta-profile-incremento-guarderia",
-        "renta-profile-cotizaciones-ss-madre",
-    }
-)
+FIXTURE_GUARDERIA_BINDINGS = frozenset({"renta-profile-incremento-guarderia"})
 
 # The Modelo 100 edition these cuotas are computed for: the newest one whose AEAT Renta
 # manual prints the Cataluna scale the expected cuotas use and whose declared bindings
@@ -229,7 +224,6 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in scenarios
         # without childcare deduction (mínimo del contribuyente chain only).
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
