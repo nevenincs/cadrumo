@@ -258,13 +258,6 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("modelo.work.file", ("app", "modelo", "work", "file"), "WorkFileResult", profile_bound_write=True),
     ActionTarget("modelo.work.list", ("app", "modelo", "work", "list"), "WorkListResult"),
-    ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
-    ActionTarget("modelo.work.status", ("app", "modelo", "work", "status"), "WorkStatusResult"),
-    ActionTarget(
-        "modelo.work.verify", ("app", "modelo", "work", "verify"), "WorkVerifyResult", profile_bound_write=True
-    ),
-    ActionTarget(
-        "overview.explain", ("app", "overview", "explain"), "OverviewExplainResult", required_inputs=("modelo",)
     ActionTarget(
         "modelo.work.override",
         ("app", "modelo", "work", "override"),
@@ -272,6 +265,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         required_inputs=("work_unit_id", "binding_id", "value"),
         profile_bound_write=True,
     ),
+    ActionTarget("modelo.work.revisions", ("app", "modelo", "work", "revisions"), "WorkRevisionsResult"),
+    ActionTarget("modelo.work.status", ("app", "modelo", "work", "status"), "WorkStatusResult"),
+    ActionTarget(
+        "modelo.work.verify", ("app", "modelo", "work", "verify"), "WorkVerifyResult", profile_bound_write=True
+    ),
+    ActionTarget(
+        "overview.explain", ("app", "overview", "explain"), "OverviewExplainResult", required_inputs=("modelo",)
     ),
     ActionTarget("overview.status", ("app", "overview", "status"), "OverviewStatusResult"),
 )
