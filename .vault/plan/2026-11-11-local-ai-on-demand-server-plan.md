@@ -10,7 +10,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:66d4e4673b9eebddc90a08d7812e4fd2b298c7453573697fc6d59d426c7d202c'
+body_hash: 'sha256:39c76757bbab61a078a15152cbbc87efffff56f1cb47a1c2057f3a638317f926'
 ---
 
 <!-- LINK RULES:
@@ -128,7 +128,7 @@ The demand is a lease. Each demand keeps the server for 5 minutes, and the agent
 - [ ] `S03` - Add the closed demand_local_ai manager request and its outcomes, admit it only for the digest-verified agent-service image whose parent is the admitted desktop, and serve it from both the installed and the desktop-hosted manager; `native/manager/src/ipc.rs`.
 - [ ] `S04` - Serve dormant as its own local AI state in the quick check instead of program_not_running, with backend words in every locale; `native/application/src/provisioning/local_ai/models.rs`.
 - [ ] `S05` - Make setup verify the program and models from files without leaving a server running, serve the local engine as ready only when a model file it can run exists (build 15 showed 'Listo' on the lane and the setup dialog with zero models), and re-scope program_not_running and server_wait_expired to a failed demanded start; `native/application/src/provisioning/engine.rs`.
-- [ ] `S06` - Add the agent service's manager-pipe client, demand the server before a local-lane run and renew it while the run lasts, and refuse with a served reason when the manager cannot be reached; make a local engine's provider lane read as its served local AI setup row, so no runnable model file reads not set up and a dormant server reads ready (COORD 2026-11-11); `src/cadrumo_agent_service/host`.
+- [x] `S06` - Add the agent service's manager-pipe client, demand the server before a local-lane run and renew it while the run lasts, and refuse with a served reason when the manager cannot be reached; make a local engine's provider lane read as its served local AI setup row, so no runnable model file reads not set up and a dormant server reads ready (COORD 2026-11-11); `src/cadrumo_agent_service/host`.
 - [ ] `S07` - Update the desktop setup fixture and scenarios for the dormant state and hand the native build and Playwright to DESKTOP; `native/desktop/frontend/src/dev/setupFixture.ts`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
