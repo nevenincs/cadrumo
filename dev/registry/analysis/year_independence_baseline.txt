@@ -1,0 +1,189 @@
+# Year-independence baseline: findings that exist today and may only shrink.
+# Regenerate with: python -m dev.registry.analysis.year_independence_gate --write-baseline
+casilla-member|100|0150|formula|present=2024|absent=2023
+casilla-member|100|0150|formula|present=2024|absent=2025
+casilla-member|100|0611|formula|present=2023|absent=2022
+casilla-member|100|0613|formula|present=2023|absent=2022
+casilla-member|100|1039|formula|present=2025|absent=2024
+casilla-member|200|00670|binding|present=2024|absent=2023
+casilla-member|200|01494|binding|present=2024|absent=2023
+casilla-member|200|01495|binding|present=2024|absent=2023
+casilla-member|200|DP200014:00550|formula|present=2024|absent=2023
+casilla-member|200|DP200014:00552|formula|present=2024|absent=2023
+casilla-member|200|DP200014:00558|formula|present=2024|absent=2023
+casilla-member|200|DP200014:00562|formula|present=2024|absent=2023
+casilla-member|200|DP200014:00582|formula|present=2024|absent=2023
+casilla-member|200|DP200014B:00592|formula|present=2024|absent=2023
+casilla-member|200|DP200014B:00599|formula|present=2024|absent=2023
+casilla-member|200|DP200014B:00611|formula|present=2024|absent=2023
+casilla-member|202|01|binding|present=2025-y-siguientes|absent=2023-2024
+casilla-member|222|23|formula|present=2024|absent=2025-y-siguientes
+casilla-member|296|02|binding|present=2024-2025|absent=2023
+casilla-member|296|03|binding|present=2024-2025|absent=2023
+casilla-member|303|18|binding|present=2023|absent=2025
+edition-only|036|application_links|modelo-036-workflow|2025-02-03-y-siguientes|uncited appearing boundary
+edition-only|036|bindings|modelo-036-profile-censo-status|2025-02-03-y-siguientes|uncited appearing boundary
+edition-only|036|casillas|decl.event-kind|2025-02-03-y-siguientes|uncited appearing boundary
+edition-only|100|application_links|modelo-100-portal|2025|uncited appearing boundary
+edition-only|100|bindings|renta-inventory-activity-acquisition-cost-0181|2025|uncited appearing boundary
+edition-only|100|bindings|renta-inventory-activity-closing-decrease-0182|2025|uncited appearing boundary
+edition-only|100|bindings|renta-inventory-activity-closing-increase-0177|2025|uncited appearing boundary
+edition-only|100|bindings|renta-maritime-annual-salary|2025|uncited appearing boundary
+edition-only|100|bindings|renta-maritime-gross-navigation-income|2025|uncited appearing boundary
+edition-only|100|bindings|renta-maritime-path-rebeca|2025|uncited appearing boundary
+edition-only|100|bindings|renta-maritime-qualifying-days|2025|uncited appearing boundary
+edition-only|100|bindings|renta-profile-madrid-nacimiento-adopcion-eligible-count|2025|uncited appearing boundary
+edition-only|100|bindings|renta-profile-unidad-familiar-otros-miembros-base|2025|uncited appearing boundary
+edition-only|100|bindings|renta-rental-reduccion-art-23-2-tier|2024|uncited disappearing boundary
+edition-only|100|casillas|2211|2025|uncited appearing boundary
+edition-only|100|casillas|2232|2025|uncited appearing boundary
+edition-only|100|casillas|trabajo-mar-renta-exenta|2025|uncited appearing boundary
+edition-only|100|constructs|renta-mini-model-deduccion-madrid-nacimiento-adopcion|2025|uncited appearing boundary
+edition-only|100|constructs|renta-observation-parsing|2025|uncited appearing boundary
+edition-only|100|constructs|renta-real-estate-capital|2025|uncited appearing boundary
+edition-only|100|constructs|renta-source-foundation|2025|uncited appearing boundary
+edition-only|100|formulas|renta-atencion-percibida-importe-total|2025|uncited appearing boundary
+edition-only|100|formulas|renta-capital-inmobiliario-reduccion-arrendamiento-vivienda-art-23-2|2024|uncited disappearing boundary
+edition-only|100|formulas|renta-criptomonedas-ganancia-reducida-no-exenta|2025|uncited appearing boundary
+edition-only|100|formulas|renta-deduccion-madrid-nacimiento-adopcion|2025|uncited appearing boundary
+edition-only|100|formulas|renta-maritime-exempt-income|2025|uncited appearing boundary
+edition-only|100|parameters|lirpf-art-7p-exemption-cap|2025|uncited appearing boundary
+edition-only|100|parameters|rebeca-maritime-exemption-fraction|2025|uncited appearing boundary
+edition-only|100|parameters|renta-atribucion-rentas-rate-pass-through|2025|uncited appearing boundary
+edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-cuantia|2025|uncited appearing boundary
+edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta|2025|uncited appearing boundary
+edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual|2025|uncited appearing boundary
+edition-only|100|parameters|renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar|2025|uncited appearing boundary
+edition-only|100|parameters|renta-ric-mantenimiento-plazo-anos|2025|uncited appearing boundary
+edition-only|100|parameters|renta-ric-materializacion-plazo-anos|2025|uncited appearing boundary
+edition-only|100|parameters|renta-ric-reduccion-rate-maximo|2025|uncited appearing boundary
+edition-only|100|parameters|renta-zec-tipo-gravamen-reducido|2025|uncited appearing boundary
+edition-only|123|casillas|09|2024-y-siguientes|uncited appearing boundary
+edition-only|123|casillas|12|2024-y-siguientes|uncited appearing boundary
+edition-only|123|casillas|14|2024-y-siguientes|uncited appearing boundary
+edition-only|123|verification_predicates|implies-nonzero:base-total-implica-retenciones-total|2024-y-siguientes|uncited appearing boundary
+edition-only|193|bindings|modelo-193-perceptor-row-isin|2025-y-siguientes|uncited appearing boundary
+edition-only|202|bindings|modelo-202-cuota-base-ejercicio-anterior|2025-y-siguientes|uncited appearing boundary
+edition-only|202|formulas|modelo-202-importe-pago-fraccionado-b2-tipo-3|2025-y-siguientes|uncited appearing boundary
+edition-only|202|formulas|modelo-202-importe-pago-fraccionado-b2-tipo-4|2025-y-siguientes|uncited appearing boundary
+edition-only|202|verification_predicates|implies-nonzero:b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3|2025-y-siguientes|uncited appearing boundary
+edition-only|202|verification_predicates|implies-nonzero:b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4|2025-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-approval|2024-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-extractor|2024-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-portal|2024-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-reconciliation|2024-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-review|2024-y-siguientes|uncited appearing boundary
+edition-only|216|application_links|modelo-216-workflow|2024-y-siguientes|uncited appearing boundary
+edition-only|216|casillas|13|2024-y-siguientes|uncited appearing boundary
+edition-only|216|casillas|21|2024-y-siguientes|uncited appearing boundary
+edition-only|216|casillas|7|2020-2023|uncited disappearing boundary
+edition-only|216|constructs|modelo-216-calculation-construct|2024-y-siguientes|uncited appearing boundary
+edition-only|216|constructs|modelo-216-liquidacion|2020-2023|uncited disappearing boundary
+edition-only|216|formulas|modelo-216-base-no-sometidas-total|2024-y-siguientes|uncited appearing boundary
+edition-only|216|formulas|modelo-216-base-total|2024-y-siguientes|uncited appearing boundary
+edition-only|216|formulas|modelo-216-numero-rentas-no-sometidas-total|2024-y-siguientes|uncited appearing boundary
+edition-only|216|formulas|modelo-216-numero-rentas-sometidas-total|2024-y-siguientes|uncited appearing boundary
+edition-only|216|formulas|modelo-216-retenciones-total|2024-y-siguientes|uncited appearing boundary
+edition-only|216|verification_predicates|implies-nonzero:retenciones-declaradas-cuando-base-sometida-positiva|2024-y-siguientes|uncited appearing boundary
+edition-only|222|formulas|modelo-222-importe-pago-fraccionado-b2-tipo-3|2025-y-siguientes|uncited appearing boundary
+edition-only|222|formulas|modelo-222-importe-pago-fraccionado-b2-tipo-4|2025-y-siguientes|uncited appearing boundary
+edition-only|303|constructs|modelo-303-printed-disclosure-arithmetic-2022|2022|uncited disappearing boundary
+edition-only|303|constructs|modelo-303-printed-disclosure-arithmetic-2023|2023|uncited appearing and disappearing boundary
+edition-only|303|constructs|modelo-303-printed-disclosure-arithmetic-2025|2025|uncited appearing and disappearing boundary
+edition-only|303|constructs|modelo-303-printed-disclosure-arithmetic-2026-y-siguientes|2026-y-siguientes|uncited appearing boundary
+edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2008-2022|2008-2022|uncited disappearing boundary
+edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2023|2023|uncited appearing and disappearing boundary
+edition-only|322|constructs|modelo-322-printed-disclosure-arithmetic-2024-2025|2024-2025|uncited appearing and disappearing boundary
+edition-only|345|application_links|modelo-345-export|2025|uncited appearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-el-termin|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reduccion-aplicable-por-actividad-realizada-en-municip|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-el-termin|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reduccion-aplicable-por-actividad-realizada-en-municip|2024|uncited appearing and disappearing boundary
+edition-only|390|bindings|modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total|2024|uncited appearing and disappearing boundary
+edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2022|2022|uncited disappearing boundary
+edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2023|2023|uncited appearing and disappearing boundary
+edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2024|2024|uncited appearing and disappearing boundary
+edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2025|2025|uncited appearing and disappearing boundary
+edition-only|390|constructs|modelo-390-printed-disclosure-arithmetic-2026|2026|uncited appearing boundary
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='AR',tipo_renta='pension'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='BE',tipo_renta='canones'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='DE',tipo_renta='canones'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='DE',tipo_renta='dividend'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='DE',tipo_renta='interest'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='FR',tipo_renta='canones'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='FR',tipo_renta='dividend'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='FR',tipo_renta='interest'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='GB',tipo_renta='general'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='MA',tipo_renta='interest'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='NL',tipo_renta='canones'
+fact-year-gap|irnr.convenio.override|devengo_date|country_code='PT',tipo_renta='canones'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='at',rate_role='coexisting-13'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='be',rate_role='coexisting-6'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='cy',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='ee',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='ee',rate_role='coexisting-9'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='es',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='es',rate_role='coexisting-7.5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='fi',rate_role='coexisting-10'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='fr',rate_role='coexisting-5.5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='gr',rate_role='coexisting-17'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='gr',rate_role='coexisting-6'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='hr',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='hu',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='ie',rate_role='coexisting-9'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='it',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='lt',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='lv',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='mt',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='pl',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='pt',rate_role='coexisting-6'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='ro',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='se',rate_role='coexisting-6'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='si',rate_role='coexisting-5'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='reduced',member_state='sk',rate_role='coexisting-19'
+fact-year-gap|iva-rate-schedule|devengo_date|kind='super_reduced',member_state='es',rate_role='coexisting-2'
+fact-year-gap|iva-recargo-by-applied-rate|devengo_date|applied_rate=Decimal('0.00')
+fact-year-gap|iva-recargo-by-applied-rate|devengo_date|applied_rate=Decimal('0.02')
+fact-year-gap|iva-recargo-by-applied-rate|devengo_date|applied_rate=Decimal('0.05')
+fact-year-gap|iva-recargo-by-applied-rate|devengo_date|applied_rate=Decimal('0.075')
+fact-year-gap|liva-orden-lorca-reduction|filing_period|
+fact-year-gap|madrid-birth-adoption-following-periods|filing_period|
+fact-year-gap|madrid-nacimiento-adopcion-full-proration-share|filing_period|
+fact-year-gap|modelo-303-rectificativa-record-design-mapping|filing_period|
+fact-year-gap|rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada|filing_period|
+fact-year-gap|renta-rental-reduccion-art-23-2-tier-catalogue|filing_period|
+fact-year-gap|renta.maternity.post-enrollment-increment|filing_period|modelo='100',parameter_id='renta-maternidad-alta-posterior-incremento'
+period-overlap|036|alta|2023
+period-overlap|036|alta|2025
+period-overlap|036|baja|2023
+period-overlap|036|baja|2025
+period-overlap|036|modificacion|2023
+period-overlap|036|modificacion|2025
+year-in-profile-key|100|2022|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2022
+year-in-profile-key|100|2022|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2022
+year-in-profile-key|100|2022|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2022
+year-in-profile-key|100|2023|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2023
+year-in-profile-key|100|2023|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2023
+year-in-profile-key|100|2023|renta-profile-incremento-guarderia|renta_family.incremento_guarderia_2023
+year-in-profile-key|100|2023|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2023
+year-in-profile-key|100|2023|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2023
+year-in-profile-key|100|2024|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2024
+year-in-profile-key|100|2024|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2024
+year-in-profile-key|100|2024|renta-profile-incremento-guarderia|renta_family.incremento_guarderia_2024
+year-in-profile-key|100|2024|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2024
+year-in-profile-key|100|2024|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2024
+year-in-profile-key|100|2024|renta-rental-reduccion-art-23-2-tier|renta_rental.reduccion_art_23_2_tier_2024
+year-in-profile-key|100|2025|renta-profile-anualidades-sin-minimo-descendientes|renta_family.anualidades_sin_minimo_descendientes_2025
+year-in-profile-key|100|2025|renta-profile-deduccion-maternidad|renta_family.deduccion_maternidad_2025
+year-in-profile-key|100|2025|renta-profile-incremento-guarderia|renta_family.incremento_guarderia_2025
+year-in-profile-key|100|2025|renta-profile-minimo-descendientes-autonomico|renta_family.descendientes_minimos_aggregate_autonomico_2025
+year-in-profile-key|100|2025|renta-profile-minimo-descendientes-estatal|renta_family.descendientes_minimos_aggregate_2025
+year-valued-fact|inventory-anexo-d-applicability|inventory-anexo-d-applicability:2025-01-01|2025
+year-valued-fact|lirpf-objective-estimation-settled-year-max|lirpf-objective-estimation-settled-year-max:2016-01-01|2026
+year-valued-fact|madrid-nacimiento-adopcion-applicability|madrid-nacimiento-adopcion-applicability:2025-01-01|2025
