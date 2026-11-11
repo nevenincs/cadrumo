@@ -15,12 +15,12 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...domain.modelos.errors import ModeloError
+from .edit_contract import ModeloEditMutationFamily
 from .edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditBaselineV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
-    ModeloEditMutationFamily,
     ModeloEditSubmissionV1,
 )
 from .work_form_models import ModeloFormCarryAttestation
