@@ -26,6 +26,8 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
+from pydantic import BaseModel
+
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.agenda import OverviewAgenda
 from ...application.overview.backlog import OverviewBacklog
@@ -188,6 +190,28 @@ def _calendar_warning_action_payload(warning: CalendarWarning) -> dict[str, obje
         "action": {"action": {"action_id": action_id}, **action},
         "argument_bindings": [binding.model_dump(mode="json") for binding in resolved.argument_bindings],
     }
+
+
+def _warning_payloads(warnings: Sequence[CalendarWarning]) -> list[dict[str, object]]:
+    """Project warnings with their resolved fix action, as every overview payload carries them."""
+    return [
+        {**warning.model_dump(mode="json"), "fix_action": _calendar_warning_action_payload(warning)}
+        for warning in warnings
+    ]
+
+
+def _typed_with_warning_actions[ResultT: BaseModel](
+    result_type: type[ResultT], source: OverviewAgenda | OverviewBacklog
+) -> ResultT:
+    """Project an agenda or backlog into ``result_type`` keeping each warning's resolved door.
+
+    ``CalendarWarning.fix_action`` is excluded from plain serialization, so a
+    bare round trip would hand JSON consumers warnings with no action; the
+    calendar payload names the action, and these projections must too.
+    """
+    document = json.loads(source.model_dump_json())
+    document["warnings"] = _warning_payloads(source.warnings)
+    return result_type.model_validate_json(json.dumps(document))
 
 
 def _calendar_entry_detail_action(entry: OverviewCalendarEntry) -> ResolvedNoticeAction:
@@ -548,13 +572,7 @@ def overview_calendar_output(
                 "range": cal.range.model_dump(mode="json"),
                 "entries": entries,
                 "events": events,
-                "warnings": [
-                    {
-                        **warning.model_dump(mode="json"),
-                        "fix_action": _calendar_warning_action_payload(warning),
-                    }
-                    for warning in cal.warnings
-                ],
+                "warnings": _warning_payloads(cal.warnings),
                 "generated_at": cal.generated_at.isoformat(),
                 "as_of": cal.evaluated_on.isoformat(),
                 "completeness": cal.completeness.model_dump(mode="json"),
@@ -634,7 +652,7 @@ def _next_due_entry(cal: OverviewCalendar) -> OverviewCalendarEntry | None:
 
 def overview_agenda_output(agenda: OverviewAgenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:
     """Project an overview agenda into payload, text lines, and notices."""
-    typed_agenda = strict_round_trip(OverviewAgendaResult, agenda)
+    typed_agenda = _typed_with_warning_actions(OverviewAgendaResult, agenda)
     lines: list[str] = [
         f"as_of\t{agenda.as_of.isoformat()}",
         f"horizon_days\t{agenda.horizon_days}",
@@ -670,7 +688,7 @@ def overview_backlog_output(
     work_units_notice: Notice | None,
 ) -> tuple[OverviewBacklogResult, list[str], list[Notice]]:
     """Project an overview backlog into payload, text lines, and notices."""
-    typed_backlog = strict_round_trip(OverviewBacklogResult, backlog)
+    typed_backlog = _typed_with_warning_actions(OverviewBacklogResult, backlog)
     lines: list[str] = [
         f"from\t{backlog.range.from_date.isoformat()}",
         f"to\t{backlog.range.to_date.isoformat()}",
