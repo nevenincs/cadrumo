@@ -123,8 +123,22 @@ def _persona(persona_id: str) -> Persona:
     return read_persona(persona_id, envelope=_envelope())
 
 
+@cache
+def _persona_at(persona_id: str, horizon: int) -> Persona:
+    """The persona as the replay under ``horizon`` reads it: records below the floor left out and listed.
+
+    A persona that cannot be read at that horizon is not replayed there (the replay records it as not run), so
+    its rows are planned from the persona as read at the registry's own horizon.
+    """
+    envelope = dataclasses.replace(_envelope(), horizon=horizon)
+    try:
+        return read_persona(persona_id, envelope=envelope, omit_below_floor=horizon != _envelope().horizon)
+    except PersonaCatalogueError:
+        return _persona(persona_id)
+
+
 def _plan(persona_id: str, horizon: int) -> list[PlannedRow]:
-    persona, envelope = _persona(persona_id), _envelope()
+    persona, envelope = _persona_at(persona_id, horizon), _envelope()
     today = persona.as_of.resolve(dataclasses.replace(envelope, horizon=horizon))
     rows = ended(planned_rows(persona, horizon, envelope), today)
     return select(rows, modelos=_listed(MODELOS_ENV), years=tuple(int(year) for year in _listed(YEARS_ENV)))
