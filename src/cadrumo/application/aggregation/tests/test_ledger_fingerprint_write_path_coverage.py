@@ -50,7 +50,13 @@ _IVA_AGGREGATION_MODULES: tuple[Path, ...] = (
 
 #: Writable, IVA-read fields deliberately left out of the fingerprint, each with
 #: the reason. Adding an entry here is a reviewed decision, not a way to pass.
-INTENTIONALLY_EXCLUDED: dict[str, str] = {}
+INTENTIONALLY_EXCLUDED: dict[str, str] = {
+    "attachment_ids": (
+        "presence of a stored copy only drives the non-blocking missing-source-document warnings, which "
+        "verification recomputes from the live catalogue on every run and never reads from a sealed "
+        "fingerprint; no casilla amount or admission outcome depends on it"
+    ),
+}
 
 _RAW_PREFIX = "raw."
 

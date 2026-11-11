@@ -433,7 +433,15 @@ def _add_transaction(
     direction: TransactionDirection = TransactionDirection.INCOMING,
     currency: str = "EUR",
 ) -> Transaction:
-    """Add through the real ledger action after the persisted calculation."""
+    """Add through the real ledger action after the persisted calculation.
+
+    A personal row has no business component, so it is written without the IVA figures
+    the business rows carry.
+    """
+    personal = business is BusinessClassification.PERSONAL
+    taxable_base = None if personal else Decimal("300.00")
+    iva_rate = None if personal else Decimal("0.21")
+    iva_amount = None if personal else Decimal("63.00")
     with _ledger_ports(objects, repos[-1], repos[-2]) as ports:
         return create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -445,9 +453,9 @@ def _add_transaction(
                 description="New transaction after calculation",
                 counterparty="New customer or supplier",
                 business_classification=business,
-                taxable_base=Decimal("300.00"),
-                iva_rate=Decimal("0.21"),
-                iva_amount=Decimal("63.00"),
+                taxable_base=taxable_base,
+                iva_rate=iva_rate,
+                iva_amount=iva_amount,
                 actor="operator",
             ),
             ports=ports,
