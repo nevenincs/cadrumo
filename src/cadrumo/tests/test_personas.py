@@ -79,9 +79,129 @@ def test_an_unknown_format_is_refused() -> None:
         parse_identity_catalogue({"format": 2, "convention": {}, "identities": []})
 
 
-def _one_identity(**fields: object) -> dict[str, object]:
-    identity = {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **fields}
+_NATURAL_NAME = {"primer_apellido": "Vidal", "segundo_apellido": "Soler", "nombre": "Andrés"}
+
+
+def _identity_document(identity: dict[str, object]) -> dict[str, object]:
     return {"format": 1, "convention": {}, "identities": [identity]}
+
+
+def _one_identity(**fields: object) -> dict[str, object]:
+    """A natural person with a stated name, unless the fields state a razón social instead."""
+    name = {} if "razon_social" in fields else _NATURAL_NAME
+    return _identity_document(
+        {"role": "a.titular", "persona": "a", "kind": "nif", "value": "00000006Y", **name, **fields}
+    )
+
+
+def test_a_natural_person_states_apellidos_and_nombre_and_an_entity_its_razon_social() -> None:
+    person = parse_identity_catalogue(_one_identity()).role("a.titular")
+    assert (person.primer_apellido, person.segundo_apellido, person.nombre) == ("Vidal", "Soler", "Andrés")
+    assert person.is_entity is False
+    assert person.surnames == "Vidal Soler"
+    assert person.field("nombre") == "Andrés"
+    entity = parse_identity_catalogue(
+        _one_identity(kind="cif", value="B00000059", razon_social="Ediciones del Turia, S.L.")
+    ).role("a.titular")
+    assert entity.is_entity is True
+    assert entity.field("razon_social") == "Ediciones del Turia, S.L."
+    assert entity.surnames is None
+
+
+def test_a_single_surname_is_stated_and_never_read_from_a_blank() -> None:
+    document = _identity_document(
+        {
+            "role": "a.titular",
+            "persona": "a",
+            "kind": "nie",
+            "value": "X0000001R",
+            "primer_apellido": "Holm",
+            "nombre": "Mikkel",
+            "no_second_surname": True,
+        }
+    )
+    single = parse_identity_catalogue(document).role("a.titular")
+    assert single.no_second_surname is True
+    assert single.segundo_apellido is None
+    assert single.surnames == "Holm"
+
+
+@pytest.mark.parametrize(
+    ("fields", "message"),
+    [
+        ({"kind": "nif", "nombre": "Andrés"}, "states a razon_social, or a natural person's"),
+        (
+            {"kind": "nif", "primer_apellido": "Vidal", "nombre": "Andrés"},
+            "states segundo_apellido, or says no_second_surname",
+        ),
+        (
+            {
+                "kind": "nif",
+                "primer_apellido": "Vidal",
+                "segundo_apellido": "Soler",
+                "nombre": "Andrés",
+                "no_second_surname": True,
+            },
+            "contradicts a stated segundo_apellido",
+        ),
+        (
+            {"kind": "nif", "razon_social": "Ediciones del Turia, S.L."},
+            "identifies a natural person",
+        ),
+        (
+            {"kind": "cif", "primer_apellido": "Vidal", "segundo_apellido": "Soler", "nombre": "Andrés"},
+            "identifies an entity",
+        ),
+        (
+            {"kind": "cif", "razon_social": "Ediciones del Turia, S.L.", "nombre": "Andrés"},
+            "states no person name part",
+        ),
+        ({"kind": "cif"}, "states a razon_social, or a natural person's"),
+        (
+            {
+                "kind": "cif",
+                "razon_social": "Ediciones del Turia, S.L.",
+                "renderings": [{"width": 10, "text": "Ediciones del Turia"}],
+            },
+            "fits the width it is stated for",
+        ),
+        (
+            {"kind": "cif", "razon_social": "Ediciones del Turia, S.L.", "renderings": [{"width": 0, "text": "E"}]},
+            "positive field width",
+        ),
+        (
+            {
+                "kind": "cif",
+                "razon_social": "Ediciones del Turia, S.L.",
+                "renderings": [{"width": 20, "text": "Ediciones Turia"}, {"width": 20, "text": "Ed. Turia"}],
+            },
+            "one rendering per field width",
+        ),
+    ],
+)
+def test_a_malformed_identity_name_is_refused(fields: dict[str, object], message: str) -> None:
+    identity = {"role": "a.titular", "persona": "a", "value": "00000006Y", **fields}
+    with pytest.raises(PersonaCatalogueError, match=message):
+        parse_identity_catalogue(_identity_document(identity))
+
+
+def test_an_identity_states_the_operators_rendering_for_a_narrower_field() -> None:
+    identity: dict[str, object] = {
+        "role": "a.titular",
+        "persona": "a",
+        "value": "00000006Y",
+        "kind": "cif",
+        "razon_social": "Ediciones del Turia, S.L.",
+        "renderings": [{"width": 20, "text": "Ediciones del Turia"}],
+    }
+    stated = parse_identity_catalogue(_identity_document(identity)).role("a.titular")
+    assert stated.renderings == ((20, "Ediciones del Turia"),)
+
+
+@pytest.mark.parametrize("key", ["name", "surnames", "legal_name"])
+def test_the_replaced_identity_keys_are_refused(key: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="unknown fields"):
+        parse_identity_catalogue(_one_identity(**{key: "Vidal"}))
 
 
 def test_an_identity_states_its_domicile_province_and_ceuta_melilla_determination() -> None:

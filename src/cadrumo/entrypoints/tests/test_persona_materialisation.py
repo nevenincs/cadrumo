@@ -14,6 +14,11 @@ from ...application.inventory.registered_requests import (
     INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
     InventoryInspectRequest,
 )
+from ...application.ledger.counterparty_operation import (
+    LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+    LedgerCounterpartyRequest,
+    LedgerCounterpartyResult,
+)
 from ...application.modelo.filing_record_list_contracts import (
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
@@ -57,6 +62,7 @@ from .persona_materialisation import (
     ReplayScope,
     filing_key,
     household_leaves,
+    informative_party_roles,
     load_profile_record,
     materialised_persona,
     patch_answers,
@@ -404,3 +410,51 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
         )
         for filing in persona.aeat_filings
     }
+
+
+def test_a_replay_states_each_informative_party_filing_name_readable_through_the_counterparty_view(
+    tmp_path: Path,
+) -> None:
+    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.FULL) as materialised:
+        persona, world = materialised.persona, materialised.world
+        roles = informative_party_roles(persona)
+        viewed = {
+            role: run_operation(
+                world,
+                LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+                LedgerCounterpartyRequest(
+                    profile_id=world.profile_id,
+                    action="view",
+                    tax_identifier=persona.identities.role(role).value,
+                    country_code=persona.identities.role(role).country,
+                ),
+                LedgerCounterpartyResult,
+            ).filing_name
+            for role in roles
+        }
+
+    assert {"fontanero.comunidad", "fontanero.arrendador-taller", "fontanero.cliente-restaurante"} <= set(roles)
+    assert "fontanero.titular" not in roles
+    assert all(name is not None for name in viewed.values())
+    comunidad = viewed["fontanero.comunidad"]
+    assert comunidad is not None
+    assert comunidad.party_kind == "entity"
+    assert comunidad.razon_social == persona.identities.role("fontanero.comunidad").razon_social
+    assert len(comunidad.razon_social or "") == 41
+    assert [(rendering.width, rendering.text) for rendering in comunidad.renderings] == list(
+        persona.identities.role("fontanero.comunidad").renderings
+    )
+    assert all(len(rendering.text) <= rendering.width == 40 for rendering in comunidad.renderings)
+    assert comunidad.renderings
+    taller = persona.identities.role("fontanero.arrendador-taller")
+    stated = viewed["fontanero.arrendador-taller"]
+    assert stated is not None
+    assert stated.party_kind == "natural_person"
+    assert (stated.primer_apellido, stated.segundo_apellido, stated.nombre) == (
+        taller.primer_apellido,
+        taller.segundo_apellido,
+        taller.nombre,
+    )
+    assert stated.razon_social is None
+    assert stated.no_second_surname is False
+    assert stated.asserted_by == PERSONA_ACTOR

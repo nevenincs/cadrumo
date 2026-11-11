@@ -1133,6 +1133,24 @@ errors:
     refused_export_format: A kért exportálási sorosítási formátum nem támogatott.
     refused_filing_calculate: A benyújtás-számítás vagy összefoglalás nem ment át
       az invariáns-ellenőrzésen.
+    refused_filing_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{export_field_id}
+      mező olyan partnert nevez meg, akinek nincs olyan bevallási neve, amelyet az
+      AEAT nyilvántartási mintája ott elfogad. Add meg a partner bevallási nevét,
+      és exportálj újra.'
+    refused_filing_export_declared_party_name_missing: 'Semmi sem íródott ki: a(z)
+      %{export_field_id} mező olyan partnert nevez meg, akinek nincs megadott bevallási
+      neve. Az AEAT nyilvántartási mintája a partner vezeték- és utónevével vagy cégnevével
+      (razón social) tölti ki, és semmi más nem állhat a helyén. Add meg a partner
+      bevallási nevét, és exportálj újra.'
+    refused_filing_export_declared_party_name_single_surname: 'Semmi sem íródott ki:
+      a(z) %{export_field_id} mező egyetlen vezetéknévvel megadott természetes személyt
+      nevez meg, és az AEAT nyilvántartási mintája nem ad szabályt egy ilyen név összeállítására.
+      Ellenőrizd a megadott vezetékneveket; a helyükön semmi sem kerül bevallásra.'
+    refused_filing_export_declared_party_name_too_wide: 'Semmi sem íródott ki: egy
+      partner bevallási neve %{composed_length} karakter, a(z) %{export_field_id}
+      mező pedig %{field_length} karakteres. A nyilvántartási minta nem engedi a rövidítést,
+      ezért adj meg a névnek egy %{field_length} karakteres változatát, és exportálj
+      újra.'
     refused_financial_aggregation_category_coverage: Egy tranzakcióhoz hiányzik a
       kategória- vagy profil-lefedettség. Osztályozd a tranzakciót az összesítés előtt.
     refused_financial_aggregation_missing_classification: Néhány időszaki tranzakció
@@ -1201,6 +1219,11 @@ errors:
       más területen letelepedett; a csere előtt vonja vissza a megerősített tényt.
     refused_ledger_counterparty_establishment_input: A letelepedési tény nem erősíthető
       meg olyan partnerazonosítóval, amely nem érvényes.
+    refused_ledger_counterparty_filing_name_input: A megadott név nem olyan, amelyet
+      egy adatszolgáltató bevallás elfogad. Egy természetes személyhez az első vezetéknév,
+      az utónév, valamint a második vezetéknév vagy annak megadása kell, hogy nincs
+      ilyen; egy szervezethez csak a cégneve. Minden részt kezdő, záró és dupla szóköz
+      nélkül írj, és minden rövidebb alak férjen el a saját szélességében.
     refused_ledger_counterparty_provincia_input: A megadott tartomány nem INE-tartománykód.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsd a bemenetet, és próbáld újra.
@@ -1299,6 +1322,10 @@ errors:
       időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
       meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
+    refused_modelo_export_declared_party_name: 'Semmi sem íródott ki: a(z) %{field_length}
+      pozíció hosszú %{export_field_id} mező olyan partnert nevez meg, akinek nincs
+      olyan bevallási neve, amelyet az AEAT nyilvántartási mintája elfogad. Add meg
+      vagy javítsd a partner bevallási nevét, és exportálj újra.'
     refused_modelo_export_prior_domiciliation_election_required: A 111-es mezőt kitöltő
       Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről
       (megtartás, illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi

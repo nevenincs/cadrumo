@@ -64,6 +64,7 @@ from cadrumo.domain.calculations.registry.ids import (
     SourceRefId,
     is_registry_id,
 )
+from cadrumo.domain.calculations.registry.party_name_composition import PartyNameComposition
 from cadrumo.domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole, RecordDiscriminator
 
@@ -80,6 +81,7 @@ __all__ = [
     "SemanticMapEntry",
     "SemanticMapFragment",
     "SemanticMapPart",
+    "SemanticMapPartyName",
     "SemanticMapRecord",
     "SemanticMapRequirement",
     "VariableEnvelopeSemantic",
@@ -331,6 +333,40 @@ class SemanticMapRequirement(_StrictModel):
     """The source's own words, copied verbatim; validation finds them in the cited document."""
 
 
+#: The entry kinds a party-name composition may sit on: a slot a stated party
+#: name fills, whether the row's party or the declarant.
+_PARTY_NAME_KINDS: Final[frozenset[str]] = frozenset({"binding", "header"})
+
+
+class SemanticMapPartyName(_StrictModel):
+    """The party-name rule a design states for one field, quoted from the design itself.
+
+    The record design prescribes this field's content as a composition of the
+    party's name parts ("el primer apellido, un espacio, el segundo apellido, un
+    espacio y el nombre completo, necesariamente en este mismo orden") or, for
+    an entity, its razón social. ``composition`` is that rule as data; the two
+    statements are the design's own words, which generation finds in the text of
+    the slot the rule is stated on and holds the declared order to.
+
+    A slot may state the rule by reference ("con el mismo criterio que el
+    especificado para el declarante en el registro de tipo 1"): ``stated_at``
+    then names the slot whose text states it, and ``referral_statement`` is the
+    referring sentence, found in this entry's own slot.
+    """
+
+    composition: PartyNameComposition
+    natural_person_statement: str = Field(min_length=1)
+    entity_statement: str = Field(min_length=1)
+    stated_at: SemanticMapAnchor | None = None
+    referral_statement: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _referral_is_quoted_with_its_target(self) -> SemanticMapPartyName:
+        if (self.stated_at is None) != (self.referral_statement is None):
+            raise ValueError("a party-name rule stated elsewhere names both the slot and the referring sentence")
+        return self
+
+
 class SemanticMapEntry(_StrictModel):
     """Reviewed registry meaning for one exact parser anchor.
 
@@ -368,6 +404,18 @@ class SemanticMapEntry(_StrictModel):
     :class:`SemanticMapRequirement`. The cited source must also be one of the
     entry's ``source_refs``, so the generated field carries its own citation.
     """
+
+    party_name: SemanticMapPartyName | None = None
+    """The design's composition rule for a party-name slot; see :class:`SemanticMapPartyName`."""
+
+    @model_validator(mode="after")
+    def _party_name_sits_on_a_name_slot(self) -> SemanticMapEntry:
+        if self.party_name is not None and self.kind.value not in _PARTY_NAME_KINDS:
+            raise ValueError(
+                f"semantic-map field {self.export_field_id!r} is a {self.kind.value} field; a party-name rule "
+                "may sit only on a binding or header field",
+            )
+        return self
 
     @model_validator(mode="after")
     def _require_cited_requirement_on_an_identifying_field(self) -> SemanticMapEntry:

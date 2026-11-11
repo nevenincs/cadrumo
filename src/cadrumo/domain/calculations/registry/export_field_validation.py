@@ -79,6 +79,7 @@ def validate_export_field_kind(field: ExportFieldDefinition) -> None:
     _validate_field_render_shape(field)
     _validate_required_for(field)
     _validate_required_with(field)
+    _validate_party_name(field)
     _validate_design_type(field)
     validate_export_field_policy_metadata(field)
 
@@ -198,6 +199,18 @@ def _validate_required_for(field: ExportFieldDefinition) -> None:
         raise RegistryValidationError(
             f"export field {field.id!r} is required unconditionally and cannot also declare required_for",
         )
+
+
+def _validate_party_name(field: ExportFieldDefinition) -> None:
+    """Admit a party-name composition only on a text slot a stated name can fill."""
+    if field.party_name is None:
+        return
+    if field.kind not in {CasillaFieldKind.BINDING, CasillaFieldKind.HEADER} or field.data_type != "text":
+        raise RegistryValidationError(
+            f"export field {field.id!r} can declare party_name only on a text binding or header field",
+        )
+    if field.length is None:
+        raise RegistryValidationError(f"export field {field.id!r} declares party_name without a fixed width")
 
 
 def _validate_required_with(field: ExportFieldDefinition) -> None:

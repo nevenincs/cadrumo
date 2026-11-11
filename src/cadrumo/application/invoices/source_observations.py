@@ -43,6 +43,7 @@ from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
@@ -766,17 +767,17 @@ def _m349_operador_row_from_values(
     *,
     row_index: int,
 ) -> Modelo349OperadorRow:
-    if set(values) != set(_M349_OPERADOR_ROW_BINDINGS.values()):
+    if set(values) | {"razon_social"} != set(_M349_OPERADOR_ROW_BINDINGS.values()):
         raise RegistryValidationError(f"Modelo 349 invoice row {row_index} is incomplete")
     codigo_pais = values["codigo_pais"]
     nif_comunitario = values["nif_comunitario"]
-    razon_social = values["razon_social"]
+    razon_social = values.get("razon_social")
     clave_operacion = values["clave_operacion"]
     importe = values["importe"]
     if not (
         isinstance(codigo_pais, str)
         and isinstance(nif_comunitario, str)
-        and isinstance(razon_social, str)
+        and (razon_social is None or isinstance(razon_social, str))
         and isinstance(clave_operacion, str)
         and isinstance(importe, Decimal)
     ):
@@ -799,14 +800,19 @@ def invoice_row_values(
     *,
     context: CalculationSourceContext,
     observations: tuple[InvoiceObservation, ...],
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Build the revision's invoice row families once, through the canonical row builder."""
+    """Build the revision's invoice row families once, through the canonical row builder.
+
+    ``party_name_refusals`` receives each party-name slot left without content.
+    """
     if not observations:
         return {}
     return resolve_invoice_binding_row_values(
         context.revision,
         observations,
         effective_date=filing_period_date(context),
+        party_name_refusals=party_name_refusals,
     )
 
 
@@ -853,12 +859,16 @@ def m349_rectificacion_rows_from_values(
             for binding_id, attr in _M349_RECTIFICACION_ROW_BINDINGS.items()
             if (binding_id, row_index) in row_values
         }
-        if set(values) != set(_M349_RECTIFICACION_ROW_BINDINGS.values()):
+        if set(values) | {"razon_social"} != set(_M349_RECTIFICACION_ROW_BINDINGS.values()):
             raise RegistryValidationError(f"Modelo 349 rectification row {row_index} is incomplete")
         try:
             rows.append(
                 Modelo349RectificacionRow.model_validate(
-                    {**values, "nif_comunitario": f"{values['codigo_pais']}{values['nif_comunitario']}"},
+                    {
+                        "razon_social": None,
+                        **values,
+                        "nif_comunitario": f"{values['codigo_pais']}{values['nif_comunitario']}",
+                    },
                 ),
             )
         except ValueError as exc:

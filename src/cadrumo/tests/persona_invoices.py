@@ -72,16 +72,15 @@ def _party(identity: Identity, role_tag: str) -> list[str]:
         lines.extend(
             (
                 "      <LegalEntity>",
-                f"        <CorporateName>{escape(identity.field('legal_name'))}</CorporateName>",
+                f"        <CorporateName>{escape(identity.field('razon_social'))}</CorporateName>",
                 "      </LegalEntity>",
             )
         )
     else:
-        first, _, second = identity.field("surnames").partition(" ")
-        lines.extend(("      <Individual>", f"        <Name>{escape(identity.field('name'))}</Name>"))
-        lines.append(f"        <FirstSurname>{escape(first)}</FirstSurname>")
-        if second:
-            lines.append(f"        <SecondSurname>{escape(second)}</SecondSurname>")
+        lines.extend(("      <Individual>", f"        <Name>{escape(identity.field('nombre'))}</Name>"))
+        lines.append(f"        <FirstSurname>{escape(identity.field('primer_apellido'))}</FirstSurname>")
+        if identity.segundo_apellido is not None:
+            lines.append(f"        <SecondSurname>{escape(identity.segundo_apellido)}</SecondSurname>")
         lines.append("      </Individual>")
     lines.append(f"    </{role_tag}>")
     return lines

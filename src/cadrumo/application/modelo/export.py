@@ -62,6 +62,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import (
+    FilingExportDeclaredPartyNameError,
     FilingExportError,
     FilingExportRequiredRecordAbsentError,
     FilingExportValueOverflowError,
@@ -76,6 +77,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.errors import (
     ModeloError,
+    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
     ModeloExportRequiredRecordAbsentError,
@@ -632,6 +634,16 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportDeclaredPartyNameError):
+        # The kept context names the slot, a non-identifying party handle and
+        # the door; the party's identifier reaches only the in-process envelope,
+        # where the door binds it, and the name is never carried.
+        context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})}
+        if exc.tax_identifier is not None:
+            context["tax_identifier"] = exc.tax_identifier
+        if exc.country_code is not None:
+            context["country_code"] = exc.country_code
+        return ModeloExportDeclaredPartyNameError(context=context)
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
         return ModeloExportRequiredRecordAbsentError(
             context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},

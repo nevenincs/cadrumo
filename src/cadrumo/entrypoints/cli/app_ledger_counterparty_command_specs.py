@@ -22,6 +22,7 @@ from .app_ledger_command_spec_policies import (
 )
 from .app_ledger_command_spec_support import (
     blank_default_text_option,
+    boolean_flag_option,
     optional_text_option,
     required_text_argument,
 )
@@ -150,6 +151,81 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_counterparty_results", "CounterpartyWithdrawResult", __package__),
             identity="ledger.counterparty.withdraw",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_counterparty_filing_name",
+        "app_ledger_counterparty",
+        "filing-name",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.counterparty.filing_name_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            required_text_argument("tax_identifier", "cli.app.ledger.counterparty.tax_identifier_help"),
+            OptionSpec(
+                name="kind",
+                declarations=("--kind",),
+                value=ValueContract(
+                    DeferredTarget("...domain.filing.declared_party_name", "DeclaredPartyKind", __package__)
+                ),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.counterparty.party_kind_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+            optional_text_option(
+                "primer_apellido", ("--primer-apellido",), "cli.app.ledger.counterparty.primer_apellido_help"
+            ),
+            optional_text_option(
+                "segundo_apellido", ("--segundo-apellido",), "cli.app.ledger.counterparty.segundo_apellido_help"
+            ),
+            boolean_flag_option(
+                "no_second_surname", ("--no-second-surname",), "cli.app.ledger.counterparty.no_second_surname_help"
+            ),
+            optional_text_option("nombre", ("--nombre",), "cli.app.ledger.counterparty.nombre_help"),
+            optional_text_option("razon_social", ("--razon-social",), "cli.app.ledger.counterparty.razon_social_help"),
+            OptionSpec(
+                name="rendering",
+                declarations=("--rendering",),
+                value=ValueContract(
+                    DeferredTarget(
+                        "...application.ledger.counterparty_operation", "CounterpartyFilingNameRendering", __package__
+                    ),
+                    parser=DeferredTarget(
+                        ".ledger_counterparty_filing_name_commands", "parse_filing_name_rendering", __package__
+                    ),
+                ),
+                default=ParameterDefault.value(()),
+                help_key=TranslationKey("cli.app.ledger.counterparty.rendering_help"),
+                metavar="WIDTH=TEXT",
+                is_flag=False,
+                flag_value=None,
+                multiple=True,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+            optional_text_option("country_code", ("--country-code",), "cli.app.ledger.counterparty.country_code_help"),
+            optional_text_option("actor", ("--actor",), "cli.app.ledger.counterparty.actor_help"),
+        ),
+        policy=POLICY_4,
+        handler=LazyBinding.available(
+            DeferredTarget(".ledger_counterparty_filing_name_commands", "counterparty_filing_name", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_counterparty_results", "CounterpartyFilingNameResult", __package__),
+            identity="ledger.counterparty.filing_name",
         ),
     ),
 )

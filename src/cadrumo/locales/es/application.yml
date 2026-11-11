@@ -1619,6 +1619,13 @@ application:
           la fuente que esté mal y vuelve a calcular. Si has comprobado que el importe
           utilizado es correcto, acéptalo con su identificador: `aeat app modelo work
           accept-disagreement <identificador> --reason <motivo>`.'
+      declared_party_name_unresolved:
+        what: Una parte declarada no tiene un nombre de declaración que su registro
+          pueda llevar, así que su campo de nombre queda sin contenido y la exportación
+          se rechaza.
+        what_to_do: 'Indica el nombre de declaración de la parte: apellidos y nombre,
+          o su razón social, y una versión más corta donde el campo sea más estrecho.
+          Después vuelve a calcular.'
       deferred_binding_source:
         what: Cadrumo todavía no rellena automáticamente una cifra de esta declaración.
         what_to_do: No tienes que hacer nada, salvo que esa cifra te afecte. Si te
@@ -1967,6 +1974,12 @@ application:
         ya no se aplica.'
       credit_source_disagreement: 'Casilla {box}: la fuente declarada da {amount};
         según {cross_check}, son {compared_amount}.'
+      declared_party_name_missing: No hay nombre de declaración indicado para {party}.
+      declared_party_name_single_surname: '{party} está indicada con un solo apellido,
+        para lo que el diseño de registro no da ninguna regla.'
+      declared_party_name_too_wide: El nombre de declaración de {party} es más ancho
+        que su campo de {width} caracteres y no hay ninguna versión indicada para
+        ese ancho.
       disposal_claim_gap: '{element}: su baja es el {date} y parte de {year} no tiene
         dotación registrada. Su mínimo reduce igualmente el coste.'
       disposal_exemption_not_computed: '{element}: cualquier exención o diferimiento

@@ -90,6 +90,7 @@ def schema_field(
                 "allowed_values": allowed_values,
                 "minimum_year": minimum_year,
                 "presence_marker": presence_marker(joined_field),
+                "party_name": None if semantic_entry.party_name is None else semantic_entry.party_name.composition,
                 "legal_refs": semantic_entry.legal_refs,
                 "source_refs": semantic_entry.source_refs,
             },

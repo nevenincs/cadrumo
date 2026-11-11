@@ -16,6 +16,7 @@ from typing import Protocol
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.period import Period
+from ...domain.filing.declared_party_name import DeclaredPartyFilingName
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.row_models import Modelo349OperadorRow, Modelo349RectificacionRow
 
@@ -64,6 +65,17 @@ class CounterpartyProvinciaReader(Protocol):
         ...
 
 
+class CounterpartyFilingNameReader(Protocol):
+    """Read the filing name a person declared for a counterparty."""
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+        """Return the counterparty's declared filing name, or ``None`` when none is stated.
+
+        Raise :class:`InvoiceSourcePersistenceError` when the stated facts cannot be read.
+        """
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class InvoiceSourceResolverPorts:
     """Capabilities for one invoice source-mesh resolver.
@@ -73,14 +85,18 @@ class InvoiceSourceResolverPorts:
     earlier Modelo 349 period then has no known declared base, and is refused.
     ``counterparty_provincias`` is absent where no declarado record is built;
     every Spanish declarado's provincia is then unstated.
+    ``counterparty_filing_names`` is absent likewise; no party-name slot is
+    then filled and none is reported, since no record naming a party is built.
     """
 
     catalogue_reader: InvoiceSourceCatalogueReader
     m349_filed_declarations: M349FiledDeclarationReader | None = None
     counterparty_provincias: CounterpartyProvinciaReader | None = None
+    counterparty_filing_names: CounterpartyFilingNameReader | None = None
 
 
 __all__ = [
+    "CounterpartyFilingNameReader",
     "CounterpartyProvinciaReader",
     "InvoiceSourceCatalogueReader",
     "InvoiceSourcePersistenceError",

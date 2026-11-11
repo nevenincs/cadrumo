@@ -1202,6 +1202,23 @@ errors:
       está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
+    refused_filing_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id}
+      nombra a una parte sin un nombre de declaración que el diseño de registro de
+      la AEAT admita ahí. Indica el nombre de declaración de la parte y vuelve a exportar.'
+    refused_filing_export_declared_party_name_missing: 'No se ha escrito nada: el
+      campo %{export_field_id} nombra a una parte sin nombre de declaración indicado.
+      El diseño de registro de la AEAT lo rellena con sus apellidos y nombre, o con
+      su razón social, y nada más puede ocupar su lugar. Indica el nombre de declaración
+      de la parte y vuelve a exportar.'
+    refused_filing_export_declared_party_name_single_surname: 'No se ha escrito nada:
+      el campo %{export_field_id} nombra a una persona física indicada con un solo
+      apellido, y el diseño de registro de la AEAT no da ninguna regla para componer
+      ese nombre. Revisa los apellidos indicados; no se declara nada en su lugar.'
+    refused_filing_export_declared_party_name_too_wide: 'No se ha escrito nada: el
+      nombre de declaración de una parte tiene %{composed_length} caracteres y el
+      campo %{export_field_id} tiene %{field_length}. El diseño de registro no permite
+      abreviarlo, así que indica una versión del nombre de %{field_length} caracteres
+      y vuelve a exportar.'
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
       de categoría o de perfil. Clasifica la transacción antes de agregar.
     refused_financial_aggregation_missing_classification: Aún hay transacciones del
@@ -1274,6 +1291,11 @@ errors:
       como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
     refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
       de establecimiento con un identificador de contraparte que no valida.
+    refused_ledger_counterparty_filing_name_input: El nombre indicado no es uno que
+      admita una declaración informativa. Una persona física necesita el primer apellido,
+      el nombre y el segundo apellido o la indicación de que no lo tiene; una entidad
+      solo necesita su razón social. Cada parte se escribe sin espacios iniciales,
+      finales ni dobles, y cada forma abreviada cabe en su ancho.
     refused_ledger_counterparty_provincia_input: La provincia indicada no es un código
       de provincia del INE.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
@@ -1376,6 +1398,10 @@ errors:
       ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) porque la ventana de presentación
       no fija ninguna; el {export_on} solo puedes pagar el resultado de otra forma.
     refused_modelo_edit_parse: No se ha podido leer este dato.
+    refused_modelo_export_declared_party_name: 'No se ha escrito nada: el campo %{export_field_id},
+      de %{field_length} posiciones, nombra a una parte sin un nombre de declaración
+      que el diseño de registro de la AEAT admita. Indica o corrige el nombre de declaración
+      de la parte y vuelve a exportar.'
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidación
       rectificativa del modelo 303 con la casilla 111 necesita una elección sobre
       la domiciliación anterior (mantenerla, o anularla o modificarla); no se indicó

@@ -1578,6 +1578,13 @@ application:
           a hibás forrást, és számold újra. Ha ellenőrizted, hogy a felhasznált összeg
           helyes, fogadd el az azonosítójával: `aeat app modelo work accept-disagreement
           <azonosító> --reason <indoklás>`.'
+      declared_party_name_unresolved:
+        what: Egy bevallott partnernek nincs olyan bevallási neve, amelyet a rekordja
+          tartalmazhat, ezért a névmezője tartalom nélkül marad, és az export elutasításra
+          kerül.
+        what_to_do: 'Add meg a partner bevallási nevét: vezeték- és utónevét vagy
+          cégnevét (razón social), valamint rövidebb változatát, ahol a mező keskenyebb.
+          Ezután számolj újra.'
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1926,6 +1933,11 @@ application:
         már nem érvényes.'
       credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
         {cross_check} szerint viszont {compared_amount}.'
+      declared_party_name_missing: '{party} számára nincs megadott bevallási név.'
+      declared_party_name_single_surname: '{party} egyetlen vezetéknévvel van megadva,
+        amelyre a nyilvántartási minta nem ad szabályt.'
+      declared_party_name_too_wide: '{party} bevallási neve szélesebb a(z) {width}
+        karakteres mezőjénél, és ehhez a szélességhez nincs megadott változat.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
         egy részére nincs rögzített értékcsökkenési leírás. A minimuma ettől még csökkenti
         a költséget.'

@@ -157,6 +157,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
         "m347_declarado_provincia_unrecorded": _M,
+        "declared_party_name_unresolved": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
         # lists it as assumed, so nothing in the editor can confirm it, and the
         # filer checks it against their records instead.

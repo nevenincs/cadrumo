@@ -112,6 +112,12 @@ CalculationSourceDiagnosticReason = Literal[
     # record field, because the filer must supply it: the generic "source_issue"
     # names neither and reads as the whole declaration missing something.
     "m347_declarado_provincia_unrecorded",
+    # A record naming a party (a Modelo 347 declarado or arrendatario, a Modelo
+    # 349 operador) whose name field the person's declared filing name cannot
+    # fill: none is declared, the design gives no rule for it, or it is wider
+    # than the field. Its own reason because only the filer can state the name
+    # and the export refuses until they do.
+    "declared_party_name_unresolved",
     # The cash amount above 6.000 EUR a Modelo 347 declarado record carries (RD
     # 1065/2007 art. 34.1.h), which no invoice records. Owed only where such cash
     # was received, so it is worth checking and never classes as missing.

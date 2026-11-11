@@ -83,14 +83,30 @@ cli:
           felet helyezi. Add meg, hogy megkérdezd, mit válaszol a létra erre a dokumentumra;
           csak így láthatod az eltérést attól, amit korábban megerősítettél, mielőtt
           egy megerősítés elutasítaná.
+        filing_name_help: Add meg, milyen néven szerepel egy partner az adatszolgáltató
+          bevallásokban, a nyilvántartási minták által megnevezett részekben. Egyszer
+          adod meg, minden későbbi exporthoz.
         group_help: Erősítsd meg, mit tudunk az ügyfélről – egyszer, minden későbbi
           bizonylathoz.
         identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
           azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít,
           nem a letelepedés helye alapján.'
+        no_second_surname_help: Megadod, hogy a természetes személynek egy vezetékneve
+          van. A hiányzó második vezetéknevet a program sosem tekinti hiánynak.
+        nombre_help: Egy természetes személy teljes utóneve.
         note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
           használjuk fel.
+        party_kind_help: A partner természetes személy vagy szervezet; ez dönti el,
+          mely részeket adod meg.
+        primer_apellido_help: Egy természetes személy első vezetékneve, ahogy ismered.
+        razon_social_help: Egy szervezet teljes cégneve (razón social vagy denominación),
+          sosem kereskedelmi név.
+        rendering_help: Egy rövidebb alak, amelyet egy keskenyebb mezőhöz adsz meg,
+          SZÉLESSÉG=SZÖVEG formában. Szélességenként egyszer ismételd; egy név csak úgy
+          rövidül, ahogy megadod.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
+        segundo_apellido_help: Egy természetes személy második vezetékneve. Csak a
+          --no-second-surname kapcsolóval együtt hagyd el.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         view_help: Megmutatja, mit válaszolna az áfa-azonosítási létra erre az üzleti
           partnerre az eddig megerősített adatok alapján.
@@ -3496,8 +3512,14 @@ cli:
           kell: a ''--scope'' azt adja meg, hol letelepedett az ügyfél, az ''--identification-state''
           pedig azt, melyik tagállam adja áfa-azonosítóját; bármelyik önmagában is
           megadható.'
+        rendering_malformed: 'A(z) ''{rendering}'' nem rövidített alak. Írd SZÉLESSÉG=SZÖVEG
+          formában: a mező szélessége karakterben, és a szöveg, amelyet ott be akarsz
+          vallani.'
         unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
           ezért nincs olyan ügyfél, amelyről bármit meg lehetne erősíteni.
+      lines:
+        filing_name_stated: '{identifier}: bevallási név megadva'
+        filing_name_unchanged: '{identifier}: a bevallási név már meg volt adva'
       notices:
         already_confirmed: A(z) '{identifier}' azonosítót '{asserted_by}' már megerősítette
           mint '{answered}'; ez a hívás nem hozott létre új megerősítést, és az eredeti
@@ -3506,12 +3528,22 @@ cli:
           telepedett le: {confirmed}, de az általad megadott bizonylat ugyanezt a
           felet ide helyezi: {evidenced}. A Cadrumo nem állapít meg területet ehhez
           a partnerhez, amíg a kettő közül az egyiket vissza nem vonják.'
+        filing_name_already_stated: A(z) '{identifier}' már rendelkezik ezzel a bevallási
+          névvel, amelyet '{asserted_by}' adott meg; ez a hívás semmit sem változtatott,
+          az eredeti megadás érvényben marad.
+        filing_name_kind_contradicts_identifier_form: A bevallási nevet {declared}
+          számára adtad meg, de ennek a spanyol adóazonosítónak a formája {observed}
+          formája. A nevet úgy tároltuk, ahogy megadtad, és semmi sem változott; ellenőrizd,
+          melyik a helyes.
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.
         nothing_to_withdraw: A(z) '{identifier}' esetében semmi nem volt megerősítve,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
+      party_kinds:
+        entity: szervezet
+        natural_person: természetes személy
     detach:
       actor_help: Az életciklus-eseményen rögzített szereplő.
       attachment_help: A leválasztandó csatolmány azonosítója; ismételhető.
