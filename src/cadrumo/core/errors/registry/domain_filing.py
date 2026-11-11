@@ -358,6 +358,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.CalculationRevisionIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_MODELOS_CALCULATION_REVISION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_modelos_calculation_revision",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.errors.ModeloOperatorLayerIntegrityError",
         ErrorCode(
             code="INTEGRITY_MODELOS_OPERATOR_LAYER",
