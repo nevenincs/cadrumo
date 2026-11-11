@@ -385,6 +385,7 @@ def require_first_period_zero_decision_grounded(
             "reason": "first_period_zero_ungrounded",
         },
         carry_period=work_unit.period,
+        carry_revision=snapshot.revision,
     )
 
 

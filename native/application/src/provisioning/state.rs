@@ -227,6 +227,19 @@ pub struct StatusRow {
     pub version: Option<String>,
     pub size_estimate_bytes: Option<u64>,
     pub recovery: Option<RecoveryAction>,
+    /// The removals the row offers, in the order they are listed.
+    pub removals: Vec<RemovalOffer>,
+}
+
+/// What a removal a row offers deletes from this computer.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RemovalOffer {
+    /// The whole item: the browser's builds, or the local AI's program with the models
+    /// on the person's lists.
+    Whole,
+    /// The local AI's program alone; every model stays.
+    ProgramOnly,
 }
 
 impl StatusRow {
@@ -259,6 +272,7 @@ impl Serialize for StatusRow {
             map.serialize_entry("recovery", &recovery)?;
             map.serialize_entry("recovery_action_id", &self.recovery_action_id())?;
         }
+        map.serialize_entry("removals", &self.removals)?;
         map.end()
     }
 }
@@ -304,6 +318,27 @@ pub fn derive_row(
         version: reading.version.clone(),
         size_estimate_bytes: None,
         recovery: recovery_for(state),
+        removals: removals_for(declaration.id, state),
+    }
+}
+
+/// The removals a state offers: those of an item with something on this computer to
+/// delete, and none while a setup changes it or for an item that is absent or blocked.
+/// A damaged program that came with Cadrumo offers none either: removing it repairs
+/// nothing, and only repairing or reinstalling Cadrumo does.
+pub fn removals_for(item: ItemId, state: ItemState) -> Vec<RemovalOffer> {
+    let has_something = match state {
+        ItemState::Failed(FailureCategory::EnginePackageDamaged) => false,
+        ItemState::Ready | ItemState::Stale(_) | ItemState::Failed(_) | ItemState::Unknown => true,
+        ItemState::Absent
+        | ItemState::Provisioning
+        | ItemState::Verifying
+        | ItemState::Blocked(_) => false,
+    };
+    match (has_something, item) {
+        (false, _) => Vec::new(),
+        (true, ItemId::Browser) => vec![RemovalOffer::Whole],
+        (true, ItemId::LocalAi) => vec![RemovalOffer::Whole, RemovalOffer::ProgramOnly],
     }
 }
 
@@ -579,6 +614,7 @@ mod tests {
                 "version": "0.40.10",
                 "recovery": "update",
                 "recovery_action_id": "operator.provision.browser",
+                "removals": ["whole"],
             })
         );
         let blocked = derive_row(
@@ -594,6 +630,7 @@ mod tests {
                 "mode": "quick",
                 "state": "blocked",
                 "blocked_reason": "not_in_this_build",
+                "removals": [],
             })
         );
         let failed = row(
@@ -604,6 +641,52 @@ mod tests {
         assert_eq!(
             serde_json::to_value(&failed).unwrap()["failure_category"],
             "disk_full"
+        );
+    }
+
+    #[test]
+    fn a_row_offers_removal_only_of_something_a_removal_deletes() {
+        let both = vec![RemovalOffer::Whole, RemovalOffer::ProgramOnly];
+        for (state, local_ai) in [
+            (ItemState::Ready, both.clone()),
+            (ItemState::Unknown, both.clone()),
+            (ItemState::Stale(StaleReason::OlderRevision), both.clone()),
+            (
+                ItemState::Failed(FailureCategory::DamagedDownload),
+                both.clone(),
+            ),
+            (
+                ItemState::Failed(FailureCategory::EngineProgramUnusable),
+                both.clone(),
+            ),
+            // Removing the program that came with Cadrumo repairs nothing.
+            (
+                ItemState::Failed(FailureCategory::EnginePackageDamaged),
+                Vec::new(),
+            ),
+            (ItemState::Absent, Vec::new()),
+            (ItemState::Provisioning, Vec::new()),
+            (ItemState::Verifying, Vec::new()),
+            (ItemState::Blocked(BlockedReason::Hardware), Vec::new()),
+            (ItemState::Blocked(BlockedReason::Offline), Vec::new()),
+        ] {
+            assert_eq!(removals_for(ItemId::LocalAi, state), local_ai, "{state:?}");
+            let browser = if local_ai.is_empty() {
+                Vec::new()
+            } else {
+                vec![RemovalOffer::Whole]
+            };
+            assert_eq!(removals_for(ItemId::Browser, state), browser, "{state:?}");
+        }
+        let damaged = derive_row(
+            &LOCAL_AI,
+            &reading(Observation::Failed(FailureCategory::EnginePackageDamaged)),
+            Activity::Idle,
+            None,
+        );
+        assert_eq!(
+            serde_json::to_value(&damaged).unwrap()["removals"],
+            serde_json::json!([])
         );
     }
 

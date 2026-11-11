@@ -797,6 +797,10 @@ errors:
       no coincide con su contrato.
     canonical_operation_financial_operand_custody: Se ha infringido el orden fijo
       de transición de custodia del operando financiero.
+    canonical_profile_kdf_background_yielded: El trabajo de derivación de claves en
+      segundo plano ha cedido el paso a un inicio de sesión.
+    canonical_profile_kdf_strengthening_point_refused: Un ajuste de derivación de
+      claves medido no puede reforzar la protección por contraseña de este perfil.
     canonical_schema_resolution: La proyección del esquema de comandos está incompleta.
     canonical_structured_invoice_read: El lector seleccionado no pudo leer la factura
       estructurada.

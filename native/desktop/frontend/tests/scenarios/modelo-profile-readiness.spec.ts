@@ -109,6 +109,29 @@ test("a creation refused for an undeclared setup opens the profile's completion"
   ).toBeVisible();
 });
 
+test("a refusal the host reports by rejecting the submission keeps its words and door", async ({
+  page: target,
+}) => {
+  // The host may answer a refused write by rejecting the submission with the
+  // settled operation's identity. The window then reads that operation's
+  // detail, and shows the same sentence and the same door as a settlement.
+  const detail = recorded("profile-setup");
+  const step = servedNextStep(detail);
+  expect(step?.kind).toBe("complete_profile_setup");
+  if (step?.kind !== "complete_profile_setup") return;
+
+  const alert = await refuseCreation(target, "profile-setup-rejected");
+  await expect(alert).toContainText(servedRefusalWords(detail)!);
+  await expect(alert).not.toContainText(
+    label("workspace.declarations.list.new.refused"),
+  );
+  const door = alert.getByRole("button", { name: step.words, exact: true });
+  await expect(door).toBeVisible();
+  await door.click();
+  await expect(dialog(target)).toBeHidden();
+  await expect(profile(target)).toBeVisible();
+});
+
 test("a refusal naming no door leaves the refusal's words standing alone", async ({
   page: target,
 }) => {

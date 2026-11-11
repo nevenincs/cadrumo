@@ -63,7 +63,9 @@ def _prior_compensation_inputs(
     )
 
 
-def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs, *, carry_period: Period) -> None:
+def _require_decision_for_supplied_inputs(
+    inputs: _PriorCompensationInputs, *, carry_period: Period, carry_revision: ModeloRevision
+) -> None:
     supplied_values = tuple(value for value in inputs if value is not None)
     if not supplied_values:
         return
@@ -77,6 +79,7 @@ def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs, *, c
             "supplied_value_count": len(supplied_values),
         },
         carry_period=carry_period,
+        carry_revision=carry_revision,
     )
 
 
@@ -139,6 +142,7 @@ def _validated_decision_amount(
             context={"divergence": str(decision.divergence), "reason": blocked_reason},
             carry_period=target.period,
             local_amount=decision.local_recurrence_amount,
+            carry_revision=target.revision,
         )
     if decision.selected_amount is None:
         raise_iva_wallet_precondition(
@@ -254,7 +258,7 @@ def apply_iva_compensation_decision_binding(
         backend_binding_values=backend_binding_values,
     )
     if decision is None:
-        _require_decision_for_supplied_inputs(inputs, carry_period=target.period)
+        _require_decision_for_supplied_inputs(inputs, carry_period=target.period, carry_revision=target.revision)
         return
     validated_decision, selected = _validated_decision_amount(
         decision,

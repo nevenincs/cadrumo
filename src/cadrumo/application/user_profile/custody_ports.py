@@ -53,6 +53,7 @@ from .custody_record_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
 )
+from .kdf_strength import ProfileKdfStrength
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 from .proof_cancellation import ProfileProofCancellation
 
@@ -633,6 +634,7 @@ class ProfileCustodyPort(Protocol):
         dek_epoch: str,
         salt: bytes,
         predecessor: ProfileCustodyEnvelopePort | None,
+        strength: ProfileKdfStrength | None = None,
     ) -> ProfileCustodyRegistrationMaterial:
         """Mint a password envelope and its DEK sentinel.
 
@@ -640,6 +642,20 @@ class ProfileCustodyPort(Protocol):
         or ``None`` for a new profile's first envelope. The adapter derives
         the successor's generation and predecessor digest from it rather
         than taking them as free values, so the two cannot disagree.
+
+        ``strength`` replaces calibration with a point measured earlier. It is
+        accepted only for a replacement and only when it lies on the grid,
+        fits this host, meets the fallback floor and is strictly stronger than
+        ``predecessor``'s; anything else is refused, never weakened.
+        """
+        ...
+
+    def measure_stronger_password_kdf(self, profile_id: UUID, *, root: Path | None = None) -> ProfileKdfStrength | None:
+        """Measure, in the background, a point strictly stronger than a fallback envelope's, else ``None``.
+
+        Only an envelope at the fixed fallback point is measured. The
+        measurement reads the envelope's public salt alone, yields to any
+        waiting unlock and never adopts the fallback.
         """
         ...
 
@@ -724,6 +740,10 @@ class ProfileCustodyPort(Protocol):
 
     def retire_automation(self, *, profile_id: UUID, root: Path) -> bool:
         """Durably deny delegated custody; return whether optional cleanup finished."""
+        ...
+
+    def automation_enrolled(self, *, profile_id: UUID, root: Path) -> bool:
+        """Whether any local installation holds automation custody for ``profile_id``, retired or not."""
         ...
 
     def replace_password_envelope(
@@ -888,6 +908,7 @@ def create_profile_custody_registration_material(
     dek_epoch: str,
     salt: bytes,
     predecessor: ProfileCustodyEnvelopePort | None = None,
+    strength: ProfileKdfStrength | None = None,
 ) -> ProfileCustodyRegistrationMaterial:
     """Mint the password envelope and DEK sentinel at the custody boundary.
 
@@ -904,6 +925,7 @@ def create_profile_custody_registration_material(
         dek_epoch=dek_epoch,
         salt=salt,
         predecessor=predecessor,
+        strength=strength,
     )
 
 

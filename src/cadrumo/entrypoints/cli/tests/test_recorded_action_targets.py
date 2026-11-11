@@ -44,7 +44,11 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.calculations.registry.form_codes import form_for_role
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ..common import resolve_cli_precondition_action
@@ -173,6 +177,11 @@ def _refused_wallet_verdict(reason_code: str, carry_period: Period) -> Precondit
             translated_message="application.modelo.errors.iva_wallet_not_seeded",
             evidence_values={"reason": reason_code},
             carry_period=carry_period,
+            carry_revision=published_snapshot(
+                form_for_role("iva.periodic"),
+                filing_year=carry_period.filing_year,
+                period=carry_period.registry_token,
+            ).revision,
         )
     return refused.value.precondition_failure.verdict
 
@@ -193,8 +202,9 @@ def test_each_real_opening_balance_refusal_records_an_action_that_resolves_to_th
         assert served.action.action_id == "operator.modelo.iva_wallet.seed", reason_code
         assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
         bound = {item.argument_name: item for item in served.argument_bindings}
-        assert bound["filing_year"].value == carry_period.filing_year
-        assert bound["period"].value == carry_period.registry_token
+        # The balance a first quarter carries is the previous year's fourth quarter's closing one.
+        assert bound["filing_year"].value == carry_period.filing_year - 1
+        assert bound["period"].value == "4T"
         assert bound["amount"].status is ActionArgumentStatus.MISSING
         assert served.missing_argument_names == ("amount",)
         assert leaf.input_schema is not None

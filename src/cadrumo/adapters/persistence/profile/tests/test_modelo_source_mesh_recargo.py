@@ -16,6 +16,7 @@ from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueRead
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
@@ -147,3 +148,68 @@ def test_an_invoice_recargo_is_declared_though_the_ledger_carries_none(
     )
 
     assert resolution.binding_values["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("520.00")
+
+
+def _line(description: str, taxable_base: Decimal, rate_code: str, percent: str) -> InvoiceLine:
+    return InvoiceLine(
+        description=description,
+        quantity=Decimal("1"),
+        unit_price=taxable_base,
+        subtotal=taxable_base,
+        iva_rate=IvaRate.from_registry(rate_code),
+        iva_amount=(taxable_base * Decimal(percent)).quantize(Decimal("0.01")),
+    )
+
+
+def test_an_issued_invoice_with_two_rates_is_one_record_the_resolution_rests_on(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Each rate of a two-rate issued invoice reaches its casilla, and the invoice is named once.
+
+    The invoice yields one observation per line; naming it once per line made
+    the resolution's provenance ambiguous, so the calculation refused.
+    """
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "1T")
+    revision = published_authority_operation().snapshot("303", filing_year=year, period="1T").revision
+    lines = (
+        _line("Servicio general", Decimal("100.00"), "RATE_21", "0.21"),
+        _line("Servicio reducido", Decimal("50.00"), "RATE_10", "0.10"),
+    )
+    base_total = sum((line.subtotal for line in lines), Decimal("0"))
+    iva_total = sum((line.iva_amount for line in lines), Decimal("0"))
+    invoice = Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": CatalogueInvoiceKind.ISSUED,
+            "invoice_number": "MULTIRATE-1T",
+            "issued_at": period.start_date,
+            "counterparty_name": "Cliente Dos Tipos SL",
+            "counterparty_tax_id": "B00015016",
+            "counterparty_country": "ES",
+            "base_total": base_total,
+            "iva_total": iva_total,
+            "grand_total": base_total + iva_total,
+            "currency": "EUR",
+            "lines": lines,
+            "payment_status": PaymentStatus.PAID,
+        },
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo.save(build_invoice_catalogue((invoice,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+        objects=secure_objects,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID, modelo="303", filing_year=year, period=period, revision=revision
+        ),
+    )
+
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("21.00")
+    assert resolution.binding_values["modelo-303-iva-repercutido-reducido-cuota"] == Decimal("5.00")
+    named = [row.source_ref for row in resolution.provenance if row.source_ref.startswith("invoice:")]
+    assert len(named) == 1

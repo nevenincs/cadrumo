@@ -18,6 +18,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     LoginEligibility,
     OsLockState,
+    SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
@@ -347,7 +348,10 @@ def test_attended_child_whose_connection_closed_does_not_return(subject: Subject
     rebound = subject.authority.admit_human(connection_id=subject.connection)
 
     assert isinstance(rebound, AccessSession) and rebound.session_id == human.session_id
-    assert child.session_id in {item.session_id for item in recovery.retired}
+    # The retirement names whose lease ended: a delegated child's, not the person's.
+    assert {item.session_kind for item in recovery.retired if item.session_id == child.session_id} == {
+        SessionKind.ATTENDED
+    }
     assert child.session_id not in subject.owner.active
 
 

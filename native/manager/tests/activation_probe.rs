@@ -31,7 +31,19 @@ impl Fixture {
         Self(root)
     }
 
+    /// Every metadata child this fixture's probe launched, in launch order.
+    fn attempts(&self) -> Vec<u32> {
+        fs::read_to_string(self.0.join("retry-probe-attempts"))
+            .unwrap()
+            .lines()
+            .map(|line| line.parse().unwrap())
+            .collect()
+    }
+
     fn assert_settled(&self, unchanged: &[u8]) {
+        for pid in self.attempts() {
+            assert!(matches!(open_process(pid), Err(InspectError::NotRunning)));
+        }
         let pid: u32 = fs::read_to_string(self.0.join("retry-probe-pid"))
             .unwrap()
             .parse()
@@ -83,14 +95,38 @@ fn capable_legacy_and_failed_metadata_children_are_joined_without_state_edits() 
 }
 
 #[test]
-fn timeout_terminates_and_joins_only_the_metadata_child() {
+fn timeout_terminates_and_joins_only_the_metadata_children_after_bounded_attempts() {
     let fixture = Fixture::new("timeout");
     let unchanged = fs::read(path(&fixture.0)).unwrap();
     let started = Instant::now();
     let error = require_retry_support(FIXTURE.as_ref(), &fixture.0).unwrap_err();
     assert_eq!(error.kind(), io::ErrorKind::TimedOut);
-    assert!(started.elapsed() < Duration::from_secs(6));
+    // Three bounded attempts, each terminated and joined before the next.
+    assert_eq!(fixture.attempts().len(), 3);
+    assert!(started.elapsed() < Duration::from_secs(20));
     fixture.assert_settled(&unchanged);
+}
+
+#[test]
+fn a_capable_image_that_answers_late_once_is_admitted_on_the_next_attempt() {
+    let fixture = Fixture::new("late-once");
+    let unchanged = fs::read(path(&fixture.0)).unwrap();
+    let started = Instant::now();
+    require_retry_support(FIXTURE.as_ref(), &fixture.0).unwrap();
+    // The first answer missed its bound; the second was asked and answered.
+    assert_eq!(fixture.attempts().len(), 2);
+    assert!(started.elapsed() >= Duration::from_secs(2));
+    fixture.assert_settled(&unchanged);
+}
+
+#[test]
+fn an_image_without_retry_support_is_refused_without_a_second_attempt() {
+    for mode in ["legacy", "failed"] {
+        let fixture = Fixture::new(mode);
+        let error = require_retry_support(FIXTURE.as_ref(), &fixture.0).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::Unsupported, "{mode}");
+        assert_eq!(fixture.attempts().len(), 1, "{mode}");
+    }
 }
 
 #[test]
