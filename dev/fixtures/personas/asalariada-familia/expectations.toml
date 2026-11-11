@@ -33,8 +33,8 @@ modelo = "100"
 period = "0A"
 year = "horizon-1"
 casillas = { "0596" = "5412.00" }
-not_sourced = { "0003" = "36000.00", "0013" = "2332.80" }
-roles = { "irpf_rendimiento_trabajo_rendimiento_neto_previo" = "33667.20", "irpf_rendimiento_trabajo_gasto_otros" = "2000.00", "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00", "irpf_rendimiento_trabajo_rendimiento_neto_reducido" = "31667.20" }
+not_sourced = { "0003" = "36000.00", "0013" = "2332.80", "0017" = "33667.20", "0019" = "2000.00", "0025" = "31667.20" }
+roles = { "irpf_rendimiento_trabajo_reduccion_gastos_generales" = "0.00" }
 derivation = """
 From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
 The bank ledger carries the net payroll: 14 payments totalling 36000.00 - 2332.80 - 5412.00 = 28255.20.
@@ -44,13 +44,14 @@ Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
-reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded."
+reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded. The suffered-withholding binding family admits no income casilla for any class (RETENCION_SOPORTADA_NON_CREDIT_ROLES is empty in src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py), and casilla 0003 carries no binding in any Modelo 100 edition, although the record stores the certificate's importe_integro_dinerario. Casillas 0017, 0019 and 0025 follow from 0003 and 0013 through the registry formulas, so they cannot carry the law's figures either. The art. 20 reduction (role irpf_rendimiento_trabajo_reduccion_gastos_generales) stays compared: the law gives 0.00 here, and with no work income the calculation also gives 0.00."
 
 [[values]]
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-roles = { "irpf_minimo_contribuyente_estatal" = "5550.00", "irpf_minimo_descendientes_estatal" = "3950.00", "irpf_minimo_ascendientes_estatal" = "2550.00", "irpf_minimo_personal_familiar_estatal" = "12050.00" }
+not_sourced = { "0515" = "2550.00", "0519" = "12050.00" }
+roles = { "irpf_minimo_contribuyente_estatal" = "5550.00", "irpf_minimo_descendientes_estatal" = "3950.00" }
 derivation = """
 Contribuyente under 65: 5550.00 (art. 57).
 Descendientes (art. 58): first 2400.00 + second 2700.00 + 2800.00 for the second being under three = 7900.00; both parents live with
@@ -62,6 +63,7 @@ Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla
 """
 legal_ref = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-61"]
 grounding = "verified"
+reason = "The application does not source the ascendant minimum: casilla 0515 carries no binding and no formula in any Modelo 100 edition, whereas the descendant minimum of casilla 0513 has its profile aggregate binding; the ascendant's annual income that art. 59 tests is also no profile leaf. Casilla 0519 totals the minimums including 0515, so it cannot carry 12050.00 either. An application gap."
 
 [[values]]
 modelo = "100"
