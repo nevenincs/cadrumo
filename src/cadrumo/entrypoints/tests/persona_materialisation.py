@@ -21,6 +21,7 @@ registration of the profile it runs against.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import hashlib
 import json
 from collections.abc import Generator, Mapping, Sequence
@@ -364,8 +365,13 @@ def _scenario(as_of: datetime) -> Generator[None]:
 
 
 @contextmanager
-def _operations_over(root: Path, profile_id: UUID, *, workdir: Path, as_of: datetime) -> Generator[PersonaWorld]:
-    """Compose a production supervisor over the profile already resumed in the isolated ``root``."""
+def _operations_over(
+    root: Path, profile_id: UUID, *, workdir: Path, as_of: datetime, envelope: YearEnvelope | None = None
+) -> Generator[PersonaWorld]:
+    """Compose a production supervisor over the profile already resumed in the isolated ``root``.
+
+    ``envelope`` is the year envelope the persona was read under; the registry's own when omitted.
+    """
     with (
         profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
         bundled_indexed_authority().operation() as operation,
@@ -398,7 +404,7 @@ def _operations_over(root: Path, profile_id: UUID, *, workdir: Path, as_of: date
                 storage_root=root,
                 workdir=workdir,
                 as_of=as_of,
-                envelope=year_envelope(operation),
+                envelope=year_envelope(operation) if envelope is None else envelope,
                 services=services,
                 registry=registry,
                 operation=operation,
@@ -408,7 +414,9 @@ def _operations_over(root: Path, profile_id: UUID, *, workdir: Path, as_of: date
 
 
 @contextmanager
-def persona_world(tmp_path: Path, persona: Persona, *, as_of: datetime) -> Generator[PersonaWorld]:
+def persona_world(
+    tmp_path: Path, persona: Persona, *, as_of: datetime, envelope: YearEnvelope | None = None
+) -> Generator[PersonaWorld]:
     """Open ``persona``'s registered empty profile and a production supervisor over it, frozen at ``as_of``."""
     with bundled_indexed_authority().operation(), _scenario(as_of):
         _create_context, decode_context = profile_authority_contexts()
@@ -418,7 +426,9 @@ def persona_world(tmp_path: Path, persona: Persona, *, as_of: datetime) -> Gener
             profile_id,
         ):
             try:
-                with _operations_over(root, profile_id, workdir=tmp_path / "inputs", as_of=as_of) as opened:
+                with _operations_over(
+                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                ) as opened:
                     yield opened
             finally:
                 reset_test_profile_session()
@@ -1486,6 +1496,7 @@ def _sealed_replay(
     decode_context: ProfileDecodeContext,
     *,
     complete_setup: bool,
+    envelope: YearEnvelope,
 ) -> SealedProfileWorld:
     """This run's world holding ``persona`` replayed to ``scope`` into ``base``, replayed on first use anywhere in the run."""
 
@@ -1495,7 +1506,7 @@ def _sealed_replay(
             raise PersonaMaterialisationError("a sealed replay runs inside an isolated storage root")
         with (
             TemporaryDirectory(prefix="persona-inputs-") as inputs,
-            _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of) as world,
+            _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of, envelope=envelope) as world,
         ):
             replayed = materialise_persona(persona, world, scope, complete_setup=complete_setup)
         ids = {
@@ -1514,6 +1525,7 @@ def _sealed_replay(
         scope.value,
         persona_inputs_digest(persona),
         as_of.isoformat(),
+        f"envelope {envelope.floor}..{envelope.horizon}",
         "setup completed" if complete_setup else "setup open",
     )
     return derived_profile_world(base, key, replay, profile_decode_context=decode_context)
@@ -1521,7 +1533,13 @@ def _sealed_replay(
 
 @contextmanager
 def _reused_persona_world(
-    persona: Persona, scope: ReplayScope, tmp_path: Path, *, as_of: datetime, complete_setup: bool
+    persona: Persona,
+    scope: ReplayScope,
+    tmp_path: Path,
+    *,
+    as_of: datetime,
+    complete_setup: bool,
+    envelope: YearEnvelope,
 ) -> Generator[MaterialisedPersona]:
     """Open this consumer's own copy of the run's replay of ``persona``, replaying it only when the run has none."""
     with bundled_indexed_authority().operation(), _scenario(as_of):
@@ -1533,6 +1551,7 @@ def _reused_persona_world(
             _registered_world(persona, as_of),
             decode_context,
             complete_setup=complete_setup,
+            envelope=envelope,
         )
         with copied_profile_world(sealed, tmp_path / "runtime", profile_decode_context=decode_context) as (
             root,
@@ -1540,7 +1559,9 @@ def _reused_persona_world(
         ):
             ids = json.loads((root.parent / _REPLAYED_IDS).read_text(encoding="utf-8"))
             try:
-                with _operations_over(root, profile_id, workdir=tmp_path / "inputs", as_of=as_of) as world:
+                with _operations_over(
+                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                ) as world:
                     yield MaterialisedPersona(
                         persona=persona,
                         world=world,
@@ -1565,6 +1586,7 @@ def materialised_persona(
     reuse: bool = False,
     complete_setup: bool = True,
     read_on: datetime | None = None,
+    horizon: int | None = None,
 ) -> Generator[MaterialisedPersona]:
     """Read one persona, open its world at its scenario instant and replay it there as far as ``scope`` reaches.
 
@@ -1579,16 +1601,27 @@ def materialised_persona(
     write to one copy reaches no other and never the sealed world. A consumer
     that mutates the profile may reuse; one that needs the replay to run
     afresh does not. ``complete_setup`` is as :func:`materialise_persona` takes it.
+
+    With ``horizon`` the persona is read as if the registry's horizon were that
+    earlier supported year: its year tokens and its scenario clock move down
+    with it, so a scenario written against ``horizon-1`` is replayed for an
+    earlier supported year. The floor stays the registry's own.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
+    if horizon is not None:
+        if not envelope.floor <= horizon <= envelope.horizon:
+            raise PersonaMaterialisationError(f"horizon {horizon} lies outside {envelope.floor}..{envelope.horizon}")
+        envelope = dataclasses.replace(envelope, horizon=horizon)
     persona = read_persona(persona_id, envelope=envelope)
     as_of = scenario_instant(persona, envelope) if read_on is None else read_on
     if reuse:
-        with _reused_persona_world(persona, scope, tmp_path, as_of=as_of, complete_setup=complete_setup) as reused:
+        with _reused_persona_world(
+            persona, scope, tmp_path, as_of=as_of, complete_setup=complete_setup, envelope=envelope
+        ) as reused:
             yield reused
         return
-    with persona_world(tmp_path, persona, as_of=as_of) as world:
+    with persona_world(tmp_path, persona, as_of=as_of, envelope=envelope) as world:
         yield materialise_persona(persona, world, scope, complete_setup=complete_setup)
 
 
