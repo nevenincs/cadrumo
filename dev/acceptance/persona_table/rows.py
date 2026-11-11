@@ -44,6 +44,8 @@ class Stage(StrEnum):
     """Calculate only: the application refused with the code the persona states."""
     REFUSAL_NOT_RAISED = "refusal-not-raised"
     """Calculate only: the persona states a refusal, and the return calculated."""
+    UNRESOLVED = "unresolved"
+    """Calculate only: the calculation gives no value for a stated casilla, so nothing disagrees and nothing passes."""
     INCOMPLETE = "incomplete"
     """Verify only: verificado completo was not granted."""
     REFUSED = "refused"
@@ -250,7 +252,7 @@ def classify(row: TableRow) -> Verdict:
     return Verdict.FLOOR_SOURCE if _refused_for_dropped_source(row) else Verdict.FAIL
 
 
-_REFUSING_STAGES = frozenset({Stage.REFUSED, Stage.INCOMPLETE})
+_REFUSING_STAGES = frozenset({Stage.REFUSED, Stage.INCOMPLETE, Stage.UNRESOLVED})
 
 
 def _refused_for_dropped_source(row: TableRow) -> bool:

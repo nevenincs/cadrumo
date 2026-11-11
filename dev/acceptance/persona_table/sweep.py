@@ -326,7 +326,7 @@ def _compare(
     elif not values:
         calculate = Stage.CALCULATED
     else:
-        calculate = Stage.MISMATCH if mismatches else Stage.PASSED
+        calculate = _value_stage(values, calculated) if mismatches else Stage.PASSED
         reasons += ["; ".join(mismatches)] if mismatches else []
     unresolved = _unresolved(calculated)
     if unresolved:
@@ -343,6 +343,18 @@ def _mismatches(values: list[ExpectedValue], calculated: ModeloWorkCalculatePubl
         for casilla, amount in value.casillas
         if _decimal(got.get(casilla)) != _decimal(amount)
     ]
+
+
+def _value_stage(values: list[ExpectedValue], calculated: ModeloWorkCalculatePublicResultV3) -> Stage:
+    """Mismatch when a stated casilla has another value; unresolved when every differing casilla has none."""
+    got = {item.key: restore_scalar(item.value) for item in calculated.calculation.casilla_values}
+    differing = [
+        casilla
+        for value in values
+        for casilla, amount in value.casillas
+        if _decimal(got.get(casilla)) != _decimal(amount)
+    ]
+    return Stage.UNRESOLVED if all(got.get(casilla) is None for casilla in differing) else Stage.MISMATCH
 
 
 def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:

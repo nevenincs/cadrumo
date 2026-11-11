@@ -268,6 +268,13 @@ def test_a_value_mismatch_stays_a_fail_beside_a_dropped_source() -> None:
     assert row.verdict is Verdict.FAIL
 
 
+def test_a_stated_casilla_left_without_a_value_is_unresolved_not_a_mismatch() -> None:
+    floor = TableRow.from_plan(_floor_plan(), Stage.UNRESOLVED, verify=Stage.REFUSED, export=Stage.REFUSED)
+    plain = TableRow.from_plan(_plan(), Stage.UNRESOLVED, verify=Stage.REFUSED, export=Stage.REFUSED)
+    assert floor.verdict is Verdict.FLOOR_SOURCE
+    assert plain.verdict is Verdict.FAIL
+
+
 def test_a_refusal_without_a_dropped_source_stays_a_fail() -> None:
     row = TableRow.from_plan(_floor_plan(dropped=False), Stage.REFUSED)
     assert row.verdict is Verdict.FAIL
