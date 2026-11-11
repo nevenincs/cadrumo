@@ -276,6 +276,7 @@ def read_modelo_workbench_form(
         bucket_events=ports.bucket_events,
         activity_assets=ports.activity_assets,
         credit_resolutions=ports.credit_resolutions,
+        transactions=None if ports.ledger is None else ports.ledger.transactions,
         m303_arrivals=ports.m303_arrivals,
     )
     form = loaded.form

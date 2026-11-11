@@ -387,6 +387,10 @@ def _next_after_review(
         return _after_verified_review(form)
     if form.calculation_revision_id is None:
         return ModeloFormNextAction.CALCULATE, 0, False
+    if form.verification_out_of_date:
+        # The movements the last check read changed since, so what it found to
+        # resolve may already be settled; only checking again can say.
+        return ModeloFormNextAction.VERIFY, 0, False
     if awaiting and awaiting == blocking and not blocked:
         # Only the check can say whether what blocks stands, and it also judges
         # whether the values still missing are ones the declaration needs.

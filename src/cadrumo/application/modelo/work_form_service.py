@@ -97,6 +97,7 @@ from .profile_binding import resolve_profile_sourced_bindings
 from .profile_export_binding import resolve_m303_profile_lexicals, resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available
 from .taxation_comparison import revision_compares_taxation
+from .verification_report_facts import verification_sources_digest
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
@@ -111,11 +112,12 @@ from .work_form_models import (
     ModeloFormField,
     ModeloWorkForm,
 )
-from .work_review import build_modelo_work_review
+from .work_review import ModeloWorkReview, build_modelo_work_review
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
@@ -441,6 +443,7 @@ def load_modelo_work_form(
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
     activity_assets: ActivityAssetHistoryRepository | None = None,
     credit_resolutions: CreditResolutionReader | None = None,
+    transactions: TransactionCatalogueRepositoryProtocol | None = None,
     m303_arrivals: M303ArrivalPorts | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
@@ -462,6 +465,9 @@ def load_modelo_work_form(
     ``credit_resolutions`` is the profile's store of accepted source
     disagreements; without it none is honoured, so every disagreement holds
     filing, and one that cannot be read is held the same way.
+    ``transactions`` is the profile's ledger, read only to tell whether the
+    movements the last check read have changed since; without it the form
+    never says the check is out of date.
 
     ``m303_arrivals`` are the ledger and register repositories a Modelo 303 period
     facts are folded from, exactly as its export folds them. Without them the
@@ -561,12 +567,25 @@ def load_modelo_work_form(
             "compares_taxation": revision_compares_taxation(snapshot),
             "compares_borrador": borrador_pdf_extraction_profile(snapshot) is not None,
             "offers_iva_wallet": revision_offers_iva_wallet(modelo_id=snapshot.modelo.id, revision=snapshot.revision),
+            "verification_out_of_date": _verification_out_of_date(review, head, transactions),
         }
     )
     state = review.lifecycle_state
     return ModeloWorkFormLoadV1(
         form=form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES
     )
+
+
+def _verification_out_of_date(
+    review: ModeloWorkReview,
+    head: CalculationRevision | None,
+    transactions: TransactionCatalogueRepositoryProtocol | None,
+) -> bool:
+    """Whether the movements or the calculation the last check read have changed since it read them."""
+    recorded = review.verification_sources_digest
+    if recorded is None or head is None or transactions is None:
+        return False
+    return verification_sources_digest(head, transactions.load()) != recorded
 
 
 def _last_export(
