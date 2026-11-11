@@ -24,6 +24,7 @@ from ....core.config import (
 from ....core.config_support import StorageRouteClassification, StorageRouteKind
 from ....core.time.clock import now as clock_utc_now
 from .errors import (
+    SessionExpiredError,
     storage_validation_error,
 )
 from .master_key.active_session import current_active_bucket_session, session_serves_bucket
@@ -108,10 +109,13 @@ class StorageRuntime(BaseModel):
         if active is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
         now = clock_utc_now()
+        # An ended session is the operator's to reopen, not a broken store: it
+        # refuses as the expiry the secure-object repository reports for the
+        # same state, keeping the readiness code that names which end it met.
         if active.sealed:
-            raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_SEALED)
+            raise _session_ended_error(StorageRuntimeReadinessCode.SESSION_SEALED)
         if active.is_expired(now):
-            raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_EXPIRED)
+            raise _session_ended_error(StorageRuntimeReadinessCode.SESSION_EXPIRED)
         bucket_id = self.bucket_id
         if bucket_id is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)
@@ -155,6 +159,16 @@ def _route_readiness_issues(
     if route.bucket_id != active.bucket_id:
         return [readiness_issue(code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH)]
     return []
+
+
+def _session_ended_error(code: StorageRuntimeReadinessCode) -> SessionExpiredError:
+    return SessionExpiredError(
+        context={
+            "active_session_fresh": False,
+            "session_expired": True,
+            "readiness_code": code.value,
+        },
+    )
 
 
 def inspect_storage_runtime(

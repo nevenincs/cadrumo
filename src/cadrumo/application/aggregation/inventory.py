@@ -421,6 +421,8 @@ def _ledgers_or_not_ready(
                 "valued at acquisition price, so the stock variation can be derived."
             ),
         )
+    # A missing book is an unanswered question, not a statement that the activity
+    # held no existencias: only a book closed at zero proves the zero rows.
     if not ledgers:
         return _ledger_not_ready(
             binding_ids,
@@ -428,6 +430,12 @@ def _ledgers_or_not_ready(
             owned_sources,
             state="missing_activity_ledgers",
             message=f"no complete {filing_year} inventory activity ledger is available",
+            remedy=(
+                "Open the inventory book of each activity in estimacion directa for the ejercicio and record "
+                "its closing value, the existencias finales valued at acquisition price. For an activity that "
+                "held no existencias, open the book with no stock and record its closing at zero, so the rows "
+                "read zero on that statement."
+            ),
         )
     return ledgers
 

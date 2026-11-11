@@ -71,6 +71,7 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.errors import (
     ModeloExportError,
+    ModeloExportProducerFactsRefusedError,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.own_accounts import (
@@ -593,23 +594,33 @@ def build_export_producer_snapshot(
                 operation=operation,
             ),
         )
-    except (FilingProducerSnapshotError, ValueError) as exc:
-        # A typed cause (FilingProducerSnapshotError, e.g. the M202 producer-facts
-        # completeness refusal) may already carry structured context -- the
-        # missing fact identifiers, a reason -- that a bare `cause_type` would
-        # otherwise discard. Merge it forward so the operator-visible refusal
-        # names what is actually missing instead of only that something failed.
-        context: dict[str, object] = {
-            "calculation_revision_id": command.calculation_revision_id,
-            "cause_type": type(exc).__name__,
-        }
-        cause_context = getattr(exc, "context", None)
-        if cause_context:
-            context.update(cause_context)
+    except FilingProducerSnapshotError as exc:
+        raise _producer_facts_refusal(command, exc) from exc
+    except ValueError as exc:
+        # Not a statement about the filer's facts: a value the export's own
+        # assembly could not form, which no filer action puts right.
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context=context,
+            context={"calculation_revision_id": command.calculation_revision_id, "cause_type": type(exc).__name__},
         ) from exc
+
+
+def _producer_facts_refusal(
+    command: ModeloExportCommand, exc: FilingProducerSnapshotError
+) -> ModeloExportProducerFactsRefusedError:
+    """Refuse an export whose facts about the filer or the filing cannot form the producer snapshot.
+
+    The cause's structured context -- the missing fact identifiers, a reason --
+    is merged forward, so the refusal names what is missing rather than only
+    that something failed.
+    """
+    return ModeloExportProducerFactsRefusedError(
+        context={
+            "calculation_revision_id": command.calculation_revision_id,
+            "cause_type": type(exc).__name__,
+            **(exc.context or {}),
+        },
+    )
 
 
 def m303_nota_three_requires_refund_account(
@@ -711,11 +722,10 @@ def _require_export_identity(
     presenter = command.presenter or (derived[0] if derived else None)
     taxpayer_identity = command.taxpayer_identity or (derived[1] if derived else None)
     if presenter is None or taxpayer_identity is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
+        raise ModeloExportProducerFactsRefusedError(
             context={
                 "calculation_revision_id": command.calculation_revision_id,
-                "cause": "explicit presenter and taxpayer identity facts are required",
+                "reason": "export_identity_unresolved",
             },
         )
     return presenter, taxpayer_identity
@@ -762,14 +772,7 @@ def require_m360_solicitud_for_export(
             export_ports=export_ports,
         )
     except FilingProducerSnapshotError as exc:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause_type": type(exc).__name__,
-                **(exc.context or {}),
-            },
-        ) from exc
+        raise _producer_facts_refusal(command, exc) from exc
 
 
 def _resolve_export_model_profile(

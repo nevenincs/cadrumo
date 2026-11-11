@@ -108,6 +108,11 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID, LedgerLinkRequest
+from ...application.ledger.update_contracts import (
+    LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+    LedgerUpdatePatch,
+    LedgerUpdateRequest,
+)
 from ...application.live.filed_single_capture_operation import (
     FILED_SINGLE_CAPTURE_DEFINITION_ID,
     FiledSingleCapturePublicResultV1,
@@ -245,7 +250,7 @@ from ...tests.personas import (
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
-from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
+from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -363,7 +368,7 @@ def scenario_instant(persona: Persona, envelope: YearEnvelope) -> datetime:
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry(filed_data_port=PERSONA_AEAT_REGISTER)
+    return build_production_operation_registry(filed_register=PERSONA_FILED_REGISTER)
 
 
 def persona_profile_id(persona_id: str) -> UUID:
@@ -913,6 +918,18 @@ def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[
                 actor=PERSONA_ACTOR,
             ),
         )
+        if (accrued_on := row.accrual_date(world.envelope)) is not None:
+            settle_operation(
+                world,
+                LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+                LedgerUpdateRequest(
+                    profile_id=world.profile_id,
+                    transaction_id=transactions[row.ref],
+                    patch=LedgerUpdatePatch(accrual_date=accrued_on.isoformat()),
+                    patch_fields=("accrual_date",),
+                    actor=PERSONA_ACTOR,
+                ),
+            )
     invoices: dict[str, str] = {}
     for row in persona.ledger:
         request = _invoice_request(persona, row, world)

@@ -1303,6 +1303,14 @@ errors:
       Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről
       (megtartás, illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi
       sem íródott ki. Válassz egyet, és exportálj újra.
+    refused_modelo_export_producer_facts: 'Semmi sem íródott ki: hiányoznak vagy nem
+      egyeznek azok az adatok, amelyeket a fájl rólad vagy erről a bevallásról közöl
+      (azonosítás, bankszámla vagy a modellre jellemző adatok). Egészítsd ki őket
+      a profilodban vagy az exportálási beállításokban, és exportálj újra.'
+    refused_modelo_export_value_overflow: 'Semmi sem íródott ki: egy érték nem fér
+      el a(z) %{field_id} mezőben, amelynek az AEAT rekordterve %{field_length} pozíciót
+      ad. A levágás más adatot vallana be. Ellenőrizd az adatot vagy az összeget,
+      és exportálj újra.'
     refused_modelo_instalment_election: 'Ezt a bevallást nem fizetheted két részletben:
       ehhez olyan fizetendő eredmény kell, amelyből a második részlet legalább egy
       cent marad, a bevallás nem lehet helyesbítő, határidőn belül kell benyújtanod,

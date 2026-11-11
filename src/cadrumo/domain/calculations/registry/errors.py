@@ -272,6 +272,30 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
 
+class FixedWidthValueOverflowError(RegistryValidationError):
+    """A value is wider than the fixed-width slot the record design gives it.
+
+    The codec refuses rather than truncates: a value cut to fit would be a
+    different value on the wire. The width facts are kept as attributes so a
+    filing boundary can say which slot refused and by how much, without
+    parsing the message.
+
+    Structured attributes: ``field_id`` (``None`` until a field is known),
+    ``field_length``, ``rendered`` (the text that did not fit).
+    """
+
+    def __init__(self, *, rendered: str, field_length: int, field_id: str | None = None) -> None:
+        """Construct the overflow refusal for ``rendered`` against ``field_length``."""
+        self.rendered: str = rendered
+        self.field_length: int = field_length
+        self.field_id: str | None = field_id
+        prefix = "fixed-width value" if field_id is None else f"export field {field_id!r} value"
+        super().__init__(
+            f"{prefix} exceeds length {field_length}",
+            context={"field_length": field_length, "value_length": len(rendered)},
+        )
+
+
 class GovernedFactNotApplicableError(RegistryValidationError):
     """A registered governed fact authors no variant covering the query coordinate.
 

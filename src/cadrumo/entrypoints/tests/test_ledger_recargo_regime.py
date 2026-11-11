@@ -40,9 +40,11 @@ def test_a_general_regime_profile_cannot_classify_a_purchase_with_recargo(tmp_pa
         transaction_id = materialised.transactions[_PURCHASE]
 
         def stored() -> tuple[Decimal | None, Decimal | None, Decimal | None]:
-            row = compose_ledger_action_ports(
-                bucket_id=str(world.profile_id), operation=world.operation
-            ).transaction_repository.load().transactions[transaction_id]
+            row = (
+                compose_ledger_action_ports(bucket_id=str(world.profile_id), operation=world.operation)
+                .transaction_repository.load()
+                .transactions[transaction_id]
+            )
             return row.taxable_base, row.iva_amount, row.recargo_amount
 
         before = stored()

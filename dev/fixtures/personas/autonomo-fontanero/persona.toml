@@ -165,9 +165,8 @@ periods = ["0A"]
 
 # His first Modelo 130 return is calculated but not filed by the replay.
 # Casilla 13 depends on the prior year's Renta, which the replay brings in from
-# his AEAT filing above. The later quarters are not calculated: their casilla 05
-# reads casilla 07 of the earlier quarters' filed returns, and with 1T unfiled
-# the calculation refuses for that missing input.
+# his AEAT filing above. The later quarters' casilla 05 reads casilla 07 of the
+# earlier quarters' filed returns, so they calculate once 1T is filed.
 [[calculated_returns]]
 modelo = "130"
 year = "horizon-1"

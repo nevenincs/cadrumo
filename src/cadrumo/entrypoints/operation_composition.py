@@ -46,7 +46,6 @@ if TYPE_CHECKING:
     from ..application.ledger.participation_read import TransactionParticipationIndexRepositoryFactory
     from ..application.ledger.read_ports import LedgerReadPortsFactory
     from ..application.ledger.rule_repository import LedgerClassificationRuleRepositoryFactory
-    from ..application.live.filed_data_ports import FiledDataCapturePort
     from ..application.live.sede_view_ports import SedeViewStreamOpener
     from ..application.modelo.aggregate_ports import ModeloAggregateOperationPortsFactory
     from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
@@ -83,6 +82,7 @@ if TYPE_CHECKING:
     from ..core.hex import Hex64Str
     from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .live_state_composition import FiledRegisterSource
 
 from .operation_composition_general import (
     compose_actividad_asset_registered_operations,
@@ -523,15 +523,15 @@ def build_production_operation_registry(
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     connectivity_probe: ConnectivityProbePort | None = None,
-    filed_data_port: FiledDataCapturePort | None = None,
+    filed_register: FiledRegisterSource | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory by composing every group eagerly.
 
     This is the validation authority the contract manifest is generated from.
     A ``None`` capability selects its production default.
     ``connectivity_probe`` browses to the site the connectivity operation
-    observes. ``filed_data_port`` is the AEAT register the single and bulk
-    filed captures read in place of the AEAT Sede.
+    observes. ``filed_register`` is the register the single and bulk
+    filed captures read, with its preflight, in place of the AEAT Sede.
     """
     inputs = OperationCompositionInputs(
         settings=settings,
@@ -578,7 +578,7 @@ def build_production_operation_registry(
         modelo_workbench_read_ports_factory=modelo_workbench_read_ports_factory,
         execution_caller_reader=execution_caller_reader,
         connectivity_probe=connectivity_probe,
-        filed_data_port=filed_data_port,
+        filed_register=filed_register,
     )
     return _compose_every_group(inputs)[0]
 
