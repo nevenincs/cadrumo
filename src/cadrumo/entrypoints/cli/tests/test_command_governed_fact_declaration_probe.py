@@ -96,6 +96,7 @@ from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     require_governed_fact_authority,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
@@ -494,7 +495,7 @@ _TEETH_TARGET: Final = DeferredTarget(
 def read_a_governed_fact(ctx: object) -> None:
     """Read a governed fact the way an under-declared handler would."""
     del ctx
-    resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 1, 1))
+    resolve_m347_counterparty_annual_threshold(effective_date=date(filing_year_envelope().horizon, 1, 1))
 
 
 def _state_free_policy() -> ExecutionPolicySpec:

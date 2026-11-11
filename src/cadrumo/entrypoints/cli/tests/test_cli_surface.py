@@ -13,6 +13,7 @@ pre-existing active profile.
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
@@ -21,6 +22,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.cli_json_support import require_json_object
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
@@ -32,6 +34,8 @@ from .scenario_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 __all__ = ["cli_surface_isolated_backend"]
 
@@ -90,7 +94,7 @@ def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        f"{date(_YEAR, 4, 15).isoformat()},Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
     dry = invoke(
@@ -121,7 +125,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
             "ledger",
             "add",
             "--date",
-            "2026-05-02",
+            date(_YEAR, 5, 2).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -141,7 +145,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, Any]:
             "--iva-amount",
             "21.00",
             "--idempotency-key",
-            "cash-office-2026-05-02",
+            f"cash-office-{date(_YEAR, 5, 2).isoformat()}",
         ],
     )
     assert bucket_id not in json.dumps(payload, sort_keys=True)
@@ -283,7 +287,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
 
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:
     """After one reviewed transaction the status verb reports a single ready row."""
-    status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "05", "--year", "2026"])
+    status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "05", "--year", str(_YEAR)])
     assert bucket_id not in json.dumps(status, sort_keys=True)
     assert status["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert status["total_count"] == 1
@@ -324,10 +328,10 @@ def _assert_ledger_review_returns_transaction(transaction_id: str) -> None:
 def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) -> None:
     """Review with a period filter that doesn't match returns an empty rows list."""
     filtered_out = _run_ledger_cli_json(
-        ["app", "ledger", "review", transaction_id, "--filter", "period=06", "--filter", "year=2026"],
+        ["app", "ledger", "review", transaction_id, "--filter", "period=06", "--filter", f"year={_YEAR}"],
     )
     assert filtered_out["rows"] == []
-    assert filtered_out["filters"] == ["period=2026 06", f"id={transaction_id}"]
+    assert filtered_out["filters"] == [f"period={_YEAR} 06", f"id={transaction_id}"]
 
 
 @pytest.mark.usefixtures("authority_operation")
@@ -460,8 +464,8 @@ def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> 
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n"
-        "2026-04-16,SaaS Vendor,Subscription,-48.40,EUR,n26-002\n",
+        f"{date(_YEAR, 4, 15).isoformat()},Client SL,Invoice 1,121.00,EUR,n26-001\n"
+        f"{date(_YEAR, 4, 16).isoformat()},SaaS Vendor,Subscription,-48.40,EUR,n26-002\n",
         encoding="utf-8",
     )
     imported = invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
