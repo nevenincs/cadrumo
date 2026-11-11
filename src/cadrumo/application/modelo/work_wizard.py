@@ -225,7 +225,7 @@ def modelo_work_wizard_follow_up_step(
     """
     grounding_lookup = _binding_grounding_lookup(unit, operation=operation)
     if isinstance(error, ModeloWorkMissingInputError):
-        return _binding_step(str(error.binding_id), grounding_lookup)
+        return _binding_step(error.binding_id, grounding_lookup)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return None
     context = error.context or {}
