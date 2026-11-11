@@ -85,14 +85,30 @@ cli:
           Indica-ho per preguntar què respondrà l'escala per a aquest document, que
           és l'única manera de veure una discrepància amb el que vas confirmar abans
           que una confirmació la rebutgi.
+        filing_name_help: Indica el nom amb què es declara una contrapart a les declaracions
+          informatives, en les parts que anomenen els dissenys de registre. S'indica
+          una sola vegada, per a totes les exportacions posteriors.
         group_help: Confirma el que se sap d'una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
           contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
           no per on estigui establerta.'
+        no_second_surname_help: Indica que la persona física té un sol cognom. Un
+          segon cognom que falta mai no s'interpreta com a absència.
+        nombre_help: El nom complet d'una persona física.
         note_help: En què es basa la resposta, amb les teves paraules. Es registra,
           mai no es consulta.
+        party_kind_help: Si la contrapart és persona física o entitat; decideix quines
+          parts indiques.
+        primer_apellido_help: El primer cognom d'una persona física, tal com el coneixes.
+        razon_social_help: La raó social o denominació completa d'una entitat, mai
+          un nom comercial.
+        rendering_help: Una forma més curta que indiques per a un camp més estret,
+          com AMPLADA=TEXT. Repeteix-ho una vegada per amplada; un nom mai no s'escurça
+          sense que ho indiquis.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
+        segundo_apellido_help: El segon cognom d'una persona física. Omet-lo només
+          juntament amb --no-second-surname.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         view_help: Mostra què respondria l'escala d'identificació d'IVA per a aquesta
@@ -3569,8 +3585,14 @@ cli:
           ''--scope'' per a on està establerta la contrapart, ''--identification-state''
           per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
           fets independents i qualsevol d''ells es pot indicar per separat.'
+        rendering_malformed: '''{rendering}'' no és una forma abreujada. Escriu-la
+          com AMPLADA=TEXT, amb l''amplada del camp en caràcters i el text que vols
+          declarar-hi.'
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
           per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
+      lines:
+        filing_name_stated: '{identifier}: nom de declaració indicat'
+        filing_name_unchanged: '{identifier}: el nom de declaració ja estava indicat'
       notices:
         already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}''
           com a ''{answered}''; aquesta crida no ha creat cap confirmació nova i es
@@ -3579,11 +3601,21 @@ cli:
           establert a {confirmed}, però el justificant que has aportat situa la mateixa
           part a {evidenced}. Cadrumo no fixarà cap territori per a aquesta contrapart
           fins que se''n retiri un dels dos.'
+        filing_name_already_stated: '''{identifier}'' ja té aquest nom de declaració,
+          indicat per ''{asserted_by}''; aquesta crida no ha canviat res i es manté
+          la indicació original.'
+        filing_name_kind_contradicts_identifier_form: Has indicat el nom de declaració
+          per a {declared}, però la forma d'aquest identificador fiscal espanyol és
+          la de {observed}. El nom es desa tal com l'has indicat i no s'ha canviat
+          res; comprova quina de les dues coses és correcta.
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
           que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+      party_kinds:
+        entity: una entitat
+        natural_person: una persona física
     detach:
       actor_help: Actor registrat en l'esdeveniment de cicle de vida.
       attachment_help: Id de l'adjunt que se separa; repetible.

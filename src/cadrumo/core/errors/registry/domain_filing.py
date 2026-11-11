@@ -508,11 +508,51 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.filing.errors.FilingExportUnrepresentableCharacterError",
         ErrorCode(
             code="ERROR_FILING_EXPORT_UNREPRESENTABLE_CHARACTER",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_filing_export_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameMissingError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameSingleSurnameError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_SINGLE_SURNAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_single_surname",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.filing.errors.FilingExportDeclaredPartyNameTooWideError",
+        ErrorCode(
+            code="REFUSED_FILING_EXPORT_DECLARED_PARTY_NAME_TOO_WIDE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_export_declared_party_name_too_wide",
             retryable=False,
             runbook_id=None,
         ),
@@ -695,6 +735,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_EXPORT_REQUIRED_RECORD_ABSENT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_export_required_record_absent",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.modelos.errors.ModeloExportDeclaredPartyNameError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_DECLARED_PARTY_NAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_declared_party_name",
             retryable=False,
             runbook_id=None,
         ),

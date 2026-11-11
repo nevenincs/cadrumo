@@ -62,6 +62,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "part",
         "required_with",
         "requirement",
+        "party_name",
     },
 )
 
@@ -165,6 +166,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "absent_fill",
         "scheme_period_part",
         "scheme_period_type",
+        "party_name",
         "legal_refs",
         "source_refs",
     },
@@ -187,6 +189,7 @@ _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED: Final[tuple[str, ...]] = (
     "absent_fill",
     "scheme_period_part",
     "scheme_period_type",
+    "party_name",
 )
 
 
@@ -315,6 +318,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         **({"part": payload["part"]} if payload["part"] is not None else {}),
         **({"required_with": payload["required_with"]} if payload["required_with"] is not None else {}),
         **({"requirement": payload["requirement"]} if payload["requirement"] is not None else {}),
+        **({"party_name": payload["party_name"]} if payload["party_name"] is not None else {}),
     }
 
 

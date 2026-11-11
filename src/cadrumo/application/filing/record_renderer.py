@@ -18,7 +18,7 @@ from ...domain.calculations.registry.retenciones_bindings import (
     RetencionesAggregationFact,
     RetencionesAggregationProvider,
 )
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -38,6 +38,7 @@ from ...domain.modelos.perceptor_clave_scope import (
 )
 from .export_parity import did_page_suppressed
 from .m347_declarado_row_scope import require_m347_declarado_casillas_have_one_row
+from .party_name_slots import require_declared_party_names
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_field_renderer import format_field, render_record
@@ -110,6 +111,7 @@ def render_layout_records(
                         projection_values=projection_values,
                         source_digests=source_digests,
                         clave_scope=clave_scope,
+                        revision=registry_snapshot.revision,
                     ),
                 )
             )
@@ -204,7 +206,11 @@ def _render_record_bytes(
     projection_values: dict[ProjectionAddress, object],
     source_digests: Mapping[str, str],
     clave_scope: PerceptorClaveScope | None,
+    revision: ModeloRevision,
 ) -> bytes:
+    require_declared_party_names(
+        record, modelo=str(draft.modelo), revision=revision, binding_values=binding_values, row=row
+    )
     try:
         text = render_record(
             record,

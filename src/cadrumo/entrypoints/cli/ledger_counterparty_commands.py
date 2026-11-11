@@ -49,6 +49,8 @@ import typer
 
 from ...application.ledger.counterparty_operation import (
     CounterpartyFactProjection,
+    CounterpartyFilingNameFinding,
+    CounterpartyFilingNameProjection,
     CounterpartyResolutionProjection,
     LedgerCounterpartyRequest,
 )
@@ -59,6 +61,11 @@ from ...domain.calculations.registry.eu_member_state_catalogue import require_eu
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .ledger_counterparty_filing_name_commands import (
+    filing_name_finding_notices,
+    filing_name_finding_payloads,
+    filing_name_payload,
+)
 from .ledger_counterparty_results import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
@@ -266,6 +273,8 @@ def _counterparty_view_result(
     tax_identifier: str,
     evidenced_scope: IvaTerritorialScope | None,
     resolution: CounterpartyResolutionProjection,
+    filing_name: CounterpartyFilingNameProjection | None,
+    findings: tuple[CounterpartyFilingNameFinding, ...],
 ) -> CounterpartyViewResult:
     """Project the resolver's three-state answer onto the backend-owned payload."""
     operation = authority_operation(ctx)
@@ -306,6 +315,8 @@ def _counterparty_view_result(
             else None
         ),
         contradiction_detail=resolution.contradiction_detail,
+        filing_name=filing_name_payload(filing_name) if filing_name is not None else None,
+        filing_name_findings=filing_name_finding_payloads(findings),
     )
 
 
@@ -364,10 +375,18 @@ def counterparty_view(
     )
     resolution = cast("CounterpartyResolutionProjection", completed.projection.resolution)
     notices = _counterparty_view_notices(tax_identifier, resolution)
+    notices.extend(filing_name_finding_notices(completed.projection.findings))
     emit_envelope(
         ctx,
         command="ledger.counterparty.show",
-        result=_counterparty_view_result(ctx, tax_identifier, evidenced_scope, resolution),
+        result=_counterparty_view_result(
+            ctx,
+            tax_identifier,
+            evidenced_scope,
+            resolution,
+            completed.projection.filing_name,
+            completed.projection.findings,
+        ),
         lines=[_counterparty_view_line(tax_identifier, resolution)],
         notices=notices,
     )

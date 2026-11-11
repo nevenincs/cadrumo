@@ -16,6 +16,8 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
+from ...filing.declared_party_name import DeclaredPartyFilingName
+from ...filing.declared_party_name_filing import PartyNameRefusals
 from ...invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
@@ -37,6 +39,7 @@ from .invoice_row_materialization import (
     normalise_m349_nif_export_rows,
 )
 from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
+from .party_name_rows import file_party_names
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
 
@@ -68,7 +71,7 @@ string for an enum-typed field, so the token is coerced at the boundary.
 _InvoiceRowField = Literal[
     "party_tax_id",
     "country_code",
-    "party_legal_name",
+    "party_filing_name",
     "clave",
     "base_imponible",
     "importe_total",
@@ -154,6 +157,15 @@ class InvoiceObservation(BaseModel):
     art. 33.1 compares with the floor, which are those "durante el año natural".
     """
     party_legal_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
+    """The counterparty's name as the invoice prints it: display only, never filed."""
+    party_filing_name: DeclaredPartyFilingName | None = None
+    """The name the person declared this party is filed under, when they stated one.
+
+    A party-name slot files only this, composed by the slot's design rule; the
+    invoice's printed name never stands in for it.
+    """
+    party_handle: str | None = Field(default=None, min_length=1, max_length=64)
+    """A non-identifying handle of the party's stated-facts record, naming it in a refusal."""
     cash_accounting_operation: bool = False
     """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
 
@@ -409,10 +421,9 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # Row fields the InvoiceObservation model cannot supply at all. The
 # validator rejects bindings asking for these so the failure surfaces
 # at snapshot-build rather than as a silent missing column at runtime.
-# ``party_legal_name`` is NOT on this list: AEAT modelo-349 operator
-# rows require it, and a missing legal_name in an observation is a
-# real-data defect that must surface loudly at row-build time rather
-# than be filtered out by a binding-validation guard.
+# ``party_filing_name`` is NOT on this list: every row names its party, and a
+# party with no declared filing name leaves the slot without content for the
+# export to refuse, rather than being filtered out by a binding-validation guard.
 _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
 
 
@@ -767,6 +778,7 @@ def resolve_invoice_binding_row_values(
     observations: Iterable[InvoiceObservation],
     *,
     effective_date: date | None = None,
+    party_name_refusals: PartyNameRefusals | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer invoice bindings into per-row indexed values.
 
@@ -784,6 +796,14 @@ def resolve_invoice_binding_row_values(
             bindings group, filter, and aggregate into indexed row values.
         effective_date: Filing-period date used by governed operation claves and
             the M347 declaration threshold when those facts are present.
+        party_name_refusals: Receives each party-name slot left without
+            content because its party has no declared filing name that the
+            slot's design rule composes within the slot's width.
+
+    A ``party_filing_name`` row cell holds the declared name composed by the
+    composition rule and width of the layout field that files the binding. A
+    party with no such name leaves the cell absent, never blank and never the
+    invoice's printed name.
     """
     available = tuple(observations)
     _validate_invoice_operation_claves(revision, available, effective_date=effective_date)
@@ -798,7 +818,24 @@ def resolve_invoice_binding_row_values(
             effective_date=_require_m347_effective_date(effective_date),
         ),
     )
-    return normalise_m349_nif_export_rows(rows)
+    composed = file_party_names(
+        revision,
+        rows,
+        available,
+        name_bindings=_party_name_bindings(revision),
+        refusals=party_name_refusals,
+    )
+    return normalise_m349_nif_export_rows(composed)
+
+
+def _party_name_bindings(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the invoice bindings whose rows file a party's name."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source in INVOICE_BINDING_SOURCE_KINDS
+        and _validated_invoice_selector(binding).row_field == "party_filing_name"
+    )
 
 
 def _validate_invoice_operation_claves(

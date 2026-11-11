@@ -52,6 +52,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+
 from .....core.aggregation import BindingSourceKind
 from ..invoice_bindings import (
     InvoiceObservation,
@@ -72,6 +74,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         base_amount=Decimal("1000.00"),
         intracommunity_clave="E",
         party_legal_name="DE Auto GmbH",
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="DE Auto GmbH"),
     ),
     InvoiceObservation(
         source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -82,6 +85,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         base_amount=Decimal("500.50"),
         intracommunity_clave="S",
         party_legal_name="Equipement Garage SARL",
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="Equipement Garage SARL"),
     ),
     # Second observation for the SAME (country, party, clave) as the first —
     # AEAT accumulates same-operator-same-clave operations into one Tipo 2
@@ -96,6 +100,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         base_amount=Decimal("250.25"),
         intracommunity_clave="E",
         party_legal_name="DE Auto GmbH",
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="DE Auto GmbH"),
     ),
 )
 _EXPECTED_OPERATOR_COUNT = Decimal("2")  # distinct (country, party, clave): DE/E, FR/S

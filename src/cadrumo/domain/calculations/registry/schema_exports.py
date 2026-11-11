@@ -41,6 +41,7 @@ from .fixed_width_codec import (
 )
 from .governed_fact_scope import governed_facts_in_scope
 from .ids import BindingId, ExportFieldId, ExportLayoutId, ProjectionEndpointId, RecordId, SourceRefId
+from .party_name_composition import PartyNameComposition
 from .schema_base import (
     CasillaDataType,
     LegalRefs,
@@ -591,6 +592,13 @@ class ExportFieldDefinition(RegistryModel):
     Without it a numeric slot's blank fill is its zero padding. A design can state
     otherwise for its unused slots, as DR369's general notes 6-7 do, which keeps an
     absent quantity apart from a declared zero.
+    """
+    party_name: PartyNameComposition | None = None
+    """How a party-name slot is composed from the parts its party's filing name states.
+
+    Carried by generated layouts from the reviewed design text that prescribes
+    the field's content, so the order and separator are the design's and the
+    width stays this field's own ``length``.
     """
     legal_refs: LegalRefs
     source_refs: SourceRefs

@@ -62,6 +62,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount, TaxpayerProfile
 from ...domain.filing.errors import (
+    FilingExportDeclaredPartyNameError,
     FilingExportError,
     FilingExportFieldUnrenderableError,
     FilingExportRequiredRecordAbsentError,
@@ -77,6 +78,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevision,
 )
 from ...domain.modelos.errors import (
+    ModeloExportDeclaredPartyNameError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
     ModeloExportRequiredRecordAbsentError,
@@ -635,23 +637,40 @@ def export_write_failure(command: ModeloExportCommand, exc: FilingExportError) -
     """Keep a refused box's own message; the generic one would read as a disk problem."""
     if isinstance(exc, FilingExportValueOverflowError):
         return _export_value_overflow_refusal(command, exc)
+    if isinstance(exc, FilingExportDeclaredPartyNameError):
+        return _declared_party_name_refusal(command, exc)
+    refusal_context: dict[str, object] = {
+        "calculation_revision_id": command.calculation_revision_id,
+        **(exc.context or {}),
+    }
     if isinstance(exc, FilingExportRequiredRecordAbsentError):
-        return ModeloExportRequiredRecordAbsentError(
-            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
-        )
+        return ModeloExportRequiredRecordAbsentError(context=refusal_context)
     if isinstance(exc, FilingExportUnrepresentableCharacterError):
         return _export_unrepresentable_character_refusal(command, exc)
     if isinstance(exc, FilingExportFieldUnrenderableError):
         return export_field_unrenderable_refusal(command, exc)
     if is_xml_value_refusal(exc) or is_shared_owner_refusal(exc):
-        return ModeloExportError(
-            translated_message=exc.translated_message,
-            context={"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})},
-        )
+        return ModeloExportError(translated_message=exc.translated_message, context=refusal_context)
     return ModeloExportError(
         translated_message="application.modelo.errors.export_draft_write_failed",
         context=_export_write_failure_context(command, exc),
     )
+
+
+def _declared_party_name_refusal(
+    command: ModeloExportCommand, exc: FilingExportDeclaredPartyNameError
+) -> ModeloExportDeclaredPartyNameError:
+    """Name the slot, a non-identifying party handle and the door.
+
+    The party's identifier reaches only the in-process envelope, where the door
+    binds it; the name is never carried.
+    """
+    context: dict[str, object] = {"calculation_revision_id": command.calculation_revision_id, **(exc.context or {})}
+    if exc.tax_identifier is not None:
+        context["tax_identifier"] = exc.tax_identifier
+    if exc.country_code is not None:
+        context["country_code"] = exc.country_code
+    return ModeloExportDeclaredPartyNameError(context=context)
 
 
 def _export_value_overflow_refusal(

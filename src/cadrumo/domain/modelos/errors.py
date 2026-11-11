@@ -81,6 +81,20 @@ class ModeloExportRequiredRecordAbsentError(ModeloExportError):
     """
 
 
+class ModeloExportDeclaredPartyNameError(ModeloExportError):
+    """Refused: a party-name slot has no declared filing name the record design can take.
+
+    The design fills the slot from the party's own name parts and allows no
+    shortening, so the party's filing name is stated, or restated with a
+    rendering for the slot's width, through the action the context names. The
+    context never carries the name. The party's tax identifier and country,
+    which the door binds as its arguments, travel only as process-local keys:
+    no kept record, journal or log holds them.
+    """
+
+    process_local_context_keys: ClassVar[frozenset[str]] = frozenset({"tax_identifier", "country_code"})
+
+
 class ModeloExportProducerFactsRefusedError(ModeloExportError):
     """Refused: the facts the file states about the filer or the filing are incomplete.
 
@@ -133,6 +147,7 @@ __all__ = [
     "Modelo036PriorAltaRequiredError",
     "Modelo036TerminalStateError",
     "ModeloError",
+    "ModeloExportDeclaredPartyNameError",
     "ModeloExportError",
     "ModeloExportManifestError",
     "ModeloExportProducerFactsRefusedError",

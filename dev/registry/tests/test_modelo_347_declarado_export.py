@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_last_exercise
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
@@ -110,6 +111,7 @@ def _observation(party_tax_id: str, country_code: str, name: str) -> InvoiceObse
         invoice_total_amount=Decimal("8000.00"),
         operation_clave="B",
         party_legal_name=name,
+        party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
     )
 
 
@@ -279,6 +281,20 @@ class _CatalogueReader:
         return self._catalogue
 
 
+class _StatedFilingNames:
+    """The filing name the person stated for each counterparty: here, the razón social its invoices print."""
+
+    def __init__(self, invoices: tuple[Invoice, ...]) -> None:
+        self._names = {
+            (str(invoice.counterparty_country), str(invoice.counterparty_tax_id)): str(invoice.counterparty_name)
+            for invoice in invoices
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+        name = self._names.get((country_code, tax_identifier))
+        return None if name is None else DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name)
+
+
 def _resolve_later(invoices: tuple[Invoice, ...], profile: ModeloWorkProfile):
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
@@ -289,7 +305,10 @@ def _resolve_later(invoices: tuple[Invoice, ...], profile: ModeloWorkProfile):
         profile=profile,
     )
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReader(invoices)),
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_CatalogueReader(invoices),
+            counterparty_filing_names=_StatedFilingNames(invoices),
+        ),
     ).resolve(context)
 
 
@@ -452,14 +471,14 @@ def test_a_non_resident_declarado_carries_provincia_99_and_a_spanish_one_is_disc
     with bundled_indexed_authority().operation() as operation:
         invoices = (
             _operation(
-                "V-4", date(_LATER_FIRST, 2, 1), "8000.00", tax_id="US000000001", name="CUSTOMER INC", country="US"
+                "V-4", date(_LATER_FIRST, 2, 1), "8000.00", tax_id="DE123456789", name="KUNDE GMBH", country="DE"
             ),
             _operation("V-5", date(_LATER_FIRST, 2, 1), "8000.00", tax_id="C0001502D", name="CLIENTE NACIONAL SL"),
         )
         resolution = _resolve_later(invoices, _filer_profile(operation))
 
     provincia = {str(row[_NAME]): row[_PROVINCIA] for row in _declarado_rows(resolution)}
-    assert provincia == {"CUSTOMER INC": "99", "CLIENTE NACIONAL SL": ""}
+    assert provincia == {"KUNDE GMBH": "99", "CLIENTE NACIONAL SL": ""}
     # One note per Spanish declarado whose provincia is unstated, opening at its
     # invoice; the non-resident's 99 needs none.
     (advisory,) = (

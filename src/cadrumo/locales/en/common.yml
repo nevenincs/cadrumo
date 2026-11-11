@@ -6312,7 +6312,7 @@ sheets:
       operation_date: Operation date
       operation_kind_code: Operation kind
       pago: Payment
-      party_legal_name: Party legal name
+      party_filing_name: Party filing name
       party_tax_id: Party tax id
       penalizaciones: Penalties
       pendiente_flag: Pending

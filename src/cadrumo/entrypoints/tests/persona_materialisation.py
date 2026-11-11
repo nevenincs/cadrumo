@@ -36,7 +36,7 @@ from enum import StrEnum
 from functools import cache, partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import cast
+from typing import Final, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -96,6 +96,12 @@ from ...application.ledger.classify_requests import (
     LedgerClassifyPatch,
     LedgerClassifyPatchField,
     LedgerClassifyRequest,
+)
+from ...application.ledger.counterparty_operation import (
+    LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+    CounterpartyFilingNameRendering,
+    LedgerCounterpartyRequest,
+    LedgerCounterpartyResult,
 )
 from ...application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -815,7 +821,73 @@ def _public_percentage(fraction: Decimal | None) -> PublicDecimal | None:
 
 def party_name(persona: Persona, role: str) -> str:
     counterparty = persona.identities.role(role)
-    return counterparty.legal_name or f"{counterparty.field('name')} {counterparty.field('surnames')}"
+    return counterparty.razon_social or f"{counterparty.field('nombre')} {counterparty.field('surnames')}"
+
+
+INFORMATIVE_MODELOS: Final = frozenset({"347", "349", "180", "190", "193"})
+"""The informative returns whose design names a third party by its filing name."""
+
+
+def informative_party_roles(persona: Persona) -> tuple[str, ...]:
+    """The roles of the third parties the persona's informative returns name, in first-named order.
+
+    A persona that files none of :data:`INFORMATIVE_MODELOS` names no party. Otherwise the counterparty
+    of every ledger row is a declarado, operador or perceptor, and the landlord of leased premises is
+    the perceptor of the Modelo 180. The payer of a withholding certificate is the taxpayer's source
+    of income on the Modelo 100, not a party an informative return names.
+    """
+    if INFORMATIVE_MODELOS.isdisjoint(persona.modelos):
+        return ()
+    payers = {certificate.payer for certificate in persona.withholding_certificates}
+    roles: dict[str, None] = {}
+    for row in persona.ledger:
+        if row.counterparty is not None and row.counterparty not in payers:
+            roles[row.counterparty] = None
+    for premises in persona.leased_premises:
+        roles[premises.landlord] = None
+    return tuple(roles)
+
+
+def _filing_name_request(persona: Persona, role: str, world: PersonaWorld) -> LedgerCounterpartyRequest:
+    """The statement of one party's filing name, in the identity's own words and order."""
+    party = persona.identities.role(role)
+    stated: dict[str, object]
+    if party.is_entity:
+        stated = {"party_kind": "entity", "razon_social": party.razon_social}
+    else:
+        stated = {
+            "party_kind": "natural_person",
+            "primer_apellido": party.primer_apellido,
+            "segundo_apellido": party.segundo_apellido,
+            "no_second_surname": party.no_second_surname,
+            "nombre": party.nombre,
+        }
+    return LedgerCounterpartyRequest.model_validate(
+        {
+            "profile_id": world.profile_id,
+            "action": "filing_name",
+            "tax_identifier": party.value,
+            "country_code": party.country,
+            "asserted_by": PERSONA_ACTOR,
+            "renderings": tuple(
+                CounterpartyFilingNameRendering(width=width, text=text) for width, text in party.renderings
+            ),
+            **stated,
+        }
+    )
+
+
+def _state_filing_names(persona: Persona, world: PersonaWorld) -> None:
+    """State each informative-return party's filing name through the registered counterparty operation."""
+    for role in informative_party_roles(persona):
+        result = run_operation(
+            world,
+            LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+            _filing_name_request(persona, role, world),
+            LedgerCounterpartyResult,
+        )
+        if result.filing_name is None or result.recorded is not True:
+            raise PersonaMaterialisationError(f"{persona.id} {role}: the filing name was not recorded")
 
 
 def _invoice_request(persona: Persona, row: LedgerRow, world: PersonaWorld) -> InvoiceAddRequest | None:
@@ -1760,6 +1832,7 @@ def materialise_persona(
             _replay_withholding(persona, world)
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
+            _state_filing_names(persona, world)
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None

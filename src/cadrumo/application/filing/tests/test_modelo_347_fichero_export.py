@@ -41,10 +41,12 @@ from ....domain.calculations.registry.applicability import derive_modelo_applica
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from ....domain.filing.declared_party_name_filing import DECLARED_PARTY_NAME_DOOR_ACTION_ID
 from ....domain.filing.errors import (
+    FilingExportDeclaredPartyNameMissingError,
     FilingExportRequiredRecordAbsentError,
     FilingExportValidationError,
-    FilingExportValueOverflowError,
 )
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -118,6 +120,23 @@ def _domestic(
     )
 
 
+class _FilingNames:
+    """The filing names the person declared, by counterparty identifier: each one's razón social here."""
+
+    def __init__(self, invoices: tuple[Invoice, ...]) -> None:
+        self._names = {
+            invoice.counterparty_tax_id: DeclaredPartyFilingName(
+                kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name
+            )
+            for invoice in invoices
+            if invoice.counterparty_tax_id is not None
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str) -> DeclaredPartyFilingName | None:
+        del country_code
+        return self._names.get(tax_identifier)
+
+
 class _CatalogueReader:
     def __init__(self, invoices: tuple[Invoice, ...]) -> None:
         self._catalogue = build_invoice_catalogue(invoices)
@@ -189,7 +208,10 @@ def _resolved_inputs(
         operation=operation,
     )
     resolution = InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=_CatalogueReader(invoices)),
+        ports=InvoiceSourceResolverPorts(
+            catalogue_reader=_CatalogueReader(invoices),
+            counterparty_filing_names=_FilingNames(invoices),
+        ),
     ).resolve(context)
     inputs: dict[str, ModeloInputValue] = {
         "decl.ejercicio": str(_YEAR),
@@ -524,19 +546,27 @@ def test_a_year_with_no_counterparty_above_the_floor_is_refused_as_having_no_dec
     assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()
 
 
-def test_a_counterparty_name_wider_than_its_slot_is_refused_by_record_field_and_width_not_truncated(
+def test_a_counterparty_name_wider_than_its_slot_is_refused_with_its_door_not_truncated(
     operation: PinnedAuthorityOperation,
     tmp_path: Path,
 ) -> None:
-    """The design gives the declarado name positions 36-75 and asks for it complete, with no truncation rule."""
+    """The design gives the declarado name positions 36-75, complete, with no truncation rule.
+
+    A declared name wider than the slot leaves it without content at
+    calculation, and the export refuses that slot with the door that states a
+    rendering, never the name and never a shortened one.
+    """
     name = "COMUNIDAD DE PROPIETARIOS CALLE OLMO 1234"
     long_named = (_domestic("V-1", InvoiceKind.ISSUED, "H00015016", name, "8000.00"),)
 
-    with pytest.raises(FilingExportValueOverflowError) as raised:
+    with pytest.raises(FilingExportDeclaredPartyNameMissingError) as raised:
         _exported_lines(operation, tmp_path, long_named)
 
     error = raised.value
-    assert (error.first_position, error.field_length, len(error.rendered)) == (36, 40, len(name))
+    assert (error.export_record_id, error.field_length, error.row_index) == ("m347-declarado", 40, 1)
+    assert error.context is not None
+    assert error.context["door_action_id"] == DECLARED_PARTY_NAME_DOOR_ACTION_ID
+    assert (error.tax_identifier, error.country_code) == ("H00015016", "ES")
     assert name not in str(error)
-    assert all(name not in str(value) for value in (error.context or {}).values())
+    assert all(name not in str(value) and "H00015016" not in str(value) for value in error.context.values())
     assert not (tmp_path / f"modelo-347-{_YEAR}.txt").exists()

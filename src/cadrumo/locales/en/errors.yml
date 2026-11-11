@@ -1131,6 +1131,22 @@ errors:
       export.
     refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
+    refused_filing_export_declared_party_name: 'Nothing was written: field %{export_field_id}
+      names a party with no filing name the AEAT record design can take there. State
+      the party''s filing name and export again.'
+    refused_filing_export_declared_party_name_missing: 'Nothing was written: field
+      %{export_field_id} names a party for which no filing name is stated. The AEAT
+      record design fills it with the party''s surnames and given name, or its razón
+      social, and nothing else may stand in. State the party''s filing name and export
+      again.'
+    refused_filing_export_declared_party_name_single_surname: 'Nothing was written:
+      field %{export_field_id} names a natural person stated with one surname, and
+      the AEAT record design gives no rule for composing such a name. Check the stated
+      surnames; nothing is filed in their place.'
+    refused_filing_export_declared_party_name_too_wide: 'Nothing was written: a party''s
+      filing name is %{composed_length} characters and field %{export_field_id} has
+      %{field_length}. The record design allows no shortening, so state a rendering
+      of the name for %{field_length} characters and export again.'
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
     refused_financial_aggregation_missing_classification: Some in-period transactions
@@ -1197,6 +1213,11 @@ errors:
       before replacing it.
     refused_ledger_counterparty_establishment_input: An establishment fact cannot
       be confirmed against a counterparty identifier that does not verify.
+    refused_ledger_counterparty_filing_name_input: The filing name given is not one
+      an informative return can take. A natural person needs the first surname, the
+      given name, and the second surname or the statement that there is none; an entity
+      needs only its razón social. Each part is written without leading, trailing
+      or doubled spaces, and each shorter rendering fits its width.
     refused_ledger_counterparty_provincia_input: The province given is not an INE
       province code.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
@@ -1295,6 +1316,9 @@ errors:
       {payment_cutoff_legal_refs}) because the filing window sets none; on {export_on}
       the result can only be paid another way.
     refused_modelo_edit_parse: This entry could not be read.
+    refused_modelo_export_declared_party_name: 'Nothing was written: field %{export_field_id},
+      %{field_length} positions long, names a party with no filing name the AEAT record
+      design can take. State or restate the party''s filing name and export again.'
     refused_modelo_export_prior_domiciliation_election_required: A Modelo 303 rectificativa
       that states casilla 111 needs a choice for the earlier direct debit (keep it,
       or cancel or modify it); none was given, so nothing was written. Choose one

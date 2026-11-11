@@ -15,10 +15,10 @@ from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 
 TIER_BINDING = "renta-rental-reduccion-art-23-2-tier"
 
-# The one authored edition that declares the Art. 23.2 tier binding, so the exercise follows the registry.
-(_TIER_EDITION,) = authored_revisions_where(
+# The oldest authored edition that declares the Art. 23.2 tier binding, so the exercise follows the registry.
+_TIER_EDITION = authored_revisions_where(
     "100", lambda revision: any(binding.id == TIER_BINDING for binding in revision.bindings)
-)
+)[0]
 TIER_EDITION_ID = str(_TIER_EDITION.id)
 TIER_EDITION_EXERCISE = _TIER_EDITION.valid_from.year
 FILING_DATE = date(TIER_EDITION_EXERCISE, 12, 31)
@@ -31,6 +31,7 @@ def calculate(
     *,
     inputs: dict[str, Decimal],
     tier: str | None = None,
+    filing_date: date = FILING_DATE,
 ) -> RegistryCalculationResult:
     enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
     if tier is not None:
@@ -38,7 +39,7 @@ def calculate(
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": FILING_DATE},
+        date_context={"filing_period": filing_date},
         binding_values={
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-profile-estimacion-directa": Decimal("1"),
