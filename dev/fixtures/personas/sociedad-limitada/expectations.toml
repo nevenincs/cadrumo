@@ -132,8 +132,11 @@ grounding = "cited"
 modelo = "390"
 period = "0A"
 year = "horizon-1"
-concepts = { base_21 = "30800.00", cuota_21 = "6468.00", total_cuota_devengada = "6468.00", base_soportado_interior = "5400.00", total_cuota_deducible = "1134.00", resultado_regimen_general = "5334.00", suma_resultados_303 = "5334.00" }
-derivation = "Annual sums; 1186.50 + 1438.50 + 1081.50 + 1627.50 = 5334.00."
+casillas = { "iva.anual.repercutido.tipo-21.base" = "30800.00", "iva.anual.repercutido.tipo-21.cuota" = "6468.00", "iva.anual.cuota-devengada-total" = "6468.00", "iva.anual.soportado.interiores.base" = "5400.00", "iva.anual.cuota-deducible-total" = "1134.00", "iva.anual.resultado-regimen-general" = "5334.00", "iva.anual.suma-resultados" = "5334.00" }
+derivation = """
+Boxes per the AEAT Modelo 390 record design (the aeat-dr-390 design of every supported year prints them unchanged, under the same box number and row text): [05] base_21, [06] cuota_21, [47] total_cuota_devengada, [48] base_soportado_interior, [64] total_cuota_deducible, [65] resultado_regimen_general, [84] suma_resultados_303.
+Annual sums; 1186.50 + 1438.50 + 1081.50 + 1627.50 = 5334.00.
+"""
 legal_ref = ["rd-1624-1992:art-71"]
 grounding = "cited"
 

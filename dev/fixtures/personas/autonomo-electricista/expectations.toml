@@ -232,12 +232,12 @@ grounding = "verified"
 modelo = "390"
 period = "0A"
 year = "horizon-1"
-concepts = { base_21 = "36100.00", cuota_21 = "7581.00", total_cuota_devengada = "7581.00", base_soportado_interior = "10760.00", total_cuota_deducible = "2259.60", resultado_regimen_general = "5321.40", suma_resultados_303 = "5321.40" }
+casillas = { "iva.anual.repercutido.tipo-21.base" = "36100.00", "iva.anual.repercutido.tipo-21.cuota" = "7581.00", "iva.anual.cuota-devengada-total" = "7581.00", "iva.anual.soportado.interiores.base" = "10760.00", "iva.anual.cuota-deducible-total" = "2259.60", "iva.anual.resultado-regimen-general" = "5321.40", "iva.anual.suma-resultados" = "5321.40" }
 derivation = """
+Boxes per the AEAT Modelo 390 record design (the aeat-dr-390 design of every supported year prints them unchanged, under the same box number and row text): [05] base_21, [06] cuota_21, [47] total_cuota_devengada, [48] base_soportado_interior, [64] total_cuota_deducible, [65] resultado_regimen_general, [84] suma_resultados_303.
 Annual sums of the four 303 periods: bases 21 % 9600 + 8700 + 7700 + 10100 = 36100.00, cuota 7581.00.
 Deductible: 3040 + 2690 + 2140 + 2890 = 10760.00 base, 638.40 + 564.90 + 449.40 + 606.90 = 2259.60 cuota.
 Resultado 7581.00 - 2259.60 = 5321.40, equal to the sum of the quarterly results 1377.60 + 1262.10 + 1167.60 + 1514.10.
-Asserted as concepts because the 390 casilla numbering is not re-derived here.
 """
 legal_ref = ["rd-1624-1992:art-71"]
 grounding = "cited"

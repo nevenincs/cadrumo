@@ -263,8 +263,11 @@ grounding = "cited"
 modelo = "390"
 period = "0A"
 year = "horizon-1"
-concepts = { base_21 = "6700.00", cuota_21 = "1407.00", base_adquisiciones_intracomunitarias = "960.00", cuota_adquisiciones_intracomunitarias = "201.60", total_cuota_devengada = "1608.60", total_cuota_deducible = "333.90", entregas_intracomunitarias = "34500.00", resultado_regimen_general = "1274.70", suma_resultados_303 = "1274.70" }
-derivation = "Annual sums of the four 303 periods; 368.55 + 452.55 + 242.55 + 211.05 = 1274.70."
+casillas = { "iva.anual.repercutido.tipo-21.base" = "6700.00", "iva.anual.repercutido.tipo-21.cuota" = "1407.00", "iva.anual.aic.servicios.tipo-21.base" = "960.00", "iva.anual.aic.servicios.tipo-21.cuota" = "201.60", "iva.anual.cuota-devengada-total" = "1608.60", "iva.anual.cuota-deducible-total" = "333.90", "iva.anual.volumen.entregas-intracomunitarias" = "34500.00", "iva.anual.resultado-regimen-general" = "1274.70", "iva.anual.suma-resultados" = "1274.70" }
+derivation = """
+Boxes per the AEAT Modelo 390 record design (the aeat-dr-390 design of every supported year prints them unchanged, under the same box number and row text): [05] base_21, [06] cuota_21, [551] base_adquisiciones_intracomunitarias, [552] cuota_adquisiciones_intracomunitarias, [47] total_cuota_devengada, [64] total_cuota_deducible, [103] entregas_intracomunitarias, [65] resultado_regimen_general, [84] suma_resultados_303.
+Annual sums of the four 303 periods; 368.55 + 452.55 + 242.55 + 211.05 = 1274.70.
+"""
 legal_ref = ["rd-1624-1992:art-71"]
 grounding = "cited"
 
