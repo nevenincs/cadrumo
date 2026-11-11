@@ -57,10 +57,14 @@ def _activity_facts(*, declares_income: bool) -> dict[str, str]:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         }
-        # The registration placeholders declare an income category; a blank value withdraws it.
-        facts["taxpayer_type.irpf_income_categories"] = (
-            irpf_income_category_actividad_economica_token().value if declares_income else ""
-        )
+        # The registration placeholders declare an income category and an estimation
+        # regime; a blank value withdraws each. Both must go for an undeclared model,
+        # because an estimation regime proves economic-activity income on its own.
+        if declares_income:
+            facts["taxpayer_type.irpf_income_categories"] = irpf_income_category_actividad_economica_token().value
+        else:
+            facts["taxpayer_type.irpf_income_categories"] = ""
+            facts["irpf.estimation_regime"] = ""
         return facts
 
 
