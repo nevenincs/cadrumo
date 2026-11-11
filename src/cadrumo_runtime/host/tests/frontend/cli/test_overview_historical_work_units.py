@@ -37,7 +37,10 @@ def _native_profile(tmp_path: Path) -> Iterator[None]:
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label="Historical overview profile",
+            # Residency decides IRPF or IRNR, so without it Modelo 130 has no
+            # registry row for a work unit to enrich.
             facts={
+                "taxpayer_type.fiscal_residency": "resident_irpf",
                 "withholding.has_employees": "false",
                 "withholding.pays_professionals_with_retencion": "false",
                 "irpf.art109_activity_income_withholding_ge_70pct": "false",
