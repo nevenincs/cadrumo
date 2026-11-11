@@ -352,6 +352,10 @@ cli:
         authority_file_help: A teljes zárókészlet-hatósági JSON-dokumentum beolvasása
           fájlból.
         authority_invalid: A zárókészlet-hatósági objektum érvénytelen ehhez a készletnyilvántartáshoz.
+        claim_transaction_mismatch: A főkönyvi tranzakció 64 karakteres azonosítóját
+          a `--ledger-row claimed` értékkel add meg, és csak azzal.
+        claimed_transaction_id_help: A beszerzést könyvelő főkönyvi tranzakció; a
+          `claimed` értékkel add meg, és csak azzal.
         closing_authority_record_help: A bizonyított zárókészlet-hatóság atomi rögzítése
         closing_value_file_help: JSON-fájl a záróérték adataival.
         closing_value_file_invalid: A záróérték fájlja nem érvényes ehhez a készlethez.
@@ -374,9 +378,15 @@ cli:
         inspect_help: Megmutat egy készletet az érvényes mozgásaival és a megőrzött
           előzményeivel.
         label_help: A készlet neve.
+        ledger_row_help: 'Amit a beszerzésről a főkönyvvel kapcsolatban megadsz: `claimed`
+          (megnevez egy tranzakciót), `none` (egyetlen főkönyvi tranzakció sem könyveli)
+          vagy `unstated`.'
         list_help: Készletnyilvántartások listázása az aktív profilban.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a készletnyilvántartáshoz.
+        movement_claim_help: Megadod, melyik főkönyvi tranzakció könyveli a beszerzést,
+          vagy hogy egyik sem, vagy törlöd a megjelölést; a lefoglalt tranzakció kikerül
+          a főkönyvi költségrovatokból.
         movement_correct_help: Egy mozgást javítottra cserél; az eredeti az előzményekben
           marad.
         movement_date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN).

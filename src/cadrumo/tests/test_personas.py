@@ -340,6 +340,61 @@ def test_a_malformed_own_account_is_refused(accounts: tuple[dict[str, object], .
         _parse(_with_own_accounts(*accounts))
 
 
+def _with_prior_carries(*statements: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["prior_carries"] = list(statements)
+    return document
+
+
+def test_the_pending_carries_are_stated_as_nothing_pending_or_as_amounts_per_box() -> None:
+    nothing, amounts = _parse(
+        _with_prior_carries(
+            {"year": "horizon-1", "nothing_pending": True},
+            {"year": "horizon-2", "pending": {"1388": "1250.40", "1380": "300.00"}},
+        )
+    ).prior_carries
+    assert (str(nothing.year), nothing.pending) == ("horizon-1", ())
+    assert (str(amounts.year), amounts.pending) == (
+        "horizon-2",
+        (("1380", Decimal("300.00")), ("1388", Decimal("1250.40"))),
+    )
+
+
+@pytest.mark.parametrize(
+    ("statements", "message"),
+    [
+        (({"year": "horizon-1", "pending": {"1381": "10.00"}},), "is not one of"),
+        (({"year": "horizon-1", "pending": {"1380": "0.00"}},), "positive amount"),
+        (({"year": "horizon-1", "pending": {"1380": "1.234,00"}},), "canonical decimal"),
+        (({"year": "horizon-1", "pending": {}},), "at least one box"),
+        (({"year": "horizon-1", "nothing_pending": False},), "only be stated true"),
+        (({"year": "horizon-1"},), "either nothing_pending"),
+        (({"year": "horizon-1", "nothing_pending": True, "pending": {"1380": "1.00"}},), "either nothing_pending"),
+        (({"year": "horizon-1", "nothing_pending": True, "modelo": "100"},), "unknown fields"),
+        (({"year": _ENVELOPE.horizon, "nothing_pending": True},), "not a year token"),
+        (({"year": "horizon+1", "nothing_pending": True},), "outside the supported envelope"),
+        (({"year": "floor-1", "nothing_pending": True},), "outside the supported envelope"),
+        (
+            ({"year": "horizon-1", "nothing_pending": True}, {"year": "floor+3", "pending": {"1380": "5.00"}}),
+            "stated twice",
+        ),
+    ],
+)
+def test_a_malformed_pending_carry_statement_is_refused(
+    statements: tuple[dict[str, object], ...], message: str
+) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_prior_carries(*statements))
+
+
+def test_a_pending_carry_statement_needs_a_persona_that_files_modelo_100() -> None:
+    document = _with_prior_carries({"year": "horizon-1", "nothing_pending": True})
+    document["persona"]["modelos"] = ["303"]
+    document.pop("own_accounts", None)
+    with pytest.raises(PersonaCatalogueError, match="files no Modelo 100"):
+        _parse(document)
+
+
 def test_a_local_observation_needs_canonical_casilla_amounts() -> None:
     document = copy.deepcopy(_document("persona.toml"))
     observation = {"modelo": "100", "year": "horizon-2", "period": "0A", "reason": "Copia propia"}
@@ -435,10 +490,17 @@ def test_an_inventory_book_with_no_movement_is_admitted() -> None:
     )
 
 
+def test_a_book_with_purchases_may_close_away_from_its_opening() -> None:
+    (book,) = _parse(_with_inventory({**_BOOK, "closing_stock": "10.00", "purchases": ["ROW-1", "ROW-2"]})).inventory
+
+    assert (book.closing_stock, book.purchases) == (Decimal("10.00"), ("ROW-1", "ROW-2"))
+
+
 @pytest.mark.parametrize(
     ("books", "message"),
     [
         (({**_BOOK, "closing_stock": "10.00"},), "closes at its opening stock"),
+        (({**_BOOK, "purchases": "ROW-1"},), "purchases must be an array of strings"),
         (({**_BOOK, "opening_stock": "-1.00", "closing_stock": "-1.00"},), "nonnegative"),
         (({**_BOOK, "opening_stock": "0,00"},), "canonical decimal"),
         (({**_BOOK, "year": "horizon+1"},), "outside the supported envelope"),

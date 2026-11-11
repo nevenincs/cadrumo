@@ -141,6 +141,8 @@ class CalculationNoteSentence(StrEnum):
     ROW_UNREGISTERED_UNDATED = "row_unregistered_undated"
     REGISTER_OWNED_ACQUISITION = "register_owned_acquisition"
     REGISTER_OWNED_ACQUISITION_UNDATED = "register_owned_acquisition_undated"
+    BOOK_CLAIMED_PURCHASE = "book_claimed_purchase"
+    BOOK_CLAIMED_PURCHASE_UNDATED = "book_claimed_purchase_undated"
     POSSIBLY_DURABLE_EXPENSE = "possibly_durable_expense"
     REGISTER_ROW_MISSING = "register_row_missing"
     REGISTER_COST_EXCEEDS_PAID = "register_cost_exceeds_paid"
@@ -181,6 +183,8 @@ class CalculationNoteSentence(StrEnum):
     """The operator accepted the value in use for a disagreement this calculation persisted."""
     HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
     """A household group states more people than the profile records."""
+    HOUSEHOLD_ROW_FACT_UNSTATED = "household_row_fact_unstated"
+    """A household row omits a fact the official design requires of every row of its group."""
     PROFILE_FACT_UNRECORDED = "profile_fact_unrecorded"
     """A profile fact a calculation compares is unrecorded, so the box built on it stays open."""
     PRIOR_FILING_UNRECORDED = "prior_filing_unrecorded"
@@ -360,8 +364,11 @@ class CalculationSourceIssue(BaseModel):
     binding source kind.
     outcome. ``household_rows_incomplete`` is a household group whose stated
     count is larger than the rows the profile records: the recorded rows are
-    used and the group is not proven complete; it withholds nothing. ``fact``
-    states such a note's own row, element, interval and amount.
+    used and the group is not proven complete; it withholds nothing.
+    ``household_row_fact_unstated`` is a stored household row that omits a fact
+    the official design requires of every row, such as an ascendant's NIF: it
+    withholds checking, exporting and filing until the profile states the fact.
+    ``fact`` states such a note's own row, element, interval and amount.
     ``binding_source`` is ``None`` only where the condition names no binding
     source kind. ``precedence_tier_divergence`` is a filed figure for
     which a higher source tier replaced a different value a lower tier held;
@@ -397,8 +404,10 @@ class CalculationSourceIssue(BaseModel):
         "register_acquisition_partly_accounted",
         "register_acquisition_row_missing",
         "register_owned_capital_acquisition",
+        "inventory_book_claimed_purchase",
         "ledger_expense_may_be_durable",
         "household_rows_incomplete",
+        "household_row_fact_unstated",
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",

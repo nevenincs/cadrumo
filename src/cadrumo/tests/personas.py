@@ -273,6 +273,23 @@ class OwnAccount:
     designations: tuple[OwnAccountDesignation, ...]
 
 
+PRIOR_CARRY_BOXES: tuple[str, ...] = ("1380", "1382", "1385", "1388")
+"""The Modelo 100 boxes of the negative general bases still pending from the four previous ejercicios."""
+
+
+@dataclass(frozen=True, slots=True)
+class PriorCarries:
+    """What the persona states is still pending, on one year's Modelo 100, of earlier ejercicios' negative bases.
+
+    An empty ``pending`` is the statement that nothing is pending. Otherwise each
+    entry is a box of :data:`PRIOR_CARRY_BOXES` with the amount pending in it,
+    and a box it does not name is stated to hold nothing.
+    """
+
+    year: YearToken
+    pending: tuple[tuple[str, Decimal], ...]
+
+
 @dataclass(frozen=True, slots=True)
 class HouseholdMember:
     """One descendant or ascendant row: canonical leaves plus the identity supplying its ``nif``."""
@@ -440,10 +457,12 @@ class LeasedPremises:
 class InventoryBook:
     """The existencias book of one activity for one year, which the Modelo 100 Anexo D rows read.
 
-    The book records no movement: it opens at ``opening_stock`` and closes on
-    its movements, so ``closing_stock`` equals it. ``statement`` is the text of
-    the taxpayer's statement that evidences both the closing and the prior
-    year's closing it continues from.
+    The book opens at ``opening_stock`` and closes on its movements at
+    ``closing_stock``. ``purchases`` names the ledger rows that book its
+    purchases; each becomes a purchase claiming its row, and the stock sold
+    is what leaves ``closing_stock``. A book with no purchase closes at its
+    opening. ``statement`` is the text of the taxpayer's statement that
+    evidences both the closing and the prior year's closing it continues from.
     """
 
     activity: str
@@ -452,6 +471,7 @@ class InventoryBook:
     opening_stock: Decimal
     closing_stock: Decimal
     statement: str
+    purchases: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -655,6 +675,8 @@ class Persona:
     """
     own_accounts: tuple[OwnAccount, ...]
     """The bank accounts the persona states as its own, each with the charge and refund roles it is designated for."""
+    prior_carries: tuple[PriorCarries, ...]
+    """The Modelo 100 returns whose pending negative bases of earlier ejercicios the persona states, one per year."""
     withholding_certificates: tuple[WithholdingCertificate, ...]
     rental_properties: tuple[RentalProperty, ...]
     officers: tuple[Officer, ...]
@@ -873,6 +895,7 @@ _PERSONA_TABLES = frozenset(
         "elections",
         "household",
         "own_accounts",
+        "prior_carries",
         "withholding_certificates",
         "rental_properties",
         "officers",
@@ -992,6 +1015,31 @@ def _check_designations(accounts: tuple[OwnAccount, ...], where: str) -> None:
     keys = [(item.role, item.modelo) for account in accounts for item in account.designations]
     if len(keys) != len(set(keys)):
         raise _fail(where, "two designations state one role and scope")
+
+
+def _prior_carries(table: _Table, where: str, modelos: tuple[str, ...]) -> PriorCarries:
+    _keys(table, where, required=frozenset({"year"}), optional=frozenset({"nothing_pending", "pending"}))
+    if "100" not in modelos:
+        raise _fail(where, "the pending carries are a Modelo 100 statement, and the persona files no Modelo 100")
+    year = YearToken.parse(table["year"], where=f"{where}.year")
+    if ("nothing_pending" in table) == ("pending" in table):
+        raise _fail(where, "state either nothing_pending = true or the pending amounts")
+    if "nothing_pending" in table:
+        if not _bool(table, "nothing_pending", where):
+            raise _fail(where, "nothing_pending can only be stated true; state the pending amounts instead")
+        return PriorCarries(year=year, pending=())
+    boxes = _table(table["pending"], f"{where}.pending")
+    if not boxes:
+        raise _fail(where, "pending must name at least one box; state nothing_pending = true when none is pending")
+    pending: list[tuple[str, Decimal]] = []
+    for box, text in sorted(boxes.items()):
+        if box not in PRIOR_CARRY_BOXES:
+            raise _fail(where, f"box {box!r} is not one of {list(PRIOR_CARRY_BOXES)}")
+        amount = _amount(text, f"{where}.pending.{box}")
+        if amount <= 0:
+            raise _fail(where, f"box {box} must hold a positive amount; a box left out is stated to hold nothing")
+        pending.append((box, amount))
+    return PriorCarries(year=year, pending=tuple(pending))
 
 
 def _withholding(table: _Table, where: str, roles: _Roles) -> WithholdingCertificate:
@@ -1279,12 +1327,14 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         table,
         where,
         required=frozenset({"activity", "year", "valuation_method", "opening_stock", "closing_stock", "statement"}),
+        optional=frozenset({"purchases"}),
     )
     opening = _amount(table["opening_stock"], f"{where}.opening_stock")
     closing = _amount(table["closing_stock"], f"{where}.closing_stock")
+    purchases = _strings(table, "purchases", where) if "purchases" in table else ()
     if opening < 0 or closing < 0:
         raise _fail(where, "existencias are valued at a nonnegative amount")
-    if closing != opening:
+    if closing != opening and not purchases:
         raise _fail(where, "a book with no movement closes at its opening stock")
     return InventoryBook(
         activity=_string(table, "activity", where),
@@ -1293,6 +1343,7 @@ def _inventory_book(table: _Table, where: str) -> InventoryBook:
         opening_stock=opening,
         closing_stock=closing,
         statement=_string(table, "statement", where),
+        purchases=purchases,
     )
 
 
@@ -1735,6 +1786,10 @@ def parse_persona(
         ascendants=_household(household.get("ascendants"), f"{where} ascendants", _ASCENDANT_LEAVES, roles),
         household_families=tuple(family for family in ("descendants", "ascendants") if family in household),
         own_accounts=own_accounts,
+        prior_carries=tuple(
+            _prior_carries(table, f"{where} prior_carries[{index}]", modelos)
+            for index, table in enumerate(_tables(persona_document.get("prior_carries"), where))
+        ),
         withholding_certificates=tuple(
             _withholding(table, f"{where} withholding_certificates[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("withholding_certificates"), where))
@@ -1796,6 +1851,7 @@ def parse_persona(
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
     _check_attested_prior_values(persona, envelope)
+    _check_prior_carries(persona, envelope)
     return persona
 
 
@@ -1906,6 +1962,13 @@ def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> No
             )
 
 
+def _check_prior_carries(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse two statements of the pending carries for one Modelo 100 year."""
+    years = [statement.year.resolve(envelope) for statement in persona.prior_carries]
+    if len(set(years)) != len(years):
+        raise _fail(persona.id, "the pending carries of one Modelo 100 year are stated twice")
+
+
 def _check_inventory(persona: Persona) -> None:
     """Refuse two books for one activity and year."""
     books = [(book.activity, str(book.year)) for book in persona.inventory]
@@ -1930,6 +1993,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         persona.fiscal_year,
         *(election.year for election in persona.elections),
         *(certificate.ejercicio for certificate in persona.withholding_certificates),
+        *(statement.year for statement in persona.prior_carries),
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
@@ -1987,6 +2051,7 @@ __all__ = [
     "LEDGER_ACCRUAL_COLUMNS",
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
+    "PRIOR_CARRY_BOXES",
     "ActivityRow",
     "AeatFiling",
     "AttestedPriorValue",
@@ -2016,6 +2081,7 @@ __all__ = [
     "PersonaCatalogueError",
     "PersonaDate",
     "PersonaDocument",
+    "PriorCarries",
     "PriorValueSource",
     "ProfileAnswer",
     "ProfileValue",

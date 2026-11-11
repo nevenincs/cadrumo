@@ -355,6 +355,10 @@ cli:
           des d'un fitxer.
         authority_invalid: L'objecte d'autoritat de tancament no és vàlid per a aquest
           registre d'existències.
+        claim_transaction_mismatch: Indica l'identificador de 64 caràcters de la transacció
+          del llibre amb `--ledger-row claimed`, i només aleshores.
+        claimed_transaction_id_help: Transacció del llibre que registra la compra;
+          indica-la amb `claimed` i només aleshores.
         closing_authority_record_help: Registrar atòmicament l'autoritat acreditada
           del tancament d'existències
         closing_value_file_help: Fitxer JSON amb les dades del valor de tancament.
@@ -381,9 +385,15 @@ cli:
         inspect_help: Mostra un inventari amb els seus moviments vigents i el seu
           historial conservat.
         label_help: Nom de l'inventari.
+        ledger_row_help: 'El que indiques de la compra respecte al llibre: `claimed`
+          (anomena una transacció), `none` (cap transacció del llibre la registra)
+          o `unstated`.'
         list_help: Llista els registres d'existències del perfil actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al registre
           d'existències
+        movement_claim_help: Indica quina transacció del llibre registra una compra,
+          indica que cap ho fa o esborra la indicació; una transacció reclamada deixa
+          les caselles de despesa del llibre.
         movement_correct_help: Substitueix un moviment per un altre de corregit; l'original
           es queda a l'historial.
         movement_date_help: Data del moviment (AAAA-MM-DD)

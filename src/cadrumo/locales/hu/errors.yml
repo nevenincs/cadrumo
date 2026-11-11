@@ -1328,6 +1328,9 @@ errors:
       el a(z) %{field_id} mezőben, amelynek az AEAT rekordterve %{field_length} pozíciót
       ad. A levágás más adatot vallana be. Ellenőrizd az adatot vagy az összeget,
       és exportálj újra.'
+    refused_modelo_household_row_fact_unstated: 'A bevallás továbbra is elutasított:
+      a profilod nem tartalmaz egy olyan háztartási adatot, amelyet a hivatalos kialakítás
+      megkövetel. Add meg a profilodban, majd számíts újra.'
     refused_modelo_instalment_election: 'Ezt a bevallást nem fizetheted két részletben:
       ehhez olyan fizetendő eredmény kell, amelyből a második részlet legalább egy
       cent marad, a bevallás nem lehet helyesbítő, határidőn belül kell benyújtanod,

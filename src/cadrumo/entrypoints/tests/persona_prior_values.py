@@ -29,8 +29,6 @@ from ...application.modelo.edit_models import (
 )
 from ...application.modelo.edit_operator_input import (
     ModeloEditOperatorInputV2,
-    PreparedModeloEditOperand,
-    prepare_modelo_edit_operand,
 )
 from ...application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from ...application.modelo.work_calculation_contracts import ModeloWorkCalculatePublicResultV3
@@ -56,9 +54,8 @@ class SettleOperation(Protocol):
         payload: BaseModel,
         *,
         subject: str | None = None,
-        operand: PreparedModeloEditOperand | None = None,
     ) -> BaseModel | None:
-        """Submit ``payload`` against ``subject``, binding ``operand`` to the operation, and settle it."""
+        """Submit ``payload`` against ``subject`` and settle it; an edit's operator input is staged as its operand."""
         ...
 
 
@@ -124,17 +121,10 @@ def attest_prior_values(
     submission = ModeloEditSubmissionV1(
         baseline=baseline, mutation_family=ModeloEditMutationFamily.CALCULATE, binding_intents=intents
     )
-    prepared = prepare_modelo_edit_operand(
-        definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-        profile_id=profile_id,
-        subject_ref=work_unit_id,
-        input_json=ModeloEditOperatorInputV2(
-            submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
-        ).model_dump_json(),
+    operator_input = ModeloEditOperatorInputV2(
+        submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
     )
-    applied = settle(
-        MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID, prepared.request, subject=work_unit_id, operand=prepared
-    )
+    applied = settle(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID, operator_input, subject=work_unit_id)
     if not isinstance(applied, ModeloEditApplyPublicResultV1):
         raise PriorValueAttestationError(f"{work_unit_id}: the attestation published no edit receipt")
     return True

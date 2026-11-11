@@ -318,6 +318,7 @@ def test_inventory_registry_binds_the_inspect_and_every_ledger_change_operation(
         "ledger.inventory.correct",
         "ledger.inventory.movement.correct",
         "ledger.inventory.movement.reverse",
+        "ledger.inventory.movement.claim",
         "ledger.inventory.retire",
         "ledger.inventory.restore",
     }

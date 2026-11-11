@@ -56,6 +56,7 @@ from .calculation_screen import (
     calculation_screen_outdated_message_key,
     calculation_screen_stamp,
 )
+from .household_row_fact_gate import household_row_fact_refusal
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 
@@ -241,8 +242,14 @@ def require_no_blocking_calculation_notes(
     resolution answers; ``resolutions_unreadable`` says the resolutions could
     not be read, so none was honoured.
 
+    A household row that omits a fact the official design requires is refused
+    with its own typed error, which names the fact and the profile door that
+    states it.
+
     Raises:
         ModeloCalculationBlockedError: The revision carries a blocking note.
+        ModeloHouseholdRowFactUnstatedError: The blocking note is a required
+            household fact the profile has not stated.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -251,6 +258,9 @@ def require_no_blocking_calculation_notes(
     blocking = blocking_calculation_issues(revision, resolutions)
     if not blocking:
         return
+    household_refusal = household_row_fact_refusal(revision, blocking, action=action)
+    if household_refusal is not None:
+        raise household_refusal
     first = blocking[0]
     raise ModeloCalculationBlockedError(
         translated_message=what_locale_key(first.reason),

@@ -437,6 +437,18 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
+    # The profile door that states a household row's required fact: the fact is the
+    # filer's, and the door lists the people the profile records so the missing one is added.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.household_row_facts.{member}_stated",
+            f"{leaf}.household_row_facts.{member}_unstated",
+            action_id=f"operator.profile.{member}",
+        )
+        for member in ("ascendiente", "descendiente")
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
     # No action: a settled prior-accrual Modelo 193 row needs an official
     # source for its payment-year amounts, which only the operator can obtain.
     *(
