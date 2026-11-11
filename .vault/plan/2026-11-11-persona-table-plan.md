@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:46dea80db4de71dcdc9d5900b9e1aa8053138ddbb6923e77308484e60ff3d253'
+body_hash: 'sha256:6e60f7d982ebf46091fd18a49248eb4e9e482705b5981b68632d1db039f60ad8'
 ---
 
 # `persona-table` plan
@@ -57,6 +57,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S30` - Write fixed-width export text as each official design requires (upper case, no accents, ISO-8859-1 where the design says so) from one shared rule, and make the persona table's export stage assert it (lanes LIFECYCLE and ACCEPTANCE); `src/cadrumo/application/filing, dev/acceptance/persona_table`.
 - [ ] `P01.S31` - Satisfy a cross-period dependency whose source year lies below the support envelope by an explicit operator attestation shown on the verification report (lanes CALC-PAGOS and LIFECYCLE); `src/cadrumo/application/modelo/verification_cross_period.py, dev/fixtures/personas`.
 - [ ] `P01.S33` - Remove every dependence of a result on a particular year in registry authoring, production code and persona data, and add a gate for declarations that exist in one edition or one year only (all lanes; gate by ACCEPTANCE); `src/cadrumo/_data/registry, src/cadrumo/application, dev/registry, dev/fixtures/personas`.
+- [ ] `P01.S35` - Give Modelo 100 rental income a source: property and lease records, the inmueble rows 0100 to 0148 with their expenses and amortisation, and the art. 23.2 reduction in casilla 0150, so the landlord persona calculates, verifies and exports with its rental income asserted (lane CALC-RENTA); `src/cadrumo/_data/registry/aeat/modelos/100, src/cadrumo/application/aggregation, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, dev/fixtures/personas/arrendador-jubilado`.
 
 ### Phase `P02` - Deferred backend scope
 
