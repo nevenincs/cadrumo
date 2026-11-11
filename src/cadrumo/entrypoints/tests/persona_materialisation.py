@@ -108,6 +108,11 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID, LedgerLinkRequest
+from ...application.ledger.update_contracts import (
+    LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+    LedgerUpdatePatch,
+    LedgerUpdateRequest,
+)
 from ...application.live.filed_single_capture_operation import (
     FILED_SINGLE_CAPTURE_DEFINITION_ID,
     FiledSingleCapturePublicResultV1,
@@ -846,6 +851,18 @@ def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[
                 actor=PERSONA_ACTOR,
             ),
         )
+        if (accrued_on := row.accrual_date(world.envelope)) is not None:
+            settle_operation(
+                world,
+                LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+                LedgerUpdateRequest(
+                    profile_id=world.profile_id,
+                    transaction_id=transactions[row.ref],
+                    patch=LedgerUpdatePatch(accrual_date=accrued_on.isoformat()),
+                    patch_fields=("accrual_date",),
+                    actor=PERSONA_ACTOR,
+                ),
+            )
     invoices: dict[str, str] = {}
     for row in persona.ledger:
         request = _invoice_request(persona, row, world)

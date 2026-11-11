@@ -422,10 +422,19 @@ class LedgerRow:
     retencion_rate: Decimal | None
     retencion_amount: Decimal | None
     document: str | None
+    accrual: tuple[YearToken, int, int] | None = None
+    """The year, month and day the gasto or ingreso accrues, where it differs from the movement and no invoice dates it."""
 
     def operation_date(self, envelope: YearEnvelope) -> date:
         """Return the movement's calendar date under ``envelope``."""
         return date(self.year.resolve(envelope), self.month, self.day)
+
+    def accrual_date(self, envelope: YearEnvelope) -> date | None:
+        """Return the stated accrual date under ``envelope``, or ``None`` when the row states none."""
+        if self.accrual is None:
+            return None
+        year, month, day = self.accrual
+        return date(year.resolve(envelope), month, day)
 
     @property
     def reverse_charge(self) -> bool:
@@ -1148,6 +1157,9 @@ LEDGER_COLUMNS: tuple[str, ...] = (
 )
 """The ``ledger.csv`` header, in order."""
 
+LEDGER_ACCRUAL_COLUMNS: tuple[str, ...] = ("accrual_year", "accrual_month", "accrual_day")
+"""Optional trailing ``ledger.csv`` columns: a row's accrual date, stated where the devengo criterion needs it."""
+
 
 def _cell(row: Mapping[str, str], column: str) -> str | None:
     return row[column] or None
@@ -1185,6 +1197,7 @@ def _ledger_row(row: Mapping[str, str], where: str, roles: _Roles) -> LedgerRow:
         retencion_rate=_cell_amount(row, "retencion_rate", where),
         retencion_amount=_cell_amount(row, "retencion_amount", where),
         document=_cell(row, "document"),
+        accrual=_accrual(row, where),
     )
     if not 1 <= month <= 12 or not 1 <= day <= 31:
         raise _fail(where, "month or day out of range")
@@ -1192,6 +1205,19 @@ def _ledger_row(row: Mapping[str, str], where: str, roles: _Roles) -> LedgerRow:
         raise _fail(where, "a row needs a ref, a description and EUR")
     _check_invoice_arithmetic(ledger_row, where)
     return ledger_row
+
+
+def _accrual(row: Mapping[str, str], where: str) -> tuple[YearToken, int, int] | None:
+    cells = [row.get(column) or None for column in LEDGER_ACCRUAL_COLUMNS]
+    if all(cell is None for cell in cells):
+        return None
+    year, month, day = cells
+    if year is None or month is None or day is None:
+        raise _fail(where, "an accrual date states its year, month and day")
+    accrual = (YearToken.parse(year, where=f"{where}.accrual_year"), int(month), int(day))
+    if not 1 <= accrual[1] <= 12 or not 1 <= accrual[2] <= 31:
+        raise _fail(where, "accrual month or day out of range")
+    return accrual
 
 
 def _check_invoice_arithmetic(row: LedgerRow, where: str) -> None:
@@ -1205,10 +1231,13 @@ def _check_invoice_arithmetic(row: LedgerRow, where: str) -> None:
 
 
 def _parse_ledger(text: str, *, where: str, roles: _Roles) -> tuple[LedgerRow, ...]:
-    """Parse ``ledger.csv`` text; a header other than :data:`LEDGER_COLUMNS` is refused."""
+    """Parse ``ledger.csv`` text; a header other than :data:`LEDGER_COLUMNS`, optionally followed by
+    :data:`LEDGER_ACCRUAL_COLUMNS`, is refused."""
     reader = csv.DictReader(text.splitlines())
-    if tuple(reader.fieldnames or ()) != LEDGER_COLUMNS:
-        raise _fail(where, f"header must be {','.join(LEDGER_COLUMNS)}")
+    if tuple(reader.fieldnames or ()) not in (LEDGER_COLUMNS, LEDGER_COLUMNS + LEDGER_ACCRUAL_COLUMNS):
+        raise _fail(
+            where, f"header must be {','.join(LEDGER_COLUMNS)}, optionally with {','.join(LEDGER_ACCRUAL_COLUMNS)}"
+        )
     rows = tuple(_ledger_row(row, f"{where}:{index + 2}", roles) for index, row in enumerate(reader))
     refs = [row.ref for row in rows]
     if len(set(refs)) != len(refs):
@@ -1678,6 +1707,7 @@ __all__ = [
     "BIOGRAPHICAL_DATE_KEYS",
     "CATALOGUE_FORMAT",
     "DECLARATIVE_BLOCKS",
+    "LEDGER_ACCRUAL_COLUMNS",
     "LEDGER_COLUMNS",
     "PERSONAS_ROOT",
     "ActivityRow",
