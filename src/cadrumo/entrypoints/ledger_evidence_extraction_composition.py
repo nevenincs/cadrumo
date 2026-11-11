@@ -159,7 +159,7 @@ def invoice_draft_extraction_ports(
         resolve_evidence_input=resolve_evidence_input,
         evidence_input_ports=evidence_input_ports,
         text_layer_ports=evidence_text_layer_ports(),
-        parse_structured_invoice=_invoice_parse_structured_invoice,
+        parse_structured_invoice=read_structured_invoice_record,
         read_text=read_text,
         propose_supply_nature=propose_supply_nature,
         rasterise_pdf=_invoice_rasterise_pdf,
@@ -168,7 +168,7 @@ def invoice_draft_extraction_ports(
     )
 
 
-__all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports"]
+__all__ = ["evidence_text_layer_ports", "invoice_draft_extraction_ports", "read_structured_invoice_record"]
 
 
 def _invoice_resolve_evidence_input(
@@ -198,7 +198,8 @@ def _invoice_resolve_evidence_input(
     return resolve_attachment_evidence_input(attachment_id, store=store, ports=evidence_input_ports)
 
 
-def _invoice_parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
+def read_structured_invoice_record(data: bytes) -> StructuredInvoiceRecord:
+    """Read a structured e-invoice's record, refusing one the e-invoice reader cannot read."""
     try:
         return translate_parsed_einvoice(parse_einvoice_document(data))
     except EInvoiceXmlParseError as exc:

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Self
 
 from pydantic import BaseModel, PositiveInt, model_validator
@@ -18,11 +20,15 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.text_bounds import NonEmptyStr
+from ...domain.attachments.enums import AttachmentSource
+from ...domain.attachments.models import Attachment, normalize_media_type
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.service import invoice_settlement
 from ...domain.iva.schema import InvoiceKind
+from ..operations.host_path_name import host_path_file_name
 from ..operations.public_scalar import PublicDecimal
+from .catalogue_reads_ports import InvoiceDocumentManifestReader
 
 
 def _decimal(value: Decimal) -> PublicDecimal:
@@ -77,6 +83,82 @@ class InvoiceLineSnapshot(BaseModel):
         )
 
 
+def _is_bare_file_name(value: str) -> bool:
+    return value not in {"", ".", ".."} and "/" not in value and "\\" not in value
+
+
+def _document_file_name(attachment: Attachment) -> str | None:
+    # Only a document read from a local file records that file's path; any
+    # other channel's reference (a message id, a URL) is not a file name.
+    if attachment.source is not AttachmentSource.LOCAL_FILE:
+        return None
+    name = host_path_file_name(attachment.source_reference)
+    return name if name is not None and _is_bare_file_name(name) else None
+
+
+class InvoiceDocumentSnapshot(BaseModel):
+    """One stored document kept as an invoice's source, named by its file name alone."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    attachment_id: Hex64Str
+    #: The name of the file the document was read from, without its folder;
+    #: absent when the document did not come from a local file.
+    name: NonEmptyStr | None
+    media_type: NonEmptyStr
+
+    @model_validator(mode="after")
+    def _bare_name(self) -> Self:
+        if self.name is not None and not _is_bare_file_name(self.name):
+            raise ValueError("an invoice document is named by its file name alone")
+        return self
+
+    @classmethod
+    def from_attachment(cls, attachment: Attachment) -> Self:
+        """Copy the document's identity, file name and media type from its manifest."""
+        return cls(
+            attachment_id=attachment.attachment_id,
+            name=_document_file_name(attachment),
+            media_type=normalize_media_type(attachment.mime_type),
+        )
+
+
+class InvoiceDocumentIndex:
+    """Each invoice's stored documents, gathered from the manifests in one pass."""
+
+    __slots__ = ("_documents",)
+
+    def __init__(self, documents: Mapping[str, tuple[InvoiceDocumentSnapshot, ...]]) -> None:
+        """Hold an already ordered invoice-to-documents mapping."""
+        self._documents: Mapping[str, tuple[InvoiceDocumentSnapshot, ...]] = MappingProxyType(dict(documents))
+
+    @classmethod
+    def from_manifests(cls, manifests: Iterable[Attachment]) -> Self:
+        """Index every manifest by each invoice it records, ordered by attachment id."""
+        gathered: dict[str, list[InvoiceDocumentSnapshot]] = {}
+        for manifest in manifests:
+            if not manifest.linked_invoice_ids:
+                continue
+            document = InvoiceDocumentSnapshot.from_attachment(manifest)
+            for invoice_id in manifest.linked_invoice_ids:
+                gathered.setdefault(invoice_id, []).append(document)
+        return cls(
+            {
+                invoice_id: tuple(sorted(documents, key=lambda document: document.attachment_id))
+                for invoice_id, documents in gathered.items()
+            }
+        )
+
+    @classmethod
+    def read(cls, reader: InvoiceDocumentManifestReader) -> Self:
+        """Read the profile's manifests once and index them."""
+        return cls.from_manifests(reader.iter_manifests())
+
+    def of(self, invoice_id: str) -> tuple[InvoiceDocumentSnapshot, ...]:
+        """The documents kept for ``invoice_id``; empty when the records hold none."""
+        return self._documents.get(invoice_id, ())
+
+
 class CatalogueInvoiceSnapshot(BaseModel):
     """The existing catalogue readback fields, excluding full source paths."""
 
@@ -120,6 +202,8 @@ class CatalogueInvoiceSnapshot(BaseModel):
     referencia_catastral: str | None
     #: The cash the invoice settles for: its total less the retención withheld at source.
     settlement_amount: PublicDecimal
+    #: The stored documents kept as this invoice's source, ordered by attachment id.
+    documents: tuple[InvoiceDocumentSnapshot, ...]
 
     @model_validator(mode="after")
     def _bounds(self) -> Self:
@@ -128,8 +212,12 @@ class CatalogueInvoiceSnapshot(BaseModel):
         return self
 
     @classmethod
-    def from_invoice(cls, invoice: Invoice) -> Self:
-        """Copy the existing list/view surface without forwarding the aggregate."""
+    def from_invoice(cls, invoice: Invoice, *, documents: InvoiceDocumentIndex) -> Self:
+        """Copy the existing list/view surface and the invoice's stored documents without forwarding the aggregate.
+
+        ``documents`` is required so that no reader serves an invoice as having
+        no document merely because it did not look.
+        """
         provenance = invoice.provenance
         return cls(
             invoice_id=invoice.invoice_id,
@@ -173,6 +261,7 @@ class CatalogueInvoiceSnapshot(BaseModel):
                 else None
             ),
             settlement_amount=_decimal(invoice_settlement(invoice)),
+            documents=documents.of(invoice.invoice_id),
         )
 
 
@@ -199,12 +288,10 @@ def _require_snapshot_classification_and_source(snapshot: CatalogueInvoiceSnapsh
         not _bounded_decimal(snapshot.fx_rate, positive=True)
         or not snapshot.invoice_class
         or normalise_iso_4217_currency(snapshot.currency) != snapshot.currency
-        or (
-            snapshot.source_filename is not None
-            and (not snapshot.source_filename or "/" in snapshot.source_filename or "\\" in snapshot.source_filename)
-        )
+        or (snapshot.source_filename is not None and not _is_bare_file_name(snapshot.source_filename))
+        or len({document.attachment_id for document in snapshot.documents}) != len(snapshot.documents)
     ):
         raise ValueError("invoice snapshot has invalid disclosed values")
 
 
-__all__ = ["CatalogueInvoiceSnapshot", "InvoiceLineSnapshot"]
+__all__ = ["CatalogueInvoiceSnapshot", "InvoiceDocumentIndex", "InvoiceDocumentSnapshot", "InvoiceLineSnapshot"]

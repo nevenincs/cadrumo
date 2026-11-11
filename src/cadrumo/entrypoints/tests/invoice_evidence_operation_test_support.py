@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
+from ...application.invoices.catalogue_read_projection import InvoiceDocumentIndex
 from ...application.ledger.confirmation_record import load_confirmation_records, re_stamped_provenance
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_draft import printed_total_discrepancy
@@ -159,7 +160,11 @@ def assert_invoice_evidence_confirmation_persisted(
         total_discrepancy=printed_total_discrepancy(draft=prepared.preparation.draft, invoice=stored),
         establishment=prepared.preparation.establishment,
     )
-    assert result.confirmation == InvoiceConfirmationProjectionV1.from_result(canonical)
+    documents = InvoiceDocumentIndex.read(ports.invoice_confirmation_ports.attachment_store)
+    assert tuple(document.attachment_id for document in result.confirmation.invoice.documents) == (
+        prepared.preparation.attachment_id,
+    )
+    assert result.confirmation == InvoiceConfirmationProjectionV1.from_result(canonical, documents=documents)
 
 
 __all__ = [

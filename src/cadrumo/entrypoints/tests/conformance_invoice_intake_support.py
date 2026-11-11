@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     INVOICE_WIZARD_OPERATION_DEFINITION_ID,
@@ -16,7 +17,7 @@ from ...application.invoices.catalogue_intake_contracts import (
     InvoiceWizardOutcome,
     InvoiceWizardRequest,
 )
-from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
@@ -122,7 +123,8 @@ def _prepare_wizard(context: ConformanceFamilyContext) -> ConformancePreparation
             Decimal("52.50"),
             Decimal("302.50"),
         )
-        assert wizard.result.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice)
+        documents = InvoiceDocumentIndex.read(AttachmentStore(bucket_id=bucket_id))
+        assert wizard.result.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice, documents=documents)
 
     return ConformancePreparation(
         subject_ref=profile_operation_subject(bucket_id),

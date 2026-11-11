@@ -48,7 +48,7 @@ from .catalogue_intake_refusal import (
     InvoiceWizardFieldsValidationError,
     InvoiceWizardValidationRefusalProjection,
 )
-from .catalogue_read_projection import CatalogueInvoiceSnapshot
+from .catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from .creation_wizard import create_invoice_via_wizard
 from .source_observations import iva_category_for_operation_type
 
@@ -206,6 +206,7 @@ class _InvoiceIntakeRun:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         category = _resolve_wizard_category(self.payload, operation)
         category = category or iva_category_for_operation_type(self.payload.operation_type)
+        creation = ports.creation()
         outcome = create_invoice_via_wizard(
             bucket_id=str(self.payload.profile_id),
             kind=self.payload.kind,
@@ -227,13 +228,15 @@ class _InvoiceIntakeRun:
             series=self.payload.series,
             rectifies_invoice_number=self.payload.rectifies_invoice_number,
             recargo_amount=self.payload.recargo_amount,
-            ports=ports.creation(),
+            ports=creation,
             operation=operation,
             actor=self.wizard_actor,
         )
         return InvoiceWizardProjection(
             profile_id=self.payload.profile_id,
-            invoice=CatalogueInvoiceSnapshot.from_invoice(outcome.invoice),
+            invoice=CatalogueInvoiceSnapshot.from_invoice(
+                outcome.invoice, documents=InvoiceDocumentIndex.read(creation.documents)
+            ),
             already_existed=outcome.already_existed,
             euro_value_pending=outcome.invoice.euro_value_pending,
         )

@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.application.exchange_rate_provider import exchange_rate_provider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from cadrumo.application.ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts
 from cadrumo.application.ledger.classification_category_resolution import IvaCategoryResolution
 from cadrumo.application.ledger.closure_findings import closure_findings
@@ -310,11 +310,13 @@ def test_confirmation_projection_preserves_actual_rerun_and_resolution_facts(cre
         establishment=establishment,
     )
 
-    projected = InvoiceConfirmationProjectionV1.from_result(result)
+    projected = InvoiceConfirmationProjectionV1.from_result(result, documents=InvoiceDocumentIndex.from_manifests(()))
     decoded = InvoiceConfirmationProjectionV1.model_validate_json(projected.model_dump_json())
 
     assert decoded == projected
-    assert projected.invoice == CatalogueInvoiceSnapshot.from_invoice(result.invoice)
+    assert projected.invoice == CatalogueInvoiceSnapshot.from_invoice(
+        result.invoice, documents=InvoiceDocumentIndex.from_manifests(())
+    )
     assert projected.created is created
     assert projected.confirmation_id == result.confirmation_id
     assert projected.draft.facturae_invoice_class is not None

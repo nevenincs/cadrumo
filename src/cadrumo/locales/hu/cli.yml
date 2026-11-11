@@ -285,6 +285,8 @@ cli:
         page_number_help: A megrajzolandó oldal, 1-től számozva.
         page_output_failed: 'Nem sikerült az oldal képét ide írni: {path}.'
         page_output_help: A PNG-fájl, amelybe az oldal kerül.
+        page_structured_invoice: Ez a dokumentum strukturált e-számla, nincs megrajzolható
+          oldala; nyisd meg az ablakban az adatai elolvasásához.
         pull_actor_help: A neved vagy címkéd.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
         remove_help: Beszerzési számlához tartozó bizonyíték törlése.

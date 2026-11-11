@@ -19,6 +19,7 @@ from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import EurRateLookup
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from .catalogue_reads_ports import InvoiceDocumentManifestReader
 
 
 class CatalogueInvoicePersistenceError(CadrumoError):
@@ -113,6 +114,8 @@ class CatalogueCreationPorts:
     event_repository: CatalogueInvoiceEventRepositoryPort
     audit_commit: CatalogueInvoiceAuditCommitPort
     rate_provider: CatalogueInvoiceRateProviderPort
+    #: The profile's document manifests, so a created invoice is served with any document already kept for it.
+    documents: InvoiceDocumentManifestReader
 
 
 class CatalogueCreationPortsFactory(Protocol):

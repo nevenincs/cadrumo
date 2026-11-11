@@ -13,6 +13,7 @@ from ...adapters.persistence.profile.counterparty_establishment import build_cou
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.own_accounts import OwnAccountRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.invoices.catalogue_add_contracts import InvoiceAddResult
 from ...application.invoices.catalogue_read_operation import (
@@ -24,7 +25,7 @@ from ...application.invoices.catalogue_read_operation import (
     InvoiceViewRequest,
     InvoiceViewSuccess,
 )
-from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
 from ...application.invoices.catalogue_remove_operation import (
     INVOICE_REMOVE_OPERATION_DEFINITION_ID,
     InvoiceRemoveRequest,
@@ -415,6 +416,10 @@ def assert_ledger_check_outcome(ctx: ExecutorOutcome) -> None:
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
+def _stored_documents(ctx: ExecutorOutcome) -> InvoiceDocumentIndex:
+    return InvoiceDocumentIndex.read(AttachmentStore(bucket_id=str(ctx.profile_id)))
+
+
 def assert_ledger_invoice_add_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.invoice.add public result and effects."""
     created = ctx.resolve(InvoiceAddResult)
@@ -427,7 +432,7 @@ def assert_ledger_invoice_add_outcome(ctx: ExecutorOutcome) -> None:
     invoice = catalogue.invoices[created.invoice.invoice_id]
     assert invoice.invoice_number == "CONFORMANCE-INVOICE-2025-ADD"
     assert invoice.grand_total == Decimal("121.00")
-    assert created.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice)
+    assert created.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice, documents=_stored_documents(ctx))
 
 
 def assert_ledger_invoice_preview_outcome(ctx: ExecutorOutcome) -> None:
@@ -458,7 +463,8 @@ def assert_invoice_list_outcome(ctx: ExecutorOutcome) -> None:
     assert inventory.kind is None
     assert ctx.invoice_catalogue_before is not None
     assert tuple(inventory.invoices) == tuple(
-        CatalogueInvoiceSnapshot.from_invoice(invoice) for invoice in ctx.invoice_catalogue_before.values()
+        CatalogueInvoiceSnapshot.from_invoice(invoice, documents=_stored_documents(ctx))
+        for invoice in ctx.invoice_catalogue_before.values()
     )
     assert len(inventory.invoices) == 1
     assert_invoice_catalogue_unchanged(ctx)
@@ -474,7 +480,7 @@ def assert_invoice_view_outcome(ctx: ExecutorOutcome) -> None:
     assert isinstance(selection.outcome, InvoiceViewSuccess)
     assert ctx.invoice_catalogue_before is not None
     assert selection.outcome.invoice == CatalogueInvoiceSnapshot.from_invoice(
-        ctx.invoice_catalogue_before.invoices[ctx.payload.invoice_id]
+        ctx.invoice_catalogue_before.invoices[ctx.payload.invoice_id], documents=_stored_documents(ctx)
     )
     assert_invoice_catalogue_unchanged(ctx)
 
@@ -488,7 +494,7 @@ def assert_invoice_remove_outcome(ctx: ExecutorOutcome) -> None:
     assert removal.invoice_id == ctx.payload.invoice_id
     assert ctx.invoice_catalogue_before is not None
     removed_invoice = ctx.invoice_catalogue_before.invoices[ctx.payload.invoice_id]
-    assert removal.invoice == CatalogueInvoiceSnapshot.from_invoice(removed_invoice)
+    assert removal.invoice == CatalogueInvoiceSnapshot.from_invoice(removed_invoice, documents=_stored_documents(ctx))
     expected_catalogue = InvoiceCatalogue(
         invoices={
             invoice_id: invoice

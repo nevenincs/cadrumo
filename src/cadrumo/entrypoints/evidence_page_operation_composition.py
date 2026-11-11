@@ -1,4 +1,4 @@
-"""Concrete evidence catalogue, attachment custody and renderer for the page read."""
+"""Concrete evidence catalogue, attachment custody, renderer and e-invoice reader for the page read."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from ..application.ledger.evidence_page_contracts import (
     LedgerEvidencePagePorts,
     RenderedEvidencePage,
 )
+from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.identity.bucket import canonical_bucket_id
@@ -53,6 +54,17 @@ class _DeferredPageRenderer:
         )
 
 
+def _read_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
+    """Read a structured e-invoice's record with the e-invoice reader, loaded on the first one shown.
+
+    Building the operation registry must not load the reader: only the worker
+    that shows an e-invoice needs it.
+    """
+    from .ledger_evidence_extraction_composition import read_structured_invoice_record
+
+    return read_structured_invoice_record(data)
+
+
 def _attachment_store(bucket_id: str, /) -> AttachmentStoreProtocol:
     normalized_bucket_id = canonical_bucket_id(bucket_id)
     if require_active_bucket_id() != normalized_bucket_id:
@@ -63,11 +75,12 @@ def _attachment_store(bucket_id: str, /) -> AttachmentStoreProtocol:
 def build_ledger_evidence_page_operation_ports(
     *, renderer: EvidencePageRenderer | None = None
 ) -> LedgerEvidencePagePorts:
-    """Provide guarded factories and the in-memory renderer; construction opens no profile store."""
+    """Provide guarded factories, the in-memory renderer and the e-invoice reader; construction opens no store."""
     return LedgerEvidencePagePorts(
         evidence_ports_factory=build_ledger_evidence_ports,
         attachment_store_factory=_attachment_store,
         renderer=_DeferredPageRenderer() if renderer is None else renderer,
+        structured_reader=_read_structured_invoice,
     )
 
 

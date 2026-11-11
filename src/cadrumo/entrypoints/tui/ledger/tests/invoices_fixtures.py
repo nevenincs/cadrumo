@@ -117,6 +117,7 @@ def invoice_snapshot(
         grand_total_eur=None,
         referencia_catastral=None,
         settlement_amount=_decimal("121.00"),
+        documents=(),
     )
 
 

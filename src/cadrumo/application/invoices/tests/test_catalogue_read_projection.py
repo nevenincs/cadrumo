@@ -2,26 +2,32 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from ....domain.attachments.enums import AttachmentKind, AttachmentSource
+from ....domain.attachments.models import Attachment
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ...operations.registry_schema_validation import strict_model_json_schema
 from ..catalogue_creation import build_catalogue_invoice
-from ..catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
+from ..catalogue_read_projection import (
+    CatalogueInvoiceSnapshot,
+    InvoiceDocumentIndex,
+    InvoiceDocumentSnapshot,
+    InvoiceLineSnapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-def _snapshot(
-    *, kind: InvoiceKind = InvoiceKind.RECEIVED, lease: BusinessPremisesLease | None = None
-) -> CatalogueInvoiceSnapshot:
-    invoice = build_catalogue_invoice(
+def _invoice(*, kind: InvoiceKind = InvoiceKind.RECEIVED, lease: BusinessPremisesLease | None = None) -> Invoice:
+    return build_catalogue_invoice(
         bucket_id="20202020-2020-4202-8202-202020202020",
         kind=kind,
         counterparty_name="Papeleria Sol SL",
@@ -35,7 +41,14 @@ def _snapshot(
         business_premises_lease=lease,
         rate_provider=exchange_rate_provider(),
     )
-    return CatalogueInvoiceSnapshot.from_invoice(invoice)
+
+
+def _snapshot(
+    *, kind: InvoiceKind = InvoiceKind.RECEIVED, lease: BusinessPremisesLease | None = None
+) -> CatalogueInvoiceSnapshot:
+    return CatalogueInvoiceSnapshot.from_invoice(
+        _invoice(kind=kind, lease=lease), documents=InvoiceDocumentIndex.from_manifests(())
+    )
 
 
 def test_snapshot_roundtrip_preserves_amounts_lines_and_absence() -> None:
@@ -92,6 +105,15 @@ def test_line_rejects_invalid_decimal_bounds(field: str, value: str) -> None:
         ("counterparty_name", ""),
         ("fx_rate_source", ""),
         ("lines", []),
+        ("documents", [{"attachment_id": "a" * 64, "name": "private/factura.pdf", "media_type": "application/pdf"}]),
+        ("documents", [{"attachment_id": "a" * 64, "name": "..", "media_type": "application/pdf"}]),
+        (
+            "documents",
+            [
+                {"attachment_id": "a" * 64, "name": "factura.pdf", "media_type": "application/pdf"},
+                {"attachment_id": "a" * 64, "name": "factura.pdf", "media_type": "application/pdf"},
+            ],
+        ),
     ],
 )
 def test_snapshot_rejects_invalid_public_shape(field: str, value: object) -> None:
@@ -99,3 +121,72 @@ def test_snapshot_rejects_invalid_public_shape(field: str, value: object) -> Non
     data[field] = value
     with pytest.raises(ValidationError):
         CatalogueInvoiceSnapshot.model_validate(data)
+
+
+def _manifest(
+    digest: str,
+    *,
+    invoices: tuple[str, ...],
+    source: AttachmentSource = AttachmentSource.LOCAL_FILE,
+    reference: str = "/home/persona/facturas/factura.pdf",
+    mime_type: str = "application/pdf",
+) -> Attachment:
+    return Attachment(
+        attachment_id=digest,
+        kind=AttachmentKind.INVOICE_PDF,
+        source=source,
+        source_reference=reference,
+        sha256=digest,
+        mime_type=mime_type,
+        bytes_size=10,
+        captured_at=datetime.fromtimestamp(0, UTC),
+        linked_invoice_ids=invoices,
+    )
+
+
+def test_the_index_names_a_local_document_by_its_last_path_component_on_either_kind_of_system() -> None:
+    index = InvoiceDocumentIndex.from_manifests(
+        (
+            _manifest("b" * 64, invoices=("i1",), reference=r"C:\Users\persona\Facturas\recibida.PDF"),
+            _manifest("a" * 64, invoices=("i1",), reference="/home/persona/facturas/emitida.xml", mime_type="text/xml"),
+        )
+    )
+
+    assert index.of("i1") == (
+        InvoiceDocumentSnapshot(attachment_id="a" * 64, name="emitida.xml", media_type="text/xml"),
+        InvoiceDocumentSnapshot(attachment_id="b" * 64, name="recibida.PDF", media_type="application/pdf"),
+    )
+
+
+def test_a_document_not_read_from_a_local_file_is_served_without_a_name() -> None:
+    index = InvoiceDocumentIndex.from_manifests(
+        (_manifest("c" * 64, invoices=("i1",), source=AttachmentSource.URL, reference="https://example.test/f.pdf"),)
+    )
+
+    assert index.of("i1") == (InvoiceDocumentSnapshot(attachment_id="c" * 64, name=None, media_type="application/pdf"),)
+
+
+def test_one_document_kept_for_two_invoices_is_served_with_each_and_an_unlinked_one_with_none() -> None:
+    index = InvoiceDocumentIndex.from_manifests(
+        (_manifest("d" * 64, invoices=("i1", "i2")), _manifest("e" * 64, invoices=()))
+    )
+
+    assert [document.attachment_id for document in index.of("i1")] == ["d" * 64]
+    assert [document.attachment_id for document in index.of("i2")] == ["d" * 64]
+    assert index.of("i3") == ()
+
+
+def test_the_snapshot_serves_exactly_the_documents_indexed_for_its_invoice() -> None:
+    plain = _snapshot()
+    index = InvoiceDocumentIndex.from_manifests(
+        (_manifest("f" * 64, invoices=(plain.invoice_id,)), _manifest("0" * 64, invoices=("another",)))
+    )
+    invoice = _invoice()
+
+    documented = CatalogueInvoiceSnapshot.from_invoice(invoice, documents=index)
+
+    assert documented.invoice_id == plain.invoice_id
+    assert documented.documents == (
+        InvoiceDocumentSnapshot(attachment_id="f" * 64, name="factura.pdf", media_type="application/pdf"),
+    )
+    assert plain.documents == ()

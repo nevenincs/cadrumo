@@ -27,10 +27,14 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 @dataclass(frozen=True, slots=True)
 class EvidencePageRead:
-    """The page read's correlated projection and the PNG bytes its image URL carries."""
+    """The page read's correlated projection and the PNG bytes its image URL carries.
+
+    ``png`` is ``None`` for a structured e-invoice, which is shown as the facts
+    its record states and has no page to draw.
+    """
 
     projection: LedgerEvidencePageProjection
-    png: bytes
+    png: bytes | None
 
 
 def _page_matches_request(
@@ -44,7 +48,7 @@ def _page_matches_request(
         projection.evidence_id == evidence_id
         and (attachment_id is None or projection.attachment_id == attachment_id)
         and projection.page == page
-        and projection.width <= max_width
+        and (projection.width is None or projection.width <= max_width)
     )
 
 
@@ -56,7 +60,7 @@ def run_ledger_evidence_page(
     page: int,
     max_width: int,
 ) -> EvidencePageRead:
-    """Draw one page of a stored document through the exact active-profile runtime frontend."""
+    """Show one page of a stored document through the exact active-profile runtime frontend."""
     expected_profile_id = UUID(active_bucket_id_or_refuse())
     client = require_profile_client(ctx, expected_profile_id=expected_profile_id)
     request = LedgerEvidencePageRequest(
@@ -84,6 +88,10 @@ def run_ledger_evidence_page(
         or projection.profile_id != client.profile_id
         or not _page_matches_request(projection, evidence_id, attachment_id, page, max_width)
     ):
+        raise invalid_completion_error(completed)
+    if projection.structured_invoice is not None:
+        return EvidencePageRead(projection=projection, png=None)
+    if projection.image_data_url is None:
         raise invalid_completion_error(completed)
     try:
         png = base64.b64decode(projection.image_data_url.removeprefix(EVIDENCE_PAGE_IMAGE_URL_PREFIX), validate=True)
