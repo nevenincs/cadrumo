@@ -24,11 +24,14 @@ import typer
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import clear_output_language_cache
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..date_parsing import parse_iso_date
 from ..decimal_parsing import parse_decimal_amount
 from ..terminal_errors import render_click_exception_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _LOCALES = (OutputLanguage.EN, OutputLanguage.ES, OutputLanguage.CA, OutputLanguage.HU)
 
@@ -69,9 +72,9 @@ def test_decimal_refusal_carries_label_raw_and_hint_in_every_locale() -> None:
 
 def test_date_refusal_carries_label_and_raw_in_every_locale() -> None:
     for locale in _LOCALES:
-        message = _render_date_refusal(locale, "15/01/2026")
+        message = _render_date_refusal(locale, f"15/01/{_YEAR}")
         assert "invoice-date" in message, f"{locale.value}: label missing -> {message!r}"
-        assert "15/01/2026" in message, f"{locale.value}: raw value missing -> {message!r}"
+        assert f"15/01/{_YEAR}" in message, f"{locale.value}: raw value missing -> {message!r}"
 
 
 def test_decimal_refusal_text_differs_across_locales() -> None:
@@ -82,7 +85,7 @@ def test_decimal_refusal_text_differs_across_locales() -> None:
 
 
 def test_date_refusal_text_differs_across_locales() -> None:
-    rendered = {locale.value: _render_date_refusal(locale, "15/01/2026") for locale in _LOCALES}
+    rendered = {locale.value: _render_date_refusal(locale, f"15/01/{_YEAR}") for locale in _LOCALES}
     assert len({rendered["en"], rendered["es"], rendered["ca"], rendered["hu"]}) == 4, rendered
 
 

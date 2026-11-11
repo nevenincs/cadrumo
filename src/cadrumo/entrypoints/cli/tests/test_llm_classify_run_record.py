@@ -25,6 +25,7 @@ from cadrumo.application.ledger.llm_classification import suggest_llm_classifica
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -32,6 +33,8 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.entrypoints.ledger_llm_composition import compose_ledger_llm
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "43434343-4343-4343-8343-434343434343"
 
@@ -54,8 +57,8 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-run-record",
-        booked_date=date(2025, 3, 1),
-        value_date=date(2025, 3, 1),
+        booked_date=date(_YEAR, 3, 1),
+        value_date=date(_YEAR, 3, 1),
         amount=Decimal("50.00"),
         currency="EUR",
         counterparty="Office SL",
@@ -65,7 +68,7 @@ def _transaction() -> Transaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "office supplies"},
