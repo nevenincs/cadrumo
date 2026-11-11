@@ -53,12 +53,12 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .action_errors import M303Exonerado390AttestationUnadmissibleError
 from .m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
 )
+from .m303_exonerado_390_attestation_refusal import RequestAttestationRefusal, request_attestation_unadmissible
 from .profile_readiness_gate import load_modelo_work_profile
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
@@ -163,9 +163,8 @@ class ModeloWorkM303AttestationExecutor:
                 if unit.bucket_id != bucket_id:
                     raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
                 if str(unit.modelo) != form_for_role("iva.periodic"):
-                    raise M303Exonerado390AttestationUnadmissibleError(
-                        "Modelo 390 applicability attestation requires a Modelo 303 work unit",
-                        context={"work_unit_id": unit.work_unit_id},
+                    raise request_attestation_unadmissible(
+                        RequestAttestationRefusal.NOT_MODELO_303_WORK_UNIT, work_unit_id=unit.work_unit_id
                     )
                 period = unit.period
             else:

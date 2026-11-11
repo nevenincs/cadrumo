@@ -86,8 +86,8 @@ class _Context:
         self.operands = operation_secure_reference_repository()
 
 
-def _calculated_revision(operation: PinnedAuthorityOperation) -> str:
-    """Calculate a synthetic first-quarter Modelo 130, which stays an unverified draft."""
+def _calculated_revision(operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    """Calculate a synthetic first-quarter Modelo 130, which stays an unverified draft; return its unit and revision."""
     period = Period.from_year_and_code(2025, "1T")
     snapshot = operation.snapshot("130", filing_year=2025, period=period.registry_token)
     unit = create_work_unit(
@@ -131,7 +131,7 @@ def _calculated_revision(operation: PinnedAuthorityOperation) -> str:
         assert reference is not None
         return await context.operands.resolve(reference, ModeloWorkCalculatePublicResultV3)
 
-    return asyncio.run(run()).calculation_revision_id
+    return unit.work_unit_id, asyncio.run(run()).calculation_revision_id
 
 
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ def test_an_export_refused_for_an_unverified_revision_reports_no_effect(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
         seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         with bound_test_profile_record(_PROFILE_ID):
-            revision_id = _calculated_revision(operation)
+            work_unit_id, revision_id = _calculated_revision(operation)
             output.parent.mkdir()
             executor = ModeloExportExecutor(
                 profile_resolver=resolve_active_workflow_profile,
@@ -158,7 +158,7 @@ def test_an_export_refused_for_an_unverified_revision_reports_no_effect(
             context = _Context(operation)
             request = OperationRequest(
                 definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
-                subject_ref=revision_id,
+                subject_ref=work_unit_id,
                 payload=ModeloExportRequest(
                     calculation_revision_id=revision_id,
                     output_path=str(output),

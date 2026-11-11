@@ -415,7 +415,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible",
             retryable=False,
-            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),

@@ -1710,6 +1710,9 @@ cli:
           del Modelo 303 del último periodo del año (código de periodo 12 o 4T), e
           imprime su identificador y SHA-256 para `work calculate`. Los demás periodos
           no lo preguntan.
+        attest_no_amount_help: Indica que un importe que se arrastra de una declaración
+          anterior es nulo. Muestra la comprobación del cambio; con --yes lo registra
+          como un 0 que has declarado, distinto de una cifra escrita.
         attest_prior_carries_confirm: Todavía no se ha declarado nada. Ejecuta `aeat
           app modelo work attest-prior-carries %{work_unit_id} --yes` para declararlo.
         attest_prior_carries_help: Indica que no te queda ningún importe pendiente
@@ -1728,6 +1731,9 @@ cli:
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base debe ser
           un importe decimal; se recibió: {value}. Usa el punto como separador decimal
           y sin separador de miles, p. ej. 1234.56.'
+        binding_option_help: Valor de entrada de una casilla con sintaxis KEY=VALUE
+          (repetible); ejecuta `aeat app modelo bindings list --missing` para ver
+          los valores que requiere el cálculo.
         borrador_help: Id del snapshot del borrador del Modelo 100 (completo o prefijo
           no ambiguo). Sus valores solo rellenan las casillas cuyo origen está marcado
           como aeat_prefilled en las definiciones de los modelos; los valores que
@@ -1819,6 +1825,17 @@ cli:
           `pdf`).'
         document_only_help: Comprueba solo el documento, sin abrir el almacén del
           perfil activo; sin --trusted-key, un resultado válido queda sin clave anclada.
+        entry_binding_help: Dato de la declaración, por su identificador (consulta
+          `aeat app modelo bindings list`).
+        entry_binding_unknown: '%{binding} no es un identificador de dato.'
+        entry_casilla_help: Casilla de la declaración, por su identificador del registro
+          (consulta `aeat app modelo casillas`).
+        entry_casilla_unknown: '%{casilla} no es un identificador de casilla.'
+        entry_confirm: Todavía no se ha registrado nada. Ejecuta `%{command}` para
+          registrarlo.
+        entry_value_help: El valor, escrito como en tu idioma de salida (por ejemplo
+          1.234,56 en español o 1,234.56 en inglés).
+        entry_yes_help: Confirma el cambio y regístralo en la declaración
         file:
           verification_report_ambiguous: Hay más de un informe de verificación favorable
             para esta revisión. Resuelve el conflicto de verificación antes de registrar
@@ -1948,9 +1965,11 @@ cli:
         output_help: Ruta donde escribir el informe de cálculo; su directorio padre
           debe existir.
         output_language_help: Idioma de salida para los mensajes generados.
-        override_help: Valor de entrada de una casilla con sintaxis KEY=VALUE (repetible);
-          ejecuta `aeat app modelo bindings list --missing` para ver los valores que
-          requiere el cálculo.
+        override_help: Indica tú el valor de un dato de una declaración, por encima
+          de lo que aporta su fuente o en lugar de una fuente que no aportó nada,
+          como una declaración anterior que no tienes guardada. Muestra el valor y
+          la comprobación del cambio; con --yes lo registra y conserva todos los demás
+          valores que has introducido.
         payment_election_help: 'Elige cómo se paga un resultado positivo del Modelo
           303: mediante ingreso ordinario o domiciliación.'
         period_help: 'Código de periodo de la declaración: 0A anual, 1T-4T trimestres,
@@ -2149,6 +2168,10 @@ cli:
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA_ID=DECIMAL
           (repetible; al menos uno requerido)
+        set_value_help: Escribe un valor en una casilla que rellenas tú en una declaración,
+          tal como la toma su formulario. Muestra el valor tal como lo lee la casilla
+          y la comprobación del cambio; con --yes lo registra y conserva todos los
+          demás valores que has introducido.
         state_label_borrador: Borrador
         state_label_descartado: Descartado
         state_label_presentado: Registrada como presentada

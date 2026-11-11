@@ -117,8 +117,9 @@ from ..user_profile.modelo_scoped_conditions import (
 from .action_errors import (
     ModeloChargeAccountMissingError,
     ModeloDomiciliationPastCutoffError,
-    ModeloInstalmentElectionRefusedError,
     ModeloRefundAccountMissingError,
+    instalment_election_refusal,
+    own_account_missing_error,
 )
 from .export_contracts import (
     ModeloExportAccountReference,
@@ -195,15 +196,7 @@ def _resolve_own_account(
 def _missing_account_error(
     role: OwnAccountRole, *, context: Mapping[str, object]
 ) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
-    if role is OwnAccountRole.CHARGE:
-        return ModeloChargeAccountMissingError(
-            "a domiciliacion export requires a charge account on file",
-            context=dict(context),
-        )
-    return ModeloRefundAccountMissingError(
-        "the export's account page requires a refund account on file",
-        context=dict(context),
-    )
+    return own_account_missing_error("charge" if role is OwnAccountRole.CHARGE else "refund", context=context)
 
 
 def _unavailable_context(context: Mapping[str, object], resolved: _ResolvedOwnAccount) -> dict[str, object]:
@@ -409,10 +402,7 @@ def require_instalment_election_admissible(
         operation=operation,
     )
     if reason is not None:
-        raise ModeloInstalmentElectionRefusedError(
-            translated_message="errors.refused.refused_modelo_instalment_election",
-            context={**context, "reason": reason},
-        )
+        raise instalment_election_refusal(reason, context=context)
     if not election.debits_second:
         return
     charge_account = _charge_account_projection(accounts.charge)

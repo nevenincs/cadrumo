@@ -30,7 +30,8 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal, override
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final, Literal, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -116,7 +117,28 @@ class WorkUnitMutationRefusedError(ModeloPreconditionErrorMixin, ModeloError):
 
 
 class CalculationRevisionNotFoundError(ModeloPreconditionErrorMixin, ModeloError, CoreNotFoundError):
-    """Raised when a calculation revision lookup fails."""
+    """Raised when a calculation revision lookup fails.
+
+    A raise site that knows a sharper door, such as the declaration an
+    identifier turned out to name, carries its own failure. Every other lookup
+    serves the default: the declarations list, from which the right revision
+    can be addressed.
+    """
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict:
+        """Expose the carried verdict, or the default door of an absent revision."""
+        failure = self.precondition_failure
+        if failure is not None:
+            return failure.verdict
+        return build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.revisions",
+            scenario_id="modelo.work.revisions.calculation_revision.absent",
+            evidence_id="modelo.work.revisions.calculation_revision",
+            evidence_values={"stored": False},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ).verdict
 
 
 class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
@@ -125,6 +147,16 @@ class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
 
 class ModeloRevisionNotSealedError(OperationNextStepErrorMixin, CalculationRevisionStateError):
     """Refused: an artefact was asked of a calculation not yet verified, which checking the declaration settles."""
+
+
+class ModeloOperationSubjectNotWorkUnitError(OperationNextStepErrorMixin, ModeloError):
+    """Refused: a request's subject is not the work unit that owns the stored record its payload names.
+
+    An operation whose subject is a stored work unit is addressed by that unit,
+    never by the record it acts on, so a calculation revision id or another
+    unit's id is the wrong subject. The door opens the declaration that does
+    own the record, from which the request can be made again.
+    """
 
 
 class ModeloRecordNotFoundError(ModeloError):
@@ -509,7 +541,7 @@ class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
     """
 
 
-class ModeloInstalmentElectionRefusedError(ModeloError):
+class ModeloInstalmentElectionRefusedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a two-instalment payment is elected where the law does not admit it.
 
     The split exists only for a modelo that declares it, only for a result to
@@ -532,7 +564,7 @@ class ModeloPriorDomiciliationElectionRefusedError(ModeloError):
     """Raised when a prior-direct-debit election lacks legal, registry, or U-proof authority."""
 
 
-class ModeloRefundAccountMissingError(ModeloError):
+class ModeloRefundAccountMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a refund-disposition export has no refund account on file.
 
     When the determined disposition is a refund (devolución, ``D`` / ``V`` /
@@ -548,7 +580,7 @@ class ModeloRefundAccountMissingError(ModeloError):
     """
 
 
-class ModeloChargeAccountMissingError(ModeloError):
+class ModeloChargeAccountMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a domiciliación export has no charge account on file.
 
     A ``U`` declaration instructs AEAT to debit the taxpayer's account. The
@@ -558,6 +590,87 @@ class ModeloChargeAccountMissingError(ModeloError):
     The export refuses rather than falling back to that separate account or
     writing an empty account page.
     """
+
+
+_ACCOUNT_MISSING_WORDS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "charge": "errors.refused.refused_modelo_charge_account_missing",
+        "refund": "errors.refused.refused_modelo_refund_account_missing",
+    }
+)
+
+
+def own_account_missing_error(
+    role: Literal["charge", "refund"],
+    *,
+    context: Mapping[str, object] | None = None,
+) -> ModeloChargeAccountMissingError | ModeloRefundAccountMissingError:
+    """Refuse an export that needs an own account of ``role`` the register does not give.
+
+    The door is adding an own account. The account's label and holding are the
+    operator's to state, and the number arrives on the secret channel, so the
+    verdict binds neither. Which own account serves the role is a separate
+    designation made once the account exists.
+    """
+    precondition_failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id=f"modelo.export.{role}_account.missing",
+        evidence_id=f"modelo.export.{role}_account",
+        evidence_values={"account_role": role, "own_account_registered": False},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        missing_action_arguments=("holding", "label"),
+    )
+    error_type = ModeloChargeAccountMissingError if role == "charge" else ModeloRefundAccountMissingError
+    return error_type(
+        translated_message=_ACCOUNT_MISSING_WORDS[role],
+        context={**(context or {}), "account_role": role},
+        precondition_failure=precondition_failure,
+    )
+
+
+def instalment_election_refusal(
+    reason: str,
+    *,
+    context: Mapping[str, object] | None = None,
+) -> ModeloInstalmentElectionRefusedError:
+    """Refuse a two-instalment payment the export cannot write, naming no action.
+
+    Paying in one go is the filer's choice about the export, which no catalogued
+    action states, so the verdict records an operator decision. ``reason`` names
+    the condition of the split that failed.
+    """
+    precondition_failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.instalment_election.refused",
+        evidence_id="modelo.export.instalment_election",
+        evidence_values={"reason": reason, "admitted": False},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
+    return ModeloInstalmentElectionRefusedError(
+        translated_message="errors.refused.refused_modelo_instalment_election",
+        context={**(context or {}), "reason": reason},
+        precondition_failure=precondition_failure,
+    )
+
+
+class ModeloExportPeriodUnmappableError(ModeloPreconditionErrorMixin, ModeloError):
+    """Refused: a declaration's stored period contradicts its filing year, so no filing period maps."""
+
+
+def export_period_unmappable_error(*, work_unit_id: str, period: str) -> ModeloExportPeriodUnmappableError:
+    """Refuse an export whose declaration holds a period that is not of its filing year."""
+    precondition_failure = build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.export",
+        scenario_id="modelo.export.period.unmappable",
+        evidence_id="modelo.export.period",
+        evidence_values={"work_unit_id": work_unit_id, "period": period, "maps_to_filing_period": False},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+    return ModeloExportPeriodUnmappableError(
+        translated_message="application.modelo.errors.export_period_unmappable",
+        context={"work_unit_id": work_unit_id, "period": period},
+        precondition_failure=precondition_failure,
+    )
 
 
 class ModeloDomiciliationPastCutoffError(ModeloError):
@@ -646,8 +759,10 @@ __all__ = [
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",
+    "ModeloExportPeriodUnmappableError",
     "ModeloInstalmentElectionRefusedError",
     "ModeloLocalObservationError",
+    "ModeloOperationSubjectNotWorkUnitError",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",
     "ModeloProfileReadinessError",
@@ -664,6 +779,9 @@ __all__ = [
     "WorkUnitNotFoundError",
     "WorkUnitRevisionDivergenceError",
     "amendment_evidence_missing_precondition",
+    "export_period_unmappable_error",
+    "instalment_election_refusal",
     "modelo_edit_refusal_error",
     "modelo_work_wizard_retry_exhausted_precondition",
+    "own_account_missing_error",
 ]
