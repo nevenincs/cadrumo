@@ -37,3 +37,14 @@ def cuota_disagreement(transaction: Transaction) -> CuotaDisagreement | None:
     return CuotaDisagreement(
         base=taxable_base, rate=iva_rate, expected=round_to_cents(expected_cuota), declared=iva_amount
     )
+
+
+def eur_figure(amount: Decimal) -> str:
+    """An amount as the operator reads it: two decimals and the currency, whatever scale it was stored at."""
+    return f"{round_to_cents(amount):.2f} EUR"
+
+
+def percent_figure(rate: Decimal) -> str:
+    """A fractional tipo as a percentage without trailing zeros, ``0.21`` as ``21%`` and ``0.055`` as ``5.5%``."""
+    percent = (rate * 100).normalize()
+    return f"{percent:f}%"

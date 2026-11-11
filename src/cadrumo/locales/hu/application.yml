@@ -2517,6 +2517,10 @@ application:
         invoice_deduction_family_unresolved: 'a kifizetett bejövő számlából nem derül
           ki, melyik levonás illeti meg: sorold be a tételt, például folyó költségként
           vagy beruházási javakként'
+        invoice_recargo_not_declarable: 'egy kiállított számla kiegyenlítő pótléka
+          (recargo de equivalencia) nem egyezik az adóalap és az áfakulcsához és dátumához
+          tartozó art. 161 szerinti kulcs szorzatával: javítsd a számlát, vagy állíts
+          ki helyesbítő számlát (factura rectificativa)'
         invoice_recargo_split_unresolved: 'egy kiállított számla több áfakulcsra egyetlen
           kiegyenlítő pótlékot (recargo de equivalencia) tartalmaz, amely eltér az
           egyes kulcsok pótlékának összegétől: javítsd a számla pótlékát'

@@ -12,6 +12,7 @@ from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..calculations.registry.errors import GovernedFactNotApplicableError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.schema import RegistrySnapshot
@@ -93,14 +94,21 @@ def _registry_m303_rectificativa_declarations(
     revision here: in a year with a mid-year design boundary two revisions are in
     force at once, and a year-only selection would refuse every 303 export of
     those weeks whatever period it files.
+
+    A filing presented before the first record design that carried the
+    rectificativa motive finds no variant: no revision admits the motive then,
+    so the catalogue is empty rather than a failure of the return's export.
     """
-    resolved = operation.resolve_governed_fact(
-        MappingFactQuery(
-            fact_id="modelo-303-rectificativa-record-design-mapping",
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=today_madrid(),
-        ),
-    )
+    try:
+        resolved = operation.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id="modelo-303-rectificativa-record-design-mapping",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=today_madrid(),
+            ),
+        )
+    except GovernedFactNotApplicableError:
+        return dict[str, str]()
     if not isinstance(resolved, ResolvedMappingFact):
         raise ModeloValidationError("M303 rectificativa declarations must resolve as a mapping fact")
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
