@@ -52,12 +52,18 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_indexed_authority
-from .authored_editions import manual_editions_printing, revision_covering, supported_authored_exercises
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
-from .scenarios import (
+from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    manual_editions_printing,
+    revision_covering,
+    supported_authored_exercises,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import (
+    M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
+)
+from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     run_registry_calculation_scenario,
