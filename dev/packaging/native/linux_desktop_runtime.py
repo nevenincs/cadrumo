@@ -80,7 +80,10 @@ DEPENDENCY_INPUTS = {
     # extra prerequisites and Linux artifact/minimum-host proof remain separate.
     "native/desktop/src-tauri/Cargo.lock": "b7016974ca69e208c765da46de8e2719e23a93c633b7d6598ae95758c4c08bae",
     "native/desktop/src-tauri/Cargo.toml": "f0e94c97e2a0ae18c39ecd59a16a7c1aa758d3cdfd42f71a6b715a6b212e705f",
-    "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
+    # The application manifest later gained only a [[test]] target (service_diagnostics,
+    # required-features diagnostics-test-support, an existing feature): no dependency,
+    # feature or Linux graph change. Declaration-level evidence.
+    "native/application/Cargo.toml": "34f891cada42022f7f530ee9d1611fa799ab7893d181668f313b484abac7da8a",
     "native/platform/Cargo.toml": "7b47f615156cee781579b50b3d2ad66a3996a431ad84830ecd9150845ada6c12",
 }
 

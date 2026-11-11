@@ -121,7 +121,9 @@ def build_censal_fetch_port() -> CensalFetchPort:
     return fetch
 
 
-def build_invoice_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
+def build_invoice_lifecycle_ports(
+    *, bucket_id: str, mutation_writer: Callable[[Callable[[], None]], None] | None = None
+) -> CatalogueLifecyclePorts:
     """Bind the invoice lifecycle bundle with the profile's own tax identity.
 
     The sealed-revision scan decodes every stored calculation revision, and an
@@ -141,7 +143,9 @@ def build_invoice_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
             objects=secure_object_repository_for_bucket(normalized_bucket_id),
             operation=operation,
         )
-    return build_catalogue_lifecycle_ports(bucket_id=normalized_bucket_id, taxpayer_tax_id=binding.taxpayer_tax_id)
+    return build_catalogue_lifecycle_ports(
+        bucket_id=normalized_bucket_id, taxpayer_tax_id=binding.taxpayer_tax_id, mutation_writer=mutation_writer
+    )
 
 
 def build_modelo_export_ports(

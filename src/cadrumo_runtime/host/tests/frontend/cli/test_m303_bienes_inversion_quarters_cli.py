@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import (
     admit_ordinary_m303_secure_evidence,
@@ -43,7 +44,9 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = 2025
+#: The last complete filing year, one before the published horizon: its fourth quarter
+#: has closed, so the year-end Modelo 390 attestation it calculates with has been observed.
+_YEAR = PublishedGovernedFactSource().supported_filing_years().horizon - 1
 _QUARTERS = ("1T", "2T", "3T", "4T")
 _SALE_DAYS = ("02-14", "05-14", "08-14", "11-14")
 
@@ -234,7 +237,7 @@ def _calculate(quarter: str) -> Result:
     work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
     assert isinstance(work_unit_id, str)
     answers = (
-        admit_ordinary_m303_secure_evidence(period="4T").calculate_options()
+        admit_ordinary_m303_secure_evidence(filing_year=_YEAR, period="4T").calculate_options()
         if quarter == "4T"
         else joint_return_options()
     )

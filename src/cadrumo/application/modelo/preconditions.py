@@ -123,13 +123,41 @@ IVA_WALLET_OPENING_BALANCE_SCENARIOS: Final[frozenset[str]] = frozenset(
 
 Each says the period's carry has no usable recorded authority, which is exactly
 what declaring the opening balance supplies. A stale wallet, a divergence, or a
-reason that asks for an override or correction names a different wallet entry,
-so it keeps no action here rather than naming a command that would not settle
-it. The wallet gate's served step and these profiles' action read this one set.
+correction names a different wallet entry, so it keeps no action here rather
+than naming a command that would not settle it. The wallet gate's served step
+and these profiles' action read this one set.
 """
 
 IVA_WALLET_OPENING_BALANCE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.seed"
 """The catalogue action that declares the opening balance of a period's carry."""
+
+IVA_WALLET_OVERRIDE_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {
+        "filed_history_requires_override",
+        "local_recurrence_requires_override",
+        "stale_wallet_local_recurrence_requires_override",
+    },
+)
+"""The wallet refusals the taxpayer's own override of the period's carry settles.
+
+Each says the only evidence for the carry is filed or local history that the
+reconciliation may not apply on its own, which is the case the override records
+the taxpayer's figure for. The override targets the same period the refusal
+names, so the action binds that period and leaves the figure, reason and
+evidence locator to the taxpayer.
+"""
+
+IVA_WALLET_OVERRIDE_ACTION_ID: Final[str] = "operator.modelo.iva_wallet.override"
+"""The catalogue action that records the taxpayer's override of a period's carry."""
+
+
+def _iva_wallet_action_id(scenario_code: str) -> str | None:
+    """Name the catalogue action that settles one wallet refusal, or None when none does."""
+    if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
+        return IVA_WALLET_OPENING_BALANCE_ACTION_ID
+    if scenario_code in IVA_WALLET_OVERRIDE_SCENARIOS:
+        return IVA_WALLET_OVERRIDE_ACTION_ID
+    return None
 
 
 def _iva_wallet_profiles(
@@ -141,9 +169,7 @@ def _iva_wallet_profiles(
             subject_leaf_key,
             f"{subject_leaf_key}.iva_wallet.ready",
             f"{subject_leaf_key}.iva_wallet.{scenario_code}",
-            action_id=IVA_WALLET_OPENING_BALANCE_ACTION_ID
-            if scenario_code in IVA_WALLET_OPENING_BALANCE_SCENARIOS
-            else None,
+            action_id=_iva_wallet_action_id(scenario_code),
         )
         for scenario_code in scenario_codes
     )
@@ -826,6 +852,8 @@ def build_modelo_work_file_unverified_revision_failure(
 __all__ = [
     "IVA_WALLET_OPENING_BALANCE_ACTION_ID",
     "IVA_WALLET_OPENING_BALANCE_SCENARIOS",
+    "IVA_WALLET_OVERRIDE_ACTION_ID",
+    "IVA_WALLET_OVERRIDE_SCENARIOS",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",

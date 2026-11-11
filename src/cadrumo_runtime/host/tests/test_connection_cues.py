@@ -18,7 +18,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+    SessionKind,
+)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle
@@ -102,27 +107,54 @@ def _person(profiles: RuntimeProfileConnections, profile_id: UUID) -> Connection
     return context
 
 
+def _ended(profiles: RuntimeProfileConnections) -> SessionEvent:
+    return SessionEvent(
+        runtime_boot_id=profiles.boot,
+        connection_id=uuid4(),
+        profile_id=uuid4(),
+        session_id=uuid4(),
+        event=SessionRetirementKind.REVOKED,
+        reason=AccessDenialCode.SESSION_INACTIVE,
+    )
+
+
 def test_sign_in_watchers_hear_one_cue_per_pending_change_and_nothing_once_gone(tmp_path: Path) -> None:
     profiles = _runtime(tmp_path)
     watcher, bystander = _connected(profiles), _connected(profiles)
     profiles.watch_sign_in(watcher)
 
-    profiles._retired(())
-    assert profiles.take_events(watcher) == ()
-    profiles._retired((uuid4(),))
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     (cue,) = profiles.take_events(watcher)
     assert cue == SignInChanged(runtime_boot_id=profiles.boot, connection_id=watcher.connection_id)
     assert profiles.take_events(bystander) == ()
 
     # Once taken, a later change queues a fresh cue.
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     assert profiles.take_events(watcher) == (cue,)
 
     profiles.disconnect(watcher)
     assert watcher.connection_id not in profiles._sign_in_watchers
-    profiles._retired((uuid4(),))
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
     assert profiles.take_events(bystander) == ()
+
+
+@pytest.mark.parametrize("kind", [SessionKind.ATTENDED, SessionKind.API_KEY])
+def test_a_delegated_lease_ending_leaves_sign_in_watchers_alone(tmp_path: Path, kind: SessionKind) -> None:
+    # A service's attended lease is retired and renewed on a short cycle; the
+    # person's sign-in did not move, so no watcher is sent to read it again.
+    profiles = _runtime(tmp_path)
+    watcher = _connected(profiles)
+    profiles.watch_sign_in(watcher)
+
+    profiles._publish_retirement(_ended(profiles), kind)
+    profiles._retired((uuid4(),))
+    assert profiles.take_events(watcher) == ()
+
+    # ANTI-VACUITY: the same watcher hears a person's lease ending.
+    profiles._publish_retirement(_ended(profiles), SessionKind.HUMAN)
+    (cue,) = profiles.take_events(watcher)
+    assert isinstance(cue, SignInChanged)
 
 
 def test_os_lock_changes_cue_watchers_and_unchanged_logins_do_not(tmp_path: Path) -> None:
@@ -195,7 +227,7 @@ def test_retiring_the_parent_session_withdraws_the_service_lease_and_cues_only_t
         reason=AccessDenialCode.AUTHENTICATION_REQUIRED,
     )
 
-    profiles._publish_retirement(retirement)
+    profiles._publish_retirement(retirement, SessionKind.HUMAN)
 
     assert profiles._services[service.connection_id].lease is None
     assert profiles.take_events(holder) == (retirement,)

@@ -805,6 +805,10 @@ errors:
       coincideix amb el seu contracte.
     canonical_operation_financial_operand_custody: S'ha infringit l'ordre fix de transició
       de custòdia de l'operand financer.
+    canonical_profile_kdf_background_yielded: La derivació de claus en segon pla ha
+      cedit el pas a un inici de sessió.
+    canonical_profile_kdf_strengthening_point_refused: Un ajust de derivació de claus
+      mesurat no pot reforçar la protecció per contrasenya d'aquest perfil.
     canonical_schema_resolution: La projecció de l'esquema d'ordres està incompleta.
     canonical_structured_invoice_read: El lector seleccionat no ha pogut llegir la
       factura estructurada.

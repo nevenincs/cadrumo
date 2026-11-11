@@ -103,4 +103,6 @@ def test_a_binding_the_revision_does_not_declare_refuses_as_on_calculate(
 
     assert projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
     assert "REFUSED_MODELO_CALCULATE_BINDING_INPUT" in (projection.failure_error_code, projection.refusal_ref)
+    # The refusal comes before the amendment writes anything, so nothing may have changed.
+    assert projection.effect is OperationEffect.NONE
     assert amendment is None

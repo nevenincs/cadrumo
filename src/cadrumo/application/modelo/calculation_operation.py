@@ -64,9 +64,9 @@ if TYPE_CHECKING:
     from .calculation_action_ports import CalculationActionPorts
 
 
+from ..operations.first_write_effect import FirstWriteEffectAnnouncement
 from .operation_shared import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    FirstWriteEffectAnnouncement,
     modelo_workspace_refresh_target_binding,
     resolve_modelo_work_unit_refresh_target,
 )

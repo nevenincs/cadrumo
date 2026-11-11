@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import capture_m111_invoice_withholding
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import SCENARIO_FILING_YEAR, capture_m111_invoice_withholding
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_profile_facts import native_general_iva_facts
@@ -28,6 +28,10 @@ __all__ = ["isolated_cli_backend"]
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+
+#: The year the shared withholding capture records its Modelo 111 percepción in.
+_M111_YEAR = str(SCENARIO_FILING_YEAR)
 
 
 def _invoke(args: list[str]):
@@ -113,7 +117,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -124,7 +128,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "status",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert status.exit_code == 0, status.output
@@ -144,7 +148,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -155,7 +159,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
@@ -174,7 +178,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
         [
             "--format", "json",
             "app", "modelo", "export",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
             "--output", str(out),
         ],
     )  # fmt: skip
@@ -202,7 +206,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -211,7 +215,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -221,7 +225,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert first.exit_code == 0, first.output
@@ -237,7 +241,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert work_addressed.exit_code == 0, work_addressed.output
@@ -551,7 +555,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -562,7 +566,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -572,7 +576,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "revision",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
             "--select", "current",
         ],
     )  # fmt: skip
@@ -583,7 +587,7 @@ def test_adjacent_work_reads_resolve_visible_targets() -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "history",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _M111_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert history.exit_code == 0, history.output

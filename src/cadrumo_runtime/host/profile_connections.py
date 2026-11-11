@@ -21,6 +21,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     OsLockState,
     OsLoginContext,
+    SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
@@ -234,8 +235,12 @@ class RuntimeProfileConnections(
             connection = self._connections.get(connection_id)
             return connection is not None and connection.session_id == session_id
 
-    def _publish_retirement(self, event: SessionEvent) -> None:
-        """Publish exact retirement; services own shutdown of their native descendants."""
+    def _publish_retirement(self, event: SessionEvent, session_kind: SessionKind) -> None:
+        """Publish exact retirement; services own shutdown of their native descendants.
+
+        Sign-in status is the person's alone, so only a person's lease ending
+        cues its watchers; a delegated lease's routine renewal does not.
+        """
         self._cancel_service_admissions(event.connection_id, event.session_id)
         # A retired session's views unbind before anyone hears of the retirement.
         self._views.unbind_sessions((event.session_id,))
@@ -253,7 +258,8 @@ class RuntimeProfileConnections(
         self._events.publish(event)
         for cue in withdrawn:
             self._events.publish_cue(cue)
-        self._sign_in_changed()
+        if session_kind is SessionKind.HUMAN:
+            self._sign_in_changed()
 
     def watch_sign_in(self, context: ConnectionContext) -> None:
         """Cue this connection on every later change that can move any sign-in status, until it disconnects."""

@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
     create_calculable_modelo_work_unit,
     create_m303_work_unit,
 )
@@ -602,8 +603,9 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    assert any(line == "result summary Modelo 111 1T 2025" for line in lines), result.output
-    assert "result summary Modelo 111 1T 2025 2025" not in result.output
+    headline = f"result summary Modelo 111 1T {SCENARIO_FILING_YEAR}"
+    assert any(line == headline for line in lines), result.output
+    assert f"{headline} {SCENARIO_FILING_YEAR}" not in result.output
     summary_header_index = next(i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel"))
     first_casilla_index = next(i for i, line in enumerate(lines) if line.startswith("casilla\t"))
     # The summary block precedes the full casilla table.

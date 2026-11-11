@@ -28,8 +28,18 @@ from ...application.aggregation.renta_imputation import (
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+#: The taxpayer a modelo applies to, where the seeded estimación-directa activity is not one:
+#: Modelo 131 is the pago fraccionado of an activity in estimación objetiva (módulos), and
+#: Modelo 111 is filed only by a payer of income subject to retención. A modelo that does not
+#: apply to the profile is refused before any form exists, so each is seeded for its own filer.
+_ESTIMATION_REGIME_BY_MODELO = {"131": "objetiva"}
+_EXTRA_FACTS_BY_MODELO = {
+    "111": (UserProfileFact(path="withholding.pays_professionals_with_retencion", value=True),),
+}
 
 
 def _asks(work: SeededOperatorWork) -> bool:
@@ -62,7 +72,14 @@ def _asks(work: SeededOperatorWork) -> bool:
 def test_the_form_asks_for_the_election_exactly_where_its_revision_reads_the_criterion(
     tmp_path: Path, modelo: str, filing_year: int, period_code: str, asks: bool
 ) -> None:
-    with seeded_operator_work(tmp_path, modelo=modelo, filing_year=filing_year, period_code=period_code) as work:
+    with seeded_operator_work(
+        tmp_path,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_code=period_code,
+        extra_facts=_EXTRA_FACTS_BY_MODELO.get(modelo, ()),
+        estimation_regime=_ESTIMATION_REGIME_BY_MODELO.get(modelo, "directa_normal"),
+    ) as work:
         assert _asks(work) is asks
 
 
