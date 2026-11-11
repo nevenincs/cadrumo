@@ -3242,8 +3242,14 @@ cli:
         kihagyva.'
       registry_unavailable: A nyomtatványdefiníciók nem érhetők el.
       secure_objects_empty: A biztonságos objektumtár üres.
+      secure_objects_probe_failed: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét %{failed} névtérben. Ez nem jelenti azt, hogy üresek vagy épek.
+      secure_objects_probe_failed_detail: 'nem ellenőrzött: %{namespaces}'
       secure_objects_readable: '%{readable} olvasható biztonságos objektum-névtér:
         %{namespaces}.'
+      secure_objects_unavailable: Nem sikerült ellenőrizni a biztonságos objektumok
+        épségét, mert a titkosított tárat nem lehetett beolvasni. Ez nem jelenti azt,
+        hogy a tár üres vagy ép.
       secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható
         sor.'
       state_backend_readable: Az állapot-tár olvasható.

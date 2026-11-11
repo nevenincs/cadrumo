@@ -3296,8 +3296,15 @@ cli:
         de los modelos: omitida.'
       registry_unavailable: Las definiciones de los modelos no están disponibles.
       secure_objects_empty: El almacén de objetos seguros esta vacío.
+      secure_objects_probe_failed: No se pudo comprobar la integridad de los objetos
+        seguros en %{failed} espacio(s) de nombres. Esto no significa que estén vacíos
+        ni sanos.
+      secure_objects_probe_failed_detail: 'sin comprobar: %{namespaces}'
       secure_objects_readable: '%{readable} espacios de nombres de objetos seguros
         legibles: %{namespaces}.'
+      secure_objects_unavailable: No se pudo comprobar la integridad de los objetos
+        seguros porque no se pudo leer el almacén cifrado. Esto no significa que el
+        almacén esté vacío ni sano.
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
