@@ -10,7 +10,7 @@ supersedes:
   - '2026-08-07-recargo-equivalencia-source-of-truth-adr'
 modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:91ebb5586f82aaeec902f836aef6661628e8be5bf5398236dee9fd5491f20d1f'
+body_hash: 'sha256:0b35587be5481b17b7f0e0ffb36a2c7d1fb7658b8af0527e44c83ed7e74d708d'
 ---
 # `recargo-equivalencia-source-of-truth` adr: `the recargo de equivalencia cuota is derived from base and rate` | (**status:** `accepted`)
 
@@ -53,15 +53,28 @@ operator never learns that the transaction or the invoice is wrong, so the books
 figure that the return contradicts.
 
 **Derive the cuota per line, and refuse a stored figure that departs by more than
-rounding.** Chosen. The return carries the legal figure. A departure becomes a
-structured finding that the operator resolves at its source. The stored figure never
-wins.
+rounding.** Chosen. A departure beyond one cent per line becomes a structured finding
+that the operator resolves at its source, so a figure the law contradicts never reaches
+the return. Within the cent, the stored figure is the invoice's legitimate rounding and
+is the one declared, exactly as the IVA cuota path already treats its own cuota.
 
 ## Constraints
 
 - The derivation is per line: the line base times the rate resolved for that line's
-  applied IVA rate and devengo date, rounded to the cent. The stored figure is compared
-  at line level, with a tolerance of at most 0.01 per line for rounding only.
+  applied IVA rate and devengo date. The stored figure is compared at line level, with a
+  tolerance of 0.01 per line for rounding only. Within that cent, the stored per-line
+  figure is what reaches the casilla. This matches the IVA cuota screen
+  (`src/cadrumo/application/aggregation/iva_cuota_disagreement.py`), so the two cuotas
+  of one line follow one rule.
+- The rule binds the charged side only: recargo repercutido on the filer's own supplies,
+  the only recargo the 303 and 390 recargo casillas read. A recargo soportado on a
+  purchase reaches no IVA casilla, and the buyer's cost is what the supplier charged, so
+  it keeps its stored figure.
+- Labores del tabaco carry their own art. 161 rate (1.75%) on the same 21% IVA rate as
+  the general recargo, and the 303 declares them on their own rung, which the registry
+  binds no casilla for. A charged 21% line whose recargo matches the tobacco rate within
+  the cent is reported unresolved as an unsupported rung. It is never refused as a
+  mismatch and never routed into the general recargo casilla.
 - A larger difference is a refusal. It carries a structured finding naming the stored
   and derived figures, the rate, the date and the provision, plus a served door to
   correct the transaction. Wording comes from the backend catalogue; no frontend
@@ -84,11 +97,12 @@ wins.
 
 ## Implementation
 
-We will derive the recargo de equivalencia cuota of each IVA ledger line from its base
-and the registry rate for its applied IVA rate and devengo date, and refuse a stored
-figure that departs from it by more than one cent per line. The derived figure is the
-value that reaches the 303. The invoice mismatch advisory becomes this refusal rather
-than a parallel signal. Where the derivation runs (the IVA observation build or the
+We will derive the recargo de equivalencia cuota of each charged IVA ledger line from
+its base and the registry rate for its applied IVA rate and devengo date, and refuse a
+stored figure that departs from it by more than one cent per line. Within the cent, the
+stored figure reaches the 303. For issued invoices, the mismatch advisory becomes this
+refusal rather than a parallel signal. A received invoice's advisory is unchanged,
+since its recargo reaches no casilla. Where the derivation runs (the IVA observation build or the
 binding aggregation) is an implementation choice within these constraints.
 
 ## Rationale
@@ -109,8 +123,8 @@ binding conditions listed under Constraints.
 
 ## Consequences
 
-- A 303 with a recargo cuota inconsistent with its base can no longer be exported from
-  stored figures.
+- A 303 whose recargo cuota departs from base times Tipo by more than rounding can no
+  longer be exported from stored figures.
 - Operators whose transactions carry a mistyped or mis-charged recargo are blocked until
   they correct it. The refusal must therefore be specific and must name its door.
 - The rate table becomes filing-load-bearing, so its grounding review is a precondition
