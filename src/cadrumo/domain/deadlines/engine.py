@@ -505,6 +505,8 @@ class DeadlineEngine:
         Raises:
             ScheduleComputationError: If the registry projects more than one
                 window for the target, which no consumer may arbitrate.
+
+        ``profile`` is the :class:`TaxpayerProfile` it uses.
         """
         reference_today = today or today_madrid()
         with self._operation_context() as operation:

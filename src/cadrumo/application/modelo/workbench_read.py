@@ -11,6 +11,8 @@ read admits the edit baseline that every parse and apply is judged against. An
 admission refusal is part of the result, never hidden as "no edit surface".
 
 Core types: :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+
+It works with :class:`CalculationRevision`.
 """
 
 from __future__ import annotations

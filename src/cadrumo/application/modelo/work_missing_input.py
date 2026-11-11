@@ -1,4 +1,7 @@
-"""Typed missing-input refusal from a Modelo calculation before publication."""
+"""Typed missing-input refusal from a Modelo calculation before publication.
+
+It works with :class:`RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
@@ -141,6 +144,8 @@ def prior_carry_absence_unstated(
     Every carry of the same family that no source resolved and the caller did
     not answer is named, the refused one included. ``None`` when the binding
     declares no statement of absence, so the engine refusal stands unchanged.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     refused = bindings.get(missing.binding_id)

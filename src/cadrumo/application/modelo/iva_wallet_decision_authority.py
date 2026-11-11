@@ -6,6 +6,8 @@ a missing one may be derived from local recurrence. A ``first_period_zero``
 decision stands only where concrete zero authority or the profile's activity
 start, read against the registry snapshot, proves every prior Modelo 303
 compensation dependency is pre-activity.
+
+It works with :class:`RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -66,7 +68,10 @@ def persisted_decision_for_calculation(
     persist_blocked: bool = True,
     prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Return the persisted decision for calculation, refreshed and first-period-zero grounded."""
+    """Return the persisted decision for calculation, refreshed and first-period-zero grounded.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
         work_unit,
         repository=repository,
@@ -191,7 +196,10 @@ def refresh_local_iva_compensation_decision_if_evidence_changed(
     persist_blocked: bool = True,
     prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision:
-    """Return ``decision``, or its local refresh where the local evidence it replays has changed."""
+    """Return ``decision``, or its local refresh where the local evidence it replays has changed.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
     if decision.selected_authority == "taxpayer_override":
         return decision
     refreshed = reconcile_local_iva_compensation(
@@ -349,7 +357,10 @@ def require_first_period_zero_decision_grounded(
     subject_leaf_key: str,
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision:
-    """Fail closed unless a first-period-zero decision is profile/registry-grounded."""
+    """Fail closed unless a first-period-zero decision is profile/registry-grounded.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
     if not decision_is_first_period_zero(decision):
         return decision
     if decision_has_concrete_zero_authority(decision):
@@ -450,7 +461,10 @@ def reconcile_local_iva_compensation(
     evaluated_at: datetime | None = None,
     prior_calculations: PriorModeloCalculations | None = None,
 ) -> IvaCompensationReconciliationDecision | None:
-    """Derive the local-authority decision for a Modelo 303 ``work_unit``, persisting it when asked."""
+    """Derive the local-authority decision for a Modelo 303 ``work_unit``, persisting it when asked.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
+    """
     if work_unit.modelo != form_for_role("iva.periodic"):
         return None
     taxpayer_nif = taxpayer_nif_from_path_values(profile_values)
