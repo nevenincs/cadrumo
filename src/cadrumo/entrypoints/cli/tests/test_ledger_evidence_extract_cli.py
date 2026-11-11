@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 import typer
 
+from ....application.ledger.closure_findings import closure_findings
 from ....application.ledger.invoice_draft_payloads import EvidenceExtractResult
 from ....application.ledger.invoice_draft_records import (
     FieldProvenance,
@@ -133,3 +134,24 @@ def test_extract_payload_keeps_full_structured_draft_and_both_review_addresses()
     assert f"source_sha256\t{_SOURCE_SHA256}" in lines
     assert f"draft_review_sha256\t{_DRAFT_SHA256}" in lines
     assert "consent_audit_effect\tnone" in lines
+
+
+def test_extract_lines_name_each_finding_the_draft_carries() -> None:
+    """A reading that counts findings also names them, kind, field and figures."""
+    figures = InvoiceDraft(
+        taxable_base=Decimal("766.30"),
+        iva_rate=Decimal("1"),
+        iva_amount=Decimal("766.30"),
+        grand_total=Decimal("766.30"),
+        currency="EUR",
+    )
+    draft = figures.model_copy(update={"discrepancies": closure_findings(figures)})
+    projection = _projection().model_copy(update={"draft": InvoiceDraftProjectionV1.from_draft(draft)})
+
+    lines = evidence_extract_lines(str(_PROFILE), projection)
+
+    assert "discrepancies\t2" in lines
+    assert [line for line in lines if line.startswith("discrepancy\t")] == [
+        "discrepancy\tarithmetic_closure\tgrand_total\t1532.60\t766.30",
+        "discrepancy\trate_inconsistent\tiva_rate\t7.663\t766.30",
+    ]

@@ -137,6 +137,10 @@ _NUMBER_CONTINUATION = frozenset("0123456789.,")
 #: the decimal parse, exactly one, mirroring the reader-side rule.
 _TRAILING_UNIT_MARKERS = ("%", "percent", "pct")
 
+#: One printed figure inside a cited span: digits with their separators,
+#: starting and ending on a digit, and not running on into more of a number.
+_PRINTED_FIGURE = re.compile(r"(?<![0-9.,])[0-9](?:[0-9.,]*[0-9])?(?![0-9])")
+
 
 def strip_printed_unit(anchor: str, currency_unit: str | None = None) -> str:
     """Return *anchor* with exactly one printed unit marker removed.
@@ -517,14 +521,7 @@ def _evaluate_anchor_against(
 
     parsed = coerce_finite_european_decimal(strip_printed_unit(anchor, currency_unit))
     if parsed is None:
-        return AnchorEvaluation(
-            outcome=FieldGroundingOutcome.CONTRADICTED,
-            anchor_found=True,
-            detail=(
-                f"the anchor {anchor!r} occurs in the document but does not parse to a decimal "
-                f"under the extraction contract, so it cannot support the value {value}"
-            ),
-        )
+        return _evaluate_cited_span(value=value, anchor=anchor)
 
     if parsed != value:
         return AnchorEvaluation(
@@ -540,6 +537,63 @@ def _evaluate_anchor_against(
         parsed_anchor=parsed,
         parse_was_vacuous=normalise_for_anchor_search(str(value)) == needle,
         detail=f"anchored to {anchor!r}, which parses to {parsed}",
+    )
+
+
+def _evaluate_cited_span(*, value: Decimal, anchor: str) -> AnchorEvaluation:
+    """Judge a found anchor that is a printed SPAN rather than one figure.
+
+    Readers cite the line a figure is printed on -- ``Base imponible 766,30``,
+    ``TOTAL 890,00 EUR`` -- and the span does not parse as a decimal because of
+    its words. That is not the document disagreeing with the value, so it must
+    not read as CONTRADICTED: a wrong verdict forecloses the review an absent
+    one prompts. The span is judged by the figures printed in it, each parsed
+    under the same extraction contract as a bare anchor.
+
+    One figure: the span is that figure's label, and the figure decides exactly
+    as a bare anchor would. Several figures, one of them the value: the span
+    carries the value but does not say which figure the reader took, so the
+    field stays unsettled with its anchor kept. No figure equal to the value:
+    the cited text does not support it, which is a contradiction.
+    """
+    figures = [
+        figure
+        for figure in (coerce_finite_european_decimal(token) for token in _PRINTED_FIGURE.findall(anchor))
+        if figure is not None
+    ]
+    if len(figures) == 1:
+        figure = figures[0]
+        if figure == value:
+            return AnchorEvaluation(
+                outcome=FieldGroundingOutcome.ANCHORED,
+                anchor_found=True,
+                parsed_anchor=figure,
+                detail=f"anchored to the one figure printed in {anchor!r}, which parses to {figure}",
+            )
+        return AnchorEvaluation(
+            outcome=FieldGroundingOutcome.CONTRADICTED,
+            anchor_found=True,
+            parsed_anchor=figure,
+            detail=(
+                f"the one figure printed in {anchor!r} parses to {figure}, which is not the proposed value {value}"
+            ),
+        )
+    if value in figures:
+        return AnchorEvaluation(
+            outcome=FieldGroundingOutcome.UNANCHORED,
+            anchor_found=True,
+            detail=(
+                f"the anchor {anchor!r} occurs in the document and prints {value} among several figures, "
+                f"so it does not say which figure the value was read from"
+            ),
+        )
+    return AnchorEvaluation(
+        outcome=FieldGroundingOutcome.CONTRADICTED,
+        anchor_found=True,
+        detail=(
+            f"the anchor {anchor!r} occurs in the document but no figure printed in it parses to "
+            f"the value {value} under the extraction contract, so it cannot support that value"
+        ),
     )
 
 
