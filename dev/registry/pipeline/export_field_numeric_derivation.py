@@ -320,31 +320,49 @@ def _note_governed_printed_derivation(
     field_id = joined_field.semantic_entry.export_field_id
     printed = _numeric_enumeration_values(stem)
     if printed is None:
-        match = OFFICIAL_LITERAL_RE.fullmatch(stem) or OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(stem)
-        constant = None if match is None else match.group("literal")
-        if constant is None or not constant.isascii() or not constant.isdecimal():
-            raise RegistryValidationError(
-                f"note-governed reading of {field_id!r} addresses a cell whose content {stem!r} "
-                "is neither a numeric constant nor a numeric enumeration",
-            )
+        constant = _printed_numeric_constant(field_id, stem)
         _require_reading_fills_the_printed_runs(field_id, (constant,), adjudicated)
         return _note_governed_amount_derivation(
             joined_field, adjudicated, export_record_id, allowed_values=adjudicated.mandated_values
         )
     _require_reading_fills_the_printed_runs(field_id, printed, adjudicated)
+    return _note_governed_amount_derivation(
+        joined_field,
+        adjudicated,
+        export_record_id,
+        allowed_values=_printed_enumeration_domain(field_id, printed, adjudicated),
+    )
+
+
+def _printed_numeric_constant(field_id: str, stem: str) -> str:
+    """Return the decimal run a cell prints, refusing content that is not one."""
+    match = OFFICIAL_LITERAL_RE.fullmatch(stem) or OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(stem)
+    constant = None if match is None else match.group("literal")
+    if constant is None or not constant.isascii() or not constant.isdecimal():
+        raise RegistryValidationError(
+            f"note-governed reading of {field_id!r} addresses a cell whose content {stem!r} "
+            "is neither a numeric constant nor a numeric enumeration",
+        )
+    return constant
+
+
+def _printed_enumeration_domain(
+    field_id: str,
+    printed: tuple[str, ...],
+    adjudicated: NoteGovernedAmountDeclaration,
+) -> tuple[str, ...]:
+    """Close a printed enumeration, widened only by runs the reading's note adds."""
     domain = tuple(str(int(value)) for value in printed)
     if len(set(domain)) != len(domain):
         raise RegistryValidationError(f"official numeric enumeration {field_id!r} has duplicate values")
     if adjudicated.mandated_values is None:
-        return _note_governed_amount_derivation(joined_field, adjudicated, export_record_id, allowed_values=domain)
+        return domain
     if not set(domain) <= set(adjudicated.mandated_values):
         raise RegistryValidationError(
             f"note-governed reading of {field_id!r} mandates {adjudicated.mandated_values!r}, which omits runs "
             f"the design prints in {domain!r}",
         )
-    return _note_governed_amount_derivation(
-        joined_field, adjudicated, export_record_id, allowed_values=adjudicated.mandated_values
-    )
+    return adjudicated.mandated_values
 
 
 def _require_reading_fills_the_printed_runs(
