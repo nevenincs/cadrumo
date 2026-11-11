@@ -30,7 +30,7 @@ from ..operations.public_scalar import PublicDecimal
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .catalogue_lifecycle import CatalogueInvoicePatch, update_catalogue_invoice
+from .catalogue_lifecycle import CatalogueInvoicePatch, admit_catalogue_invoice_patch, update_catalogue_invoice
 from .catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 
@@ -147,6 +147,13 @@ class InvoiceUpdateExecutor:
         await context.events.phase(INVOICE_UPDATE_OPERATION_DEFINITION_ID)
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=_PERSON_FRONTEND_ACTOR)
 
+        def admit() -> None:
+            admit_catalogue_invoice_patch(
+                invoice_id=payload.invoice_id,
+                patch=payload.patch.to_patch(),
+                ports=self._factory(bucket_id=profile),
+            )
+
         def update() -> InvoiceUpdateResult:
             ports = self._factory(bucket_id=profile)
             updated = update_catalogue_invoice(
@@ -164,6 +171,9 @@ class InvoiceUpdateExecutor:
             )
 
         async def commit() -> str:
+            # A correction the stored invoice refuses is refused here, before
+            # any effect is recorded, so it settles as a refusal with no effect.
+            await asyncio.to_thread(admit)
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
                 result = await asyncio.to_thread(update)
