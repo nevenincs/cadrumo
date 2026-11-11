@@ -78,7 +78,9 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/docs/terminology/relevance/relevance.json": "the committed mapping coverage is measured against",
     "dev/quality/import_checker.py": "the module the import gate spawns; read, never written",
     "dev/quality/import_load_worker.py": "the module the load probe spawns; read, never written",
-    "dev/quality/metadata/refusal_shape_ratchet.json": "the shrink-only refusal-shape ratchet; its diff is reviewed",
+    "dev/quality/metadata/refusal_shape_ratchet.json": (
+        "the shrink-only refusal-shape ratchet the gate reads; --write regenerates it for review"
+    ),
     "dev/quality/secure_store_write_path.toml": "the declared write paths the gate checks source against",
     "dev/registry/analysis/casilla_lineage_ledger.toml": "the reviewed lineage ledger; its diff is the artefact",
     "dev/registry/analysis/casilla_lineage_rulings.toml": "the authored rulings the lineage seed resolves against",
