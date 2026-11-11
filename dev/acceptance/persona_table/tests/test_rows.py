@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import date, timedelta
 from functools import cache
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from ..rows import (
     Verdict,
     in_force,
     latest_rows,
+    opened,
     planned_rows,
     read_rows,
     replay_horizons,
@@ -135,6 +137,38 @@ def test_every_applicable_obligation_period_is_a_row_at_the_real_horizon() -> No
         assert owed <= planned, persona_id
 
 
+def test_every_return_of_a_persona_history_is_a_row_the_table_runs_live() -> None:
+    envelope = _envelope()
+    for persona_id in persona_ids():
+        persona = _persona(persona_id)
+        planned = {(row.modelo, row.year, row.period) for row in planned_rows(persona, envelope.horizon, envelope)}
+        history = {
+            (block.modelo, block.year.resolve(envelope), period)
+            for block in (*persona.filed_returns, *persona.calculated_returns)
+            for period in block.periods
+        }
+        assert history <= planned, persona_id
+
+
+def test_a_return_an_obligation_states_not_applicable_is_no_row_even_with_a_stated_cross_check() -> None:
+    envelope = _envelope()
+    for persona_id in persona_ids():
+        persona = _persona(persona_id)
+        planned = {(row.modelo, row.year, row.period) for row in planned_rows(persona, envelope.horizon, envelope)}
+        filed = {
+            (block.modelo, block.year.resolve(envelope), period)
+            for block in (*persona.filed_returns, *persona.calculated_returns)
+            for period in block.periods
+        }
+        absent = {
+            (item.modelo, item.year.resolve(envelope), period)
+            for item in persona.expectations.obligations
+            if item.applicable is False
+            for period in item.periods
+        }
+        assert not (absent - filed) & planned, persona_id
+
+
 def test_a_shifted_horizon_moves_every_row_down_by_the_shift() -> None:
     envelope = _envelope()
     persona = _persona("autonomo-fontanero")
@@ -189,3 +223,15 @@ def test_a_replay_runs_each_quarter_before_the_annual_returns_of_its_year() -> N
         quarters_at = [index for index, (other, _modelo, code) in enumerate(order) if other == year and code != "0A"]
         assert all(index < annual_at for index in quarters_at), (modelo, year)
     assert [period for (_year, modelo, period) in order if modelo == "111"][:4] == ["1T", "2T", "3T", "4T"]
+
+
+def test_a_return_whose_window_has_not_opened_by_the_scenario_day_is_not_owed_yet() -> None:
+    today = date(_plan().year, 4, 1)
+    first, later, unknown = (
+        dataclasses.replace(_plan(), period="1T"),
+        dataclasses.replace(_plan(), period="2T"),
+        dataclasses.replace(_plan(), period="0A"),
+    )
+    opening = {"1T": today, "2T": today + timedelta(days=1)}
+    kept = opened([first, later, unknown], lambda _modelo, _year, period: opening.get(period), today)
+    assert kept == [first, unknown]
