@@ -20,6 +20,9 @@ import keyring.core
 
 from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copy_sealed_tree, sealed_tree
+from cadrumo.adapters.persistence.storage.custody.envelope import create_profile_custody_password_envelope
+from cadrumo.adapters.persistence.storage.custody.records import ProfileCustodyKdfParameters
+from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
 )
@@ -37,7 +40,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-from cadrumo.application.user_profile.custody_ports import create_profile_custody_registration_material
+from cadrumo.application.user_profile.custody_ports import ProfileCustodyRegistrationMaterial
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
@@ -50,7 +53,7 @@ from dev.test_runs.paths import scratch_base
 from .errors import SequenceExecutionError
 from .persona_profile import sandbox_profile_facts
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
-from .runtime_fixture import SANDBOX_INSTANT, sequence_runtime
+from .runtime_fixture import sandbox_instant, sequence_runtime
 
 #: The deterministic injected profile identity (a fixed valid UUIDv4 shape,
 #: distinct from the shared test-fixture bucket ids). With the clock frozen and
@@ -164,17 +167,44 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
         )
 
 
+def _sandbox_registration_material(*, profile_id: str, dek: bytes) -> ProfileCustodyRegistrationMaterial:
+    """Mint the sandbox envelope at one pinned key-derivation point instead of calibrating.
+
+    Enrollment calibrates on the host it runs on, so a calibrated sandbox would
+    store whatever point this machine and its load allowed in time, and every
+    frame that shows custody facts would then depend on the machine. The pin is
+    a grid point above the fixed fallback, the ordinary outcome a person's
+    profile shows, minted and wrapped by the same custody constructors that
+    enrollment uses.
+    """
+    salt = derive_test_bucket_key(profile_id, purpose="password-salt")[:16]
+    envelope = create_profile_custody_password_envelope(
+        profile_id=UUID(profile_id),
+        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+        dek=dek,
+        dek_epoch=b64encode(derive_test_bucket_key(profile_id, purpose="dek-epoch")[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=64,
+            iterations=4,
+            parallelism=1,
+            salt_b64=b64encode(salt).decode("ascii"),
+            output_bytes=32,
+        ),
+        password_generation=1,
+        previous_envelope_digest=None,
+    )
+    return ProfileCustodyRegistrationMaterial(
+        envelope=envelope, sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek)
+    )
+
+
 def _publish_sandbox_profile(*, profile_id: str, label: str) -> None:
     """Create and select one real synthetic capsule without authenticating it."""
     identity = UUID(profile_id)
     dek = derive_test_bucket_key(profile_id, purpose="dek")
-    material = create_profile_custody_registration_material(
-        profile_id=identity,
-        password=load_settings().cadrumo_dev_test_database_password.get_secret_value(),
-        dek=dek,
-        dek_epoch=b64encode(derive_test_bucket_key(profile_id, purpose="dek-epoch")[:16]).decode("ascii"),
-        salt=derive_test_bucket_key(profile_id, purpose="password-salt")[:16],
-    )
+    material = _sandbox_registration_material(profile_id=profile_id, dek=dek)
     create_context, decode_context = profile_authority_contexts()
     initial = create_user_profile_record(
         context=create_context,
@@ -343,7 +373,7 @@ def sandbox_template() -> Path:
             isolated_profile_storage_root(tmp_path=template),
             composed_profile_persistence_ports(),
             isolated_diagnostic_log(),
-            frozen_clock(SANDBOX_INSTANT),
+            frozen_clock(sandbox_instant()),
             _provisioned_sandbox_profile(),
         ):
             pass
@@ -524,7 +554,7 @@ def sequence_sandbox(
     """Open one hermetic per-sequence sandbox under ``sandbox_root``.
 
     Inside the scope: an isolated real-crypto storage root, the frozen
-    :data:`SANDBOX_INSTANT`, the deterministic :data:`SANDBOX_PROFILE_ID`
+    :func:`sandbox_instant`, the deterministic :data:`SANDBOX_PROFILE_ID`
     registered and active, ``cadrumo_output_language`` pinned to English, the
     operator's ambient ``CADRUMO_*`` / ``AEAT_*`` environment scrubbed for the
     whole scope (restored on exit; the storage-root isolation pin survives), the
@@ -605,7 +635,7 @@ def sequence_sandbox(
         # every golden depend on the day's reference rates.
         bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
         isolated_diagnostic_log(),
-        frozen_clock(SANDBOX_INSTANT),
+        frozen_clock(sandbox_instant()),
         chdir(workdir),
         _provisioned_sandbox_profile(published=True),
         sequence_receipt_store(Path(load_settings().cadrumo_storage_root), enabled=persistent_sign_in),
@@ -622,7 +652,7 @@ def sequence_sandbox(
                     storage_root=Path(effective_settings.cadrumo_storage_root),
                     workdir=workdir.resolve(),
                     profile_id=SANDBOX_PROFILE_ID,
-                    frozen_instant=SANDBOX_INSTANT,
+                    frozen_instant=sandbox_instant(),
                 )
             finally:
                 close_active_bucket_session()

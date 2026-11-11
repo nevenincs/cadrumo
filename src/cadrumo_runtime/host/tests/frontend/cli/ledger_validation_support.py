@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 
 from click.testing import Result
@@ -14,6 +15,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.cli_json_support import require_json_object
 
@@ -152,7 +154,7 @@ def add_eligible_mixed_expense() -> str:
             "ledger",
             "add",
             "--date",
-            "2026-02-10",
+            date(filing_year_envelope().horizon, 2, 10).isoformat(),
             "--amount",
             "60.50",
             "--direction",

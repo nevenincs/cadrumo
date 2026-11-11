@@ -5,13 +5,12 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Final, Literal, override
+from typing import Final, override
 
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel, ValidationError
 
 from ....application.journal_repository import JournalBusyError, JournalRepositoryBase
 from ....application.operations.event_replay import OperationEventCursor
@@ -39,15 +38,11 @@ from ....application.operations.persistence.replay import (
     OperationReplayPage,
     OperationReplayStatus,
 )
-from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes
 from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.errors.error_codes import RETIRED_ERROR_CODE_SUCCESSORS, current_error_code
-from ....core.external_constants import UTF_8_ENCODING
-from ....core.hex import HEX_PATTERN_64
-from ....core.identity.digest import ContentDigest
-from ....core.link_safety import is_link_like
+from ....core.hex import is_hex64
 from ....core.locks import exclusive_file_lock
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -57,6 +52,7 @@ from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
 from ..storage.master_key.login_handover_journal import handover_journal_path
 from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
+from .journal_claim_index import OperationClaimIndex
 from .journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .lease import OperationLeaseStorage
 
@@ -121,48 +117,9 @@ class _OperationInventoryRequest(BaseModel):
     limit: OperationInventoryLimit
 
 
-_HEX_64: Final = re.compile(HEX_PATTERN_64)
-_CLAIM_INDEX_DIRNAME: Final = "idempotency-claims"
-_CLAIM_INDEX_COMPLETE_FILENAME: Final = "complete"
-_CLAIM_INDEX_DIRECTORY_MODE: Final = 0o700
-_CLAIM_INDEX_FILE_MODE: Final = 0o600
 # Records are captured a bounded batch at a time, so an inventory never holds
 # every record's text at once.
 _INVENTORY_CAPTURE_BATCH: Final = 128
-# A first read of a record is dominated by per-file open latency (cold cache,
-# on-access scanning), which overlaps across threads; validation does not.
-_INVENTORY_CAPTURE_THREADS: Final = 4
-
-
-class _ClaimIndexEntry(BaseModel):
-    """Which journal records were created carrying one idempotency key digest.
-
-    The entry is a derived lookup aid, never evidence: every named record is
-    loaded and validated before its claim is believed, so an entry naming an
-    absent record, a record whose claim was purged, or a record with another
-    claim changes nothing.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_version: Literal[1]
-    key_digest: ContentDigest
-    operation_ids: tuple[OperationId, ...]
-
-    @field_validator("operation_ids")
-    @classmethod
-    def _sorted_unique(cls, value: tuple[OperationId, ...]) -> tuple[OperationId, ...]:
-        if tuple(sorted(set(value))) != value:
-            raise ValueError("claim index operation ids must be sorted and unique")
-        return value
-
-
-class _ClaimIndexCompleteness(BaseModel):
-    """Witness that every claim-bearing record in the journal root has an entry."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    schema_version: Literal[1]
 
 
 def replay_page_from_record(
@@ -221,6 +178,10 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         )
         self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
         self._profile_handover_path = handover_journal_path(storage_root)
+        # Late-bound, as every other journal write is, so the index uses the journal's current writer.
+        self._claim_index = OperationClaimIndex(
+            journal_root=self.root, write_payload=lambda path, payload: self._write_payload(path, payload)
+        )
 
     @override
     def load(self, operation_id: str) -> OperationJournalRecord:
@@ -403,8 +364,11 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
         if len(operation_ids) < 2:
             return [capture(operation_id) for operation_id in operation_ids]
+        # A first read of a record is dominated by per-file open latency (cold
+        # cache, on-access scanning), which overlaps across threads; validation
+        # does not. The process's processor allowance bounds the overlap.
         with ThreadPoolExecutor(
-            max_workers=min(_INVENTORY_CAPTURE_THREADS, len(operation_ids)),
+            max_workers=min(os.process_cpu_count() or 1, len(operation_ids)),
             thread_name_prefix="operation-journal-inventory",
         ) as pool:
             return list(pool.map(capture, operation_ids))
@@ -443,7 +407,7 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
     @property
     def claim_index_root(self) -> Path:
         """Return the directory of derived idempotency-claim lookup entries."""
-        return self.root / _CLAIM_INDEX_DIRNAME
+        return self._claim_index.root
 
     @override
     def save(self, operation: OperationJournalRecord) -> None:
@@ -498,107 +462,13 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         absent or unreadable witness, or a malformed entry, sends the lookup
         back to the records through one rebuild.
         """
-        if not self._claim_index_is_complete_unlocked():
+        if not self._claim_index.is_complete_unlocked():
             self._rebuild_claim_index_unlocked()
         try:
-            return self._read_claim_index_entry_unlocked(key_digest)
+            return self._claim_index.read_entry_unlocked(key_digest)
         except RepositoryError:
             self._rebuild_claim_index_unlocked()
-            return self._read_claim_index_entry_unlocked(key_digest)
-
-    def _claim_index_entry_path(self, key_digest: str) -> Path:
-        if _HEX_64.fullmatch(key_digest) is None:
-            raise RepositoryError("operation idempotency key digest must be 64 lowercase hexadecimal characters")
-        return self.claim_index_root / f"{key_digest}.json"
-
-    def _claim_index_complete_path(self) -> Path:
-        return self.claim_index_root / _CLAIM_INDEX_COMPLETE_FILENAME
-
-    def _read_claim_index_text_unlocked(self, path: Path) -> str | None:
-        """Read one index file, ``None`` when absent; links and unreadable files are refused."""
-        if not os.path.lexists(path):
-            return None
-        if is_link_like(path) or is_link_like(self.claim_index_root):
-            raise RepositoryError("operation idempotency claim index cannot be a link")
-        try:
-            return path.read_text(encoding=UTF_8_ENCODING)
-        except OSError as exc:
-            raise RepositoryError("cannot read operation idempotency claim index") from exc
-
-    def _claim_index_is_complete_unlocked(self) -> bool:
-        try:
-            raw = self._read_claim_index_text_unlocked(self._claim_index_complete_path())
-        except RepositoryError:
-            return False
-        if raw is None:
-            return False
-        try:
-            _ClaimIndexCompleteness.model_validate_json(raw)
-        except ValidationError:
-            return False
-        return True
-
-    def _read_claim_index_entry_unlocked(self, key_digest: str) -> tuple[OperationId, ...]:
-        raw = self._read_claim_index_text_unlocked(self._claim_index_entry_path(key_digest))
-        if raw is None:
-            return ()
-        try:
-            entry = _ClaimIndexEntry.model_validate_json(raw)
-        except ValidationError as exc:
-            raise RepositoryError("invalid operation idempotency claim index entry") from exc
-        if entry.key_digest != key_digest:
-            raise RepositoryError("operation idempotency claim index entry names another key")
-        return entry.operation_ids
-
-    def _ensure_claim_index_root_unlocked(self) -> None:
-        index_root = self.claim_index_root
-        if os.path.lexists(index_root) and is_link_like(index_root):
-            raise RepositoryError("operation idempotency claim index cannot be a link")
-        index_root.mkdir(exist_ok=True)
-        if not index_root.is_dir():
-            raise RepositoryError("operation idempotency claim index is not a directory")
-        try:
-            # Private directory mode; Semgrep's generic file-mode rule is inverted here.
-            os.chmod(index_root, _CLAIM_INDEX_DIRECTORY_MODE)  # nosemgrep
-        except OSError as exc:
-            raise RepositoryError("cannot restrict operation idempotency claim index permissions") from exc
-
-    def _write_claim_index_entry_unlocked(
-        self,
-        key_digest: str,
-        operation_ids: Iterable[OperationId],
-        *,
-        rebuild_batch: DurableWriteBatch | None = None,
-    ) -> None:
-        entry = _ClaimIndexEntry(
-            schema_version=1,
-            key_digest=key_digest,
-            operation_ids=tuple(sorted(set(operation_ids))),
-        )
-        path = self._claim_index_entry_path(key_digest)
-        payload = entry.model_dump_json() + "\n"
-        if rebuild_batch is None:
-            self._write_payload(path, payload)
-            return
-        if self._read_claim_index_text_unlocked(path) == payload:
-            return
-        # A rebuilt entry is re-derived from the records it names, so its
-        # durability sync is batched (see DurableWriteBatch): a torn entry is
-        # refused as malformed and rebuilt again. A create's entry is not.
-        atomic_write_hardened_bytes(
-            path, payload.encode(UTF_8_ENCODING), mode=_CLAIM_INDEX_FILE_MODE, batch=rebuild_batch
-        )
-        try:
-            os.chmod(path, _CLAIM_INDEX_FILE_MODE)
-        except OSError as exc:
-            raise RepositoryError("cannot restrict operation idempotency claim index permissions") from exc
-
-    def _add_claim_index_entry_unlocked(self, key_digest: str, operation_id: OperationId) -> None:
-        """Publish ``operation_id`` under ``key_digest`` before its record is written."""
-        self._ensure_claim_index_root_unlocked()
-        existing = self._read_claim_index_entry_unlocked(key_digest)
-        if operation_id not in existing:
-            self._write_claim_index_entry_unlocked(key_digest, (*existing, operation_id))
+            return self._claim_index.read_entry_unlocked(key_digest)
 
     def _rebuild_claim_index_unlocked(self) -> None:
         """Derive every entry from a full scan of the records, then witness completeness.
@@ -611,42 +481,12 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         claimed: dict[str, set[OperationId]] = {}
         for path in scan_directory(self.root, pattern="*.json"):
             operation_id = path.stem
-            if _HEX_64.fullmatch(operation_id) is None:
+            if not is_hex64(operation_id):
                 continue
             persisted_claim = self._load_unlocked(operation_id).snapshot.idempotency_claim
             if persisted_claim is not None:
                 claimed.setdefault(persisted_claim.key_digest, set()).add(persisted_claim.operation_id)
-        self._ensure_claim_index_root_unlocked()
-        complete_path = self._claim_index_complete_path()
-        if os.path.lexists(complete_path):
-            if is_link_like(complete_path):
-                raise RepositoryError("operation idempotency claim index cannot be a link")
-            complete_path.unlink()
-        rebuild_batch = DurableWriteBatch()
-        self._replace_claim_index_entries_unlocked(claimed, rebuild_batch)
-        # Every entry's publication is synced before the witness that relies
-        # on it, which is itself written with a full per-file sync.
-        rebuild_batch.commit()
-        self._write_payload(complete_path, _ClaimIndexCompleteness(schema_version=1).model_dump_json() + "\n")
-
-    def _replace_claim_index_entries_unlocked(
-        self,
-        claimed: Mapping[str, set[OperationId]],
-        rebuild_batch: DurableWriteBatch,
-    ) -> None:
-        """Make the entry files exactly the derived mapping, refusing foreign files."""
-        for path in scan_directory(self.claim_index_root, require_root=True):
-            if path.name == _CLAIM_INDEX_COMPLETE_FILENAME:
-                continue
-            key_digest = path.name.removesuffix(".json")
-            if path.suffix != ".json" or _HEX_64.fullmatch(key_digest) is None:
-                raise RepositoryError("invalid operation idempotency claim index filename")
-            if is_link_like(path) or not path.is_file():
-                raise RepositoryError("operation idempotency claim index entry is not a regular file")
-            if key_digest not in claimed:
-                path.unlink()
-        for key_digest, operation_ids in claimed.items():
-            self._write_claim_index_entry_unlocked(key_digest, operation_ids, rebuild_batch=rebuild_batch)
+        self._claim_index.publish_rebuild_unlocked(claimed)
 
     def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> str:
         """Create the initial snapshot and its retry claim in one journal write."""
@@ -672,7 +512,7 @@ class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
                 # Entry first: a crash between the two writes leaves an entry
                 # naming an absent record, which lookups skip, never a
                 # claim-bearing record the index cannot find.
-                self._add_claim_index_entry_unlocked(snapshot.idempotency_claim.key_digest, snapshot.operation_id)
+                self._claim_index.add_entry_unlocked(snapshot.idempotency_claim.key_digest, snapshot.operation_id)
             self._write(path, record)
         return snapshot.operation_id
 

@@ -94,7 +94,7 @@ _CLI = OperationFrontendProjection.CLI
 _LABEL = "repair-acts"
 _PROFILE = UUID("95959595-9595-4595-8595-959595959595")
 _CORRUPT_POINTER = b"not = valid = toml"
-_LOG_LINES = tuple(f"2026-04-02T09:30:{index:02d}Z synthetic repair log line {index}" for index in range(30))
+_LOG_LINES = tuple(f"1980-04-02T09:30:{index:02d}Z synthetic repair log line {index}" for index in range(30))
 _DOOR_COORDINATES = frozenset({"request_id", "runtime_boot_id", "connection_id", "kind"})
 
 

@@ -15,6 +15,7 @@ import pydantic
 import pytest
 
 from ....core.foreign_asset_obligation import M720AssetClassCode
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..register import (
     ForeignAssetDeclarationEntry,
     ForeignAssetRegister,
@@ -28,6 +29,10 @@ from ..register import (
 from .register_authoring import with_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+#: A holding start long before any ejercicio under test.
+_LONG_HELD = date(1980, 1, 1)
 
 _IBAN = "DE89370400440532013000"
 _OTHER_IBAN = "ES9121000418450200051332"
@@ -53,7 +58,7 @@ def _entry(
         country_code=country,
         identifier=identifier,
         description="synthetic asset",
-        held_since=date(2015, 1, 1),
+        held_since=_LONG_HELD,
     )
 
 
@@ -221,27 +226,27 @@ def test_looking_up_an_unregistered_asset_refuses() -> None:
 
 
 @pytest.mark.parametrize(
-    ("held_since", "ceased_on", "held_in_2025", "ceased_in_2025"),
+    ("held_since", "ceased_on", "held_in_year", "ceased_in_year"),
     [
-        (date(2015, 1, 1), None, True, False),
-        (date(2025, 12, 31), None, True, False),
-        (date(2026, 1, 1), None, False, False),
-        (date(2015, 1, 1), date(2025, 1, 1), True, True),
-        (date(2015, 1, 1), date(2024, 12, 31), False, False),
+        (_LONG_HELD, None, True, False),
+        (date(_YEAR, 12, 31), None, True, False),
+        (date(_YEAR + 1, 1, 1), None, False, False),
+        (_LONG_HELD, date(_YEAR, 1, 1), True, True),
+        (_LONG_HELD, date(_YEAR - 1, 12, 31), False, False),
     ],
 )
 def test_the_holding_period_decides_which_ejercicios_reach_the_asset(
-    held_since: date, ceased_on: date | None, held_in_2025: bool, ceased_in_2025: bool
+    held_since: date, ceased_on: date | None, held_in_year: bool, ceased_in_year: bool
 ) -> None:
     entry = _account(_ref("a")).model_copy(update={"held_since": held_since, "ceased_on": ceased_on})
 
-    assert entry.held_in(2025) is held_in_2025
-    assert entry.ceased_in(2025) is ceased_in_2025
+    assert entry.held_in(_YEAR) is held_in_year
+    assert entry.ceased_in(_YEAR) is ceased_in_year
 
 
 def test_an_asset_cannot_cease_before_it_was_first_held() -> None:
     payload = _account(_ref("a")).model_dump()
-    payload["ceased_on"] = date(2014, 12, 31)
+    payload["ceased_on"] = date(_LONG_HELD.year - 1, 12, 31)
 
     with pytest.raises(pydantic.ValidationError, match="cannot cease before it was first held"):
         ForeignAssetRegisterEntry.model_validate(payload)

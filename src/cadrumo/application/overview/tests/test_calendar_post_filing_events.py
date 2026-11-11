@@ -16,6 +16,7 @@ import pytest
 
 from ....core.period import Period
 from ....core.post_filing_event import PostFilingEventKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notification_ports import RemoteNotification
@@ -30,8 +31,10 @@ from .calendar_test_support import BUCKET_ID, SOURCE_URL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_RANGE = OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31))
-_AS_OF = date(2025, 3, 13)
+_YEAR = filing_year_envelope().horizon
+
+_RANGE = OverviewCalendarRange(from_date=date(_YEAR, 3, 1), to_date=date(_YEAR, 3, 31))
+_AS_OF = date(_YEAR, 3, 13)
 """One day after every fixture's puesta a disposicion.
 
 Inside the art. 43.2 window, so the service-state axis stays EN_PLAZO and
@@ -54,8 +57,8 @@ def _notification(
         titular_nombre="Test S.L.",
         destinatario_nif="B12345678",
         destinatario_nombre="Test S.L.",
-        fecha_emision=date(2025, 3, 10),
-        fecha_notificacion=date(2025, 3, 12),
+        fecha_emision=date(_YEAR, 3, 10),
+        fecha_notificacion=date(_YEAR, 3, 12),
         modo_notificacion="DEH",
         leida=leida,
         source_url=SOURCE_URL,
@@ -66,10 +69,10 @@ def _notifications_snapshot(rows: tuple[RemoteNotification, ...]) -> PersistedNo
     return PersistedNotificationsSnapshot(
         snapshot_id="a" * 64,
         bucket_id=BUCKET_ID,
-        captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 3, 13, 10, 0, tzinfo=UTC),
         source_url=SOURCE_URL,
         rows=rows,
-        persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
+        persisted_at=datetime(_YEAR, 3, 13, 10, 5, tzinfo=UTC),
     )
 
 
@@ -113,20 +116,20 @@ def test_expediente_filing_event_carries_declaracion_presentada_kind() -> None:
     snapshot = PersistedExpedientesSnapshot(
         snapshot_id="e" * 64,
         bucket_id=BUCKET_ID,
-        captured_at=datetime(2025, 3, 16, 10, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 3, 16, 10, 0, tzinfo=UTC),
         source_url=SOURCE_URL,
         authenticated_identity="B12345678",
         declarations=(
             ExpedientesDeclaration(
                 modelo="303",
-                ejercicio=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                ejercicio=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 expediente_id="12345678901234567890",
                 estado="ALTA",
-                presented_at=datetime(2025, 3, 15, 9, 30, tzinfo=UTC),
+                presented_at=datetime(_YEAR, 3, 15, 9, 30, tzinfo=UTC),
             ),
         ),
-        persisted_at=datetime(2025, 3, 16, 10, 5, tzinfo=UTC),
+        persisted_at=datetime(_YEAR, 3, 16, 10, 5, tzinfo=UTC),
     )
 
     events = calendar_events_from_expedientes_snapshots((snapshot,), _RANGE)

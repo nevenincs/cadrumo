@@ -47,12 +47,12 @@ _RESPONSE = {
             AccessAction.DETACH,
         ),
         (
-            {**_RESPONSE, "response_action": "apply", "responded_at": "2026-09-27T10:00:00Z"},
+            {**_RESPONSE, "response_action": "apply", "responded_at": "1980-09-27T10:00:00Z"},
             OperationResponseApplyRequestV1,
             AccessAction.RESPOND,
         ),
         (
-            {**_RESPONSE, "response_action": "reject", "responded_at": "2026-09-27T10:00:00Z"},
+            {**_RESPONSE, "response_action": "reject", "responded_at": "1980-09-27T10:00:00Z"},
             OperationResponseRejectRequestV1,
             AccessAction.RESPOND,
         ),

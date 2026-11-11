@@ -8,14 +8,19 @@ the fill, the fields it left unread and the remedy that cause asks for.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from ..evidence_draft import draft_lines
 from ..models import LedgerEvidenceDraftV1
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -25,8 +30,8 @@ def _draft(fallback: LabelReadingFallback | None) -> LedgerEvidenceDraftV1:
         evidence_id="8747cbf318cf0adb",
         supplier_name=None,
         supplier_tax_id="B00015081",
-        invoice_number="T-0042-2026",
-        invoice_date="2026-02-14",
+        invoice_number=f"T-0042-{_YEAR}",
+        invoice_date=date(_YEAR, 2, 14).isoformat(),
         taxable_base="60.00",
         iva_rate="21",
         iva_amount="12.60",

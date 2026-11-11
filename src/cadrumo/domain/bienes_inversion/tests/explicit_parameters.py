@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
@@ -25,7 +26,7 @@ EXPLICIT_PARAMS = BienesInversionRegularizacionParameters(
     umbral_comparison=ThresholdComparison.EXCLUSIVE,
     provenance=BienesInversionParameterProvenance(
         modelo_id="303",
-        revision_id="2025",
+        revision_id=str(filing_year_envelope().horizon),
         parameter_ids=(
             "m303-bien-inversion-ventana-anos-mueble",
             "m303-bien-inversion-ventana-anos-inmueble",
@@ -33,7 +34,7 @@ EXPLICIT_PARAMS = BienesInversionRegularizacionParameters(
             "m303-bien-inversion-divisor-inmueble",
             "m303-bien-inversion-regularizacion-umbral-puntos",
         ),
-        resolved_on=date(2025, 6, 1),
+        resolved_on=date(filing_year_envelope().horizon, 6, 1),
     ),
 )
 

@@ -13,6 +13,7 @@ import type {
   SetupRun,
   SetupStep,
 } from "../../ipc/componentSetup";
+import { labelled } from "../../shell/compose";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { formatSize } from "../../shared/numbers";
@@ -67,8 +68,9 @@ export type StepProgress = {
 };
 
 /** A row's state said once: its sentence, marked by a glyph that repeats
- * nothing. */
-export function RowState({ row }: { row: SetupRow }) {
+ * nothing. Where the row's name is not beside it, `fact` names what the
+ * sentence is about. */
+export function RowState({ row, fact }: { row: SetupRow; fact?: string }) {
   const t = useStrings();
   const tone = rowTone(row);
   return (
@@ -83,7 +85,9 @@ export function RowState({ row }: { row: SetupRow }) {
           }
         />
       )}
-      <span data-setup-sentence>{rowSentence(t, row)}</span>
+      <span data-setup-sentence>
+        {fact ? labelled(t, fact, rowSentence(t, row)) : rowSentence(t, row)}
+      </span>
     </p>
   );
 }

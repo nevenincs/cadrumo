@@ -220,7 +220,6 @@ def _seed_one_bucket_transaction(bucket_id: str) -> None:
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            "taxable_base": Decimal("100.00"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": ingested_at,
             "classified_by": "manual",

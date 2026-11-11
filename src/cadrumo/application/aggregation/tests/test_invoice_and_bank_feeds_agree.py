@@ -44,6 +44,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -52,6 +53,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 from .iva_authority_support import aggregate_iva_ledger_observations
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -64,8 +67,8 @@ def _pinned_operation() -> PinnedAuthorityOperation:
 
 
 _BASE = Decimal("5000.00")
-_DAY = date(2026, 4, 15)
-_PERIOD = Period.from_year_and_code(2026, "2T")
+_DAY = date(_YEAR, 4, 15)
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
@@ -73,7 +76,7 @@ _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
 
 @cache
 def _revision():
-    return published_snapshot("303", filing_year=2026, period="2T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="2T").revision
 
 
 def _resolved(observations, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
@@ -112,7 +115,7 @@ def _as_bank_transaction(
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},

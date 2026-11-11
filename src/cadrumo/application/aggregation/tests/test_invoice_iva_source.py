@@ -18,6 +18,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
@@ -38,9 +39,11 @@ from .ledger_source_mesh_support import (
     machine_acquisition_transaction,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_QUARTER = Period.from_year_and_code(2025, "2T")
+_QUARTER = Period.from_year_and_code(_YEAR, "2T")
 #: Fact 0032, LIVA art. 108.Dos.5.º: a good is a bien de inversión unless its value "sea inferior a" this.
 _ESCASO_VALOR = Decimal("3005.06")
 
@@ -63,7 +66,7 @@ def _received(number: str, *, base: Decimal, paid_by: tuple[Transaction, ...] = 
     return domestic_iva_invoice(
         number,
         kind=InvoiceKind.RECEIVED,
-        issued_at=date(2025, 4, 5),
+        issued_at=date(_YEAR, 4, 5),
         taxable_base=base,
         iva_amount=(base * Decimal("0.21")).quantize(Decimal("0.01")),
         linked_transaction_ids=tuple(movement.transaction_id for movement in paid_by),
@@ -247,7 +250,7 @@ def test_a_received_invoice_without_its_factura_is_the_one_reported() -> None:
     issued = domestic_iva_invoice(
         "V-21",
         kind=InvoiceKind.ISSUED,
-        issued_at=date(2025, 4, 5),
+        issued_at=date(_YEAR, 4, 5),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )

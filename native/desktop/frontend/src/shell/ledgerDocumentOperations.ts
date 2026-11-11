@@ -155,7 +155,8 @@ export type DraftDiscrepancyKind =
   | "postal_code_unreadable"
   | "party_attribution_contradicted"
   | "invoice_class_unmodelled"
-  | "invoice_class_contradicted";
+  | "invoice_class_contradicted"
+  | "invoice_number_unnumbered";
 
 export type DraftDiscrepancy = {
   kind: DraftDiscrepancyKind;
@@ -249,7 +250,8 @@ export type ConfirmationBlockReason =
   | "contradicted_regime"
   | "undetermined_establishment"
   | "unmodelled_invoice_class"
-  | "contradicted_invoice_class";
+  | "contradicted_invoice_class"
+  | "unnumbered_invoice";
 
 /** A finding the person answers before the reading may be confirmed. Its
  * id is derived from what it is, so the same reading raises the same ids. */

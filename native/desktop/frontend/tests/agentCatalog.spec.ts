@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   FIXTURE_CATALOG,
+  FIXTURE_DECLARED_CATALOG,
   fixtureModelPresence,
 } from "../src/dev/fixtures/agentCatalog";
 import {
@@ -10,7 +11,12 @@ import {
   selectionRecord,
   startingSelection,
 } from "../src/shell/agentCatalog";
-import type { AgentProviderCatalog } from "../src/shell/agentSession";
+import {
+  parseAuthKind,
+  type AgentProviderCatalog,
+  type AgentProviderLane,
+} from "../src/shell/agentSession";
+import { connectionWords } from "../src/shell/providerConnection";
 
 // How the agent column deduces its choices from cadrumo-agent's provider
 // catalog, and what it sends back for a run. The catalog is the scenario
@@ -404,4 +410,132 @@ test("with no model of the local lane on this computer, the lane cannot be chose
       .flatMap((provider) => provider.ways)
       .find((way) => way.id === "alpha/cli")?.unavailableReason,
   ).toBe("desktop.agent.lane_signed_out");
+});
+
+// What a lane is authenticated with is the catalogue's to state, on every lane
+// and from a closed set; the lane's name and transport say nothing of it.
+
+const laneNamed = (provider: string, transport: string) =>
+  FIXTURE_CATALOG.providers?.find(
+    (lane) => lane.provider_id === provider && lane.transport === transport,
+  ) as AgentProviderLane;
+
+test("every closed value of what a lane authenticates with is read as served", () => {
+  for (const kind of [
+    "api_key",
+    "api_key_with_base_url",
+    "provider_sign_in_only",
+    "none",
+  ])
+    expect(parseAuthKind({ auth_kind: kind })).toBe(kind);
+});
+
+test("a value outside the closed set, or none at all, is malformed", () => {
+  for (const served of [
+    undefined,
+    null,
+    "",
+    "None",
+    "keyless",
+    "api",
+    3,
+    ["none"],
+    { kind: "none" },
+  ])
+    expect(parseAuthKind({ auth_kind: served })).toBe("malformed");
+  expect(parseAuthKind({})).toBe("malformed");
+});
+
+test("a way carries what its lane is served to authenticate with, not what its transport or name suggests", () => {
+  const ways = choices.providers.flatMap((provider) => provider.ways);
+  for (const way of ways) {
+    const [provider, transport] = way.id.split("/");
+    expect(way.authKind).toBe(
+      parseAuthKind(laneNamed(provider ?? "", transport ?? "")),
+    );
+  }
+  const kinds = new Map(ways.map((way) => [way.id, way.authKind]));
+  expect(kinds.get("llamacpp/api")).toBe("none");
+  expect(kinds.get("ollama/api")).toBe("none");
+  expect(kinds.get("alpha/api")).toBe("api_key");
+  expect(kinds.get("beta/cli")).toBe("provider_sign_in_only");
+});
+
+test("a keyless lane is worded as on this computer and a keyed one by how it is reached, whatever its transport", () => {
+  const way = (transport: "api" | "cli", authKind: string) =>
+    ({ transport, authKind }) as Parameters<typeof connectionWords>[1];
+  expect(connectionWords(words, way("api", "none"))).toBe(
+    "desktop.providers.connection_local",
+  );
+  expect(connectionWords(words, way("cli", "none"))).toBe(
+    "desktop.providers.connection_local",
+  );
+  expect(connectionWords(words, way("api", "api_key"))).toBe(
+    "desktop.providers.connection_api",
+  );
+  expect(connectionWords(words, way("api", "api_key_with_base_url"))).toBe(
+    "desktop.providers.connection_api",
+  );
+  expect(connectionWords(words, way("cli", "provider_sign_in_only"))).toBe(
+    "desktop.providers.connection_app",
+  );
+});
+
+test("a lane that states no auth kind, or one outside the set, is not offered", () => {
+  const served = (mutate: (lane: AgentProviderLane) => AgentProviderLane) => ({
+    ...FIXTURE_CATALOG,
+    providers: FIXTURE_CATALOG.providers?.map((lane) =>
+      lane.provider_id === "llamacpp" ? mutate(lane) : lane,
+    ),
+  });
+  const without = served((lane) => {
+    const held: Record<string, unknown> = { ...lane };
+    delete held.auth_kind;
+    return held as unknown as AgentProviderLane;
+  });
+  const unknown = served((lane) => ({ ...lane, auth_kind: "magic" }));
+  for (const catalog of [without, unknown]) {
+    const offered = catalogChoices(words, catalog);
+    expect(offered.providers.map((provider) => provider.id)).not.toContain(
+      "llamacpp",
+    );
+    expect(offered.incompatible).toBe(false);
+    expect(
+      selectionRecord(catalog, {
+        providerId: "llamacpp",
+        wayId: "llamacpp/api",
+        modelId: "synthetic-llamacpp:1",
+      }),
+    ).toBeNull();
+  }
+  // Every lane malformed: the service is not understood.
+  const none = catalogChoices(words, {
+    ...FIXTURE_CATALOG,
+    providers: FIXTURE_CATALOG.providers?.map((lane) => ({
+      ...lane,
+      auth_kind: undefined,
+    })),
+  });
+  expect(none.providers).toEqual([]);
+  expect(none.incompatible).toBe(true);
+});
+
+test("a declared lane carries what the declared catalogue states, and one that states none is not listed", () => {
+  const declared = catalogChoices(words, FIXTURE_DECLARED_CATALOG);
+  const ways = declared.providers.flatMap((provider) => provider.ways);
+  expect(ways.find((way) => way.id === "llamacpp/api")?.authKind).toBe("none");
+  expect(ways.find((way) => way.id === "alpha/api")?.authKind).toBe("api_key");
+  const lanes = FIXTURE_DECLARED_CATALOG.catalog.providers ?? [];
+  const bare = catalogChoices(words, {
+    ...FIXTURE_DECLARED_CATALOG,
+    catalog: {
+      ...FIXTURE_DECLARED_CATALOG.catalog,
+      providers: lanes.map((lane) =>
+        lane.provider === "llamacpp" ? { ...lane, auth_kind: undefined } : lane,
+      ),
+    },
+  });
+  expect(bare.providers.map((provider) => provider.id)).not.toContain(
+    "llamacpp",
+  );
 });

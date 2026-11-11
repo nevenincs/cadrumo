@@ -20,6 +20,7 @@ from .....application.ledger.remove_operation import LedgerRemoveRequest
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.ledger_sort import LedgerSortField, LedgerSortOrder
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.dialogs import ConfirmScreen
 from ...tests.settling import settle
 from ..entries_browse import LedgerEntriesBrowseScreen
@@ -35,6 +36,8 @@ from .entries_door_fixtures import (
     lifecycle_requests,
 )
 from .workspace_fixtures import WorkspaceHostApp
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -305,7 +308,7 @@ async def test_the_filters_build_the_operations_own_request() -> None:
             cast("Select[str]", screen.query_one("#entries-browse-status", Select)).value = "pending"
             cast("Select[str]", screen.query_one("#entries-browse-direction", Select)).value = "outgoing"
             cast("Select[str]", screen.query_one("#entries-browse-period", Select)).value = "2T"
-            screen.query_one("#entries-browse-year", Input).value = "2026"
+            screen.query_one("#entries-browse-year", Input).value = str(_YEAR)
             screen.query_one("#entries-browse-text", Input).value = "office"
             cast("Select[str]", screen.query_one("#entries-browse-sort", Select)).value = "amount"
             cast("Select[str]", screen.query_one("#entries-browse-order", Select)).value = "desc"
@@ -320,7 +323,7 @@ async def test_the_filters_build_the_operations_own_request() -> None:
     requests = _list_requests(ledger)
     assert len(requests) == 2
     applied = requests[1]
-    assert applied.filters == ("status=pending", "direction=outgoing", "period=2T", "year=2026", "text=office")
+    assert applied.filters == ("status=pending", "direction=outgoing", "period=2T", f"year={_YEAR}", "text=office")
     assert applied.sort_by is LedgerSortField.AMOUNT
     assert applied.sort_order is LedgerSortOrder.DESC
     assert applied.exclude_llm_rejected

@@ -23,9 +23,12 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE_ID = "91df36b5-544e-45eb-835a-7ec1112988e1"
 _FIRST_QUARTER_BINDINGS = {
@@ -40,14 +43,14 @@ def test_bucket_calculation_reuses_caller_authority_and_returns_writer_publicati
 ) -> None:
     """Readiness, source, advisory, and result phases keep one authority lease."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=datetime(2026, 8, 24, tzinfo=UTC))
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=datetime(_YEAR, 8, 24, tzinfo=UTC))
         with bundled_indexed_authority().operation() as operation:
-            revision = resolved_revision(modelo="130", filing_year=2025, period="1T")
+            revision = resolved_revision(modelo="130", filing_year=_YEAR, period="1T")
             unit = create_work_unit(
                 bucket_id=_PROFILE_ID,
                 modelo="130",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "1T"),
                 revision_id=revision.id,
                 actor="authority-binding-test",
                 ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),

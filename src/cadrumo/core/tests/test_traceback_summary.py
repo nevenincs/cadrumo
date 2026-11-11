@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..traceback_summary import TRACEBACK_FRAMES, TracebackReader, TracebackSummary
+from ..traceback_summary import SUMMARY_FRAMES, TracebackReader, TracebackSummary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -68,9 +68,9 @@ def test_a_body_holds_only_its_innermost_frames() -> None:
         assert reader.read("    step()") is None
     summary = reader.read("RecursionError: depth")
     assert summary is not None
-    assert len(summary.frames) == TRACEBACK_FRAMES
+    assert len(summary.frames) == SUMMARY_FRAMES
     assert summary.frames[0] == "deep.py:4999:step_4999"
-    assert summary.frames[-1] == f"deep.py:{5000 - TRACEBACK_FRAMES}:step_{5000 - TRACEBACK_FRAMES}"
+    assert summary.frames[-1] == f"deep.py:{5000 - SUMMARY_FRAMES}:step_{5000 - SUMMARY_FRAMES}"
 
 
 def test_a_body_that_never_reaches_its_exception_line_is_unfinished_with_no_type() -> None:

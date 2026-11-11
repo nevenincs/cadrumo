@@ -293,7 +293,10 @@ class MovementWithholding:
 
 
 def states_received_retencion(invoices: InvoiceCatalogue, *, bucket_id: str) -> bool:
-    """Return whether any received invoice of ``bucket_id`` states a retención; if none, no movement carries one."""
+    """Return whether any received invoice of ``bucket_id`` states a retención; if none, no movement carries one.
+
+    ``invoices`` is the :class:`InvoiceCatalogue` it uses.
+    """
     return any(_states_retencion(invoice) and invoice.bucket_id in (None, bucket_id) for invoice in invoices.values())
 
 
@@ -309,6 +312,9 @@ def received_invoice_movement_withholding(
     over every period and modelo, so a listed movement and the modelo that
     declares it cannot disagree. A movement that pays no invoice stating a
     retención has no entry: its retención is absent, which is not zero.
+
+    ``invoices`` is the :class:`InvoiceCatalogue` it uses.
+    ``transactions`` is the :class:`TransactionCatalogue` it uses.
     """
     live = _live(transactions)
     by_movement: dict[str, list[MovementWithholding]] = {}

@@ -3,7 +3,7 @@
 Each :class:`~dev.docs.sequences.schema.ParsedSequence` executes in FULL
 isolation: a fresh real-crypto storage root (:func:`isolated_profile_storage_root`
 with genuine password custody over an ephemeral deterministic test DEK),
-the project-wide frozen instant :data:`SANDBOX_INSTANT`
+the project-wide frozen instant :func:`sandbox_instant`
 (:func:`cadrumo.core.time.frozen_clock`), a deterministic injected profile
 identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
 writer (:class:`~cadrumo.application.user_profile.lifecycle.ProfileCapsuleLifecycle`,

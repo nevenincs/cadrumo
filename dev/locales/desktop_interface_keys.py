@@ -21,7 +21,9 @@ _PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS
 
 DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | frozenset(
     {
+        "desktop.agent.model_does_not_fit_memory",
         "desktop.agent.model_does_not_fit_refused",
+        "desktop.agent.model_does_not_fit_shortfall",
         "desktop.providers.connection_local",
         "desktop.dock.arrange",
         "desktop.dock.expand",

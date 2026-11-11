@@ -36,3 +36,9 @@ class ProfileConnection:
     human_admission_deadline: float | None = None
     human_proof_attempt_id: UUID | None = None
     human_proof_cancellation: ProfileProofCancellation | None = field(default=None, repr=False)
+    attended_session_id: UUID | None = None
+    """The session this connection has reported the person's own input under, if any.
+
+    Only a connection whose input report the session authority accepted is
+    attended; a script that resumes a sign-in without one never is.
+    """

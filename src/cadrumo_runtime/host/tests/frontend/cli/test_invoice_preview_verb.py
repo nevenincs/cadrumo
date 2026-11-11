@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,7 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -20,6 +22,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .machine_secret_pipe import machine_secret_descriptor_option
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -41,7 +45,7 @@ _COMPLETE_DRAFT = (
     "--invoice-number",
     "PREVIEW-2026-001",
     "--invoice-date",
-    "2026-04-15",
+    date(_YEAR, 4, 15).isoformat(),
     "--currency",
     "EUR",
 )
@@ -111,7 +115,7 @@ def test_a_hundred_at_twenty_one_percent_previews_twenty_one_of_iva_and_stores_n
         )
         assert answer["lines"][0]["subtotal"]["computed"] == "100.00"
         assert answer["lines"][0]["iva_amount"]["computed"] == "21.00"
-        assert answer["on_date"] == "2026-04-15"
+        assert answer["on_date"] == date(_YEAR, 4, 15).isoformat()
         assert answer["on_date_source"] == "issued_at"
         slots = {slot["slot"]: slot for slot in answer["rate_slots"]}
         assert slots["RATE_21"]["fraction"] == "0.21"
@@ -215,7 +219,7 @@ def test_a_rule_refusal_names_itself_and_a_correction_serves_what_is_left_to_pay
             "--country-code",
             "ES",
             "--invoice-date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--taxable-base",
             "1000.00",
             "--retention-rate",

@@ -1,4 +1,7 @@
-"""Encrypted inventory-ledger resolver for typed inventory binding projections."""
+"""Encrypted inventory-ledger resolver for typed inventory binding projections.
+
+It works with :class:`UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

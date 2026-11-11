@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.wizard import catalogue, persistence
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_snapshot,
@@ -23,6 +24,7 @@ NIF = "12345678Z"
 #: ``UserProfileRecord.profile_id`` requires a UUIDv4, so this is a UUID.
 _GUIDANCE_PROFILE = "33333333-3333-4333-8333-333333333333"
 _GUIDANCE_NIF = "X0001502F"
+_ACTIVITY_START = date(filing_year_envelope().floor, 1, 1).isoformat()
 #: Check letter verified against the standard NIF algorithm
 #: (letters = "TRWAGMYFPDXBNJZSQVHLCKE"[87654321 % 23]); "Y" was a typo that
 #: only started failing once NIF checksum validation began enforcing it.
@@ -70,7 +72,7 @@ def _store_profile_with_nif(nif: str, *, bucket_id: str = _SEED_BUCKET_ID) -> No
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
-    created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
+    created_at = datetime(1980, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
@@ -88,7 +90,7 @@ def seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autonomo profile sufficient for M303 work-unit applicability."""
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
-    created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
+    created_at = datetime(1980, 1, 1, 12, 0, tzinfo=UTC)
     seed_test_profile_record(
         create_user_profile_record(
             profile_id=bucket_id,
@@ -102,7 +104,7 @@ def seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
                         path="taxpayer_type.irpf_income_categories",
                         value="actividad_economica",
                     ),
-                    UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
+                    UserProfileFact(path="censo.activity_start_date", value=_ACTIVITY_START),
                     UserProfileFact(path="activities.description", value="economic activity"),
                     UserProfileFact(path="provenance.source", value="manual_cli"),
                 )

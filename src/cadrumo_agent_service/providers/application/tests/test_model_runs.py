@@ -115,6 +115,7 @@ def _harness(
         resolver=resolver,
         catalog_source=source,
         live_models=StaticLiveModels() if live is None else live,
+        selected_engine=lambda: LocalEngine.LLAMACPP,
         gateway=gateway,
     )
     return runs, settings, gateway
@@ -281,11 +282,20 @@ def test_a_written_model_no_entry_lists_reads_text_with_no_facts_and_never_image
     assert runs.lookup("vision_transcription") == _NO_IMAGES
 
 
-def test_a_selected_local_model_the_server_lacks_still_resolves_for_the_agent_to_refuse_at_run_start() -> None:
-    live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, False))
+def test_a_selected_local_model_of_unstated_install_state_resolves_for_the_agent_to_refuse_at_run_start() -> None:
+    live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, None))
     runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
 
     assert runs.lookup("vision_transcription") == _declared(KEYLESS_VISION_MODEL)
+
+
+def test_a_selected_local_model_the_server_says_it_lacks_gives_way_and_no_installed_vision_model_stands_in() -> None:
+    live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, False))
+    runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
+
+    assert runs.lookup("vision_transcription") == _NO_SELECTION
+    text = runs.lookup("text_extraction")
+    assert isinstance(text, ModelRunLane) and text.model == KEYLESS_TEXT_MODEL
 
 
 def test_a_selected_added_model_the_server_holds_reads_text_and_its_unstated_vision_refuses_images() -> None:
@@ -463,6 +473,7 @@ def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> Non
         resolver=resolver,
         catalog_source=source,
         live_models=StaticLiveModels(),
+        selected_engine=lambda: LocalEngine.LLAMACPP,
         gateway=gateway,
     )
 

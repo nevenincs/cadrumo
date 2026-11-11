@@ -58,6 +58,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # positions 136-144.
     last_relation_edition = authored_revisions("193")[-2]
     revision = modelo.revisions[str(last_relation_edition.id)]
+    assert last_relation_edition.valid_to is not None, "the last relation edition is closed by its successor"
 
     # Graph-wiring assertions — each monetary output casilla must declare an
     # op=copy formula sourcing the matching 123 relation. The perceptor count

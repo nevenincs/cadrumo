@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator, Sequence
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_support import renta_single_taxpayer_facts
 from cadrumo.tests.cli_envelope import require_error_document, require_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -83,9 +85,12 @@ def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
                 "censo.activity_start_date": "2015-01-01",
                 "tax_residence.ccaa": "madrid",
                 "provenance.source": "manual_cli",
-                "renta_taxpayer.birth_date": "1985-06-15",
-                "renta_filing.declaration_type": "1",
-                "renta_taxpayer.marriage_full_year": "false",
+                # A complete single filer with no dependants, so once the carries are stated
+                # the declaration has nothing else left to answer.
+                **{
+                    fact.path: str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value)
+                    for fact in renta_single_taxpayer_facts(birth_date=date.fromisoformat("1985-06-15"))
+                },
             },
         )
         yield profile
@@ -166,9 +171,13 @@ def test_the_statement_the_refusal_names_lets_the_declaration_calculate_for_ever
         assert applied["applied"] is True
         assert applied["receipt_id"]
 
-        calculated = _invoke(("app", "modelo", "work", "calculate", work_unit_id))
-        assert calculated.exit_code == 0, (year, calculated.output)
-        revision = require_schema_envelope(calculated.output)
+        # The guarded apply recalculates with the statement and stores that revision. A later
+        # `calculate` takes only the inputs it is given (full-specification semantics), so the
+        # declaration the statement settled is read from the revision the apply stored.
+        stored = _invoke(("app", "modelo", "work", "revision", applied["calculation_revision_id"]))
+        assert stored.exit_code == 0, (year, stored.output)
+        revision = require_schema_envelope(stored.output)
+        assert revision["work_unit_id"] == work_unit_id
         assert Decimal(revision["casilla_values"]["1380"]) == 0
         assert {binding_id: Decimal(revision["binding_overrides"][binding_id]) for binding_id in _PENDING_CARRIES} == {
             binding_id: Decimal(0) for binding_id in _PENDING_CARRIES

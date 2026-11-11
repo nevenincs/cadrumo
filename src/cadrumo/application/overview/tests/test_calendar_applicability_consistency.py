@@ -29,6 +29,7 @@ import pytest
 
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
@@ -37,11 +38,12 @@ from ..explain import build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _CALENDAR_RANGE = OverviewCalendarRange(
-    from_date=date(2026, 1, 1),
-    to_date=date(2026, 12, 31),
+    from_date=date(_YEAR, 1, 1),
+    to_date=date(_YEAR, 12, 31),
 )
-_TODAY = date(2026, 4, 1)
+_TODAY = date(_YEAR, 4, 1)
 
 
 def _autonomo() -> TaxpayerProfile:
@@ -118,7 +120,7 @@ def _collect_verdicts_from_explain(
     """Call build_overview_explain for each modelo and collect the verdict."""
     verdicts: dict[str, ApplicabilityVerdict] = {}
     for modelo in modelos:
-        explain = build_overview_explain(profile, modelo=modelo, year=2026, operation=operation)
+        explain = build_overview_explain(profile, modelo=modelo, year=_YEAR, operation=operation)
         verdicts[modelo] = explain.verdict
     return verdicts
 

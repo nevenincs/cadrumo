@@ -17,6 +17,7 @@ from babel.dates import format_date
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation
 from ....domain.calculations.registry.schema_base import CasillaDataType
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..calculation_summary_presentation import VALUE_NOT_APPLICABLE_LOCALE_KEY
 from ..edit_value_grammar import ModeloEditRatioUnit
 from ..value_presentation import (
@@ -30,6 +31,7 @@ from ..value_presentation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 _NBSP = "\u00a0"
 _MINUS = "\u2212"
 _EURO = f"{_NBSP}\u20ac"
@@ -201,8 +203,8 @@ def test_a_ratio_reads_as_a_percentage_only_where_its_unit_is_declared() -> None
 
 def test_counts_group_and_years_stay_plain_digits() -> None:
     assert format_casilla_value(1234, data_type="integer", language=OutputLanguage.ES) == "1.234"
-    assert format_casilla_value(Decimal(2026), data_type="year", language=OutputLanguage.ES) == "2026"
-    assert format_casilla_value("2026", data_type="year", language=OutputLanguage.HU) == "2026"
+    assert format_casilla_value(Decimal(_YEAR), data_type="year", language=OutputLanguage.ES) == str(_YEAR)
+    assert format_casilla_value(str(_YEAR), data_type="year", language=OutputLanguage.HU) == str(_YEAR)
 
 
 @pytest.mark.parametrize(
@@ -219,18 +221,18 @@ def test_a_yes_or_no_is_a_word_whatever_channel_carries_it(language: OutputLangu
 
 
 def test_dates_read_as_the_window_writes_them() -> None:
-    day = date(2026, 3, 31)
+    day = date(_YEAR, 3, 31)
 
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.EN) == "Mar 31, 2026"
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.ES) == "31 mar 2026"
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.CA) == "31 de març 2026"
-    assert format_casilla_value(day, data_type="date", language=OutputLanguage.HU) == "2026. márc. 31."
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.EN) == f"Mar 31, {_YEAR}"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.ES) == f"31 mar {_YEAR}"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.CA) == f"31 de març {_YEAR}"
+    assert format_casilla_value(day, data_type="date", language=OutputLanguage.HU) == f"{_YEAR}. márc. 31."
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
 @pytest.mark.parametrize("month", range(1, 13))
 def test_every_month_reads_as_the_languages_medium_date(language: OutputLanguage, month: int) -> None:
-    for day in (date(2026, month, 5), date(2026, month, 20)):
+    for day in (date(_YEAR, month, 5), date(_YEAR, month, 20)):
         written = format_casilla_value(day, data_type="date", language=language)
 
         assert written == format_date(day, format="medium", locale=language.value)

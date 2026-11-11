@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.cli_envelope import unwrap_cli_result
@@ -16,6 +18,8 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,7 +49,7 @@ def test_operator_iva_derivation_uses_exact_profile_worker_and_preserves_row_sem
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",

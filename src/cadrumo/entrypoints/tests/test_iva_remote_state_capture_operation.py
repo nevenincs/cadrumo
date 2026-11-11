@@ -64,6 +64,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -74,26 +75,28 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_TARGET_PERIOD = Period.from_year_and_code(2025, "1T")
+_PRIOR_YEAR, _YEAR = filing_year_envelope().years[-2:]
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_TARGET_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _NIF = "12345678Z"
 _PRIVATE_HISTORY_AMOUNT = "9876.54"
 _PRIVATE_WALLET_AMOUNT = "7654.32"
 
 _HISTORY_REPORT = IvaCompensationHistoryCaptureReport(
     output_root="synthetic-history-output",
-    year_from=2024,
-    year_to=2025,
+    year_from=_PRIOR_YEAR,
+    year_to=_YEAR,
     captured_count=1,
     observation_paths=("encrypted-history/manifest.json",),
     artefact_refs=("encrypted-history:artefact",),
     casilla_count=3,
     calculation_observation_count=1,
-    calculation_observation_keys=("303:2025:1T",),
+    calculation_observation_keys=(f"303:{_YEAR}:1T",),
     reloaded_history_count=1,
     reloaded_rows=(
         IvaCompensationHistoryRow(
-            year=2025,
+            year=_YEAR,
             period=_TARGET_PERIOD,
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             register_status="ALTA",
@@ -110,7 +113,7 @@ _HISTORY_REPORT = IvaCompensationHistoryCaptureReport(
 )
 _WALLET_REPORT = IvaWalletCaptureReport(
     taxpayer_ref="private-synthetic-taxpayer-ref",
-    target_year=2025,
+    target_year=_YEAR,
     target_period=_TARGET_PERIOD,
     observation_path="encrypted-wallet/manifest.json",
     decision_key="private-synthetic-decision-key",
@@ -310,9 +313,9 @@ def _assert_public_result(
     assert result.model_dump() == {
         "acquisition_manifest_id": port.manifests[0].acquisition_id,
         "output_root": str(output_root),
-        "year_from": 2024,
-        "year_to": 2025,
-        "target_year": 2025,
+        "year_from": _PRIOR_YEAR,
+        "year_to": _YEAR,
+        "target_year": _YEAR,
         "target_period": "1T",
         "auth": {
             "status": LiveIvaReadStatus.SUCCEEDED,
@@ -380,10 +383,10 @@ def _assert_guarded_effects(
     ]
     assert port.authentication_requests == [("live-iva-remote-state-read", port.wallet_target_url, authority)]
     assert port.history_calls == [
-        (2024, 2025, output_root / "filed-history", authority),
+        (_PRIOR_YEAR, _YEAR, output_root / "filed-history", authority),
     ]
     assert port.wallet_calls == [
-        (2025, _TARGET_PERIOD, _NIF, output_root / "wallet", authority),
+        (_YEAR, _TARGET_PERIOD, _NIF, output_root / "wallet", authority),
     ]
     assert port.surface_guards == ["history", "wallet"]
     assert port.guard_depth == 0
@@ -401,9 +404,9 @@ def _assert_manifest_and_resources(
     manifest = port.manifests[0]
     assert manifest.acquisition_id == result.acquisition_manifest_id
     assert (manifest.year_from, manifest.year_to, manifest.target_year, manifest.target_period) == (
-        2024,
-        2025,
-        2025,
+        _PRIOR_YEAR,
+        _YEAR,
+        _YEAR,
         _TARGET_PERIOD,
     )
     assert manifest.filed_history_succeeded and manifest.wallet_succeeded
@@ -472,9 +475,9 @@ def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(
             payload=IvaRemoteStateCaptureRequest(
                 profile_id=profile_id,
                 output_root=output_root,
-                year_from=2024,
-                year_to=2025,
-                target_year=2025,
+                year_from=_PRIOR_YEAR,
+                year_to=_YEAR,
+                target_year=_YEAR,
                 target_period="1T",
                 taxpayer_nif=_NIF,
             ),

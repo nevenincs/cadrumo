@@ -30,12 +30,15 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..invoice_retencion import InvoiceRetencionProjectionDefect, invoice_retencion_liability_defects
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -58,7 +61,7 @@ def _invoice(
     category: IvaCategory = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
     subtotal = Decimal(base)
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -72,7 +75,7 @@ def _invoice(
         {
             "kind": kind,
             "invoice_number": number,
-            "issued_at": date(2026, 3, 15),
+            "issued_at": date(_YEAR, 3, 15),
             "counterparty_name": "Asesoría Profesional SL",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
@@ -86,7 +89,7 @@ def _invoice(
             "retention_rate": None if retention_rate is None else Decimal(retention_rate),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "fx_rate": None if fx_rate is None else Decimal(fx_rate),
-            "fx_rate_date": None if fx_rate is None else date(2026, 3, 15),
+            "fx_rate_date": None if fx_rate is None else date(_YEAR, 3, 15),
             # The three fx fields are set together or not at all: a rate with no
             # named authority is an unattributable conversion.
             "fx_rate_source": None if fx_rate is None else _FX_RATE_SOURCE,
@@ -205,7 +208,7 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path(
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(first, second),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
 
@@ -265,7 +268,7 @@ def _modelo_111_revision() -> ModeloRevision:
     """
     return published_snapshot(
         Modelo("111").value,
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     ).revision
 
@@ -288,7 +291,7 @@ def test_the_committed_m111_bindings_receive_the_invoice_figures(operation: Pinn
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
 
@@ -312,7 +315,7 @@ def test_the_filed_base_is_never_the_grand_total(operation: PinnedAuthorityOpera
 
     aggregation = aggregate_retenciones_111(
         _routed_observations(invoice),
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         operation=operation,
     )
 

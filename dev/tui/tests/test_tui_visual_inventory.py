@@ -405,7 +405,7 @@ def _run(tmp_path: Path, name: str, frames: tuple[RenderedFrame, ...], body: str
         Manifest(
             source_revision=_REVISION,
             source_revision_at_end=_REVISION,
-            generated_at="2026-01-01T00:00:00+00:00",
+            generated_at="1980-01-01T00:00:00+00:00",
             cell_height=22,
             frames=frames,
         ),
@@ -517,7 +517,7 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
         schema_version=MANIFEST_SCHEMA_VERSION,
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=26,
         frames=(frame,),
         interfaces=(
@@ -561,7 +561,7 @@ def test_a_manifest_missing_a_field_refuses_at_load(tmp_path: Path) -> None:
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
     )
     path = write_manifest(tmp_path, manifest)
@@ -578,7 +578,7 @@ def test_the_index_reports_uncovered_interfaces_rather_than_omitting_them(tmp_pa
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
         interfaces=(
             InterfaceRecord(qualname="pkg.Painted", kind="app", locator="a.py:1", rendered_by=("status",)),
@@ -757,7 +757,7 @@ def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
         frames=(
             RenderedFrame(
@@ -802,7 +802,7 @@ def test_the_index_reports_blocked_surfaces_and_unattempted_frames(tmp_path: Pat
     manifest = Manifest(
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         cell_height=22,
         failures=(
             FailedFrame(
@@ -842,7 +842,7 @@ def test_a_manifest_from_an_older_schema_is_refused_not_upgraded(tmp_path: Path)
 
     stale = {
         "schema_version": MANIFEST_SCHEMA_VERSION - 1,
-        "generated_at": "2026-01-01T00:00:00+00:00",
+        "generated_at": "1980-01-01T00:00:00+00:00",
         "cell_height": 22,
         "failures": ["form: harness refused"],
     }
@@ -901,7 +901,7 @@ def test_repainting_a_run_rewrites_only_the_raster_derived_fields(real_export: P
         Manifest(
             source_revision=_REVISION,
             source_revision_at_end=_REVISION,
-            generated_at="2026-01-01T00:00:00+00:00",
+            generated_at="1980-01-01T00:00:00+00:00",
             cell_height=22,
             frames=(original,),
         ),

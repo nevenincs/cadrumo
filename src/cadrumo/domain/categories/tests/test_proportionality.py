@@ -15,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -27,6 +28,9 @@ from ..proportionality import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+_ENVELOPE = filing_year_envelope()
+_YEAR = _ENVELOPE.horizon
+
 
 def _citation() -> CategoryCitation:
     return CategoryCitation(
@@ -36,8 +40,8 @@ def _citation() -> CategoryCitation:
         url=parse_http_url("https://www.boe.es/ley"),
         quote=tr("Texto de prueba."),
         legal_ref="ley-35-2006:art-30",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
 

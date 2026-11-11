@@ -53,6 +53,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
 from .supervised_operation_rig import (
     assert_foreign_profile_refused,
@@ -63,7 +64,10 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 9, 29, 12, tzinfo=UTC)
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 
 
@@ -93,8 +97,8 @@ class _SnapshotRepository:
 def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
     return ExpedientesDeclaration(
         modelo=modelo,
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        ejercicio=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         expediente_id="12345678901234567890",
         estado="ALTA",
         tipo_solicitud="Presentación",
@@ -178,7 +182,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
         request = OperationRequest(
             definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
-            payload=ExpedientesSingleCaptureRequest(profile_id=profile_id, modelo="303", year=2025),
+            payload=ExpedientesSingleCaptureRequest(profile_id=profile_id, modelo="303", year=_FILING_YEAR),
         )
         access_context = _access_context(profile_id, registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
@@ -234,11 +238,11 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
     assert first_result.bucket_id == profile.bucket_id
     assert first_result.snapshot_id == second_result.snapshot_id
     assert first_result.declaration_count == 1
-    assert first_result.source_url == "declarations:modelo=303:ejercicio=2025"
+    assert first_result.source_url == f"declarations:modelo=303:ejercicio={_FILING_YEAR}"
     assert len(repository.snapshots) == 1
     assert events.count("snapshot-save") == 1
     assert (
-        events.index("remote-walk:303:2025")
+        events.index(f"remote-walk:303:{_FILING_YEAR}")
         < events.index("guard-enter")
         < events.index("snapshot-save")
         < events.index("guard-exit")
@@ -364,8 +368,8 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         payload=ExpedientesBulkCaptureRequest(
             profile_id=_PROFILE_ID,
             modelos=("100", "303"),
-            year_from=2025,
-            year_to=2025,
+            year_from=_FILING_YEAR,
+            year_to=_FILING_YEAR,
         ),
     )
     access = resolve_expedientes_bulk_capture_access(request, _access_context(_PROFILE_ID, registration.contract))
@@ -378,7 +382,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
 
     assert reference == "result-ref"
     assert operands.report is not None
-    assert events.index("remote-walk:100:2025") < events.index("remote-walk:303:2025")
+    assert events.index(f"remote-walk:100:{_FILING_YEAR}") < events.index(f"remote-walk:303:{_FILING_YEAR}")
     assert (
         events.index("register-close")
         < events.index("guard-enter")
@@ -407,7 +411,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
     assert projected.declaration_count == 1
     assert projected.failed_count == 1
     assert len(projected.snapshot_ids) == 1
-    assert (projected.failures[0].modelo, projected.failures[0].year) == ("303", 2025)
+    assert (projected.failures[0].modelo, projected.failures[0].year) == ("303", _FILING_YEAR)
     assert projected.failures[0].error_type == "RuntimeError"
     assert "temporary register failure" in projected.failures[0].message
 
@@ -421,8 +425,8 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         asyncio.run(
             expedientes_module.capture_expedientes_bulk(
                 bucket_id=str(_PROFILE_ID),
-                year_from=2025,
-                year_to=2025,
+                year_from=_FILING_YEAR,
+                year_to=_FILING_YEAR,
                 modelos=("AUTH",),
                 ports=ports,
                 certificate_secret_backend_factory=cast(Any, object()),

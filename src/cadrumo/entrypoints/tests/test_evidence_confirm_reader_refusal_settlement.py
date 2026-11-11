@@ -49,6 +49,7 @@ from ...core.operations import OperationTerminalCondition, profile_operation_sub
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import InvoiceKind
 from ...tests.llm_vision_evidence_support import png_image
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
@@ -60,6 +61,8 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("6c1d3e5f-7a9b-4c2d-8e4f-5a6b7c8d9e0f")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
@@ -91,7 +94,7 @@ def _stored_image(profile: TestRuntimeProfile) -> tuple[str, str]:
             sha256=digest,
             mime_type="image/png",
             bytes_size=len(data),
-            captured_at=datetime(2026, 10, 24, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 10, 24, 9, 0, tzinfo=UTC),
             bucket_id=str(_PROFILE),
             captured_by="operator",
             source_command="aeat app ledger attach",

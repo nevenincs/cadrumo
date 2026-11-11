@@ -9,7 +9,7 @@ history through one ``SecureObjectRepository.apply_batch`` transaction.
 from __future__ import annotations
 
 import json
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -485,8 +485,13 @@ class ProfileRecordStore:
         *,
         rotated: ProfileRecordSession,
         event: ProfileRecordCommandEvent,
+        before_write: Callable[[str, str], None],
     ) -> UserProfileRecord:
         """Re-publish the current row's witness under a re-wrapped envelope.
+
+        ``before_write`` receives the row header before and after the re-head,
+        once both are known and before anything is written, so the caller can
+        make the replacement recoverable from either side of this write.
 
         A passphrase rotation re-mints the password envelope over the SAME
         data key. The row's ``write_provenance`` folds the envelope digest and
@@ -527,6 +532,7 @@ class ProfileRecordStore:
                 updated_at=datetime.fromisoformat(event.occurred_at).astimezone(UTC),
             )
             rotated.assert_replacement(current.record, replacement)
+            before_write(self.session.write_provenance(current.record), rotated.write_provenance(replacement))
             self._write_with_event(
                 objects,
                 record=replacement,

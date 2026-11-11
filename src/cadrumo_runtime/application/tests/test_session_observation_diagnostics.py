@@ -11,7 +11,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.application.user_profile.access_contracts import AccessSession, LoginEligibility, OsLockState
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 
-from .. import session_authority_core
+from .. import session_authority_core, session_login_observation
 from ..session_authority_contracts import SessionAuthorityFacts
 from .session_authority_support import Subject
 
@@ -50,7 +50,7 @@ def test_unavailable_observation_reason_classifies_current_facts(
         )
         context = changed(context, login_contexts=(login,))
     facts = SessionAuthorityFacts(subject.owner.current.profile, context)
-    assert session_authority_core.unavailable_observation_reason(human, facts) == reason
+    assert session_login_observation.unavailable_observation_reason(human, facts) == reason
 
 
 def test_unknown_observation_emits_only_safe_reason_and_does_not_retire(

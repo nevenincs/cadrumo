@@ -79,6 +79,11 @@ def declared_licence(distribution: Distribution) -> str:
     )
     if classifiers:
         return " / ".join(classifiers)
+    return _free_text_licence(metadata)
+
+
+def _free_text_licence(metadata: Any) -> str:
+    """The licence a distribution states in its ``License`` field when short, else by its licence files."""
     field = str(metadata.get("License") or "").strip()
     if field and "\n" not in field and len(field) <= _SHORT_LICENCE_FIELD:
         return field
@@ -150,6 +155,53 @@ def javascript_notices(runtime: Path, runtime_prefix: str) -> list[Notice]:
     return notices
 
 
+def _partition_program_files(names: Sequence[str]) -> tuple[list[str], list[str], list[str]]:
+    """Split program files into the OpenMP and Visual C++ runtime libraries and those no component owns."""
+    programs = [name for name in names if _LLAMA_FILE.fullmatch(name)]
+    openmp = [name for name in names if _OPENMP_FILE.fullmatch(name)]
+    runtime = [name for name in names if name in REQUIRED_LIBRARIES]
+    unattributed = [name for name in names if name not in {*programs, *openmp, *runtime}]
+    return openmp, runtime, unattributed
+
+
+def _llama_notices(
+    root: Path, layout: Mapping[str, str], inputs: Mapping[str, Any], tag: str
+) -> tuple[list[Notice], list[str]]:
+    """List llama.cpp, its OpenMP and Visual C++ runtime libraries; name each program file no component owns."""
+    licences = f"{layout['docs']}/licenses/llama.cpp"
+    names = sorted(path.name for path in (root / layout["llama_server"]).iterdir() if path.is_file())
+    openmp, runtime, unattributed = _partition_program_files(names)
+    notices = [
+        Notice("llama.cpp: llama-server and the llama, ggml and mtmd libraries", tag, "MIT", f"{licences}/LICENSE")
+    ]
+    if openmp:
+        notices.append(_openmp_notice(tag, licences, openmp))
+    if runtime:
+        notices.append(_msvc_runtime_notice(inputs, runtime))
+    return notices, unattributed
+
+
+def _openmp_notice(tag: str, licences: str, openmp: Sequence[str]) -> Notice:
+    return Notice(
+        f"LLVM OpenMP runtime ({', '.join(openmp)}) from the llama.cpp release",
+        tag,
+        "Apache-2.0 WITH LLVM-exception",
+        f"{licences}/LICENSE-LLVM-OpenMP",
+    )
+
+
+def _msvc_runtime_notice(inputs: Mapping[str, Any], runtime: Sequence[str]) -> Notice:
+    toolchain = cast(Mapping[str, Any], inputs.get("build_toolchain", {}))
+    redist = cast(Mapping[str, Any], toolchain.get("msvc_redist", {}))
+    version = _MSVC_VERSION.search(str(redist.get("directory", "")))
+    return Notice(
+        f"Microsoft Visual C++ runtime ({', '.join(runtime)})",
+        version.group(1) if version else "not recorded",
+        "Microsoft Visual C++ Redistributable terms",
+        None,
+    )
+
+
 def _native_notices(
     root: Path,
     layout: Mapping[str, str],
@@ -170,37 +222,8 @@ def _native_notices(
     inputs = cast(Mapping[str, Any], manifest.get("inputs", {}))
     llama = cast(Mapping[str, Any] | None, inputs.get("llama_server"))
     if llama is not None:
-        tag = str(llama["tag"])
-        licences = f"{layout['docs']}/licenses/llama.cpp"
-        names = sorted(path.name for path in (root / layout["llama_server"]).iterdir() if path.is_file())
-        programs = [name for name in names if _LLAMA_FILE.fullmatch(name)]
-        openmp = [name for name in names if _OPENMP_FILE.fullmatch(name)]
-        runtime = [name for name in names if name in REQUIRED_LIBRARIES]
-        unattributed = [name for name in names if name not in {*programs, *openmp, *runtime}]
-        notices.append(
-            Notice("llama.cpp: llama-server and the llama, ggml and mtmd libraries", tag, "MIT", f"{licences}/LICENSE")
-        )
-        if openmp:
-            notices.append(
-                Notice(
-                    f"LLVM OpenMP runtime ({', '.join(openmp)}) from the llama.cpp release",
-                    tag,
-                    "Apache-2.0 WITH LLVM-exception",
-                    f"{licences}/LICENSE-LLVM-OpenMP",
-                )
-            )
-        if runtime:
-            toolchain = cast(Mapping[str, Any], inputs.get("build_toolchain", {}))
-            redist = cast(Mapping[str, Any], toolchain.get("msvc_redist", {}))
-            version = _MSVC_VERSION.search(str(redist.get("directory", "")))
-            notices.append(
-                Notice(
-                    f"Microsoft Visual C++ runtime ({', '.join(runtime)})",
-                    version.group(1) if version else "not recorded",
-                    "Microsoft Visual C++ Redistributable terms",
-                    None,
-                )
-            )
+        found, unattributed = _llama_notices(root, layout, inputs, str(llama["tag"]))
+        notices.extend(found)
     packages = PurePosixPath(layout["packages"])
     receipt = root / packages.parent / STAGED_RECEIPT_NAME
     if receipt.is_file():

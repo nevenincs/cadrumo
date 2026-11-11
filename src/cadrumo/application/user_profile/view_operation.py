@@ -304,7 +304,7 @@ class ProfileViewNoticeContextEntry(BaseModel):
 
 
 class ProfileViewNoticeAction(BaseModel):
-    """The catalogue action a notice offers, resolved before it is served."""
+    """The action a notice offers, resolved to its command before it is served."""
 
     model_config = STRICT_FROZEN_CONFIG
     action_id: str = Field(min_length=1)

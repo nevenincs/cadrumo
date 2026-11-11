@@ -28,12 +28,17 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_authored_revision_metadata
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+_LEGACY_YEAR = filing_year_envelope().floor
+
 _CERTIFICATE = "renta-retencion-soportada-trabajo"
-_CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 3, 10, 0, tzinfo=UTC)
 
 
 def _source(index: int) -> str:
@@ -128,11 +133,11 @@ def test_a_legacy_snapshot_is_refused_by_name_while_the_others_still_read(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         bucket_id = runtime.bucket_id
-        legacy = _store_legacy_snapshot(operation, bucket_id, filing_year=2023, key=key)
+        legacy = _store_legacy_snapshot(operation, bucket_id, filing_year=_LEGACY_YEAR, key=key)
         service = _service(bucket_id)
         valid = service.capture(
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "0A"),
             captured_at=_CAPTURED_AT,
             source_url=_source(1),
             binding_values={_CERTIFICATE: Decimal("100.00")},
@@ -140,8 +145,8 @@ def test_a_legacy_snapshot_is_refused_by_name_while_the_others_still_read(
         )
 
         reading = service.read_snapshots(operation=operation)
-        legacy_year = service.read_latest_for_year(filing_year=2023, operation=operation)
-        valid_year = service.read_latest_for_year(filing_year=2025, operation=operation)
+        legacy_year = service.read_latest_for_year(filing_year=_LEGACY_YEAR, operation=operation)
+        valid_year = service.read_latest_for_year(filing_year=_FILING_YEAR, operation=operation)
         with pytest.raises(LiveApplicationInputError) as viewed:
             service.show(legacy.snapshot_id, operation=operation)
         stored = build_borrador_100_snapshot_repository(bucket_id=bucket_id).load(legacy.snapshot_id)
@@ -162,7 +167,11 @@ def test_a_snapshot_whose_revision_no_longer_reconfirms_is_refused_with_that_rea
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         stale = _store_legacy_snapshot(
-            operation, runtime.bucket_id, filing_year=2025, key=_CERTIFICATE, revision_id="persisted-stale-revision"
+            operation,
+            runtime.bucket_id,
+            filing_year=_FILING_YEAR,
+            key=_CERTIFICATE,
+            revision_id="persisted-stale-revision",
         )
         service = _service(runtime.bucket_id)
         reading = service.read_snapshots(operation=operation)
@@ -180,7 +189,7 @@ def test_a_snapshot_outside_the_support_envelope_is_refused_while_the_others_sti
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         outside = _store_snapshot_below_support_floor(operation, runtime.bucket_id)
-        valid = _store_legacy_snapshot(operation, runtime.bucket_id, filing_year=2025, key=_CERTIFICATE)
+        valid = _store_legacy_snapshot(operation, runtime.bucket_id, filing_year=_FILING_YEAR, key=_CERTIFICATE)
         service = _service(runtime.bucket_id)
         reading = service.read_snapshots(operation=operation)
         latest = service.read_latest_for_year(filing_year=outside.filing_year, operation=operation)
@@ -198,8 +207,8 @@ def test_a_capture_with_an_inadmissible_key_writes_nothing(tmp_path: Path, opera
         service = _service(runtime.bucket_id)
         with pytest.raises(LiveApplicationInputError) as refused:
             service.capture(
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
+                filing_year=_FILING_YEAR,
+                period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                 captured_at=_CAPTURED_AT,
                 source_url=_source(1),
                 binding_values={_CERTIFICATE: Decimal("100.00"), "casilla.0596": Decimal("15.25")},
@@ -214,13 +223,13 @@ def test_a_capture_with_an_inadmissible_key_writes_nothing(tmp_path: Path, opera
 def test_each_capture_says_whether_it_stored_or_resolved_to_a_stored_snapshot(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    period = Period.from_year_and_code(2025, "0A")
+    period = Period.from_year_and_code(_FILING_YEAR, "0A")
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         service = _service(runtime.bucket_id)
 
         def capture(document: int, *, hours: int):
             return service.capture_with_outcome(
-                filing_year=2025,
+                filing_year=_FILING_YEAR,
                 period=period,
                 captured_at=_CAPTURED_AT + timedelta(hours=hours),
                 source_url=_source(document),

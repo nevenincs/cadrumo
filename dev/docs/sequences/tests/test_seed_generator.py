@@ -75,3 +75,17 @@ def test_a_generated_document_is_registered_from_its_fixture_and_attached_to_its
     assert lines[added + 2] == (
         "@setup aeat app ledger attach {fon_alq_01} --purchase-invoice-evidence-id {factura_fon_alq_01_evidence}"
     )
+
+
+@pytest.mark.parametrize(
+    ("text", "refusal"),
+    [
+        (f":persona: {SANDBOX_PERSONA_ID}\n{_REGION}", "also declares :profile:"),
+        (f":persona: {SANDBOX_PERSONA_ID}\n:profile: a\n:profile: b\n{_REGION}", "declared twice"),
+        (f":persona: {SANDBOX_PERSONA_ID}\n:profile: a\n:generated: begin\n", "exactly one"),
+        (f":persona: \n:profile: a\n{_REGION}", "must each carry a value"),
+    ],
+)
+def test_an_incomplete_header_is_refused(text: str, refusal: str) -> None:
+    with pytest.raises(ValueError, match=refusal):
+        parse_seed_header(text, name="probe")

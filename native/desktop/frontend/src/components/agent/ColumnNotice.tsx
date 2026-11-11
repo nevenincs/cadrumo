@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import type { ContextFit } from "../../errors";
 import { sendRefusalStep } from "../../shell/agentSendRefusals";
 import { useStrings } from "../../shell/strings";
 import { EngineDoor } from "../setup/EngineDoor";
@@ -23,6 +24,7 @@ export type EngineNotice = {
  */
 export function ColumnNotice({
   failure,
+  fit = null,
   notice,
   engines,
   onRetry,
@@ -32,6 +34,8 @@ export function ColumnNotice({
 }: {
   /** The refusal code of the last send or request, null where none. */
   failure: string | null;
+  /** The context sizes the refusal stated, said with its code. */
+  fit?: ContextFit | null;
   notice: string | null;
   /** The local engines that do not run, said in place of `notice`. */
   engines?: readonly EngineNotice[];
@@ -58,7 +62,7 @@ export function ColumnNotice({
     <p role="alert" className="flex items-start gap-2 text-sm">
       <Icon name="alert" className="mt-0.5 text-destructive" />
       <span className="grid justify-items-start gap-1.5">
-        {refusalWords(t, failure)}
+        {refusalWords(t, failure, fit)}
         {failureStep && download(failureStep)}
       </span>
     </p>

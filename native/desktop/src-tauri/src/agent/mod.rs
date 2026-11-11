@@ -38,11 +38,23 @@ use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Refused {
     pub code: String,
+    /// The tokens of context the refused run's first request needs, where the
+    /// agent's refusal states it: a model whose window is too small for it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub needed_tokens: Option<u32>,
+    /// The tokens of context the model is held or loaded with, where the
+    /// agent's refusal states it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_tokens: Option<u32>,
 }
 
 impl Refused {
     pub fn new(code: String) -> Self {
-        Self { code }
+        Self {
+            code,
+            needed_tokens: None,
+            context_tokens: None,
+        }
     }
 }
 

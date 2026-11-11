@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
@@ -14,6 +15,8 @@ from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _legal_entity() -> TaxpayerProfile:
@@ -36,8 +39,8 @@ def _legal_entity() -> TaxpayerProfile:
 def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "202" in surfaced, (
@@ -50,11 +53,11 @@ def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados(
 def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
-    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(2025, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
 
     surfaced = {entry.modelo for entry in cal.entries}
     assert "200" in surfaced, (
-        "M200 (IS annual) must appear for a LEGAL_ENTITY profile querying 2025; "
-        "absent means covered_years() did not include prior fiscal year 2024"
+        "M200 (IS annual) must appear for a LEGAL_ENTITY profile querying its filing year; "
+        "absent means covered_years() did not include the prior fiscal year"
     )

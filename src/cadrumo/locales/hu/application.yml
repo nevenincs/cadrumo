@@ -1021,6 +1021,7 @@ application:
         undetermined_establishment: Nem állapítható meg, hol van letelepedve az egyik
           fél
         unmodelled_invoice_class: A feltüntetett számlatípusnak itt nincs megfelelője
+        unnumbered_invoice: A beolvasott számlaszám nem szám
         unresolved_direction: Nem egyértelmű, melyik fél állította ki a dokumentumot
     entry_options:
       deduction_fact_kind:

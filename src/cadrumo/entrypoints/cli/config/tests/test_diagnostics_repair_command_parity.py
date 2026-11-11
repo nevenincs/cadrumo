@@ -28,9 +28,11 @@ from pydantic import AnyHttpUrl, BaseModel
 from cadrumo.adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    SecureObjectNamespaceDefinition,
+)
+from cadrumo.adapters.persistence.storage.secure_object_probe_namespaces import (
     TEST_RUNTIME_PROFILE_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
-    SecureObjectNamespaceDefinition,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.diagnostics_repair_documents import (
@@ -68,7 +70,7 @@ from cadrumo.entrypoints.diagnostics_repair_composition import build_diagnostics
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("97979797-9797-4797-8797-979797979797")
-_SEEDED_PROGRESS_AT = datetime(2026, 4, 3, 10, 15, 42, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(1980, 4, 3, 10, 15, 42, tzinfo=UTC)
 _OBSERVED = SiteHealthStatus(
     state=SiteHealthState.RATE_LIMITED,
     evidence=SiteHealthEvidence(
@@ -77,7 +79,7 @@ _OBSERVED = SiteHealthStatus(
         html_fragment="<html>synthetic rate limit page</html>",
         detected_markers=("retry-after:45",),
     ),
-    observed_at=datetime(2026, 4, 3, 10, 16, 0, tzinfo=UTC),
+    observed_at=datetime(1980, 4, 3, 10, 16, 0, tzinfo=UTC),
     retry_after_seconds=45,
 )
 

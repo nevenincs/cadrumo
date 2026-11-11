@@ -7,6 +7,7 @@ import {
   messageField,
   settled,
 } from "../support/agent";
+import { connectionLabel } from "../support/connection";
 import { label } from "../support/strings";
 
 // The agent's provider list: a list of lanes, each with its provider's own
@@ -187,13 +188,7 @@ test("the searchable list has one entry for each connection, with its provider's
     const row = rows.find((held) => held.way === wayOf(served));
     const why = heldBy(served);
     expect(row?.text, wayOf(served)).toContain(served.display_name);
-    expect(row?.text, wayOf(served)).toContain(
-      label(
-        served.transport === "api"
-          ? "desktop.providers.connection_api"
-          : "desktop.providers.connection_app",
-      ),
-    );
+    expect(row?.text, wayOf(served)).toContain(connectionLabel(served));
     if (why) expect(row?.text, wayOf(served)).toContain(why);
     expect(row?.disabled, wayOf(served)).toBe(why !== null);
     expect(row?.marks, wayOf(served)).toEqual([
@@ -221,8 +216,10 @@ test("search filters connection types and reports no matches", async ({
   });
 
   await search.fill(label("desktop.providers.connection_api"));
+  const reachedBy = (key: string) =>
+    lanes.filter((served) => connectionLabel(served) === label(key));
   await expect(pickerOptions(target)).toHaveCount(
-    lanes.filter((served) => served.transport === "api").length,
+    reachedBy("desktop.providers.connection_api").length,
   );
   for (const option of await pickerOptions(target).all())
     await expect(option).toContainText(
@@ -231,13 +228,63 @@ test("search filters connection types and reports no matches", async ({
 
   await search.fill(label("desktop.providers.connection_app"));
   await expect(pickerOptions(target)).toHaveCount(
-    lanes.filter((served) => served.transport === "cli").length,
+    reachedBy("desktop.providers.connection_app").length,
+  );
+  await search.fill(label("desktop.providers.connection_local"));
+  await expect(pickerOptions(target)).toHaveCount(
+    reachedBy("desktop.providers.connection_local").length,
   );
   await search.fill("no matching provider");
   await expect(pickerOptions(target)).toHaveCount(0);
   await expect(
     target.getByText(label("desktop.providers.search_empty")),
   ).toBeVisible();
+});
+
+test("a lane the catalogue serves as needing no key is worded as on this computer, and a keyed lane by how it is reached", async ({
+  page: target,
+}) => {
+  await open(target);
+  const settings = await openSettings(target);
+  await providerBox(settings).click();
+  const keyless = lanes.filter((served) => served.auth_kind === "none");
+  const keyed = lanes.filter((served) => served.auth_kind !== "none");
+  // The scenario catalogue serves both kinds, and both local engines.
+  expect(keyless.map(wayOf)).toEqual(
+    expect.arrayContaining(["llamacpp/api", "ollama/api"]),
+  );
+  expect(keyed.length).toBeGreaterThan(0);
+  for (const served of keyless) {
+    const row = entry(target, wayOf(served));
+    await expect(row).toContainText(
+      label("desktop.providers.connection_local"),
+    );
+    await expect(row).not.toContainText(
+      label("desktop.providers.connection_api"),
+    );
+  }
+  for (const served of keyed) {
+    const row = entry(target, wayOf(served));
+    await expect(row).toContainText(connectionLabel(served));
+    await expect(row).not.toContainText(
+      label("desktop.providers.connection_local"),
+    );
+  }
+  // An API-transport keyed lane says key; the same transport keyless does not.
+  await expect(entry(target, "alpha/api")).toContainText(
+    label("desktop.providers.connection_api"),
+  );
+  await expect(entry(target, "llamacpp/api")).not.toContainText(
+    label("desktop.providers.connection_api"),
+  );
+  // The chosen lane's button and name say the same.
+  await entry(target, "llamacpp/api").click();
+  await expect(providerBox(settings)).toContainText(
+    label("desktop.providers.connection_local"),
+  );
+  await expect(providerBox(settings)).toHaveAccessibleName(
+    `${label("desktop.agent.provider")}: ${laneOf("llamacpp/api").display_name}, ${label("desktop.providers.connection_local")}`,
+  );
 });
 
 test("search keeps duplicate provider connections distinct for keyboard choice", async ({

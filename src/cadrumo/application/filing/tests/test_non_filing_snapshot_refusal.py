@@ -24,6 +24,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.filing.errors import ModeloBuilderError
 from ..draft_construction import load_registry_snapshot
 from ..runtime import build_runtime_schema_provider
@@ -31,7 +32,9 @@ from ..runtime import build_runtime_schema_provider
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "038"
-_PERIOD = Period.from_year_and_code(2025, "01")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "01")
+_REVISION_ID = str(revision_covering(_MODELO, _YEAR).id)
 _DECLARED_GRADE = "applicability"
 _REQUESTED_GRADE = "filing"
 
@@ -39,7 +42,7 @@ _REQUESTED_GRADE = "filing"
 def _assert_names_modelo_revision_and_both_grades(message: str) -> None:
     """The refusal must carry every fact the caller needs to act on it."""
     assert f"modelo {_MODELO}" in message
-    assert "revision 2025-y-siguientes" in message
+    assert f"revision {_REVISION_ID}" in message
     assert f"'{_DECLARED_GRADE}' authority grade" in message
     assert f"'{_REQUESTED_GRADE}' snapshot authority" in message
 

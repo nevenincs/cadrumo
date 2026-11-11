@@ -32,22 +32,25 @@ from .calendar_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+# The shared fixtures file the first quarter of this exercise.
+_YEAR = PERIOD_2025_1T.filing_year
 
-def _april_2025_303_filing_row(
+
+def _april_303_filing_row(
     evidence: tuple[OverviewCalendarFilingEvidence, ...], operation: PinnedAuthorityOperation
 ) -> tuple[OverviewCalendar, OverviewCalendarFilingEvidence]:
-    """Build the April 2025 calendar over ``evidence`` and return it with the 303 first-quarter evidence row."""
+    """Build the April calendar over ``evidence`` and return it with the 303 first-quarter evidence row."""
     calendar = build_overview_calendar(
         profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         operation=operation,
-        today=date(2025, 4, 10),
+        today=date(_YEAR, 4, 10),
         filing_evidence=evidence,
     )
     row = next(
         entry.filing_evidence
         for entry in calendar.entries
-        if entry.modelo == "303" and entry.filing_year == 2025 and entry.period == PERIOD_2025_1T
+        if entry.modelo == "303" and entry.filing_year == _YEAR and entry.period == PERIOD_2025_1T
     )
     return calendar, row
 
@@ -67,7 +70,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
                 external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
                     local_ref,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                    imported_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
                 ),
             ),
         ),
@@ -85,9 +88,9 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
 
     calendar = build_overview_calendar(
         profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30)),
         operation=authority_operation,
-        today=date(2025, 4, 10),
+        today=date(_YEAR, 4, 10),
         events=event,
         filing_evidence=evidence,
     )
@@ -95,7 +98,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     row = next(
         entry.filing_evidence
         for entry in calendar.entries
-        if entry.modelo == "303" and entry.filing_year == 2025 and entry.period == PERIOD_2025_1T
+        if entry.modelo == "303" and entry.filing_year == _YEAR and entry.period == PERIOD_2025_1T
     )
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.justificante_verified is True
@@ -106,7 +109,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
     assert warning.fix_action.action.action_id == "operator.live.filed.pull"
     assert {binding.argument_name: binding.value for binding in warning.fix_action.argument_bindings} == {
         "modelos": "303",
-        "year": 2025,
+        "year": _YEAR,
         "period": "1T",
     }
 
@@ -124,7 +127,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
                 external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
                     csv,
-                    imported_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                    imported_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
                 ),
             ),
         ),
@@ -139,7 +142,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
         expected_tax_id="X0001500M",
     )
 
-    calendar, row = _april_2025_303_filing_row(evidence, authority_operation)
+    calendar, row = _april_303_filing_row(evidence, authority_operation)
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.verified_justificante_csv == csv
     assert row.aeat_evidence_conflict_reference_ids == ()
@@ -168,7 +171,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
                 external_evidence=external_evidence(
                     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                     csv,
-                    imported_at=datetime(2025, 4, 16, 11, 0, tzinfo=UTC),
+                    imported_at=datetime(_YEAR, 4, 16, 11, 0, tzinfo=UTC),
                 ),
                 filed_by="aeat-import",
             ),
@@ -178,7 +181,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
         expected_tax_id="X0001500M",
     )
 
-    calendar, row = _april_2025_303_filing_row(evidence, authority_operation)
+    calendar, row = _april_303_filing_row(evidence, authority_operation)
     assert row.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
     assert row.verified_justificante_csv == csv
     assert row.aeat_evidence_conflict_reference_ids == ()

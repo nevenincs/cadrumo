@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
     [
         ("identity", ["--target", "windows-x86-64", "--output", "{output}"]),
         ("generate", ["{output}", "--target", "windows-x86-64"]),
-        ("metadata", ["{output}", "--number", "1", "--date", "2026-10-16", "--tools", "{root}"]),
+        ("metadata", ["{output}", "--number", "1", "--date", "1980-10-16", "--tools", "{root}"]),
         (
             "product",
             ["--output", "{output}", "--python", "{python}", "--dependencies", "{root}", "--target", "windows-x86-64"],

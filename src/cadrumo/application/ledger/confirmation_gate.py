@@ -76,6 +76,7 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
     DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED: ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS,
     DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS,
+    DraftDiscrepancyKind.INVOICE_NUMBER_UNNUMBERED: ConfirmationBlockReason.UNNUMBERED_INVOICE,
 }
 """Which review-gate reason each deterministic check's failure raises.
 

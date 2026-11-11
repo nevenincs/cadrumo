@@ -11,9 +11,11 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.modelos.perceptor_clave_scope import resolve_perceptor_clave_scope
 
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
-_REVISIONS = ("2022", "2023", "2024", "2025-y-siguientes")
+_REVISIONS = tuple(str(revision.id) for revision in authored_revisions("190"))
 _SOURCE_DIGESTS = {
     "aeat-dr-190-2020": "4cefd924a7dda3ac5159582f728a72f6f162d3344b8e87f2d17900e6fdcf3b32",
     "aeat-dr-190-2023": "430daf439ed645155ffc6096b65c4da5b26dd2e6c16b8e4781f9be145b3792cb",
@@ -26,7 +28,9 @@ def _check(record: ExportRecordDefinition, wire: str, *, source_digests: dict[st
     require_m190_signed_reintegro_context(
         record,
         wire,
-        clave_scope=resolve_perceptor_clave_scope(period=Period.from_year_and_code(2025, "0A")),
+        clave_scope=resolve_perceptor_clave_scope(
+            period=Period.from_year_and_code(filing_year_envelope().horizon, "0A")
+        ),
         source_digests=source_digests,
     )
 
@@ -45,7 +49,10 @@ def record(request: pytest.FixtureRequest) -> ExportRecordDefinition:
     return _record(request.param)
 
 
-def _wire(*, key: str = "A", subkey: str = "01", devengo: str = "2024", filing: str = "2025") -> list[str]:
+def _wire(*, key: str = "A", subkey: str = "01", devengo: str | None = None, filing: str | None = None) -> list[str]:
+    filing_year = filing_year_envelope().horizon
+    filing = filing or str(filing_year)
+    devengo = devengo or str(filing_year - 1)
     wire = list(" " * 500)
     wire[4:8], wire[77], wire[78:80], wire[147:151] = list(filing), key, list(subkey), list(devengo)
     for offset in (82, 109, 256, 283, 95, 122, 269, 296):
@@ -57,9 +64,10 @@ def test_negative_reintegro_requires_prior_devengo_and_zero_withholding(record: 
     wire = _wire()
     wire[80], wire[81:94] = "N", list("0" * 12 + "1")
     _check(record, "".join(wire), source_digests=_SOURCE_DIGESTS)
-    for changed in (_wire(devengo="2025"), _wire(devengo="0000"), _wire(devengo="2024")):
+    filing_year = filing_year_envelope().horizon
+    for changed in (_wire(devengo=str(filing_year)), _wire(devengo="0000"), _wire(devengo=str(filing_year - 1))):
         changed[80], changed[81:94] = "N", list("0" * 12 + "1")
-        if changed[147:151] == list("2024"):
+        if changed[147:151] == list(str(filing_year - 1)):
             changed[94:107] = list("0" * 12 + "1")
         with pytest.raises(FilingExportValidationError, match="earlier devengo year and zero"):
             _check(record, "".join(changed), source_digests=_SOURCE_DIGESTS)

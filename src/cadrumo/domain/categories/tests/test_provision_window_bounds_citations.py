@@ -26,6 +26,7 @@ import pytest
 from ....core.validity_window import ValidityWindow
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_references import LegalReference
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import published_legal_reference, published_legal_references
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
@@ -36,6 +37,8 @@ from ..proportionality import (
 from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ENVELOPE = filing_year_envelope()
 
 
 def _legal_catalogue(citations: list[tuple[str, CategoryCitation]]) -> dict[str, LegalReference]:
@@ -146,8 +149,8 @@ def test_a_statutory_citation_must_name_its_provision() -> None:
             locator="art. 28.1",
             url=parse_http_url("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"),
             quote=tr("Texto."),
-            valid_from=date(2022, 1, 1),
-            valid_to=date(2026, 12, 31),
+            valid_from=date(_ENVELOPE.floor, 1, 1),
+            valid_to=date(_ENVELOPE.horizon, 12, 31),
         )
 
 
@@ -156,7 +159,7 @@ def test_a_window_opening_before_its_provision_took_effect_is_a_violation() -> N
     entry = published_legal_reference("ley-35-2006:art-30")
     too_early = ValidityWindow(
         valid_from=date(entry.effective_from.year - 3, 1, 1),
-        valid_to=date(2026, 12, 31),
+        valid_to=date(_ENVELOPE.horizon, 12, 31),
     )
 
     assert "before the provision took effect" in _outside_provision(too_early, entry)
@@ -166,6 +169,6 @@ def test_a_window_inside_the_span_is_not_a_violation() -> None:
     entry = published_legal_reference("ley-35-2006:art-28")
 
     assert not _outside_provision(
-        ValidityWindow(valid_from=date(2022, 1, 1), valid_to=date(2026, 12, 31)),
+        ValidityWindow(valid_from=date(_ENVELOPE.floor, 1, 1), valid_to=date(_ENVELOPE.horizon, 12, 31)),
         entry,
     )

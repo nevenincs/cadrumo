@@ -49,6 +49,7 @@ from .profile_support import require_active_profile_pointer
 if TYPE_CHECKING:
     from datetime import date
 
+    from ....application.user_profile.family_rows import ProfileViewFamilyGroupItem
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
 
@@ -190,8 +191,13 @@ def _emit_descendiente_list(
     ctx: typer.Context,
     pointer: ProfileBucketPointer,
     descendientes: tuple[DescendantInfo, ...],
+    group: ProfileViewFamilyGroupItem | None = None,
 ) -> None:
-    """Emit the active profile's declared descendant set as the list envelope."""
+    """Emit the active profile's declared descendant set as the list envelope.
+
+    ``group`` is the backend's reading of the household group when the verb read it; the
+    door, which reads no group, omits it and the envelope then carries no state.
+    """
     from ..config_descendiente_payloads import (
         ConfigProfileDescendienteListResult,
         ProfileDescendientePayload,
@@ -200,6 +206,8 @@ def _emit_descendiente_list(
     result = ConfigProfileDescendienteListResult(
         profile=pointer.label,
         total=len(descendientes),
+        state=group.state if group is not None else None,
+        stated_count=group.stated_count if group is not None else None,
         descendientes=[
             ProfileDescendientePayload(
                 index=index,
@@ -259,12 +267,50 @@ def _run_descendant_door(ctx: typer.Context) -> None:
     _emit_descendiente_list(ctx, pointer, rows)
 
 
+def _descendiente_none(ctx: typer.Context) -> None:
+    """State that the active profile has no descendants, as the stored count of zero.
+
+    The same registered replacement the flag rows use, with no rows. Refused while the
+    profile stores descendants or states a count, so a stated answer never overwrites
+    people the profile still holds.
+    """
+    from uuid import UUID
+
+    from cadrumo_client.commands.profile_binding import require_profile_client
+
+    from ....application.user_profile.descendant_rows import DESCENDANT_OBJECT_PATH
+    from ..config_descendiente_payloads import ConfigProfileDescendienteAddResult
+    from ..state_projection_support import authority_operation
+    from .operation_descendants import replace_descendants
+    from .operation_household import household_group, read_household_baseline, require_group_open_to_none
+    from .profile_mutation import mutation_deadline
+
+    pointer = require_active_profile_pointer()
+    authority = authority_operation(ctx)
+    client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
+    deadline = mutation_deadline()
+    baseline = read_household_baseline(client, deadline=deadline)
+    require_group_open_to_none(household_group(baseline, group_key=DESCENDANT_OBJECT_PATH))
+    committed = replace_descendants(client, baseline=baseline, descendants=(), operation=authority, deadline=deadline)
+    emit_envelope(
+        ctx,
+        command="config.profile.descendiente.add",
+        result=ConfigProfileDescendienteAddResult(
+            profile=pointer.label, added=0, total=len(committed), none_declared=True
+        ),
+        lines=(f"profile	{pointer.label}", "added	0", f"total	{len(committed)}", "none_declared	true"),
+    )
+
+
 def descendiente_add(
     ctx: typer.Context,
-    descendiente: list[str],
+    descendiente: list[str] | None = None,
+    none: bool = False,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Append one or more ``--descendiente`` rows to the active profile.
+    """Append one or more ``--descendiente`` rows to the active profile, or state ``--none``.
+
+    ``--none`` states that the taxpayer has no descendants; see :func:`_descendiente_none`.
 
     Each ``--descendiente`` flag is parsed by
     :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`; a malformed flag
@@ -288,9 +334,15 @@ def descendiente_add(
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
     from ..state_projection_support import authority_operation
     from .operation_descendants import read_descendants, replace_descendants
+    from .operation_household import require_rows_or_none
     from .profile_mutation import mutation_deadline
 
     activate_subcommand_output_language(ctx, output_language)
+    flags = descendiente or []
+    require_rows_or_none(flag="--descendiente", supplied=len(flags), none=none)
+    if none:
+        _descendiente_none(ctx)
+        return
     pointer = require_active_profile_pointer()
     # Stored rows and the flag's relationship and disability vocabularies are
     # governed facts, so reading and parsing need the command's pinned
@@ -301,7 +353,7 @@ def descendiente_add(
     baseline, existing = read_descendants(client, operation=authority, deadline=deadline)
 
     new_rows: list[DescendantInfo] = []
-    for raw in descendiente:
+    for raw in flags:
         # BOTH refusal families, because this flag has two kinds of guard and
         # only one of them was reaching the operator intact. The parser's own
         # pre-validations raise the typed error; the canonical record's
@@ -384,14 +436,17 @@ def descendiente_list(
 
     from cadrumo_client.commands.profile_binding import require_profile_client
 
+    from ....application.user_profile.descendant_rows import DESCENDANT_OBJECT_PATH
     from ..state_projection_support import authority_operation
-    from .operation_descendants import read_descendants
+    from .operation_descendants import decode_descendants
+    from .operation_household import household_group, read_household_baseline
 
     activate_subcommand_output_language(ctx, output_language)
     pointer = require_active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
-    _baseline, rows = read_descendants(client, operation=authority_operation(ctx), deadline=monotonic() + 60)
-    _emit_descendiente_list(ctx, pointer, rows)
+    baseline = read_household_baseline(client, deadline=monotonic() + 60)
+    rows = decode_descendants(client, baseline, authority_operation(ctx))
+    _emit_descendiente_list(ctx, pointer, rows, household_group(baseline, group_key=DESCENDANT_OBJECT_PATH))
 
 
 def descendiente_remove(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from typing import override
@@ -22,6 +22,11 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import (
+    newest_authored_editions,
+    open_ended_revision,
+    revision_covering,
+)
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -76,6 +81,10 @@ from .ledger_transaction_support import (
     ledger_raw_transaction,
 )
 from .usage_ratio_support import no_stored_usage_ratios
+
+_YEAR = newest_authored_edition("100")
+_PRIOR_YEAR = newest_authored_editions("100", 2)[0]
+_M130_REVISION_ID = str(open_ended_revision("130").id)
 
 BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
@@ -156,7 +165,7 @@ def empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
 
 
 def prior_m303_snapshot_ref():
-    return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_snapshot("303", filing_year=_YEAR, period="4T").snapshot_ref
 
 
 class InMemoryTransactionCatalogueRepository:
@@ -308,7 +317,7 @@ def m100_revision(year: int) -> ModeloRevision:
 
 @cache
 def m303_revision() -> ModeloRevision:
-    return published_snapshot("303", filing_year=2025, period="1T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="1T").revision
 
 
 def ledger_source_mesh_invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Invoice:
@@ -325,7 +334,7 @@ def ledger_source_mesh_invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Inv
             "bucket_id": bucket_id,
             "kind": CatalogueInvoiceKind.RECEIVED,
             "invoice_number": f"INV-{tx_id}",
-            "issued_at": date(2025, 4, 1),
+            "issued_at": date(_YEAR, 4, 1),
             "counterparty_name": "Proveedor SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -442,7 +451,7 @@ def machine_asset(transaction_id: str) -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger-business-allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
@@ -462,13 +471,13 @@ def machine_claim(asset: ActivityAssetRevision) -> AmortizationClaim:
         asset_id=asset.asset_id,
         asset_revision_id=asset.revision_id,
         asset_kind=asset.asset_kind,
-        tax_year=2025,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        tax_year=_YEAR,
+        covered_from=date(_YEAR, 1, 1),
+        covered_until=date(_YEAR, 12, 31) + timedelta(days=1),
         amount=Decimal("120.00"),
         schedule_fingerprint="8" * 64,
         authority_generation="published-test-generation",
-        source_reference="modelo-100:2025:parameter:maquinaria",
+        source_reference=f"modelo-100:{_YEAR}:parameter:maquinaria",
         creating_operation="record-amortization",
     )
 
@@ -480,7 +489,7 @@ def machine_acquisition_transaction(
     amount: Decimal = Decimal("1210.00"),
     taxable_base: Decimal = Decimal("1000.00"),
     iva_amount: Decimal = Decimal("210.00"),
-    year: int = 2025,
+    year: int = _YEAR,
 ) -> Transaction:
     """The purchase itself: 1.000,00 base plus 210,00 IVA soportado, paid from the bank."""
     return Transaction.model_validate(
@@ -527,7 +536,7 @@ def register_asset(
     *,
     transaction_id: str,
     basis: Decimal = Decimal("12000.00"),
-    in_service: date = date(2025, 1, 1),
+    in_service: date = date(_YEAR, 1, 1),
     kind: AssetKind = AssetKind.MATERIAL,
     election: ActivityAssetAmortizationElection | None = None,
 ) -> ActivityAssetRevision:
@@ -568,7 +577,7 @@ def register_claim(
     asset: ActivityAssetRevision,
     *,
     amount: Decimal,
-    tax_year: int = 2025,
+    tax_year: int = _YEAR,
     covered_from: date | None = None,
     covered_until: date | None = None,
 ) -> AmortizationClaim:
@@ -603,7 +612,7 @@ def resolve_m130(
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
     invoices: InvoiceCatalogueReader | None = None,
-    year: int = 2025,
+    year: int = _YEAR,
 ) -> CalculationSourceResolution:
     profile = profile or cash_criterion_profile(year)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
@@ -620,7 +629,7 @@ def resolve_m130(
             modelo="130",
             filing_year=year,
             period=Period.from_year_and_code(year, period),
-            revision=ledger_source_mesh_revision("130", "2019-y-siguientes"),
+            revision=ledger_source_mesh_revision("130", _M130_REVISION_ID),
             profile=profile,
         ),
     )
@@ -631,7 +640,7 @@ def resolve_m100(
     *,
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
-    year: int = 2025,
+    year: int = _YEAR,
     invoices: InvoiceCatalogueReader | None = None,
     prorrata_register: ProrrataRegister | None = None,
 ) -> CalculationSourceResolution:
@@ -659,7 +668,7 @@ def resolve_m100(
 
 
 def m130_box(resolution: CalculationSourceResolution) -> Decimal:
-    return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))]
+    return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", _M130_REVISION_ID))]
 
 
 def reasons(resolution: CalculationSourceResolution) -> list[str]:
@@ -679,7 +688,7 @@ def prior_year_purchase() -> Transaction:
         amount=Decimal("14520.00"),
         taxable_base=Decimal("12000.00"),
         iva_amount=Decimal("2520.00"),
-        year=2024,
+        year=_PRIOR_YEAR,
     )
 
 
@@ -743,9 +752,11 @@ def activity_asset_ledger_membership(
             bucket_id=BUCKET_ID,
             work_unit_id=work_unit.work_unit_id,
             modelo=modelo,
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, period_code),
-            revision=ledger_source_mesh_revision(modelo, "2025" if modelo == "100" else "2019-y-siguientes"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period_code),
+            revision=ledger_source_mesh_revision(
+                modelo, str(revision_covering("100", _YEAR).id) if modelo == "100" else _M130_REVISION_ID
+            ),
         ),
         work_unit=work_unit,
         ports=ports,

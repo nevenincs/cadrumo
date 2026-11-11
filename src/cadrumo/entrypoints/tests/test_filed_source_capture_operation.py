@@ -71,6 +71,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
@@ -81,9 +82,12 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
-_TARGET_PERIOD = Period.from_year_and_code(2026, "1T")
-_SOURCE_PERIOD = Period.from_year_and_code(2025, "0A")
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
+_TARGET_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_SOURCE_PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")
 _SOURCE_EXPEDIENTE_ID = "202510013522222A"
 _SUBMITTED_BODY = b"synthetic source declaration"
 _JUSTIFICANTE_BODY = b"synthetic source justificante"
@@ -143,7 +147,7 @@ class _SyntheticSourcePort:
         assert not self._is_guarded(), "source acquisition must finish before local writes"
         assert effect_guard is not None and on_session_write is not None
         assert revision.id
-        assert (filing_year, period, operation) == (2026, _TARGET_PERIOD, "live-filed-read")
+        assert (filing_year, period, operation) == (_YEAR, _TARGET_PERIOD, "live-filed-read")
         self.acquired.append(("130", filing_year, period, operation))
         return self._batch
 
@@ -190,7 +194,7 @@ class _SyntheticReconciliation:
         assert actor == "aeat-filed-history"
         assert clock == _NOW
         assert entry.modelo == "100"
-        assert entry.filing_year == 2025
+        assert entry.filing_year == _FILING_YEAR
         assert entry.period == _SOURCE_PERIOD
         assert entry.register.csv == _JUSTIFICANTE_CSV
         assert entry.casilla_values is None
@@ -229,7 +233,7 @@ def _assert_source_capture_collaborators(
     resources,
 ):
     assert provider_preflights == [(profile_id, authority)]
-    assert filed_port.acquired == [("130", 2026, _TARGET_PERIOD, "live-filed-read")]
+    assert filed_port.acquired == [("130", _YEAR, _TARGET_PERIOD, "live-filed-read")]
     assert len(reconciliation_port.entries) == 1
     assert guard_entries == 2
     assert guarded_writes == ["artefact", "artefact", "manifest", "calculation"]
@@ -245,13 +249,13 @@ def _assert_source_capture_result(definition, terminal, projected, tmp_path):
     assert isinstance(projected.projection, FiledSourceCapturePublicResultV1)
     result = projected.projection
     assert result.output_root == str(tmp_path / "filed-source-output")
-    assert (result.target_modelo, result.target_year, result.target_period) == ("130", 2026, "1T")
+    assert (result.target_modelo, result.target_year, result.target_period) == ("130", _YEAR, "1T")
     assert (result.captured_count, result.reached_count) == (1, 1)
     assert result.observation_paths == (str(Path("memory-observations") / "1" / "manifest.json"),)
     assert result.artefact_refs == ("memory-artefact:1", "memory-artefact:2")
     assert result.casilla_count == 1
     assert result.calculation_observation_count == 1
-    assert result.calculation_observation_keys == ("100:2025:0A",)
+    assert result.calculation_observation_keys == (f"100:{_FILING_YEAR}:0A",)
     assert result.justificante_metadata_count == 1
     assert result.justificante_csvs == (_JUSTIFICANTE_CSV,)
     assert result.filing_evidence_stamped_count == 0
@@ -270,7 +274,7 @@ def _assert_period_independent_commit_admission(admitted):
 def _synthetic_source_observation(source_snapshot):
     observation = FiledDeclaracionObservation(
         modelo="100",
-        ejercicio=2025,
+        ejercicio=_FILING_YEAR,
         period=_SOURCE_PERIOD,
         expediente_id=_SOURCE_EXPEDIENTE_ID,
         status="ALTA",
@@ -313,12 +317,12 @@ def _synthetic_source_receipt():
     receipt = Justificante(
         csv=_JUSTIFICANTE_CSV,
         modelo="100",
-        ejercicio="2025",
+        ejercicio=str(_FILING_YEAR),
         period=_SOURCE_PERIOD,
         presented_at=_NOW.replace(tzinfo=None),
         tax_id=_TAX_ID,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python("https://test.invalid/verificar"),
-        source_pdf_path=Path("justificantes/source-100-2025.pdf"),
+        source_pdf_path=Path(f"justificantes/source-100-{_FILING_YEAR}.pdf"),
         source_pdf_sha256=sha256(_JUSTIFICANTE_BODY).hexdigest(),
         parsed_at=_NOW,
     )
@@ -336,7 +340,7 @@ def _assert_source_capture_reconciliation(result, profile):
     ) == (
         profile.bucket_id,
         "100",
-        2025,
+        _FILING_YEAR,
     )
     assert public_reconciliation.period == "0A"
     assert public_reconciliation.notices[0].code == FilingReconciliationNoticeCode.CONTENT_UNAVAILABLE.value
@@ -350,7 +354,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
     """A real supervisor records source evidence and projects its safe reconciliation tally."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
-        source_snapshot = authority.snapshot("100", filing_year=2025, period="0A")
+        source_snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
         observation = _synthetic_source_observation(source_snapshot)
         guard_depth = 0
         guard_entries = 0
@@ -471,7 +475,7 @@ def test_supervisor_binds_source_capture_to_exact_profile_and_projects_reconcili
                 profile_id=profile_id,
                 output_root=tmp_path / "filed-source-output",
                 modelo="130",
-                year=2026,
+                year=_YEAR,
                 period="1T",
             ),
         )

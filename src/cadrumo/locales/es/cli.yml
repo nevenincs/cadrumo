@@ -2616,6 +2616,24 @@ cli:
           export_target_exists: Ya existe un archivo en la ruta de destino y no se
             sobrescribe una copia de seguridad. Elige otro --output o mueve primero
             el archivo existente; no se ha leído ningún perfil.
+      ascendiente:
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<número
+          de descendientes con los que convive el ascendiente>]. Repetible; NACIMIENTO
+          es obligatorio en cada fila.
+        add_help: Añade uno o varios ascendientes al perfil activo, o declara con
+          --none que no hay ninguno.
+        help: Declara los ascendientes del contribuyente para la sección de familia
+          del modelo 100.
+        index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
+          ascendiente(s).
+        invalid_row: No se ha podido leer la fila de --ascendiente. Usa pares CLAVE=VALOR
+          con las claves NACIMIENTO, NIF, FALLECIMIENTO y CONVIVIENTES, cada una como
+          máximo una vez y con valor; el contexto del error indica la clave cuando
+          se puede identificar.
+        list_help: Lista los ascendientes declarados en el perfil activo y si el perfil
+          declara que no hay ninguno.
+        remove_help: Elimina un ascendiente por índice (base 0) del perfil activo.
+        remove_index_help: Índice (base 0) del ascendiente que quieres eliminar.
       automation:
         approve:
           digest_help: Huella exacta de revisión mostrada por cadrumo-runtime config
@@ -2817,6 +2835,16 @@ cli:
         (p. ej. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar el historial a eventos en o antes de esta marca
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
+      household:
+        none_conflicts_with_rows: '%{none} no se puede combinar con %{flag}.'
+        none_flag_help: Declara que el contribuyente no tiene ninguno, en lugar de
+          añadir filas. Es una respuesta, no un dato desconocido. Se rechaza junto
+          a una fila y mientras haya filas guardadas.
+        none_with_stored_rows: El perfil ya contiene este grupo familiar (%{rows}
+          fila(s) guardadas, recuento declarado %{stated_count}). Elimina primero
+          las filas con el comando remove.
+        rows_or_none_required: Indica al menos una fila %{flag}, o %{none} para declarar
+          que no hay ninguna.
       list:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
           perfiles (estado: {outcome}). Vuelve a ejecutar el comando; si persiste,

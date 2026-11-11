@@ -2431,6 +2431,22 @@ cli:
           export_target_exists: A file already exists at the destination path, and
             a backup is never overwritten. Choose another --output or move the existing
             file first; no profile was read.
+      ascendiente:
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,NIF=<NIF or NIE>][,FALLECIMIENTO=YYYY-MM-DD][,CONVIVIENTES=<number
+          of descendants the ascendant lives with>]. Repeatable; NACIMIENTO is required
+          in every row.
+        add_help: Add one or more ascendants to the active profile, or state with
+          --none that there are none.
+        help: Declare the taxpayer's ascendants for the Modelo 100 household section.
+        index_out_of_range: Index %{index} is out of range; the profile has %{total}
+          ascendant(s).
+        invalid_row: The --ascendiente row could not be read. Use KEY=VALUE pairs
+          with the keys NACIMIENTO, NIF, FALLECIMIENTO and CONVIVIENTES, each at most
+          once and with a value; the error context names the key when it can be identified.
+        list_help: List the ascendants declared on the active profile and whether
+          the profile states there are none.
+        remove_help: Remove one ascendant by 0-based index from the active profile.
+        remove_index_help: 0-based index of the ascendant to remove.
       automation:
         approve:
           digest_help: Exact review digest shown by cadrumo-runtime config profile
@@ -2621,6 +2637,16 @@ cli:
         (e.g. 2026-04-01T00:00:00+00:00)
       history_until_help: Filter the history to events at or before this ISO-8601
         timestamp (e.g. 2026-04-30T23:59:59+00:00)
+      household:
+        none_conflicts_with_rows: '%{none} cannot be combined with %{flag}.'
+        none_flag_help: State that the taxpayer has none, instead of adding rows.
+          This is an answer, not an unknown. Refused next to a row and while rows
+          are stored.
+        none_with_stored_rows: The profile already holds this household (%{rows} row(s)
+          stored, stated count %{stated_count}). Remove the rows first with the remove
+          command.
+        rows_or_none_required: Give at least one %{flag} row, or %{none} to state
+          there are none.
       list:
         incoherent_observation_advisory: 'The profile listing could not be read coherently
           (outcome: {outcome}). Run the command again; if it persists, inspect the

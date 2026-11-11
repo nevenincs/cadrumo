@@ -121,11 +121,18 @@ class AgentServiceAdministration(ABC):
         )
         model_list = SecureLocalModelListStore(client=client)
         live_models = ServedCatalogModels(self._live_catalog)
+        self._local_models = LocalModelListService(
+            store=model_list,
+            catalog_source=self._catalog,
+            live_models=live_models,
+            default_engine=local_engine_default,
+        )
         self._model_runs = ModelRunService(
             model_list=model_list,
             resolver=resolver,
             catalog_source=self._catalog,
             live_models=live_models,
+            selected_engine=self._local_models.selected_engine,
             gateway=HostedBackgroundRuns(
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
@@ -141,9 +148,6 @@ class AgentServiceAdministration(ABC):
         )
         self._login_status = AgentProviderAuthStatusProbe(
             context=self._login_context, cancellation=self._read_cancellation
-        )
-        self._local_models = LocalModelListService(
-            store=model_list, catalog_source=self._catalog, default_engine=local_engine_default
         )
         self._providers = ProviderSettingsService(
             store=self._store,
@@ -372,6 +376,16 @@ class AgentServiceAdministration(ABC):
             return self._connect(provider, expected_revision=expected_revision, method=method)
         return self._change_provider(action, provider, expected_revision, base_url, choice, secret)
 
+    def _admin_refusal(self) -> dict[str, str] | None:
+        """Refuse a tree or provider change while stopping, signed out or during a sign-in attempt."""
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        if self.client.lease is None:
+            return {"kind": "refused", "code": "signed_out"}
+        if self._auth_attempt is not None and self._auth_attempt.active:
+            return {"kind": "refused", "code": "busy"}
+        return None
+
     def _admin(
         self,
         action: str,
@@ -387,12 +401,9 @@ class AgentServiceAdministration(ABC):
         engine: str | None = None,
         placement: str | None = None,
     ) -> Any:
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        if self.client.lease is None:
-            return {"kind": "refused", "code": "signed_out"}
-        if self._auth_attempt is not None and self._auth_attempt.active:
-            return {"kind": "refused", "code": "busy"}
+        refusal = self._admin_refusal()
+        if refusal is not None:
+            return refusal
         if action == "start":
             if not self._schedule_start():
                 return {"kind": "refused", "code": "service_stopping"}

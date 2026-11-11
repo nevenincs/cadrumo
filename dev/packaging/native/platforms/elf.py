@@ -76,8 +76,22 @@ def _needed(data: bytes, sections: list[tuple[int, int, int, int, int]], path: P
     return names
 
 
+def _glibc_versions(data: bytes, table: tuple[int, int], entry: int, path: Path) -> tuple[list[tuple[int, ...]], int]:
+    """Return the ``GLIBC_`` versions one version-need entry names and the offset of the following entry."""
+    _version, count, _file, auxiliary, following = _unpack(data, "<HHIII", entry, path)
+    record = entry + auxiliary
+    found: list[tuple[int, ...]] = []
+    for _ in range(count):
+        _hash, _flags, _other, name, next_record = _unpack(data, "<IHHII", record, path)
+        version = _GLIBC_VERSION.fullmatch(_string(data, table, name, path))
+        if version is not None:
+            found.append(tuple(int(part) for part in version.groups() if part is not None))
+        record += next_record
+    return found, following
+
+
 def _glibc(data: bytes, sections: list[tuple[int, int, int, int, int]], path: Path) -> tuple[int, ...] | None:
-    highest: tuple[int, ...] | None = None
+    versions: list[tuple[int, ...]] = []
     for kind, start, size, link, info in sections:
         if kind != _SHT_GNU_VERNEED:
             continue
@@ -86,19 +100,12 @@ def _glibc(data: bytes, sections: list[tuple[int, int, int, int, int]], path: Pa
         table = (sections[link][1], sections[link][2])
         entry = start
         for _ in range(info):
-            _version, count, _file, auxiliary, following = _unpack(data, "<HHIII", entry, path)
-            record = entry + auxiliary
-            for _ in range(count):
-                _hash, _flags, _other, name, next_record = _unpack(data, "<IHHII", record, path)
-                version = _GLIBC_VERSION.fullmatch(_string(data, table, name, path))
-                if version is not None:
-                    numbers = tuple(int(part) for part in version.groups() if part is not None)
-                    highest = numbers if highest is None else max(highest, numbers)
-                record += next_record
+            found, following = _glibc_versions(data, table, entry, path)
+            versions.extend(found)
             if following == 0 or entry + following >= start + size:
                 break
             entry += following
-    return highest
+    return max(versions, default=None)
 
 
 def read_elf_requirements(path: Path) -> ElfRequirements:

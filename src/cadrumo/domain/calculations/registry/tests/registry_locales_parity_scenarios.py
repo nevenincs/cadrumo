@@ -44,7 +44,7 @@ def check_complete_registry_tree_locales_compile_and_validate_cleanly(
         str(revision.id): casilla.get_help("en")
         for revision in modelos_by_id["100"].revisions.values()
         for casilla in revision.casillas
-        if casilla.id == "0001" and casilla.get_help("en")
+        if casilla.id == "0001" and casilla.get_help("en") not in (None, "")
     }
     assert helped, "no authored Modelo 100 edition carries the help text of casilla 0001"
     assert set(helped.values()) == {"Selector for the taxpayer obtaining the business yield."}

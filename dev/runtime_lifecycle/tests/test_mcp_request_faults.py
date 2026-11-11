@@ -30,6 +30,7 @@ from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.period import PeriodError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import StoredSignInRuntime, stored_sign_in_runtime
 
@@ -169,7 +170,12 @@ async def test_a_validators_message_that_quotes_what_it_refused_reaches_the_call
 async def test_a_registered_refusal_raised_while_a_request_is_read_reaches_the_caller_as_the_command_line_prints_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    members: dict[str, Any] = {"modelo": "210", "year": 2025, "period_code": "evento", "missing": True}
+    members: dict[str, Any] = {
+        "modelo": "210",
+        "year": filing_year_envelope().horizon,
+        "period_code": "evento",
+        "missing": True,
+    }
     with (
         stored_sign_in_runtime(tmp_path, monkeypatch) as runtime,
         override_settings(cadrumo_active_profile=str(runtime.profile_id)),
@@ -216,7 +222,7 @@ async def test_a_registered_refusal_about_what_a_request_names_is_answered_and_t
                         "work_unit_id": unknown,
                         "new_name": "synthetic new name",
                         "observed_name": "synthetic old name",
-                        "observed_updated_at": "2026-01-01T00:00:00Z",
+                        "observed_updated_at": "1980-01-01T00:00:00Z",
                         "actor": "synthetic-actor",
                     },
                 },

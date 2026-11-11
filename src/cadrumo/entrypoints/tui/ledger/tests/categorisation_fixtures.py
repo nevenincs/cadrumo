@@ -29,6 +29,7 @@ from .....application.ledger.rule_contracts import (
 )
 from .....core.errors.hierarchy import RecordedRegisteredError
 from .....core.identity.transaction_ids import TransactionId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.classification_rule import LedgerClassificationRule
 from .....domain.transactions.enums import BusinessClassification
 from ...account import AccountSessionExpiredError
@@ -36,7 +37,8 @@ from ...account import AccountSessionExpiredError
 CATEGORISATION_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d2")
 CATEGORISATION_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 CATEGORISATION_REFUSAL_KEY = "errors.refused.refused_cli_validation_boundary"
-_CREATED_AT = datetime(2026, 3, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CREATED_AT = datetime(_YEAR, 3, 1, tzinfo=UTC)
 
 
 class MemoryDoor[RequestT: BaseModel, ResultT: BaseModel]:

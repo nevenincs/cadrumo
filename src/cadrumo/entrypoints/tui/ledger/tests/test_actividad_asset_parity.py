@@ -45,6 +45,16 @@ from ..models_actividad_asset import (
 )
 from ..workspace_injection import LedgerWorkspaceInjection
 from .actividad_asset_fixtures import (
+    ASSET_IN_SERVICE_ON,
+    ASSET_IN_SERVICE_YEAR,
+    BASIS_EXHAUSTED_YEAR,
+    COVERED_UNTIL,
+    DISPOSAL_ON,
+    DISPOSAL_YEAR,
+    INCOMPLETE_YEAR,
+    MAXIMUM_PERIOD_ENDS_ON,
+    PERIOD_ELAPSED_YEAR,
+    REGISTER_YEAR,
     ActivityAssetActionStub,
     activity_asset_forecast,
     activity_asset_form_options,
@@ -128,8 +138,8 @@ async def test_activity_asset_screen_dispatches_typed_requests_and_renders_worke
         assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\ttui-runtime-screen")
         assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == revision.revision_id
 
-        screen.query_one("#asset-covered-from", Input).value = "2025-01-01"
-        screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
+        screen.query_one("#asset-covered-from", Input).value = ASSET_IN_SERVICE_ON.isoformat()
+        screen.query_one("#asset-covered-until", Input).value = COVERED_UNTIL.isoformat()
         await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
         rendered = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="forecast\t")
         assert rendered.startswith("forecast\t520.00\tTUI screen fixture only")
@@ -162,8 +172,8 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
         screen.query_one("#asset-current-revision-id", Static).update(f"current_revision_id\t{revision.revision_id}")
         screen._last_forecast = activity_asset_forecast(
             revision,
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
+            covered_from=ASSET_IN_SERVICE_ON,
+            covered_until=COVERED_UNTIL,
             history=AssetScheduleHistory(),
             requested_free_amount=None,
         )
@@ -227,8 +237,8 @@ async def test_activity_asset_refusal_retains_the_registered_recovery_presentati
 
     async with app.run_test(size=(100, 35)) as pilot:
         screen.query_one("#asset-id", Input).value = revision.asset_id
-        screen.query_one("#asset-covered-from", Input).value = "2025-01-01"
-        screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
+        screen.query_one("#asset-covered-from", Input).value = ASSET_IN_SERVICE_ON.isoformat()
+        screen.query_one("#asset-covered-until", Input).value = COVERED_UNTIL.isoformat()
         await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
         rejected = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
         assert "undeclared-van" in rejected
@@ -277,12 +287,12 @@ async def test_activity_asset_screen_clears_old_result_while_action_runs() -> No
 @pytest.mark.parametrize(
     ("covered_from", "free_amount"),
     (
-        ("20250101", ""),
-        ("2025-W01-3", ""),
-        ("2025-01-01", "NaN"),
-        ("2025-01-01", "1e3"),
-        ("2025-01-01", "+5"),
-        ("2025-01-01", "1_000"),
+        (ASSET_IN_SERVICE_ON.strftime("%Y%m%d"), ""),
+        (f"{ASSET_IN_SERVICE_YEAR}-W01-3", ""),
+        (ASSET_IN_SERVICE_ON.isoformat(), "NaN"),
+        (ASSET_IN_SERVICE_ON.isoformat(), "1e3"),
+        (ASSET_IN_SERVICE_ON.isoformat(), "+5"),
+        (ASSET_IN_SERVICE_ON.isoformat(), "1_000"),
     ),
 )
 async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refuses(
@@ -296,7 +306,7 @@ async def test_activity_asset_forecast_refuses_the_shapes_the_command_line_refus
     async with app.run_test(size=(100, 35)) as pilot:
         screen.query_one("#asset-id", Input).value = revision.asset_id
         screen.query_one("#asset-covered-from", Input).value = covered_from
-        screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
+        screen.query_one("#asset-covered-until", Input).value = COVERED_UNTIL.isoformat()
         screen.query_one("#asset-free-amount", Input).value = free_amount
         await _activate(pilot=pilot, screen=screen, selector="#asset-forecast")
         assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
@@ -436,7 +446,7 @@ async def test_activity_asset_screen_reaches_describe_and_every_register_read() 
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
         plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
-        assert "31 dic 2034" in plan
+        assert f"31 dic {MAXIMUM_PERIOD_ENDS_ON.year - 1}" in plan
         assert "equipo-informacion-software" not in plan
 
     assert actions.requests[0] == (
@@ -462,8 +472,13 @@ async def test_activity_asset_plan_labels_the_minimum_amortization_and_flags_an_
 
     lines = plan.splitlines()
     # Only the year that omitted a year's minimum says so.
-    assert any(line.startswith("2025") and f"{label}: 130.00" in line and incomplete not in line for line in lines)
-    assert any(line.startswith("2036") and f"{label}: 130.00{_EURO} ({incomplete})" in line for line in lines)
+    assert any(
+        line.startswith(str(ASSET_IN_SERVICE_YEAR)) and f"{label}: 130.00" in line and incomplete not in line
+        for line in lines
+    )
+    assert any(
+        line.startswith(str(PERIOD_ELAPSED_YEAR)) and f"{label}: 130.00{_EURO} ({incomplete})" in line for line in lines
+    )
 
 
 @pytest.mark.asyncio
@@ -486,13 +501,13 @@ async def test_activity_asset_plan_says_each_year_in_words_with_its_glyph_and_re
         history_missing = tr("ledger.actividad_asset.errors.opening_history_missing")
 
     lines = {line.split("\t")[0]: line for line in plan.splitlines()[1:]}
-    assert f"! {missing}" in lines["2025"]
-    assert "Maximum period elapsed" in lines["2036"]
+    assert f"! {missing}" in lines[str(ASSET_IN_SERVICE_YEAR)]
+    assert "Maximum period elapsed" in lines[str(PERIOD_ELAPSED_YEAR)]
     # The incomplete year says why in the register's sentence, and names the entry that settles it.
-    assert history_missing in lines["2037"]
-    assert remedy in lines["2037"]
+    assert history_missing in lines[str(INCOMPLETE_YEAR)]
+    assert remedy in lines[str(INCOMPLETE_YEAR)]
     # A year with nothing to work out says it does not apply instead of reading as a missing figure.
-    assert not_applicable in lines["2038"]
+    assert not_applicable in lines[str(BASIS_EXHAUSTED_YEAR)]
     assert "basis_exhausted" not in plan
     assert "period_elapsed" not in plan
     assert "not_due" not in plan
@@ -501,7 +516,9 @@ async def test_activity_asset_plan_says_each_year_in_words_with_its_glyph_and_re
 @pytest.mark.asyncio
 async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_as_money_owed() -> None:
     revision = activity_asset_revision("tui-list")
-    actions = ActivityAssetActionStub(revision, list_rows=activity_asset_list_rows(), register_default_year=2027)
+    actions = ActivityAssetActionStub(
+        revision, list_rows=activity_asset_list_rows(), register_default_year=REGISTER_YEAR
+    )
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
@@ -523,7 +540,7 @@ async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_a
     assert in_service in rows["desk"]
     assert not_applicable in rows["printer"]
     assert "900" not in rows["printer"]
-    assert "Jun 30, 2026" in rows["printer"]
+    assert f"Jun 30, {DISPOSAL_YEAR}" in rows["printer"]
     assert "in_service" not in listing
     assert "out_of_service" not in listing
 
@@ -555,7 +572,7 @@ async def test_activity_asset_timeline_says_what_each_record_did_and_changed() -
     assert not_recorded in second
     assert not_in_calculation in second
     assert f"{method}: {linear}" in second
-    assert "Mar 15, 2025" in second
+    assert f"Mar 15, {ASSET_IN_SERVICE_YEAR}" in second
     assert "record-one" not in timeline
     assert "record-two" not in timeline
     assert "constant_percentage" not in timeline
@@ -582,7 +599,7 @@ async def test_activity_asset_reads_fill_the_year_and_the_claim_dates_but_leave_
     revision = activity_asset_revision("laptop")
     options = activity_asset_form_options(m130_periods=("1T", "2T", "3T"))
     actions = ActivityAssetActionStub(
-        revision, list_rows=activity_asset_list_rows(), register_default_year=2031, form_options_view=options
+        revision, list_rows=activity_asset_list_rows(), register_default_year=REGISTER_YEAR, form_options_view=options
     )
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
@@ -591,13 +608,13 @@ async def test_activity_asset_reads_fill_the_year_and_the_claim_dates_but_leave_
         async with app.run_test(size=(100, 60)) as pilot:
             await _activate(pilot=pilot, screen=screen, selector="#asset-list")
             await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Office laptop")
-            assert screen.query_one("#asset-filing-tax-year", Input).value == "2031"
+            assert screen.query_one("#asset-filing-tax-year", Input).value == str(REGISTER_YEAR)
 
             screen.query_one("#asset-id", Input).value = "laptop"
             await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
             await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
-            assert screen.query_one("#asset-covered-from", Input).value == "2025-01-01"
-            assert screen.query_one("#asset-covered-until", Input).value == "2026-01-01"
+            assert screen.query_one("#asset-covered-from", Input).value == ASSET_IN_SERVICE_ON.isoformat()
+            assert screen.query_one("#asset-covered-until", Input).value == COVERED_UNTIL.isoformat()
 
             await _activate(pilot=pilot, screen=screen, selector="#asset-form-options")
             shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Method")
@@ -608,21 +625,23 @@ async def test_activity_asset_reads_fill_the_year_and_the_claim_dates_but_leave_
             assert "edition=" not in shown
             assert "fixture-edition" not in shown
 
-    assert ("form_options", (AssetKind.MATERIAL, 2031)) in actions.requests
+    assert ("form_options", (AssetKind.MATERIAL, REGISTER_YEAR)) in actions.requests
 
 
 @pytest.mark.asyncio
 async def test_activity_asset_reads_leave_what_the_operator_typed() -> None:
     revision = activity_asset_revision("laptop")
-    actions = ActivityAssetActionStub(revision, list_rows=activity_asset_list_rows(), register_default_year=2031)
+    actions = ActivityAssetActionStub(
+        revision, list_rows=activity_asset_list_rows(), register_default_year=REGISTER_YEAR
+    )
     screen = _screen(actions)
     app = ScreenHostApp[None](screen)
 
     async with app.run_test(size=(100, 60)) as pilot:
-        screen.query_one("#asset-filing-tax-year", Input).value = "2029"
+        screen.query_one("#asset-filing-tax-year", Input).value = str(ASSET_IN_SERVICE_YEAR)
         await _activate(pilot=pilot, screen=screen, selector="#asset-list")
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Office laptop")
-        assert screen.query_one("#asset-filing-tax-year", Input).value == "2029"
+        assert screen.query_one("#asset-filing-tax-year", Input).value == str(ASSET_IN_SERVICE_YEAR)
 
 
 @pytest.mark.asyncio
@@ -651,7 +670,7 @@ async def test_activity_asset_screen_records_a_baja_and_reads_its_figures() -> N
 
     async with app.run_test(size=(100, 70)) as pilot:
         screen.query_one("#asset-id", Input).value = revision.asset_id
-        screen.query_one("#asset-disposal-date", Input).value = "2026-06-30"
+        screen.query_one("#asset-disposal-date", Input).value = DISPOSAL_ON.isoformat()
         screen.query_one("#asset-disposal-reason", Input).value = "sale"
         screen.query_one("#asset-disposal-proceeds", Input).value = "2000.00"
         screen.query_one("#asset-disposal-costs", Input).value = "100.00"
@@ -663,7 +682,7 @@ async def test_activity_asset_screen_records_a_baja_and_reads_its_figures() -> N
         await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="disposed\ttui-baja")
 
     stated = ActivityAssetDisposalSnapshot(
-        disposal_date=date(2026, 6, 30),
+        disposal_date=DISPOSAL_ON,
         reason=ActivityAssetDisposalReason.SALE,
         proceeds=PublicDecimal(decimal="2000.00"),
         transmission_costs=PublicDecimal(decimal="100.00"),
@@ -685,7 +704,7 @@ async def test_activity_asset_creation_takes_the_typed_facts_over_the_revision_i
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         screen.query_one("#asset-price", Input).value = "1.500,00"
         screen.query_one("#asset-non-deductible-iva", Input).value = "315.00"
-        screen.query_one("#asset-in-service-date", Input).value = "2025-03-01"
+        screen.query_one("#asset-in-service-date", Input).value = date(ASSET_IN_SERVICE_YEAR, 3, 1).isoformat()
         screen.query_one("#asset-method", Input).value = "linear"
         screen.query_one("#asset-serial", Input).value = "SN-1"
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
@@ -695,7 +714,7 @@ async def test_activity_asset_creation_takes_the_typed_facts_over_the_revision_i
     assert isinstance(created, ActivityAssetCreationRequestV1)
     assert created.revision.basis.basis_amount == Decimal("1500.00")
     assert created.revision.basis.non_deductible_iva == Decimal("315.00")
-    assert created.revision.in_service_date == date(2025, 3, 1)
+    assert created.revision.in_service_date == date(ASSET_IN_SERVICE_YEAR, 3, 1)
     assert created.revision.amortization.method.value == "linear"
     assert created.descriptor == ActivityAssetDescriptorFacts(name="Office laptop", serial_number="SN-1")
 
@@ -779,18 +798,18 @@ async def _refusal_for(actions: ActivityAssetActionStub, selector: str, **inputs
         ("#asset-filing-handoff", {"asset-filing-tax-year": "20255"}, "year_invalid"),
         (
             "#asset-filing-handoff",
-            {"asset-filing-tax-year": "2025", "asset-filing-m130-period": "9T"},
+            {"asset-filing-tax-year": str(ASSET_IN_SERVICE_YEAR), "asset-filing-m130-period": "9T"},
             "quarter_invalid",
         ),
         (
             "#asset-forecast",
-            {"asset-covered-from": "2025-01-01", "asset-covered-until": "2026-01-01"},
+            {"asset-covered-from": ASSET_IN_SERVICE_ON.isoformat(), "asset-covered-until": COVERED_UNTIL.isoformat()},
             "asset_id_required",
         ),
         ("#asset-inspect", {}, "asset_id_required"),
         (
             "#asset-forecast",
-            {"asset-id": "a", "asset-covered-from": "soon", "asset-covered-until": "2026-01-01"},
+            {"asset-id": "a", "asset-covered-from": "soon", "asset-covered-until": COVERED_UNTIL.isoformat()},
             "date_invalid",
         ),
         ("#asset-claim", {}, "forecast_first"),
@@ -798,7 +817,7 @@ async def _refusal_for(actions: ActivityAssetActionStub, selector: str, **inputs
             "#asset-dispose",
             {
                 "asset-id": "a",
-                "asset-disposal-date": "2026-06-30",
+                "asset-disposal-date": DISPOSAL_ON.isoformat(),
                 "asset-disposal-reason": "sale",
                 "asset-disposal-proceeds": "1e3",
             },
@@ -823,10 +842,14 @@ async def test_activity_asset_screen_words_an_unreadable_entry_before_the_door_i
 @pytest.mark.parametrize(
     ("selector", "inputs", "choices"),
     (
-        ("#asset-form-options", {"asset-filing-tax-year": "2025", "asset-options-kind": "x"}, AssetKind),
+        (
+            "#asset-form-options",
+            {"asset-filing-tax-year": str(ASSET_IN_SERVICE_YEAR), "asset-options-kind": "x"},
+            AssetKind,
+        ),
         (
             "#asset-dispose",
-            {"asset-id": "a", "asset-disposal-date": "2026-06-30", "asset-disposal-reason": "gift"},
+            {"asset-id": "a", "asset-disposal-date": DISPOSAL_ON.isoformat(), "asset-disposal-reason": "gift"},
             ActivityAssetDisposalReason,
         ),
     ),
@@ -882,7 +905,7 @@ async def test_activity_asset_screen_refuses_a_blank_baja_amount_before_the_door
             selector,
             **{
                 "asset-id": "a",
-                "asset-disposal-date": "2026-06-30",
+                "asset-disposal-date": DISPOSAL_ON.isoformat(),
                 "asset-disposal-reason": "sale",
                 input_id: "   ",
                 stated_id: "10.00",
@@ -938,14 +961,14 @@ def _gap(kind: M100GapKind, *, accrued: Decimal | None = None) -> M100ClaimGapPr
     return M100ClaimGapProjection(
         asset_id="laptop-1",
         kind=kind,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=ASSET_IN_SERVICE_ON,
+        covered_until=COVERED_UNTIL,
         accrued=accrued,
         words=m100_gap_words(
             kind,
             name="Office laptop",
-            covered_from=date(2025, 1, 1),
-            covered_through=date(2025, 12, 31),
+            covered_from=ASSET_IN_SERVICE_ON,
+            covered_through=date(ASSET_IN_SERVICE_YEAR, 12, 31),
             accrued=accrued,
             language=OutputLanguage(output_language()),
         ),
@@ -961,7 +984,7 @@ async def test_activity_asset_filing_without_a_quarter_asks_for_the_annual_figur
     app = ScreenHostApp[None](screen)
 
     async with app.run_test(size=(100, 60)) as pilot:
-        screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+        screen.query_one("#asset-filing-tax-year", Input).value = str(ASSET_IN_SERVICE_YEAR)
         await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
         shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
 
@@ -979,7 +1002,7 @@ async def test_activity_asset_filing_with_a_quarter_states_both_modelos() -> Non
     app = ScreenHostApp[None](screen)
 
     async with app.run_test(size=(100, 60)) as pilot:
-        screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+        screen.query_one("#asset-filing-tax-year", Input).value = str(ASSET_IN_SERVICE_YEAR)
         screen.query_one("#asset-filing-m130-period", Input).value = "2T"
         await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
         shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
@@ -1006,7 +1029,7 @@ async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_da
 
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(100, 60)) as pilot:
-            screen.query_one("#asset-filing-tax-year", Input).value = "2025"
+            screen.query_one("#asset-filing-tax-year", Input).value = str(ASSET_IN_SERVICE_YEAR)
             await _activate(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
             shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
         first, *lines = shown.splitlines()
@@ -1014,5 +1037,5 @@ async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_da
     assert first == "filing_handoff	m100_material=box_unbound	m100_intangible=0.00"
     # The screen shows each sentence exactly as the application served it.
     assert lines == [gap.words for gap in gaps]
-    assert all("Office laptop" in line and "Dec 31, 2025" in line for line in lines)
+    assert all("Office laptop" in line and f"Dec 31, {ASSET_IN_SERVICE_YEAR}" in line for line in lines)
     assert "laptop-1" not in shown

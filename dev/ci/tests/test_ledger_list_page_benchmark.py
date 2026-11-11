@@ -34,15 +34,9 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.list_operation import LedgerListProjection, LedgerListRequest
+from cadrumo.application.ledger.list_operation import LedgerListProjection, LedgerListRequest, ledger_list_row
 from cadrumo.application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
-from cadrumo.application.ledger.manual_read import ledger_transaction_payload
 from cadrumo.application.ledger.read_ports import LedgerReadPorts
-from cadrumo.application.ledger.review_projection import ledger_transaction_review_status
-from cadrumo.application.ledger.transaction_projection import (
-    LedgerTransactionProjection,
-    LedgerTransactionReviewProjection,
-)
 from cadrumo.core.ledger_sort import LedgerSortField
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
@@ -151,15 +145,7 @@ def _read_page(
     )
     return LedgerListProjection(
         profile_id=request.profile_id,
-        rows=tuple(
-            LedgerTransactionReviewProjection(
-                transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(item.transaction)),
-                review_status=ledger_transaction_review_status(item.transaction),
-                group_label=item.transaction.group_label,
-                own_account_id=item.transaction.own_account_id,
-            )
-            for item in page.results
-        ),
+        rows=tuple(ledger_list_row(item.transaction) for item in page.results),
         total=page.total,
         truncated=page.truncated,
         offset=request.offset,

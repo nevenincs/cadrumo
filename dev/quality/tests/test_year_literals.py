@@ -13,14 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.year_literals import (
-    blank_text,
-    governed_sources,
-    main,
-    python_findings,
-    scan,
-    typescript_findings,
-)
+from dev.quality.typescript_text_blanking import blank_text
+from dev.quality.year_literal_python import python_findings
+from dev.quality.year_literal_typescript import typescript_findings
+from dev.quality.year_literals import governed_sources, main, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

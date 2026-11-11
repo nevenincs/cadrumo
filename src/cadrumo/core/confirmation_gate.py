@@ -99,6 +99,9 @@ class ConfirmationBlockReason(StrEnum):
     CONTRADICTED_INVOICE_CLASS = "contradicted_invoice_class"
     """The document's class code and corrective reference disagree."""
 
+    UNNUMBERED_INVOICE = "unnumbered_invoice"
+    """The invoice number read is not a number; the operator supplies it."""
+
 
 OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON: Mapping[ConfirmationBlockReason, OperatorActionAxis] = MappingProxyType(
     {
@@ -109,6 +112,7 @@ OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON: Mapping[ConfirmationBlockReason, O
         ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        ConfirmationBlockReason.UNNUMBERED_INVOICE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
     },
 )
 """Total operator-action projection for the native confirmation blocker axis."""

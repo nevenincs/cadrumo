@@ -89,11 +89,18 @@ class SavedFilingScreen(ModalScreen[None]):
         if view.filing_record_id != filing_id or view.record.filing_record_id != filing_id:
             self.query_one("#saved-filing-notice", Static).update(tr("workspace.declarations.related_filings.failed"))
             return
+        self._show(view, filing_id)
+
+    def _show(self, view: ModeloFilingRecordViewProjection, filing_id: str) -> None:
         self._view = view
         picker = self.query_one("#saved-filing-select", Select)
         picker.set_options((self._label(row), row.filing_record_id) for row in view.related_filings)
         picker.value = filing_id
         self.query_one("#saved-filing-notice", Static).update(view.historical_display_words or "")
+        self._render_links(view, filing_id)
+        self._render_values(view)
+
+    def _render_links(self, view: ModeloFilingRecordViewProjection, filing_id: str) -> None:
         links = self.query_one("#saved-filing-links", DataTable)
         links.add_column(tr("workspace.declarations.related_filings.title"))
         for row in view.related_filings:
@@ -107,7 +114,6 @@ class SavedFilingScreen(ModalScreen[None]):
                     tr("workspace.declarations.related_filings.corrections") + ": " + self._label(row),
                     key=row.filing_record_id,
                 )
-        self._render_values(view)
 
     @staticmethod
     def _label(row: ModeloRelatedFilingProjection) -> str:

@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
@@ -56,7 +56,7 @@ from ..categories.registry import resolve_category_profiles
 from ..categories.spending_category import SpendingCategory
 from ..categories.spending_category_catalogue import spending_category_tokens
 from ..iva.schema import IvaCategory
-from .enums import BusinessClassification
+from .enums import BusinessClassification, TransactionDirection
 from .errors import LLMClassifierError, TransactionValidationError
 from .models import Transaction
 
@@ -288,6 +288,15 @@ _DEFAULT_CLASSIFICATION_HINTS: dict[BusinessClassification, str] = {
 }
 
 
+# The bank amount is a magnitude, so the prompt states which way the money
+# moved; without it an incoming transfer reads exactly like a payment.
+_DIRECTION_HINTS: dict[TransactionDirection, str] = {
+    TransactionDirection.INCOMING: "INCOMING, money received into the autónomo's account",
+    TransactionDirection.OUTGOING: "OUTGOING, money paid out of the autónomo's account",
+    TransactionDirection.INTERNAL_TRANSFER: "INTERNAL_TRANSFER, money moved between the autónomo's own accounts",
+}
+
+
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
     """Return the default allowed-classifications tuple used by the prompt.
 
@@ -334,6 +343,19 @@ class PromptSpec:
             select from; empty when the spec does not ask for an IVA category.
         """
         return frozenset(choice.value for choice in self.iva_categories)
+
+    def for_direction(self, direction: TransactionDirection) -> PromptSpec:
+        """Return this spec scoped to a row moving money in ``direction``.
+
+        Every :class:`SpendingCategory` names an expense, so only an outgoing
+        row may carry one. Scoping the spec, rather than the prompt alone,
+        keeps the rendered choices and the parser's allow-list the same: a
+        category proposed for an incoming row or an internal transfer is
+        refused as unexpected.
+        """
+        if direction is TransactionDirection.OUTGOING:
+            return self
+        return replace(self, categories=())
 
     def render(
         self,
@@ -660,6 +682,7 @@ def _render_prompt(
         "Transaction:",
         f"  Date: {effective_date.isoformat()}",
         f"  Amount: {raw.amount} {raw.currency}",
+        f"  Direction: {_DIRECTION_HINTS[transaction.direction]}",
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",
@@ -843,6 +866,7 @@ def build_split_prompt(
         "Transaction:",
         f"  Date: {effective_date}",
         f"  Amount: {raw.amount} {raw.currency}",
+        f"  Direction: {_DIRECTION_HINTS[transaction.direction]}",
         f"  Counterparty: {raw.counterparty or '(unknown)'}",
         f"  Description: {raw.description}",
         "",

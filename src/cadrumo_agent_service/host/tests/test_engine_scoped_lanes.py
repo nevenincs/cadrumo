@@ -29,6 +29,7 @@ from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from ...providers.application.tests.synthetic_catalog import (
     ProvidedProviderCatalogSource,
+    StaticLiveModels,
     engine_catalog,
     engine_document,
 )
@@ -74,7 +75,7 @@ def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, engine: LocalEn
     source = ProvidedProviderCatalogSource(engine_catalog())
     store = MemoryLocalModelListStore()
     service._local_models = LocalModelListService(
-        store=store, catalog_source=source, default_engine=LocalEngine.LLAMACPP
+        store=store, catalog_source=source, live_models=StaticLiveModels(), default_engine=LocalEngine.LLAMACPP
     )
     service._providers = ProviderSettingsService(
         store=MemoryProviderSettingsStore(),

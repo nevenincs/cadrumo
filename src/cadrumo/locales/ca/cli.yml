@@ -2596,6 +2596,23 @@ cli:
           export_target_exists: Ja hi ha un fitxer al camí de destinació i una còpia
             de seguretat no se sobreescriu mai. Tria un altre --output o mou primer
             el fitxer existent; no s'ha llegit cap perfil.
+      ascendiente:
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,NIF=<NIF o NIE>][,FALLECIMIENTO=AAAA-MM-DD][,CONVIVIENTES=<nombre
+          de descendents amb qui conviu l'ascendent>]. Repetible; NACIMIENTO és obligatori
+          a cada fila.
+        add_help: Afegeix un o més ascendents al perfil actiu, o declara amb --none
+          que no n'hi ha cap.
+        help: Declara els ascendents del contribuent per a la secció de família del
+          model 100.
+        index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} ascendent(s).
+        invalid_row: No s'ha pogut llegir la fila de --ascendiente. Fes servir parells
+          CLAU=VALOR amb les claus NACIMIENTO, NIF, FALLECIMIENTO i CONVIVIENTES,
+          cadascuna com a màxim una vegada i amb valor; el context de l'error indica
+          la clau quan es pot identificar.
+        list_help: Llista els ascendents declarats al perfil actiu i si el perfil
+          declara que no n'hi ha cap.
+        remove_help: Elimina un ascendent per índex (base 0) del perfil actiu.
+        remove_index_help: Índex (base 0) de l'ascendent que vols eliminar.
       automation:
         approve:
           digest_help: Empremta exacta de revisió mostrada per cadrumo-runtime config
@@ -2794,6 +2811,16 @@ cli:
         marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
+      household:
+        none_conflicts_with_rows: '%{none} no es pot combinar amb %{flag}.'
+        none_flag_help: Declara que el contribuent no en té cap, en lloc d'afegir
+          files. És una resposta, no una dada desconeguda. Es rebutja al costat d'una
+          fila i mentre hi hagi files desades.
+        none_with_stored_rows: El perfil ja conté aquest grup familiar (%{rows} fila/es
+          desades, recompte declarat %{stated_count}). Elimina primer les files amb
+          l'ordre remove.
+        rows_or_none_required: Indica almenys una fila %{flag}, o %{none} per declarar
+          que no n'hi ha cap.
       list:
         incoherent_observation_advisory: 'No s''ha pogut obtenir un llistat fiable
           de perfils (estat: {outcome}). Torna a executar l''ordre; si persisteix,

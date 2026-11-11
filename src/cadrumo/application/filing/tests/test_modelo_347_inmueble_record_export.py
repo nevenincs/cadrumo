@@ -30,6 +30,7 @@ from ....domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ..draft_construction import build_draft
 from ..export import render_filing_layout
@@ -50,8 +51,10 @@ class _Edition:
     year: int
 
 
-_FILING_EDITION = _Edition("2025-y-siguientes", 2025)
-_HISTORICAL_FILING_EDITION = _Edition("2011-2024", 2024)
+_HISTORICAL_REVISION, _CURRENT_REVISION = authored_revisions("347")
+assert _HISTORICAL_REVISION.valid_to is not None
+_FILING_EDITION = _Edition(str(_CURRENT_REVISION.id), _CURRENT_REVISION.valid_from.year)
+_HISTORICAL_FILING_EDITION = _Edition(str(_HISTORICAL_REVISION.id), _HISTORICAL_REVISION.valid_to.year)
 
 
 def _observation(

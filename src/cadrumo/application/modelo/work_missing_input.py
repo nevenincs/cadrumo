@@ -1,4 +1,7 @@
-"""Typed missing-input refusal from a Modelo calculation before publication."""
+"""Typed missing-input refusal from a Modelo calculation before publication.
+
+It works with :class:`RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
@@ -38,6 +41,8 @@ class ModeloWorkMissingInputError(RegistryValidationError):
     may already have changed other state.
     """
 
+    _binding_id: BindingId
+
     def __init__(
         self,
         source: RegistryValidationError,
@@ -52,7 +57,7 @@ class ModeloWorkMissingInputError(RegistryValidationError):
         A subclass that words the refusal itself passes its own message key,
         context and verdict; otherwise the engine's are kept.
         """
-        self.binding_id = binding_id
+        self._binding_id = binding_id
         super().__init__(
             str(source),
             context=source.context if context is None else context,
@@ -64,6 +69,15 @@ class ModeloWorkMissingInputError(RegistryValidationError):
         )
         self.args = source.args
         self.__cause__ = source
+
+    @property
+    def binding_id(self) -> BindingId:
+        """The binding the engine found without a value.
+
+        Held privately so the registered error context, which folds public
+        attributes in, never names a registry binding to the filer.
+        """
+        return self._binding_id
 
     @classmethod
     def from_registry_error(cls, source: RegistryValidationError) -> Self | None:
@@ -96,6 +110,9 @@ class ModeloPriorCarryAbsenceUnstatedError(OperationNextStepErrorMixin, ModeloWo
     them together; it is raised before any revision is published.
     """
 
+    _family: AbsenceAttestationFamily
+    _open_carry_ids: tuple[BindingId, ...]
+
     def __init__(
         self,
         source: RegistryValidationError,
@@ -109,8 +126,8 @@ class ModeloPriorCarryAbsenceUnstatedError(OperationNextStepErrorMixin, ModeloWo
         next_step: OperationNextStepWording | None,
     ) -> None:
         """Keep the engine refusal as the cause and the open carries as typed facts."""
-        self.family = family
-        self.open_carry_ids = open_carry_ids
+        self._family = family
+        self._open_carry_ids = open_carry_ids
         super().__init__(
             source,
             binding_id=binding_id,
@@ -119,6 +136,16 @@ class ModeloPriorCarryAbsenceUnstatedError(OperationNextStepErrorMixin, ModeloWo
             precondition_verdict=precondition_verdict,
             next_step=next_step,
         )
+
+    @property
+    def family(self) -> AbsenceAttestationFamily:
+        """The statement-of-absence family the open carries belong to."""
+        return self._family
+
+    @property
+    def open_carry_ids(self) -> tuple[BindingId, ...]:
+        """Every carry of the family still open, as typed facts kept out of the rendered context."""
+        return self._open_carry_ids
 
 
 def _carry_box(snapshot: RegistrySnapshot, boxes: PrintedBoxes, binding_id: BindingId) -> str | None:
@@ -141,6 +168,8 @@ def prior_carry_absence_unstated(
     Every carry of the same family that no source resolved and the caller did
     not answer is named, the refused one included. ``None`` when the binding
     declares no statement of absence, so the engine refusal stands unchanged.
+
+    ``snapshot`` is the :class:`RegistrySnapshot` it uses.
     """
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     refused = bindings.get(missing.binding_id)

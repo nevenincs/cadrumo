@@ -25,6 +25,7 @@ from .synthetic_catalog import (
     KEYLESS_LANE,
     KEYLESS_TEXT_MODEL,
     ProvidedProviderCatalogSource,
+    StaticLiveModels,
     engine_catalog,
     synthetic_catalog,
 )
@@ -47,7 +48,9 @@ def _services(
 ) -> tuple[MemoryLocalModelListStore, LocalModelListService, ProviderSettingsService]:
     store = MemoryLocalModelListStore()
     source = ProvidedProviderCatalogSource(engine_catalog())
-    models = LocalModelListService(store=store, catalog_source=source, default_engine=default_engine)
+    models = LocalModelListService(
+        store=store, catalog_source=source, live_models=StaticLiveModels(), default_engine=default_engine
+    )
     settings = ProviderSettingsService(
         store=MemoryProviderSettingsStore(), catalog_source=source, selected_engine=models.selected_engine
     )

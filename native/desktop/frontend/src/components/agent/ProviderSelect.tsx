@@ -15,9 +15,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { described, labelled } from "../../shell/compose";
+import { connectionWords } from "../../shell/providerConnection";
 import { useStrings } from "../../shell/strings";
 import { ProviderMark } from "./ProviderMark";
-import type { ProviderOption, ProviderTransport, ProviderWay } from "./types";
+import type { ProviderOption, ProviderWay } from "./types";
 
 /** One row of the list: a lane of the catalog, named as the catalog names it
  * and distinguished by how it reaches the provider. */
@@ -28,15 +29,6 @@ const entriesOf = (providers: readonly ProviderOption[]): Entry[] =>
   providers.flatMap((provider) =>
     provider.ways.map((way): Entry => ({ provider, way })),
   );
-
-function connectionWords(
-  t: ReturnType<typeof useStrings>,
-  transport: ProviderTransport,
-) {
-  return transport === "api"
-    ? t("desktop.providers.connection_api")
-    : t("desktop.providers.connection_app");
-}
 
 /** Keep an entry whose words hold what was typed, as the provider settings
  * search does; a fuzzy match would let a short word like "app" match almost
@@ -91,7 +83,7 @@ export function ProviderSelect({
                   described(
                     t,
                     chosen.provider.name,
-                    connectionWords(t, chosen.way.transport),
+                    connectionWords(t, chosen.way),
                   ),
                 )
               : t("desktop.agent.provider")
@@ -106,7 +98,7 @@ export function ProviderSelect({
                 <ProviderMark provider={chosen.provider.id} size="md" />
                 <span className="truncate">{chosen.provider.name}</span>
                 <span className="shrink-0 text-sm text-muted-foreground">
-                  {connectionWords(t, chosen.way.transport)}
+                  {connectionWords(t, chosen.way)}
                 </span>
               </>
             ) : (
@@ -149,7 +141,7 @@ export function ProviderSelect({
                 )}
                 <CommandGroup>
                   {group.map(({ provider, way }) => {
-                    const connection = connectionWords(t, way.transport);
+                    const connection = connectionWords(t, way);
                     const reason = way.selectable
                       ? null
                       : (way.unavailableReason ??

@@ -157,20 +157,32 @@ def _year_failures(
         return [f"{subject}: publication {publication.variant_id!r} declares no verified territories"]
     verified = [token.strip() for token in verified_value.split(",") if token.strip()]
     catalogue = resolve_calendar_ccaa_catalogue(effective_date=coordinate, authority=authority)
-    territories = {str(token) for token in catalogue.choices}
+    failures = _territory_failures(
+        subject, publication.variant_id, verified, {str(token) for token in catalogue.choices}
+    )
+    failures.extend(_event_failures(subject, [event for event in events if event.year == year], verified))
+    return failures
+
+
+def _territory_failures(subject: str, variant_id: str, verified: list[str], territories: set[str]) -> list[str]:
+    """Compare the territories a publication verifies with the territory catalogue."""
     failures = [
         f"{subject}: territory {code} of the deadline-calendar territory catalogue is not verified by "
-        f"publication {publication.variant_id!r}"
+        f"publication {variant_id!r}"
         for code in sorted(territories - set(verified))
     ]
     failures.extend(
-        f"{subject}: publication {publication.variant_id!r} verifies {code}, "
-        "which the territory catalogue does not declare"
+        f"{subject}: publication {variant_id!r} verifies {code}, which the territory catalogue does not declare"
         for code in sorted(set(verified) - territories)
     )
     if len(set(verified)) != len(verified):
-        failures.append(f"{subject}: publication {publication.variant_id!r} repeats a verified territory")
-    in_year = tuple(event for event in events if event.year == year)
+        failures.append(f"{subject}: publication {variant_id!r} repeats a verified territory")
+    return failures
+
+
+def _event_failures(subject: str, in_year: list[_HolidayEvent], verified: list[str]) -> list[str]:
+    """Check the year's authored día inhábil events against its verified territories."""
+    failures: list[str] = []
     if not any(event.jurisdiction == _NATIONAL for event in in_year):
         failures.append(f"{subject}: no national día inhábil of fact {HOLIDAY_EVENT_FACT_ID!r} is authored for it")
     unverified_regions = sorted(

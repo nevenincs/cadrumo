@@ -21,13 +21,11 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
-from ..registry_status import (
+from ..registry_status import RegistryStatus, project_target_states, registry_status_payload
+from ..registry_target_classification import (
     INAPPLICABLE_BELOW_FLOOR,
     INAPPLICABLE_NO_RECORD_DESIGN,
-    RegistryStatus,
     classify_inapplicable_target,
-    project_target_states,
-    registry_status_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

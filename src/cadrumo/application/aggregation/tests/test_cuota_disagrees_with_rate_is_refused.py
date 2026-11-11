@@ -17,15 +17,18 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.models import Transaction
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_ledger_row_support import aggregate_row, uncategorised_sale_row
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-_PERIOD = Period.from_year_and_code(2024, "4T")
-_ON = date(2024, 11, 6)
+_PERIOD = Period.from_year_and_code(_YEAR, "4T")
+_ON = date(_YEAR, 11, 6)
 _REFUSED = [IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE.value]
 
 

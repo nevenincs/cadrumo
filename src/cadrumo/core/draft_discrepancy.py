@@ -180,3 +180,17 @@ class DraftDiscrepancyKind(StrEnum):
     carrying one, gives two incompatible answers inside the same document.
     Neither statement is silently selected over the other.
     """
+
+    INVOICE_NUMBER_UNNUMBERED = "invoice_number_unnumbered"
+    """The invoice number read from the document contains no digit.
+
+    An invoice carries its number, and within a series that numbering is
+    correlative (Real Decreto 1619/2012, art. 6.1.a), so a value with no digit
+    is not a number at all: it is typically the document's own heading, such as
+    ``FACTURA``, read into the number's place. The value can be printed on the
+    page and still be the wrong one, so the anchor check cannot catch it.
+
+    Blocking rather than advisory because it fires only on a value that cannot
+    be any invoice's number, and the record it would otherwise create names no
+    invoice the operator or a counterparty could find again.
+    """

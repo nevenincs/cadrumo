@@ -29,6 +29,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -53,12 +54,14 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _OTHER_BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-_QUARTER = Period.from_year_and_code(2024, "1T")
-_ANNUAL = Period.from_year_and_code(2024, "0A")
+_QUARTER = Period.from_year_and_code(_YEAR, "1T")
+_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 M130_INGRESOS_CASILLA = validated_casilla_id("01")
 _M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
 _is_activity_income = m130_activity_category_matcher
@@ -69,8 +72,8 @@ _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 3, 15),
-        value_date=date(2024, 3, 15),
+        booked_date=date(_YEAR, 3, 15),
+        value_date=date(_YEAR, 3, 15),
         amount=Decimal(cash),
         currency="EUR",
         counterparty="Cliente SL",
@@ -80,7 +83,7 @@ def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={},
@@ -94,7 +97,7 @@ def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
             "business_classification": BusinessClassification.BUSINESS,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -110,7 +113,7 @@ def _invoice(
     number: str = "F-2024-001",
     iva_category: IvaCategory | None = _DEFAULT_IVA_CATEGORY,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -124,7 +127,7 @@ def _invoice(
         {
             "kind": kind,
             "invoice_number": number,
-            "issued_at": date(2024, 3, 15),
+            "issued_at": date(_YEAR, 3, 15),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
@@ -584,7 +587,7 @@ def test_an_uncategorised_invoice_grounds_its_irpf_base_and_retencion() -> None:
 
     result = aggregate_renta_income_ledger(
         transactions,
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",
@@ -612,7 +615,7 @@ def test_a_category_that_contradicts_its_cuota_is_still_refused() -> None:
 
     result = aggregate_renta_income_ledger(
         transactions,
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",
@@ -637,7 +640,7 @@ def test_a_categorised_invoice_still_grounds_on_its_base() -> None:
 
     result = aggregate_renta_income_ledger(
         transactions,
-        period=Period.from_year_and_code(2024, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
         modelo="130",

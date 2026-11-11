@@ -72,7 +72,7 @@ def test_canonical_temp_keeps_live_scratch_and_flags_unowned_work(repository: Pa
 
 
 def test_canonical_logs_preserve_live_run(repository: Path) -> None:
-    run = repository / ".tmp" / "logs" / "audit-runs" / "2026-10-29" / f"run-audit-{os.getpid()}-abcdef"
+    run = repository / ".tmp" / "logs" / "audit-runs" / "1980-10-29" / f"run-audit-{os.getpid()}-abcdef"
     _write(run / "run.log")
     verdict, _ = classify(repository, ".tmp/logs/audit-runs")
     assert verdict is Verdict.KEEP
@@ -170,8 +170,8 @@ def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
         / ".tmp"
         / "logs"
         / "test-runs"
-        / "2026-09-08"
-        / f"20260908T000000.0Z-pytest-{os.getpid()}-abcd1234"
+        / "1980-09-08"
+        / f"19800908T000000.0Z-pytest-{os.getpid()}-abcd1234"
         / "run.json",
         "{}",
     )
@@ -180,8 +180,8 @@ def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
         / ".tmp"
         / "logs"
         / "audit-runs"
-        / "2026-09-08"
-        / f"20260908T000000.0Z-audit-{os.getpid()}-beef5678"
+        / "1980-09-08"
+        / f"19800908T000000.0Z-audit-{os.getpid()}-beef5678"
         / "run.log",
         "still being written",
     )

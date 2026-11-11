@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from ....calculations.registry.authority import PinnedAuthorityOperation
@@ -23,7 +25,7 @@ def catalogue(operation: PinnedAuthorityOperation) -> ApoderamientosCatalogue:
 
 
 def test_default_catalogue_loads_registry_invariants(catalogue: ApoderamientosCatalogue) -> None:
-    assert catalogue.catalogue_version.startswith("2026")
+    assert re.fullmatch(r"\d{4}\.\d{2}\.\S+", catalogue.catalogue_version)
     assert len(catalogue.scopes) >= 5
     codes = catalogue.code_set()
     assert {"IVA", "RENT", "CENSO"} <= codes

@@ -1,4 +1,5 @@
 import type { AgentServiceStatus } from "../../shell/agentSession";
+import type { ContextFit } from "../../errors";
 import type { Translate } from "../../shell/strings";
 
 /** Why the agent service is not serving, in words; null when it is. */
@@ -12,8 +13,13 @@ export function serviceWords(
   return refusalWords(t, status.code);
 }
 
-/** A refusal code of the agent's, in words where it is one we know. */
-export function refusalWords(t: Translate, code: string): string {
+/** A refusal code of the agent's, in words where it is one we know; a model
+ * that does not fit is said with the context sizes its refusal states. */
+export function refusalWords(
+  t: Translate,
+  code: string,
+  fit: ContextFit | null = null,
+): string {
   switch (code) {
     case "agent_platform_unsupported":
       return t("desktop.agent.platform_unsupported");
@@ -55,8 +61,25 @@ export function refusalWords(t: Translate, code: string): string {
     case "agent_gateway_model_not_installed":
       return t("desktop.agent.model_not_installed_refused");
     case "agent_gateway_model_does_not_fit":
-      return t("desktop.agent.model_does_not_fit_refused");
+      return fitWords(t, fit);
     default:
       return t("desktop.agent.request_failed");
   }
+}
+
+/** Why the model does not fit, by what its refusal counted: the context the
+ * conversation needs beyond the model's window, the context it could not be
+ * loaded with in the memory free, or neither where the refusal says none. */
+function fitWords(t: Translate, fit: ContextFit | null): string {
+  const tokens = new Intl.NumberFormat(t.locale);
+  if (fit?.needed_tokens !== undefined && fit.context_tokens !== undefined)
+    return t("desktop.agent.model_does_not_fit_shortfall", {
+      needed: tokens.format(fit.needed_tokens),
+      context: tokens.format(fit.context_tokens),
+    });
+  if (fit?.context_tokens !== undefined)
+    return t("desktop.agent.model_does_not_fit_memory", {
+      context: tokens.format(fit.context_tokens),
+    });
+  return t("desktop.agent.model_does_not_fit_refused");
 }

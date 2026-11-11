@@ -18,7 +18,7 @@ from typing import TypeIs
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
-from ..quality.year_literals import YEAR_SOURCE
+from ..quality.year_literal_shapes import YEAR_SOURCE
 from ..registry.compiler.validate_below_floor_export_refs import SUPPORTED_FILING_YEARS_DECLARATION
 
 AUTHORITY = Path("src/cadrumo/_data/registry/aeat") / SUPPORTED_FILING_YEARS_DECLARATION

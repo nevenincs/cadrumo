@@ -1,5 +1,5 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { failureCode } from "../../errors";
+import { failureCode, failureFit, type ContextFit } from "../../errors";
 import { selectionRecord } from "../../shell/agentCatalog";
 import { documentRefs } from "../../shell/agentDocuments";
 import { sendRefusalStep } from "../../shell/agentSendRefusals";
@@ -74,12 +74,17 @@ export function agentSending({
     setView((held) => ({ ...held, ...next }));
   const namedFor = staging.namedFor;
   // A send that did not go is given back to the composer to try again.
-  const giveBack = (text: string, failure: string | null) =>
+  const giveBack = (
+    text: string,
+    failure: string | null,
+    fit: ContextFit | null = null,
+  ) =>
     setView((held) => ({
       ...held,
       sending: false,
       pending: null,
       sendFailure: failure,
+      sendFit: fit,
       draft: { key: held.draft.key + 1, text },
     }));
   const deliver = async (
@@ -118,7 +123,7 @@ export function agentSending({
       // A choice refused as one this computer cannot run came from a
       // catalog older than the agent's answer: what is offered is read again.
       if (sendRefusalStep(code) !== null) refreshCatalog();
-      if (current()) giveBack(request.text, code);
+      if (current()) giveBack(request.text, code, failureFit(error));
     }
   };
   // Pressing Send is the person's decision: the message goes, and nothing

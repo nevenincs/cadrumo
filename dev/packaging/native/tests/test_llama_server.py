@@ -21,10 +21,6 @@ from ..llama_server import (
     LICENSE_NAME,
     PROGRAM_DIRECTORY,
     RECEIPT_NAME,
-    ArchiveMismatchError,
-    GlibcFloorError,
-    LlamaServerError,
-    UnresolvedImportError,
     acquire_llama_server,
     fetch_pinned,
     pin_for_target,
@@ -32,6 +28,7 @@ from ..llama_server import (
     stage_llama_server,
     verify_acquired,
 )
+from ..llama_server_errors import ArchiveMismatchError, GlibcFloorError, LlamaServerError, UnresolvedImportError
 from ..platforms import posix_assembly
 from .binary_fixtures import elf_with_requirements, macho_image, pe_with_imports
 

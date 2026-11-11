@@ -86,6 +86,7 @@ from .....application.prorrata_register.projection_contracts import (
     ProrrataSectorDefinitionProjection,
     ProrrataSeedSourceProjection,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
@@ -102,6 +103,11 @@ from .....domain.contribuyente.inventory.records import InventoryAcquisitionCost
 from .....domain.filing_evidence import FilingEvidenceReference
 from ...account import AccountSessionExpiredError
 from ..registers_prorrata import ProrrataMutationRequestV1
+
+CAPITAL_GOOD_YEAR = filing_year_envelope().floor
+"""The year the fixture capital goods were acquired."""
+INVENTORY_YEAR = filing_year_envelope().horizon
+"""The year the fixture inventories are kept for."""
 
 REGISTERS_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d5")
 SYNTHETIC_AUTHORITY_PATH = "synthetic-closing-authority.json"
@@ -402,7 +408,7 @@ _PRORRATA_OPERATIONS: dict[type[BaseModel], ProrrataOperationId] = {
 }
 
 
-def synthetic_capital_good(identifier: str, *, year: int = 2024) -> BienInversionRecordProjection:
+def synthetic_capital_good(identifier: str, *, year: int = CAPITAL_GOOD_YEAR) -> BienInversionRecordProjection:
     """One declared capital good as the list operation projects it."""
     return BienInversionRecordProjection(
         identifier=identifier,
@@ -489,7 +495,7 @@ class MemoryCapitalGoodsDoor:
         )
 
 
-def synthetic_inventory_row(actividad_id: str, year: int = 2026) -> InventoryListRowProjection:
+def synthetic_inventory_row(actividad_id: str, year: int = INVENTORY_YEAR) -> InventoryListRowProjection:
     """One activity inventory as the list operation projects it."""
     return InventoryListRowProjection(
         actividad_id=actividad_id,
@@ -789,7 +795,7 @@ class MemoryInventoryDoor:
         self.requests.append(path)
         if path != SYNTHETIC_AUTHORITY_PATH:
             raise ValueError(f"unreadable: {path}")
-        return InventoryClosingAuthorityRecordInput.from_domain(synthetic_closing_authority("act-01", 2026))
+        return InventoryClosingAuthorityRecordInput.from_domain(synthetic_closing_authority("act-01", INVENTORY_YEAR))
 
 
 __all__ = [

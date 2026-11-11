@@ -28,12 +28,13 @@ import pytest
 
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import single_exercise_editions
 from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ..verification_predicates import advisory_predicate_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_REVISION_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_REVISION_YEARS = single_exercise_editions("100")
 _FORBIDDEN_WORDS = ("pull", "capture", "fetch")
 _LOCALES_NAMING_THE_SPANISH_CERTIFICATE = ("en", "es")
 _ALL_LOCALES = ("en", "es", "ca", "hu")
