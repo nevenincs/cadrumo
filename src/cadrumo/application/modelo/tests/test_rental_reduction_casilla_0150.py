@@ -36,7 +36,8 @@ from ..profile_binding import resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+# A record timestamp inside the newest supported exercise; the value decides nothing.
+_CLOCK = datetime(supported_exercises_with_projection("100")[-1], 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100150"
 _NET = Decimal("6782.00")
 _REDUCTION = validated_casilla_id("0150")

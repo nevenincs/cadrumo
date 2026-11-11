@@ -157,7 +157,7 @@ class ValorCatastral(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    year: int = Field(ge=1000, le=9999)
+    year: int = Field(gt=0)
     total: Decimal = Field(ge=0)
     construccion: Decimal = Field(ge=0)
 
@@ -243,41 +243,51 @@ class InmuebleRecord(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _coherent(self) -> Self:
-        if self.situacion.carries_catastral_reference != (self.referencia_catastral is not None):
-            raise _refuse(
-                "the cadastral reference is required with claves 1 to 3 and absent with the others",
-                field="referencia_catastral",
-            )
-        if (
-            self.fecha_adquisicion is not None
-            and self.fecha_transmision is not None
-            and self.fecha_transmision < self.fecha_adquisicion
-        ):
-            raise _refuse("the property cannot be transmitted before it is acquired", field="fecha_transmision")
-        if (
-            self.valor_suelo is not None
-            and self.importe_adquisicion is not None
-            and self.valor_suelo > self.importe_adquisicion
-        ):
-            raise _refuse("the land value cannot exceed the acquisition amount", field="valor_suelo")
+        _require_reference_matches_situacion(self)
+        _require_ordered_acquisition(self)
         _require_distinct_years(self.valores_catastrales, field="valores_catastrales")
-        if self.inmueble_principal is not None and self.inmueble_principal == self.clave:
-            raise _refuse("an accessory property cannot be its own principal", field="inmueble_principal")
-        share = self.titularidad.porcentaje_propiedad if self.titularidad is not None else None
-        if share is not None and share < _PERCENT_CEILING and self.importes_movimientos is None:
-            raise _refuse(
-                "a co-owned property states whether its ledger rows hold whole-property or own-share amounts",
-                field="importes_movimientos",
-            )
-        for index, uso in enumerate(self.usos):
-            if any(uso.overlaps(other) for other in self.usos[index + 1 :]):
-                raise _refuse("two uses of the same type cannot share a day", field="usos")
+        _require_ownership_coherent(self)
+        _require_disjoint_uses(self.usos)
         if (self.amortizacion_acumulada is None) != (self.amortizacion_acumulada_desde is None):
             raise _refuse(
                 "the attested cumulative amortisation and the date it is attested to travel together",
                 field="amortizacion_acumulada",
             )
         return self
+
+
+def _require_reference_matches_situacion(record: InmuebleRecord) -> None:
+    if record.situacion.carries_catastral_reference != (record.referencia_catastral is not None):
+        raise _refuse(
+            "the cadastral reference is required with claves 1 to 3 and absent with the others",
+            field="referencia_catastral",
+        )
+
+
+def _require_ordered_acquisition(record: InmuebleRecord) -> None:
+    acquired, transmitted = record.fecha_adquisicion, record.fecha_transmision
+    if acquired is not None and transmitted is not None and transmitted < acquired:
+        raise _refuse("the property cannot be transmitted before it is acquired", field="fecha_transmision")
+    land, amount = record.valor_suelo, record.importe_adquisicion
+    if land is not None and amount is not None and land > amount:
+        raise _refuse("the land value cannot exceed the acquisition amount", field="valor_suelo")
+
+
+def _require_ownership_coherent(record: InmuebleRecord) -> None:
+    if record.inmueble_principal is not None and record.inmueble_principal == record.clave:
+        raise _refuse("an accessory property cannot be its own principal", field="inmueble_principal")
+    share = record.titularidad.porcentaje_propiedad if record.titularidad is not None else None
+    if share is not None and share < _PERCENT_CEILING and record.importes_movimientos is None:
+        raise _refuse(
+            "a co-owned property states whether its ledger rows hold whole-property or own-share amounts",
+            field="importes_movimientos",
+        )
+
+
+def _require_disjoint_uses(usos: tuple[UsoInmueble, ...]) -> None:
+    for index, uso in enumerate(usos):
+        if any(uso.overlaps(other) for other in usos[index + 1 :]):
+            raise _refuse("two uses of the same type cannot share a day", field="usos")
 
 
 def _require_distinct_years(values: tuple[ValorCatastral, ...], *, field: str) -> None:
