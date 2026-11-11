@@ -54,12 +54,15 @@ from ....application.modelo.filing_actions import ModeloFilingEvidenceMissingErr
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_gate_findings import missing_evidence_findings
 from ....application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from ....application.modelo.work_form_next_step import ModeloFormNextAction, form_next_step
+from ....application.modelo.work_form_service import load_modelo_work_form
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.external_constants import OutputLanguage
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
@@ -985,6 +988,91 @@ def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifyin
         # folding evidence into identity: no calculation differs, so no new
         # revision was needed to carry the fix.
         assert settled.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_the_form_offers_the_check_again_once_evidence_is_attached_after_a_blocked_check(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A blocked check whose movements gained evidence since is offered again, not resolved.
+
+    The stored report still lists the missing factura it found, but the
+    movement it read has changed: only checking again says whether that
+    finding still stands. The form serves the check, follows each step it
+    serves, and arrives at a granted verification.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository, operation=operation)
+        )
+
+        def _verify() -> VerificationReport:
+            with bundled_indexed_authority().operation() as pinned:
+                return verify_modelo_revision_with_preconditions(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        operation=pinned,
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=pinned,
+                ).report
+
+        def _next() -> ModeloFormNextAction:
+            unit = wu_repo.load().get(revision.work_unit_id)
+            assert unit is not None
+            with bundled_indexed_authority().operation() as pinned:
+                loaded = load_modelo_work_form(
+                    unit.bucket_id,
+                    unit.modelo,
+                    unit.filing_year,
+                    unit.period,
+                    operation=pinned,
+                    work_unit_repository=wu_repo,
+                    calculation_repository=cr_repo,
+                    verification_repository=vr_repo,
+                    admission=None,
+                    language=OutputLanguage.EN,
+                    transactions=tx_repo,
+                )
+            return form_next_step(loaded.form, verified=loaded.verified, filed=loaded.filed).action
+
+        assert _verify().completeness_status is VerificationCompletenessStatus.BLOCKED
+        assert _next() is ModeloFormNextAction.RESOLVE
+
+        invoice = tmp_path / "supplier-invoice.pdf"
+        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        evidence = PurchaseInvoiceEvidenceService(
+            ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
+        ).add(bucket_id=_BUCKET_ID, source_path=invoice)
+        with _ledger_ports(objects=profile.repository, tx_repo=tx_repo, event_repo=event_repo) as ports:
+            attach_manual_transaction_evidence(
+                bucket_id=_BUCKET_ID,
+                transaction_id=purchase.transaction_id,
+                purchase_invoice_evidence_id=evidence.record.evidence_id,
+                actor="operator",
+                ports=ports,
+                occurred_at=_VERIFIED_AT,
+            )
+
+        assert _next() is ModeloFormNextAction.VERIFY
+        # Evidence is a watched fact, so the check reports the calculation stale.
+        assert _verify().granted_verificado_completo is False
+        assert _next() is ModeloFormNextAction.RECALCULATE
+        _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        assert _next() is ModeloFormNextAction.VERIFY
+        granted = _verify()
+        assert granted.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert _next() is not ModeloFormNextAction.VERIFY
 
 
 def _work_unit() -> WorkUnit:

@@ -834,6 +834,10 @@ class ModeloWorkForm(ModeloFormBase):
     #: compensación-pendiente binding the wallet decision owns. It holds before any calculation and says
     #: nothing about the balance, the wallet's history or whether a wallet write would be admitted.
     offers_iva_wallet: bool = False
+    #: Whether the source movements changed after the last check read them, such as evidence attached
+    #: since, so its findings may no longer stand and the check is the next thing to run. ``False`` when
+    #: they did not, or when the check recorded nothing to compare with.
+    verification_out_of_date: bool = False
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.
@@ -894,13 +898,17 @@ class ModeloWorkForm(ModeloFormBase):
     def calculation_out_of_date(self) -> bool:
         """Whether the calculation must be worked out again before it can be checked, exported or recorded.
 
-        The last check found the records changed after the calculation, or the
-        calculation was screened against other registry declarations than the
-        pinned ones, which the gate refuses until it is calculated again.
+        The last check found the records changed after the calculation, unless
+        what it read has itself changed since, or the calculation was screened
+        against other registry declarations than the pinned ones, which the gate
+        refuses until it is calculated again.
         """
-        return any(
+        stale_finding = not self.verification_out_of_date and any(
             issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues
-        ) or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes)
+        )
+        return stale_finding or any(
+            note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes
+        )
 
     @property
     def filed_before_grade_cap(self) -> bool:

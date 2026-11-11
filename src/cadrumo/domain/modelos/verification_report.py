@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -263,6 +264,14 @@ class VerificationReport(BaseModel):
     run_at: UtcInstant
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
+    source_transactions_digest: Hex64Str | None = None
+    """The digest of the source movements and the calculation's ledger anchor as this run read them.
+
+    ``None`` for a report that recorded none. Like ``run_at`` it is no part of
+    the identity: it says what the findings were judged against, so a later
+    reader can tell they predate a change to those movements, such as evidence
+    attached since, or a calculation taken over them since.
+    """
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

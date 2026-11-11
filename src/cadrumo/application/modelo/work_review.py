@@ -15,6 +15,7 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
@@ -221,6 +222,8 @@ class ModeloWorkReview(BaseModel):
     calculation_revision_id: CalculationRevisionId | None
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
+    #: The digest of the source movements the last check read, ``None`` when it recorded none.
+    verification_sources_digest: Hex64Str | None = None
     progress: ModeloWorkProgress
     casillas: tuple[ModeloWorkReviewCasilla, ...]
     findings: tuple[ModeloVerificationFinding, ...]

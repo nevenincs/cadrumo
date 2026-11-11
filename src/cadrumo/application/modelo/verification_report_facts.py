@@ -7,6 +7,8 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.hashing import content_hash_hex
+from ...core.hex import Hex64Str
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -24,7 +26,8 @@ from .m210_rate import resolve_m210_rate
 from .verification_finding_contracts import BLOCKED_VERDICT_KINDS, M210_UNRESOLVED_RATE_REASONS
 
 if TYPE_CHECKING:
-    pass
+    from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.transactions.models import TransactionCatalogue
 
 
 def m210_unresolved_outcome_findings(
@@ -85,6 +88,23 @@ def granting_verification_report(
     return None
 
 
+def verification_sources_digest(revision: CalculationRevision, catalogue: TransactionCatalogue) -> Hex64Str:
+    """The digest of what a check of ``revision`` reads from the ledger, as it stands now.
+
+    It covers each source movement whole, its evidence included, naming one that
+    is gone as absent, and the ledger anchor the calculation last took, so a
+    change to a movement or a new calculation over them both move it.
+    """
+    movements: dict[str, object] = {}
+    for transaction_id in sorted(revision.source_transaction_ids):
+        movement = catalogue.get(transaction_id)
+        movements[transaction_id] = None if movement is None else movement.model_dump(mode="json")
+    anchor = revision.ledger_filing_snapshot
+    return content_hash_hex(
+        {"movements": movements, "anchor": None if anchor is None else anchor.model_dump(mode="json")}
+    )
+
+
 def build_verification_report(
     *,
     calculation_revision_id: CalculationRevisionId,
@@ -96,6 +116,7 @@ def build_verification_report(
     granted: bool,
     actor: str,
     run_at: datetime,
+    source_transactions_digest: Hex64Str | None,
 ) -> VerificationReport:
     """Build the immutable, content-addressed verification report."""
     frozen_findings = tuple(findings)
@@ -116,6 +137,7 @@ def build_verification_report(
         run_at=run_at,
         verified_by=verified_by,
         granted_verificado_completo=granted,
+        source_transactions_digest=source_transactions_digest,
     )
 
 
