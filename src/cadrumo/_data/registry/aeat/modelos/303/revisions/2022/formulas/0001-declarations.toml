@@ -614,6 +614,55 @@ casilla_id = "65"
 [[revisions.2022.formulas.expression.args]]
 literal = "100"
 
+# Boxes [09], [06] and [03] project the cuota devengada of their régimen general
+# row, the carrier modelo-303-iva-cuota-devengada-total adds into [27]. The 2022
+# diseno de registro (aeat-dr-303-2022, campo 51) defines [27] as the sum of
+# those boxes with [11], [13], [15], [18], [21], [24] and [26], and the same
+# design's rows [01], [04] and [07] already take their base from the ledger at
+# the row's rate, so the cuota of the row comes from the same population.
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-09-projection"
+target_casilla_id = "09"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.cuota-devengada.general"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-06-projection"
+target_casilla_id = "06"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.cuota-devengada.reducido"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-03-projection"
+target_casilla_id = "03"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.cuota-devengada.super-reducido"
+
 # Box [10] projects the intracomunitaria acquisitions base, the base of the
 # same rows box [11] states the cuota of. The 2022 diseño de registro prints it
 # as every later design does (DP30301 campo 34) and gives it no rate field.

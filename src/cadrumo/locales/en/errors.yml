@@ -1280,6 +1280,17 @@ errors:
       that states casilla 111 needs a choice for the earlier direct debit (keep it,
       or cancel or modify it); none was given, so nothing was written. Choose one
       and export again.
+    refused_modelo_export_producer_facts: 'Nothing was written: facts the file states
+      about you or about this return are missing or inconsistent (identification,
+      bank account or facts specific to the modelo). Complete them in your profile
+      or in the export options and export again.'
+    refused_modelo_export_required_record_absent: The official design requires at
+      least one %{export_record_id} record, but this return has none, so there is nothing
+      to write in this format and nothing was written.
+    refused_modelo_export_value_overflow: 'Nothing was written: a value does not fit
+      field %{field_id}, which the AEAT record design gives %{field_length} positions.
+      Cutting it would declare something else. Check that value or amount and export
+      again.'
     refused_modelo_household_row_fact_unstated: 'The declaration stays refused: your
       profile does not state a household fact that the official design requires. Add
       it in your profile, then calculate again.'

@@ -651,6 +651,35 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.export",
+            target_command_key="modelo.export",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="modelo",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="output",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="output",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="period_code",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.CONDITION_EVIDENCE,
+                    source_key="filing_year",
+                    source_evidence_id="workflow.deadline.window",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.calculate",
             target_command_key="modelo.work.calculate",
             argument_specifications=(

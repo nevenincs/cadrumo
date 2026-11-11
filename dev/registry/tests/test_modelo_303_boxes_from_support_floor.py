@@ -6,9 +6,9 @@ box-equals-source predicates apply to every design from the one covering the
 registry's support floor: each of those boxes is printed there with the meaning later designs
 repeat. They are authored once at that edition and inherited forward. Boxes a
 later design introduces stay out of every edition whose own design omits them.
-The rate-row cuotas [03], [06] and [09] are not among them: their meaning follows
-the paired Tipo % field, which the floor design leaves free, and
-``test_modelo_303_record_projection_year_parity`` pins where they are derived.
+The rate-row cuotas [03], [06] and [09] are among them: the floor design adds
+them into [27] and its rate rows take their base from the same ledger
+population, so the row's cuota is derived there as it is in later designs.
 """
 
 from __future__ import annotations
@@ -35,12 +35,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 # Official box -> the semantic carrier its single-source projection copies.
 _PROJECTED_BOXES = {
+    "03": "iva.cuota-devengada.super-reducido",
+    "06": "iva.cuota-devengada.reducido",
+    "09": "iva.cuota-devengada.general",
     "10": "iva.autorepercutido.intracomunitaria.devengado.base",
     "11": "iva.autorepercutido.intracomunitaria.devengado",
     "13": "iva.autorepercutido.interior.devengado",
     "27": "iva.cuota-devengada-total",
 }
 _EQUALS_PREDICATES = {
+    "equals:dr303-03-equals-iva-cuota-devengada-super-reducido",
+    "equals:dr303-06-equals-iva-cuota-devengada-reducido",
+    "equals:dr303-09-equals-iva-cuota-devengada-general",
     "equals:dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado",
     "equals:dr303-13-equals-iva-autorepercutido-interior-devengado",
     "equals:dr303-27-equals-iva-cuota-devengada-total",
@@ -250,8 +256,9 @@ def test_floor_exercise_carries_its_sales_to_the_printed_result() -> None:
     The expected figures are the three sales' own cuotas and the design's box
     arithmetic ([27] = [03] + [06] + [09] with no other devengado, [46] = [27] -
     [45] with nothing deductible, [64] = [46], [66] = [64] at a 100 % State
-    share and [69] = [66]), not the registry's formulas. The floor design leaves
-    the rate rows' Tipo % free, so the rows themselves stay operator input there.
+    share and [69] = [66]), not the registry's formulas. Each rate row's cuota is
+    the cuota of the sale charged at that row's rate: 4 % of 100,00, 10 % of
+    200,00 and 21 % of 1000,00 (LIVA arts. 91.Dos, 91.Uno and 90.Uno).
     """
     exercise = committed_supported_filing_years().floor
     result = calculate_303_from_observations(filing_year=exercise, period="2T", observations=_domestic_sales(exercise))
@@ -260,6 +267,9 @@ def test_floor_exercise_carries_its_sales_to_the_printed_result() -> None:
     def box(casilla_id: str) -> Decimal:
         return values[validated_casilla_id(casilla_id)]
 
+    assert box("03") == Decimal("4.00")
+    assert box("06") == Decimal("20.00")
+    assert box("09") == Decimal("210.00")
     assert box("27") == Decimal("234.00")
     assert box("64") == Decimal("234.00")
     assert box("66") == Decimal("234.00")

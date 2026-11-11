@@ -24,7 +24,11 @@ from ...domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ...domain.filing.errors import FilingExportValidationError
+from ...domain.filing.errors import (
+    FilingExportRequiredRecordAbsentError,
+    FilingExportValidationError,
+    FilingExportValueOverflowError,
+)
 from ...domain.filing.schema import ModeloDraft
 from ...domain.modelos.perceptor_clave_scope import (
     PerceptorClaveScope,
@@ -81,7 +85,7 @@ def render_layout_records(
             projection_plan=projection_plan,
         )
         if record.required and not rows:
-            raise FilingExportValidationError(f"required export record {record.id!r} has no applicable occurrence")
+            raise FilingExportRequiredRecordAbsentError(export_record_id=record.id)
         require_m347_declarado_casillas_have_one_row(
             record,
             rows=tuple(row for row, _context in rows),
@@ -200,19 +204,23 @@ def _render_record_bytes(
     source_digests: Mapping[str, str],
     clave_scope: PerceptorClaveScope | None,
 ) -> bytes:
-    text = render_record(
-        record,
-        draft=draft,
-        producer_values=headers,
-        producer_snapshot=producer_snapshot,
-        casilla_values=casilla_values,
-        binding_values=binding_values,
-        row=row,
-        render_context=render_context,
-        projection_values=projection_values,
-        source_digests=source_digests,
-        clave_scope=clave_scope,
-    )
+    try:
+        text = render_record(
+            record,
+            draft=draft,
+            producer_values=headers,
+            producer_snapshot=producer_snapshot,
+            casilla_values=casilla_values,
+            binding_values=binding_values,
+            row=row,
+            render_context=render_context,
+            projection_values=projection_values,
+            source_digests=source_digests,
+            clave_scope=clave_scope,
+        )
+    except FilingExportValueOverflowError as exc:
+        # The slot knows its field; only the record knows which design record it is.
+        raise exc.in_record(record.record_type) from exc
     line_ending = {"crlf": "\r\n", "lf": "\n"}.get(record.line_ending, "")
     return f"{text}{line_ending}".encode(record.encoding)
 

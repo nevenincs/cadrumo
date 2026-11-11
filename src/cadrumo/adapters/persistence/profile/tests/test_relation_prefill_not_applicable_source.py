@@ -1,7 +1,7 @@
 """A relation whose source modelo the registry's applicability rule excludes is a proven zero.
 
 A professional with at least 70 % of the activity income withheld is exempt from Modelo 130
-(RIRPF art. 109.1), so the Modelo 100 pagos fraccionados relation it feeds is a proven zero, as one whose
+(RIRPF art. 109.2), so the Modelo 100 pagos fraccionados relation it feeds is a proven zero, as one whose
 source periods precede the activity start is. The verdict is the registry's own, read from the profile: an
 unanswered or negative fact keeps Modelo 130 applicable and the relation unresolved.
 """

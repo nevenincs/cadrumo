@@ -108,6 +108,11 @@ from ...application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from ...application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID, LedgerLinkRequest
+from ...application.ledger.update_contracts import (
+    LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+    LedgerUpdatePatch,
+    LedgerUpdateRequest,
+)
 from ...application.live.filed_single_capture_operation import (
     FILED_SINGLE_CAPTURE_DEFINITION_ID,
     FiledSingleCapturePublicResultV1,
@@ -118,6 +123,10 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
     ModeloInvoiceWithholdingCaptureRequest,
+)
+from ...application.modelo.iva_wallet_override_operation import (
+    MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+    ModeloIvaWalletOverrideRequest,
 )
 from ...application.modelo.iva_wallet_seed_operation import (
     MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
@@ -156,6 +165,7 @@ from ...application.modelo.work_filing_contracts import (
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.composition import OperationComposedServices, compose_operation_services
+from ...application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -198,7 +208,11 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
@@ -241,7 +255,7 @@ from ...tests.personas import (
 from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
-from .persona_aeat_filings import PERSONA_AEAT_REGISTER, recorded_filing
+from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
 from .persona_inventory_purchases import replay_inventory_purchases
 from .persona_own_accounts import replay_own_accounts
 
@@ -268,6 +282,14 @@ class ReplayScope(StrEnum):
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
     """The household scope, the own bank accounts, the declared withholding, the statement import, invoices, evidence and inventory books."""
+    RECORDS = "records"
+    """The full scope, then the records the persona's returns read, without the returns.
+
+    The local observations, the Modelo 303 compensation carried in, the rent
+    and professional withholding and the returns filed with the AEAT are
+    recorded; no return is created. A consumer that takes the persona's
+    returns through their own operations, in order, replays this scope.
+    """
     HISTORY = "history"
     """The full scope, then the persona's return history.
 
@@ -353,7 +375,7 @@ def scenario_instant(persona: Persona, envelope: YearEnvelope) -> datetime:
 
 @cache
 def _registry() -> OperationRegistry:
-    return build_production_operation_registry(filed_data_port=PERSONA_AEAT_REGISTER)
+    return build_production_operation_registry(filed_register=PERSONA_FILED_REGISTER)
 
 
 def persona_profile_id(persona_id: str) -> UUID:
@@ -521,9 +543,60 @@ def settle_operation(
             if terminal.terminal_condition is OperationTerminalCondition.REFUSED
             else terminal.failure_error_code
         )
-        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
+        detail = _served_words(world, terminal)
+        if detail is None and result is not None:
+            # A refusal a definition records as its own typed result carries its sentence in that result.
+            detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
+            detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
+        if detail is None:
+            detail = "no detail"
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+def _result_words(value: object) -> str | None:
+    """The ``refusal_words`` sentence a typed refusal result carries, on one line, wherever it nests."""
+    if isinstance(value, Mapping):
+        words = str(value.get("refusal_words") or "")
+        if words.strip():
+            return " ".join(words.split())
+        children: Sequence[object] = tuple(value.values())
+    elif isinstance(value, list | tuple):
+        children = value
+    else:
+        return None
+    found: str | None = None
+    for child in children:
+        found = _result_words(child)
+        if found is not None:
+            break
+    return found
+
+
+def _served_words(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> str | None:
+    """The sentence the application serves an operator for a refused or failed operation, on one line.
+
+    This reads the recorded error detail through the settled-result read, as the command line and the
+    workbench do, so the words are those a frontend shows. ``None`` when the operation recorded none.
+    """
+    if terminal.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+        return None
+    contract = terminal.definition_contract
+    resolved = asyncio.run(
+        world.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=terminal.operation_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=operation_error_detail_schema(),
+            ),
+            OperationErrorDetailV1,
+        )
+    )
+    if not isinstance(resolved, OperationResultProjectionSuccessV1):
+        return None
+    words = resolved.projection.refusal_words if isinstance(resolved.projection, OperationErrorDetailV1) else None
+    return None if words is None else " ".join(words.split())
 
 
 def run_operation[Projection: BaseModel](
@@ -872,6 +945,18 @@ def _replay_ledger(persona: Persona, world: PersonaWorld, transactions: Mapping[
                 actor=PERSONA_ACTOR,
             ),
         )
+        if (accrued_on := row.accrual_date(world.envelope)) is not None:
+            settle_operation(
+                world,
+                LEDGER_UPDATE_OPERATION_DEFINITION_ID,
+                LedgerUpdateRequest(
+                    profile_id=world.profile_id,
+                    transaction_id=transactions[row.ref],
+                    patch=LedgerUpdatePatch(accrual_date=accrued_on.isoformat()),
+                    patch_fields=("accrual_date",),
+                    actor=PERSONA_ACTOR,
+                ),
+            )
     invoices: dict[str, str] = {}
     for row in persona.ledger:
         request = _invoice_request(persona, row, world)
@@ -1074,17 +1159,33 @@ def _m303_evidence(
 
 
 def _seed_compensation_carried_in(persona: Persona, world: PersonaWorld) -> None:
-    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one."""
+    """Declare the Modelo 303 compensation balance each filed block starts from, where the persona states one.
+
+    A balance carried into the first supported quarter comes from a quarter below the registry's support floor,
+    which has no Modelo 303 edition to seed; it is stated as the taxpayer's override on the consuming period.
+    """
     for filed in persona.filed_returns:
         if filed.iva_compensation_carried_in is None:
             continue
+        year = filed.year.resolve(world.envelope)
+        amount = _decimal_text(filed.iva_compensation_carried_in.normalize())
+        preceding = preceding_quarter(year, filed.periods[0])
+        if preceding.filing_year >= world.envelope.floor:
+            settle_operation(
+                world,
+                MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
+                ModeloIvaWalletSeedRequest(profile_id=world.profile_id, period=preceding, amount=amount),
+            )
+            continue
         settle_operation(
             world,
-            MODELO_IVA_WALLET_SEED_OPERATION_DEFINITION_ID,
-            ModeloIvaWalletSeedRequest(
+            MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
+            ModeloIvaWalletOverrideRequest(
                 profile_id=world.profile_id,
-                period=preceding_quarter(filed.year.resolve(world.envelope), filed.periods[0]),
-                amount=_decimal_text(filed.iva_compensation_carried_in.normalize()),
+                period=PublicPeriod(filing_year=year, code=filed.periods[0]),
+                amount=amount,
+                reason="Compensation balance carried in from before the first supported period, as the taxpayer states it",
+                evidence_locator=f"synthetic:persona:{persona.id}:iva-compensation-carried-in",
             ),
         )
 
@@ -1391,13 +1492,21 @@ def _capture_aeat_filings(persona: Persona, world: PersonaWorld) -> None:
                 )
 
 
-def _replay_history(
+def _replay_records(
     persona: Persona, world: PersonaWorld, *, transactions: Mapping[str, str], invoices: Mapping[str, str]
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Replay the persona's return history; returns the filed and the calculated returns, key to revision id.
+) -> None:
+    """Record what the persona's returns read: observations, compensation carried in, withholding and AEAT filings."""
+    _seed_compensation_carried_in(persona, world)
+    _record_local_observations(persona, world)
+    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
+    _capture_aeat_filings(persona, world)
 
-    The local observations, the rent and professional withholding and the
-    returns filed with the AEAT are recorded first. Then each
+
+def _replay_history(persona: Persona, world: PersonaWorld) -> tuple[dict[str, str], dict[str, str]]:
+    """Replay the persona's returns; returns the filed and the calculated returns, key to revision id.
+
+    The records of :func:`_replay_records` come first. Then each
     filed return is created, calculated, verified and filed locally, and each
     calculated return created and calculated, in the order their windows close.
     Each figure comes from the persona's replayed ledger, profile and recorded
@@ -1406,11 +1515,6 @@ def _replay_history(
     reason, never overridden. Local filing records a PRESENTADO revision whose
     AEAT status stays pending; no receipt is made.
     """
-    _seed_compensation_carried_in(persona, world)
-    _record_local_observations(persona, world)
-    _capture_rent_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_professional_withholding(persona, world, transactions=transactions, invoices=invoices)
-    _capture_aeat_filings(persona, world)
     filings: dict[str, str] = {}
     calculations: dict[str, str] = {}
     for year, period, filed in history_periods(persona, world.envelope):
@@ -1515,16 +1619,26 @@ def _complete_setup(world: PersonaWorld) -> bool:
     return load_profile_record(world).setup_state is ProfileSetupState.COMPLETE
 
 
-def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | None) -> tuple[NotLoaded, ...]:
+def _not_loaded(
+    persona: Persona, scope: ReplayScope, envelope: YearEnvelope, *, setup_complete: bool | None
+) -> tuple[NotLoaded, ...]:
     """The persona facts no production operation recorded within ``scope``, and why.
 
     A block outside the scope was never attempted, so it is absent from the
-    scope's result rather than reported as one no operation can record.
+    scope's result rather than reported as one no operation can record. A
+    return-history record a lowered horizon put below the floor is reported
+    within the records scope: the application refuses its year.
     """
     found = [
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
+    if scope.includes(ReplayScope.RECORDS):
+        found.extend(
+            NotLoaded(block=record.block, reason=record.reason(envelope))
+            for record in persona.below_floor
+            if record.history
+        )
     if setup_complete is False:
         found.append(
             NotLoaded(
@@ -1583,12 +1697,14 @@ def materialise_persona(
             evidence = _replay_documents(persona, world, transactions)
             _replay_inventory(persona, world, transactions)
         setup_complete = _complete_setup(world) if complete_setup else None
-        if scope.includes(ReplayScope.HISTORY) and (
+        if scope.includes(ReplayScope.RECORDS) and (
             persona.filed_returns or persona.calculated_returns or persona.local_observations or persona.aeat_filings
         ):
             if setup_complete is not True:
                 raise PersonaMaterialisationError(f"{persona.id}: replaying its returns needs a completed setup")
-            filings, calculations = _replay_history(persona, world, transactions=transactions, invoices=invoices)
+            _replay_records(persona, world, transactions=transactions, invoices=invoices)
+            if scope.includes(ReplayScope.HISTORY):
+                filings, calculations = _replay_history(persona, world)
     return MaterialisedPersona(
         persona=persona,
         world=world,
@@ -1596,7 +1712,7 @@ def materialise_persona(
         transactions=transactions,
         invoices=invoices,
         evidence=evidence,
-        not_loaded=_not_loaded(persona, scope, setup_complete=setup_complete),
+        not_loaded=_not_loaded(persona, scope, world.envelope, setup_complete=setup_complete),
         filings=filings,
         calculations=calculations,
     )
@@ -1687,7 +1803,7 @@ def _reused_persona_world(
                         transactions=ids["transactions"],
                         invoices=ids["invoices"],
                         evidence=ids["evidence"],
-                        not_loaded=_not_loaded(persona, scope, setup_complete=ids["setup_complete"]),
+                        not_loaded=_not_loaded(persona, scope, envelope, setup_complete=ids["setup_complete"]),
                         filings=ids["filings"],
                         calculations=ids["calculations"],
                     )
@@ -1723,15 +1839,20 @@ def materialised_persona(
     With ``horizon`` the persona is read as if the registry's horizon were that
     earlier supported year: its year tokens and its scenario clock move down
     with it, so a scenario written against ``horizon-1`` is replayed for an
-    earlier supported year. The floor stays the registry's own.
+    earlier supported year. The floor stays the registry's own, so a return
+    history record or expectation that moves below it is left out of the
+    replay and listed in :attr:`Persona.below_floor`, its history records
+    also in :attr:`MaterialisedPersona.not_loaded`; a return that depends on
+    one meets the application's own refusal.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
+    lowered = horizon is not None and horizon != envelope.horizon
     if horizon is not None:
         if not envelope.floor <= horizon <= envelope.horizon:
             raise PersonaMaterialisationError(f"horizon {horizon} lies outside {envelope.floor}..{envelope.horizon}")
         envelope = dataclasses.replace(envelope, horizon=horizon)
-    persona = read_persona(persona_id, envelope=envelope)
+    persona = read_persona(persona_id, envelope=envelope, omit_below_floor=lowered)
     as_of = scenario_instant(persona, envelope) if read_on is None else read_on
     if reuse:
         with _reused_persona_world(

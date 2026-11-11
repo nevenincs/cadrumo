@@ -3,7 +3,7 @@
 The projection under test is the production one: a real
 :class:`~cadrumo.domain.user_profile.values.UserProfileRecord` goes through
 :func:`projection_for_taxpayer` and the registry's own applicability
-classifier. RIRPF art. 109.1 exempts the taxpayer from pagos fraccionados when
+classifier. RIRPF arts. 109.2 to 109.4 exempts the taxpayer from pagos fraccionados when
 at least 70 per cent of the previous year's activity income bore retención, so
 a declared yes rules Modelo 130 out and a declared no leaves it due. A record
 nobody answered must stay INCOMPLETE: a defaulted negative asserted an answer
