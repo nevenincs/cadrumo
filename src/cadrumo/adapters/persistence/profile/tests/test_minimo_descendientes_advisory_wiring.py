@@ -36,6 +36,8 @@ from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.schema_references import TemporalProjectionDirection
+from .....domain.calculations.registry.temporal import revision_temporal_resolution
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -153,36 +155,48 @@ def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
     assert _PRORRATA_INFERRED in _source_kinds({_ESTATAL_CASILLA: Decimal("1200")})
 
 
-def _supported_year_with_manual_settlement() -> int:
-    """The first supported Modelo 100 year whose revision leaves a settlement casilla manual.
+def _newest_authored_year() -> int:
+    """The newest Modelo 100 year the support envelope serves from its own authored edition.
 
-    Read from the registry support envelope and the revisions' own structure,
-    so the fixture follows the envelope instead of naming a year it may drop.
+    A year the envelope reaches only by projecting another edition has no filing
+    snapshot, so it is never a candidate.
     """
     operation = published_authority_operation()
     supported = operation.modelo_directory(Modelo("100").value).supported_filing_years
     assert supported is not None, "Modelo 100 declares no filing-year support envelope"
-    for year in supported.years:
-        revision = operation.snapshot(Modelo("100").value, filing_year=year, period=_ANNUAL_PERIOD).revision
-        if revision.formulas and any(
-            casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES and casilla.input_kind != InputKind.COMPUTED
-            for casilla in revision.casillas
-        ):
+    for year in sorted(supported.years, reverse=True):
+        selected = operation.revision_for_context(Modelo("100").value, filing_year=year, period=_ANNUAL_PERIOD)
+        resolution = revision_temporal_resolution(selected, filing_year=year, period=_ANNUAL_PERIOD, support=supported)
+        if resolution.projection_direction is TemporalProjectionDirection.AUTHORED:
             return year
-    raise AssertionError(f"no supported Modelo 100 year in {supported.years} leaves a settlement casilla manual")
+    raise AssertionError(f"no supported Modelo 100 year in {supported.years} has its own authored edition")
+
+
+def _with_manual_settlement(revision: ModeloRevision) -> ModeloRevision:
+    """The same revision with its settlement-role casillas left for the operator to enter."""
+    casillas = tuple(
+        casilla.model_copy(update={"input_kind": InputKind.MANUAL})
+        if casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES
+        else casilla
+        for casilla in revision.casillas
+    )
+    return revision.model_copy(update={"casillas": casillas})
 
 
 def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     """A non-mínimo wiring.
 
     ``settlement_not_computed`` fires where a revision declares a settlement-role
-    casilla that is NOT computed, which only the partially modelled Modelo 100
-    revisions do, so the fixture year is selected from the support envelope by
-    that structure rather than shared with every other case in this module. The
-    state is a property of the revision alone, so no profile setup is needed.
+    casilla that is NOT computed. Every supported Modelo 100 edition now computes
+    its settlement, so the case is a filing-grade revision with those casillas
+    turned manual: the advisory is a property of the revision alone, so the
+    coordinator must surface it for any such revision, and no profile setup is
+    needed. The control below proves the unaltered revision stays quiet.
     """
-    filing_year = _supported_year_with_manual_settlement()
-    revision = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
+    filing_year = _newest_authored_year()
+    authored = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
+    assert any(casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES for casilla in authored.casillas)
+    revision = _with_manual_settlement(authored)
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
