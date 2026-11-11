@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.classifier_input_source import ClassifierInputSource
 from ...core.confirmation_gate import ConfirmationBlockReason
 from ...core.country_code import CountryCodeAlpha2
-from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
+from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.external_constants import OutputLanguage
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
@@ -42,12 +42,12 @@ from ..ledger.establishment_ladder import (
     RegistrationEstablishmentConflict,
 )
 from ..ledger.evidence_draft import PrintedTotalDiscrepancy, RetentionReadingDiscrepancy
+from ..ledger.finding_words_projection import FindingWordsProjectionV1, require_served_words
 from ..ledger.invoice_confirmation import InvoiceConfirmationResult
 from ..ledger.invoice_draft_records import (
     DraftDiscrepancyFinding,
     FieldAmbiguityCandidate,
     FieldProvenance,
-    FindingWords,
     InvoiceDraft,
     InvoiceDraftLine,
     InvoiceDraftRateBreakdown,
@@ -134,20 +134,6 @@ class FieldProvenanceProjectionV1(BaseModel):
         )
 
 
-class FindingWordsProjectionV1(BaseModel):
-    """Which sentence explains a finding and the values it quotes, as the finding stores them."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    wording: DraftFindingWording
-    params: Annotated[tuple[tuple[_FieldName, _ShortText], ...], Field(max_length=16)] = ()
-
-    @classmethod
-    def from_words(cls, value: FindingWords | None) -> Self | None:
-        """Copy a finding's words, or nothing for a finding stored without them."""
-        return None if value is None else cls(wording=value.wording, params=value.params)
-
-
 class DraftDiscrepancyProjectionV1(BaseModel):
     """One extraction finding with lossless decimal facts."""
 
@@ -165,7 +151,7 @@ class DraftDiscrepancyProjectionV1(BaseModel):
 
     @model_validator(mode="after")
     def _words_name_their_language(self) -> DraftDiscrepancyProjectionV1:
-        _require_served_words(self.words, self.detail_words, self.detail_words_language)
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
         return self
 
     @classmethod
@@ -182,15 +168,6 @@ class DraftDiscrepancyProjectionV1(BaseModel):
             detail_words=words,
             detail_words_language=language,
         )
-
-
-def _require_served_words(
-    stored: FindingWordsProjectionV1 | None,
-    words: str | None,
-    language: OutputLanguage | None,
-) -> None:
-    if len({stored is None, words is None, language is None}) != 1:
-        raise ValueError("a served sentence names the wording it renders and the language it is in")
 
 
 class LabelReadingFallbackProjectionV1(BaseModel):
@@ -623,7 +600,7 @@ class ConfirmationBlockerProjectionV1(BaseModel):
     def _words_name_their_language(self) -> ConfirmationBlockerProjectionV1:
         if (self.reason_words is None) != (self.reason_words_language is None):
             raise ValueError("served words name the language they are in")
-        _require_served_words(self.words, self.detail_words, self.detail_words_language)
+        require_served_words(self.words, self.detail_words, self.detail_words_language)
         return self
 
     @classmethod

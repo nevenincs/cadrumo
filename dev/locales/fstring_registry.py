@@ -271,29 +271,10 @@ def _automation_inventory_registration() -> FStringKeyRegistration:
     )
 
 
-def _runtime_registrations(
-    descendant_relations: tuple[str, ...],
-    descendant_disability_grades: tuple[str, ...],
-) -> tuple[FStringKeyRegistration, ...]:
-    """Enumerate runtime refusal, action and terminal-condition copy."""
-    from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
-    from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
-    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
-    from cadrumo.application.prorrata_register.projection_contracts import ProrrataRefusalReason
-    from cadrumo.application.review.filter import LedgerReviewStatus
-    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
+def _ledger_finding_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Enumerate the words served for an invoice reading's blockers and findings."""
     from cadrumo.core.confirmation_gate import ConfirmationBlockReason
     from cadrumo.core.draft_discrepancy import DraftFindingWording
-    from cadrumo.core.errors.error_codes import ErrorCategory
-    from cadrumo.core.operations import OperationTerminalCondition
-    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
-    from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
-    from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
-    from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
-    from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
-    from dev.locales.invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
-
-    from .m303_carry_fstring_registrations import m303_carry_error_registration
 
     return (
         FStringKeyRegistration(
@@ -306,6 +287,33 @@ def _runtime_registrations(
             key_factory=lambda value: f"application.ledger.draft_finding.{value}",
             values=_enum_values(DraftFindingWording),
         ),
+    )
+
+
+def _runtime_registrations(
+    descendant_relations: tuple[str, ...],
+    descendant_disability_grades: tuple[str, ...],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Enumerate runtime refusal, action and terminal-condition copy."""
+    from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
+    from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
+    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.prorrata_register.projection_contracts import ProrrataRefusalReason
+    from cadrumo.application.review.filter import LedgerReviewStatus
+    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
+    from cadrumo.core.errors.error_codes import ErrorCategory
+    from cadrumo.core.operations import OperationTerminalCondition
+    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+    from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
+    from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
+    from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
+    from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
+    from dev.locales.invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
+
+    from .m303_carry_fstring_registrations import m303_carry_error_registration
+
+    return (
+        *_ledger_finding_registrations(),
         FStringKeyRegistration(
             # The operations modal renders tr(terminal_copy_key), a key the
             # projection selects per terminal condition, plus the partial-success
