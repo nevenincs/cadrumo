@@ -22,6 +22,7 @@ from ....application.ledger.models import LedgerStatusReport
 from ....application.ledger.readiness_query import LedgerReadinessIssueV1
 from ....application.ledger.stale_filing_query import LedgerStaleFilingV1
 from ....core.json_contract import strict_round_trip
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ledger_results import (
     LedgerReadinessIssuePayload,
     LedgerStaleFilingPayload,
@@ -29,6 +30,8 @@ from ..ledger_results import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET = "b" * 32
 
@@ -107,7 +110,7 @@ def test_a_stale_filing_reaches_json_carrying_its_coverage_qualifier() -> None:
     """
     finding = LedgerStaleFilingV1(
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
         calculation_revision_id="c" * 64,
         work_unit_id="w" * 64,

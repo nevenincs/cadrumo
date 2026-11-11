@@ -27,6 +27,7 @@ per test, the real Typer app, and the JSON envelope surfaced by
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from functools import cache
 
 import pytest
 from click.testing import Result
@@ -53,6 +54,12 @@ _PERSONAL_DESC = "Suscripcion Netflix"
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+@cache
+def _first_corpus_year() -> int:
+    """Return the earliest calendar year the corpus rows are dated in."""
+    return min(int(str(row["date"])[:4]) for row in list_ledger_rows_via_cli())
 
 
 def _import_corpus(*, invoke_cli: Callable[..., Result]) -> None:
@@ -146,7 +153,7 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
     checked set below the all-period total while still reporting gaps.
     """
     pre = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(_first_corpus_year())],
     )
     assert pre.exit_code == 0, pre.output
     result = unwrap_schema_envelope(pre.output)
@@ -172,7 +179,7 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
 def test_preflight_issue_detail_is_actionable_text() -> None:
     """Each preflight issue must name the missing fact in plain language."""
     pre = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(_first_corpus_year())],
     )
     assert pre.exit_code == 0, pre.output
     json_result = unwrap_schema_envelope(pre.output)
@@ -259,7 +266,7 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     assert refreshed.get("business_classification") == "BUSINESS", refreshed
 
     pre = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(_first_corpus_year())],
     )
     assert pre.exit_code == 0, pre.output
     issues_val = unwrap_schema_envelope(pre.output).get("issues")
@@ -292,7 +299,7 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     assert classify.exit_code == 0, classify.output
 
     pre = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(_first_corpus_year())],
     )
     assert pre.exit_code == 0, pre.output
     issues_val = unwrap_schema_envelope(pre.output).get("issues")
