@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import calendar
 import csv
+import dataclasses
 import re
 import tomllib
 from collections.abc import Mapping
@@ -127,10 +128,17 @@ class YearToken:
 
     def resolve(self, envelope: YearEnvelope, *, biographical: bool = False) -> int:
         """Return the calendar year, refusing one outside the envelope unless it is a biographical early date."""
-        year = (envelope.horizon if self.anchor == "horizon" else envelope.floor) + self.offset
+        year = self._shifted(envelope)
         if year > envelope.horizon or (year < envelope.floor and not biographical):
             raise PersonaCatalogueError(f"year token {self} resolves outside the supported envelope")
         return year
+
+    def precedes_floor(self, envelope: YearEnvelope) -> bool:
+        """Whether the token's year lies below the envelope floor, a year the application refuses."""
+        return self._shifted(envelope) < envelope.floor
+
+    def _shifted(self, envelope: YearEnvelope) -> int:
+        return (envelope.horizon if self.anchor == "horizon" else envelope.floor) + self.offset
 
     @override
     def __str__(self) -> str:
@@ -513,6 +521,48 @@ class Expectations:
     values: tuple[ExpectedValue, ...]
 
 
+type BelowFloorBlock = Literal[
+    "filed_returns",
+    "calculated_returns",
+    "local_observations",
+    "aeat_filings",
+    "expectations.obligations",
+    "expectations.deadlines",
+    "expectations.values",
+]
+
+_HISTORY_BLOCKS: Final[frozenset[BelowFloorBlock]] = frozenset(
+    {"filed_returns", "calculated_returns", "local_observations", "aeat_filings"}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class BelowFloorRecord:
+    """A dated persona record a read left out because its year resolves below the envelope floor.
+
+    The application refuses every year below the floor, so such a record can be
+    neither replayed nor compared; a return of a supported year that depends on
+    it meets the application's own refusal instead.
+    """
+
+    block: BelowFloorBlock
+    modelo: str
+    year: YearToken
+    periods: tuple[str, ...]
+
+    @property
+    def history(self) -> bool:
+        """Whether the record is a return the replay records, rather than an expectation it compares."""
+        return self.block in _HISTORY_BLOCKS
+
+    def reason(self, envelope: YearEnvelope) -> str:
+        """Why the record is left out under ``envelope``."""
+        return (
+            f"Modelo {self.modelo} {self.year} ({', '.join(self.periods)}) resolves below the supported "
+            f"envelope floor {envelope.floor}, a year the application refuses"
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class Persona:
     """One canonical synthetic taxpayer with every file of its directory."""
@@ -549,6 +599,8 @@ class Persona:
     documents: tuple[PersonaDocument, ...]
     expectations: Expectations
     identities: IdentityCatalogue
+    below_floor: tuple[BelowFloorRecord, ...] = ()
+    """The dated records a read under a lowered horizon left out, their year lying below the envelope floor."""
 
     def identity(self, reference: str | IdentityRef) -> str:
         """Return the value an identity role or a role field reference names."""
@@ -1441,8 +1493,16 @@ def parse_persona(
     expectations_document: _Table,
     catalogue: IdentityCatalogue,
     envelope: YearEnvelope,
+    omit_below_floor: bool = False,
 ) -> Persona:
-    """Validate one persona's parsed files against the catalogue contract and the year envelope."""
+    """Validate one persona's parsed files against the catalogue contract and the year envelope.
+
+    A year outside the envelope is refused. With ``omit_below_floor``, for a
+    read under a horizon lowered below the registry's own, a return-history
+    record or an expectation whose year falls below the floor is left out and
+    listed in :attr:`Persona.below_floor` instead; every other token stays
+    refused there.
+    """
     where = f"{persona_id}/persona.toml"
     if persona_document.get("format") != CATALOGUE_FORMAT:
         raise _fail(where, f"format must be {CATALOGUE_FORMAT}, found {persona_document.get('format')!r}")
@@ -1551,9 +1611,61 @@ def parse_persona(
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
     _check_inventory(persona)
+    if omit_below_floor:
+        persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
     return persona
+
+
+type _DatedRecord = (
+    FiledReturns
+    | CalculatedReturns
+    | LocalObservation
+    | AeatFiling
+    | ExpectedObligation
+    | ExpectedDeadline
+    | ExpectedValue
+)
+
+
+def _record_periods(record: _DatedRecord) -> tuple[str, ...]:
+    if isinstance(record, FiledReturns | CalculatedReturns | ExpectedObligation):
+        return record.periods
+    return (record.period,)
+
+
+def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Persona:
+    """``persona`` without its return-history records and expectations below the envelope floor, listing them."""
+    dropped: list[BelowFloorRecord] = []
+
+    def kept[Record: _DatedRecord](block: BelowFloorBlock, records: tuple[Record, ...]) -> tuple[Record, ...]:
+        inside: list[Record] = []
+        for record in records:
+            if record.year.precedes_floor(envelope):
+                dropped.append(
+                    BelowFloorRecord(
+                        block=block, modelo=record.modelo, year=record.year, periods=_record_periods(record)
+                    )
+                )
+            else:
+                inside.append(record)
+        return tuple(inside)
+
+    expectations = persona.expectations
+    return dataclasses.replace(
+        persona,
+        filed_returns=kept("filed_returns", persona.filed_returns),
+        calculated_returns=kept("calculated_returns", persona.calculated_returns),
+        local_observations=kept("local_observations", persona.local_observations),
+        aeat_filings=kept("aeat_filings", persona.aeat_filings),
+        expectations=Expectations(
+            obligations=kept("expectations.obligations", expectations.obligations),
+            deadlines=kept("expectations.deadlines", expectations.deadlines),
+            values=kept("expectations.values", expectations.values),
+        ),
+        below_floor=tuple(dropped),
+    )
 
 
 def _check_returns(persona: Persona) -> None:
@@ -1636,8 +1748,11 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         raise _fail(persona.id, str(error)) from None
 
 
-def read_persona(persona_id: str, *, envelope: YearEnvelope) -> Persona:
-    """Read and validate one persona of the catalogue under the registry's year ``envelope``."""
+def read_persona(persona_id: str, *, envelope: YearEnvelope, omit_below_floor: bool = False) -> Persona:
+    """Read and validate one persona of the catalogue under the registry's year ``envelope``.
+
+    ``omit_below_floor`` is as :func:`parse_persona` takes it.
+    """
     directory = PERSONAS_ROOT / persona_id
     if not (directory / "persona.toml").is_file():
         raise PersonaCatalogueError(f"unknown persona {persona_id!r}")
@@ -1649,6 +1764,7 @@ def read_persona(persona_id: str, *, envelope: YearEnvelope) -> Persona:
         expectations_document=_read_toml(directory / "expectations.toml"),
         catalogue=identity_catalogue(),
         envelope=envelope,
+        omit_below_floor=omit_below_floor,
     )
 
 
@@ -1668,6 +1784,8 @@ __all__ = [
     "PERSONAS_ROOT",
     "ActivityRow",
     "AeatFiling",
+    "BelowFloorBlock",
+    "BelowFloorRecord",
     "CalculatedReturns",
     "Election",
     "Expectations",

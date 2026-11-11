@@ -1478,16 +1478,26 @@ def _complete_setup(world: PersonaWorld) -> bool:
     return load_profile_record(world).setup_state is ProfileSetupState.COMPLETE
 
 
-def _not_loaded(persona: Persona, scope: ReplayScope, *, setup_complete: bool | None) -> tuple[NotLoaded, ...]:
+def _not_loaded(
+    persona: Persona, scope: ReplayScope, envelope: YearEnvelope, *, setup_complete: bool | None
+) -> tuple[NotLoaded, ...]:
     """The persona facts no production operation recorded within ``scope``, and why.
 
     A block outside the scope was never attempted, so it is absent from the
-    scope's result rather than reported as one no operation can record.
+    scope's result rather than reported as one no operation can record. A
+    return-history record a lowered horizon put below the floor is reported
+    within the records scope: the application refuses its year.
     """
     found = [
         NotLoaded(block=block, reason="no production operation records this block")
         for block in persona.declared_blocks()
     ]
+    if scope.includes(ReplayScope.RECORDS):
+        found.extend(
+            NotLoaded(block=record.block, reason=record.reason(envelope))
+            for record in persona.below_floor
+            if record.history
+        )
     if setup_complete is False:
         found.append(
             NotLoaded(
@@ -1560,7 +1570,7 @@ def materialise_persona(
         transactions=transactions,
         invoices=invoices,
         evidence=evidence,
-        not_loaded=_not_loaded(persona, scope, setup_complete=setup_complete),
+        not_loaded=_not_loaded(persona, scope, world.envelope, setup_complete=setup_complete),
         filings=filings,
         calculations=calculations,
     )
@@ -1651,7 +1661,7 @@ def _reused_persona_world(
                         transactions=ids["transactions"],
                         invoices=ids["invoices"],
                         evidence=ids["evidence"],
-                        not_loaded=_not_loaded(persona, scope, setup_complete=ids["setup_complete"]),
+                        not_loaded=_not_loaded(persona, scope, envelope, setup_complete=ids["setup_complete"]),
                         filings=ids["filings"],
                         calculations=ids["calculations"],
                     )
@@ -1687,15 +1697,20 @@ def materialised_persona(
     With ``horizon`` the persona is read as if the registry's horizon were that
     earlier supported year: its year tokens and its scenario clock move down
     with it, so a scenario written against ``horizon-1`` is replayed for an
-    earlier supported year. The floor stays the registry's own.
+    earlier supported year. The floor stays the registry's own, so a return
+    history record or expectation that moves below it is left out of the
+    replay and listed in :attr:`Persona.below_floor`, its history records
+    also in :attr:`MaterialisedPersona.not_loaded`; a return that depends on
+    one meets the application's own refusal.
     """
     with bundled_indexed_authority().operation() as operation:
         envelope = year_envelope(operation)
+    lowered = horizon is not None and horizon != envelope.horizon
     if horizon is not None:
         if not envelope.floor <= horizon <= envelope.horizon:
             raise PersonaMaterialisationError(f"horizon {horizon} lies outside {envelope.floor}..{envelope.horizon}")
         envelope = dataclasses.replace(envelope, horizon=horizon)
-    persona = read_persona(persona_id, envelope=envelope)
+    persona = read_persona(persona_id, envelope=envelope, omit_below_floor=lowered)
     as_of = scenario_instant(persona, envelope) if read_on is None else read_on
     if reuse:
         with _reused_persona_world(
