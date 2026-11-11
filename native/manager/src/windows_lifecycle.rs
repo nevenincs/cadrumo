@@ -380,6 +380,8 @@ unsafe fn tick(window: Handle, state: &mut WindowState) {
             let result = ipc.poll(|request| {
                 if matches!(request, crate::ipc::Request::Status { .. }) {
                     crate::ipc::status(state.background.status())
+                } else if matches!(request, crate::ipc::Request::DemandLocalAi { .. }) {
+                    crate::ipc::demanded(state.background.demand_local_ai())
                 } else if matches!(request, crate::ipc::Request::Reveal { .. }) {
                     let queued = (state.tray.is_some() || state.revealing)
                         && PostMessageW(window, 0x8002, 0, 0) != 0;

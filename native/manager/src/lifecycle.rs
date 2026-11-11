@@ -74,6 +74,11 @@ pub trait ManagerLifecycle: CutoverRuntime {
     fn quit_completed(&self) -> bool {
         false
     }
+    /// Demands the local AI server for the agent service; `None` while no server can
+    /// run here.
+    fn demand_local_ai(&self) -> Option<crate::supervision::local_ai::DemandAnswer> {
+        None
+    }
     fn poll(&mut self) -> io::Result<()>;
     fn begin_session_end(&mut self);
     fn session_end_settled(&self) -> bool;
@@ -86,6 +91,9 @@ pub trait ManagerLifecycle: CutoverRuntime {
 impl ManagerLifecycle for Background {
     fn retry(&mut self) -> io::Result<()> {
         Background::retry(self)
+    }
+    fn demand_local_ai(&self) -> Option<crate::supervision::local_ai::DemandAnswer> {
+        Background::demand_local_ai(self)
     }
     fn restart(&mut self) -> io::Result<()> {
         Background::restart(self)
