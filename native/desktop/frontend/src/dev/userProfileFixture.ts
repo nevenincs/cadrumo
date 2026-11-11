@@ -25,6 +25,9 @@ declare global {
       burst(): void;
       complete(): void;
       completeWithMissing(): void;
+      /** Every required detail filled and valid, the setup not yet
+       * declared complete: what the completion action waits for. */
+      readyToComplete(): void;
       changeIdentity(): void;
       /** The providers whose passphrase or password was saved. */
       credentials(): string[];
@@ -128,6 +131,12 @@ export function userProfileFixture(
     completeWithMissing() {
       data.setup_state = "complete";
       data.valid = true;
+      listeners.forEach((listener) => listener());
+    },
+    readyToComplete() {
+      data.setup_state = "incomplete";
+      data.valid = true;
+      data.missing_required = [];
       listeners.forEach((listener) => listener());
     },
     complete() {

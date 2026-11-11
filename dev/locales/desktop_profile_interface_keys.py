@@ -99,6 +99,7 @@ DESKTOP_PROFILE_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.profile.search",
         "desktop.profile.search_placeholder",
         "desktop.profile.sections",
+        "desktop.profile.setup_completed_notice",
         "desktop.profile.signed_out",
         "desktop.profile.title",
         "desktop.profile.unavailable",
