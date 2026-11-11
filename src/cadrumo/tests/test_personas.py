@@ -756,3 +756,35 @@ def test_a_ledger_row_states_its_accrual_date_apart_from_the_movement() -> None:
 def test_an_incomplete_or_impossible_accrual_date_is_refused(cells: str) -> None:
     with pytest.raises(PersonaCatalogueError, match="accrual"):
         _accruing_ledger(cells)
+
+
+def test_a_year_token_in_a_field_key_resolves_against_the_envelope() -> None:
+    document = _changed(("fields",), {"renta_family.cotizaciones_ss_madre_{horizon-1}": "10.00"})
+
+    persona = _parse(document)
+
+    assert [(field.path, field.value) for field in persona.fields] == [
+        (f"renta_family.cotizaciones_ss_madre_{_ENVELOPE.horizon - 1}", "10.00")
+    ]
+
+
+def test_a_field_keyed_to_a_year_below_the_floor_is_not_stated() -> None:
+    document = _changed(("fields",), {"renta_family.cotizaciones_ss_madre_{floor-1}": "10.00", "contact.x": "y"})
+
+    persona = _parse(document)
+
+    assert [field.path for field in persona.fields] == ["contact.x"]
+
+
+@pytest.mark.parametrize("token", ["", str(_ENVELOPE.floor), "horizon-x", "year-1"])
+def test_a_malformed_year_token_in_a_field_key_is_refused(token: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match="is not a year token"):
+        _parse(_changed(("fields",), {f"renta_family.cotizaciones_ss_madre_{{{token}}}": "10.00"}))
+
+
+def test_a_field_keyed_to_the_floor_year_follows_the_floor() -> None:
+    document = _changed(("fields",), {"renta_family.cotizaciones_ss_madre_{floor}": "10.00"})
+
+    persona = _parse(document)
+
+    assert [field.path for field in persona.fields] == [f"renta_family.cotizaciones_ss_madre_{_ENVELOPE.floor}"]

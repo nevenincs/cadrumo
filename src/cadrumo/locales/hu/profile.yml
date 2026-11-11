@@ -439,6 +439,8 @@ profile:
           label: Felmenők száma
         convive_con_otro_progenitor:
           label: Együtt él a háztartás valamelyik gyermekének másik szülőjével
+        cotizaciones_ss_madre_2022:
+          label: Anya társadalombiztosítási járulékai a szülés után (2022)
         cotizaciones_ss_madre_2024:
           label: Anya társadalombiztosítási járulékai (2024)
         descendants:

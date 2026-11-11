@@ -65,11 +65,17 @@ grounding = "verified"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "1000.00", deduccion_maternidad_total = "2200.00" }
+concepts = { deduccion_maternidad = "1200.00", incremento_guarderia = "916.67", deduccion_maternidad_total = "2116.67" }
 derivation = """
 Art. 81: the daughter is under three for all twelve months and the mother is in alta all year: 12 x 100.00 = 1200.00.
-Guardería increment: 11 monthly fees of 220.00 = 2420.00 paid to an authorised escuela infantil, capped at 1000.00.
-The total 2200.00 is below the mother's cotizaciones 2332.80, so the cotización limit does not bind.
+Guardería increment: up to 83.33 euros (1000.00 / 12) for each month in which the art. 81.1 and 81.2 requirements hold
+together, and only the months whose fee is paid for the whole month count (Manual práctico de Renta 2022 lines 62659 and
+62678, 2023 lines 71891 and 71907, 2024 lines 58878 and 58899, 2025 lines 54858 and 54874; the worked cases at 2023 line 72029,
+2024 line 59021 and 2025 line 54996 count whole months only). The fees are paid in 11 months (August is not paid),
+so 1000.00 / 12 x 11 = 916.67, below the 2420.00 spent (11 x 220.00) and the annual cap of 1000.00.
+Total 1200.00 + 916.67 = 2116.67.
+Until ejercicio 2022 the increment is also limited by the cotizaciones devengadas after the birth (2022 manual lines 62690
+to 62700, a) and b)); 916.67 is below 2332.80, so 0613 is unchanged.
 """
 legal_ref = ["ley-35-2006:art-81"]
 grounding = "verified"

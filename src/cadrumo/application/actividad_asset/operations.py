@@ -99,7 +99,6 @@ from .ports import (
 )
 from .register_reads import (
     RegisterReadContext,
-    beyond_last_admitted_year,
     default_register_year,
     election_limits,
     element_list,
@@ -168,7 +167,8 @@ class ActivityAssetRegisterAuthority:
 
     edition: Callable[[int], tuple[ActivityAssetEdition, ModeloRevision]]
     admits_filing_year: Callable[[int], bool]
-    last_admitted_year: Callable[[], int]
+    projection_coordinate: Callable[[int], int | None]
+    clamp_filing_year: Callable[[int], int]
     agrarian_activities: Callable[[date], frozenset[TipoActividad]]
     residence_territory: Callable[[date], ResidenceTerritory]
     claim_consumers: Callable[[Iterable[str]], Mapping[str, tuple[str, ...]]]
@@ -585,8 +585,8 @@ class ActivityAssetOperations:
             equal_figures_claim(current_history.claims, claim) is not None
         ):
             return self._service.record_claim(claim)
-        last_admitted_year = self._authority.last_admitted_year()
-        if beyond_last_admitted_year(forecast.tax_year, last_admitted_year):
+        last_admitted_year = self._authority.projection_coordinate(forecast.tax_year)
+        if last_admitted_year is not None and last_admitted_year != forecast.tax_year:
             raise ActividadAssetUnsupportedError(
                 context={"tax_year": forecast.tax_year, "last_admitted_year": last_admitted_year},
                 translated_message="ledger.actividad_asset.errors.claim_year_beyond_registry",
@@ -727,11 +727,16 @@ class ActivityAssetOperations:
             forecast=self._forecast_operation,
             edition=lambda tax_year: self._authority.edition(tax_year)[0],
             admits_filing_year=self._authority.admits_filing_year,
-            last_admitted_year=self._authority.last_admitted_year(),
+            projection_coordinate=self._authority.projection_coordinate,
+            election_year=self._election_year,
             today=self._authority.today(),
             minimum_bounds=self._authority.disposal_bounds,
             class_labels=self._authority.class_labels,
         )
+
+    def _election_year(self, revision: ActivityAssetRevision) -> int:
+        """Name the filing year an election is read under: the year it enters service, as the catalogue admits it."""
+        return self._authority.clamp_filing_year(revision.in_service_date.year)
 
     def list_elements(self) -> tuple[ActivityAssetListRow, ...]:
         """Summarise every element of the register."""
@@ -749,7 +754,7 @@ class ActivityAssetOperations:
     def plan_limits(self, asset_id: str) -> ActivityAssetElectionLimits:
         """Read what the registry allows the element's current election, under this year's edition."""
         revision = self.inspect(asset_id)[-1]
-        tax_year = max(self._authority.today().year, revision.in_service_date.year)
+        tax_year = self._election_year(revision)
         try:
             _, modelo = self._authority.edition(tax_year)
             schedule = self._authority.schedule_authority(revision, tax_year)
@@ -789,7 +794,7 @@ class ActivityAssetOperations:
         there is no charge for it to speak about.
         """
         revision = self.inspect(asset_id)[-1]
-        tax_year = max(self._authority.today().year, revision.in_service_date.year)
+        tax_year = self._election_year(revision)
         try:
             _, modelo = self._authority.edition(tax_year)
         except RegistryError:
