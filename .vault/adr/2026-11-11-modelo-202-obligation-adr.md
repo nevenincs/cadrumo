@@ -15,9 +15,9 @@ related:
   - '[[2026-11-11-modelo-202-obligation-research]]'
 ---
 
-# `modelo-202-obligation` adr: `Modelo 202 filing obligation facts` | (**status:** `proposed`)
+# `modelo-202-obligation` adr: `Modelo 202 filing obligation facts` | (**status:** `accepted`)
 
-Proposed 2026-11-11 for the lifecycle lane. Not accepted. The lane's rulings on the open choices are at the end of Constraints.
+Accepted 2026-11-11 by PRIME under the operator's delegation, with four conditions recorded in the Acceptance section below.
 
 ## Problem Statement
 
@@ -63,11 +63,11 @@ We will decide the Modelo 202 obligation of a sociedad at or below the threshold
   - INCN undeclared: INCOMPLETE, as today.
   - INCN above the threshold: APPLICABLE.
   - Election never asked: INCOMPLETE, with the door to state the censal election.
-  - Election stated yes: INCOMPLETE with its own reason, because the ingreso depends on the base imponible of the 3, 9 or 11 months, which only the Modelo 202 calculation of that instalment produces. Door: calculate that 202. Under ruling (a): a calculated 202 with a positive result decides APPLICABLE and a zero result NOT_APPLICABLE.
+  - Election stated yes: INCOMPLETE with its own reason, because the ingreso depends on the base imponible of the 3, 9 or 11 months, which only the Modelo 202 calculation of that instalment produces. Door: calculate that 202. Under ruling (a) as narrowed at acceptance: a positive result of a current Modelo 202 calculation decides APPLICABLE; a zero result decides NOT_APPLICABLE only when that calculation is current and verified; an unverified or stale calculation leaves the verdict INCOMPLETE.
   - Election stated no: resolve the base binding for the instalment. A positive base gives APPLICABLE. Zero or negative gives NOT_APPLICABLE, citing art. 40.2 and Orden art. 1.3. A source periodo impositivo that ended before the declared activity start means no prior return exists, so NOT_APPLICABLE with operator-declared provenance. An absent base gives INCOMPLETE, with the Modelo 200 create or capture door first and the attest door as an alternative.
 - **Attestation.** Reuse `ATTEST_PRIOR_VALUE` on the base binding of the Modelo 202 work unit for that instalment, under the absence rule of the 2026-11-11 amendment. The calendar reads it from the operator layer of the latest revision of that work unit, with operator-attested provenance. INCOMPLETE applicability does not block creating that work unit (`BLOCKING_APPLICABILITY_VERDICTS` in `src/cadrumo/application/modelo/profile_readiness_gate.py`). No new intent kind.
 - **Registry.** Declare the base binding at the earliest Modelo 202 edition whose instructions carry the art. 40.2 wording, after checking the instructions of each edition, so later editions inherit it. Where the resolved edition still declares no base binding, the verdict stays INCOMPLETE; there is no fallback. Reword `reason.filing_depends_on_ingreso` in the catalogue and add one served reason per outcome above.
-- **Schema.** Profile schema 9 introduces the new path. The 8 to 9 transition clears nothing, and a schema-8 record carrying the path is refused, as `PATHS_INTRODUCED_IN_V7` does today.
+- **Schema.** The next profile schema version, taken in landing order on the integration branch, introduces the new path. The transition from the version before it clears nothing, and a record of an earlier version carrying the path is refused, as `PATHS_INTRODUCED_IN_V7` does today.
 
 ## Rationale
 
@@ -77,6 +77,15 @@ The election is a declaration the entity makes in its censal record, and it bind
 
 - A sociedad at or below the threshold that states no election and holds or attests its Modelo 200 base gets a definite verdict per instalment. 1P can differ from 2P and 3P because its base comes from an earlier year.
 - Persona table: sociedad Modelo 202 rows move from INCOMPLETE to APPLICABLE or NOT_APPLICABLE per instalment once the persona states the election and holds or attests the base. Personas with the election unasked stay INCOMPLETE with the new door. Above-threshold personas are unchanged.
-- Profile schema 9, its forward migration, the setup question, the CLI flag, the calendar warning, locale keys and docs goldens change. The authority is republished for the catalogue and the earliest-edition binding.
+- The next profile schema version, its forward migration, the setup question, the CLI flag, the calendar warning, locale keys and docs goldens change. The authority is republished for the catalogue and the earliest-edition binding.
 - The calendar reads Modelo 200 sources and the operator layer of a Modelo 202 work unit, which it did not read before.
 - Reconsider if a captured censal observation exposes the art. 40.3 option, which would let capture supply the fact, or if a non-calendar periodo impositivo comes into scope.
+
+## Acceptance
+
+Accepted 2026-11-11 by PRIME, who read the bundled LIS art. 40.2, 40.3 and Orden HFP/227/2017 art. 1.3 text. Lane rulings (b) and (c) are confirmed; (a) is narrowed as written above. Conditions:
+
+1. No schema number is fixed here. Profile schema versions are taken in landing order: the rental-income unit holds the next one in its own worktree, so this work rebases on the integration branch after that unit lands and takes the version after it.
+2. Under the election, a zero result decides NOT_APPLICABLE only from a current and verified Modelo 202 calculation; an unverified or stale one leaves INCOMPLETE, because an incomplete source does not prove that no obligation exists. A positive result of a current calculation gives APPLICABLE.
+3. The schema change updates the native pin and the generated types as text, with a native-debt record.
+4. This is plan Phase P02 work and moves no Phase P01 row. It is built as one unit of about ten commits after the lane's hand-overs already in hand, with the full locale test suite run before its hand-over.
