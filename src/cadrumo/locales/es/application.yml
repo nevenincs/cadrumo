@@ -2465,6 +2465,11 @@ application:
         como cuando se suspende una parte del importe a ingresar con cargo a la devolución
         de tu cónyuge o renuncias a una devolución. Cadrumo todavía no calcula el
         resto para el modelo de este ejercicio.'
+      export_text_value_overflow: 'No se ha escrito nada: «%{field_value}» tiene %{value_length}
+        caracteres y el diseño de registro de la AEAT solo admite %{field_length}
+        en las posiciones %{first_position}-%{last_position} del registro «%{record_type}».
+        Recortarlo declararía otro dato. Corrige ese dato donde lo registraste, tal
+        como figura en el censo de la AEAT, y vuelve a exportar.'
       export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE porque
         %{reason}. El cálculo, la comprobación y los registros de presentación que
         guardas pueden existir, pero este comando no puede producir un fichero para

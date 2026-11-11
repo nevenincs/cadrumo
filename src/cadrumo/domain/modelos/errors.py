@@ -51,6 +51,24 @@ class ModeloExportPriorDomiciliationElectionRequiredError(ModeloExportError):
     """
 
 
+class ModeloExportValueOverflowError(ModeloExportError):
+    """Refused: a value is wider than its slot in the official record design.
+
+    The file would only be writable by cutting the value, which would declare
+    something else, so nothing is written. The value is put right where it was
+    recorded.
+    """
+
+
+class ModeloExportProducerFactsRefusedError(ModeloExportError):
+    """Refused: the facts the file states about the filer or the filing are incomplete.
+
+    Identity, account and model facts the export needs to form its producer
+    snapshot are missing or contradict each other. They are the filer's to
+    supply, so this is a refusal rather than a failure to write.
+    """
+
+
 class Modelo036LifecycleError(ModeloError):
     """Base error for the Modelo 036 lifecycle (alta / modificacion / baja)."""
 
@@ -96,6 +114,8 @@ __all__ = [
     "ModeloError",
     "ModeloExportError",
     "ModeloExportManifestError",
+    "ModeloExportProducerFactsRefusedError",
+    "ModeloExportValueOverflowError",
     "ModeloValidationError",
     "raise_catalogue_integrity_error",
 ]
