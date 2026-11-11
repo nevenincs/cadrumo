@@ -152,15 +152,14 @@ class ValueContract:
     """Deferred annotation and conversion hooks for one CLI parameter."""
 
     annotation: DeferredTarget
-    click_type: DeferredTarget | None = None
     parser: DeferredTarget | None = None
     completion: DeferredTarget | None = None
     callback: DeferredTarget | None = None
     choices: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        """Validate that the click type, parser, and choices are mutually exclusive, or raise."""
-        validate_value_contract(self.click_type, self.parser, self.choices)
+        """Validate that the parser and choices are mutually exclusive, or raise."""
+        validate_value_contract(self.parser, self.choices)
 
 
 @dataclass(frozen=True, slots=True)

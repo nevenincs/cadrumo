@@ -50,6 +50,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from typing import Protocol, TypeGuard
 
 import pytest
@@ -274,12 +275,10 @@ class _EnumChoiceSurface:
 def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> frozenset[str]:
     """Read the advertised choice-set of one Typer option, live from the tree.
 
-    Reads the option's choice type by duck-typing its ``choices`` attribute so
-    the gate is agnostic to the vendored ``typer._types.TyperChoice`` versus the
-    upstream ``click.Choice`` (the project ships the typer-vendored hierarchy, so
-    an ``isinstance(t, click.Choice)`` check is False even for a real choice
-    surface). A future widening of the advertised enum is caught because the set
-    is read live, not frozen.
+    Reads the set Typer describes from the option's annotation, or else the
+    ``choices`` its value parser declares, so the gate covers a spec-declared
+    choice set and a parser-owned one alike. A future widening of the
+    advertised enum is caught because the set is read live, not frozen.
     """
     import typer._click as click_vendored
     from typer.core import TyperGroup
@@ -299,12 +298,17 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     for param in cmd.params:
         opts = getattr(param, "opts", ())
         if getattr(param, "param_type_name", None) == "option" and option_flag in opts:
-            choices = getattr(getattr(param, "type", None), "choices", None)
+            descriptor = getattr(param, "type_descriptor", None)
+            choices = getattr(descriptor, "choices", None)
+            if choices is None:
+                parser = getattr(getattr(descriptor, "parameter_info", None), "parser", None)
+                choices = getattr(parser, "choices", None)
             assert choices is not None, f"{' '.join(verb_path)} {option_flag} is not a choice option"
             typed_choices: set[str] = set()
             for choice in choices:
-                assert isinstance(choice, str), f"{' '.join(verb_path)} {option_flag} has a non-string choice"
-                typed_choices.add(choice)
+                token = choice.value if isinstance(choice, Enum) else choice
+                assert isinstance(token, str), f"{' '.join(verb_path)} {option_flag} has a non-string choice"
+                typed_choices.add(token)
             return frozenset(typed_choices)
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")
 

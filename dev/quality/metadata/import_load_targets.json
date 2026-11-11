@@ -2035,6 +2035,7 @@
         "cadrumo.core.classification.policies",
         "cadrumo.core.classifier_input_source",
         "cadrumo.core.cli_metadata",
+        "cadrumo.core.cli_value_parsers",
         "cadrumo.core.click_context",
         "cadrumo.core.concept_lifecycle",
         "cadrumo.core.concepto_ingreso",
