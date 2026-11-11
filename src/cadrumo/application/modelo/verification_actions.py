@@ -205,7 +205,7 @@ def _prepare_verification_profile(
         work_unit_repository=repos.work_unit,
         calculation_repository=repos.calculation,
         filing_repository=repos.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies_to_profile(
             taxpayer_profile_for_work(profile),
         ),
         operation=operation,

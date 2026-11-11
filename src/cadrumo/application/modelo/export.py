@@ -993,7 +993,7 @@ def _prepare_modelo_export(
         work_unit_repository=export_ports.work_unit,
         calculation_repository=export_ports.calculation,
         filing_repository=export_ports.filing,
-        regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+        regimen_simplificado_applies=lambda: m303_regimen_simplificado_annual_summary_applies(work_unit),
         operation=operation,
     )
     raise_if_ledger_export_evidence_missing(revision)
