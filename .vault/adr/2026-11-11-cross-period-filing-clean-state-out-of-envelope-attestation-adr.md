@@ -66,3 +66,16 @@ The figure is the taxpayer's own fact, and no source can be held for it. An expl
 - Floor-year Modelo 130 rows can verify, seal and export. Dependent floor-year Modelo 100 rows get real expectations instead of a permanent block.
 - The edit contract, the operator layer, the clean-state evidence vocabulary, the finding catalogue and the locale keys all change shape. The operation contract manifest is regenerated.
 - Reconsider this record if the envelope floor moves or a source of out-of-envelope returns becomes admissible.
+
+## Amendment 2026-11-11: attestation whenever the upstream return is absent
+
+Accepted 2026-11-11 on the operator's own decision, relayed by PRIME. The operator's words: "registry is projected, yes attestation is enough". The question put was the in-envelope case: the earlier return is for a supported year, but it is not in the application.
+
+This amendment replaces the constraint above that an in-envelope source year whose return is not in the application stays blocked. An explicit operator attestation of the value satisfies a cross-period dependency whenever the application holds no upstream return for that source, whether the source year lies outside or inside the support envelope.
+
+- Absence is a fact of the stores. The attestation applies only when the application holds no work unit, filing record or captured observation for that source modelo, year and period. Where one exists, the dependency follows it as before. An attestation on such a requirement is refused at admission. If an attestation is recorded and a conflicting source appears later, verification raises a blocking conflict finding. The attestation is never preferred over a source.
+- Inside the envelope the existing doors (create, import, capture) stay, and the attest action is served beside them, not instead of them. Outside the envelope it remains the only door.
+- A plain override or a blank still never satisfies.
+- The report shows the same non-blocking `cross_period_dependency_operator_attested` finding, and the result carries operator-attested provenance. The clean evidence kind becomes `operator_attested_absent_upstream`. Envelope status stays a separate fact, used only for wording.
+- Scope widens from `previous_filing_binding` requirements to the scalar relation-prefill dependencies too, for example Modelo 100 casilla 0604 when the Modelo 130 quarters were filed outside the application, or Modelo 390 from Modelo 303. Row channels stay sourced from records, and an attestation on them is refused.
+- No year literal is used. Envelope and presence come from the pinned catalogue and the stores.
