@@ -3179,6 +3179,7 @@ desktop:
         unclassified: Classify later
         under: The parts are {amount} short of the movement.
       stage: Add to changes
+      statement_reference: Statement reference
       unread: Could not be read
       unsaved: 'Changes: {count} · not saved'
       unsaved_classification: → {classification} · not saved

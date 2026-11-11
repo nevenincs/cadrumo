@@ -3449,6 +3449,7 @@ cli:
       source: Source
       split_group_id: Split group id
       stashed: Stashed
+      statement_reference: Statement reference
       taxable_base: Taxable base
       usage_ratio_id: Usage ratio id
       valid: Valid

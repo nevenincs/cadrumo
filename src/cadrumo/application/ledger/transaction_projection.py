@@ -96,6 +96,7 @@ class LedgerTransactionProjection(BaseModel):
     direction: str
     counterparty: str
     description: str
+    statement_reference: str | None = None
     business_classification: str
     business_pct: str | None
     category_id: str | None

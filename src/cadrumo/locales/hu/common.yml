@@ -3213,6 +3213,7 @@ desktop:
         unclassified: Besorolás később
         under: A részekből {amount} hiányzik a tételhez.
       stage: Hozzáadás a változtatásokhoz
+      statement_reference: Kivonat hivatkozása
       unread: Nem olvasható
       unsaved: 'Változások: {count} · nincs mentve'
       unsaved_classification: → {classification} · nincs mentve

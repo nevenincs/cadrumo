@@ -92,6 +92,7 @@ ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
         "password",
         "pkcs12",
         "secret",
+        "statement_reference",
         "tax_id",
         "token",
     },
@@ -113,6 +114,10 @@ overview alone, so the two other predicates — which redact a NIF, a bearer tok
 and a PKCS#12 blob — did not treat a key named ``password`` as sensitive at all.
 That asymmetry is the exact failure the paragraph below describes, and it
 survived because nothing enumerated the third consumer.
+
+``statement_reference`` is the reference a bank statement printed for a
+movement. It is private banking data that lives only in the encrypted
+transaction payload, so no log line, error context or failure record names it.
 
 Each consuming predicate composes its own set as ``ALWAYS_REDACT_KEY_TERMS |
 {domain-specific-additions}`` — never redeclares an overlapping term

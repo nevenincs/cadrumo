@@ -100,23 +100,25 @@ def _ledger_list_rows_and_lines(
             ),
         )
         iva_category = review_payload.iva_category or ""
-        # The narrative is imported text: escape its newlines and tabs so it
-        # cannot forge rows or shift the tab-separated columns.
+        statement_reference = review_payload.statement_reference or ""
+        # The narrative and the statement reference are imported text: escape
+        # their newlines and tabs so they cannot forge rows or shift the
+        # tab-separated columns.
         lines.append(
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
             f"{review_payload.amount}\t{encode_terminal_field(review_payload.description)}\t"
-            f"{iva_category}\t{review_status}",
+            f"{encode_terminal_field(statement_reference)}\t{iva_category}\t{review_status}",
         )
     return rows, lines
 
 
 def _ledger_list_column_header() -> str:
     base_header = tr("cli.ledger.list.column_header")
-    iva_category_label = tr("cli.ledger.labels.iva_category")
+    added = (tr("cli.ledger.labels.statement_reference"), tr("cli.ledger.labels.iva_category"))
     columns = base_header.split("\t")
     if len(columns) >= 2:
-        return "\t".join((*columns[:-1], iva_category_label, columns[-1]))
-    return f"{base_header}\t{iva_category_label}"
+        return "\t".join((*columns[:-1], *added, columns[-1]))
+    return "\t".join((base_header, *added))
 
 
 __all__ = [

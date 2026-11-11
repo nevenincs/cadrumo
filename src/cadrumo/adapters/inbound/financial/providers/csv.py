@@ -257,6 +257,7 @@ class ParsedTabularTransactionRow:
     currency: str
     description: str
     counterparty: str | None
+    statement_reference: str | None
 
 
 class CsvProvider(FinancialProvider):
@@ -612,8 +613,9 @@ def parse_tabular_transaction_row(
 ) -> ParsedTabularTransactionRow:
     """Project one statement row into typed transaction fields."""
     columns = STATEMENT_COLUMNS
-    transaction_id = _value_from_aliases(raw_fields, lookup, columns.external_id)
-    if not (transaction_id is not None and transaction_id):
+    statement_reference = _value_from_aliases(raw_fields, lookup, columns.external_id)
+    transaction_id = statement_reference
+    if transaction_id is None:
         transaction_id = synthesize_transaction_id(
             provider_name=synthetic_provider_name,
             source_sha256=source_sha256,
@@ -664,6 +666,7 @@ def parse_tabular_transaction_row(
         currency=currency,
         description=description,
         counterparty=counterparty,
+        statement_reference=statement_reference,
     )
 
 
@@ -699,6 +702,7 @@ def build_provider_row(
         counterparty=parsed.counterparty,
         description=parsed.description,
         raw_fields=raw_fields,
+        statement_reference=parsed.statement_reference,
     )
     return ParsedLedgerRow(
         raw=built.raw,

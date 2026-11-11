@@ -436,6 +436,8 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     direction: str = Field(min_length=1)
     counterparty: str = ""
     description: str = Field(min_length=1)
+    # The reference the bank statement printed for the movement; None when it printed none.
+    statement_reference: str | None = None
     business_classification: str = Field(min_length=1)
     business_pct: str | None = None
     category_id: str | None = None

@@ -3709,6 +3709,7 @@ cli:
       source: Origen
       split_group_id: id_grupo_división
       stashed: Apartadas
+      statement_reference: Referencia del extracto
       taxable_base: Base imponible
       usage_ratio_id: Id de proporción de uso
       valid: Válido

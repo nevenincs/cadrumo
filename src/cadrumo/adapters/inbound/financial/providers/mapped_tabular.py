@@ -307,6 +307,7 @@ class MappedTabularProvider(FinancialProvider):
                 counterparty=fields.counterparty,
                 description=fields.description,
                 raw_fields={cell.header: cell.value for cell in row.cells},
+                statement_reference=fields.external_id or None,
             )
 
     def _row_fields(self, row: ProjectedRow, table: NormalizedTable) -> _MappedRowFields:

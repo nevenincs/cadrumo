@@ -181,6 +181,7 @@ class PdfStatementProvider(FinancialProvider):
                 counterparty=movement.counterparty,
                 description=movement.description,
                 raw_fields={**movement.printed, "read_by": read.decided_by},
+                statement_reference=None,
             )
 
     def _read(self, source_bytes: bytes) -> _StatementRead:
