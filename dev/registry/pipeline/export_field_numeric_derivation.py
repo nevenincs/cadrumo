@@ -203,6 +203,13 @@ def numeric_derivation(
             note_governed_enumerations=note_governed_enumerations,
             export_record_id=export_record_id,
         )
+    adjudicated = note_governed_amount_for(
+        note_governed_amounts,
+        sheet=joined_field.parser_field.sheet,
+        published_content=pointer_content,
+    )
+    if adjudicated is not None:
+        return _note_governed_printed_derivation(joined_field, normalised_content, adjudicated, export_record_id)
     derived = _ordered_numeric_shape_derivation(joined_field, normalised_content, note_references, export_record_id)
     if derived is not None:
         return derived
@@ -288,6 +295,79 @@ def _pointer_numeric_derivation(
             export_record_id=export_record_id,
             derivation_code="numeric-integer-v1",
         )
+    return _note_governed_amount_derivation(
+        joined_field, adjudicated, export_record_id, allowed_values=adjudicated.mandated_values
+    )
+
+
+def _note_governed_printed_derivation(
+    joined_field: JoinedRecordDesignField,
+    stem: str,
+    adjudicated: NoteGovernedAmountDeclaration,
+    export_record_id: str,
+) -> ExportFieldDerivation:
+    """Scale a printed numeric constant or enumeration the way a reviewed reading states.
+
+    The printed digits fix the slot's wire runs, not their scale: ``00500`` in
+    a Tipo % slot is five percent and ``"00000", "00050", "00062"`` closes it to
+    0, 0.50 and 0.62 percent, at two implied decimals. Every printed run must
+    still fill the slot, so a reading cannot be attached to a cell whose digits
+    contradict the declared extent. A printed enumeration is the closed domain
+    unless the reading records the runs a note the cell names adds to it, such
+    as the ``00000`` a foral-only filer may print; a reading that drops a
+    printed run is refused rather than preferred.
+    """
+    field_id = joined_field.semantic_entry.export_field_id
+    printed = _numeric_enumeration_values(stem)
+    if printed is None:
+        match = OFFICIAL_LITERAL_RE.fullmatch(stem) or OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(stem)
+        constant = None if match is None else match.group("literal")
+        if constant is None or not constant.isascii() or not constant.isdecimal():
+            raise RegistryValidationError(
+                f"note-governed reading of {field_id!r} addresses a cell whose content {stem!r} "
+                "is neither a numeric constant nor a numeric enumeration",
+            )
+        _require_reading_fills_the_printed_runs(field_id, (constant,), adjudicated)
+        return _note_governed_amount_derivation(
+            joined_field, adjudicated, export_record_id, allowed_values=adjudicated.mandated_values
+        )
+    _require_reading_fills_the_printed_runs(field_id, printed, adjudicated)
+    domain = tuple(str(int(value)) for value in printed)
+    if len(set(domain)) != len(domain):
+        raise RegistryValidationError(f"official numeric enumeration {field_id!r} has duplicate values")
+    if adjudicated.mandated_values is None:
+        return _note_governed_amount_derivation(joined_field, adjudicated, export_record_id, allowed_values=domain)
+    if not set(domain) <= set(adjudicated.mandated_values):
+        raise RegistryValidationError(
+            f"note-governed reading of {field_id!r} mandates {adjudicated.mandated_values!r}, which omits runs "
+            f"the design prints in {domain!r}",
+        )
+    return _note_governed_amount_derivation(
+        joined_field, adjudicated, export_record_id, allowed_values=adjudicated.mandated_values
+    )
+
+
+def _require_reading_fills_the_printed_runs(
+    field_id: str,
+    printed: tuple[str, ...],
+    adjudicated: NoteGovernedAmountDeclaration,
+) -> None:
+    if any(len(value) != adjudicated.wire_length for value in printed):
+        raise RegistryValidationError(
+            f"note-governed reading of {field_id!r} declares {adjudicated.wire_length} positions where the "
+            f"design prints {printed!r}",
+        )
+
+
+def _note_governed_amount_derivation(
+    joined_field: JoinedRecordDesignField,
+    adjudicated: NoteGovernedAmountDeclaration,
+    export_record_id: str,
+    *,
+    allowed_values: tuple[str, ...] | None,
+) -> ExportFieldDerivation:
+    """Derive the representation a reviewed note reading declares for one slot."""
+    parser_field = joined_field.parser_field
     # The sign travels with the adjudication and drives data_type, `signed` and
     # `decimals` together. The width check includes the sign position, so an
     # adjudication that does not fill the slot is refused like an unsigned one.
@@ -302,7 +382,7 @@ def _pointer_numeric_derivation(
         signed=signed,
         export_record_id=export_record_id,
         decimals=None if signed else adjudicated.decimal_digits,
-        allowed_values=adjudicated.mandated_values,
+        allowed_values=allowed_values,
         derivation_code="numeric-note-governed-amount-v1",
     )
 
