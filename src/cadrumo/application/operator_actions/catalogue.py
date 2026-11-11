@@ -312,6 +312,22 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="config.profile.status",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.account.add",
+            target_command_key="ledger.account.add",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="holding",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="holding",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="label",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="label",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.link",
             target_command_key="ledger.link",
             argument_specifications=(

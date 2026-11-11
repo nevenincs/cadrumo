@@ -173,6 +173,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ActionTarget("config.repair.reset_progress", ("config", "repair", "reset-progress"), "RepairResetProgressResult"),
     ActionTarget("config.storage.init", ("config", "storage", "init"), "ConfigStorageInitResult"),
     ActionTarget(
+        "ledger.account.add",
+        ("app", "ledger", "account", "add"),
+        "OwnAccountChangeResult",
+        required_inputs=("label", "holding"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "ledger.actividad_asset.correct",
         ("app", "ledger", "actividad-asset", "correct"),
         "ActivityAssetHistoryPayload",

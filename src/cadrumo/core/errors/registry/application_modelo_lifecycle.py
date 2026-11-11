@@ -468,6 +468,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloExportPeriodUnmappableError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_PERIOD_UNMAPPABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.export_period_unmappable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.m360_solicitud_operation.Modelo360SolicitudRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_360_SOLICITUD",
