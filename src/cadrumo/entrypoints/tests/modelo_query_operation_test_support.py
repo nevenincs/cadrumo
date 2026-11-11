@@ -36,8 +36,11 @@ from ...application.state_projection_models import ModeloReadinessRequest
 from ...core.external_constants import OutputLanguage
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import UserProfileFact
 from ..modelo_query_read_operation_composition import build_modelo_query_read_ports
+
+_YEAR = filing_year_envelope().horizon
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,18 +55,18 @@ def prepare_modelo_query_conformance_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> ModeloQueryConformanceCase:
     """Use the real indexed authority and the admitted encrypted profile."""
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     public_period = PublicPeriod.from_period(period)
     report = registry_bindings_for_scope("303", period=period, operation=operation)
     if definition_id == "modelo.bindings.list":
         rows = tuple(ModeloBindingRowV1.from_report_row(report, row) for row in report.rows)
         return ModeloQueryConformanceCase(
-            request=ModeloBindingsListRequest(profile_id=profile_id, modelo="303", year=2025, period_code="1T"),
+            request=ModeloBindingsListRequest(profile_id=profile_id, modelo="303", year=_YEAR, period_code="1T"),
             expected_projection=ModeloBindingsListProjection(
                 authority_generation=operation.generation.logical_generation,
                 profile_id=profile_id,
                 modelo_filter="303",
-                year_filter=2025,
+                year_filter=_YEAR,
                 period_filter="1T",
                 missing_filter=False,
                 catalogue_only=False,
@@ -100,7 +103,7 @@ def prepare_modelo_query_conformance_case(
     if definition_id == "modelo.bindings.resolve.typed":
         assert report.rows, "the real modelo must provide a grounded binding preview"
         first = report.rows[0]
-        snapshot = operation.snapshot("303", filing_year=2025, period="1T")
+        snapshot = operation.snapshot("303", filing_year=_YEAR, period="1T")
         declaration = next(binding for binding in snapshot.revision.bindings if binding.id == first.binding_id)
         assert declaration.value.channel.value == "decimal"
         override = ModeloBindingOverride(binding_id=first.binding_id, value="0.75")
@@ -139,7 +142,7 @@ def prepare_modelo_query_conformance_case(
             profile_id, (UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),)
         )
         checklist = data_inventory_checklist(
-            modelo="303", filing_year=2025, period=period, bucket_id=str(profile_id), operation=operation
+            modelo="303", filing_year=_YEAR, period=period, bucket_id=str(profile_id), operation=operation
         )
         return ModeloQueryConformanceCase(
             request=ModeloRequiresRequest(profile_id=profile_id, modelo="303", period=public_period),
@@ -154,14 +157,14 @@ def prepare_modelo_query_conformance_case(
         raise ValueError(f"unknown modelo query operation: {definition_id}")
     ports = build_modelo_query_read_ports(bucket_id=str(profile_id), operation=operation)
     readiness = build_modelo_readiness_reports(
-        (ModeloReadinessRequest(modelo="303", revision_id=report.revision, filing_year=2025, period=period),),
+        (ModeloReadinessRequest(modelo="303", revision_id=report.revision, filing_year=_YEAR, period=period),),
         active_profile_id=str(profile_id),
         read_ports=ports.read_ports,
         operation=operation,
     )
     assert len(readiness) == 1
     request = ModeloReadinessOperationRequest(
-        profile_id=profile_id, modelo="303", filing_year=2025, period=public_period
+        profile_id=profile_id, modelo="303", filing_year=_YEAR, period=public_period
     )
     human = ModeloReadinessProjection.from_report(
         profile_id,

@@ -14,6 +14,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_iva_wallet_commands as handler
 from .. import operation_modelo_iva_wallet_correction as bridge
 from ..modelo_results_m036 import IvaWalletCorrectResult
@@ -22,7 +23,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OPERATION_ID = "a" * 64
-_PERIOD = Period.from_year_and_code(2024, "4T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "4T")
 
 
 def _projection() -> bridge.ModeloIvaWalletCorrectionProjection:
@@ -58,7 +60,7 @@ def test_correct_command_requires_confirmation_before_submission(monkeypatch: py
     with pytest.raises(typer.BadParameter):
         handler.iva_wallet_correct_cmd(
             cast(typer.Context, cast(object, None)),
-            filing_year=2024,
+            filing_year=_YEAR,
             period="4T",
             amount="1200.50",
             reason="fix",
@@ -83,7 +85,7 @@ def test_correct_command_emits_the_registered_projection_without_local_reads(
 
     handler.iva_wallet_correct_cmd(
         cast(typer.Context, cast(object, None)),
-        filing_year=2024,
+        filing_year=_YEAR,
         period="4T",
         amount="1200.50",
         reason="  typo in opening balance  ",
@@ -95,7 +97,7 @@ def test_correct_command_emits_the_registered_projection_without_local_reads(
     envelope = envelopes[0]
     assert envelope["command"] == "modelo.iva_wallet.correct"
     result = cast(IvaWalletCorrectResult, envelope["result"])
-    assert result.filing_year == 2024
+    assert result.filing_year == _YEAR
     assert result.period == _PERIOD
     assert result.taxpayer_nif == "12345678Z"
     assert result.previous_amount == "500.00"
@@ -105,7 +107,7 @@ def test_correct_command_emits_the_registered_projection_without_local_reads(
     assert result.reason == "typo in opening balance"
     assert envelope["lines"] == [
         "operation\tmodelo.iva-wallet.correct",
-        "filing_year\t2024",
+        f"filing_year\t{_YEAR}",
         "period\t4T",
         "taxpayer_nif\t12345678Z",
         "previous_amount\t500.00",
@@ -129,7 +131,7 @@ def test_correct_command_rejects_noncanonical_amount_before_submission(
     with pytest.raises(typer.BadParameter):
         handler.iva_wallet_correct_cmd(
             cast(typer.Context, cast(object, None)),
-            filing_year=2024,
+            filing_year=_YEAR,
             period="4T",
             amount=amount,
             reason="test",

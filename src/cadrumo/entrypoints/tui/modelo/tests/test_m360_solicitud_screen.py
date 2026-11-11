@@ -15,6 +15,7 @@ from .....application.modelo.m360_solicitud_operation import Modelo360SolicitudR
 from .....core.config import override_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...ledger.controller import LedgerWorkspaceController
 from ...ledger.tests.workspace_fixtures import (
     WorkspaceHostApp,
@@ -39,6 +40,8 @@ from .solicitud_360_fixtures import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _screen(door: MemorySolicitudDoor) -> Modelo360SolicitudScreen:
@@ -92,19 +95,19 @@ async def test_a_solicitante_declaration_with_an_own_account_lists_masked(tmp_pa
             assert _text(screen, "#ledger-flow-status") == tr("tui.modelo.m360_solicitud.empty")
 
             facts = _facts_file(tmp_path, M360TitularEnCalidadDe.SOLICITANTE)
-            _type(screen, m360_year="2025", m360_facts_path=facts, m360_own_account="acc-01")
+            _type(screen, m360_year=str(_YEAR), m360_facts_path=facts, m360_own_account="acc-01")
             await _press(pilot, screen, "register-review")
             staged = screen.staged
             assert isinstance(staged, Modelo360SolicitudRequest), _text(screen, "#ledger-refusal")
-            assert (staged.action, staged.filing_year, staged.own_account_id) == ("declare", 2025, "acc-01")
+            assert (staged.action, staged.filing_year, staged.own_account_id) == ("declare", _YEAR, "acc-01")
             assert staged.representante_account is None
             assert "acc-01" in _text(screen, "#register-staged")
 
             await _press(pilot, screen, "register-confirm")
             assert door.requests[1] == staged
-            assert _keys(screen) == ["2025"]
+            assert _keys(screen) == [str(_YEAR)]
             (entry,) = door.solicitudes.register.entries
-            assert entry.period.filing_year == 2025
+            assert entry.period.filing_year == _YEAR
             row = screen.query_one("#m360-solicitudes", DataTable).get_row_at(0)
             assert row[1] == "FR"
             assert row[4] == "acc-01"
@@ -128,7 +131,7 @@ async def test_a_representante_account_is_typed_as_a_secret_and_shown_only_by_it
             facts = _facts_file(tmp_path, M360TitularEnCalidadDe.REPRESENTANTE)
             _type(
                 screen,
-                m360_year="2025",
+                m360_year=str(_YEAR),
                 m360_facts_path=facts,
                 m360_iban=SYNTHETIC_REPRESENTANTE_IBAN,
                 m360_bic="COBADEFFXXX",
@@ -156,7 +159,7 @@ async def test_an_own_account_without_a_bic_is_refused_by_the_operation_and_stay
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             facts = _facts_file(tmp_path, M360TitularEnCalidadDe.SOLICITANTE)
-            _type(screen, m360_year="2025", m360_facts_path=facts, m360_own_account="acc-01")
+            _type(screen, m360_year=str(_YEAR), m360_facts_path=facts, m360_own_account="acc-01")
             await _press(pilot, screen, "register-review")
             await _press(pilot, screen, "register-confirm")
             assert _text(screen, "#ledger-refusal")
@@ -173,7 +176,7 @@ async def test_removing_an_undeclared_year_is_refused_by_the_operation() -> None
             await settle(pilot)
             await _choose(pilot, screen, "m360-action", "remove")
             assert not screen.query_one("#m360-facts-path-field").display
-            _type(screen, m360_year="2025")
+            _type(screen, m360_year=str(_YEAR))
             await _press(pilot, screen, "register-review")
             staged = screen.staged
             assert isinstance(staged, Modelo360SolicitudRequest)
@@ -191,10 +194,10 @@ async def test_removing_a_declared_solicitud_empties_the_register(tmp_path: Path
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             facts = _facts_file(tmp_path, M360TitularEnCalidadDe.SOLICITANTE)
-            _type(screen, m360_year="2025", m360_facts_path=facts, m360_own_account="acc-01")
+            _type(screen, m360_year=str(_YEAR), m360_facts_path=facts, m360_own_account="acc-01")
             await _press(pilot, screen, "register-review")
             await _press(pilot, screen, "register-confirm")
-            assert _keys(screen) == ["2025"]
+            assert _keys(screen) == [str(_YEAR)]
 
             await _choose(pilot, screen, "m360-action", "remove")
             await _press(pilot, screen, "register-review")
@@ -214,7 +217,7 @@ async def test_an_unreadable_or_invalid_facts_file_is_refused_before_anything_is
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
-            _type(screen, m360_year="2025", m360_own_account="acc-01", m360_facts_path=absent)
+            _type(screen, m360_year=str(_YEAR), m360_own_account="acc-01", m360_facts_path=absent)
             await _press(pilot, screen, "register-review")
             assert screen.staged is None
             assert _text(screen, "#ledger-refusal") == tr("tui.modelo.m360_solicitud.source_unreadable", path=absent)

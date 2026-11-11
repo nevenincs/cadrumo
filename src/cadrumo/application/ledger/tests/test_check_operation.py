@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -31,6 +32,8 @@ from ..check_operation import (
 )
 from ..check_query import LedgerCheckV1
 from ..preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -81,7 +84,7 @@ def test_check_registers_strict_versioned_models_without_commit() -> None:
     assert LedgerCheckProjection.model_json_schema().get("additionalProperties") is False
 
 
-@pytest.mark.parametrize("period", [None, PublicPeriod.from_period(Period.from_year_and_code(2026, "1T"))])
+@pytest.mark.parametrize("period", [None, PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T"))])
 def test_check_access_is_whole_profile_even_with_period(period: PublicPeriod | None) -> None:
     registry, registration = _registry()
     resolved = resolve_operation_access(
@@ -116,7 +119,7 @@ def test_check_access_refuses_wrong_subject() -> None:
 
 
 def test_encrypted_projection_roundtrips_global_link_with_selected_period() -> None:
-    period = PublicPeriod.from_period(Period.from_year_and_code(2026, "1T"))
+    period = PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T"))
     link = LinkInconsistency(
         invoice_id="missing-invoice",
         transaction_id="a" * 64,

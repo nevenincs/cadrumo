@@ -17,10 +17,13 @@ profile persistence adapter seam with every defaultable field populated NON-defa
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ....core.field_grounding import FieldGroundingOutcome
@@ -43,6 +46,8 @@ from .confirmation_record_support import (
     populated_confirmation_record,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -58,7 +63,7 @@ def _read_draft() -> InvoiceDraft:
         supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
-        invoice_date="2024-11-15",
+        invoice_date=date(_YEAR - 2, 11, 15).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),

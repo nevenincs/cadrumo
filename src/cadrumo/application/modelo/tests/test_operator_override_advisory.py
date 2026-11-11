@@ -19,6 +19,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
@@ -35,12 +36,12 @@ _GUARDED_SOURCES = frozenset(CALCULATION_ROUTE_ENROLLED_SOURCES) - frozenset(CAL
 
 @pytest.fixture(scope="module")
 def m303_revision() -> ModeloRevision:
-    return published_snapshot(Modelo("303"), filing_year=2024, period="1T").revision
+    return published_snapshot(Modelo("303"), filing_year=filing_year_envelope().horizon, period="1T").revision
 
 
 @pytest.fixture(scope="module")
 def m390_revision() -> ModeloRevision:
-    return published_snapshot(Modelo("390"), filing_year=2024, period="0A").revision
+    return published_snapshot(Modelo("390"), filing_year=filing_grade_exercises("390")[-1], period="0A").revision
 
 
 def test_divergent_operator_value_raises_one_advisory_naming_both_figures(

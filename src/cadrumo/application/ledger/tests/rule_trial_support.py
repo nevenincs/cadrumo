@@ -9,10 +9,14 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..rule_trial_operation import try_rule_pattern
+
+_YEAR = filing_year_envelope().horizon
 
 RULE_TRIAL_PROFILE: Final = UUID("11111111-1111-4111-8111-111111111111")
 
@@ -24,11 +28,11 @@ def rule_trial_row(
     classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
 ) -> Transaction:
     """A synthetic outgoing movement of ``description``, keyed by nothing but the text it carries."""
-    moment = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+    moment = datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC)
     raw = RawTransaction(
         provider_transaction_id=description,
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        booked_date=date(_YEAR - 2, 4, 10),
+        value_date=date(_YEAR - 2, 4, 10),
         amount=Decimal("10.00"),
         currency="EUR",
         counterparty="Supplier SL",

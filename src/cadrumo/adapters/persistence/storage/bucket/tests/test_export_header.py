@@ -14,7 +14,7 @@ from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _VALID_DIGEST = hashlib.sha256(b"manifest-payload").hexdigest()
-_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
+_CREATED_AT = datetime(1980, 1, 1, tzinfo=UTC)
 _PLUS_ONE = timezone(timedelta(hours=1))
 
 
@@ -112,8 +112,8 @@ def test_rejects_every_archive_schema_version_but_the_current_one() -> None:
 
 def test_rejects_non_utc_created_at() -> None:
     for created_at in (
-        datetime(2026, 1, 1),
-        datetime(2026, 1, 1, tzinfo=_PLUS_ONE),
+        datetime(1980, 1, 1),
+        datetime(1980, 1, 1, tzinfo=_PLUS_ONE),
     ):
         with pytest.raises(ValidationError):
             _header(created_at=created_at)

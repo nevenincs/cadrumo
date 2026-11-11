@@ -13,6 +13,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     activity_asset_amortization_casillas,
 )
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.renta.actividad_asset.election import (
@@ -45,6 +46,8 @@ from ..activity_asset_expense_reconciliation import (
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = newest_authored_edition("100")
 
 
 @cache
@@ -134,7 +137,7 @@ def test_the_unowned_row_note_names_the_row_and_the_remedy() -> None:
         (),
         (
             _treatment(
-                transaction_id="a" * 64, category="hardware_amortizable", amortization_labelled=True, tax_year=2025
+                transaction_id="a" * 64, category="hardware_amortizable", amortization_labelled=True, tax_year=_YEAR
             ),
         ),
     ).unregistered
@@ -161,7 +164,7 @@ def _refused(
 
 def test_a_row_refused_once_its_route_is_gone_still_counts_as_unowned() -> None:
     """After the category leaves the routing the row never becomes an observation, and must still block."""
-    asset = _asset(2025)
+    asset = _asset(_YEAR)
     assert asset.acquisition.observed_transaction_id is not None
     with bundled_indexed_authority().operation():
         rows = refused_amortization_rows(
@@ -193,15 +196,15 @@ def test_a_row_refused_once_its_route_is_gone_still_counts_as_unowned() -> None:
                 ),
             ),
             assets=(asset,),
-            tax_year=2025,
-            effective_date=date(2025, 12, 31),
+            tax_year=_YEAR,
+            effective_date=date(_YEAR, 12, 31),
         )
 
     assert [row.transaction_id for row in rows] == ["a" * 64]
 
 
 def test_refused_rows_do_not_invent_dates_or_amounts_in_notes() -> None:
-    asset = _asset(2025)
+    asset = _asset(_YEAR)
     assert asset.acquisition.observed_transaction_id is not None
     issues = tuple(
         _refused(
@@ -213,9 +216,9 @@ def test_refused_rows_do_not_invent_dates_or_amounts_in_notes() -> None:
     )
     with bundled_indexed_authority().operation():
         unregistered = refused_amortization_rows(
-            issues, assets=(asset,), tax_year=2025, effective_date=date(2025, 12, 31)
+            issues, assets=(asset,), tax_year=_YEAR, effective_date=date(_YEAR, 12, 31)
         )
-        owned = refused_register_owned_rows(issues, assets=(asset,), tax_year=2025, effective_date=date(2025, 12, 31))
+        owned = refused_register_owned_rows(issues, assets=(asset,), tax_year=_YEAR, effective_date=date(_YEAR, 12, 31))
     diagnostics = (
         *unregistered_amortization_row_diagnostics(unregistered, resolver_id="test"),
         *register_owned_acquisition_diagnostics(owned, source_kind="test", resolver_id="test"),

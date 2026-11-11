@@ -17,6 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.namespace_registry_support impor
 
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.errors import RepositoryError
 from ...storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...storage.namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
@@ -25,9 +26,11 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ..secure_references import OperationSecureReferenceRepository, operation_secure_reference_repository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_WRITTEN_AT = datetime(2026, 8, 14, 14, tzinfo=UTC)
+_WRITTEN_AT = datetime(_YEAR, 8, 14, 14, tzinfo=UTC)
 
 
 class _Operand(BaseModel):

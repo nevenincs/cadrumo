@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_before_first_declaring,
+)
 from cadrumo.entrypoints.cli.tests.modelo_empty_profile_fixture import isolated_backend
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
@@ -18,6 +23,7 @@ __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
 _M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
@@ -67,7 +73,7 @@ def _create_lorentz_irene_profile() -> None:
                 "identity.legal_name": "Lorentz Irene SL",
                 "activities.description": "IVA corporate run",
                 "taxpayer_type.incn_prior_12_months": "500000",
-                "censo.activity_start_date": "2024-01-15",
+                "censo.activity_start_date": date(filing_year_envelope().floor, 1, 15).isoformat(),
                 "tax_residence.ccaa": "madrid",
                 "iva.regime": "GENERAL",
                 "tax_residence.jurisdiction_scope": "common_regime",
@@ -96,9 +102,9 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--revision-id",
-            "2025-y-siguientes",
+            str(open_ended_revision("202").id),
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
         ],
@@ -120,7 +126,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
         ],
@@ -139,7 +145,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
         ],
@@ -173,7 +179,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
         ],
@@ -192,7 +198,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
         ],
@@ -205,7 +211,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert filed_error["context"]["pointer_name"] == "current_calculation_revision_id"
     assert filed_error["context"]["effect"] == "none"
 
-    export_path = tmp_path / "modelo-202-2025-1P.txt"
+    export_path = tmp_path / f"modelo-202-{_YEAR}-1P.txt"
     exported = invoke_joined_cli(
         [
             "--format",
@@ -216,7 +222,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
             "--output",

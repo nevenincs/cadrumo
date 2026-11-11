@@ -27,12 +27,16 @@ import pytest
 from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..prorrata_register import ProrrataRegisterRepository
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_LATER_EJERCICIO = filing_year_envelope().horizon
+_EARLIER_EJERCICIO = _LATER_EJERCICIO - 1
 
 _BUCKET_ID = "51355135-5135-4135-8135-513551355135"
 
@@ -59,11 +63,11 @@ def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
 
 def test_sequential_upserts_for_distinct_ejercicios_accumulate() -> None:
     """Baseline: nothing about two repository instances loses an entry."""
-    ProrrataRegisterRepository().upsert_entry(_entry(2024, percentage="80"))
-    ProrrataRegisterRepository().upsert_entry(_entry(2025, percentage="70"))
+    ProrrataRegisterRepository().upsert_entry(_entry(_EARLIER_EJERCICIO, percentage="80"))
+    ProrrataRegisterRepository().upsert_entry(_entry(_LATER_EJERCICIO, percentage="70"))
 
     ejercicios = [entry.ejercicio for entry in ProrrataRegisterRepository().load().entries]
-    assert sorted(ejercicios) == [2024, 2025]
+    assert sorted(ejercicios) == [_EARLIER_EJERCICIO, _LATER_EJERCICIO]
 
 
 def test_a_concurrent_upsert_does_not_discard_the_other_entry() -> None:
@@ -77,23 +81,23 @@ def test_a_concurrent_upsert_does_not_discard_the_other_entry() -> None:
     repo = ProrrataRegisterRepository()
     interloper_written = False
 
-    def _apply_2024_while_2025_lands(current: ProrrataRegister) -> ProrrataRegister:
+    def _apply_earlier_while_later_lands(current: ProrrataRegister) -> ProrrataRegister:
         nonlocal interloper_written
         if not interloper_written:
             interloper_written = True
-            ProrrataRegisterRepository().upsert_entry(_entry(2025, percentage="70"))
+            ProrrataRegisterRepository().upsert_entry(_entry(_LATER_EJERCICIO, percentage="70"))
         return ProrrataRegister(
-            entries=(*current.entries, _entry(2024, percentage="80")),
+            entries=(*current.entries, _entry(_EARLIER_EJERCICIO, percentage="80")),
             sector_definitions=current.sector_definitions,
         )
 
     # Reaches through the repository's storage kernel deliberately: the point is
     # to interleave INSIDE one guarded upsert, which the public method does not
     # expose a seam for.
-    repo._storage.mutate(_apply_2024_while_2025_lands)
+    repo._storage.mutate(_apply_earlier_while_later_lands)
 
     ejercicios = [entry.ejercicio for entry in ProrrataRegisterRepository().load().entries]
-    assert sorted(ejercicios) == [2024, 2025]
+    assert sorted(ejercicios) == [_EARLIER_EJERCICIO, _LATER_EJERCICIO]
 
 
 def test_replacing_an_existing_key_still_replaces_rather_than_duplicates() -> None:
@@ -104,8 +108,8 @@ def test_replacing_an_existing_key_still_replaces_rather_than_duplicates() -> No
     REPLACE. Without this, the concurrency fix could have been "keep both",
     which would silently duplicate a provisional and a definitive settlement.
     """
-    ProrrataRegisterRepository().upsert_entry(_entry(2024, percentage="80"))
-    ProrrataRegisterRepository().upsert_entry(_entry(2024, percentage="65"))
+    ProrrataRegisterRepository().upsert_entry(_entry(_EARLIER_EJERCICIO, percentage="80"))
+    ProrrataRegisterRepository().upsert_entry(_entry(_EARLIER_EJERCICIO, percentage="65"))
 
     entries = ProrrataRegisterRepository().load().entries
     assert len(entries) == 1

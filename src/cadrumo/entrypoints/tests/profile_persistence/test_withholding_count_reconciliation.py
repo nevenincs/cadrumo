@@ -33,6 +33,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -49,7 +50,7 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "19019019-0190-4190-8190-000000005555"
-_YEAR = 2022
+_YEAR = filing_year_envelope().floor
 _NOW = datetime(_YEAR + 1, 1, 15, 9, 0, tzinfo=UTC)
 _WORK_BOX = "01"
 _ACTIVITY_BOX = "07"

@@ -119,8 +119,8 @@ def test_a_sign_in_record_of_the_earlier_shape_requires_a_new_sign_in(tmp_path: 
     earlier = {
         "account_email": "operator@example.invalid",
         "granted_scopes": list(REQUIRED_SCOPES),
-        "issued_at": "2026-05-26T09:00:00Z",
-        "last_refresh_at": "2026-05-26T09:00:00Z",
+        "issued_at": "1980-05-26T09:00:00Z",
+        "last_refresh_at": "1980-05-26T09:00:00Z",
         "reauth_required": False,
     }
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE) as profile:

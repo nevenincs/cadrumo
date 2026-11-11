@@ -75,11 +75,14 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 28, 13, tzinfo=UTC)
+_NOW = datetime(_YEAR, 8, 28, 13, tzinfo=UTC)
 _DEFINITION_ID = "operation.supervisor.restart"
 _RESUME_PHASE = "operation.phase.resumed"
 _LEASE_DURATION = timedelta(minutes=1)

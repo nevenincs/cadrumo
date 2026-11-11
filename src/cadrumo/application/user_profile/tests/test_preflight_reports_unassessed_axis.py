@@ -22,6 +22,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_profile_schema,
@@ -40,7 +41,7 @@ from ..preflight import ProfilePreflightService
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _PROFILE_ID = "6d1e4b90-2c77-4a53-8e14-9b0f5a2c7d31"
-_PERIOD = Period.from_year_and_code(2024, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
@@ -84,7 +85,7 @@ def _report(schema: ProfileSchemaDefinition, record: UserProfileRecord, modelo: 
     return ProfilePreflightService(schema=schema).report(
         record=record,
         modelo=modelo,
-        revision_id="2024-0a",
+        revision_id=f"{_PERIOD.filing_year}-0a",
         period=_PERIOD,
     )
 

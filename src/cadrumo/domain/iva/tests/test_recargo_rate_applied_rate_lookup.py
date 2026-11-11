@@ -20,6 +20,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
 from ..recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
@@ -29,10 +31,12 @@ from ..recargo_equivalencia import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# RD-ley 4/2024 art. 1 carries the transitional rates over the second half of its year.
+_RDL_4_2024 = published_legal_reference("real-decreto-ley-4-2024:art-1")
 #: Inside the window where the ordinary and transitional reduced rates coexist.
-_COLLISION_DATE = date(2024, 8, 15)
+_COLLISION_DATE = date(_RDL_4_2024.effective_from.year, 8, 15)
 #: Inside the Q4 2024 step, after the transitional rates increased.
-_STEP_DATE = date(2024, 11, 15)
+_STEP_DATE = date(_RDL_4_2024.effective_from.year, 11, 15)
 
 
 def test_the_two_reduced_rates_resolve_distinctly_on_one_date() -> None:
@@ -102,7 +106,11 @@ def test_a_zero_rated_pairing_is_a_rate_of_zero_not_an_absent_one() -> None:
 @pytest.mark.parametrize(
     ("applied_rate", "on_date", "why"),
     [
-        (Decimal("0.05"), date(2026, 6, 1), "transitional rate, long after its window closed"),
+        (
+            Decimal("0.05"),
+            date(filing_year_envelope().horizon, 6, 1),
+            "transitional rate, long after its window closed",
+        ),
         (Decimal("0.03"), _COLLISION_DATE, "a rate Spain never charged"),
         (Decimal("0.21"), date(1990, 1, 1), "before the regime existed"),
     ],

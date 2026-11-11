@@ -79,9 +79,9 @@ MIXED_POPULATION_CORPUS = [
     "cuenta ES91 2100 0418 4502 0005 1332 declarada",
     "IBAN ES91-2100-0418-4502-0005-1332 EN FACTURA",
     # serialised instants
-    "2026-01-02T09:32:12.345678Z",
-    "observed_at=2026-01-02T09:32:12.345678Z status=FILED",
-    "2026-01-02 09:32:12+02:00",
+    "1986-01-02T09:32:12.345678Z",
+    "observed_at=1986-01-02T09:32:12.345678Z status=FILED",
+    "1986-01-02 09:32:12+02:00",
     # decimal-bearing payload text
     "base 1234.56 cuota 259.26 total 1493.82",
     "importe -1.234,56 EUR saldo 0.00",
@@ -110,8 +110,8 @@ def test_a_serialised_instant_survives_the_structured_funnel() -> None:
     refused on the way to storage.
     """
     record = {
-        "observed_at": "2026-01-02T09:32:12.345678Z",
-        "recorded_at": "2026-01-02 09:32:12+02:00",
+        "observed_at": "1986-01-02T09:32:12.345678Z",
+        "recorded_at": "1986-01-02 09:32:12+02:00",
         "counterparty_tax_id": _IDENTITY,
         "status": "FILED",
     }
@@ -119,8 +119,8 @@ def test_a_serialised_instant_survives_the_structured_funnel() -> None:
     redacted = redact_structured(record, rules=_diagnostic_rules())
 
     assert isinstance(redacted, dict)
-    assert redacted["observed_at"] == "2026-01-02T09:32:12.345678Z"
-    assert redacted["recorded_at"] == "2026-01-02 09:32:12+02:00"
+    assert redacted["observed_at"] == "1986-01-02T09:32:12.345678Z"
+    assert redacted["recorded_at"] == "1986-01-02 09:32:12+02:00"
     assert redacted["status"] == "FILED"
     assert redacted["counterparty_tax_id"] != _IDENTITY, "the identity beside the stamps was not redacted"
 

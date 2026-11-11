@@ -8,10 +8,13 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction, raw_transaction
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,7 +91,7 @@ def test_preflight_flags_missing_category_on_income_refund_with_purchase_evidenc
             "iva_amount": Decimal("7.81"),
             "usage_ratio_id": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

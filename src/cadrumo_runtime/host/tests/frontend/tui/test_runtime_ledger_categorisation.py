@@ -155,6 +155,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -174,6 +175,8 @@ from ....frontend.tui.runtime_ledger_categorisation import (
 )
 from .unsupported_result import raises_unsupported_result
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000d2")
@@ -181,7 +184,7 @@ _OTHER_PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000ff")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000d2")
 _OPERATION_ID = "a" * 64
 _TX = "b" * 64
-_NOW = datetime(2026, 10, 22, tzinfo=UTC)
+_NOW = datetime(_YEAR, 10, 22, tzinfo=UTC)
 _UNUSED: Any = cast(object, lambda **_kwargs: None)
 
 
@@ -237,11 +240,11 @@ class _Controller:
 def _transaction(
     classification: BusinessClassification = BusinessClassification.BUSINESS,
 ) -> LedgerTransactionProjection:
-    stamp = "2026-03-01T09:00:00+00:00"
+    stamp = datetime(_YEAR, 3, 1, 9, tzinfo=UTC).isoformat()
     return LedgerTransactionProjection(
         transaction_id=_TX,
-        date="2026-03-14",
-        booked_date="2026-03-14",
+        date=date(_YEAR, 3, 14).isoformat(),
+        booked_date=date(_YEAR, 3, 14).isoformat(),
         value_date=None,
         amount="100.00",
         currency="EUR",
@@ -306,11 +309,11 @@ def _diagnostics(profile_id: UUID) -> LedgerLlmDiagnosticsProjection:
         operation_id="ledger.llm-diagnostics",
         outcome="completed",
         effect=OperationEffect.NONE,
-        since=date(2026, 1, 1),
+        since=date(_YEAR, 1, 1),
         until=None,
         low_confidence_threshold=threshold,
         report=LedgerLlmDiagnosticsReportSnapshot(
-            since=date(2026, 1, 1),
+            since=date(_YEAR, 1, 1),
             until=None,
             low_confidence_threshold=threshold,
             usage_providers=(),
@@ -484,7 +487,7 @@ _CASES: tuple[_Case, ...] = (
         lambda: build_ledger_llm_diagnostics_definition(_UNUSED),
         build_ledger_llm_diagnostics_registration,
         LedgerLlmDiagnosticsRequest(
-            profile_id=_PROFILE_ID, since=date(2026, 1, 1), low_confidence_threshold=PublicDecimal(decimal="0.5")
+            profile_id=_PROFILE_ID, since=date(_YEAR, 1, 1), low_confidence_threshold=PublicDecimal(decimal="0.5")
         ),
         _diagnostics,
         OperationEffect.NONE,
@@ -493,16 +496,16 @@ _CASES: tuple[_Case, ...] = (
         "ratios_list",
         build_ledger_ratios_list_definition,
         build_ledger_ratios_list_registration,
-        LedgerRatiosListRequest(profile_id=_PROFILE_ID, year=2026),
-        lambda profile: LedgerRatiosListProjection(profile_id=profile, year=2026, outcome="available", count=0),
+        LedgerRatiosListRequest(profile_id=_PROFILE_ID, year=_YEAR),
+        lambda profile: LedgerRatiosListProjection(profile_id=profile, year=_YEAR, outcome="available", count=0),
         OperationEffect.NONE,
     ),
     _Case(
         "ratios_eligible",
         build_ledger_ratios_eligible_definition,
         build_ledger_ratios_eligible_registration,
-        LedgerRatiosEligibleRequest(profile_id=_PROFILE_ID, year=2026),
-        lambda profile: LedgerRatiosEligibleProjection(profile_id=profile, year=2026, rows=(), count=0),
+        LedgerRatiosEligibleRequest(profile_id=_PROFILE_ID, year=_YEAR),
+        lambda profile: LedgerRatiosEligibleProjection(profile_id=profile, year=_YEAR, rows=(), count=0),
         OperationEffect.NONE,
     ),
     _Case(
@@ -519,7 +522,7 @@ _CASES: tuple[_Case, ...] = (
         "ratios_set",
         build_ledger_ratios_set_definition,
         build_ledger_ratios_set_registration,
-        LedgerRatiosSetRequest(profile_id=_PROFILE_ID, category="vehiculo", ratio="0.5", year=2026),
+        LedgerRatiosSetRequest(profile_id=_PROFILE_ID, category="vehiculo", ratio="0.5", year=_YEAR),
         lambda profile: LedgerRatiosSetProjection(
             profile_id=profile, requested_category="vehiculo", category="vehiculo", ratio="0.5"
         ),

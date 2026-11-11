@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...modelo.verification_repository_ports import VerificationRepositoryBundle
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
@@ -37,6 +38,8 @@ from ..status_operation import (
     build_ledger_status_registration,
 )
 from .registration_access_context_support import registration_access_context
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -145,7 +148,7 @@ def test_status_projection_roundtrips_zero_absence_decimal_issues_and_stale_fact
     stale = (
         LedgerStaleFilingV1(
             modelo="303",
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period="1T",
             calculation_revision_id="c" * 64,
             work_unit_id="d" * 64,
@@ -186,7 +189,7 @@ def test_readiness_issue_projection_rejects_invalid_or_non_finite_decimal_text(v
 
 @pytest.mark.parametrize(
     "period",
-    [None, PublicPeriod.from_period(Period.from_year_and_code(2026, "1T"))],
+    [None, PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T"))],
 )
 def test_status_access_always_requires_unrestricted_all_periods(period: PublicPeriod | None) -> None:
     registry, registration = _registry()

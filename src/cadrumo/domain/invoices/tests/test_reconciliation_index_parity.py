@@ -32,6 +32,7 @@ from typing import TypeVar
 import pytest
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
@@ -236,7 +237,7 @@ def _transaction(
 
 def _edge_date(rng: _Picker) -> date:
     """A date on, before or after a year boundary, or anywhere in the year."""
-    anchor = date(rng.choice((2024, 2025, 2026)), 1, 1)
+    anchor = date(rng.choice(filing_year_envelope().years), 1, 1)
     return anchor + timedelta(days=rng.choice((-1, 0, 1, rng.randint(-200, 200))))
 
 
@@ -362,7 +363,7 @@ def test_a_pair_just_past_the_tolerance_is_refused_on_both_sides() -> None:
         retention=None,
         counterparty="Beta Logistica SL",
         currency="EUR",
-        issued_at=date(2025, 12, 31),
+        issued_at=date(filing_year_envelope().horizon, 12, 31),
         linked=(),
     )
     amounts = ("120.99", "120.9899999", "121.00", "121.01", "121.0100001", "121.000")
@@ -374,7 +375,7 @@ def test_a_pair_just_past_the_tolerance_is_refused_on_both_sides() -> None:
                 direction=TransactionDirection.OUTGOING,
                 counterparty="BETA",
                 currency="EUR",
-                booked=date(2026, 1, 1),
+                booked=date(filing_year_envelope().horizon + 1, 1, 1),
                 invoice_id=None,
             )
             for text in amounts

@@ -45,13 +45,13 @@ def test_rules_roundtrip_strictly_in_precedence_order_and_remain_encrypted(tmp_p
         pattern="SECRET-HIGH-PRIORITY-VENDOR",
         classification=BusinessClassification.BUSINESS,
         priority=1,
-        created_at=datetime(2026, 8, 2, 9, 0, tzinfo=UTC),
+        created_at=datetime(1980, 8, 2, 9, 0, tzinfo=UTC),
     )
     earlier_low_priority = _rule(
         pattern="SECRET-LOW-PRIORITY-VENDOR",
         classification=BusinessClassification.PERSONAL,
         priority=90,
-        created_at=datetime(2026, 8, 1, 9, 0, tzinfo=UTC),
+        created_at=datetime(1980, 8, 1, 9, 0, tzinfo=UTC),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -74,7 +74,7 @@ def test_rule_load_refuses_a_tampered_invalid_pattern(tmp_path: Path) -> None:
         pattern="VALID-PERSISTED-PATTERN",
         classification=BusinessClassification.BUSINESS,
         priority=7,
-        created_at=datetime(2026, 8, 3, 10, 0, tzinfo=UTC),
+        created_at=datetime(1980, 8, 3, 10, 0, tzinfo=UTC),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:

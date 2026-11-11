@@ -21,6 +21,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_simplificada, operation_performed_role
@@ -41,7 +42,7 @@ from .oss_rate_change_support import ordinary_general_variants, rate_change_insi
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 BUCKET = "2bb5bf4c-ff0d-440c-a428-b075558b3595"
-_SUPPLY = date(2026, 2, 17)
+_SUPPLY = date(filing_year_envelope().horizon, 2, 17)
 _LINE_LENGTH = 42
 
 

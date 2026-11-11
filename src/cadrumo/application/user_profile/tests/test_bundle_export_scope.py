@@ -28,7 +28,7 @@ from ..bundle_export_operation import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_WHEN = datetime(2026, 9, 27, tzinfo=UTC)
+_WHEN = datetime(1980, 9, 27, tzinfo=UTC)
 
 
 def prepared(

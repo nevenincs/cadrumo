@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .parser_boundary_m100_support import corpus_specimens
 from .verification_chain_support import (
     COMPUTED_CASILLAS_M390,
     calculate_engine_values_from_inputs,
@@ -41,10 +42,7 @@ _M390_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
-    [
-        ("2022-0A", 2022),
-        ("2023-0A", 2023),
-    ],
+    [(stem, year) for stem, year, _period in corpus_specimens("390", role="formula_verification")],
 )
 def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf_stem: str, year: int) -> None:
     """Engine recomputes all three M390 closure casillas and they match the printed values.

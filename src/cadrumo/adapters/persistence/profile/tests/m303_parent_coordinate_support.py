@@ -8,13 +8,16 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .published_authority_support import published_authority_operation
+
+_YEAR = filing_year_envelope().horizon
 
 
 @cache
 def registry_snapshot_ref() -> RegistrySnapshotRef:
     # Compiled on first use, not at import: collection must stay cheap.
-    return published_authority_operation().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=_YEAR, period="1T").snapshot_ref
 
 
 @cache

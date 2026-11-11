@@ -1,6 +1,6 @@
 """The borrador comparison reads the real encrypted draft store and a real saved Modelo 100 calculation.
 
-Each case seeds a synthetic 2025 taxpayer, imports a draft into encrypted
+Each case seeds a synthetic taxpayer, imports a draft into encrypted
 custody and saves a calculation through the production calculation service,
 then compares them through the registered read's own service. The draft's
 work-withholding credit is held only to cross-check the payer records, so a
@@ -26,6 +26,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -88,13 +89,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "21111111-1111-4111-8111-111111111111"
 _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _CREDIT: BindingId = "renta-retencion-soportada-trabajo"
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _SOURCE_URL = "file-import:sha256:" + "b" * 64
-_FIRST_IMPORT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
-_SECOND_IMPORT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
+_FIRST_IMPORT = datetime(_YEAR + 1, 4, 3, 10, 0, tzinfo=UTC)
+_SECOND_IMPORT = datetime(_YEAR + 1, 4, 5, 10, 0, tzinfo=UTC)
 _WORDS = "application.live.borrador.comparison"
 _PRINTED_RESULTS: tuple[CasillaId, ...] = ("0505", "0545", "0546", "0585", "0586")
 
@@ -185,7 +186,7 @@ class _Profile:
             modelo="100",
             filing_year=_YEAR,
             period=_PERIOD,
-            revision_id="2025",
+            revision_id=str(revision_covering("100", _YEAR).id),
             ports=WorkLifecyclePorts(work_unit_repository=self.work_units, bucket_event_repository=self.events),
             operation=self.operation,
         ).work_unit_id
@@ -257,8 +258,8 @@ def _seed_taxpayer() -> None:
                     *RENTA_UNMARRIED_TAXPAYER_FACTS,
                 )
             ),
-            created_at=datetime(2026, 4, 1, tzinfo=UTC),
-            updated_at=datetime(2026, 4, 1, tzinfo=UTC),
+            created_at=datetime(_YEAR + 1, 4, 1, tzinfo=UTC),
+            updated_at=datetime(_YEAR + 1, 4, 1, tzinfo=UTC),
             context=profile_creation_context_for_test(),
         ),
     )

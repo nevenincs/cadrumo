@@ -77,7 +77,7 @@ def _runs(live: StaticLiveModels, reading: str, *added: str) -> ModelRunService:
         models=tuple(ListedModel(lane=KEYLESS_LANE, model=model) for model in added),
         reading=ListedModel(lane=KEYLESS_LANE, model=reading),
         generation=new_settings_generation(),
-        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
+        updated_at=datetime(1980, 10, 27, 9, 0, tzinfo=UTC),
     )
     assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
     source = ProvidedProviderCatalogSource(synthetic_catalog())

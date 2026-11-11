@@ -21,15 +21,19 @@ from ....application.operations.public_period import PublicPeriod
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_iva_wallet_correction as bridge
 from .. import operation_profile_operation as profile_operation
 from .operation_bridge_support import bind_profile_submission
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OPERATION_ID = "b" * 64
-_PERIOD = Period.from_year_and_code(2024, "4T")
+_PERIOD = Period.from_year_and_code(_YEAR, "4T")
 
 
 def _projection() -> ModeloIvaWalletCorrectionProjection:
@@ -103,7 +107,7 @@ def test_result_or_receipt_mismatch_refuses_with_operation_correlation(
     if mismatch == "profile":
         projection = projection.model_copy(update={"profile_id": UUID("33333333-3333-4333-8333-333333333333")})
     elif mismatch == "period":
-        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=2023, code="4T")})
+        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=_YEAR - 1, code="4T")})
     elif mismatch == "amount":
         projection = projection.model_copy(update={"amount": "1200.51"})
     elif mismatch == "reason":

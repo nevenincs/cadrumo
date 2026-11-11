@@ -58,6 +58,7 @@ from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.credit_resolution import CreditResolutionIdentity
@@ -83,7 +84,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 __all__ = ["secure_objects"]
 
-_AT = datetime(2027, 4, 3, 9, 0, tzinfo=UTC)
+_AT = datetime(filing_year_envelope().horizon + 1, 4, 3, 9, 0, tzinfo=UTC)
 _SESSION = "session-label-one"
 _REASON = "Synthetic reason: the payer's own copy of the certificate states this amount."
 

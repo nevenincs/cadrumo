@@ -21,7 +21,7 @@ from ....domain.user_profile.values import ProfileSetupState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_INSTANT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 6, 1, 8, 0, tzinfo=UTC)
 
 
 def _validate_kwargs(**overrides: object) -> dict[str, object]:

@@ -14,14 +14,17 @@ import pytest
 
 from .....core.modelo import Modelo
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..submission import SubmissionRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
-_SUBMITTED_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_SUBMITTED_AT = datetime(_YEAR, 5, 27, 10, 0, 0, tzinfo=UTC)
 _DRAFT_ID = "d" * 64
 
 

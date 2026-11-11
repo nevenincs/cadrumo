@@ -37,7 +37,7 @@ from cadrumo.core.classification.policies import SensitivityClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
+_NOW = datetime(1980, 7, 3, 12, 0, tzinfo=UTC)
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-SIGNING-ADAPTER-TEST"
 _OWNER_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
 _FOREIGN_BUCKET_ID = "2e510000-0000-4000-8000-000000000002"

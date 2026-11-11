@@ -32,12 +32,15 @@ from pydantic import ValidationError
 
 from .....core.directory_scan import scan_directory
 from .....core.sync_surface import SyncSurface
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..records import SyncRunRecord, bounded_scope_description, coverage_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEARS = filing_year_envelope()
+
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_COMPLETED_AT = datetime(2026, 8, 10, 9, 30, tzinfo=UTC)
+_COMPLETED_AT = datetime(1980, 8, 10, 9, 30, tzinfo=UTC)
 
 #: A scope long enough to exercise the summariser rather than the pass-through
 #: arm. Proving the bound with a short value would prove nothing: the field
@@ -59,7 +62,7 @@ def test_a_scope_too_wide_to_enumerate_is_summarised_rather_than_truncated() -> 
     enumerated = ",".join(_WIDE_SCOPE_MODELOS)
     assert len(enumerated) > 256, "the fixture must actually exceed the field bound"
 
-    described = bounded_scope_description(_WIDE_SCOPE_MODELOS, suffix="2023-2025")
+    described = bounded_scope_description(_WIDE_SCOPE_MODELOS, suffix=f"{_YEARS.floor}-{_YEARS.horizon}")
 
     assert len(described) <= 256
     assert described.startswith(f"{len(_WIDE_SCOPE_MODELOS)} modelos")
@@ -90,7 +93,7 @@ def test_more_divergences_than_units_reached_is_refused() -> None:
             bucket_event_id="d" * 64,
             bucket_id=_BUCKET_ID,
             surface=SyncSurface.FILED_DECLARATIONS,
-            resolved_scope="303 2026-1T",
+            resolved_scope=f"303 {_YEARS.horizon}-1T",
             succeeded=True,
             unit_count=2,
             divergence_count=3,
@@ -207,9 +210,9 @@ def test_a_naive_completion_instant_is_refused() -> None:
             bucket_event_id="e" * 64,
             bucket_id=_BUCKET_ID,
             surface=SyncSurface.FILED_DECLARATIONS,
-            resolved_scope="303 2026-1T",
+            resolved_scope=f"303 {_YEARS.horizon}-1T",
             succeeded=True,
             unit_count=1,
             divergence_count=0,
-            completed_at=datetime(2026, 8, 10, 9, 30),
+            completed_at=datetime(1980, 8, 10, 9, 30),
         )

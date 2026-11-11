@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
+from ....domain.calculations.registry.tests.authored_editions import manual_edition_matches, manual_editions_printing
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     leased_profile_create_context,
@@ -51,11 +52,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET = "0de41ce4-0000-4000-8000-000000000626"
 _T0 = datetime(1980, 8, 5, 10, 0, tzinfo=UTC)
 
-#: The first year the deduccion is correctly un-capped.
-_FIRST_UNCEILINGED_YEAR = 2023
 
-#: The first year the ceiling applied to, per the Manual Practico de Renta 2020.
-_FIRST_KNOWN_CEILINGED_YEAR = 2020
+def _manual_cutover_year() -> int:
+    """The year the Manual Practico de Renta says the un-capped regime applies from."""
+    matches = manual_edition_matches("renta", r"nuevo regimen resulta aplicable desde el 1 de enero de (\d{4})")
+    cutovers = {int(match.group(1)) for match in matches.values()}
+    assert len(cutovers) == 1, "the manual editions disagree on the year the limitation ended"
+    return cutovers.pop()
+
+
+#: The first year the deduccion is correctly un-capped, as the manual states it.
+_FIRST_UNCEILINGED_YEAR = _manual_cutover_year()
+
+#: The editions of the manual that still print the cap, and so the first year it applied to.
+_CEILING_MANUAL_EDITIONS = manual_editions_printing(
+    "renta",
+    "cotizaciones y cuotas totales a la seguridad social y mutualidades devengadas en cada periodo impositivo",
+)
+_FIRST_KNOWN_CEILINGED_YEAR = min(_CEILING_MANUAL_EDITIONS)
 
 
 def _supported_filing_years() -> tuple[int, ...]:
@@ -153,4 +167,5 @@ class TestCotizacionesCeilingYears:
         asserted against each other, so moving one without the other fails.
         """
         assert _retired_ceiling_year() == _FIRST_UNCEILINGED_YEAR
+        assert max(_CEILING_MANUAL_EDITIONS) == _FIRST_UNCEILINGED_YEAR - 1
         assert max(_CEILINGED_YEARS) == _FIRST_UNCEILINGED_YEAR - 1

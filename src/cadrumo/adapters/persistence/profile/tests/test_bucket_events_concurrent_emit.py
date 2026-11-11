@@ -26,8 +26,11 @@ import pytest
 
 from .....domain.buckets.event import BucketEventObjectType, BucketEventType
 from .....domain.buckets.event_repository import append_bucket_event, build_bucket_event, emit_bucket_events
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..buckets import BucketEventHistoryRepository
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -41,7 +44,7 @@ def _event(object_id: str):
     return build_bucket_event(
         bucket_id=_BUCKET_ID,
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
-        occurred_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
         actor="test",
         object_type=BucketEventObjectType.PROFILE,
         object_id=object_id,

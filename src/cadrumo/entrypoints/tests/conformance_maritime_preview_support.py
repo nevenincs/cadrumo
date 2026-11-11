@@ -31,6 +31,7 @@ from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -39,6 +40,9 @@ from .conformance_family_contract import (
     ConformancePreparation,
     RegisteredExecutorConformanceCase,
 )
+
+_YEAR = filing_year_envelope().horizon
+
 
 _WORKER_CLASS = "trabajador_del_mar"
 _MARITIME_FACTS = (
@@ -139,7 +143,7 @@ def _retained_maritime_quickfile_prepare(context: ConformanceFamilyContext) -> C
             ModeloMaritimePreviewRequest(profile_id=context.profile_id, annual_salary="36500.00", qualifying_days=100),
             verify=verify,
         )
-    seed_modelo_ready_profile(bucket_id=profile, at=datetime(2026, 4, 1, tzinfo=UTC))
+    seed_modelo_ready_profile(bucket_id=profile, at=datetime(_YEAR, 4, 1, tzinfo=UTC))
     output = context.input_root / "quickfile.fichero-boe"
     units = WorkUnitCatalogueRepository(bucket_id=profile)
     calculations = CalculationRevisionCatalogueRepository(bucket_id=profile)
@@ -147,7 +151,7 @@ def _retained_maritime_quickfile_prepare(context: ConformanceFamilyContext) -> C
 
     def verify(outcome: ConformanceOutcome) -> None:
         result = outcome.resolve_result(QuickfileProjection)
-        assert result.profile_id == context.profile_id and result.modelo == "130" and (result.filing_year == 2025)
+        assert result.profile_id == context.profile_id and result.modelo == "130" and (result.filing_year == _YEAR - 1)
         assert not result.completed and result.stopped_at_stage is QuickfileStage.CALCULATE and (result.export is None)
         assert result.write_count > 0 and result.effect is OperationEffect.PARTIAL
         assert tuple(row.stage for row in result.stages) == QUICKFILE_STAGE_ORDER
@@ -167,7 +171,7 @@ def _retained_maritime_quickfile_prepare(context: ConformanceFamilyContext) -> C
         QuickfileRequest(
             profile_id=context.profile_id,
             modelo="130",
-            period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
+            period=PublicPeriod.from_period(Period.from_year_and_code(_YEAR - 1, "1T")),
             output_path=str(output),
             actor="conformance",
             inputs=QuickfileCalculationInputs(

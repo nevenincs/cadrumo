@@ -21,6 +21,7 @@ from ......application.modelo.work_form_source_groups import source_groups
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n.render import tr
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ....tests.settling import settle, settle_until
@@ -64,7 +65,9 @@ async def test_a_real_declaration_maps_every_box_once_and_names_no_binding(tmp_p
 @pytest.mark.asyncio
 async def test_a_real_second_quarter_names_the_declaration_it_carries_from(tmp_path: Path) -> None:
     with (
-        real_workbench(tmp_path, modelo="130", filing_year=2026, period_code="2T") as installed,
+        real_workbench(
+            tmp_path, modelo="130", filing_year=filing_year_envelope().horizon, period_code="2T"
+        ) as installed,
         override_settings(cadrumo_output_language="en"),
     ):
         screen = ModeloWorkbenchScreen(installed, actions=installed)
@@ -91,7 +94,7 @@ async def test_a_real_second_quarter_names_the_declaration_it_carries_from(tmp_p
     assert carried, "the real second quarter names no earlier declaration, so the naming check would pass on nothing"
     earlier = prompts.index(next(line for line in prompts if "« Earlier declarations" in line))
     assert prompts[earlier].startswith("▹ ")
-    assert prompts[earlier + 1].startswith("Modelo 130 · 1st quarter 2026")
+    assert prompts[earlier + 1].startswith(f"Modelo 130 · 1st quarter {filing_year_envelope().horizon}")
     assert not any(generic in prompt for prompt in prompts)
     toggles = [prompt[:1] for prompt in prompts if prompt[:1] in "▹▿▸▾"]
     assert toggles.count("▿") == 1

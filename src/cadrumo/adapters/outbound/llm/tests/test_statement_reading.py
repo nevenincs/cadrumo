@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -39,6 +40,18 @@ from .model_run_support import IMAGE_LANE, RecordingModelRuns, serving_agent
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _STATEMENT = FIXTURES_DIR / "financial" / "n26" / "n26-savings-2025-01.pdf"
+#: The statement's own period, read off the fixture it names: every date a reply echoes is printed on it.
+_STATEMENT_YEAR, _STATEMENT_MONTH = (int(part) for part in _STATEMENT.stem.removeprefix("n26-savings-").split("-"))
+
+
+def _printed(day: int) -> str:
+    """A date as the statement fixture prints it (day.month.year)."""
+    return f"{day:02d}.{_STATEMENT_MONTH:02d}.{_STATEMENT_YEAR}"
+
+
+def _booked(day: int) -> str:
+    """The booking date the provider reads for a day of the statement."""
+    return date(_STATEMENT_YEAR, _STATEMENT_MONTH, day).isoformat()
 
 
 def _movement(booked: str, amount: str | None, description: str, direction: str | None) -> dict[str, object]:
@@ -63,31 +76,31 @@ def _reply(*movements: dict[str, object], currency: str | None = "EUR") -> str:
 #: local text model's measured replies for the same pages.
 _PAGE_REPLIES = (
     _reply(
-        _movement("01.01.2025", "+8,55EUR", "Zinsertrag", "in"),
-        _movement("01.01.2025", None, "Wertstellung", None),
-        _movement("11.01.2025", "-3.000,00EUR", "An Hauptkonto", "out"),
-        _movement("13.01.2025", "+4.500,00EUR", "Von Hauptkonto", "in"),
-        _movement("20.01.2025", "+3.500,00EUR", "Von Hauptkonto", "in"),
+        _movement(_printed(1), "+8,55EUR", "Zinsertrag", "in"),
+        _movement(_printed(1), None, "Wertstellung", None),
+        _movement(_printed(11), "-3.000,00EUR", "An Hauptkonto", "out"),
+        _movement(_printed(13), "+4.500,00EUR", "Von Hauptkonto", "in"),
+        _movement(_printed(20), "+3.500,00EUR", "Von Hauptkonto", "in"),
     ),
     _reply(
-        _movement("01.01.2025", "+8.000,00EUR", "Dein alter Kontostand +8.000,00EUR", "in"),
-        _movement("01.01.2025", "-3.000,00EUR", "Ausgehende Transaktionen -3.000,00EUR", "out"),
-        _movement("01.01.2025", "+13.008,55EUR", "Dein neuer Kontostand +13.008,55EUR", "in"),
+        _movement(_printed(1), "+8.000,00EUR", "Dein alter Kontostand +8.000,00EUR", "in"),
+        _movement(_printed(1), "-3.000,00EUR", "Ausgehende Transaktionen -3.000,00EUR", "out"),
+        _movement(_printed(1), "+13.008,55EUR", "Dein neuer Kontostand +13.008,55EUR", "in"),
     ),
-    _reply(_movement("01.01.2025", "+8,55EUR", "Gesamt +8,55EUR", "in")),
+    _reply(_movement(_printed(1), "+8,55EUR", "Gesamt +8,55EUR", "in")),
     _reply(
-        _movement("01.01.2025", "100.00", "Zahlung", "out"),
-        _movement("01.01.2025", "200.00", "Zahlung", "out"),
+        _movement(_printed(1), "100.00", "Zahlung", "out"),
+        _movement(_printed(1), "200.00", "Zahlung", "out"),
     ),
 )
 
 
 def test_the_instruction_names_no_bank_and_carries_the_page_after_the_rules() -> None:
     """The reader is language- and bank-neutral, and the page is delimited from its rules."""
-    prompt = build_statement_page_prompt("Compra 02/01/2026 -25,00")
+    prompt = build_statement_page_prompt("Compra 02/01/1980 -25,00")
 
     instructions, page = prompt.split("PAGE TEXT:\n")
-    assert page == "Compra 02/01/2026 -25,00"
+    assert page == "Compra 02/01/1980 -25,00"
     assert "Copy every value exactly as printed" in instructions
     for bank in ("N26", "BBVA", "Santander", "CaixaBank", "Revolut", "Kontoauszug"):
         assert bank not in instructions
@@ -100,8 +113,8 @@ def test_a_reply_is_kept_in_printed_form_and_non_string_values_are_absent() -> N
         + json.dumps(
             {
                 "movements": [
-                    {"booked_date": "02/01/2026", "amount": "-25,00", "direction": "OUT", "description": "Compra"},
-                    {"booked_date": "03/01/2026", "amount": 25.0, "direction": "sideways"},
+                    {"booked_date": "02/01/1980", "amount": "-25,00", "direction": "OUT", "description": "Compra"},
+                    {"booked_date": "03/01/1980", "amount": 25.0, "direction": "sideways"},
                     "not an object",
                 ],
                 "opening_balance": "100,00",
@@ -173,14 +186,14 @@ def test_the_wired_read_keeps_only_the_movements_the_statement_prints() -> None:
     assert validation.is_valid, validation.warnings
     observed = [(row.raw.booked_date.isoformat(), row.raw.amount, row.direction, row.raw.currency) for row in rows]
     assert observed == [
-        ("2025-01-01", Decimal("8.55"), TransactionDirection.INCOMING, "EUR"),
-        ("2025-01-11", Decimal("3000.00"), TransactionDirection.OUTGOING, "EUR"),
-        ("2025-01-13", Decimal("4500.00"), TransactionDirection.INCOMING, "EUR"),
-        ("2025-01-20", Decimal("3500.00"), TransactionDirection.INCOMING, "EUR"),
+        (_booked(1), Decimal("8.55"), TransactionDirection.INCOMING, "EUR"),
+        (_booked(11), Decimal("3000.00"), TransactionDirection.OUTGOING, "EUR"),
+        (_booked(13), Decimal("4500.00"), TransactionDirection.INCOMING, "EUR"),
+        (_booked(20), Decimal("3500.00"), TransactionDirection.INCOMING, "EUR"),
     ]
     assert sum("dropped" in warning for warning in validation.warnings) == 7
     assert len(service.runs) == len(_PAGE_REPLIES), "each page is read once across validation and ingest"
-    assert "Zinsertrag 01.01.2025 +8,55EUR" in service.runs[0][1].prompt
+    assert f"Zinsertrag {_printed(1)} +8,55EUR" in service.runs[0][1].prompt
     assert {header.role for header, _ in service.runs} == {ModelRole.TEXT_EXTRACTION.value}
     assert {header.consent for header, _ in service.runs} == {None}
     # Copying printed values has one right answer, so the reader asks for no sampling variety.
@@ -192,17 +205,17 @@ def test_the_wired_read_keeps_only_the_movements_the_statement_prints() -> None:
 def test_a_scanned_page_is_transcribed_then_read(tmp_path: Path) -> None:
     """A page with no text layer goes to the vision role for text, then to the text role."""
     source = tmp_path / "scan.pdf"
-    source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 2026",), ()))
+    source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 1980",), ()))
     script = _ScriptedAgent(
-        text_replies=(_reply(), _reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out"))),
-        transcription="Coffee shop 05.03.2026 -4,50 EUR",
+        text_replies=(_reply(), _reply(_movement("05.03.1980", "-4,50 EUR", "Coffee shop", "out"))),
+        transcription="Coffee shop 05.03.1980 -4,50 EUR",
     )
 
     with _agent(script) as service:
         rows = list(PdfStatementProvider(reader_factory=StatementReader).ingest(source))
 
     assert [(row.raw.booked_date.isoformat(), row.raw.amount, row.raw.raw_fields["page_number"]) for row in rows] == [
-        ("2026-03-05", Decimal("4.50"), "2")
+        ("1980-03-05", Decimal("4.50"), "2")
     ]
     vision = [header.role for header, body in service.runs if _carries_images(body)]
     assert vision == [ModelRole.VISION_TRANSCRIPTION.value]
@@ -212,15 +225,15 @@ def test_a_scanned_page_is_transcribed_then_read(tmp_path: Path) -> None:
 def test_a_scanned_page_read_back_empty_is_read_again(tmp_path: Path) -> None:
     """A vision read that spent its budget and returned no text is retried, not taken as a blank page."""
     source = tmp_path / "scan.pdf"
-    source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 2026",), ()))
+    source.write_bytes(multi_page_text_pdf_bytes(("Account statement March 1980",), ()))
     script = _ScriptedAgent(
-        text_replies=(_reply(), _reply(_movement("05.03.2026", "-4,50 EUR", "Coffee shop", "out"))),
-        transcription="Coffee shop 05.03.2026 -4,50 EUR",
+        text_replies=(_reply(), _reply(_movement("05.03.1980", "-4,50 EUR", "Coffee shop", "out"))),
+        transcription="Coffee shop 05.03.1980 -4,50 EUR",
         empty_transcriptions=1,
     )
 
     with _agent(script) as service:
         rows = list(PdfStatementProvider(reader_factory=StatementReader).ingest(source))
 
-    assert [(row.raw.booked_date.isoformat(), row.raw.amount) for row in rows] == [("2026-03-05", Decimal("4.50"))]
+    assert [(row.raw.booked_date.isoformat(), row.raw.amount) for row in rows] == [("1980-03-05", Decimal("4.50"))]
     assert sum(_carries_images(body) for _, body in service.runs) == 2

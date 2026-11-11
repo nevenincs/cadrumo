@@ -19,6 +19,7 @@ from ....application.user_profile.passphrase_rotation import ProfilePassphraseRo
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....tests.log_records import delivered_records
 from ..account import (
     AccountDirectSessionActionV1,
@@ -100,11 +101,14 @@ def catalogue(
     return build_destination_catalogue(admissions=admissions, factories=factories)
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("period", ["0A", "EXT-1T", "EVENT-3", "1T"])
 async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) -> None:
     home = build_home_projection_fixture(HomeFixtureScenario.READY)
-    address = {"modelo": "360", "filing_year": 2025, "period": Period.from_year_and_code(2025, period)}
+    address = {"modelo": "360", "filing_year": _YEAR, "period": Period.from_year_and_code(_YEAR, period)}
     home = home.model_copy(update={"agenda": (home.agenda[0].model_copy(update=address),)})
     calendar = calendar_projection()
     row = calendar.entries[0].model_copy(update={**address, "recovery_action": None})
@@ -123,12 +127,12 @@ async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) 
         await settle(pilot)
         assert isinstance(app.screen, DeclarationsCalendarScreen)
         table = app.screen.query_one("#declarations-calendar-agenda", DataTable)
-        assert table.ordered_rows[table.cursor_row].key.value == f"360|2025|{period}"
+        assert table.ordered_rows[table.cursor_row].key.value == f"360|{_YEAR}|{period}"
         await pilot.press("escape")
         await settle(pilot)
         assert isinstance(app.screen, HomeScreen)
         assert app.screen.highlighted_target is not None
-        assert app.screen.highlighted_target.identity == f"agenda:360:2025:{period}"
+        assert app.screen.highlighted_target.identity == f"agenda:360:{_YEAR}:{period}"
 
 
 @pytest.mark.asyncio

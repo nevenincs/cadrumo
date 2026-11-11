@@ -10,6 +10,7 @@ from .....application.modelo.verification_model_findings import append_model_spe
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -27,6 +28,8 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -34,20 +37,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_cross_model_reconciliation_from_encrypted_catalogues(tmp_path, case):
     operation = published_authority_operation()
     bucket_id = "00000000-0000-4000-8000-000000000349"
-    period = Period.from_year_and_code(2025, "1T")
-    clock = datetime(2026, 10, 4, tzinfo=UTC)
+    period = Period.from_year_and_code(_YEAR - 1, "1T")
+    clock = datetime(_YEAR, 10, 4, tzinfo=UTC)
     units = []
     calculations = []
     for modelo in ("303", "349"):
-        snapshot = operation.snapshot(modelo, filing_year=2025, period="1T")
+        snapshot = operation.snapshot(modelo, filing_year=_YEAR - 1, period="1T")
         unit_id = derive_work_unit_id(
-            bucket_id=bucket_id, modelo=modelo, filing_year=2025, period=period, revision_id=snapshot.revision.id
+            bucket_id=bucket_id, modelo=modelo, filing_year=_YEAR - 1, period=period, revision_id=snapshot.revision.id
         )
         unit = WorkUnit(
             work_unit_id=unit_id,
             bucket_id=bucket_id,
             modelo=ModeloCode(modelo),
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period=period,
             revision_id=snapshot.revision.id,
             name=f"{modelo}-2025-1T",
@@ -81,12 +84,12 @@ def test_cross_model_reconciliation_from_encrypted_catalogues(tmp_path, case):
             calculation_revision_id=revision_id,
             work_unit_id=unit_id,
             registry_snapshot_ref=RegistrySnapshotRef(
-                modelo=modelo, modelo_year=2025, period="1T", revision_id=snapshot.revision.id
+                modelo=modelo, modelo_year=_YEAR - 1, period="1T", revision_id=snapshot.revision.id
             ),
             state=CalculationRevisionState.BORRADOR,
             casilla_values=values,
             observations=registry_grounded_observations(
-                modelo=modelo, filing_year=2025, period="1T", casilla_values=values
+                modelo=modelo, filing_year=_YEAR - 1, period="1T", casilla_values=values
             ),
             filing_instance_evidence=evidence,
             source_provenance=(),

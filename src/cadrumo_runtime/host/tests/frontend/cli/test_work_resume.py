@@ -42,12 +42,15 @@ from cadrumo.core.operator_action_enums import (
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -78,7 +81,7 @@ def _invoke_work(args: Sequence[str], *, format: str | None = None, language: st
     return result
 
 
-_T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+_T = datetime(_YEAR, 4, 12, 9, 0, 0, tzinfo=UTC)
 _PROFILE_LABEL = "Native resume operator"
 
 
@@ -106,12 +109,12 @@ def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperat
 
 
 def _obligation(modelo: str = "130", period: Period | None = None) -> WorkflowObligationFacts:
-    target_period = period or Period.from_year_and_code(2026, "1T")
+    target_period = period or Period.from_year_and_code(_YEAR, "1T")
     return WorkflowObligationFacts(
         modelo=Modelo(modelo),
         period=target_period,
-        opens_on=date(2026, 4, 1),
-        closes_on=date(2026, 4, 20),
+        opens_on=date(_YEAR, 4, 1),
+        closes_on=date(_YEAR, 4, 20),
         status=ObligationStatus.UPCOMING,
     )
 
@@ -226,9 +229,9 @@ def _seed_work_unit():
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=revision_covering("130", _YEAR).id,
         operation=_AUTHORITY_PIN.get(),
     )
 
@@ -261,7 +264,7 @@ def test_resume_surfaces_obligation_for_resumable_run() -> None:
     result = _invoke_work(["resume", run_id])
     assert result.exit_code == 0, result.output
     assert "modelo\t130" in result.output
-    assert "period\t2026 1T" in result.output
+    assert f"period\t{_YEAR} 1T" in result.output
     assert "registry_period\t1T" in result.output
     assert "aborted_reason\tSITE_UNAVAILABLE" in result.output
 
@@ -300,7 +303,7 @@ def test_runs_lists_persisted_run_ids() -> None:
     assert "run_count\t2" in result.output
     assert "a" * 16 in result.output
     assert "b" * 16 in result.output
-    assert "130\t2026 1T" in result.output
+    assert f"130\t{_YEAR} 1T" in result.output
 
 
 def _assert_stored_builder_refusal(run: WorkflowResult) -> WorkflowResult:
@@ -426,10 +429,10 @@ def test_resume_accepts_exact_run_with_matching_expected_period() -> None:
     """An explicit year/period constrains the same recorded run's obligation."""
     run_id = "9" * 16
     save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))
-    result = _invoke_work(["resume", run_id, "--year", "2026", "--period", "1T"])
+    result = _invoke_work(["resume", run_id, "--year", str(_YEAR), "--period", "1T"])
     assert result.exit_code == 0, result.output
     assert f"prior_workflow_run_id\t{run_id}" in result.output
-    assert "period\t2026 1T" in result.output
+    assert f"period\t{_YEAR} 1T" in result.output
 
 
 def test_resume_accepts_modelo_year_period_without_raw_id() -> None:
@@ -442,7 +445,7 @@ def test_resume_accepts_modelo_year_period_without_raw_id() -> None:
         ),
     )
 
-    result = _invoke_work(["resume", "--modelo", "130", "--year", "2026", "--period", "1T"])
+    result = _invoke_work(["resume", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"])
 
     assert result.exit_code == 0, result.output
     assert f"prior_workflow_run_id\t{run_id}" in result.output
@@ -456,13 +459,13 @@ def test_resume_accepts_exact_work_unit_id() -> None:
     earlier = _aborted_run("1" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
         update={
             "obligation": _obligation("130", workflow_period),
-            "started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC),
+            "started_at": datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC),
         },
     )
     later = _aborted_run("2" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
         update={
             "obligation": _obligation("130", workflow_period),
-            "started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC),
+            "started_at": datetime(_YEAR, 4, 12, 9, 0, tzinfo=UTC),
         },
     )
     save_run(earlier)
@@ -482,7 +485,7 @@ def test_resume_refuses_ambiguous_modelo_year_period_with_candidate_guidance() -
         _aborted_run("3" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
             update={
                 "obligation": _obligation("130", workflow_period),
-                "started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC),
+                "started_at": datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC),
             },
         ),
     )
@@ -490,12 +493,12 @@ def test_resume_refuses_ambiguous_modelo_year_period_with_candidate_guidance() -
         _aborted_run("4" * 16, reason=WorkflowAbortReason.SITE_UNAVAILABLE).model_copy(
             update={
                 "obligation": _obligation("130", workflow_period),
-                "started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC),
+                "started_at": datetime(_YEAR, 4, 12, 9, 0, tzinfo=UTC),
             },
         ),
     )
 
-    result = _invoke_work(["resume", "--modelo", "130", "--year", "2026", "--period", "1T"])
+    result = _invoke_work(["resume", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"])
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output

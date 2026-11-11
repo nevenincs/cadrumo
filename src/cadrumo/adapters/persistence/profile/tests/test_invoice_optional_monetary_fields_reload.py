@@ -36,6 +36,7 @@ from pydantic import ValidationError
 
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
@@ -49,6 +50,8 @@ from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 _INVOICE_NUMBER = "F-2025-FX-001"
 
 
@@ -58,7 +61,7 @@ def _invoice_with_every_optional_monetary_field_populated() -> Invoice:
         {
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": _INVOICE_NUMBER,
-            "issued_at": date(2025, 4, 2),
+            "issued_at": date(_YEAR, 4, 2),
             "counterparty_name": "Foreign Supplier Ltd",
             "counterparty_tax_id": "GB123456789",
             "counterparty_country": "GB",
@@ -82,7 +85,7 @@ def _invoice_with_every_optional_monetary_field_populated() -> Invoice:
             "recargo_amount": Decimal("5.20"),
             "suplido_amount": Decimal("12.34"),
             "fx_rate": Decimal("0.8623"),
-            "fx_rate_date": date(2025, 4, 2),
+            "fx_rate_date": date(_YEAR, 4, 2),
             "fx_rate_source": "ecb_reference",
         },
     )
@@ -105,7 +108,7 @@ def test_every_optional_monetary_field_survives_the_encrypted_roundtrip(tmp_path
         assert loaded_invoice.recargo_amount == Decimal("5.20")
         assert loaded_invoice.suplido_amount == Decimal("12.34")
         assert loaded_invoice.fx_rate == Decimal("0.8623")
-        assert loaded_invoice.fx_rate_date == date(2025, 4, 2)
+        assert loaded_invoice.fx_rate_date == date(_YEAR, 4, 2)
         assert loaded_invoice.fx_rate_source == "ecb_reference"
 
 
@@ -136,7 +139,7 @@ def test_an_unset_optional_monetary_field_survives_the_encrypted_roundtrip_as_no
             {
                 "kind": InvoiceKind.ISSUED,
                 "invoice_number": "F-2025-EUR-002",
-                "issued_at": date(2025, 4, 2),
+                "issued_at": date(_YEAR, 4, 2),
                 "counterparty_name": "Cliente Nacional",
                 "counterparty_tax_id": "12345678Z",
                 "counterparty_country": "ES",

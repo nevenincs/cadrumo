@@ -37,6 +37,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from ....domain.calculations.registry.tests.published_authority import (
     published_authored_revision,
     published_snapshot,
@@ -64,13 +65,19 @@ def _engine_filing_years() -> tuple[int, ...]:
 
 
 _ENGINE_FILING_YEARS = _engine_filing_years()
+#: The newest engine-supported year, for the cases that need exactly one.
+_YEAR = _ENGINE_FILING_YEARS[-1]
 # Historical years where Madrid's own table diverges only on the 3º/4º tranches
 # (1º/2º/menor-3 coincide with the estatal Art. 58 figures per the bundled
 # 2020/2021 AEAT Renta manuals' own "Importante" note). They lie below the
 # supported floor, so their authored revisions are read directly.
-_MADRID_PARTIAL_DIVERGENCE_YEARS = (2020, 2021)
+_MADRID_PARTIAL_DIVERGENCE_YEARS = manual_editions_printing(
+    "renta", "las cuantias del minimo por descendientes para el primer y segundo hijo"
+)
 # Years where Madrid's own table diverges on all five tranches.
-_MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
+_MADRID_FULL_DIVERGENCE_YEARS = tuple(
+    year for year in _ENGINE_FILING_YEARS if year not in _MADRID_PARTIAL_DIVERGENCE_YEARS
+)
 
 
 @lru_cache
@@ -152,33 +159,33 @@ def test_estatal_and_autonomico_casillas_are_computed() -> None:
 
 def test_no_descendientes_facts_injects_legally_correct_zero() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_YEAR)
         fact_index: dict[str, object] = {}
         fact_index_narrowed: Any = fact_index
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == Decimal("0")
+        assert fact_index[_aggregate_key(_YEAR)] == Decimal("0")
 
 
 def test_one_eligible_descendant_uses_first_tranche_plus_menor_tres() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_YEAR)
         tranches, menor_tres = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
-            "renta_family.descendiente.0.birth_date": "2023-01-15",
+            "renta_family.descendiente.0.birth_date": f"{_YEAR - 1}-01-15",
             "renta_family.descendiente.0.convivencia": "true",
         }
         fact_index_narrowed: Any = fact_index
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == tranches[0] + menor_tres
+        assert fact_index[_aggregate_key(_YEAR)] == tranches[0] + menor_tres
 
 
 def test_ineligible_descendant_over_25_contributes_nothing() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_YEAR)
         fact_index: dict[str, object] = {
             "renta_family.descendiente.0.birth_date": "1990-01-01",
             "renta_family.descendiente.0.convivencia": "true",
@@ -187,7 +194,7 @@ def test_ineligible_descendant_over_25_contributes_nothing() -> None:
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == Decimal("0")
+        assert fact_index[_aggregate_key(_YEAR)] == Decimal("0")
 
 
 #: Signals that make a scenario an explicit SINGLE-FILER household.
@@ -207,10 +214,10 @@ _SINGLE_FILER_HOUSEHOLD: dict[str, object] = {
 
 def test_custodia_compartida_halves_the_contribution() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_YEAR)
         tranches, _ = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
-            "renta_family.descendiente.0.birth_date": "2015-01-01",
+            "renta_family.descendiente.0.birth_date": f"{_YEAR - 9}-01-01",
             "renta_family.descendiente.0.convivencia": "true",
             "renta_family.descendiente.0.custodia_compartida": "true",
         }
@@ -218,7 +225,7 @@ def test_custodia_compartida_halves_the_contribution() -> None:
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == tranches[0] * Decimal("0.5")
+        assert fact_index[_aggregate_key(_YEAR)] == tranches[0] * Decimal("0.5")
 
 
 def test_two_descendientes_stack_first_and_second_tranche_for_a_single_filer() -> None:
@@ -229,20 +236,20 @@ def test_two_descendientes_stack_first_and_second_tranche_for_a_single_filer() -
     so the full sum asserted here is specific to the sole-entitlement case.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_YEAR)
         tranches, _ = _registry_tranches(snapshot)
         fact_index: dict[str, object] = {
             **_SINGLE_FILER_HOUSEHOLD,
-            "renta_family.descendiente.0.birth_date": "2010-01-01",
+            "renta_family.descendiente.0.birth_date": f"{_YEAR - 14}-01-01",
             "renta_family.descendiente.0.convivencia": "true",
-            "renta_family.descendiente.1.birth_date": "2015-01-01",
+            "renta_family.descendiente.1.birth_date": f"{_YEAR - 9}-01-01",
             "renta_family.descendiente.1.convivencia": "true",
         }
         fact_index_narrowed: Any = fact_index
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == tranches[0] + tranches[1]
+        assert fact_index[_aggregate_key(_YEAR)] == tranches[0] + tranches[1]
 
 
 def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> None:
@@ -260,14 +267,14 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
     legally-correct zero, and the assertion discriminates between the two.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        snapshot = _snapshot(2024)
-        fact_index: dict[str, object] = {_aggregate_key(2024): Decimal("999")}
+        snapshot = _snapshot(_YEAR)
+        fact_index: dict[str, object] = {_aggregate_key(_YEAR): Decimal("999")}
         fact_index_narrowed: Any = fact_index
         inject_derived_minimo_descendientes_facts(
             fact_index_narrowed, snapshot, operation=_authority_operation_for_test
         )
-        assert fact_index[_aggregate_key(2024)] == Decimal("0")
-        assert fact_index[_aggregate_key(2024)] != Decimal("999")
+        assert fact_index[_aggregate_key(_YEAR)] == Decimal("0")
+        assert fact_index[_aggregate_key(_YEAR)] != Decimal("999")
 
 
 def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years() -> None:
@@ -276,7 +283,7 @@ def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years
             snapshot = _snapshot(year)
             tranches, _ = _registry_tranches(snapshot)
             fact_index: dict[str, object] = {
-                "renta_family.descendiente.0.birth_date": "2015-01-01",
+                "renta_family.descendiente.0.birth_date": f"{year - 9}-01-01",
                 "renta_family.descendiente.0.convivencia": "true",
             }
             fact_index_narrowed: Any = fact_index
@@ -318,9 +325,9 @@ def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants(ccaa: st
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {
                 "tax_residence.ccaa": ccaa,
-                "renta_family.descendiente.0.birth_date": "2010-01-01",
+                "renta_family.descendiente.0.birth_date": f"{year - 14}-01-01",
                 "renta_family.descendiente.0.convivencia": "true",
-                "renta_family.descendiente.1.birth_date": "2015-06-01",
+                "renta_family.descendiente.1.birth_date": f"{year - 9}-06-01",
                 "renta_family.descendiente.1.convivencia": "true",
             }
             fact_index_narrowed: Any = fact_index
@@ -382,11 +389,11 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
             snapshot = _snapshot(year)
             fact_index: dict[str, object] = {
                 "tax_residence.ccaa": "madrid",
-                "renta_family.descendiente.0.birth_date": "2005-01-01",
+                "renta_family.descendiente.0.birth_date": f"{year - 19}-01-01",
                 "renta_family.descendiente.0.convivencia": "true",
-                "renta_family.descendiente.1.birth_date": "2008-01-01",
+                "renta_family.descendiente.1.birth_date": f"{year - 16}-01-01",
                 "renta_family.descendiente.1.convivencia": "true",
-                "renta_family.descendiente.2.birth_date": "2012-01-01",
+                "renta_family.descendiente.2.birth_date": f"{year - 12}-01-01",
                 "renta_family.descendiente.2.convivencia": "true",
             }
             fact_index_narrowed: Any = fact_index

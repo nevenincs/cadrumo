@@ -30,6 +30,7 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingSeverity
@@ -49,9 +50,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000128"
 _TAX_ID = "12345678Z"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
 _MODELO = "128"
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_FILING_YEAR, 2, 1, 9, 0, tzinfo=UTC)
 _PERIOD_CODE = "1T"
 
 
@@ -95,7 +96,7 @@ def _calculate(bucket: _Bucket) -> CalculationRevisionId:
 
 
 def _workflow_profile() -> TaxpayerProfile:
-    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(2020, 1, 1))
+    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(_FILING_YEAR - 6, 1, 1))
 
 
 def test_the_revision_under_test_is_published_below_filing_grade(*, operation: PinnedAuthorityOperation) -> None:
@@ -106,7 +107,7 @@ def test_the_revision_under_test_is_published_below_filing_grade(*, operation: P
         period=_PERIOD_CODE,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
-    assert calculation.revision.id == "2019-y-siguientes"
+    assert calculation.revision.id == revision_covering(_MODELO, _FILING_YEAR).id
 
     with pytest.raises(RegistryValidationError):
         operation.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE)

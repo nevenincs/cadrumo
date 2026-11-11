@@ -61,7 +61,11 @@ from cadrumo.domain.modelos.calculation_repository import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_export_readiness_reason_declares_an_unrenderable_layout() -> None:
@@ -77,13 +81,13 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
         work_unit_id="b" * 64,
         bucket_id="bucket-operator",
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         output_path=tmp_path / "modelo-130.txt",
         byte_size=128,
         file_sha256="a" * 64,
         format="fichero-boe",
-        exported_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 5, 21, 12, 0, tzinfo=UTC),
         actor="operator",
         bucket_event_id="event-1",
         casilla_provenance=(
@@ -97,7 +101,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
 
     payload = result.model_dump(mode="json")
 
-    assert payload["period"] == {"filing_year": 2026, "code": "1T"}
+    assert payload["period"] == {"filing_year": _YEAR, "code": "1T"}
     assert payload["local_evidence_status"] == "local_export_not_official_aeat_filing_evidence"
     assert "not official AEAT filing evidence" in payload["official_evidence_message"]
     assert "justificante" in payload["official_evidence_message"]
@@ -117,21 +121,21 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
         work_unit_id="b" * 64,
         bucket_id="bucket-operator",
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "2T"),
         output_path=tmp_path / "modelo-303.txt",
         byte_size=128,
         file_sha256="a" * 64,
         format="fichero-boe",
-        exported_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 5, 21, 12, 0, tzinfo=UTC),
         actor="operator",
         bucket_event_id="event-1",
         iva_wallet_decision_provenance=ModeloIvaWalletDecisionProvenance(
             decision_ref="sha256:" + "1" * 64,
             selected_authority="aeat_wallet",
             divergence="wallet_only",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "2T"),
             authority_source_kinds=("aeat_wallet",),
             authority_source_refs=("sha256:" + "2" * 64,),
         ),
@@ -139,13 +143,13 @@ def test_export_result_json_surfaces_redacted_iva_wallet_decision_provenance(tmp
 
     payload = result.model_dump(mode="json")
 
-    assert payload["period"] == {"filing_year": 2026, "code": "2T"}
+    assert payload["period"] == {"filing_year": _YEAR, "code": "2T"}
     assert payload["iva_wallet_decision_provenance"] == {
         "decision_ref": "sha256:" + "1" * 64,
         "selected_authority": "aeat_wallet",
         "divergence": "wallet_only",
-        "target_year": 2026,
-        "target_period": {"filing_year": 2026, "code": "2T"},
+        "target_year": _YEAR,
+        "target_period": {"filing_year": _YEAR, "code": "2T"},
         "authority_source_kinds": ["aeat_wallet"],
         "authority_source_refs": ["sha256:" + "2" * 64],
     }
@@ -157,8 +161,8 @@ def test_iva_wallet_export_provenance_rejects_malformed_redacted_refs() -> None:
             decision_ref="sha256:" + "1" * 64,
             selected_authority="aeat_wallet",
             divergence="wallet_only",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "2T"),
             authority_source_kinds=("aeat_wallet",),
             authority_source_refs=(" ",),
         )
@@ -295,7 +299,7 @@ def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_ga
             bucket_id=bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
             modelo="100",
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             period="0A",
         )
         out = tmp_path / "modelo-100.xml"
@@ -361,7 +365,7 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
             bucket_id=bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
         )
         output = tmp_path / "modelo-303.txt"

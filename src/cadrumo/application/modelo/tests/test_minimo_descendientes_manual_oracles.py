@@ -55,7 +55,6 @@ from ..profile_derived_facts import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_ORACLE_YEAR = 2024
 _ASTURIAS_ORACLE = "modelo-100-2024-minimo-descendientes-prorrateo-asturias.json"
 _VALENCIANA_ORACLE = "modelo-100-2024-minimo-descendientes-declaracion-propia-valenciana.json"
 _RIOJA_ORACLE = "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json"
@@ -78,6 +77,10 @@ class _ManualWorkedExample(BaseModel):
 def _read_manual_worked_example(name: str) -> _ManualWorkedExample:
     path = Path(bundled_path("corpus", "manual_oracles")) / name
     return _ManualWorkedExample.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+#: The exercise the committed worked examples were printed for, read from the examples themselves.
+_ORACLE_YEAR = _read_manual_worked_example(_ASTURIAS_ORACLE).filing_year
 
 
 def _expected(name: str, casilla_id: str) -> Decimal:
@@ -125,7 +128,7 @@ def test_both_oracle_fixtures_load_and_declare_their_provenance() -> None:
         assert payload.modelo == "100", name
         assert payload.filing_year == _ORACLE_YEAR, name
         assert payload.source_kind == "aeat_manual_worked_example", name
-        assert payload.raw_evidence_locator.startswith("corpus/manuals/renta/2024/"), name
+        assert payload.raw_evidence_locator.startswith(f"corpus/manuals/renta/{_ORACLE_YEAR}/"), name
         assert payload.expected_by_casilla_id, name
 
 

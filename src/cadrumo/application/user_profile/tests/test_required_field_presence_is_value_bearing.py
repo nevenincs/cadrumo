@@ -31,7 +31,7 @@ TAX_ID = "identity.tax_id"
 IVA_REGIME = "iva.regime"
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _SCHEMA = published_profile_schema()
-_STAMP = datetime(2026, 1, 1, tzinfo=UTC)
+_STAMP = datetime(1980, 1, 1, tzinfo=UTC)
 
 
 def _service() -> ProfileValidationService:

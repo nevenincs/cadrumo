@@ -26,7 +26,7 @@ encrypted bytes are never touched.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -45,8 +45,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _KEY = "aeat:test:classification-triad"
 _VALUE = b"classification-triad-secret"
-_CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
-_EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
+_CREATED_AT = datetime(1980, 5, 28, 11, 55, 0, tzinfo=UTC)
+# Far-future expiry: 26663 days after creation, so no case reaches it.
+_EXPIRES_AT = _CREATED_AT + timedelta(days=26663)
 
 #: The closed set as this module expects it, written out rather than derived.
 #: Every other check here reads ``SECRET_STORE_CLASSES`` and so moves with it;

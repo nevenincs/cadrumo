@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.operations import (
@@ -34,6 +35,8 @@ from ..transaction_projection import LedgerTransactionProjection
 from .ledger_input_rule_support import current_transaction
 from .recording_executor_context_support import RecordingEvents, RecordingOperands
 from .transaction_projection_support import ledger_transaction_projection
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,7 +76,7 @@ def _receipt(
         revision=1,
         condition=condition,
         effect=effect,
-        settled_at=datetime(2026, 4, 15, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
         result_ref=None if refused else "f" * 64,
         refusal_ref=classify_result_contracts.LEDGER_CLASSIFY_VALIDATION_REFUSAL_CODE if refused else None,
         refusal_detail_ref="e" * 64 if refused else None,

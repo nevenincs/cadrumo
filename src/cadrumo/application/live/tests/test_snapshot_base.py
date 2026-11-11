@@ -180,7 +180,7 @@ class ProbeService(SnapshotService[ProbeSnapshot, _ProbeCaptureRequest]):
         )
 
 
-_CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(1980, 4, 3, 10, 0, tzinfo=UTC)
 
 
 # ---- Lifecycle invariant tests -------------------------------------------

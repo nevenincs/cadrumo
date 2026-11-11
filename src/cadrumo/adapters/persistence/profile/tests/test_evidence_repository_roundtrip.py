@@ -18,7 +18,7 @@ key provider, real SQLite engine, real serializer. No mocks.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -40,13 +40,17 @@ from cadrumo.application.ledger.evidence import (
 )
 from cadrumo.core.classification.policies import SensitivityClass
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _BUCKET_ID = "34343434-3434-4434-8434-343434343434"
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 _DIGEST = "b" * 64
-_CREATED_AT = datetime(2026, 2, 5, 9, 30, tzinfo=UTC)
-_UPDATED_AT = datetime(2026, 3, 11, 17, 45, tzinfo=UTC)
+_CREATED_AT = datetime(_YEAR, 2, 5, 9, 30, tzinfo=UTC)
+_UPDATED_AT = datetime(_YEAR, 3, 11, 17, 45, tzinfo=UTC)
 
 
 def _fully_populated_record() -> PurchaseInvoiceEvidence:
@@ -66,7 +70,7 @@ def _fully_populated_record() -> PurchaseInvoiceEvidence:
         media_kind=MediaKind.IMAGE,
         supplier="Acme Suministros SL",
         invoice_number="2026-0142",
-        invoice_date="2026-02-05",
+        invoice_date=date(_YEAR, 2, 5).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),

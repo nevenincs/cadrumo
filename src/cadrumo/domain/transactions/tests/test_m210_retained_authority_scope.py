@@ -18,12 +18,16 @@ from ...calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 from ...calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import TransactionValidationError
 from ..m210_income_classification import M210IncomeClassification, resolve_m210_payer_mode
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EFFECTIVE_DATE = date(2026, 7, 1)
+_EFFECTIVE_DATE = date(_YEAR, 7, 1)
 
 
 def _unexpected_bundle() -> Never:
@@ -35,7 +39,7 @@ def _candidate_authority() -> CandidateFactAuthority:
     """Build a real unpublished fact scope that must not become runtime authority."""
     return CandidateFactAuthority(
         catalogue=GovernedFactCatalogue(facts={}),
-        support=SupportedFilingYearsCatalogue(floor=2022, horizon=2026),
+        support=SupportedFilingYearsCatalogue(floor=filing_year_envelope().floor, horizon=_YEAR),
     )
 
 

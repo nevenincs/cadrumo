@@ -20,12 +20,20 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
+from ...calculations.registry.tests.published_authority import published_legal_reference
 from ..saturation import IvaRateResolution, resolve_category_rate, split_gross_at_rate
 from ..schema import IvaCategory, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON_DATE = date(2025, 6, 1)
+# The temporary-rate windows are read from the published provisions that created them.
+_RDL_20_2022_CLOSES = published_legal_reference("real-decreto-ley-20-2022:art-72").effective_to
+assert _RDL_20_2022_CLOSES is not None
+_RDL_20_2022_YEAR = _RDL_20_2022_CLOSES.year
+_RDL_4_2024_YEAR = published_legal_reference("real-decreto-ley-4-2024:art-1").effective_from.year
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 1)
 
 
 def test_domestic_positive_rate_resolves_to_registry_fraction(
@@ -197,8 +205,8 @@ def test_resolve_then_split_round_trips_for_general_rate(authority_operation: Pi
 # ordinary rate, so between those dates the tier does not have "a" rate. Which
 # one applies turns on WHAT was supplied, and no bundled AEAT surface carries
 # that goods axis. The dates below are the registry's own effective windows.
-_SUPER_REDUCED_COEXISTENCE = date(2024, 10, 15)  # 4 % ordinary, 2 % temporary
-_REDUCED_COEXISTENCE = date(2024, 8, 15)  # 10 % ordinary, 5 % temporary
+_SUPER_REDUCED_COEXISTENCE = date(_RDL_4_2024_YEAR, 10, 15)  # 4 % ordinary, 2 % temporary
+_REDUCED_COEXISTENCE = date(_RDL_4_2024_YEAR, 8, 15)  # 10 % ordinary, 5 % temporary
 
 
 def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate(
@@ -246,7 +254,9 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers(
         (IvaCategory("domestic_super_reduced"), Decimal("0.04")),
         (IvaCategory("domestic_reduced"), Decimal("0.10")),
     ):
-        resolution = resolve_category_rate(category, on_date=date(2025, 6, 1), operation=authority_operation)
+        resolution = resolve_category_rate(
+            category, on_date=date(filing_year_envelope().horizon, 6, 1), operation=authority_operation
+        )
         assert resolution.derivable is True, category
         assert resolution.rate == expected, category
 
@@ -254,7 +264,7 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers(
     # Super-reducido only ever coexisted Oct-Dec 2024 (RD-ley 4/2024's 2 %), so
     # it still resolves in March 2024.
     super_reduced = resolve_category_rate(
-        IvaCategory("domestic_super_reduced"), on_date=date(2024, 3, 1), operation=authority_operation
+        IvaCategory("domestic_super_reduced"), on_date=date(_RDL_20_2022_YEAR, 3, 1), operation=authority_operation
     )
     assert super_reduced.derivable is True
     assert super_reduced.rate == Decimal("0.04")
@@ -266,7 +276,7 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers(
     # assertion only held because those rate rows were absent from the registry;
     # the tier was ambiguous in law the whole time and the table could not say so.
     reduced = resolve_category_rate(
-        IvaCategory("domestic_reduced"), on_date=date(2024, 3, 1), operation=authority_operation
+        IvaCategory("domestic_reduced"), on_date=date(_RDL_20_2022_YEAR, 3, 1), operation=authority_operation
     )
     assert reduced.derivable is False, (
         "reducido cannot be derived in March 2024: 5 % and 10 % both applied, to "

@@ -33,6 +33,7 @@ from .....domain.bienes_inversion.register import (
 )
 from .....domain.bienes_inversion.vocabulary import BienInversionKind
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.classification_effects import fields_refused_by_classification
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -45,7 +46,7 @@ from ..transactions import TransactionCatalogueRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "5e1d0c2a-7b3f-4a9e-8c61-2f4d9b0a7e35"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _ASSET_ID = "BI-TORNO-CNC"
 _QUARTERS = ("1T", "2T", "3T", "4T")
 

@@ -32,6 +32,8 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from ....domain.calculations.registry.tests.published_authority import published_source_reference
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..export_verification import xml_dictionary_expected_wire_value
 from ..export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
@@ -39,7 +41,8 @@ from ..export_xml_dictionary_modelo100 import modelo_100_sign_branch_value, regi
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
-_MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
+_YEAR = newest_authored_edition("100")
+_REVISION_ID = str(revision_covering("100", _YEAR).id)
 _SIGN_BRANCH_CASILLA = "0695"
 _NON_NEGATIVE_BRANCH = "TCPP112"
 _NEGATIVE_BRANCH = "TCNN112"
@@ -52,11 +55,16 @@ def _declarations(operation: PinnedAuthorityOperation) -> Mapping[str, str]:
         return registry_modelo_100_xml_declarations()
 
 
-def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
+def _layout_and_catalogues():
     modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[_REVISION_ID]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")
+    return layout, catalogues
+
+
+def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
+    layout, catalogues = _layout_and_catalogues()
     return tuple(
         xml_dictionary_entries(
             layout,
@@ -80,8 +88,8 @@ def _branch_entries() -> dict[str, XmlDictionaryEntry]:
 
 
 def _xsd_element(name: str) -> Element[str]:
-    xsd = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files", _MODELO_100_2024_XSD)
-    root = DefusedElementTree.parse(Path(xsd)).getroot()
+    source = published_source_reference(f"aeat-dr-100-{_YEAR}-xsd")
+    root = DefusedElementTree.parse(Path(bundled_path() / source.corpus_path)).getroot()
     assert root is not None
     for element in root.iter(f"{_XSD_NS}element"):
         if element.attrib.get("name") == name:

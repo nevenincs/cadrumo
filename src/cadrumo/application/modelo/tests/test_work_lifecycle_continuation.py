@@ -9,6 +9,7 @@ import pytest
 from ....core.i18n.render import extract_placeholders, tr
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ..work_lifecycle import (
     lifecycle_continuation_for_work_history,
@@ -19,7 +20,9 @@ from ..work_lifecycle import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "5aa00000-0000-4000-8000-0000000000aa"
-_OBSERVED_AT = datetime(2026, 8, 10, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_OBSERVED_AT = datetime(_YEAR, 8, 10, 9, 0, tzinfo=UTC)
 _LOCALE_KEYS = (
     "cli.app.modelo.work.list_no_active_work_summary",
     "cli.app.modelo.work.list_selection_required_summary",
@@ -32,21 +35,21 @@ _LOCALES = ("en", "es", "ca", "hu")
 
 
 def _work_unit(*, state: WorkUnitState = WorkUnitState.BORRADOR, period_code: str = "1T") -> WorkUnit:
-    period = Period.from_year_and_code(2026, period_code)
+    period = Period.from_year_and_code(_YEAR, period_code)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2019-y-siguientes",
+            revision_id=_REVISION_ID,
         ),
         bucket_id=_BUCKET_ID,
-        name=f"130-2026-{period_code}",
+        name=f"130-{_YEAR}-{period_code}",
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=_REVISION_ID,
         state=state,
         discarded_at=None if state is WorkUnitState.BORRADOR else _OBSERVED_AT,
         discarded_by=None if state is WorkUnitState.BORRADOR else "operator-1",

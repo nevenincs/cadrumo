@@ -11,6 +11,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.currency.service import CurrencyNormalizationService
 from ....domain.transactions.enums import TransactionDirection
@@ -21,9 +23,11 @@ from ..fx_value_consistency import require_consistent_fx_value
 from ..models import ManualLedgerTransactionCommand
 from .transaction_row_support import outgoing_manual_row
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(2026, 3, 2, tzinfo=UTC)
+_NOW = datetime(_YEAR, 3, 2, tzinfo=UTC)
 
 
 class _FixedRates:
@@ -35,7 +39,7 @@ class _FixedRates:
             rate_date=rate_date,
             source=self.rate_source_id,
             rate=Decimal("0.92"),
-            observation_date=date(2026, 2, 27),
+            observation_date=date(_YEAR, 2, 27),
         )
 
 
@@ -90,7 +94,7 @@ def test_a_stored_inconsistent_record_still_loads_and_keeps_its_stored_value() -
 def _command(amount: str, currency: str = "USD") -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand(
         bucket_id="p",
-        booked_date=date(2026, 3, 1),
+        booked_date=date(_YEAR, 3, 1),
         amount=Decimal(amount),
         currency=currency,
         direction=TransactionDirection.OUTGOING,
@@ -109,16 +113,20 @@ def test_manual_entry_records_the_rate_provenance() -> None:
 
     assert built.value_in_eur == Decimal("920.00")
     assert built.rate_source == "synthetic-reference"
-    assert built.rate_date == "2026-03-01"
+    assert built.rate_date == date(_YEAR, 3, 1).isoformat()
 
 
 def test_an_unchanged_fx_edit_keeps_the_stored_provenance() -> None:
     stored = _usd(
-        amount="1000.00", rate="0.92", value_in_eur="920.00", rate_source="synthetic-reference", rate_date="2026-03-01"
+        amount="1000.00",
+        rate="0.92",
+        value_in_eur="920.00",
+        rate_source="synthetic-reference",
+        rate_date=date(_YEAR, 3, 1).isoformat(),
     )
     rebuilt = outgoing_manual_row("p", amount=Decimal("1000.00"), currency="USD", counterparty="V", description="e")
 
     carried = carry_forward_fx(stored, rebuilt)
 
     assert carried.rate_source == "synthetic-reference"
-    assert carried.rate_date == "2026-03-01"
+    assert carried.rate_date == date(_YEAR, 3, 1).isoformat()

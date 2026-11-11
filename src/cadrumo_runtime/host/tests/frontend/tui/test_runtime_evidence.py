@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -81,6 +81,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
@@ -92,6 +93,8 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_evidence import RuntimeEvidenceTuiDoorV1
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -218,7 +221,7 @@ def _draft_projection() -> InvoiceDraftProjectionV1:
         invoice_number="INV-01",
         invoice_series="SERIE-X",
         rectifies_invoice_number="INV-00",
-        invoice_date="2026-03-16",
+        invoice_date=date(_YEAR, 3, 16).isoformat(),
         proposed_supply_nature=SupplyNature.GOODS,
         taxable_base=PublicDecimal(decimal="100.00"),
         iva_rate=PublicDecimal(decimal="21"),
@@ -393,7 +396,7 @@ async def test_runtime_evidence_add_preserves_caller_directory_and_source_proven
         media_kind=MediaKind.PDF,
         supplier=None,
         invoice_number=None,
-        created_at=datetime(2026, 3, 16, tzinfo=UTC),
+        created_at=datetime(_YEAR, 3, 16, tzinfo=UTC),
     )
     result = LedgerEvidenceAddProjection.model_construct(
         profile_id=_PROFILE_ID, record=record, bucket_event_ids=("c" * 64,)
@@ -538,13 +541,13 @@ def test_runtime_evidence_maps_complete_list_to_unmeasured_safe_rows(monkeypatch
         media_kind=MediaKind.PDF,
         supplier="Proveedor Example SL",
         invoice_number="INV-01",
-        invoice_date="2026-03-16",
+        invoice_date=date(_YEAR, 3, 16).isoformat(),
         taxable_base="100",
         iva_rate="21",
         iva_amount="21",
         notes="private detail",
-        created_at=datetime(2026, 3, 16, tzinfo=UTC),
-        updated_at=datetime(2026, 3, 16, tzinfo=UTC),
+        created_at=datetime(_YEAR, 3, 16, tzinfo=UTC),
+        updated_at=datetime(_YEAR, 3, 16, tzinfo=UTC),
     )
     result = LedgerEvidenceListProjection.model_construct(profile_id=_PROFILE_ID, count=1, rows=(record,))
     _install_runtime(
@@ -582,7 +585,7 @@ def _added_record() -> LedgerEvidenceAddProjection:
         media_kind=MediaKind.PDF,
         supplier=None,
         invoice_number=None,
-        created_at=datetime(2026, 3, 16, tzinfo=UTC),
+        created_at=datetime(_YEAR, 3, 16, tzinfo=UTC),
     )
     return LedgerEvidenceAddProjection.model_construct(
         profile_id=_PROFILE_ID, record=record, bucket_event_ids=("c" * 64,)

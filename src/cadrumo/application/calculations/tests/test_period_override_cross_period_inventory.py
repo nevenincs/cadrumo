@@ -12,14 +12,15 @@ from typing import Final
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...tests.period_override_authority import period_override_operation
 from ..cross_period_clean_state import cross_period_dependency_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO: Final = "130"
-_REVISION: Final = "2019-y-siguientes"
-_YEAR: Final = 2024
+_YEAR: Final = filing_year_envelope().horizon
+_REVISION: Final = str(revision_covering(_MODELO, _YEAR).id)
 _DROPPED: Final = "1T"
 _SERVED: Final = ("2T", "3T", "4T")
 

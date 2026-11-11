@@ -1,8 +1,8 @@
 """Real-behavior tests for ``build_overview_backlog``.
 
-The deadline engine's modelo 200 ``2024`` revision
+An older modelo 200 revision
 currently fails registry validation, so every test below pins both
-``from_date`` and ``to_date`` to a 2026-only window. The default-365-
+``from_date`` and ``to_date`` to a single-year window. The default-365-
 day-lookback behaviour is exercised by inspection rather than by
 running the engine across multiple years.
 """
@@ -15,11 +15,14 @@ from typing import TypedDict
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..backlog import OverviewBacklog, build_overview_backlog
 from .calendar_test_support import profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 class _WindowArgs(TypedDict):
@@ -30,9 +33,9 @@ class _WindowArgs(TypedDict):
 
 def _window_args() -> _WindowArgs:
     return {
-        "from_date": date(2026, 1, 1),
-        "to_date": date(2026, 12, 31),
-        "as_of": date(2026, 12, 31),
+        "from_date": date(_YEAR, 1, 1),
+        "to_date": date(_YEAR, 12, 31),
+        "as_of": date(_YEAR, 12, 31),
     }
 
 
@@ -48,7 +51,7 @@ def test_backlog_returns_typed_envelope() -> None:
         )
 
     assert isinstance(backlog, OverviewBacklog)
-    assert backlog.as_of == date(2026, 12, 31)
+    assert backlog.as_of == date(_YEAR, 12, 31)
     assert isinstance(backlog.items, tuple)
     assert backlog.late_count == len(backlog.items)
 
@@ -60,14 +63,14 @@ def test_backlog_explicit_window_is_honored() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         backlog = build_overview_backlog(
             profile(),
-            from_date=date(2026, 1, 1),
-            to_date=date(2026, 6, 30),
-            as_of=date(2026, 12, 31),
+            from_date=date(_YEAR, 1, 1),
+            to_date=date(_YEAR, 6, 30),
+            as_of=date(_YEAR, 12, 31),
             operation=_authority_operation_for_test,
         )
 
-        assert backlog.range.from_date == date(2026, 1, 1)
-        assert backlog.range.to_date == date(2026, 6, 30)
+        assert backlog.range.from_date == date(_YEAR, 1, 1)
+        assert backlog.range.to_date == date(_YEAR, 6, 30)
 
 
 def test_backlog_items_are_strictly_past_due_and_late() -> None:
@@ -125,15 +128,15 @@ def test_backlog_future_window_carries_no_past_due_items() -> None:
 
     The reference date is an explicit argument rather than the wall clock, so
     the "window lies wholly in the future" invariant holds on every run date;
-    both dates stay inside 2026, a registry-known year (far-future years carry
+    both dates stay inside the horizon year, a registry-known year (far-future years carry
     no deadline calendar and are refused upstream).
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         backlog = build_overview_backlog(
             profile(),
-            from_date=date(2026, 7, 1),
-            to_date=date(2026, 12, 31),
-            as_of=date(2026, 1, 15),
+            from_date=date(_YEAR, 7, 1),
+            to_date=date(_YEAR, 12, 31),
+            as_of=date(_YEAR, 1, 15),
             operation=_authority_operation_for_test,
         )
 
@@ -153,7 +156,7 @@ def test_backlog_default_lookback_is_365_days() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from datetime import timedelta
 
-        as_of = date(2026, 12, 31)
+        as_of = date(_YEAR, 12, 31)
         backlog = build_overview_backlog(profile(), as_of=as_of, operation=_authority_operation_for_test)
 
         assert backlog.range.to_date == as_of

@@ -6,6 +6,7 @@ import json
 import sys
 import time
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from cadrumo.domain.buckets.event import (
     BucketEventType,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.models import Transaction
@@ -45,6 +47,8 @@ from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixtu
 from ...native_profile_facts import native_general_iva_facts
 from .machine_secret_pipe import machine_secret_descriptor_option
 from .profile_cli_support import invoke_native_profile_revealing
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -120,7 +124,7 @@ def _seed_transaction(profile: NativeCliProfileFixture, bucket_id: str, descript
         "ledger",
         "add",
         "--date",
-        "2026-05-08",
+        date(_YEAR, 5, 8).isoformat(),
         "--amount",
         "78.90",
         "--direction",

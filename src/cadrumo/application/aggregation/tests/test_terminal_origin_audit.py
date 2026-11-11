@@ -27,12 +27,15 @@ from ....domain.calculations.registry.binding_terminal_origin import (
 )
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _LEGAL_REFS = ("ley-37-1992:art-1",)
 _SOURCE_REFS = ("aeat-modelo-303-diseno-registro",)
@@ -75,8 +78,8 @@ def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="terminal-origin-audit-test",
         localization_key="test.schema.revision.terminal-origin-audit-test.label",
-        valid_from=date(2025, 1, 1),
-        period_selector=PeriodSelector(years=(2025,), periods=("1T",)),
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(years=(_YEAR,), periods=("1T",)),
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         bindings=bindings,

@@ -19,6 +19,7 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
 from cadrumo.entrypoints.cli.modelo_results import WorkReviewPayload, WorkReviewResult
 from cadrumo.entrypoints.tests import modelo_operation_test_support
@@ -37,6 +38,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import native_api_cli_session
 from .native_profile_cli_invoke import invoke_native_profile_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -156,7 +159,7 @@ def test_native_review_denies_out_of_scope_period(
 
     with native_api_cli_session(
         tmp_path / "adjacent",
-        scope_for_destination=lambda client_id: _finite_scope(client_id, period=Period.from_year_and_code(2025, "2T")),
+        scope_for_destination=lambda client_id: _finite_scope(client_id, period=Period.from_year_and_code(_YEAR, "2T")),
         prepare_profile=prepare,
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -168,7 +171,7 @@ def test_native_review_denies_out_of_scope_period(
 
     with native_api_cli_session(
         tmp_path / "matching",
-        scope_for_destination=lambda client_id: _finite_scope(client_id, period=Period.from_year_and_code(2025, "1T")),
+        scope_for_destination=lambda client_id: _finite_scope(client_id, period=Period.from_year_and_code(_YEAR, "1T")),
         prepare_profile=prepare,
         invoke_cli=run_cadrumo_cli,
     ) as session:

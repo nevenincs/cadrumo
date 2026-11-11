@@ -11,6 +11,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -23,11 +24,13 @@ from ..preflight import (
     LedgerPreflightIssueReason as R,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 6, 3, 12, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR, 6, 3, 12, 0, tzinfo=UTC)
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _tx(
@@ -43,8 +46,8 @@ def _tx(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-x",
-        booked_date=date(2026, 1, 15),
-        value_date=date(2026, 1, 15),
+        booked_date=date(_YEAR, 1, 15),
+        value_date=date(_YEAR, 1, 15),
         amount=Decimal("121.00"),
         currency=currency,
         counterparty="Proveedor",

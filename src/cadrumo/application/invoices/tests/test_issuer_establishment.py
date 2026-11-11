@@ -16,6 +16,7 @@ from typing import Any
 import pytest
 
 from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
@@ -25,6 +26,8 @@ from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ..issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -54,7 +57,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "kind": InvoiceKind.ISSUED,
         "invoice_class": require_invoice_class("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
-        "issued_at": date(2026, 5, 3),
+        "issued_at": date(_YEAR, 5, 3),
         "counterparty_name": "Cliente de mostrador",
         "counterparty_tax_id": None,
         "counterparty_country": "ES",

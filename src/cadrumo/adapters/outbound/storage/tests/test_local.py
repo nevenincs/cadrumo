@@ -801,7 +801,7 @@ def test_get_raises_storage_corruption_error_for_every_invalid_sidecar_byte_leng
 
 @pytest.mark.parametrize(
     "written_at",
-    (None, "", "not-an-instant", "2026-08-24T12:00:00"),
+    (None, "", "not-an-instant", "1980-08-24T12:00:00"),
     ids=("missing", "blank", "malformed", "timezone-naive"),
 )
 def test_get_raises_storage_corruption_error_for_every_invalid_sidecar_written_at(

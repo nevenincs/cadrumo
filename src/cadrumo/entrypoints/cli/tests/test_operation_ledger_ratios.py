@@ -16,7 +16,11 @@ from cadrumo_client.contracts.contracts import RefusalCode
 
 from ....application.ledger import ratios_contracts as ratios
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_ledger_ratios as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -65,7 +69,7 @@ def test_list_bridge_submits_exact_profile_and_accepts_registered_censo_refusal_
 ) -> None:
     projection = ratios.LedgerRatiosListProjection(
         profile_id=_PROFILE,
-        year=2026,
+        year=_YEAR,
         outcome="censo_mismatch",
         rows=(),
         count=0,
@@ -85,10 +89,10 @@ def test_list_bridge_submits_exact_profile_and_accepts_registered_censo_refusal_
         allow_refusal_detail=True,
     )
 
-    assert bridge.list_ratios(_ctx(), year=2026) is completion
+    assert bridge.list_ratios(_ctx(), year=_YEAR) is completion
     request = cast(ratios.LedgerRatiosListRequest, submitted[0])
     assert request.profile_id == _PROFILE
-    assert request.year == 2026
+    assert request.year == _YEAR
 
 
 def test_set_bridge_correlates_raw_category_alias_ratio_and_updated_effect(
@@ -113,12 +117,12 @@ def test_set_bridge_correlates_raw_category_alias_ratio_and_updated_effect(
         request_type=ratios.LedgerRatiosSetRequest,
     )
 
-    assert bridge.set_ratio(_ctx(), category="vehicle-alias", ratio="0.50", year=2026) is completion
+    assert bridge.set_ratio(_ctx(), category="vehicle-alias", ratio="0.50", year=_YEAR) is completion
     request = cast(ratios.LedgerRatiosSetRequest, submitted[0])
     assert request.profile_id == _PROFILE
     assert request.category == "vehicle-alias"
     assert request.ratio == "0.50"
-    assert request.year == 2026
+    assert request.year == _YEAR
 
 
 def test_unset_bridge_preserves_the_registered_no_override_refusal(
@@ -155,7 +159,7 @@ def test_unset_bridge_preserves_the_registered_no_override_refusal(
 def test_eligible_bridge_correlates_pinned_year_and_read_only_effect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    projection = ratios.LedgerRatiosEligibleProjection(profile_id=_PROFILE, year=2026, rows=(), count=0)
+    projection = ratios.LedgerRatiosEligibleProjection(profile_id=_PROFILE, year=_YEAR, rows=(), count=0)
     completion = RegisteredOperationCompletion(
         operation_id=_OPERATION_ID,
         projection=projection,
@@ -168,10 +172,10 @@ def test_eligible_bridge_correlates_pinned_year_and_read_only_effect(
         request_type=ratios.LedgerRatiosEligibleRequest,
     )
 
-    assert bridge.list_eligible_ratios(_ctx(), year=2026) is completion
+    assert bridge.list_eligible_ratios(_ctx(), year=_YEAR) is completion
     request = cast(ratios.LedgerRatiosEligibleRequest, submitted[0])
     assert request.profile_id == _PROFILE
-    assert request.year == 2026
+    assert request.year == _YEAR
 
 
 def test_validate_bridge_rejects_a_mutation_effect_on_a_read(

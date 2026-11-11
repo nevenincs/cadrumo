@@ -92,6 +92,7 @@ from ....application.tests.wizard_catalogue_fixtures import register_wizard_cata
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import CalculationRevision
@@ -107,8 +108,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["register_wizard_catalogue"]
 
 _BUCKET_ID = "9a1c0e5e-2b1c-4f0e-8f7c-9d2f5b6a7c31"
-_CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
-_FILING_YEAR = 2025
+_CLOCK = datetime(filing_year_envelope().horizon, 5, 21, 9, 0, 0, tzinfo=UTC)
+_FILING_YEAR = newest_authored_edition("210")
 _PERIOD_CODE = "EVENT-1"
 _M210 = "210"
 

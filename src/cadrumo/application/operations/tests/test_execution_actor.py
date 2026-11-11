@@ -100,7 +100,7 @@ def test_the_automation_label_is_a_bounded_actor_reference(
     event = build_bucket_event(
         bucket_id="5612ee74-f4e5-47c2-9df9-2afa04286b2a",
         event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
-        occurred_at=datetime(2026, 10, 14, 12, 0, tzinfo=UTC),
+        occurred_at=datetime(1980, 10, 14, 12, 0, tzinfo=UTC),
         actor=label,
         object_type=BucketEventObjectType.LEDGER_TRANSACTION,
         object_id="transaction-1",

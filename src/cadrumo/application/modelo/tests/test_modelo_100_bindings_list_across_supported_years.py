@@ -15,6 +15,7 @@ import pytest
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where, revision_first_exercise
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
@@ -80,7 +81,8 @@ def test_bindings_list_carries_the_identity_and_ledger_surface(filing_year: int)
 
 
 # The borrador may hold these credits but only cross-checks them, so it never
-# supplies one; the tax-residence enum is the 2025 binding it does supply.
+# supplies one; the tax-residence enum is the binding it does supply, from the
+# first edition whose design lets the borrador carry it.
 _CROSS_CHECK_ONLY_CREDITS = frozenset(
     {
         "renta-retencion-soportada-trabajo",
@@ -88,7 +90,18 @@ _CROSS_CHECK_ONLY_CREDITS = frozenset(
         "renta-retencion-soportada-ganancia-patrimonial",
     }
 )
-_BORRADOR_SUPPLIED_FROM_2025 = "renta-profile-tax-residence-ccaa"
+_BORRADOR_SUPPLIED = "renta-profile-tax-residence-ccaa"
+_FIRST_SUPPLYING_EXERCISE = revision_first_exercise(
+    _MODELO,
+    str(
+        authored_revisions_where(
+            _MODELO,
+            lambda revision: any(
+                binding.id == _BORRADOR_SUPPLIED and binding.borrador_supplies_value for binding in revision.bindings
+            ),
+        )[0].id
+    ),
+)
 
 
 @pytest.mark.parametrize("filing_year", _supported_years())
@@ -104,4 +117,4 @@ def test_bindings_list_reports_borrador_capability_as_the_value_the_borrador_may
     assert {binding_id: capable[binding_id] for binding_id in _CROSS_CHECK_ONLY_CREDITS} == dict.fromkeys(
         _CROSS_CHECK_ONLY_CREDITS, False
     )
-    assert capable[_BORRADOR_SUPPLIED_FROM_2025] is (filing_year >= 2025)
+    assert capable[_BORRADOR_SUPPLIED] is (filing_year >= _FIRST_SUPPLYING_EXERCISE)

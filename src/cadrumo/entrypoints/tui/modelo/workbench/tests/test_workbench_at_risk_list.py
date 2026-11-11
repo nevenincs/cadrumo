@@ -21,6 +21,7 @@ from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
@@ -71,7 +72,7 @@ def _modelo_100(operation: PinnedAuthorityOperation) -> ModeloWorkForm:
     return registry_form_of(
         operation,
         modelo="100",
-        year=2025,
+        year=newest_authored_edition("100"),
         code="0A",
         bucket_id="13000000-0000-4000-8000-000000000100",
         work_unit_id="d" * 64,

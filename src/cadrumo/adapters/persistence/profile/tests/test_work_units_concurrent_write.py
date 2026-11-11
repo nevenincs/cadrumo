@@ -25,15 +25,18 @@ import pytest
 
 from .....core.modelo import Modelo
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..modelos_work_units import WorkUnitCatalogueRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "6d6d6d6d-6d6d-46d6-8d6d-6d6d6d6d6d6d"
-_INSTANT = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 4, 1, 9, 0, tzinfo=UTC)
 
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
@@ -47,20 +50,20 @@ _PERIOD_BY_LABEL = {"first": "1T", "interloper": "2T", "target": "3T"}
 
 def _work_unit(label: str) -> WorkUnit:
     """Build one minimal work unit attributed to this test's bucket."""
-    period = Period.from_year_and_code(2026, _PERIOD_BY_LABEL[label])
+    period = Period.from_year_and_code(_YEAR, _PERIOD_BY_LABEL[label])
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo=Modelo("303").value,
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id="2026",
+            revision_id=revision_serving_period("303", _YEAR, _PERIOD_BY_LABEL[label]).id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=Modelo("303").value,
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2026",
+        revision_id=revision_serving_period("303", _YEAR, _PERIOD_BY_LABEL[label]).id,
         name=label,
         created_at=_INSTANT,
         updated_at=_INSTANT,

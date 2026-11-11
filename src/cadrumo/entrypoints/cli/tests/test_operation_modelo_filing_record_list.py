@@ -23,6 +23,7 @@ from ....application.modelo.filing_record_list_contracts import (
 from ....application.modelo.filing_record_list_operation import MODELO_FILING_RECORD_LIST_OPERATION_DEFINITION_ID
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -33,20 +34,23 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import operation_modelo_filing_record_list as bridge
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR, 4, 10, 9, 0, tzinfo=UTC)
 
 
 def _row(*, profile_id: UUID = _PROFILE) -> ModeloFilingRecordListEntryProjection:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     work_unit_id = derive_work_unit_id(
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id="runtime-test-revision",
     )
@@ -61,7 +65,7 @@ def _row(*, profile_id: UUID = _PROFILE) -> ModeloFilingRecordListEntryProjectio
         calculation_revision_id="b" * 64,
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
         filed_at=_NOW,
         filed_by=actor,
@@ -141,7 +145,7 @@ def test_bridge_submits_profile_and_filters_then_returns_existing_row_payload(mo
     assert len(result) == 1
     assert result[0].bucket_id == str(_PROFILE)
     assert result[0].modelo == "303"
-    assert result[0].period == Period.from_year_and_code(2026, "1T")
+    assert result[0].period == Period.from_year_and_code(_YEAR, "1T")
     assert result[0].live_submission is False
     assert submitted == [ModeloFilingRecordListRequest(profile_id=_PROFILE, modelo="303", include_superseded=False)]
 

@@ -6,16 +6,18 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 
 def review_runtime_transaction(label: str) -> Transaction:
+    booked = date(filing_year_envelope().horizon, 4, 5)
     raw = RawTransaction(
         provider_transaction_id=f"tx-{label}",
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
+        booked_date=booked,
+        value_date=booked,
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -25,7 +27,7 @@ def review_runtime_transaction(label: str) -> Transaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 5, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 5, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": f"filing review runtime storage {label}"},

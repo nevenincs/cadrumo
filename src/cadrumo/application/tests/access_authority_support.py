@@ -242,7 +242,7 @@ def disclosure_decision_without_category(
     )
     authority = build_access_authority(
         binding=new_access_binding(profile_id),
-        now=datetime(2026, 10, 1, 12, tzinfo=UTC),
+        now=datetime(1980, 10, 1, 12, tzinfo=UTC),
         grant_scope=granted,
         profile_scope=complete,
     )

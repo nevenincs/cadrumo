@@ -17,11 +17,14 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     create_manual_row,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -32,8 +35,8 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
         description="already active row",
         idempotency_key="restore-active-refusal",
         amount=Decimal("50.00"),
-        booked_date=date(2026, 5, 1),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        booked_date=date(_YEAR, 5, 1),
+        occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
     )
 
     with (
@@ -50,7 +53,7 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
@@ -74,14 +77,14 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="roundtrip restore row",
                 idempotency_key="restore-roundtrip",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -95,7 +98,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
             actor="operator-A",
             reason="parked",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -109,7 +112,7 @@ def test_restore_roundtrip_survives_storage_reload_and_breaks_on_corruption(
             actor="operator-B",
             reason="restored",
             ports=ports,
-            occurred_at=datetime(2026, 5, 3, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 3, 9, 0, tzinfo=UTC),
         )
 
     fresh_repository, _ = repositories(secure_objects)

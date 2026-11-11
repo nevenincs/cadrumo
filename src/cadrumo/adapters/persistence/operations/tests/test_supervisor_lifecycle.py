@@ -56,12 +56,15 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import close_host_over_live_executor, operation_repositories
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 14, 18, tzinfo=UTC)
+_NOW = datetime(_YEAR, 8, 14, 18, tzinfo=UTC)
 
 #: Cleanup window for the deadline-expiry proof below.
 #:

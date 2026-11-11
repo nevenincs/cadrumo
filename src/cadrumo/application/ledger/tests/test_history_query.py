@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import (
     BucketEvent,
@@ -40,6 +42,8 @@ from ..history_query import (
 )
 from ..protocols import TransactionCatalogueCoCommitWriterProtocol
 from .in_memory_transaction_repository import InMemoryTransactionRepository
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -80,8 +84,8 @@ class _EmptyBucketEventHistory:
 def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        booked_date=date(_YEAR - 2, 4, 10),
+        value_date=date(_YEAR - 2, 4, 10),
         amount=Decimal("10.00"),
         currency="EUR",
         counterparty="Supplier SL",
@@ -91,7 +95,7 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -102,8 +106,8 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
         "business_classification": BusinessClassification.NOT_YET_PROCESSED,
         "source_jurisdiction": "ES",
         "group_label": None,
-        "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
-        "modified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+        "created_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
+        "modified_at": datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC),
     }
     if edit_lineage:
         payload["edit_lineage"] = edit_lineage
@@ -113,7 +117,7 @@ def _transaction(*, provider_id: str, edit_lineage: tuple[object, ...] = ()) -> 
 def _transaction_event(object_id: str) -> BucketEvent:
     """Build a canonical same-instant event for one lineage anchor."""
     payload = {"change": "updated", "transaction_id": object_id}
-    occurred_at = datetime(2026, 7, 31, 12, 30, tzinfo=UTC)
+    occurred_at = datetime(_YEAR, 7, 31, 12, 30, tzinfo=UTC)
     event_type = BucketEventType.LEDGER_TRANSACTION_UPDATED
     object_type = BucketEventObjectType.LEDGER_TRANSACTION
     event_id = derive_bucket_event_id(
@@ -243,7 +247,7 @@ def test_merged_history_uses_event_id_to_order_same_instant_lineage_events() -> 
                 previous_transaction_id=previous_id,
                 actor="operator",
                 source_command="ledger.edit",
-                edited_at=datetime(2026, 7, 31, 12, 30, tzinfo=UTC),
+                edited_at=datetime(_YEAR, 7, 31, 12, 30, tzinfo=UTC),
             ),
         ),
     )

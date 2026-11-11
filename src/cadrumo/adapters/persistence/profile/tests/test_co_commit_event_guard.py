@@ -24,10 +24,14 @@ from cadrumo.domain.buckets.event_repository import build_bucket_event, emit_buc
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET = "3f3f3f3f-3f3f-43f3-8f3f-3f3f3f3f3f3f"
-_AT = datetime(2026, 7, 1, 9, 0, tzinfo=UTC)
+_AT = datetime(_YEAR, 7, 1, 9, 0, tzinfo=UTC)
 
 #: Markers this module emits. The runtime fixture records its own lifecycle
 #: events, so asserting over EVERY entry would assert the fixture's behaviour

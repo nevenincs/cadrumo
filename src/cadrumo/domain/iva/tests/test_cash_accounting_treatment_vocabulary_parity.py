@@ -33,10 +33,13 @@ from ...calculations.registry.iva_cash_accounting_vocabulary import (
     resolve_iva_cash_accounting_catalogue,
 )
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON = date(2026, 3, 10)
+_YEAR = filing_year_envelope().horizon
+
+_ON = date(_YEAR, 3, 10)
 _PREFIX = "cash_accounting."
 _VALUE_SUFFIX = ".value"
 

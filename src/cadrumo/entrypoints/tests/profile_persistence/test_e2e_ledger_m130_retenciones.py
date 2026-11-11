@@ -68,6 +68,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
@@ -110,13 +111,13 @@ __all__ = ["secure_objects"]
 
 _BUCKET_ID: Final = "13010000-0000-4000-8000-000000000130"
 _TAX_ID: Final = "12345678Z"
-_T0: Final = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
+_T0: Final = datetime(filing_year_envelope().horizon, 4, 6, 10, 0, tzinfo=UTC)
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-_WITHHELD_YEAR: Final = 2026
-_ZERO_YEAR: Final = 2025
+_WITHHELD_YEAR: Final = filing_year_envelope().horizon
+_ZERO_YEAR: Final = _WITHHELD_YEAR - 1
 _QUARTER: Final = "1T"
-_M130_REVISION: Final = "2019-y-siguientes"
+_M130_REVISION: Final = str(open_ended_revision("130").id)
 _RETENCIONES_BOX: CasillaId = validated_casilla_id("06")
 _REASON: Final = "advisory_binding_value"
 
@@ -124,8 +125,8 @@ _REASON: Final = "advisory_binding_value"
 # and 21 % IVA: 1.000,00 leaves 150,00 withheld and 1.000,00 + 210,00 - 150,00 = 1.060,00 paid;
 # 2.400,00 leaves 360,00 withheld and 2.400,00 + 504,00 - 360,00 = 2.544,00 paid.
 _INVOICES: Final[tuple[tuple[str, Decimal, Decimal, Decimal], ...]] = (
-    ("F-2026-001", Decimal("1000.00"), Decimal("150.00"), Decimal("1060.00")),
-    ("F-2026-002", Decimal("2400.00"), Decimal("360.00"), Decimal("2544.00")),
+    (f"F-{_WITHHELD_YEAR}-001", Decimal("1000.00"), Decimal("150.00"), Decimal("1060.00")),
+    (f"F-{_WITHHELD_YEAR}-002", Decimal("2400.00"), Decimal("360.00"), Decimal("2544.00")),
 )
 # Hand-derived: 150,00 + 360,00.
 _STATED_RETENCION: Final = Decimal("510.00")
@@ -158,7 +159,9 @@ def _seed_taxpayer_profile(estimation_regime: str = "directa_simplificada") -> N
                     UserProfileFact(path="identity.name", value="Withheld"),
                     UserProfileFact(path="identity.surnames", value="Retencion Tester"),
                     UserProfileFact(path="activities.description", value="design services"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(
+                        path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)
+                    ),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                     *cash_criterion_facts(_WITHHELD_YEAR, _ZERO_YEAR, estimation_regime=estimation_regime),
                 )
@@ -594,16 +597,16 @@ def _book_invoice(
 
 def _persist_invoice_book_quarter(secure_objects: SecureObjectRepository) -> None:
     spanish = (
-        ("2026-001", date(_WITHHELD_YEAR, 1, 15)),
-        ("2026-003", date(_WITHHELD_YEAR, 2, 14)),
-        ("2026-004", date(_WITHHELD_YEAR, 3, 14)),
+        (f"{_WITHHELD_YEAR}-001", date(_WITHHELD_YEAR, 1, 15)),
+        (f"{_WITHHELD_YEAR}-003", date(_WITHHELD_YEAR, 2, 14)),
+        (f"{_WITHHELD_YEAR}-004", date(_WITHHELD_YEAR, 3, 14)),
     )
     cobros = [
         _receipt(number, value_date=day, cash=_BOOK_NET_COBRO, taxable_base=_BOOK_BASE, iva=_BOOK_CUOTA)
         for number, day in spanish
     ]
     kunde = _receipt(
-        "2026-002",
+        f"{_WITHHELD_YEAR}-002",
         value_date=date(_WITHHELD_YEAR, 1, 31),
         cash=_BOOK_INTRA_COMMUNITY_BASE,
         taxable_base=_BOOK_INTRA_COMMUNITY_BASE,
@@ -615,13 +618,13 @@ def _persist_invoice_book_quarter(secure_objects: SecureObjectRepository) -> Non
             base=_BOOK_BASE,
             cuota=_BOOK_CUOTA,
             spanish=True,
-            linked=None if number == "2026-004" else cobro.transaction_id,
+            linked=None if number == f"{_WITHHELD_YEAR}-004" else cobro.transaction_id,
         )
         for (number, day), cobro in zip(spanish, cobros, strict=True)
     ]
     invoices.append(
         _book_invoice(
-            "2026-002",
+            f"{_WITHHELD_YEAR}-002",
             date(_WITHHELD_YEAR, 1, 31),
             base=_BOOK_INTRA_COMMUNITY_BASE,
             cuota=Decimal("0"),

@@ -34,7 +34,7 @@ from ...domain.transactions.enums import TransactionDirection, TransactionLifecy
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports
 
-_SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_SEED_AT = datetime(1980, 5, 8, 10, 15, tzinfo=UTC)
 _ACTOR = "registered-lifecycle-conformance"
 _REASON = "registered lifecycle operation conformance"
 

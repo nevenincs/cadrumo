@@ -24,6 +24,7 @@ from cadrumo.domain.user_profile.values import compose_legal_full_name, create_u
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_profile_schema,
@@ -37,7 +38,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET = "d24bdc40-1623-4255-a9c3-a4b5c34dd9bb"  # was 'bucket-under-test'
 
 
-_T0 = datetime(2026, 1, 1, tzinfo=UTC)
+_EXERCISE = newest_authored_edition("100")
+_T0 = datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC)
 
 
 def _fact(path: str, value: object) -> UserProfileFact:
@@ -65,10 +67,10 @@ def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
 
 
 def _export_bindings() -> tuple[BindingDefinition, ...]:
-    """The real Modelo 100 2024 profile bindings that carry an export address."""
+    """The real newest Modelo 100 profile bindings that carry an export address."""
     snapshot = published_snapshot(
         Modelo("100").value,
-        filing_year=2024,
+        filing_year=_EXERCISE,
         period="0A",
     )
     return tuple(
@@ -84,7 +86,7 @@ def _resolve(*facts: UserProfileFact, operation: PinnedAuthorityOperation) -> di
         resolve_profile_export_values(
             _export_bindings(),
             bucket_id=_BUCKET,
-            filing_year=2024,
+            filing_year=_EXERCISE,
             profile_record=_record(facts),
             schema=published_profile_schema(),
             operation=operation,
@@ -272,7 +274,7 @@ def test_the_repeating_family_slots_are_a_known_structural_gap(*, operation: Pin
     }
     values = _resolve(
         *_DECLARANTE,
-        _fact("renta_family.descendiente.0.birth_date", "2020-01-01"),
+        _fact("renta_family.descendiente.0.birth_date", f"{_EXERCISE - 4}-01-01"),
         _fact("renta_filing.declaration_type", "1"),
         operation=operation,
     )

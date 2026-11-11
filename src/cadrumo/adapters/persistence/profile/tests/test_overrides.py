@@ -35,6 +35,7 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
 
@@ -43,11 +44,11 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_KIND = "aeat_sede_justificante"
-_CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_CURRENT_YEAR = 2026
-_PRIOR_YEAR = 2025
+_CLOCK = datetime(1980, 1, 10, 10, 0, tzinfo=UTC)
+_CURRENT_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _CURRENT_YEAR - 1
 _SETTLEMENT_PERIOD = "4T"
-_SOURCE_REF = "303:2025:4T"
+_SOURCE_REF = f"303:{_PRIOR_YEAR}:4T"
 
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 

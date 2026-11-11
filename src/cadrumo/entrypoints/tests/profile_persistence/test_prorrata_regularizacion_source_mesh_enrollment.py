@@ -47,6 +47,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, manual_editions_printing
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -56,12 +57,13 @@ from .file_flow_test_support import calculation_ports_for_test
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
-_FILING_YEAR = 2025
+#: The newest AEAT manual edition printing the worked prorrata example the expected figures below are taken from.
+_FILING_YEAR = manual_editions_printing("iva", "Exceso de deducción: 217,60")[-1]
 _PRIOR_YEAR = _FILING_YEAR - 1
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
 _UNRESOLVED_KEY = "application.calculations.prorrata_regularizacion.unresolved"
 _M303_CODE = ModeloCode("303")
-_CREATED_AT = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)
+_CREATED_AT = datetime(filing_year_envelope().horizon, 1, 20, 9, 0, tzinfo=UTC)
 _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
 

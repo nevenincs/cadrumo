@@ -8,9 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.citation_grounding import CitationGrounding
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import IvaCitation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FIRST_DAY = date(filing_year_envelope().floor, 1, 1)
+_LAST_DAY = date(filing_year_envelope().horizon, 12, 31)
 
 
 def test_iva_citation_rejects_a_verified_claim_with_no_quotation() -> None:
@@ -19,8 +23,8 @@ def test_iva_citation_rejects_a_verified_claim_with_no_quotation() -> None:
             {
                 "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": "   ",
-                "valid_from": date(2022, 1, 1),
-                "valid_to": date(2026, 12, 31),
+                "valid_from": _FIRST_DAY,
+                "valid_to": _LAST_DAY,
             },
         )
 
@@ -34,8 +38,8 @@ def test_iva_citation_rejects_an_unresolved_claim_with_no_reason() -> None:
                 "quoted_text": "",
                 "grounding": CitationGrounding.UNRESOLVED,
                 "unresolved_reason": "   ",
-                "valid_from": date(2022, 1, 1),
-                "valid_to": date(2026, 12, 31),
+                "valid_from": _FIRST_DAY,
+                "valid_to": _LAST_DAY,
             },
         )
 
@@ -53,7 +57,7 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
                 "quoted_text": "El tipo impositivo sera el 21 por ciento",
                 "grounding": CitationGrounding.UNRESOLVED,
                 "unresolved_reason": "candidate text that did not match the bundled corpus",
-                "valid_from": date(2022, 1, 1),
-                "valid_to": date(2026, 12, 31),
+                "valid_from": _FIRST_DAY,
+                "valid_to": _LAST_DAY,
             },
         )

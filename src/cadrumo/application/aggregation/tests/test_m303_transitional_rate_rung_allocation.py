@@ -30,14 +30,16 @@ rates are exercised on dates where they were actually in force.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.invoices.tests.invoice_catalogue_seed import TRANSITIONAL_WINDOWS, window_middle
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
@@ -59,29 +61,38 @@ from .iva_authority_support import aggregate_iva_ledger_observations
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
+def _quarter_period(day: date) -> Period:
+    return Period.from_year_and_code(day.year, f"{(day.month - 1) // 3 + 1}T")
+
+
+# A day inside the span the governed schedule offers the transitional 7,5 % and 2 % rates.
+_WINDOW_DAY = window_middle("RATE_7.5")
+_PERIOD_4T = _quarter_period(_WINDOW_DAY)
+
 # Each rung: its two binding ids, the rate a row must carry to reach it, a date
 # on which that rate was in force, and a distinct base/cuota pair. 5 % applies
-# before 10/4T 2024 and 7,5 % from it (Nota 8), 2 % from 10/4T 2024 (Nota 10).
+# before 10/4T and 7,5 % from it (Nota 8), 2 % from 10/4T (Nota 10).
 _RUNGS = (
-    ("general", "0.21", date(2024, 11, 4), "4000.00", "840.00"),
-    ("reducido", "0.10", date(2024, 11, 5), "2500.00", "250.00"),
-    ("reducido-transitorio", "0.075", date(2024, 11, 6), "1600.00", "120.00"),
-    ("super-reducido", "0.04", date(2024, 11, 7), "1200.00", "48.00"),
-    ("super-reducido-transitorio", "0.02", date(2024, 11, 8), "900.00", "18.00"),
+    ("general", "0.21", _WINDOW_DAY - timedelta(days=2), "4000.00", "840.00"),
+    ("reducido", "0.10", _WINDOW_DAY - timedelta(days=1), "2500.00", "250.00"),
+    ("reducido-transitorio", "0.075", _WINDOW_DAY, "1600.00", "120.00"),
+    ("super-reducido", "0.04", _WINDOW_DAY + timedelta(days=1), "1200.00", "48.00"),
+    ("super-reducido-transitorio", "0.02", _WINDOW_DAY + timedelta(days=2), "900.00", "18.00"),
 )
 
-# The 5 % half of the [153] rung, exercised in its own window (period 09/3T
-# 2024, before Nota 8 flips the mandated constant to 7,5 %). It must reach the
+# The 5 % half of the [153] rung, exercised in its own window (period 09/3T,
+# before Nota 8 flips the mandated constant to 7,5 %). It must reach the
 # SAME rung -- AEAT reuses one rung across the flip rather than opening a
 # second, so the rung admits both rates and the two never coexist in a period.
-_EARLIER_WINDOW = date(2024, 9, 10)
+_EARLIER_WINDOW = TRANSITIONAL_WINDOWS["RATE_5"][1] - timedelta(days=20)
 
-_PERIOD_4T_2024 = Period.from_year_and_code(2024, "4T")
-_PERIOD_3T_2024 = Period.from_year_and_code(2024, "3T")
+_PERIOD_3T = _quarter_period(_EARLIER_WINDOW)
 
 
 def _revision() -> ModeloRevision:
-    return published_snapshot(Modelo("303"), filing_year=2024, period="4T").revision
+    return published_snapshot(
+        Modelo("303"), filing_year=_PERIOD_4T.filing_year, period=_PERIOD_4T.registry_token
+    ).revision
 
 
 def _transaction(
@@ -107,7 +118,7 @@ def _transaction(
                     source_sha256="c" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(2024, 12, 1, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(1980, 12, 1, 12, 0, tzinfo=UTC),
                     provider_name="manual-ledger",
                 ),
                 raw_fields={"source_kind": "ledger_transaction"},
@@ -127,7 +138,7 @@ def _transaction(
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "fx_rate": None,
             "value_in_eur": None,
-            "classified_at": datetime(2024, 12, 2, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 12, 2, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -177,7 +188,7 @@ def test_each_rate_reaches_its_own_rung_and_no_other(
     so those two rungs held a sum of two rows and the transitional rungs held
     nothing.
     """
-    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024, operation=authority_operation)
+    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T, operation=authority_operation)
 
     for suffix, _rate, _on_date, base, cuota in _RUNGS:
         assert values[f"modelo-303-iva-repercutido-{suffix}-base"] == Decimal(base)
@@ -190,7 +201,7 @@ def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half(
     """Nota 8 reuses [153] across the flip, so the rung admits both its rates.
 
     A revision split per AEAT design would not separate these: the flip happens
-    INSIDE the 2024-late design, at the 10/4T 2024 period boundary.
+    INSIDE the late design of that year, at the 10/4T period boundary.
     """
     row = _transaction(
         "row-5pct",
@@ -199,7 +210,7 @@ def test_the_five_percent_half_reaches_the_same_rung_as_seven_and_a_half(
         iva_rate=Decimal("0.05"),
         iva_amount=Decimal("70.00"),
     )
-    values = _resolve((row,), period=_PERIOD_3T_2024, operation=authority_operation)
+    values = _resolve((row,), period=_PERIOD_3T, operation=authority_operation)
 
     assert values["modelo-303-iva-repercutido-reducido-transitorio-base"] == Decimal("1400.00")
     assert values["modelo-303-iva-repercutido-reducido-transitorio-cuota"] == Decimal("70.00")
@@ -219,7 +230,7 @@ def test_the_rung_split_neither_loses_nor_duplicates_a_row(
     so the tier bindings had to be narrowed, and a rate that fell between the
     narrowed sets would leave the return silently.
     """
-    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T_2024, operation=authority_operation)
+    values = _resolve(_all_rungs_catalogue(), period=_PERIOD_4T, operation=authority_operation)
 
     declared_cuota = sum(
         (values[f"modelo-303-iva-repercutido-{suffix}-cuota"] for suffix, *_ in _RUNGS),
@@ -314,7 +325,14 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
                     if covered is not None:
                         covered.update(Decimal(str(rate)) for rate in rates)
 
-        probe_dates = (date(2024, 3, 1), _EARLIER_WINDOW, date(2024, 11, 1), date(2025, 6, 1), date(2026, 6, 1))
+        after_windows = max(end for _, end in TRANSITIONAL_WINDOWS.values()) + timedelta(days=1)
+        probe_dates = (
+            window_middle("RATE_5"),
+            _EARLIER_WINDOW,
+            window_middle("RATE_2"),
+            after_windows,
+            date(filing_year_envelope().horizon, 6, 1),
+        )
         candidates = [Decimal(n) / Decimal("1000") for n in range(0, 300, 5)]
         for tier, covered in rungs_by_tier.items():
             if covered is None:
@@ -342,7 +360,7 @@ def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
     catalogue = TransactionCatalogue.model_validate(
         {"transactions": {t.transaction_id: t for t in _all_rungs_catalogue()}},
     )
-    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T_2024)
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T)
 
     domestic = [
         o
@@ -378,13 +396,13 @@ def test_a_rate_less_row_is_refused_at_ingest_rather_than_silently_dropped() -> 
     """
     row = _transaction(
         "row-no-rate",
-        on_date=date(2024, 11, 6),
+        on_date=_WINDOW_DAY,
         taxable_base=Decimal("1600.00"),
         iva_rate=None,
         iva_amount=Decimal("120.00"),
     )
     catalogue = TransactionCatalogue.model_validate({"transactions": {row.transaction_id: row}})
-    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T_2024)
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T)
 
     assert aggregation.observations == (), "a rate-less row produced an observation instead of being refused"
     assert [i.reason.value for i in aggregation.issues] == ["missing_iva_rate"]
@@ -406,7 +424,7 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all(
     def reached(applied_rate: Decimal | None) -> dict[str, Decimal]:
         observation = IvaLedgerObservation(
             ledger_id="control",
-            transaction_date=date(2024, 11, 6),
+            transaction_date=_WINDOW_DAY,
             category=IvaCategory("domestic_reduced"),
             rate_kind=IvaRateKind("reduced"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -439,7 +457,7 @@ def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None
     Keyed on the rungs rather than on a count, so adding a rung without totalling
     it reds this rather than passing on a stale tally. [158] and [26] appear in
     the printed formula of every design this revision spans; [170] appears from
-    the 2024-late design, and is included so the total stays correct on both
+    the late design of the transitional year, and is included so the total stays correct on both
     sides of the pending box move rather than needing a second edit then.
     """
     revision = _revision()
@@ -452,7 +470,7 @@ def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None
     )
 
 
-#: Every term AEAT prints inside casilla [27] in the 2025 diseno. [11] is the one
+#: Every term AEAT prints inside casilla [27] in the diseno. [11] is the one
 #: deliberate exclusion: it projects the AIC official-box PARITY casilla, while
 #: iva.autorepercutido.intracomunitaria already books that same cuota into the
 #: total, so summing it would count the AIC cuota twice. Declared here with its

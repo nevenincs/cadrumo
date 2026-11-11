@@ -32,6 +32,7 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -52,6 +53,8 @@ from ..relation_binding_join import bundled_relation_binding_join
 from .m303_parent_coordinate_support import parent_work_unit_id, registry_snapshot_ref, work_unit_period
 from .override_migration_support import override_migration_catalogue
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
@@ -65,7 +68,7 @@ _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01
 RETIRED_RELATION_ID = "modelo-303-rel-self-compensacion-anteriores"
 ABSORBING_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
 OVERRIDE_VALUE = "50.00"
-_CREATED_AT = datetime(2026, 4, 2, 9, 0, 0, tzinfo=UTC)
+_CREATED_AT = datetime(_YEAR, 4, 2, 9, 0, 0, tzinfo=UTC)
 
 
 def revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
@@ -347,7 +350,7 @@ def test_a_catalogue_learned_override_free_by_a_read_needs_no_second_read(tmp_pa
             object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
             classification=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity,
             schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-            written_at=datetime(2026, 11, 9, 12, 0, 0, tzinfo=UTC),
+            written_at=datetime(_YEAR, 11, 9, 12, 0, 0, tzinfo=UTC),
             payload=payload,
         )
 

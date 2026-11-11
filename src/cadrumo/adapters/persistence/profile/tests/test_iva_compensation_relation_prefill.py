@@ -53,10 +53,12 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 
+from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FILING_YEAR = filing_grade_exercises("390")[-1]
 _FIFO_BUCKET_ID = "39039000-0000-4000-8000-000000000097"
 _HISTORY_BUCKET_ID = "39039000-0000-4000-8000-000000000390"
 
@@ -72,7 +74,7 @@ def _save_normalized_m303_carry_observation(
         repository.prepare_observation_envelope(
             observation,
             source_kind="app_filing",
-            captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+            captured_at=datetime(_FILING_YEAR + 1, 1, 30, 12, 0, tzinfo=UTC),
             result_disposition=ResultDispositionProjection(
                 disposition=disposition,
                 provenance_kind="app_filing",
@@ -96,19 +98,19 @@ def _prepare_m303_carry_envelope(
     """Build test filing evidence through the production envelope ingress."""
     observation = registry_grounded_modelo_observation(
         modelo="303",
-        filing_year=2025,
+        filing_year=_FILING_YEAR,
         period=period,
         casilla_values=casilla_values,
     )
     return repository.prepare_observation_envelope(
         observation,
         source_kind=source_kind,
-        captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        captured_at=datetime(_FILING_YEAR + 1, 1, 30, 12, 0, tzinfo=UTC),
         source_headers=source_headers,
         result_disposition=ResultDispositionProjection(
             disposition=disposition,
             provenance_kind=provenance_kind,
-            provenance_locator=f"test-filing:2025:{period}",
+            provenance_locator=f"test-filing:{_FILING_YEAR}:{period}",
         ),
         stamped_revision_id=revision_id_for_observation(observation),
     )
@@ -125,14 +127,14 @@ def _raw_m303_carry_envelope(
     """Attempt a malformed M303 payload; canonical model validation rejects it."""
     observation = registry_grounded_modelo_observation(
         modelo="303",
-        filing_year=2025,
+        filing_year=_FILING_YEAR,
         period=period,
         casilla_values=casilla_values,
     )
     return ObservationEnvelopePayload(
         observation=observation,
         source_kind=source_kind,
-        captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        captured_at=datetime(_FILING_YEAR + 1, 1, 30, 12, 0, tzinfo=UTC),
         source_headers=source_headers,
         result_disposition=result_disposition,
         stamped_revision_id=revision_id_for_observation(observation),
@@ -163,7 +165,7 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
                 observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
-                    filing_year=2025,
+                    filing_year=_FILING_YEAR,
                     period=period,
                     casilla_values={
                         M303_RESULTADO_CASILLA: resultado,
@@ -186,8 +188,8 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
                 CalculationSourceContext(
                     bucket_id=_FIFO_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -218,7 +220,7 @@ def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path
                 observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
-                    filing_year=2025,
+                    filing_year=_FILING_YEAR,
                     period=period,
                     casilla_values={
                         M303_RESULTADO_CASILLA: resultado,
@@ -241,8 +243,8 @@ def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path
                 CalculationSourceContext(
                     bucket_id=_FIFO_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -302,7 +304,7 @@ def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tm
                 observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
-                    filing_year=2025,
+                    filing_year=_FILING_YEAR,
                     period=period,
                     casilla_values={
                         M303_RESULTADO_CASILLA: resultado,
@@ -325,8 +327,8 @@ def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tm
                 CalculationSourceContext(
                     bucket_id=_FIFO_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -355,7 +357,7 @@ def _resolve_partition_for_quarters(
                 observation_repo,
                 registry_grounded_modelo_observation(
                     modelo="303",
-                    filing_year=2025,
+                    filing_year=_FILING_YEAR,
                     period=period,
                     casilla_values=casilla_values,
                 ),
@@ -371,8 +373,8 @@ def _resolve_partition_for_quarters(
                 CalculationSourceContext(
                     bucket_id=_FIFO_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -608,7 +610,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                     observation_repo,
                     registry_grounded_modelo_observation(
                         modelo="303",
-                        filing_year=2025,
+                        filing_year=_FILING_YEAR,
                         period=period,
                         casilla_values={
                             M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
@@ -625,7 +627,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
             relation_vals = resolve_relations_from_local_store(
                 snapshot,
                 repository=observation_repo,
-                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+                captured_at=datetime(_FILING_YEAR + 1, 1, 30, 12, 0, tzinfo=UTC),
                 operation=_authority_operation_for_test,
             )
             annual_partition = IvaCompensationAnnualPartitionSourceResolver(
@@ -636,8 +638,8 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                 CalculationSourceContext(
                     bucket_id=_HISTORY_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -677,7 +679,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
         repository = CalculationObservationRepository()
         generated_observation = registry_grounded_observations(
             modelo="303",
-            filing_year=2025,
+            filing_year=_FILING_YEAR,
             period="4T",
             casilla_values={
                 M303_RESULTADO_CASILLA: Decimal("-50.00"),
@@ -686,7 +688,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
         )[0]
         valid_observation = RegistryModeloObservation(
             modelo="303",
-            filing_year=2025,
+            filing_year=_FILING_YEAR,
             period="4T",
             observations=(generated_observation,),
         )
@@ -696,7 +698,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
             result_disposition=ResultDispositionProjection(
                 disposition=ResultDisposition.COMPENSACION,
                 provenance_kind="app_filing",
-                provenance_locator="test-local-filing:2025:4T",
+                provenance_locator=f"test-local-filing:{_FILING_YEAR}:4T",
             ),
             stamped_revision_id=revision_id_for_observation(valid_observation),
         )
@@ -714,7 +716,10 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
 
         with pytest.raises(RegistryValidationError) as excinfo:
             resolve_iva_compensation_annual_partition_binding_values(
-                snapshot.revision, (invalid_envelope,), filing_year=2025, operation=_authority_operation_for_test
+                snapshot.revision,
+                (invalid_envelope,),
+                filing_year=_FILING_YEAR,
+                operation=_authority_operation_for_test,
             )
 
         assert str(excinfo.value) == (
@@ -760,8 +765,8 @@ def test_annual_partition_reader_refuses_a_persisted_available_generated_pair_mi
                 CalculationSourceContext(
                     bucket_id=_FIFO_BUCKET_ID,
                     modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
+                    filing_year=_FILING_YEAR,
+                    period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                     revision=snapshot.revision,
                 ),
             )
@@ -795,10 +800,10 @@ def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp
         snapshot = modelo_390_annual_snapshot()
 
         carried_values = resolve_iva_compensation_annual_partition_binding_values(
-            snapshot.revision, (carried,), filing_year=2025, operation=_authority_operation_for_test
+            snapshot.revision, (carried,), filing_year=_FILING_YEAR, operation=_authority_operation_for_test
         )
         refunded_values = resolve_iva_compensation_annual_partition_binding_values(
-            snapshot.revision, (refunded,), filing_year=2025, operation=_authority_operation_for_test
+            snapshot.revision, (refunded,), filing_year=_FILING_YEAR, operation=_authority_operation_for_test
         )
 
         assert carried_values[BOX_97_BINDING] == Decimal("25.00")
@@ -847,6 +852,6 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
             resolve_iva_compensation_annual_partition_binding_values(
                 modelo_390_annual_snapshot().revision,
                 (conflicting,),
-                filing_year=2025,
+                filing_year=_FILING_YEAR,
                 operation=_authority_operation_for_test,
             )

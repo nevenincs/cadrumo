@@ -40,6 +40,7 @@ from ....domain.calculations.registry.binding_terminal_audit import (
     expected_terminal_origins,
 )
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ...modelo.profile_binding import resolve_profile_sourced_bindings
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
@@ -47,12 +48,13 @@ from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+_FILING_YEAR = newest_authored_edition("100")
+_CLOCK = datetime(filing_year_envelope().horizon, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 
 
 def _snapshot() -> RegistrySnapshot:
-    return published_snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=_FILING_YEAR, period="0A")
 
 
 def _profile_record() -> UserProfileRecord:

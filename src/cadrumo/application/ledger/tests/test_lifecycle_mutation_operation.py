@@ -48,6 +48,7 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -56,12 +57,14 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _TRANSACTION_ID = "a" * 64
 _EVENT_ID = "e" * 64
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 _OPERATIONS: tuple[LedgerLifecycleOperationId, ...] = (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_STASH_OPERATION_DEFINITION_ID,
@@ -82,8 +85,8 @@ def _projection(operation_id: LedgerLifecycleOperationId) -> LedgerLifecycleMuta
         operation_id=operation_id,
         transaction=LedgerTransactionProjection(
             transaction_id=_TRANSACTION_ID,
-            date="2026-05-08",
-            booked_date="2026-05-08",
+            date=date(_YEAR, 5, 8).isoformat(),
+            booked_date=date(_YEAR, 5, 8).isoformat(),
             value_date=None,
             amount="123.45",
             currency="EUR",
@@ -327,7 +330,7 @@ async def test_prewrite_finalized_blocker_refusal_preserves_typed_recovery_facts
         "work_unit_id": "c" * 64,
         "calculation_revision_id": "d" * 64,
         "modelo": "303",
-        "filing_year": "2026",
+        "filing_year": str(_YEAR),
         "period": "1T",
         "blocking_reference_count": "2",
     }
@@ -506,7 +509,7 @@ def _stored_row(
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id,
-        booked_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
         value_date=None,
         amount=Decimal("100.00"),
         currency="EUR",

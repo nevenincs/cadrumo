@@ -30,6 +30,7 @@ from ...application.workflow.persistence import workflow_state_repository
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEventObjectType
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_audit_operation_composition import build_modelo_audit_operation_ports
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -40,14 +41,17 @@ from .conformance_family_contract import (
 )
 from .modelo_operation_test_support import seeded_modelo_work_unit
 
+_YEAR = filing_year_envelope().horizon
+
+
 _MODELO = "303"
-_PERIOD = PublicPeriod(filing_year=2025, code="1T")
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 _LOCAL_WORKBOOK_TABS = ("Entradas", "Cálculos", "Procedencia", "Tarifas", "Detalle", "Evidencia", "Guía")
 
 
 def _prepare_export(context: ConformanceFamilyContext) -> ConformancePreparation:
     profile_id = context.profile_id
-    output = (context.input_root / "modelo-303-2025-1T.xlsx").resolve()
+    output = (context.input_root / f"modelo-303-{_YEAR}-1T.xlsx").resolve()
     revision = context.operation.snapshot(_MODELO, filing_year=_PERIOD.filing_year, period=_PERIOD.code).revision.id
 
     def verify(outcome: ConformanceOutcome) -> None:
@@ -106,7 +110,7 @@ MODELO_SPREADSHEET_CONFORMANCE_FAMILY = ConformanceFamily(
 _RETAINED_MODELO_REPORTS_PRIVATE_ADDRESS = "audit-private-source-address"
 _RETAINED_MODELO_REPORTS_PRIVATE_NOTE = "synthetic private audit note"
 _RETAINED_MODELO_REPORTS_EVIDENCE = b"synthetic audit evidence"
-_RETAINED_MODELO_REPORTS_PERIOD = PublicPeriod(filing_year=2025, code="1T")
+_RETAINED_MODELO_REPORTS_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 
 
 def _retained_modelo_reports_prepare_audit(context: ConformanceFamilyContext) -> ConformancePreparation:
@@ -188,7 +192,7 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
     before_workflow = workflow.load()
     assert before_workflow.model_copy(update={"updated_at": seed_workflow.updated_at}) == seed_workflow
     assert before_workflow.updated_at >= seed_workflow.updated_at
-    snapshot = context.operation.snapshot("130", filing_year=2025, period="1T")
+    snapshot = context.operation.snapshot("130", filing_year=_YEAR, period="1T")
 
     def verify(outcome: ConformanceOutcome) -> None:
         assert session_store.load_token(profile) is None
@@ -219,7 +223,7 @@ def _retained_modelo_reports_prepare_spreadsheet(context: ConformanceFamilyConte
             }
             assert "130" in guide_values
             assert str(snapshot.revision.id) in guide_values
-            assert "1T / 2025" in guide_values
+            assert f"1T / {_YEAR}" in guide_values
             assert workbook[TabName.PROVENANCE.value].max_row > 1
         finally:
             workbook.close()

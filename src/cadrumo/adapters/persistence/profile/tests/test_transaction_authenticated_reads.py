@@ -166,7 +166,7 @@ def _mutate_payload(field: str, value: object) -> Callable[[dict[str, object]], 
     [
         ("raw.amount", "-1.00"),
         ("direction", "sideways"),
-        ("modified_at", "2026-01-01T00:00:00"),
+        ("modified_at", "1980-01-01T00:00:00"),
         ("concepto_ingreso", "bogus_concepto"),
         ("cash_accounting_treatment", "deferred"),
         ("unexpected", "value"),

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.hashing import sha256_hex
@@ -57,6 +58,8 @@ from ..catalogue_intake_operation_ports import (
 from ..catalogue_intake_projection import project_invoice_intake_result
 from ..catalogue_intake_refusal import INVOICE_WIZARD_VALIDATION_REFUSAL_CODE
 from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
@@ -154,7 +157,7 @@ def _wizard() -> intake_contracts.InvoiceWizardRequest:
         counterparty_nif="B00010157",
         counterparty_name="Synthetic supplier",
         invoice_number="WIZARD-1",
-        invoice_date="2026-05-01",
+        invoice_date=date(_YEAR, 5, 1).isoformat(),
         taxable_base="100.00",
         iva_rate="21",
         currency="EUR",
@@ -398,7 +401,11 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
-    source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nB00000281,Supplier,BOOK-1,2026-05-01,100.00,21,x\nB00000034,Supplier,BOOK-2,invalid,100.00,21,y\n"
+    source = (
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\n"
+        f"B00000281,Supplier,BOOK-1,{date(_YEAR, 5, 1).isoformat()},100.00,21,x\n"
+        "B00000034,Supplier,BOOK-2,invalid,100.00,21,y\n"
+    ).encode()
     path.write_bytes(source)
     request = _wire(
         intake_contracts.InvoiceImportRequest(

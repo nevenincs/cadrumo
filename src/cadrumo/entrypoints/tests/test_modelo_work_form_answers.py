@@ -39,12 +39,13 @@ from ...application.modelo.work_form_models import (
 )
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from ..adapter_composition import profile_adapter_composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PREVIOUS_YEAR_INCOME = "irpf.previous_year_economic_activity_net_income"
 _EARLIER_NEGATIVE_RESULTS = "modelo-130-resultados-negativos-anteriores"
 #: What the filer answers, by the box whose field takes it: the earlier year's income above the 12,000 euro

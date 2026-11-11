@@ -24,14 +24,18 @@ from ....application.live.verify_capture_operation import (
 )
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_verify_capture as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 9, 29, 10, 30, tzinfo=UTC)
+_NOW = datetime(_YEAR, 9, 29, 10, 30, tzinfo=UTC)
 _NIF = "B00015016"
 _OBSERVATION_ID = "c" * 64
 

@@ -20,19 +20,22 @@ from datetime import date
 import pytest
 
 from ....core.parsing.dates import parse_date
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..verification_predicates import parse_predicate_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 #: Forms an operator or the registry cutoff literal legitimately uses.
 ACCEPTED = {
-    "2024-02-09": date(2024, 2, 9),
-    "01/02/2024": date(2024, 2, 1),
-    "01-02-2024": date(2024, 2, 1),
+    date(_YEAR, 2, 9).isoformat(): date(_YEAR, 2, 9),
+    f"01/02/{_YEAR}": date(_YEAR, 2, 1),
+    f"01-02-{_YEAR}": date(_YEAR, 2, 1),
 }
 
 #: Under-specified entries: a date the operator has not fully stated.
-UNDER_SPECIFIED = ("1/2/2024", "2024-2-9", "1-2-2024")
+UNDER_SPECIFIED = (f"1/2/{_YEAR}", f"{_YEAR}-2-9", f"1-2-{_YEAR}")
 
 
 @pytest.mark.parametrize(("raw", "expected"), ACCEPTED.items())
@@ -46,14 +49,24 @@ def test_under_specified_dates_yield_no_eligibility_signal(raw: str) -> None:
     assert parse_predicate_date(raw) is None
 
 
-@pytest.mark.parametrize("raw", ["", "   ", "not-a-date", "2024-13-01", "32/01/2024", "9/9/24"])
+@pytest.mark.parametrize("raw", ["", "   ", "not-a-date", f"{_YEAR}-13-01", f"32/01/{_YEAR}", "9/9/24"])
 def test_blank_and_invalid_values_remain_no_signal(raw: str) -> None:
     assert parse_predicate_date(raw) is None
 
 
 @pytest.mark.parametrize(
     "raw",
-    [*ACCEPTED, *UNDER_SPECIFIED, "", "   ", "not-a-date", "2024-13-01", "32/01/2024", "9/9/24", "20240102"],
+    [
+        *ACCEPTED,
+        *UNDER_SPECIFIED,
+        "",
+        "   ",
+        "not-a-date",
+        f"{_YEAR}-13-01",
+        f"32/01/{_YEAR}",
+        "9/9/24",
+        f"{_YEAR}0102",
+    ],
 )
 def test_predicate_never_accepts_what_the_canonical_parser_refuses(raw: str) -> None:
     """The invariant, stated as a relation rather than a value table.

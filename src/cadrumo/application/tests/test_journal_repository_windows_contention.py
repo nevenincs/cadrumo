@@ -60,7 +60,7 @@ def _repository(storage_root: Path) -> JournalRepositoryBase[_Operation]:
 
 
 def _operation(note: str) -> _Operation:
-    return _Operation(operation_id=_OPERATION_ID, started_at=datetime(2026, 9, 24, tzinfo=UTC), note=note)
+    return _Operation(operation_id=_OPERATION_ID, started_at=datetime(1980, 9, 24, tzinfo=UTC), note=note)
 
 
 @contextmanager

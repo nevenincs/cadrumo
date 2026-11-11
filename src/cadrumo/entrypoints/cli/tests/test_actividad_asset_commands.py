@@ -19,6 +19,7 @@ from cadrumo.application.cli_exception_preconditions import nested_terminal_prec
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -50,6 +51,9 @@ from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+YEAR = filing_year_envelope().horizon
+DISPOSAL_DATE = date(YEAR, 3, 1).isoformat()
 
 
 def test_activity_asset_group_exposes_the_shared_operation_set() -> None:
@@ -98,7 +102,7 @@ def test_activity_asset_read_and_describe_commands_resolve_registered_output_sch
         ["list"],
         ["plan", "asset-1"],
         ["timeline", "asset-1"],
-        ["form-options", "--asset-kind", "material", "--tax-year", "2025"],
+        ["form-options", "--asset-kind", "material", "--tax-year", str(YEAR)],
         ["acquisition-candidates"],
     ],
 )
@@ -119,7 +123,7 @@ def test_activity_asset_asset_commands_require_the_positional_asset_id(command: 
 
 def test_activity_asset_form_options_refuses_an_unknown_asset_kind() -> None:
     result = invoke_cached_cli(
-        ["app", "ledger", "actividad-asset", "form-options", "--asset-kind", "vehicle-fleet", "--tax-year", "2025"]
+        ["app", "ledger", "actividad-asset", "form-options", "--asset-kind", "vehicle-fleet", "--tax-year", str(YEAR)]
     )
 
     assert result.exit_code != 0
@@ -157,7 +161,7 @@ def _revision() -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="test allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -195,9 +199,9 @@ def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_ident
         asset_id=revision.asset_id,
         asset_revision_id=revision.revision_id,
         asset_kind=revision.asset_kind,
-        tax_year=2025,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        tax_year=YEAR,
+        covered_from=date(YEAR, 1, 1),
+        covered_until=date(YEAR + 1, 1, 1),
         amount=Decimal("300.00"),
         schedule_fingerprint="c" * 64,
         authority_generation="test-authority",
@@ -240,17 +244,17 @@ def test_an_undeclared_vehicle_refusal_names_the_live_correct_command() -> None:
 
 
 def test_a_disposal_preview_states_its_proceeds_and_costs_or_is_refused() -> None:
-    stated = stated_disposal("2026-03-01", "sale", "1200.50", "10.25", None, None, None)
+    stated = stated_disposal(DISPOSAL_DATE, "sale", "1200.50", "10.25", None, None, None)
 
     assert stated is not None
     assert stated.proceeds == PublicDecimal(decimal="1200.50")
     assert stated.transmission_costs == PublicDecimal(decimal="10.25")
     assert stated_disposal(None, None, None, None, None, None, None) is None
     with pytest.raises(ValidationError) as refused:
-        stated_disposal("2026-03-01", "sale", None, "10.25", None, None, None)
+        stated_disposal(DISPOSAL_DATE, "sale", None, "10.25", None, None, None)
     assert [error["loc"] for error in refused.value.errors()] == [("proceeds",)]
     with pytest.raises(ValidationError) as refused_both:
-        stated_disposal("2026-03-01", "sale", None, None, None, None, None)
+        stated_disposal(DISPOSAL_DATE, "sale", None, None, None, None, None)
     assert [error["loc"] for error in refused_both.value.errors()] == [("proceeds",), ("transmission_costs",)]
 
 
@@ -274,9 +278,9 @@ def test_activity_asset_forecast_refuses_a_caller_authored_authority_envelope(re
             retired_option,
             '{"annual_rate":"1"}',
             "--covered-from",
-            "2025-01-01",
+            date(YEAR, 1, 1).isoformat(),
             "--covered-until",
-            "2026-01-01",
+            date(YEAR + 1, 1, 1).isoformat(),
         ],
     )
 
@@ -307,7 +311,7 @@ def test_activity_asset_plan_lines_label_the_served_minimum_and_flag_an_incomple
     complete: bool,
 ) -> None:
     row = ActivityAssetPlanRow(
-        tax_year=2025,
+        tax_year=YEAR,
         method=AmortizationMethod.LINEAR,
         claimed=PublicDecimal(decimal="0.00"),
         claim_state=ActivityAssetClaimState.NOT_DUE,

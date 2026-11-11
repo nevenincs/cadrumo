@@ -30,6 +30,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -42,7 +43,7 @@ from .runtime_profile_backend import runtime_cli_profile
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _LABEL = "Modelo 100 identity export position test profile"
-_FILING_YEAR = 2025
+_FILING_YEAR = newest_authored_edition("100")
 _PERIOD = "0A"
 #: What the profile below states for each identity casilla. Names are stored
 #: as AEAT writes them, so the calculated and the exported spelling are one text.
@@ -149,7 +150,7 @@ def test_each_profile_identity_value_is_exported_at_its_declared_position(
 ) -> None:
     _seed_salaried_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(_FILING_YEAR)
+        modelo="100", filing_year=_FILING_YEAR, period=_PERIOD, revision=str(revision_covering("100", _FILING_YEAR).id)
     )
     calculated = _cli_json("app", "modelo", "work", "calculate", work_unit_id, *_CALCULATE_FLAGS)
     _cli_json("app", "modelo", "work", "verify", calculated["calculation_revision_id"])

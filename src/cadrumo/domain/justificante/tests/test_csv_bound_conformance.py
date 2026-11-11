@@ -39,11 +39,13 @@ from pydantic import AnyHttpUrl, ValidationError
 from ....core.aeat_csv import AEAT_CSV_MAX_LENGTH, AEAT_CSV_MIN_LENGTH, is_aeat_csv
 from ....core.period import Period
 from ....tests.aeat_literal_fixtures import COTEJO_VERIFICATION_URL_FIXTURE
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 # --- Length axis. Literal tokens, counted by the guard test below. ------------
 _LEN_07 = "A1B2C3D"
@@ -122,17 +124,17 @@ def _receipt_with_csv(value: str) -> Justificante:
     return Justificante(
         csv=value,
         modelo="303",
-        ejercicio="2025",
+        ejercicio=str(_YEAR),
         period=_PERIOD,
         presentation_id="3032512345678",
-        presented_at=datetime(2026, 4, 18, 11, 5, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 18, 11, 5, 0, tzinfo=UTC),
         tax_id="12345678Z",
         total_a_ingresar=Decimal("1234.56"),
         total_a_devolver=Decimal("78.90"),
         verification_url=AnyHttpUrl(COTEJO_VERIFICATION_URL_FIXTURE),
-        source_pdf_path=Path("justificantes/303-2025-1T.pdf"),
+        source_pdf_path=Path(f"justificantes/303-{_YEAR}-1T.pdf"),
         source_pdf_sha256="3f" * 32,
-        parsed_at=datetime(2026, 4, 18, 11, 7, 30, tzinfo=UTC),
+        parsed_at=datetime(_YEAR, 4, 18, 11, 7, 30, tzinfo=UTC),
     )
 
 

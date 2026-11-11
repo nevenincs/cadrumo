@@ -21,6 +21,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
@@ -28,6 +29,8 @@ from .ledger_action_persistence_support import (
     purchase_invoice,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -43,14 +46,14 @@ def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, i
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 idempotency_key=idempotency_key,
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
     return created.ref.transaction_id
 
@@ -73,14 +76,14 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 purchase_invoice_evidence_id="missing-purchase-evidence",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -104,14 +107,14 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 attachment_ids=("a" * 64,),
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -139,14 +142,14 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -168,7 +171,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
             sha256=hashlib.sha256(body).hexdigest(),
             mime_type="application/pdf",
             bytes_size=len(body),
-            captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 4, 9, 0, tzinfo=UTC),
             bucket_id=OTHER_BUCKET_ID,
             captured_by="operator-B",
             source_command="aeat app ledger attach",
@@ -188,14 +191,14 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
                 attachment_ids=(attachment_id,),
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     assert transaction_repository.load().transactions == {}
@@ -232,7 +235,7 @@ def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRe
             purchase_invoice_evidence_id="missing-purchase-evidence",
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(transaction_id)
@@ -263,7 +266,7 @@ def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: Secu
             purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(transaction_id)
@@ -291,7 +294,7 @@ def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObject
             attachment_ids=("a" * 64,),
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(transaction_id)
@@ -313,7 +316,7 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
             sha256=hashlib.sha256(body).hexdigest(),
             mime_type="application/pdf",
             bytes_size=len(body),
-            captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 4, 9, 0, tzinfo=UTC),
             bucket_id=OTHER_BUCKET_ID,
             captured_by="operator-B",
             source_command="aeat app ledger attach",
@@ -337,7 +340,7 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
             attachment_ids=(attachment_id,),
             actor="operator-B",
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(transaction_id)

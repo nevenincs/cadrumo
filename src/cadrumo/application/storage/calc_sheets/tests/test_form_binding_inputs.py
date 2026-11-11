@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormPlacementDefinition,
     FormSectionDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..engine import build_export_plan
@@ -28,6 +29,8 @@ from ..layout import plan_layout
 from ..records import TabName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _with_bindings(snapshot, bindings, blocks):
@@ -84,9 +87,9 @@ def _manual(snapshot, data_type, *, casilla_id=None):
 
 @pytest.mark.parametrize("block_kind", ("field", "grid", "binding_inputs"))
 def test_declared_scalar_form_inputs_get_sources_without_moving_formula_operands(block_kind):
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     binding = _manual(snapshot, "text")
-    baseline = plan_layout(snapshot.revision, bracket_filter_date=date(2025, 12, 31))
+    baseline = plan_layout(snapshot.revision, bracket_filter_date=date(_YEAR, 12, 31))
     if block_kind == "field":
         block = FormFieldBlock(id="manual", binding_id=binding.id)
     elif block_kind == "binding_inputs":
@@ -108,7 +111,7 @@ def test_declared_scalar_form_inputs_get_sources_without_moving_formula_operands
             ),
         )
     changed = _with_bindings(snapshot, (binding,), (block, FormFieldBlock(id="repeat", binding_id=binding.id)))
-    layout = plan_layout(changed.revision, bracket_filter_date=date(2025, 12, 31))
+    layout = plan_layout(changed.revision, bracket_filter_date=date(_YEAR, 12, 31))
     assert all(layout.binding_cells[key] == address for key, address in baseline.binding_cells.items())
     assert layout.date_binding_cells == baseline.date_binding_cells
     assert len([row for row in layout.binding_rows if row.binding == binding.id]) == 1
@@ -122,7 +125,7 @@ def test_declared_scalar_form_inputs_get_sources_without_moving_formula_operands
     ("data_type", "format_type", "value"),
     (
         ("text", "text", "0012"),
-        ("date", "date", "2025-10-05"),
+        ("date", "date", date(_YEAR, 10, 5).isoformat()),
         ("boolean", None, False),
         ("money", "money", Decimal("12.34")),
         ("integer", "integer", Decimal("2")),
@@ -130,7 +133,7 @@ def test_declared_scalar_form_inputs_get_sources_without_moving_formula_operands
     ),
 )
 def test_binding_value_contract_controls_format_without_value_coercion(data_type, format_type, value):
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     binding = _manual(snapshot, data_type)
     changed = _with_bindings(snapshot, (binding,), (FormBindingInputsBlock(id="inputs", binding_ids=(binding.id,)),))
     layout = plan_layout(changed.revision)
@@ -145,7 +148,7 @@ def test_binding_value_contract_controls_format_without_value_coercion(data_type
 
 
 def test_casilla_manual_binding_reuses_existing_input_and_form_reference():
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     binding = _manual(snapshot, "money", casilla_id="01")
     changed = _with_bindings(snapshot, (binding,), (FormFieldBlock(id="input", binding_id=binding.id),))
     layout = plan_layout(changed.revision)
@@ -160,7 +163,7 @@ def test_casilla_manual_binding_reuses_existing_input_and_form_reference():
 
 
 def test_new_form_input_refuses_nonmanual_provider_and_rowset():
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     original = next(binding for binding in snapshot.revision.bindings if binding.source != "manual_input")
     unsupported = original.model_copy(update={"id": "test-unreferenced-provider"})
     changed = _with_bindings(snapshot, (unsupported,), (FormFieldBlock(id="input", binding_id=unsupported.id),))
@@ -177,7 +180,7 @@ def test_new_form_input_refuses_nonmanual_provider_and_rowset():
 
 @pytest.mark.parametrize("casilla_id", ("03", "unknown"))
 def test_manual_binding_cannot_invent_an_input_for_a_computed_or_unknown_casilla(casilla_id):
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     binding = _manual(snapshot, "money", casilla_id=casilla_id)
     changed = _with_bindings(snapshot, (binding,), (FormFieldBlock(id="input", binding_id=binding.id),))
     with pytest.raises(CalcSheetsEngineError, match="not an editable casilla"):

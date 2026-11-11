@@ -20,7 +20,11 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..creation_wizard import WizardFieldError, validate_iva_rate, validate_taxable_base
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -75,7 +79,7 @@ def test_iva_rate_refuses_non_canonical_text_as_a_decimal_failure(raw: str) -> N
     assert isinstance(Decimal(raw), Decimal), raw
 
     with pytest.raises(WizardFieldError) as excinfo:
-        validate_iva_rate(raw, on_date=date(2026, 1, 1))
+        validate_iva_rate(raw, on_date=date(_YEAR, 1, 1))
 
     assert excinfo.value.field == "iva_rate"
     assert "invalid decimal percentage" in excinfo.value.reason
@@ -84,15 +88,15 @@ def test_iva_rate_refuses_non_canonical_text_as_a_decimal_failure(raw: str) -> N
 def test_iva_rate_still_reports_an_unrecognised_but_well_formed_rate() -> None:
     """A conforming number outside the registry slots keeps the slot-table refusal."""
     with pytest.raises(WizardFieldError) as excinfo:
-        validate_iva_rate("17", on_date=date(2026, 1, 1))
+        validate_iva_rate("17", on_date=date(_YEAR, 1, 1))
 
     assert "not a recognised IVA percentage" in excinfo.value.reason
 
 
 @pytest.mark.parametrize("raw", [None, "", "   "])
 def test_iva_rate_treats_absent_input_as_absent(raw: str | None) -> None:
-    assert validate_iva_rate(raw, on_date=date(2026, 1, 1)) is None
+    assert validate_iva_rate(raw, on_date=date(_YEAR, 1, 1)) is None
 
 
 def test_iva_rate_accepts_a_declared_slot() -> None:
-    assert validate_iva_rate("21", on_date=date(2026, 1, 1)) == Decimal("21")
+    assert validate_iva_rate("21", on_date=date(_YEAR, 1, 1)) == Decimal("21")

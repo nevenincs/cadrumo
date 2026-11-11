@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -25,8 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 # A bucket id IS a profile UUID: registration is proven by the capsule named
 # for it, so a descriptive label can never name a bucket a session can open.
 _BUCKET_ID = "3f7b9c21-84ad-4e60-9c15-5a2e6d0b7f38"
-_SECRET_CREATED_AT = datetime(2026, 8, 3, 12, 0, 0, tzinfo=UTC)
-_SECRET_EXPIRES_AT = datetime(2099, 1, 1, tzinfo=UTC)
+_SECRET_CREATED_AT = datetime(1980, 8, 3, 12, 0, 0, tzinfo=UTC)
+# Far-future expiry: 26449 days after creation, so no case reaches it.
+_SECRET_EXPIRES_AT = _SECRET_CREATED_AT + timedelta(days=26449)
 
 
 def test_secret_store_factory_caches_each_explicit_route_independently(tmp_path: Path) -> None:

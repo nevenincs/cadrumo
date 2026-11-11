@@ -14,6 +14,7 @@ import pytest
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..validators import is_eu_member_state_code, validate_country_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -28,7 +29,9 @@ def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
 def test_eu_member_state_codes_match_substrate_catalogue_27_states(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    catalogue = resolve_eu_member_state_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    catalogue = resolve_eu_member_state_catalogue(
+        effective_date=date(filing_year_envelope().horizon, 1, 1), authority=operation
+    )
     northern_ireland = catalogue.require("xi")
     members = tuple(member for member in catalogue.choices if member != northern_ireland)
     assert len(members) == 27
@@ -37,7 +40,9 @@ def test_eu_member_state_codes_match_substrate_catalogue_27_states(
 
 
 def test_is_eu_member_state_code_accepts_each_substrate_member(operation: PinnedAuthorityOperation) -> None:
-    catalogue = resolve_eu_member_state_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    catalogue = resolve_eu_member_state_catalogue(
+        effective_date=date(filing_year_envelope().horizon, 1, 1), authority=operation
+    )
     northern_ireland = catalogue.require("xi")
     for member in (member for member in catalogue.choices if member != northern_ireland):
         assert is_eu_member_state_code(member.value.upper()) is True

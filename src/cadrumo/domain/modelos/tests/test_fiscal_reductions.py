@@ -17,6 +17,7 @@ import pytest
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CoreValidationError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ..errors import PensionReduccionError
@@ -26,10 +27,11 @@ from ..sal_reserva_especial import compute_sal_reserva_especial_dotacion
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ReductionCompute = Callable[..., Decimal]
+_EXERCISE = filing_year_envelope().horizon
 _CONTEXT = ModeloFactResolutionContext(
     authority=PublishedGovernedFactSource(),
-    filing_period=date(2025, 12, 31),
-    devengo_date=date(2025, 12, 31),
+    filing_period=date(_EXERCISE, 12, 31),
+    devengo_date=date(_EXERCISE, 12, 31),
 )
 
 _GUARD_ERROR_CASES: tuple[tuple[str, _ReductionCompute, dict[str, Decimal], str, str], ...] = (

@@ -37,6 +37,7 @@ from typer.core import TyperGroup, TyperOption
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..common import emit_envelope
@@ -45,31 +46,34 @@ from ..modelo_results import WorkCreateResult
 from ..modelo_work_lifecycle_cli import emit_work_create_result
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 
+_YEAR = filing_year_envelope().horizon
+
+
 __all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR + 1, 1, 15, 12, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "30330300-0000-4000-8000-000000000130"
 
 
 def _build_m130_unit() -> WorkUnit:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     wid = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
+        revision_id=open_ended_revision("130").id,
     )
     return WorkUnit(
         work_unit_id=wid,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("130"),
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
-        revision_id="2019-y-siguientes",
-        name="130 2025 1T",
+        revision_id=open_ended_revision("130").id,
+        name=f"130 {_YEAR} 1T",
         created_at=_T0,
         updated_at=_T0,
     )

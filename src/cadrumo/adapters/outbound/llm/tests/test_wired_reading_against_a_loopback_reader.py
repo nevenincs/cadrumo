@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import ClassVar
@@ -60,6 +61,16 @@ def _extract_control_pages_text(data: bytes) -> tuple[str, ...]:
 _CONTROL_TEXT_LAYER_PORTS = EvidenceTextLayerPorts(extract_pages_text=_extract_control_pages_text)
 
 
+def _printed_issue_date() -> str:
+    """The issue date the control document prints, so the reply's anchor is the document's own."""
+    control_text = "\n".join(_extract_control_pages_text(_CONTROL.read_bytes()))
+    printed = re.search(r"Emitida (\d{4}-\d{2}-\d{2})", control_text)
+    assert printed is not None
+    issue_date = printed.group(1)
+    assert isinstance(issue_date, str)
+    return issue_date
+
+
 #: The reply the stub returns. Authored from the control document's OWN printed
 #: forms, so the anchors are real and the upgrade under test is genuine -- except
 #: `iva_amount`, whose anchor is deliberately absent from the document so the
@@ -69,8 +80,8 @@ _READER_REPLY: dict[str, str | None] = {
     "supplier_tax_id_anchor": "B1234567X",
     "invoice_number": "SIN-NUMERO",
     "invoice_number_anchor": "SIN-NUMERO",
-    "invoice_date": "2026-06-11",
-    "invoice_date_anchor": "2026-06-11",
+    "invoice_date": _printed_issue_date(),
+    "invoice_date_anchor": _printed_issue_date(),
     "taxable_base": "766,30",
     "taxable_base_anchor": "766,30",
     "iva_rate": "21",

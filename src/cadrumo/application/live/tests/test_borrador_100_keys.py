@@ -11,6 +11,7 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..borrador_100_keys import (
     BorradorPrintedBoxValue,
@@ -22,9 +23,11 @@ from ..borrador_100_keys import (
 )
 from ..errors import LiveApplicationInputError
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-# In the 2023 revision casilla 0596 is bound to the suffered-withholding work
+# In the published revision casilla 0596 is bound to the suffered-withholding work
 # binding, one of the three credit bindings a borrador snapshot may hold; 0505
 # is a computed casilla.
 _CERTIFICATE: BindingId = "renta-retencion-soportada-trabajo"
@@ -41,7 +44,7 @@ _COMPUTED_CASILLA: CasillaId = "0505"
 
 
 def _revision() -> ModeloRevision:
-    return published_snapshot("100", filing_year=2023, period="0A").revision
+    return published_snapshot("100", filing_year=_YEAR, period="0A").revision
 
 
 def _admit(revision: ModeloRevision, binding_id: BindingId) -> ModeloRevision:
@@ -68,7 +71,13 @@ def _rebind(revision: ModeloRevision, casilla_id: CasillaId, **fields: object) -
 
 
 def test_published_revision_admits_only_the_bindings_marked_prefilled() -> None:
-    assert tuple(borrador_admitted_bindings(_revision())) == _CREDIT_BINDINGS
+    revision = _revision()
+    admitted = tuple(borrador_admitted_bindings(revision))
+
+    assert len(set(admitted)) == len(admitted)
+    assert set(admitted) == {binding.id for binding in revision.bindings if binding.aeat_prefilled}
+    assert set(_CREDIT_BINDINGS) <= set(admitted)
+    assert _UNMARKED not in admitted
 
 
 def test_a_bound_casilla_is_stored_under_its_binding_a_computed_one_is_observed_and_an_undeclared_one_reported() -> (

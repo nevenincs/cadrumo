@@ -48,6 +48,7 @@ from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.observability.tests.envelope_capture import capture_envelopes
 from ....core.observability.tests.fingerprint import compute_db_sha256
 from ....core.time.clock import frozen_clock
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
@@ -58,7 +59,9 @@ from ..ledger_results import LedgerAddResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_INSTANT = datetime(2026, 4, 14, 9, 30, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_INSTANT = datetime(_YEAR, 4, 14, 9, 30, 0, tzinfo=UTC)
 _BUCKET = "28282828-2828-4828-8828-282828282828"
 
 #: Opt-in enrolment of replayable ``--format json`` commands. Grows deliberately;
@@ -96,7 +99,7 @@ def _committed_db_fingerprint(profile: TestRuntimeProfile, snapshot_dir: Path) -
 def _idempotent_command() -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand(
         bucket_id=_BUCKET,
-        booked_date=date(2026, 5, 2),
+        booked_date=date(_YEAR, 5, 2),
         amount=Decimal("25.00"),
         direction=TransactionDirection.OUTGOING,
         description="cash sale",
@@ -163,7 +166,7 @@ def _emit_evidence_add(storage_root: Path, pdf: Path) -> dict[str, object]:
             source_path=pdf,
             supplier="Acme S.L.",
             invoice_number="INV-001",
-            invoice_date="2026-01-15",
+            invoice_date=date(_YEAR, 1, 15).isoformat(),
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("0.21"),
             iva_amount=Decimal("21.00"),

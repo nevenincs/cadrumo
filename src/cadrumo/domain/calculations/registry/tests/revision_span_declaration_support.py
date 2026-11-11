@@ -2,6 +2,28 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import PurePosixPath
+
+from cadrumo.core.resources.bundled_data import bundled_path
+
+
+def _bundled_design_name(modelo: str, publication_url: str) -> str:
+    """The stored filename of the design AEAT published at ``publication_url``.
+
+    A declaration names a design by the URL AEAT publishes it under, and the
+    per-modelo corpus manifest maps that URL to the file the corpus stores. A URL
+    the manifest no longer lists yields a name no stored design carries, so the
+    staleness audits report the declaration instead of this module failing to load.
+    """
+    manifest = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo}", "manifest.json")
+    artefacts = json.loads(manifest.read_text(encoding="utf-8"))["artefacts"]
+    for artefact in artefacts:
+        if artefact["url"] == publication_url:
+            return PurePosixPath(artefact["stored_path"]).name
+    return f"<not bundled: {publication_url}>"
+
+
 #: Designs whose era IS stated but with an OPEN BOUND, which this module refuses to
 #: enumerate for the same reason it refuses ``y siguientes``: turning "everything
 #: before 2001" or "from 2018 4T onward" into a year list invents years AEAT did not
@@ -14,11 +36,17 @@ from __future__ import annotations
 OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
     (
         "111",
-        "04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+        _bundled_design_name(
+            "111",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_2000.pdf",
+        ),
     ): "AEAT titles it '111 - Ejercicios anteriores al 2001': open below, with no earliest ejercicio stated",
     (
         "763",
-        "01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx",
+        _bundled_design_name(
+            "763",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx",
+        ),
     ): "AEAT titles it '763 - Desde 2018 4T y siguientes': open above, and period-qualified",
 }
 
@@ -26,7 +54,8 @@ OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
 #: Designs whose coverage IS stated, on an axis that is not an ejercicio. Each entry
 #: names the axis the file itself uses, so the reason is checkable against the
 #: filename rather than merely asserted. Keyed by ``(modelo, filename)`` -- never by
-#: index or line -- and audited for staleness below.
+#: index or line -- and audited for staleness below. Each filename is resolved from
+#: the AEAT publication URL through the per-modelo corpus manifest.
 #:
 #: This is NOT a place to park a design whose era is merely unknown. An orden-named
 #: design states no coverage at all, and absorbing it here would relabel "nobody
@@ -35,18 +64,30 @@ OPEN_BOUNDED_ERA_DESIGNS: dict[tuple[str, str], str] = {
 NON_EJERCICIO_COVERAGE_AXIS: dict[tuple[str, str], str] = {
     (
         "036",
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx",
+        _bundled_design_name(
+            "036",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v43.xlsx",
+        ),
     ): "censal declaration scoped by the date it comes into force (a day-month-year stamp in the filename), not by ejercicio",
     (
         "036",
-        "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx",
+        _bundled_design_name(
+            "036",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v42.xlsx",
+        ),
     ): "the provisional edition of the same in-force-date scope (the same stamp in the filename)",
     (
         "210",
-        "01-210-devengos-a-partir-de-2026.xlsx",
+        _bundled_design_name(
+            "210",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_26/dr210_2026.xlsx",
+        ),
     ): "non-resident income scoped by DEVENGO ('devengos-a-partir-de-2026'), an accrual span rather than an ejercicio",
     (
         "210",
-        "02-210-devengos-entre-01-06-2022-y-01-01-2026.xls",
+        _bundled_design_name(
+            "210",
+            "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls",
+        ),
     ): "a closed devengo span ('devengos-entre-01-06-2022-y-01-01-2026'), again an accrual axis",
 }

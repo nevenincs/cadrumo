@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -39,6 +39,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.models import (
     IVARegime,
@@ -68,9 +69,9 @@ WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compe
 
 BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 TAXPAYER_NIF = "12345678Z"
-TARGET_YEAR = 2026
+TARGET_YEAR = filing_year_envelope().horizon
 TARGET_PERIOD = "2T"
-DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+DECIDED_AT = datetime(TARGET_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC)
 
 
 M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
@@ -112,7 +113,7 @@ def wallet_observation(
     taxpayer_nif: str = TAXPAYER_NIF,
     target_year: int = TARGET_YEAR,
     target_period: Period = TARGET_PERIOD_VALUE,
-    generation_year: int = 2026,
+    generation_year: int = TARGET_YEAR,
     generation_period: str = "1T",
     captured_at: datetime = DECIDED_AT,
 ):
@@ -268,7 +269,7 @@ def store_operator_profile_with_tax_id(tax_id: str) -> None:
                     UserProfileFact(path="identity.tax_id", value=tax_id),
                     UserProfileFact(path="identity.name", value="Test"),
                     UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(TARGET_YEAR, 1, 1).isoformat()),
                     UserProfileFact(path="activities.description", value="economic activity"),
                     UserProfileFact(path="iva.regime", value=IVARegime("GENERAL")),
                     UserProfileFact(path="provenance.source", value=PROVENANCE_SOURCE_MANUAL_CLI),

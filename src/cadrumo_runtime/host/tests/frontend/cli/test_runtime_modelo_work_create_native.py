@@ -19,6 +19,7 @@ from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATI
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -35,6 +36,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import native_api_cli_session
 from .native_profile_cli_invoke import invoke_native_profile_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,7 +58,7 @@ def _invoke(fixture: NativeCliProfileFixture, *arguments: str) -> Result:
 
 
 def _m130(*extra: str) -> tuple[str, ...]:
-    return ("--modelo", "130", "--year", "2025", "--period", "1T", *extra)
+    return ("--modelo", "130", "--year", str(_YEAR), "--period", "1T", *extra)
 
 
 def test_native_create_reuse_rename_matches_encrypted_work_catalogue(
@@ -99,7 +102,7 @@ def test_native_create_reuse_rename_matches_encrypted_work_catalogue(
             assert stored.name == "Renamed"
             assert stored.current_calculation_revision_id is None
             assert str(stored.modelo) == "130"
-            assert stored.period == Period.from_year_and_code(2025, "1T")
+            assert stored.period == Period.from_year_and_code(_YEAR, "1T")
         finally:
             close_active_bucket_session()
 
@@ -116,11 +119,11 @@ def test_native_applicability_refusal_has_bounded_detail_and_no_work(
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
             "--revision",
-            "2025-y-siguientes",
+            revision_covering("202", _YEAR).id,
         )
         assert refused.exit_code == 2, refused.output
         error = require_error_document(refused.output)["error"]
@@ -196,8 +199,8 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
         return unit.work_unit_id
 
     cases = (
-        ("wrong-period", Period.from_year_and_code(2025, "2T"), True, True, "period_denied"),
-        ("no-commit", Period.from_year_and_code(2025, "1T"), False, True, "operation_denied"),
+        ("wrong-period", Period.from_year_and_code(_YEAR, "2T"), True, True, "period_denied"),
+        ("no-commit", Period.from_year_and_code(_YEAR, "1T"), False, True, "operation_denied"),
     )
     for label, period, commit, result, reason in cases:
         with native_api_cli_session(
@@ -227,7 +230,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
     with native_api_cli_session(
         tmp_path / "no-result",
         scope_for_destination=lambda client_id: _scope(
-            client_id, period=Period.from_year_and_code(2025, "1T"), commit=True, result=False
+            client_id, period=Period.from_year_and_code(_YEAR, "1T"), commit=True, result=False
         ),
         prepare_profile=prepare,
         invoke_cli=run_cadrumo_cli,
@@ -246,7 +249,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
 
     disclosure_only_scope = _scope(
         UUID("5aa00000-0000-4000-8000-0000000000aa"),
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         commit=True,
         result=True,
         result_disclosure=False,
@@ -259,7 +262,7 @@ def test_native_create_requires_matching_period_and_commit_and_result_disclosure
         tmp_path / "no-result-disclosure",
         scope_for_destination=lambda client_id: _scope(
             client_id,
-            period=Period.from_year_and_code(2025, "1T"),
+            period=Period.from_year_and_code(_YEAR, "1T"),
             commit=True,
             result=True,
             result_disclosure=False,
@@ -290,7 +293,7 @@ def test_native_applicability_refusal_detail_requires_result_permission(
     with native_api_cli_session(
         tmp_path,
         scope_for_destination=lambda client_id: _scope(
-            client_id, period=Period.from_year_and_code(2025, "1P"), commit=True, result=False
+            client_id, period=Period.from_year_and_code(_YEAR, "1P"), commit=True, result=False
         ),
         prepare_profile=prepare,
         invoke_cli=run_cadrumo_cli,
@@ -303,11 +306,11 @@ def test_native_applicability_refusal_detail_requires_result_permission(
             "--modelo",
             "202",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1P",
             "--revision",
-            "2025-y-siguientes",
+            revision_covering("202", _YEAR).id,
         )
         assert denied.exit_code == 2, denied.output
         error = require_error_document(denied.output)["error"]

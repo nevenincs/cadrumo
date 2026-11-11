@@ -18,16 +18,21 @@ rather than a tidiness item.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import TypedDict
 
 import pytest
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..evidence import (
     MediaKind,
     derive_keyed_purchase_invoice_evidence_id,
     derive_purchase_invoice_evidence_id,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -103,14 +108,14 @@ def test_the_keyless_derivation_still_folds_the_clock_deliberately() -> None:
         "media_kind": MediaKind.PDF,
         "supplier": "ESB00015016",
         "invoice_number": "F-1",
-        "invoice_date": "2024-11-15",
+        "invoice_date": date(_YEAR - 2, 11, 15).isoformat(),
         "taxable_base": None,
         "iva_rate": None,
         "iva_amount": None,
         "notes": "",
     }
-    early = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC), **fields)
-    later = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 1, tzinfo=UTC), **fields)
+    early = derive_purchase_invoice_evidence_id(created_at=datetime(_YEAR - 2, 11, 15, 9, 0, tzinfo=UTC), **fields)
+    later = derive_purchase_invoice_evidence_id(created_at=datetime(_YEAR - 2, 11, 15, 9, 1, tzinfo=UTC), **fields)
 
     assert early != later, "the keyless path is deliberately additive; two instants are two records"
 
@@ -128,7 +133,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
 
     from ..evidence import PurchaseInvoiceEvidence, divergent_evidence_fields
 
-    stamp = datetime(2024, 11, 15, 9, 0, tzinfo=UTC)
+    stamp = datetime(_YEAR - 2, 11, 15, 9, 0, tzinfo=UTC)
     prior = PurchaseInvoiceEvidence(
         evidence_id="ev-1",
         bucket_id=_BUCKET,
@@ -138,7 +143,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         media_kind=MediaKind.PDF,
         supplier="ESB00015016",
         invoice_number="F-1",
-        invoice_date="2024-11-15",
+        invoice_date=date(_YEAR - 2, 11, 15).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -153,7 +158,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         media_kind=MediaKind.PDF,
         supplier="ESB00015016",
         invoice_number="F-1",
-        invoice_date="2024-11-15",
+        invoice_date=date(_YEAR - 2, 11, 15).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),
@@ -169,7 +174,7 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
         media_kind=MediaKind.PDF,
         supplier="ESB00015016",
         invoice_number="F-1",
-        invoice_date="2024-11-15",
+        invoice_date=date(_YEAR - 2, 11, 15).isoformat(),
         taxable_base=Decimal("250.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),

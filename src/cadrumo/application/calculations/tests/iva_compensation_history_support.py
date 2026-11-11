@@ -12,6 +12,7 @@ from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
@@ -77,13 +78,14 @@ def state(
     )
 
 
-def wallet(amount: Decimal, *, generation_year: int = 2022) -> _WalletObservation:
+def wallet(amount: Decimal, *, generation_year: int | None = None) -> _WalletObservation:
+    target_year = filing_year_envelope().horizon
     return _WalletObservation(
         taxpayer_nif=TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
+        target_year=target_year,
+        target_period=Period.from_year_and_code(target_year, "2T"),
         total_pending=amount,
         source_url="https://example.test/iva-compensation-wallet",
-        captured_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
-        generation_year=generation_year,
+        captured_at=datetime(target_year, 5, 19, 10, 0, tzinfo=UTC),
+        generation_year=filing_year_envelope().floor if generation_year is None else generation_year,
     )

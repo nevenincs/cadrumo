@@ -20,10 +20,13 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.persistence_ports import LedgerPersistenceConflictError
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.repository import transaction_object_key
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -31,7 +34,7 @@ _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 
 def _transaction(provider_id: str, *, description: str = "ledger row") -> Transaction:
-    booked = date(2026, 4, 5)
+    booked = date(_YEAR, 4, 5)
     raw = RawTransaction(
         provider_transaction_id=provider_id,
         booked_date=booked,
@@ -45,7 +48,7 @@ def _transaction(provider_id: str, *, description: str = "ledger row") -> Transa
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
@@ -68,7 +71,7 @@ def _transaction(provider_id: str, *, description: str = "ledger row") -> Transa
             "irpf_category": None,
             "usage_ratio_id": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )

@@ -185,7 +185,7 @@ class TestApoderadoEnvelopeContractParity:
     """
 
     _CANONICAL_BUCKET = "26262626-2626-4262-8262-262626262626"
-    _INSTANT = datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
+    _INSTANT = datetime(1980, 5, 14, 12, 0, tzinfo=UTC)
 
     def _status(self, **overrides: object) -> ApoderadoStatusResult:
         fields: dict[str, object] = {"bucket_id": self._CANONICAL_BUCKET, "configured": False}

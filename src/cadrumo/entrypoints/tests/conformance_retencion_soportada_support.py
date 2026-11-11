@@ -25,6 +25,7 @@ from ...application.retencion_soportada_certificado.results import (
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from ..retencion_soportada_certificado_composition import build_retencion_soportada_certificado_ports
 from .conformance_family_contract import (
@@ -35,9 +36,12 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_EJERCICIO = 2025
+_YEAR = filing_year_envelope().horizon
+
+
+_EJERCICIO = _YEAR - 1
 _CERTIFICATE_BYTES = b"%PDF-1.4 synthetic payer certificate"
-_CAPTURED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 _PAYER = "B00010090"
 _SEEDING_TAXPAYER = "00000000T"
 

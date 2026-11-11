@@ -23,11 +23,21 @@ from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEF
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
 from ..surfaces import MCP_SURFACES, McpSurfaceName
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+
+def _supported_prior_year() -> int:
+    """The supported year before the horizon, read from the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon - 1
+
+
+_PRIOR_YEAR = _supported_prior_year()
 
 _PROFILE_CALL: tuple[str, dict[str, object]] = ("observe", {"observation": {}})
 """A tool that reads the profile's own operations, so it is answered only under a session."""
@@ -141,7 +151,7 @@ async def test_installed_stdio_answers_a_handshaking_client_the_same_way(tmp_pat
             handshake = await client.initialize()
             status = await client.call_tool("status", {})
             authority = await client.call_tool(
-                "authority", {"query": "describe", "modelo": "100", "filing_year": 2024, "period": "0A"}
+                "authority", {"query": "describe", "modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"}
             )
             removed = [await client.call_tool(name, {}) for name in sorted(_REMOVED_TOOLS)]
 

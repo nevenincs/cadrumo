@@ -52,6 +52,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -63,7 +64,7 @@ from ...aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_v
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "303"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 _PROFILE_ID = "m303-special-test"
 
@@ -207,8 +208,8 @@ def _recargo_purchase() -> Transaction:
     """A recargo-equivalencia retailer purchase: input IVA + RE surcharge, non-deductible."""
     raw = RawTransaction(
         provider_transaction_id="recargo-purchase-001",
-        booked_date=date(2025, 2, 1),
-        value_date=date(2025, 2, 1),
+        booked_date=date(_YEAR, 2, 1),
+        value_date=date(_YEAR, 2, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Mayorista SL",
@@ -218,7 +219,7 @@ def _recargo_purchase() -> Transaction:
             source_sha256="e" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2025, 2, 1, 10, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 2, 1, 10, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},

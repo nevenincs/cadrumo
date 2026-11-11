@@ -7,12 +7,16 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .cli_runner import invoke_cached_cli
 from .modelo_fixtures import active_cli_profile_fixture
 
 __all__ = ["active_cli_profile_fixture"]
+
+_YEAR = filing_year_envelope().horizon
+_FLOOR_REVISION = str(revision_covering("303", filing_year_envelope().floor).id)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -26,7 +30,7 @@ _HELP_SURFACES = (
     ["app", "modelo", "export", "--help"],
 )
 _INVALID_PERIODS = (
-    "2026Q1",  # year-prefixed form ambiguous to the resolver
+    f"{_YEAR}Q1",  # year-prefixed form ambiguous to the resolver
     "INVALID",  # completely invalid
     "Q1X",  # garbled quarter token
 )
@@ -128,7 +132,7 @@ def test_modelo_help_surfaces_do_not_leak_registry_validation() -> None:
 def test_reported_top_level_revisions_typo_is_usage_error() -> None:
     """The reported stale ``modelo revisions`` path is not masked by registry errors."""
 
-    result = invoke_cached_cli(["app", "modelo", "revisions", "--modelo", "130", "--year", "2024", "--period"])
+    result = invoke_cached_cli(["app", "modelo", "revisions", "--modelo", "130", "--year", str(_YEAR), "--period"])
 
     assert result.exit_code != 0, result.output
     assert "No such command 'revisions'" in result.output
@@ -159,11 +163,11 @@ def test_work_create_rejects_invalid_period_at_create_time(_active_cli_profile: 
                 "--modelo",
                 "303",
                 "--year",
-                "2026",
+                str(_YEAR),
                 "--period",
                 period,
                 "--revision",
-                "2022",
+                _FLOOR_REVISION,
             ],
         )
         output_lower = result.output.lower()
@@ -195,11 +199,11 @@ def test_work_create_rejects_unknown_modelo(_active_cli_profile: None) -> None:
             "--modelo",
             "999",
             "--year",
-            "2026",
+            str(_YEAR),
             "--period",
             "1T",
             "--revision",
-            "2022",
+            _FLOOR_REVISION,
         ],
     )
 
@@ -232,7 +236,7 @@ def test_work_create_rejects_out_of_range_year(_active_cli_profile: None) -> Non
                 "--period",
                 "Q1",
                 "--revision",
-                "2022",
+                _FLOOR_REVISION,
             ],
         )
         if result.exit_code == 0:
@@ -267,7 +271,7 @@ def test_work_create_rejects_unknown_revision(_active_cli_profile: None) -> None
             "--modelo",
             "303",
             "--year",
-            "2026",
+            str(_YEAR),
             "--period",
             "1T",
             "--revision",

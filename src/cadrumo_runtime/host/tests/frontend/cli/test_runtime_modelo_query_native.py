@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -26,6 +28,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -118,7 +122,7 @@ def _assert_override_preview(
 def _assert_inventory_is_grounded(
     profile: NativeCliProfileFixture, operation: PinnedAuthorityOperation
 ) -> dict[str, Any]:
-    inventory_result = _invoke(profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T")
+    inventory_result = _invoke(profile, "app", "modelo", "requires", "303", "--year", str(_YEAR), "--period", "1T")
     assert inventory_result.exit_code == 0, inventory_result.output
     inventory = unwrap_cli_result(inventory_result)
     assert inventory["authority_generation"] == operation.generation.logical_generation
@@ -163,14 +167,14 @@ def _assert_hungarian_listing_and_inventory(
     assert isinstance(hungarian_rows, list) and len(hungarian_rows) == len(rows)
     _assert_readiness_labels(hungarian_rows, "hu")
     hungarian_inventory_result = _invoke(
-        profile, "app", "modelo", "requires", "303", "--year", "2025", "--period", "1T", language="hu"
+        profile, "app", "modelo", "requires", "303", "--year", str(_YEAR), "--period", "1T", language="hu"
     )
     assert hungarian_inventory_result.exit_code == 0, hungarian_inventory_result.output
     hungarian_inventory = unwrap_cli_result(hungarian_inventory_result)
     assert hungarian_inventory["authority_generation"] == operation.generation.logical_generation
     with override_settings(cadrumo_output_language="hu"):
         canonical_casillas = registry_casillas_for_registry_scope(
-            "303", filing_year=2025, period="1T", operation=operation
+            "303", filing_year=_YEAR, period="1T", operation=operation
         )
     labels = {row.casilla_id: row.label for row in canonical_casillas.rows}
     for bucket in _INVENTORY_BUCKETS:
@@ -195,11 +199,11 @@ def test_native_modelo_binding_preview_inventory_and_readiness(
                 "identity.name": "Native",
                 "identity.surnames": "Query",
                 "activities.description": "design",
-                "censo.activity_start_date": "2025-01-01",
+                "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
                 "contact.postcode": "28013",
             },
         )
-        scope = ("--modelo", "303", "--year", "2025", "--period", "1T")
+        scope = ("--modelo", "303", "--year", str(_YEAR), "--period", "1T")
         listed = _invoke(profile, "app", "modelo", "bindings", "list", *scope)
         assert listed.exit_code == 0, listed.output
         listing = unwrap_cli_result(listed)

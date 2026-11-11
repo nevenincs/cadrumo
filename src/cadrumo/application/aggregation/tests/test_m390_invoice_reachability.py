@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.modelo import Modelo
@@ -53,9 +54,9 @@ _INVOICE_SOURCES = frozenset({"collectible_invoice", "payable_invoice"})
 #: The ejercicio these structural assertions read a revision for. They are
 #: claims about a revision's DECLARED binding sources, not about any year's
 #: figures, so the ejercicio only has to be one AEAT has published: modelo 390's
-#: annual design for an ejercicio appears late in that same year, so 2026 is not
-#: published yet and 2025 is the latest that is.
-_STRUCTURAL_EJERCICIO = 2025
+#: annual design for an ejercicio appears late in that same year, so the horizon
+#: ejercicio is not filing grade yet and the newest filing-grade one is the latest published.
+_STRUCTURAL_EJERCICIO = filing_grade_exercises("390")[-1]
 
 
 def _revision(modelo_id: str, period: str):

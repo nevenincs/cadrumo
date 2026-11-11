@@ -14,11 +14,14 @@ from cadrumo.application.ledger.models import LedgerReviewQuery, LedgerSourceImp
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     import_ledger_source,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,7 +82,7 @@ def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
         bucket_event_repository=event_repository,
     ) as ports:
         quarter_rows = query_ledger_review_rows(
-            LedgerReviewQuery(bucket_id=BUCKET_ID, period=Period.from_year_and_code(2026, "2T")),
+            LedgerReviewQuery(bucket_id=BUCKET_ID, period=Period.from_year_and_code(_YEAR, "2T")),
             ports=ports,
         )
     with ledger_ports_for_test(

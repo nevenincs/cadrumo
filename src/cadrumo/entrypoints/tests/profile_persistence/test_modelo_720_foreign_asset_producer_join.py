@@ -64,6 +64,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.user_profile.values import create_user_profile_record
 from .observation_seeding_support import save_stamped_observation
 
@@ -112,10 +113,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 _BUCKET_ID = "4c7f1b90-6d2e-4a13-9f58-2b7c8e0a1d64"
-_CLOCK_N = datetime(2024, 3, 15, 9, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 9, 0, 0, tzinfo=UTC)
-_YEAR_N = 2023
-_YEAR_N_PLUS_1 = 2024
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
+_CLOCK_N = datetime(_YEAR_N + 1, 3, 15, 9, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 3, 15, 9, 0, 0, tzinfo=UTC)
 _PERIOD = "0A"
 
 _CUENTAS_VALORACION: CasillaId = validated_casilla_id("cuentas.valoracion", surface="_CUENTAS_VALORACION")
@@ -190,7 +191,7 @@ def _register_and_declare_the_assets() -> None:
                 country_code=country,
                 identifier=identifier,
                 description="synthetic foreign asset",
-                held_since=date(2015, 1, 1),
+                held_since=date(_YEAR_N - 8, 1, 1),
             ),
         )
         declare_foreign_asset(
@@ -228,7 +229,7 @@ def _foreign_asset_observations() -> tuple[ForeignAssetIngestObservation, ...]:
             valuation_amount=_CUENTAS_N1,
             currency_code="EUR",
             valuation_event=M720ValuationEvent.YEAR_END,
-            acquisition_date="2019-04-01",
+            acquisition_date=date(_YEAR_N - 4, 4, 1).isoformat(),
         ),
         ForeignAssetIngestObservation(
             source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -241,7 +242,7 @@ def _foreign_asset_observations() -> tuple[ForeignAssetIngestObservation, ...]:
             valuation_amount=_VALORES_N1,
             currency_code="EUR",
             valuation_event=M720ValuationEvent.YEAR_END,
-            acquisition_date="2020-09-15",
+            acquisition_date=date(_YEAR_N - 3, 9, 15).isoformat(),
         ),
     )
 

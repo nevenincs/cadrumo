@@ -30,6 +30,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.document_shape import PDF_CONTAINER_SHAPES, DocumentShape
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .evidence_input_test_support import (
     BUCKET_ID,
@@ -42,6 +43,8 @@ from .evidence_input_test_support import (
     secure_objects,
 )
 from .evidence_input_test_support import runtime_profile as runtime_profile
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["evidence_input_ports", "isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]
@@ -143,7 +146,7 @@ def _stored_attachment_id(
             source=AttachmentSource.LOCAL_FILE,
             source_reference="operator-evidence",
             mime_type=mime_type,
-            captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 8, 1, tzinfo=UTC),
             bucket_id=BUCKET_ID,
         ),
     )
@@ -262,8 +265,8 @@ def test_record_without_in_store_attachment_is_unconstructable() -> None:
             source_path="/some/cleartext/path.pdf",
             source_sha256=hashlib.sha256(PDF_BYTES).hexdigest(),
             media_kind=MediaKind.PDF,
-            created_at=datetime(2026, 6, 10, tzinfo=UTC),
-            updated_at=datetime(2026, 6, 10, tzinfo=UTC),
+            created_at=datetime(_YEAR, 6, 10, tzinfo=UTC),
+            updated_at=datetime(_YEAR, 6, 10, tzinfo=UTC),
         )
 
     assert "attachment_id" in str(excinfo.value)

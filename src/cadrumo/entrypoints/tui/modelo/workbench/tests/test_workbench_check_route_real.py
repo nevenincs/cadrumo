@@ -44,6 +44,7 @@ from ......application.tests.operator_scope_fakes import (
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ......domain.deadlines.models import IVARegime, TaxpayerProfile
 from ......domain.modelos.verification_report import VerificationReport
 from ......domain.user_profile.values import UserProfileFact
@@ -63,7 +64,7 @@ from .workbench_fixture import FakeActions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_YEAR = 2025
+_YEAR = filing_grade_exercises("190")[-1]
 _REASON = "withholding_detail_absent"
 _ATTESTED = "application.modelo.findings.withholding_detail_absent_attested"
 _UNPROVEN = "application.modelo.findings.withholding_detail_absent_unproven"

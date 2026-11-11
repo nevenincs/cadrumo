@@ -18,12 +18,15 @@ from pydantic import ValidationError
 from .....core.period import Period
 from .....domain.calculations.registry.ids import ModeloId
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..engine import build_export_plan
 from ..records import AnySheetExportPlan, SheetExportMetadata, TabName
 from ..workbook_export import ModeloWorkbookExport, export_modelo_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _PAYLOAD = b"workbook-payload"
 
@@ -40,7 +43,7 @@ class _RecordingMaterializer:
 
 
 def _m303_snapshot() -> RegistrySnapshot:
-    return published_snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return published_snapshot("303", filing_year=_YEAR, period="1T", on=date(_YEAR, 4, 1))
 
 
 def _resolver(_modelo: ModeloId, _period: Period) -> RegistrySnapshot:
@@ -53,7 +56,7 @@ def test_entry_hands_the_canonical_plan_to_the_transport() -> None:
 
     export_modelo_workbook(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         materializer=materializer,
         snapshot_resolver=_resolver,
     )
@@ -73,7 +76,7 @@ def test_reported_facts_describe_the_returned_payload() -> None:
 
     export = export_modelo_workbook(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         materializer=materializer,
         snapshot_resolver=_resolver,
     )
@@ -90,7 +93,7 @@ def test_reported_facts_describe_the_returned_payload() -> None:
     assert export.casilla_count == len(covered)
     assert export.modelo == "303"
     assert export.period == "1T"
-    assert export.filing_year == 2025
+    assert export.filing_year == _YEAR
     assert export.revision == plan.metadata.revision_id
 
 
@@ -100,9 +103,9 @@ def test_facts_that_do_not_describe_the_payload_are_refused() -> None:
     with pytest.raises(ValidationError):
         ModeloWorkbookExport(
             modelo="303",
-            revision="2022",
+            revision=revision_serving_period("303", _YEAR, "1T").id,
             period="1T",
-            filing_year=2025,
+            filing_year=_YEAR,
             payload=_PAYLOAD,
             byte_size=len(_PAYLOAD),
             sha256=hashlib.sha256(b"other-payload").hexdigest(),
@@ -115,9 +118,9 @@ def test_a_byte_size_that_contradicts_the_payload_is_refused() -> None:
     with pytest.raises(ValidationError):
         ModeloWorkbookExport(
             modelo="303",
-            revision="2022",
+            revision=revision_serving_period("303", _YEAR, "1T").id,
             period="1T",
-            filing_year=2025,
+            filing_year=_YEAR,
             payload=_PAYLOAD,
             byte_size=len(_PAYLOAD) + 1,
             sha256=hashlib.sha256(_PAYLOAD).hexdigest(),

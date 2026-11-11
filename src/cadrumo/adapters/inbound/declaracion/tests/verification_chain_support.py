@@ -29,6 +29,7 @@ from .....domain.period import calculation_filing_date
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
+from .parser_boundary_m303_support import M303_2023_2024_PARAMS
 
 pytestmark = [
     pytest.mark.unit,
@@ -454,16 +455,7 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
     return published_snapshot(modelo, filing_year=filing_year, period=period)
 
 
-M303_2023_ONWARDS_PARAMS = [
-    ("2023-1T", 2023, "1T"),
-    ("2023-2T", 2023, "2T"),
-    ("2023-3T", 2023, "3T"),
-    ("2023-4T", 2023, "4T"),
-    ("2024-1T", 2024, "1T"),
-    ("2024-2T", 2024, "2T"),
-    ("2024-3T", 2024, "3T"),
-    ("2024-4T", 2024, "4T"),
-]
+M303_2023_ONWARDS_PARAMS = list(M303_2023_2024_PARAMS)
 
 
 def calculate_m303_engine_values_from_inputs(

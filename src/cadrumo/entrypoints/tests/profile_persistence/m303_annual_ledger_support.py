@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -28,8 +29,9 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 BUCKET_ID = "30330303-3030-4303-8303-303303303303"
-YEAR = 2025
-T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
+#: The newest exercise whose annual Modelo 390 edition is filing grade.
+YEAR = filing_grade_exercises("390")[-1]
+T0 = datetime(YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 type StoredIvaAxis = Literal["devengada", "deducible", "casilla_59", "resultado"]

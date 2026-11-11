@@ -59,6 +59,7 @@ from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
     bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -81,9 +82,11 @@ from ..deterministic_findings import deterministic_findings
 from ..invoice_draft_records import InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DATE = date(2026, 4, 2)
+_DATE = date(_YEAR, 4, 2)
 _ASSERTED = ClassifierInputSource.OPERATOR_ASSERTION
 
 #: The user-assigned codes measured settling a party outside the EU at HEAD.

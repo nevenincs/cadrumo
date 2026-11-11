@@ -26,10 +26,13 @@ from pydantic import ValidationError
 
 from ....core.json_contract import SchemaEnvelope
 from ....core.register_scoping_signal import RegisterScopingSignal
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_filed_results import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 from ..command_schema import command_schema_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_C, _B, _A = filing_year_envelope().years[-3:]
 
 _SCHEMA_KEY = "app.live.filed.pull_all"
 
@@ -43,7 +46,7 @@ def _populated() -> FiledHistoryOnboardingResult:
         pairs=[
             FiledHistoryPairOutcomePayload(
                 modelo="303",
-                ejercicio=2025,
+                ejercicio=_A,
                 signals=["profile_applicability"],
                 walk_attempted=True,
                 walk_completed=True,
@@ -56,7 +59,7 @@ def _populated() -> FiledHistoryOnboardingResult:
             ),
             FiledHistoryPairOutcomePayload(
                 modelo="100",
-                ejercicio=2024,
+                ejercicio=_B,
                 signals=["aeat_register_options"],
                 walk_attempted=True,
                 walk_completed=False,
@@ -189,7 +192,7 @@ def test_the_scoping_signal_is_always_a_hedged_reading() -> None:
 def test_a_refused_pair_and_an_empty_pair_are_distinguishable() -> None:
     refused = FiledHistoryPairOutcomePayload(
         modelo="303",
-        ejercicio=2025,
+        ejercicio=_A,
         signals=["profile_applicability"],
         walk_attempted=True,
         walk_completed=False,
@@ -202,7 +205,7 @@ def test_a_refused_pair_and_an_empty_pair_are_distinguishable() -> None:
     )
     empty = FiledHistoryPairOutcomePayload(
         modelo="303",
-        ejercicio=2024,
+        ejercicio=_B,
         signals=["profile_applicability"],
         walk_attempted=True,
         walk_completed=True,
@@ -225,7 +228,7 @@ def test_the_counts_separate_refusals_from_legitimate_empties() -> None:
     populated = _populated()
     unvisited = populated.pairs[1].model_copy(
         update={
-            "ejercicio": 2023,
+            "ejercicio": _C,
             "walk_attempted": False,
             "walk_completed": False,
             "refused": False,

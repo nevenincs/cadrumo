@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import OperatorActionAxis
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
@@ -43,6 +44,8 @@ from ...aggregation.iva_ledger_classification import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 #: The defining module itself, for the attribute scoping below. Named through
 #: `import_module` rather than `from .. import`: the ledger package facade is
@@ -67,8 +70,8 @@ def _transaction(
         {
             "raw": RawTransaction(
                 provider_transaction_id="totality-probe",
-                booked_date=date(2026, 4, 5),
-                value_date=date(2026, 4, 5),
+                booked_date=date(_YEAR, 4, 5),
+                value_date=date(_YEAR, 4, 5),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 counterparty="Cliente o proveedor",
@@ -78,7 +81,7 @@ def _transaction(
                     source_sha256="c" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+                    ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
                     provider_name="manual-ledger",
                 ),
                 raw_fields={"source_kind": BindingSourceKind.LEDGER_TRANSACTION.value},
@@ -100,7 +103,7 @@ def _transaction(
             "irpf_category": None,
             "usage_ratio_id": None,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -122,7 +125,7 @@ def _observed_counterparty_gate_reasons(
     )
     observed: set[IvaLedgerAggregationIssueReason] = set()
     categories = resolve_iva_category_catalogue(
-        effective_date=date(2026, 4, 5),
+        effective_date=date(_YEAR, 4, 5),
         authority=operation,
     ).all_categories
     for category in (*categories, None):

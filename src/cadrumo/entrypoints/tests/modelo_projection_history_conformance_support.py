@@ -36,11 +36,14 @@ from ...application.user_profile.tests.persona_profile_facts import persona_fact
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.user_profile.values import UserProfileFact
 from ..adapter_composition_ports import build_modelo_history_ports
 from ..adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from . import modelo_operation_test_support
+
+_YEAR = filing_year_envelope().horizon
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,14 +56,14 @@ class ModeloProjectionHistoryConformanceCase:
     expected_phase_codes: tuple[str, ...]
 
 
-def _seed_2026_revision(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> None:
+def _seed_horizon_revision(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> None:
     bucket_id = str(profile_id)
-    revision = resolved_revision(modelo="130", filing_year=2026, period="1T")
+    revision = resolved_revision(modelo="130", filing_year=_YEAR, period="1T")
     unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision_id=revision.id,
         actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
@@ -85,14 +88,19 @@ def prepare_modelo_projection_history_conformance_case(
     if definition_id in {"modelo.history", "modelo.history.timeline"}:
         history = assemble_modelo_lifecycle_history(
             "130",
-            filing_year=2025,
+            filing_year=modelo_operation_test_support.MODELO_FILING_YEAR,
             period="1T",
             ports=build_modelo_history_ports(bucket_id=bucket_id, operation=operation),
         )
         assert len(history.events) >= 2
         if definition_id == "modelo.history.timeline":
             return ModeloProjectionHistoryConformanceCase(
-                request=ModeloHistoryTimelineRequest(profile_id=profile_id, modelo="130", year=2025, period="1T"),
+                request=ModeloHistoryTimelineRequest(
+                    profile_id=profile_id,
+                    modelo="130",
+                    year=modelo_operation_test_support.MODELO_FILING_YEAR,
+                    period="1T",
+                ),
                 expected_projection=ModeloHistoryTimelineProjection(
                     authority_generation=operation.generation.logical_generation,
                     profile_id=profile_id,
@@ -106,7 +114,9 @@ def prepare_modelo_projection_history_conformance_case(
                 expected_phase_codes=("modelo.history.timeline",),
             )
         return ModeloProjectionHistoryConformanceCase(
-            request=ModeloHistoryOperationRequest(profile_id=profile_id, modelo="130", year=2025, period="1T"),
+            request=ModeloHistoryOperationRequest(
+                profile_id=profile_id, modelo="130", year=modelo_operation_test_support.MODELO_FILING_YEAR, period="1T"
+            ),
             expected_projection=ModeloHistoryOperationProjection(
                 profile_id=profile_id,
                 modelo=str(history.modelo),
@@ -131,7 +141,7 @@ def prepare_modelo_projection_history_conformance_case(
     )
     if definition_id == "modelo.project":
         expected = project_modelo_100_from_m130(
-            year=2025,
+            year=modelo_operation_test_support.MODELO_FILING_YEAR,
             ccaa="madrid",
             bucket_id=bucket_id,
             ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
@@ -140,7 +150,9 @@ def prepare_modelo_projection_history_conformance_case(
         assert expected.quarters_filed == 1 and expected.quarters_available == ("1T",)
         return ModeloProjectionHistoryConformanceCase(
             # The region is left to the profile, whose tax residence states the one expected above.
-            request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025),
+            request=ModeloProjectOperationRequest(
+                profile_id=profile_id, year=modelo_operation_test_support.MODELO_FILING_YEAR
+            ),
             expected_projection=ModeloProjectOperationProjection.from_service(
                 profile_id, expected, authority_generation=operation.generation.logical_generation
             ),
@@ -150,16 +162,18 @@ def prepare_modelo_projection_history_conformance_case(
 
     if definition_id != "modelo.compare":
         raise ValueError(f"unknown modelo projection/history operation: {definition_id}")
-    _seed_2026_revision(profile_id, operation=operation)
+    _seed_horizon_revision(profile_id, operation=operation)
     expected_compare = compare_modelo_years(
         modelo="130",
-        years=(2025, 2026),
+        years=(modelo_operation_test_support.MODELO_FILING_YEAR, _YEAR),
         ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
         operation=operation,
     )
     assert expected_compare.delta_rows and expected_compare.sections
     return ModeloProjectionHistoryConformanceCase(
-        request=ModeloCompareOperationRequest(profile_id=profile_id, modelo="130", years=(2025, 2026)),
+        request=ModeloCompareOperationRequest(
+            profile_id=profile_id, modelo="130", years=(modelo_operation_test_support.MODELO_FILING_YEAR, _YEAR)
+        ),
         expected_projection=ModeloCompareOperationProjection.from_service(
             profile_id, expected_compare, authority_generation=operation.generation.logical_generation
         ),

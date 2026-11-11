@@ -16,11 +16,14 @@ from cadrumo.domain.transactions.enums import TransactionDirection, TransactionL
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,14 +41,14 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="wrong account import",
                 idempotency_key="archived-edit-refusal",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
         archived = archive_manual_transaction(
             bucket_id=BUCKET_ID,
@@ -53,7 +56,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
             actor="operator-A",
             reason="wrong account import",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     with (
@@ -69,7 +72,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("60.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="attempt to edit archived row",
@@ -77,7 +80,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
                 source_command="aeat app ledger update",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 3, 10, 0, tzinfo=UTC),
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)
@@ -101,21 +104,21 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="wrong account import",
                 idempotency_key="archive-stash-refusal",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
         archive_manual_transaction(
             bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     with (
@@ -132,7 +135,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 3, 10, 0, tzinfo=UTC),
         )
     with (
         pytest.raises(TransactionValidationError, match="cannot be stashed"),
@@ -148,7 +151,7 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: 
             transaction_id=created.ref.transaction_id,
             actor="operator-A",
             ports=ports,
-            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 3, 10, 0, tzinfo=UTC),
         )
 
     assert [event.event_type for event in event_repository.load().for_bucket(BUCKET_ID)] == [

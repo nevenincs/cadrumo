@@ -71,7 +71,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .generate_base import SEDE_ORIGIN
+from .generate_base import SEDE_ORIGIN, declared_filing_years
+
+#: The exercise the English render is filed for: the one before the declared floor.
+_SPECIMEN_EXERCISE = declared_filing_years().floor - 1
 
 _BOX_ANCHOR_X = 412.0
 """Box-number x0 for the ``bbox_anchored`` targets.
@@ -106,8 +109,8 @@ class Modelo390EnglishFixture:
 
 MODELO_390_ENGLISH_FIXTURES: tuple[Modelo390EnglishFixture, ...] = (
     Modelo390EnglishFixture(
-        filename="390/2021-0A.pdf",
-        ejercicio="2021",
+        filename=f"390/{_SPECIMEN_EXERCISE}-0A.pdf",
+        ejercicio=str(_SPECIMEN_EXERCISE),
         tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         # NIF-SHAPED DECOY, deliberately control-letter invalid. Its trailing

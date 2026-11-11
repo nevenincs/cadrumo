@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def test_review_serialization_preserves_literals_dates_values_and_editable_notes() -> None:
     plan = build_review_workbook(
-        review_snapshot(), publication_id=UUID(int=2), exported_at=datetime(2026, 10, 5, tzinfo=UTC), label=review_label
+        review_snapshot(), publication_id=UUID(int=2), exported_at=datetime(1980, 10, 5, tzinfo=UTC), label=review_label
     )
     payload = materialize_export_plan(plan)
     workbook = load_workbook(BytesIO(payload))
@@ -25,7 +25,7 @@ def test_review_serialization_preserves_literals_dates_values_and_editable_notes
     assert workbook["Cálculos"]["E5"].value == "25.20"
     assert workbook["Detalle"]["K5"].data_type == "s"
     assert workbook["Detalle"]["K5"].value == '=IMPORTXML("https://example.invalid", "x")'
-    assert workbook["Detalle"]["B5"].value == datetime(2026, 1, 12)
+    assert workbook["Detalle"]["B5"].value == datetime.fromisoformat(review_snapshot().ledger_rows[0].booked_date)
     assert workbook["Detalle"].freeze_panes == "B5"
     assert workbook["Entradas"].protection.sheet is False
     assert workbook["Entradas"]["B5"].fill.fgColor.rgb == "FFFFF8E1"
@@ -36,7 +36,7 @@ def test_ledger_materialization_has_no_fake_modelo_metadata() -> None:
     plan = build_review_workbook(
         review_snapshot(ledger_only=True),
         publication_id=UUID(int=2),
-        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)))

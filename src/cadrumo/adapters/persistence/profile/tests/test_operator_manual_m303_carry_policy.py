@@ -20,11 +20,12 @@ from cadrumo.application.modelo.local_observation_actions import (
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CAPTURED_AT = datetime(2026, 8, 11, 10, 0, tzinfo=UTC)
-_FILING_YEAR = 2025
+_CAPTURED_AT = datetime(1980, 8, 11, 10, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def test_operator_manual_m303_carry_policy_refuses_without_persisting(

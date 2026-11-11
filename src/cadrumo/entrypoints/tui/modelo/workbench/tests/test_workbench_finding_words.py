@@ -21,6 +21,7 @@ import ast
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Final
@@ -47,6 +48,7 @@ from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -68,6 +70,8 @@ from .workbench_fixture import registry_form, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+
 _SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[5]
 _FINDING_CLASS: Final[str] = "ModeloVerificationFinding"
 _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
@@ -75,11 +79,11 @@ _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
 _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]] = {
     FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "EVENT-3"),
     FindingFactKind.PERIODS: ("1T|2T", NO_PERIODS_FACT, "EXT-3T|0A|EVENT-3"),
-    FindingFactKind.DATE: ("2025-03-01", "unknown"),
+    FindingFactKind.DATE: (date(_YEAR, 3, 1).isoformat(), "unknown"),
     FindingFactKind.BOX: ("op.codigo-pais", "0435", "m100.casilla-rnt"),
     FindingFactKind.BOX_NUMBER: ("76-77", "12"),
     FindingFactKind.MODELO: ("303", "absent"),
-    FindingFactKind.YEAR: (2025,),
+    FindingFactKind.YEAR: (_YEAR,),
     FindingFactKind.MONEY: (Decimal("1234.5"), "absent"),
     FindingFactKind.NUMBER: (Decimal("0.75"),),
     FindingFactKind.COUNT: (3,),
@@ -382,9 +386,9 @@ def test_the_token_check_catches_raw_facts_in_the_real_catalogue() -> None:
     raw = tr(
         "application.modelo.findings.cross_period_first_year_fractional_suppression",
         source_modelo="303",
-        source_filing_year=2025,
+        source_filing_year=_YEAR,
         source_period="4T",
-        activity_start_date="2025-03-01",
+        activity_start_date=date(_YEAR, 3, 1).isoformat(),
     )
 
     assert {leak.split(" ")[0] for leak in _leaks(raw)} >= {"period", "ISO"}
@@ -415,9 +419,9 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
         message_locale_key="application.modelo.findings.cross_period_operator_declared_suppression",
         message_facts={
             "source_modelo": "303",
-            "source_filing_year": 2025,
+            "source_filing_year": _YEAR,
             "source_period": "4T",
-            "activity_start_date": "2025-03-01",
+            "activity_start_date": date(_YEAR, 3, 1).isoformat(),
             "origin_code": "operator_declared",
         },
         legal_refs=(_LEGAL_REF,),
@@ -428,7 +432,7 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
         message_locale_key="application.modelo.findings.m303_m349_intracom_reconciliation_mismatch",
         message_facts={
             "period_code": "0A",
-            "filing_year": 2025,
+            "filing_year": _YEAR,
             "m303_total": Decimal("1234.5"),
             "m349_total": Decimal("1000"),
             "gap": Decimal("234.5"),
@@ -444,7 +448,7 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
         english = {line.level: line.message for line in issue_lines(form)}
 
     assert "periodo 4.º trimestre" in spanish[IssueLevel.INFO]
-    assert "1 mar 2025" in spanish[IssueLevel.INFO]
+    assert f"1 mar {_YEAR}" in spanish[IssueLevel.INFO]
     assert "(1.234,50 EUR)" in spanish[IssueLevel.CHECK]
     assert "difieren en 234,50 EUR" in spanish[IssueLevel.CHECK]
     assert "period 4th quarter" in english[IssueLevel.INFO]
@@ -475,7 +479,7 @@ def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_tw
 
 
 def _form_349(operation: PinnedAuthorityOperation, findings: tuple[ModeloVerificationFinding, ...]) -> ModeloWorkForm:
-    return registry_form(operation, modelo="349", year=2026, code="1T", findings=findings)
+    return registry_form(operation, modelo="349", year=_YEAR, code="1T", findings=findings)
 
 
 def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_leads_to_the_table(

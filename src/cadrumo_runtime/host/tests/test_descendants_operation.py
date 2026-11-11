@@ -23,6 +23,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -42,6 +43,10 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+# Born eleven and six years before the newest supported exercise.
+_OLDER_BIRTH = date(filing_year_envelope().horizon - 11, 4, 3)
+_YOUNGER_BIRTH = date(filing_year_envelope().horizon - 6, 8, 9)
 
 
 def _request(
@@ -81,7 +86,7 @@ def _replace_with_family(
     revision, digest, facts = profile_view_facts(client)
     assert revision == first.projection.record_revision
     assert facts["renta_family.descendientes_count"] == "2"
-    assert facts["renta_family.descendiente.0.birth_date"] == "2015-04-03"
+    assert facts["renta_family.descendiente.0.birth_date"] == _OLDER_BIRTH.isoformat()
     assert facts["renta_family.descendiente.0.custodia_compartida"] == "true"
     assert facts["renta_family.descendiente.0.prorrata_minimo"] == "true"
     assert facts["renta_family.descendiente.1.birth_date"] == "2020-08-09"
@@ -129,7 +134,7 @@ def _refuse_stale_and_malformed(
     for malformed in (
         ProfileDescendantRow(
             facts=(
-                ProfileDescendantFact(field_key="birth_date", value="2020-08-09"),
+                ProfileDescendantFact(field_key="birth_date", value=_YOUNGER_BIRTH.isoformat()),
                 ProfileDescendantFact(field_key="unknown_field", value="x"),
             )
         ),
@@ -240,12 +245,12 @@ def test_native_descendant_family_replace_reindex_clear_and_refuse_stale_intent(
             )
             with client:
                 older = DescendantInfo(
-                    birth_date=date(2015, 4, 3),
+                    birth_date=_OLDER_BIRTH,
                     custodia_compartida=True,
                     prorrata_minimo=True,
                     rentas_anuales_euros=Decimal("1200.00"),
                 )
-                younger = DescendantInfo(birth_date=date(2020, 8, 9), dependencia_economica=False)
+                younger = DescendantInfo(birth_date=_YOUNGER_BIRTH, dependencia_economica=False)
                 family = (older, younger)
                 family_rows = encode_descendant_rows(family, authority=authority_operation)
                 younger_rows = encode_descendant_rows((younger,), authority=authority_operation)

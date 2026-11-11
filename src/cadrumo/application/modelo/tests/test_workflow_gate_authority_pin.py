@@ -26,6 +26,7 @@ from types import ModuleType
 import pytest
 
 from ....core.time.clock import MADRID_TZ
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import filing_actions, verification_actions, workflow_gate
 from ..workflow_gate import RevisionInputsProvider, run_revision_workflow_gate, workflow_period_for_work_unit
 
@@ -93,6 +94,6 @@ def test_the_madrid_date_differs_from_the_utc_date_at_the_boundary() -> None:
     Europe/Madrid leads UTC by two hours in April, so a filing stamped at 22:30
     UTC on the last day of a window happened on the following Spanish day.
     """
-    instant = datetime(2026, 4, 20, 22, 30, tzinfo=UTC)
+    instant = datetime(filing_year_envelope().horizon, 4, 20, 22, 30, tzinfo=UTC)
 
     assert instant.date() != instant.astimezone(MADRID_TZ).date()

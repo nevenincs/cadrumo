@@ -27,7 +27,7 @@ from ..manifest import build_corpus_bundle, verify_corpus_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_GENERATED_AT = datetime(2026, 6, 1, 9, 0, 0, tzinfo=UTC)
+_GENERATED_AT = datetime(1980, 6, 1, 9, 0, 0, tzinfo=UTC)
 
 
 _MEMBERS = {

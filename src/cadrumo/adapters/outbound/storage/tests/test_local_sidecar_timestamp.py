@@ -67,7 +67,7 @@ _DAMAGED = (
     pytest.param("not-a-time", id="unparseable"),
     pytest.param("", id="blank"),
     pytest.param(None, id="absent"),
-    pytest.param("2026-01-02T12:00:00", id="tz-naive"),
+    pytest.param("1980-01-02T12:00:00", id="tz-naive"),
     pytest.param(1735819200, id="wrong-type-epoch-int"),
 )
 
@@ -112,7 +112,7 @@ def test_a_naive_timestamp_is_refused_rather_than_read_as_utc(provider: LocalFil
     one is damage.
     """
     sidecar = _stored_sidecar(provider)
-    _rewrite_written_at(sidecar, "2026-01-02T12:00:00")
+    _rewrite_written_at(sidecar, "1980-01-02T12:00:00")
 
     with pytest.raises(StorageCorruptionError):
         provider.get(_NAMESPACE, _HMAC)

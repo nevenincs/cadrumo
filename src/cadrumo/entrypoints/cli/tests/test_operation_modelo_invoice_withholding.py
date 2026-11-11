@@ -39,9 +39,13 @@ from ....core.hashing import content_hash_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_invoice_withholding as bridge
 from ..modelo_query_results import ModeloAggregateResult
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -55,7 +59,7 @@ def _pinned_authority() -> Iterator[None]:
 
 _PROFILE = UUID("21212121-2121-4121-8121-212121212121")
 _OPERATION_ID = "b" * 64
-_PERIOD = Period.from_year_and_code(2025, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _PUBLIC_PERIOD = PublicPeriod.from_period(_PERIOD)
 
 
@@ -231,7 +235,7 @@ def test_bridge_rejects_a_projection_or_receipt_that_disagrees_with_the_capture(
     if mismatch == "profile":
         projection = _projection(profile_id=UUID("33333333-3333-4333-8333-333333333333"))
     elif mismatch == "period":
-        projection = _projection().model_copy(update={"period": PublicPeriod(filing_year=2024, code="1T")})
+        projection = _projection().model_copy(update={"period": PublicPeriod(filing_year=_YEAR - 1, code="1T")})
     elif mismatch == "terminal":
         condition = OperationTerminalCondition.REFUSED
     elif mismatch == "refusal_code":
@@ -297,7 +301,7 @@ def test_aggregate_cli_invoice_route_uses_worker_summary_without_ambient_authori
     aggregate_cli.aggregate_modelo(
         cast(typer.Context, cast(object, None)),
         modelo="111",
-        year=2025,
+        year=_YEAR,
         period="1T",
         received_invoice_retencion=[evidence.model_dump_json()],
     )

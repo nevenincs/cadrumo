@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from .....core.classification.policies import SensitivityClass
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
@@ -31,6 +32,8 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 # Mirrors the persistence contract in ``adapters/persistence/profile/invoices.py``.
 _INVOICE_NAMESPACE = "cadrumo.domain.invoices"
@@ -50,7 +53,7 @@ def _french_identified_invoice() -> Invoice:
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": "F-2026-0417",
-            "issued_at": date(2026, 5, 12),
+            "issued_at": date(_YEAR, 5, 12),
             "counterparty_name": "Établissement Client",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

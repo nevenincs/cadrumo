@@ -26,9 +26,12 @@ from ....application.ledger.models import (
     LedgerTransactionRemovalReport,
 )
 from ....core.json_contract import strict_round_trip
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..ledger_results import LedgerRemoveResult, LedgerResetResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 # A valid hex-64 identity satisfies the WorkUnitId / CalculationRevisionId /
 # TransactionId StringConstraints (min_length=max_length=64, [0-9a-f]).
@@ -43,7 +46,7 @@ def _blocker() -> LedgerRemovalBlocker:
         calculation_revision_id=_HEX_64_B,
         revision_state="borrador",
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period="1T",
     )
 
@@ -127,7 +130,7 @@ def test_remove_report_dump_validates_against_payload_and_round_trips() -> None:
     assert advisory.calculation_revision_id == _HEX_64_B
     assert advisory.revision_state == "borrador"
     assert advisory.modelo == "130"
-    assert advisory.filing_year == 2026
+    assert advisory.filing_year == _YEAR
     assert advisory.period == "1T"
     # Blocking references must remain distinct from the draft advisory.
     assert len(payload.blocking_modelo_references) == 1

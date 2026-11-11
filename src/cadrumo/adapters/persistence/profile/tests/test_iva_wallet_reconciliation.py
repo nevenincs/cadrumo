@@ -33,6 +33,7 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 from cadrumo.domain.iva_compensation.reconciliation import (
@@ -51,7 +52,8 @@ WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compe
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_NOW = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 5, 19, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "35353535-3535-4353-8353-353535353535"
 #: Checksum-valid synthetic NIFs. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
@@ -68,7 +70,7 @@ def _m303_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
 def _local_recurrence_source(
     amount: Decimal,
     *,
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period: str = "2T",
 ) -> IvaCompensationAuthoritySource:
     return IvaCompensationAuthoritySource(
@@ -84,15 +86,15 @@ def _local_recurrence_source(
 
 
 def _save_positive_second_quarter_filing() -> None:
-    """Record a local 2026 2T M303 filing with a positive result and nothing pending."""
+    """Record a local horizon-exercise 2T M303 filing with a positive result and nothing pending."""
     IvaCompensationHistoryRepository().save_period(
         IvaCompensationPeriodState(
             provenance=IvaCompensationStateProvenance.APP_FILING,
             taxpayer_nif=_TAXPAYER_REF,
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
-            registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
-            presented_at=datetime(2026, 7, 15, 10, 0, tzinfo=UTC),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
+            registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
+            presented_at=datetime(_YEAR, 7, 15, 10, 0, tzinfo=UTC),
             prior_pending_amount=Decimal("0"),
             applied_amount=Decimal("0"),
             pending_for_later_amount=Decimal("0"),
@@ -100,7 +102,7 @@ def _save_positive_second_quarter_filing() -> None:
             final_result_amount=Decimal("399"),
             generated_amount=Decimal("0"),
             available_end_amount=Decimal("0"),
-            source_observation_key="303:2026:2T:positive-local-filing",
+            source_observation_key=f"303:{_YEAR}:2T:positive-local-filing",
         ),
     )
 
@@ -113,8 +115,8 @@ def test_registry_derived_authority_source_requires_exact_period_coordinates() -
             source_locator="binding:local-recurrence",
             captured_at=_NOW,
             source_modelo="303",
-            source_filing_year=2026,
-            source_periods=(Period.from_year_and_code(2026, "1T"),),
+            source_filing_year=_YEAR,
+            source_periods=(Period.from_year_and_code(_YEAR, "1T"),),
             registry_snapshot_refs=(),
         )
 
@@ -122,9 +124,9 @@ def test_registry_derived_authority_source_requires_exact_period_coordinates() -
 def test_local_recurrence_amount_requires_matching_stamped_authority_source() -> None:
     valid = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=None,
         local_recurrence_amount=Decimal("10"),
         local_recurrence_source=_local_recurrence_source(Decimal("10"), period="1T"),
@@ -149,16 +151,16 @@ def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensation
     return IvaCompensationWalletObservation(
         taxpayer_nif=_TAXPAYER_REF,
         authenticated_identity=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
         rows=(
             IvaCompensationWalletRow(
-                generation_year=2026,
-                generation_period=Period.from_year_and_code(2026, "1T"),
+                generation_year=_YEAR,
+                generation_period=Period.from_year_and_code(_YEAR, "1T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
-                raw_label="2026 1T",
+                raw_label=f"{_YEAR} 1T",
             ),
         ),
         total_pending=amount,
@@ -171,9 +173,9 @@ def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensation
 def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         local_recurrence_source=_local_recurrence_source(Decimal("1200")),
@@ -195,22 +197,22 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
 def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_provenance() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
         local_recurrence_source=_local_recurrence_source(Decimal("1200")),
         decided_at=_NOW,
     )
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
             revision=snapshot.revision,
         ),
     )
@@ -231,9 +233,9 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
 def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -249,9 +251,9 @@ def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() 
 def test_wallet_higher_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=_local_recurrence_source(Decimal("800")),
@@ -267,9 +269,9 @@ def test_wallet_higher_than_local_blocks_automatic_output() -> None:
 def test_wallet_lower_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("400")),
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=_local_recurrence_source(Decimal("800")),
@@ -284,9 +286,9 @@ def test_wallet_lower_than_local_blocks_automatic_output() -> None:
 def test_missing_wallet_records_local_recurrence_but_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=None,
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=_local_recurrence_source(Decimal("800")),
@@ -303,19 +305,19 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     filed_history_source = IvaCompensationAuthoritySource(
         source_kind="filed_history_observation",
         amount=Decimal("800"),
-        source_locator="303:2025:4T",
+        source_locator=f"303:{_YEAR - 1}:4T",
         captured_at=_NOW,
         source_modelo="303",
-        source_filing_year=2025,
-        source_periods=(Period.from_year_and_code(2025, "4T"),),
-        registry_snapshot_refs=(_m303_snapshot_ref(2025, "4T"),),
+        source_filing_year=_YEAR - 1,
+        source_periods=(Period.from_year_and_code(_YEAR - 1, "4T"),),
+        registry_snapshot_refs=(_m303_snapshot_ref(_YEAR - 1, "4T"),),
     )
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=None,
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=filed_history_source,
@@ -337,19 +339,19 @@ def test_missing_wallet_with_zero_aeat_filed_history_is_non_blocking_zero_author
     filed_history_source = IvaCompensationAuthoritySource(
         source_kind="filed_history_observation",
         amount=Decimal("0"),
-        source_locator="303:2026:2T",
+        source_locator=f"303:{_YEAR}:2T",
         captured_at=_NOW,
         source_modelo="303",
-        source_filing_year=2026,
-        source_periods=(Period.from_year_and_code(2026, "2T"),),
-        registry_snapshot_refs=(_m303_snapshot_ref(2026, "2T"),),
+        source_filing_year=_YEAR,
+        source_periods=(Period.from_year_and_code(_YEAR, "2T"),),
+        registry_snapshot_refs=(_m303_snapshot_ref(_YEAR, "2T"),),
     )
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "3T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "3T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "3T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "3T"),
         wallet=None,
         local_recurrence_amount=Decimal("0"),
         local_recurrence_source=filed_history_source,
@@ -372,7 +374,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         _save_positive_second_quarter_filing()
-        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="3T")
         repository = CalculationObservationRepository()
         decision_repository = IvaWalletDecisionRepository()
         with bundled_indexed_authority().operation() as operation:
@@ -427,7 +429,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         _save_positive_second_quarter_filing()
-        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="3T")
         repository = CalculationObservationRepository()
 
         with bundled_indexed_authority().operation() as operation:
@@ -456,7 +458,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
 ) -> None:
     """A wallet decision cannot leave the observation repository's encrypted bucket."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="2T")
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
@@ -481,7 +483,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
         assert (
             IvaWalletDecisionRepository(objects=runtime.primary.repository).load_decision(
                 _TAXPAYER_REF,
-                Period.from_year_and_code(2026, "2T"),
+                Period.from_year_and_code(_YEAR, "2T"),
             )
             is None
         )
@@ -489,7 +491,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
             assert (
                 foreign_decision_repository.load_decision(
                     _TAXPAYER_REF,
-                    Period.from_year_and_code(2026, "2T"),
+                    Period.from_year_and_code(_YEAR, "2T"),
                 )
                 is None
             )
@@ -502,7 +504,7 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
-        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="2T")
 
         with bundled_indexed_authority().operation() as operation:
             report = reconcile_modelo_303_iva_compensation(
@@ -520,7 +522,7 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
         assert (
             decision_repository.load_decision(
                 _TAXPAYER_REF,
-                Period.from_year_and_code(2026, "2T"),
+                Period.from_year_and_code(_YEAR, "2T"),
             )
             == report.decision
         )
@@ -530,9 +532,9 @@ def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> 
     stale = _wallet(Decimal("1200"), captured_at=_NOW - timedelta(days=40))
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=stale,
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=_local_recurrence_source(Decimal("800")),
@@ -552,15 +554,15 @@ def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> N
     override = IvaCompensationOverride(
         amount=Decimal("1000"),
         operator_explanation="Operator reviewed AEAT wallet and rectificativa evidence.",
-        evidence_locator="operator-note:iva-wallet-review-2026-2T",
+        evidence_locator=f"operator-note:iva-wallet-review-{_YEAR}-2T",
         recorded_at=_NOW,
     )
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "2T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("800"),
         local_recurrence_source=_local_recurrence_source(Decimal("800")),
@@ -588,9 +590,9 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None
     with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
-            target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "2T"),
+            target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
             wallet=wallet,
             local_recurrence_amount=Decimal("1200"),
             local_recurrence_source=_local_recurrence_source(Decimal("1200")),
@@ -608,9 +610,9 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
     with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
-            target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "2T"),
+            target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
             wallet=wallet,
             local_recurrence_amount=Decimal("1200"),
             local_recurrence_source=_local_recurrence_source(Decimal("1200")),
@@ -645,9 +647,9 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
     with pytest.raises(IvaWalletReconciliationError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
-            target_registry_snapshot_ref=_m303_snapshot_ref(2026, "2T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "2T"),
+            target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "2T"),
             wallet=_wallet(Decimal("1200")),
             local_recurrence_amount=Decimal("1200"),
             local_recurrence_source=_local_recurrence_source(Decimal("1200")),
@@ -673,16 +675,16 @@ def _wallet_for_period(
     return IvaCompensationWalletObservation(
         taxpayer_nif=_TAXPAYER_REF,
         authenticated_identity=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, period),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, period),
         rows=(
             IvaCompensationWalletRow(
-                generation_year=2025,
-                generation_period=Period.from_year_and_code(2025, "4T"),
+                generation_year=_YEAR - 1,
+                generation_period=Period.from_year_and_code(_YEAR - 1, "4T"),
                 generated_amount=amount,
                 applied_amount=Decimal("0"),
                 pending_amount=amount,
-                raw_label="2025 4T",
+                raw_label=f"{_YEAR - 1} 4T",
             ),
         )
         if amount > Decimal("0")
@@ -704,9 +706,9 @@ def test_first_period_zero_with_aeat_wallet_zero_is_non_blocking() -> None:
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "1T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "1T"),
         wallet=_wallet_for_period(Decimal("0"), "1T"),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -730,9 +732,9 @@ def test_first_period_zero_with_seeded_zero_local_record_is_non_blocking() -> No
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "1T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "1T"),
         wallet=None,
         local_recurrence_amount=Decimal("0"),
         decided_at=_NOW,
@@ -756,9 +758,9 @@ def test_first_period_flag_does_not_suppress_non_zero_wallet_divergence() -> Non
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "1T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "1T"),
         wallet=_wallet_for_period(Decimal("500"), "1T"),
         local_recurrence_amount=None,
         decided_at=_NOW,
@@ -783,9 +785,9 @@ def test_first_period_flag_does_not_suppress_stale_wallet() -> None:
 
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=_m303_snapshot_ref(2026, "1T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
+        target_registry_snapshot_ref=_m303_snapshot_ref(_YEAR, "1T"),
         wallet=stale,
         local_recurrence_amount=None,
         decided_at=_NOW,

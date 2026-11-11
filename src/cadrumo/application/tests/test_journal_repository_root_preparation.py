@@ -56,7 +56,7 @@ def _repository(storage_root: Path) -> JournalRepositoryBase[_Operation]:
 
 
 def _operation(index: int) -> _Operation:
-    return _Operation(operation_id=f"{index:064x}", started_at=datetime(2026, 10, 22, tzinfo=UTC))
+    return _Operation(operation_id=f"{index:064x}", started_at=datetime(1980, 10, 22, tzinfo=UTC))
 
 
 _RECORDING: list[Counter[tuple[str, str]] | None] = [None]

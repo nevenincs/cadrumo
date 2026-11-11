@@ -24,6 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -49,10 +50,11 @@ from .ledger_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _PROFILE_ID = "deduction-admissibility"
-_OPERATION_DATE = date(2026, 2, 10)
-_PAYMENT_DATE = date(2026, 3, 5)
+_OPERATION_DATE = date(_YEAR, 2, 10)
+_PAYMENT_DATE = date(_YEAR, 3, 5)
 _DOMESTIC_GENERAL = IvaCategory("domestic_general")
 
 

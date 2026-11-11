@@ -28,13 +28,14 @@ import pytest
 
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calculate_input_validation import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
 from ..projection import parse_projection_binding_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
 _ENUM_BINDING = "renta-profile-tax-residence-ccaa"
 _DECIMAL_BINDING = "renta-base-liquidable-negativa-general-anterior"
 _DATE_BINDING = "renta-profile-taxpayer-birth-date"
@@ -160,9 +161,9 @@ def test_an_enum_binding_accepts_a_numeric_looking_string_on_the_enum_channel(re
     this direction, so an enum key that happens to look numeric stayed text only
     by accident.
     """
-    decimals, enums = parse_projection_binding_overrides({_ENUM_BINDING: "2024"}, revision)
+    decimals, enums = parse_projection_binding_overrides({_ENUM_BINDING: "1234"}, revision)
 
-    assert enums == {_ENUM_BINDING: "2024"}
+    assert enums == {_ENUM_BINDING: "1234"}
     assert decimals == {}
 
 

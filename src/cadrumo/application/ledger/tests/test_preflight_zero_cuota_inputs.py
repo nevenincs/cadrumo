@@ -23,18 +23,21 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory, IvaExemptionArticle
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..preflight import HeldTransactionCatalogue, LedgerPreflightIssueReason, preflight_transaction_catalogue
 from .preflight_test_support import BUCKET_ID, Q2_2026, preflight_transaction
 
+_YEAR = filing_year_envelope().horizon
+
 type _ZeroCuotaRowFactory = Callable[..., Transaction]
 """One of the two cuota-less rows, built by a case that varies its fields."""
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BOOKED = date(2026, 4, 5)
+_BOOKED = date(_YEAR, 4, 5)
 _RETA_QUOTA = Decimal("314.40")
 _PREMIUM = Decimal("240.00")
 _INVOICE_PROVENANCE: dict[str, object] = {

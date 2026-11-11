@@ -23,6 +23,7 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
@@ -92,9 +93,14 @@ def profile_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return loads
 
 
+_YEAR = filing_year_envelope().floor
+
+
 def test_registered_work_create_decrypts_the_profile_once(
     runtime_profile: TestRuntimeProfile, profile_loads: list[str]
 ) -> None:
-    create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    create_modelo_work_unit_via_cli(
+        modelo="100", filing_year=_YEAR, period="0A", revision=str(revision_covering("100", _YEAR).id)
+    )
 
     assert profile_loads == [runtime_profile.bucket_id]

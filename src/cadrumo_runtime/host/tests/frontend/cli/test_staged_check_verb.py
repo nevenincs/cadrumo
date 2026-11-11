@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -19,6 +21,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .machine_secret_pipe import machine_secret_descriptor_option
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -51,7 +55,7 @@ def _invoke(profile: NativeCliProfileFixture, *command: str, secrets: dict[str, 
 def _add_outgoing(profile: NativeCliProfileFixture) -> str:
     added = _invoke(
         profile,
-        *("app", "ledger", "add", "--date", "2026-02-10", "--amount", "60.50"),
+        *("app", "ledger", "add", "--date", date(_YEAR, 2, 10).isoformat(), "--amount", "60.50"),
         *("--direction", "OUTGOING", "--description", "phone bill"),
     )
     assert added.exit_code == 0, added.output

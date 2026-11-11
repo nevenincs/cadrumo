@@ -13,6 +13,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.models import Transaction
 from ...actividad_asset.history import ActivityAssetHistory
@@ -38,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BASE = Decimal("100.00")
 _RECEIPT = Decimal("1060.00")
-_M130_YEAR = 2025
+_M130_YEAR = newest_authored_edition("100")
 """The ejercicio the Modelo 130 resolver support pins."""
 
 

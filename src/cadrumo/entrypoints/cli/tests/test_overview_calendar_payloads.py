@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..overview_results import (
     OverviewCalendarEventPayload,
     OverviewCalendarFilingEvidencePayload,
     OverviewCalendarRangePayload,
 )
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_calendar_range_payload_refuses_unordered_or_malformed_dates() -> None:
     for payload in (
-        {"from_date": "2026-05-02", "to_date": "2026-05-01"},
-        {"from_date": "not-a-date", "to_date": "2026-05-01"},
+        {"from_date": date(_YEAR, 5, 2).isoformat(), "to_date": date(_YEAR, 5, 1).isoformat()},
+        {"from_date": "not-a-date", "to_date": date(_YEAR, 5, 1).isoformat()},
     ):
         with pytest.raises(ValidationError):
             OverviewCalendarRangePayload.model_validate(payload)
@@ -40,7 +46,7 @@ def test_calendar_evidence_payload_enforces_closed_state_and_csv_pairing() -> No
 def test_calendar_event_payload_enforces_verified_csv_pairing_and_csv_normalization() -> None:
     event = {
         "event_type": "filing",
-        "event_date": "2026-05-01",
+        "event_date": date(_YEAR, 5, 1).isoformat(),
         "source": "aeat",
         "summary": "Filed",
         "reference_id": "ref-1",

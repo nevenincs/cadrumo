@@ -18,6 +18,7 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
+from ...calculations.registry.tests.published_authority import published_legal_reference
 from ...invoices.enums import IvaRate, iva_rate_percentage, iva_rate_slot_is_published, resolve_iva_rate_slot
 from ...invoices.figures import FigureFindingCode, compute_line_figures, dated_rate_slots
 from ...transactions.retencion_facts import load_retencion_actividades_rates
@@ -41,11 +42,19 @@ _REDUCED = IvaRateKind("reduced")
 _SUPER_REDUCED = IvaRateKind("super_reduced")
 _ZERO = IvaRateKind("zero")
 
-_LAST_DAY_OF_18 = date(2012, 8, 31)
-_FIRST_DAY_OF_21 = date(2012, 9, 1)
+# The rate changes take effect on the dates the legal catalogue publishes for the provisions
+# that made them: Ley 26/2009 art. 79 (18 %) and RDL 20/2012 art. 23 (21 %).
+_FIRST_DAY_OF_18 = published_legal_reference("ley-26-2009:art-79-uno").effective_from
+_FIRST_DAY_OF_21 = published_legal_reference("real-decreto-ley-20-2012:art-23-dos").effective_from
+_LAST_DAY_OF_16 = _FIRST_DAY_OF_18 - timedelta(days=1)
+_LAST_DAY_OF_18 = _FIRST_DAY_OF_21 - timedelta(days=1)
 _FIRST_DAY_OF_16 = date(1995, 1, 1)
-_LAST_DAY_OF_16 = date(2010, 6, 30)
-_FIRST_DAY_OF_18 = date(2010, 7, 1)
+# RD-ley 4/2024 art. 1 bounds the temporary measures: the 5 % arm ends with September, the
+# 2 % and 7.5 % arms with the provision's last day.
+_RDL_4_2024 = published_legal_reference("real-decreto-ley-4-2024:art-1")
+assert _RDL_4_2024.effective_to is not None
+_FIRST_DAY_OF_REDUCED_STEP = date(_RDL_4_2024.effective_from.year, 10, 1)
+_FIRST_DAY_AFTER_RDL_4_2024 = _RDL_4_2024.effective_to + timedelta(days=1)
 _BEFORE_EVERY_EDITION = _FIRST_DAY_OF_16 - timedelta(days=30)
 
 
@@ -144,9 +153,9 @@ def test_published_lookup_refuses_a_projected_rate_as_a_coverage_gap(operation: 
 @pytest.mark.parametrize(
     ("slot", "on_date"),
     [
-        ("RATE_5", date(2024, 10, 1)),
-        ("RATE_2", date(2025, 1, 1)),
-        ("RATE_7.5", date(2025, 1, 1)),
+        ("RATE_5", _FIRST_DAY_OF_REDUCED_STEP),
+        ("RATE_2", _FIRST_DAY_AFTER_RDL_4_2024),
+        ("RATE_7.5", _FIRST_DAY_AFTER_RDL_4_2024),
     ],
 )
 def test_a_temporary_measure_ends_where_its_law_ends_it(
@@ -251,13 +260,18 @@ def test_a_retention_rate_answers_below_the_floor_and_before_its_first_edition(
 ) -> None:
     """RIRPF art. 95: 15 % as authored from April 2007, and carried back from that edition."""
     floor = operation.supported_filing_years().date_envelope().floor
+    editions = operation.governed_fact("rirpf-art-95:retencion-actividades-profesionales-general").variants
+    first = min(editions, key=lambda edition: edition.valid_from or date.max)
+    assert first.valid_from is not None
+    assert first.valid_to is not None
+    inside_first_edition = first.valid_from + (first.valid_to - first.valid_from) / 2
 
     assert load_retencion_actividades_rates(
-        effective_date=date(2010, 6, 15),
+        effective_date=inside_first_edition,
         authority=operation,
     ).general_rate == Decimal("0.15")
-    assert floor.year > 2010
+    assert inside_first_edition < floor
     assert load_retencion_actividades_rates(
-        effective_date=date(2007, 3, 31),
+        effective_date=first.valid_from - timedelta(days=1),
         authority=operation,
     ).general_rate == Decimal("0.15")

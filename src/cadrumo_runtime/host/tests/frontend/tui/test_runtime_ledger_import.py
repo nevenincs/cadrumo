@@ -44,6 +44,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.models import (
@@ -57,12 +58,14 @@ from cadrumo_client.transport.operation_controller import OperationController
 
 from ....frontend.tui.runtime_ledger_import import RuntimeLedgerImportTuiDoorV1
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
+_NOW = datetime(_YEAR, 10, 4, tzinfo=UTC)
 
 
 class _Client:

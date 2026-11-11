@@ -117,8 +117,8 @@ def test_strict_decode_hooks_refuse_what_the_encoder_would_never_write() -> None
 
 def test_content_hash_hex_changes_for_content_but_not_mapping_order() -> None:
     """Equivalent mappings share an id while a changed value receives a new one."""
-    first = {"axis_label": "renta-2025", "captured_at": "2026-04-03T10:00:00+00:00", "payload_text": "alpha"}
-    reordered = {"payload_text": "alpha", "captured_at": "2026-04-03T10:00:00+00:00", "axis_label": "renta-2025"}
+    first = {"axis_label": "renta-2025", "captured_at": "1980-04-03T10:00:00+00:00", "payload_text": "alpha"}
+    reordered = {"payload_text": "alpha", "captured_at": "1980-04-03T10:00:00+00:00", "axis_label": "renta-2025"}
 
     assert content_hash_hex(first) == content_hash_hex(reordered)
     assert content_hash_hex(first) != content_hash_hex({**first, "payload_text": "alpha "})

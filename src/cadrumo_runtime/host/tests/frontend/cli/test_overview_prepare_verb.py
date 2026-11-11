@@ -17,16 +17,20 @@ import json
 import sys
 from collections.abc import Iterator
 from contextvars import ContextVar
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.overview.data_prep import DataPrepStepId, DataPrepStepState
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.overview_results import OverviewPrepareStepPayload
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .overview_native_support import invoke_native_overview
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,13 +59,13 @@ def test_prepare_shows_import_step_pending_on_fresh_profile() -> None:
     pending and names the exact ``ledger import`` command to run next."""
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
 
     assert payload["modelo"] == "130"
-    assert payload["filing_year"] == 2026
+    assert payload["filing_year"] == _YEAR
     assert payload["period"] == "1T"
     assert payload["ready_for_calculation"] is False
 
@@ -79,7 +83,7 @@ def test_prepare_shows_import_step_pending_on_fresh_profile() -> None:
     assert work_action["action"]["cli_path"] == ["app", "modelo", "work", "create"]
     assert {binding["argument_name"]: binding["value"] for binding in work_action["argument_bindings"]} == {
         "modelo": "130",
-        "year": 2026,
+        "year": _YEAR,
         "period": "1T",
     }
     preparation_notices = [
@@ -113,14 +117,14 @@ def test_prepare_advances_import_step_after_manual_ledger_entry() -> None:
     added = _invoke(
         [
             "app", "ledger", "add",
-            "--date", "2026-02-10", "--amount", "1000.00",
+            "--date", date(_YEAR, 2, 10).isoformat(), "--amount", "1000.00",
             "--direction", "INCOMING", "--description", "Factura cliente A",
         ],
     )  # fmt: skip
     assert added.exit_code == 0, added.output
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
@@ -141,10 +145,10 @@ def test_prepare_is_read_only_and_safe_to_run_repeatedly() -> None:
     invocation reports identical state, proving no mutation occurred."""
 
     first = _invoke(
-        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"],
     )
     second = _invoke(
-        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "overview", "prepare", "--modelo", "130", "--year", str(_YEAR), "--period", "1T"],
     )
     assert first.exit_code == 0, first.output
     assert second.exit_code == 0, second.output
@@ -156,7 +160,7 @@ def test_prepare_rejects_unknown_modelo_with_registry_grounded_message() -> None
     defaulting to an empty checklist."""
 
     result = _invoke(
-        ["--format", "json", "app", "overview", "prepare", "--modelo", "999", "--year", "2026", "--period", "1T"],
+        ["--format", "json", "app", "overview", "prepare", "--modelo", "999", "--year", str(_YEAR), "--period", "1T"],
     )
     assert result.exit_code != 0
 

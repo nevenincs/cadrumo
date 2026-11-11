@@ -18,6 +18,7 @@ from ...calculations.registry.binding_grade_cap_reach import capped_binding_reac
 from ...calculations.registry.facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...calculations.registry.tests.grade_cap_support import recapped_revision
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ..retenciones_routing_integrity import (
@@ -29,7 +30,7 @@ from ..retenciones_routing_integrity import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # One routing variant is in force from 2019, so any supported filing year selects it.
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD_END = date(_FILING_YEAR, 3, 31)
 
 
@@ -151,8 +152,8 @@ def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:
     """
     with bundled_indexed_authority().operation() as operation:
         for period in ("1T", "2T", "3T", "4T"):
-            snapshot = operation.snapshot(Modelo("130"), filing_year=2026, period=period)
-            assert snapshot.revision.id == "2019-y-siguientes"
+            snapshot = operation.snapshot(Modelo("130"), filing_year=_FILING_YEAR, period=period)
+            assert snapshot.revision.id == str(revision_covering("130", _FILING_YEAR).id)
 
 
 class _RecordingFacts:
@@ -172,7 +173,11 @@ class _RecordingFacts:
 
 
 @pytest.mark.parametrize(
-    ("year", "period", "closes"), [(2025, "1T", date(2025, 3, 31)), (2026, "3T", date(2026, 9, 30))]
+    ("year", "period", "closes"),
+    [
+        (filing_year_envelope().floor, "1T", date(filing_year_envelope().floor, 3, 31)),
+        (_FILING_YEAR, "3T", date(_FILING_YEAR, 9, 30)),
+    ],
 )
 def test_the_capped_reach_reads_the_route_at_the_period_it_screens(year: int, period: str, closes: date) -> None:
     """The redirect a cap on casilla 06's binding reads is the route in force for the quarter, never today's.

@@ -10,6 +10,7 @@ from typing import Never
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
 from ....application.modelo.action_errors import WorkUnitMutationRefusedError
@@ -33,21 +34,23 @@ from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
 from ....entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import seed_m130_activity
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-_FIRST = Period.from_year_and_code(2026, "1T")
-_SECOND = Period.from_year_and_code(2026, "2T")
+_FIRST = Period.from_year_and_code(_YEAR, "1T")
+_SECOND = Period.from_year_and_code(_YEAR, "2T")
 
 
 @pytest.fixture(scope="module")
 def two_persisted(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOperatorWork]:
     with seeded_operator_work(tmp_path_factory.mktemp("portfolio-two")) as persisted:
-        period = Period.from_year_and_code(2026, "2T")
+        period = Period.from_year_and_code(_YEAR, "2T")
         second = create_work_unit(
             bucket_id=persisted.work_unit.bucket_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
-            revision_id=str(persisted.operation.revision_for_context("130", filing_year=2026, period="2T").id),
+            revision_id=str(persisted.operation.revision_for_context("130", filing_year=_YEAR, period="2T").id),
             ports=build_work_lifecycle_ports(bucket_id=persisted.work_unit.bucket_id),
             clock=SEEDED_AT,
             operation=persisted.operation,
@@ -133,7 +136,7 @@ def test_two_real_rows_survive_one_stale_coordinate_without_its_amount_or_histor
     read_periods: list[Period] = []
 
     def result_box(modelo: str, year: int, period: Period) -> str:
-        assert modelo == "130" and year == 2026
+        assert modelo == "130" and year == _YEAR
         read_periods.append(period)
         return "19"
 
@@ -157,7 +160,7 @@ def test_two_real_rows_survive_one_stale_coordinate_without_its_amount_or_histor
     assert bad.summary is not None and bad.summary.state is DeclarationSummaryState.UNREADABLE
     assert bad.summary.result is None and (bad.summary.technical_reason is not None and bad.summary.technical_reason)
     assert "technical_reason" not in bad.summary.model_dump()
-    assert read_periods == [Period.from_year_and_code(2026, "1T")]
+    assert read_periods == [Period.from_year_and_code(_YEAR, "1T")]
     assert all(row.work_unit_id == healthy.work_unit_id for row in projection.calculation_revisions)
     assert len(projection.calculation_revisions) == 1
     assert projection.filings == () and projection.lifecycle == ()

@@ -41,13 +41,17 @@ from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueReposit
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
+_NOW = datetime(_YEAR, 6, 3, 16, 0, tzinfo=UTC)
 _TX_ID = "a" * 64
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 active_profile = active_profile_isolated_backend_fixture(autouse=False, name="active_profile")
 
@@ -61,14 +65,14 @@ def _persisted_work_unit(*, operation: PinnedAuthorityOperation) -> WorkUnit:
     """Persist the parent WorkUnit a stored revision must belong to, at its law-selected coordinates."""
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation)
+    revision_id = active_registry_revision_id(modelo="303", filing_year=_YEAR, period="1T", operation=operation)
     work_unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id=revision_id
+            bucket_id=bucket_id, modelo="303", filing_year=_YEAR, period=_PERIOD, revision_id=revision_id
         ),
         bucket_id=bucket_id,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=revision_id,
         name="303-2026-1T",
@@ -106,7 +110,7 @@ def _revision(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id=work_unit.revision_id,
-            modelo_year=2026,
+            modelo_year=_YEAR,
             period=_PERIOD.registry_token,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

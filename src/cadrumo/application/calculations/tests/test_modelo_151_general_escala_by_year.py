@@ -31,7 +31,9 @@ from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnve
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.formula_runtime_ops import resolve_bracket
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
+    published_legal_reference,
     published_snapshot,
     published_supported_filing_years,
 )
@@ -51,24 +53,30 @@ _RATE_LOW = Decimal("0.24")
 #: A base above the threshold, so the year's top rate decides the cuota.
 _BASE = Decimal("700000.00")
 
-#: The years the 2015-2022 edition covers below any plausible support floor,
-#: each with the top rate its own wording fixes.
-_PRE_2021_TOP_RATES: dict[int, Decimal] = {
-    2015: Decimal("0.47"),
-    2016: Decimal("0.45"),
-    2017: Decimal("0.45"),
-    2018: Decimal("0.45"),
-    2019: Decimal("0.45"),
-    2020: Decimal("0.45"),
-}
+#: The exercises the oldest edition governs. The years of the wording changes come
+#: from the published provisions' validity windows; the rates are the law's own.
+_FIRST_EDITION_YEAR = authored_revisions(_MODELO)[0].valid_from.year
+_SINGLE_YEAR_EXCEPTION = published_legal_reference("ley-35-2006:da-31").effective_from.year
+_LEY_26_2014_WORDING = published_legal_reference("ley-35-2006:art-93-2015")
+assert _LEY_26_2014_WORDING.effective_to is not None
+_LEY_26_2014_FIRST_YEAR = _LEY_26_2014_WORDING.effective_from.year
+_LEY_26_2014_LAST_YEAR = _LEY_26_2014_WORDING.effective_to.year
+_RATE_DISPOSICION_ADICIONAL = Decimal("0.47")
+_RATE_LEY_26_2014 = Decimal("0.45")
+_RATE_LEY_11_2020 = Decimal("0.47")
+
+#: The years the oldest edition covers below the support floor.
+_PRE_FLOOR_YEARS = tuple(range(_FIRST_EDITION_YEAR, filing_year_envelope().floor))
 
 
 def _top_rate(year: int) -> Decimal:
-    if year in _PRE_2021_TOP_RATES:
-        return _PRE_2021_TOP_RATES[year]
-    if year < min(_PRE_2021_TOP_RATES):
+    if year < _FIRST_EDITION_YEAR:
         raise AssertionError(f"no wording of art. 93.2.e).1.º is enrolled here for {year}")
-    return Decimal("0.47")
+    if year == _SINGLE_YEAR_EXCEPTION:
+        return _RATE_DISPOSICION_ADICIONAL
+    if _LEY_26_2014_FIRST_YEAR <= year <= _LEY_26_2014_LAST_YEAR:
+        return _RATE_LEY_26_2014
+    return _RATE_LEY_11_2020
 
 
 def _expected_cuota(base: Decimal, year: int) -> Decimal:
@@ -90,9 +98,9 @@ def _floor_snapshot() -> RegistrySnapshot:
 
 def test_the_oracle_reproduces_the_worked_cuotas() -> None:
     """600.000 x 0,24 = 144.000, then 100.000 at the year's top rate."""
-    assert _expected_cuota(_BASE, 2015) == Decimal("191000.00")
-    assert _expected_cuota(_BASE, 2016) == Decimal("189000.00")
-    assert _expected_cuota(_BASE, 2021) == Decimal("191000.00")
+    assert _expected_cuota(_BASE, _SINGLE_YEAR_EXCEPTION) == Decimal("191000.00")
+    assert _expected_cuota(_BASE, _SINGLE_YEAR_EXCEPTION + 1) == Decimal("189000.00")
+    assert _expected_cuota(_BASE, _LEY_26_2014_LAST_YEAR + 1) == Decimal("191000.00")
 
 
 @pytest.mark.parametrize("year", _supported_years())
@@ -108,7 +116,7 @@ def test_every_supported_year_computes_its_own_top_rate(year: int) -> None:
     assert result.values[_CUOTA_GENERAL] == _expected_cuota(_BASE, year)
 
 
-@pytest.mark.parametrize("year", sorted(_PRE_2021_TOP_RATES))
+@pytest.mark.parametrize("year", _PRE_FLOOR_YEARS)
 def test_a_year_below_the_floor_is_refused_as_outside_the_envelope(year: int) -> None:
     """The product does not file below the floor, and says so rather than guessing."""
     if year >= _supported_years()[0]:
@@ -118,10 +126,10 @@ def test_a_year_below_the_floor_is_refused_as_outside_the_envelope(year: int) ->
         published_snapshot(_MODELO, filing_year=year, period="0A")
 
     assert refusal.value.filing_year == year
-    assert "2015-2022" in refusal.value.covering_revision_ids
+    assert str(authored_revisions(_MODELO)[0].id) in refusal.value.covering_revision_ids
 
 
-@pytest.mark.parametrize("year", sorted(_PRE_2021_TOP_RATES))
+@pytest.mark.parametrize("year", _PRE_FLOOR_YEARS)
 def test_the_edition_resolves_the_top_rate_of_each_year_below_the_floor(year: int) -> None:
     """The covering edition's escala answers each earlier year with that year's wording."""
     snapshot = _floor_snapshot()

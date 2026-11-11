@@ -36,6 +36,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors.severity import BaseSeverity
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.import_fingerprints import derive_import_fingerprint
 from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
@@ -44,6 +45,8 @@ from ..diagnostics import LedgerImportDiagnosticKind
 from ..import_diagnostics import LedgerImportResult, import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _diagnose(
@@ -81,8 +84,8 @@ def _diagnose(
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2025, 4, 5),
-    value_date: date | None = date(2025, 4, 5),
+    booked_date: date = date(_YEAR, 4, 5),
+    value_date: date | None = date(_YEAR, 4, 5),
     amount: Decimal = Decimal("121.00"),
     description: str | None = None,
 ) -> RawTransaction:
@@ -104,7 +107,7 @@ def _raw_transaction(
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -308,9 +311,9 @@ def test_import_duplicate_diagnostic_carries_affected_transaction_id() -> None:
 def test_import_consecutive_dates_emit_no_gap_diagnostic() -> None:
     """A run of consecutive dates yields no GAP warning."""
     rows = [
-        _raw_transaction("tx-1", value_date=date(2025, 4, 1)),
-        _raw_transaction("tx-2", value_date=date(2025, 4, 5)),
-        _raw_transaction("tx-3", value_date=date(2025, 4, 10)),
+        _raw_transaction("tx-1", value_date=date(_YEAR, 4, 1)),
+        _raw_transaction("tx-2", value_date=date(_YEAR, 4, 5)),
+        _raw_transaction("tx-3", value_date=date(_YEAR, 4, 10)),
     ]
 
     result = _diagnose(
@@ -326,8 +329,8 @@ def test_import_consecutive_dates_emit_no_gap_diagnostic() -> None:
 def test_import_36_day_gap_emits_single_gap_warning() -> None:
     """Two rows >35 days apart emit one GAP WARNING."""
     rows = [
-        _raw_transaction("tx-1", value_date=date(2025, 1, 1)),
-        _raw_transaction("tx-2", value_date=date(2025, 2, 10)),
+        _raw_transaction("tx-1", value_date=date(_YEAR, 1, 1)),
+        _raw_transaction("tx-2", value_date=date(_YEAR, 2, 10)),
     ]
 
     result = _diagnose(
@@ -345,9 +348,9 @@ def test_import_multiple_gaps_emit_only_one_diagnostic() -> None:
     """The helper short-circuits after the first detected gap to
     avoid noisy duplicated GAP diagnostics within one file."""
     rows = [
-        _raw_transaction("tx-1", value_date=date(2025, 1, 1)),
-        _raw_transaction("tx-2", value_date=date(2025, 2, 10)),  # gap #1
-        _raw_transaction("tx-3", value_date=date(2025, 4, 1)),  # gap #2
+        _raw_transaction("tx-1", value_date=date(_YEAR, 1, 1)),
+        _raw_transaction("tx-2", value_date=date(_YEAR, 2, 10)),  # gap #1
+        _raw_transaction("tx-3", value_date=date(_YEAR, 4, 1)),  # gap #2
     ]
 
     result = _diagnose(
@@ -363,8 +366,8 @@ def test_import_multiple_gaps_emit_only_one_diagnostic() -> None:
 def test_import_gap_uses_value_date_with_booked_date_fallback() -> None:
     """Rows without a value_date fall back to booked_date for gap math."""
     rows = [
-        _raw_transaction("tx-1", value_date=None, booked_date=date(2025, 1, 1)),
-        _raw_transaction("tx-2", value_date=None, booked_date=date(2025, 2, 10)),
+        _raw_transaction("tx-1", value_date=None, booked_date=date(_YEAR, 1, 1)),
+        _raw_transaction("tx-2", value_date=None, booked_date=date(_YEAR, 2, 10)),
     ]
 
     result = _diagnose(

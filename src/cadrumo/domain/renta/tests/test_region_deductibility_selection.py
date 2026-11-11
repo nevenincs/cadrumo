@@ -33,6 +33,7 @@ from cadrumo.domain.categories.spending_category import SpendingCategory
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...categories.profile import CategoryProfile
 from ...categories.proportionality import (
     CategoryCitation,
@@ -48,18 +49,19 @@ from ..ledger_expenses import RentaDeductibilityContext, resolve_region_category
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CATEGORY = SpendingCategory.from_registry("material_oficina")
+_YEAR = filing_year_envelope().horizon
 
 
 def _citation() -> CategoryCitation:
     return CategoryCitation(
         source=CategoryCitationSource.MANUAL_RENTA,
-        reference="Manual practico Renta 2025",
+        reference=f"Manual practico Renta {_YEAR}",
         locator="test",
         url=parse_http_url(RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
-        source_ref="aeat-renta-2025-manual-parte1",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        source_ref=f"aeat-renta-{_YEAR}-manual-parte1",
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
 
@@ -77,7 +79,7 @@ def _profile(kind: ProportionalityKind, *, fixed_pct: str | None = None) -> Cate
     )
 
 
-_PROFILE_DATE = date(2025, 12, 31)
+_PROFILE_DATE = date(_YEAR, 12, 31)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -100,19 +102,19 @@ def override_profile() -> CategoryProfile:
 
 
 def _context(residence_ccaa: CCAA | None) -> RentaDeductibilityContext:
-    return RentaDeductibilityContext(profile_year=2025, residence_ccaa=residence_ccaa)
+    return RentaDeductibilityContext(profile_year=_YEAR, residence_ccaa=residence_ccaa)
 
 
 def test_residence_ccaa_defaults_to_none_and_accepts_a_member() -> None:
     """The D1 axis is optional (default ``None``) and accepts a CCAA member."""
-    assert RentaDeductibilityContext(profile_year=2025).residence_ccaa is None
+    assert RentaDeductibilityContext(profile_year=_YEAR).residence_ccaa is None
     assert _context(CCAA.CANARIAS).residence_ccaa == CCAA.CANARIAS
 
 
 def test_override_layer_is_provisioned_but_empty() -> None:
     """No SpendingCategory warrants a per-comunidad expense override today (D2-C)."""
-    assert dict(resolve_region_category_profiles(2024)) == {}
-    assert dict(resolve_region_category_profiles(2025)) == {}
+    for year in (filing_year_envelope().floor, _YEAR):
+        assert dict(resolve_region_category_profiles(year)) == {}, year
 
 
 def test_no_override_returns_state_profile_regardless_of_region(state_profile: CategoryProfile) -> None:

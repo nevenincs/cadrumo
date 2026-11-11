@@ -24,6 +24,7 @@ from ....application.modelo.filing_chain_reconciliation import FilingReconciliat
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_commands as handler
 from .. import operation_filed_single as bridge
 from .. import operation_profile_operation as profile_operation
@@ -32,6 +33,9 @@ from ..command_specs import COMMAND_GRAPH
 from ..filing_chain_payloads import filing_reconciliation_notices
 from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
 from .filed_capture_projection_support import confirmed_reconciliation, incomplete_receipt_notice
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,7 +48,7 @@ def _projection() -> FiledSingleCapturePublicResultV1:
     return FiledSingleCapturePublicResultV1(
         output_root=str(_OUTPUT_ROOT),
         modelo="303",
-        year=2025,
+        year=_YEAR,
         captured_count=1,
         reached_count=1,
         observation_paths=("encrypted-observation",),
@@ -60,7 +64,7 @@ def _projection() -> FiledSingleCapturePublicResultV1:
         calculation_observation_count=2,
         calculation_observation_keys=("observation-1", "observation-2"),
         evidence_notices=(incomplete_receipt_notice(),),
-        reconciliations=(confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=2025, period="1T"),),
+        reconciliations=(confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=_YEAR, period="1T"),),
     )
 
 
@@ -93,9 +97,9 @@ def _read() -> bridge.FiledSingleCaptureRead:
     return bridge.read_filed_single_capture_for_cli(
         cast(typer.Context, cast(object, None)),
         modelo="303",
-        year=2025,
+        year=_YEAR,
         output_root=_OUTPUT_ROOT,
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="exp-1",
         limit=2,
     )
@@ -109,12 +113,12 @@ def test_single_capture_submits_exact_profile_and_reconstructs_report(monkeypatc
     assert read.completion.operation_id == _OPERATION_ID
     assert read.report.output_root == str(_OUTPUT_ROOT)
     assert read.report.modelo == "303"
-    assert read.report.year == 2025
+    assert read.report.year == _YEAR
     assert read.report.reached_count == 1
     assert read.report.evidence_notices[0].context == {"reason": "unavailable"}
     reconciliation = read.report.reconciliation_results[0]
     assert reconciliation.outcome is FilingReconciliationOutcome.CONFIRMED
-    assert reconciliation.period == Period.from_year_and_code(2025, "1T")
+    assert reconciliation.period == Period.from_year_and_code(_YEAR, "1T")
     assert reconciliation.notices[0].context == {"reason": "receipt"}
     assert len(submissions) == 1
     _client, request, options = submissions[0]
@@ -122,7 +126,7 @@ def test_single_capture_submits_exact_profile_and_reconstructs_report(monkeypatc
         profile_id=_PROFILE,
         output_root=_OUTPUT_ROOT,
         modelo="303",
-        year=2025,
+        year=_YEAR,
         period="1T",
         expediente_id="exp-1",
         limit=2,
@@ -140,7 +144,7 @@ def test_single_capture_mismatch_refuses_with_correlated_receipt(
     effect = OperationEffect.UPDATED
     condition = OperationTerminalCondition.SUCCEEDED
     if mismatch == "pair":
-        projection = projection.model_copy(update={"year": 2024})
+        projection = projection.model_copy(update={"year": _YEAR - 1})
     elif mismatch == "effect":
         effect = OperationEffect.NONE
     else:
@@ -166,7 +170,7 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
     handler.emit_single_filed_pull(
         cast(typer.Context, cast(object, None)),
         modelo="303",
-        year=2025,
+        year=_YEAR,
         output_root=_OUTPUT_ROOT,
         period="1T",
         expediente_id="exp-1",
@@ -182,7 +186,7 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
         "mode": "single",
         "output_root": "filed",
         "modelo": "303",
-        "year": 2025,
+        "year": _YEAR,
         "modelos": [],
         "pair_outcomes": [],
         "year_from": None,
@@ -208,8 +212,8 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
                 "outcome": "confirmed",
                 "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
                 "modelo": "303",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "1T"},
+                "filing_year": _YEAR,
+                "period": {"filing_year": _YEAR, "code": "1T"},
                 "member_nif": "X1234567A",
                 "filing_record_id": "record-1",
                 "affected_filing_record_ids": ["record-2", "record-3"],
@@ -251,15 +255,15 @@ def test_profile_runtime_admission_covers_single_and_bulk_modes() -> None:
 
     assert profile_authentication_gate_uses_profile_connection(
         spec,
-        {"modelos": ["303"], "year": 2025, "year_from": None, "year_to": None},
+        {"modelos": ["303"], "year": _YEAR, "year_from": None, "year_to": None},
     )
     assert profile_authentication_gate_uses_profile_connection(
         spec,
-        {"modelos": ["303"], "year": 2025, "year_from": 2024, "year_to": 2025},
+        {"modelos": ["303"], "year": _YEAR, "year_from": _YEAR - 1, "year_to": _YEAR},
     )
     assert profile_authentication_gate_uses_profile_connection(
         spec,
-        {"modelos": ["303", "390"], "year": 2025, "year_from": None, "year_to": None},
+        {"modelos": ["303", "390"], "year": _YEAR, "year_from": None, "year_to": None},
     )
     assert profile_authentication_gate_uses_profile_connection(
         spec,

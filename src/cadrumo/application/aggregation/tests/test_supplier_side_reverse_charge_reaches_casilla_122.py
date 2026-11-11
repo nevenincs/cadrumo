@@ -34,6 +34,7 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.components import (
     registry_component_catalogue,
@@ -46,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BASE = Decimal("1000.00")
-_DEVENGO = date(2024, 3, 15)
+_DEVENGO = date(filing_year_envelope().horizon, 3, 15)
 
 _CASILLA_122 = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
@@ -92,7 +93,7 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
         {
             "bucket_id": "29292929-2929-4929-8929-292929292929",
             "kind": kind.value,
-            "invoice_number": "F-2024-0122",
+            "invoice_number": f"F-{_DEVENGO.year}-0122",
             "issued_at": _DEVENGO.isoformat(),
             "counterparty_name": "Constructora Peninsular SL",
             "counterparty_tax_id": "ESB00015016",

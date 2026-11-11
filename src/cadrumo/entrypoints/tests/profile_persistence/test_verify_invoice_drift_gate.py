@@ -54,6 +54,7 @@ from cadrumo.application.user_profile.tests.persona_profile_facts import persona
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -100,10 +101,10 @@ from cadrumo.tests.env_scope import ready_clave_settings
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "34700000-0000-4000-8000-000000000348"
-_YEAR = 2025
-_REVISION_ID = "2025-y-siguientes"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("347", _YEAR).id)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 10, 11, 0, tzinfo=UTC)
 _LATER = itertools.count()
 _DRIFT_KEY = "application.modelo.findings.invoice_fingerprint_drift"
 _ABSENT_KEY = "application.modelo.findings.invoice_fingerprint_absent"
@@ -119,7 +120,7 @@ def _profile_facts() -> tuple[UserProfileFact, ...]:
             UserProfileFact(path="identity.name", value="Ready"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="invoice-drift"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 6, 1, 1)),
             UserProfileFact(path="withholding.colegio_concertado", value=False),
         )
     )
@@ -127,7 +128,7 @@ def _profile_facts() -> tuple[UserProfileFact, ...]:
 
 def _later() -> datetime:
     """Each lifecycle step strictly after every calculation and verify before it."""
-    return datetime(2026, 4, 20, 12, 0, tzinfo=UTC) + timedelta(hours=next(_LATER))
+    return datetime(_YEAR, 4, 20, 12, 0, tzinfo=UTC) + timedelta(hours=next(_LATER))
 
 
 def _invoice(
@@ -364,7 +365,7 @@ def test_m347_addition_is_reported(m347: _M347) -> None:
 
 def test_m347_invoice_of_another_year_is_out_of_scope(m347: _M347) -> None:
     revision = _calculate(m347.work_unit)
-    other_year = _invoice("P-OTHER", issued_at=date(_YEAR + 1, 2, 10))
+    other_year = _invoice("P-OTHER", issued_at=date(_YEAR - 1, 2, 10))
     m347.invoices.save(build_invoice_catalogue((*m347.invoices.load().values(), other_year)))
     assert _verify_m347(m347, revision).granted_verificado_completo is True
 
@@ -487,11 +488,11 @@ def test_m303_invoice_moved_out_of_the_period_registers_and_back_in_clears(tmp_p
         sale_invoice = _invoice(
             "V-001",
             kind=InvoiceKind.ISSUED,
-            issued_at=date(2026, 2, 15),
+            issued_at=date(_YEAR, 2, 15),
             bucket_id=IRENE_BUCKET,
             base=Decimal("400.00"),
             iva=Decimal("84.00"),
-        ).model_copy(update={"operation_date": date(2026, 2, 15), "operation_date_role": operation_performed_role()})
+        ).model_copy(update={"operation_date": date(_YEAR, 2, 15), "operation_date_role": operation_performed_role()})
         invoices.save(build_invoice_catalogue((sale_invoice,)))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation)
@@ -507,7 +508,7 @@ def test_m303_invoice_moved_out_of_the_period_registers_and_back_in_clears(tmp_p
         update_catalogue_invoice(
             bucket_id=IRENE_BUCKET,
             invoice_id=sale_invoice.invoice_id,
-            patch=CatalogueInvoicePatch(operation_date=date(2026, 4, 2)),
+            patch=CatalogueInvoicePatch(operation_date=date(_YEAR, 4, 2)),
             ports=ports,
             occurred_at=_T1,
         )
@@ -516,7 +517,7 @@ def test_m303_invoice_moved_out_of_the_period_registers_and_back_in_clears(tmp_p
         update_catalogue_invoice(
             bucket_id=IRENE_BUCKET,
             invoice_id=sale_invoice.invoice_id,
-            patch=CatalogueInvoicePatch(operation_date=date(2026, 2, 16)),
+            patch=CatalogueInvoicePatch(operation_date=date(_YEAR, 2, 16)),
             ports=ports,
             occurred_at=_T1,
         )
@@ -531,7 +532,7 @@ def test_m303_second_quarter_invoice_addition_does_not_touch_the_first(tmp_path:
         invoices = InvoiceCatalogueRepository(bucket_id=IRENE_BUCKET, objects=objects)
         invoices.save(
             build_invoice_catalogue(
-                (_invoice("V-Q2", kind=InvoiceKind.ISSUED, issued_at=date(2026, 5, 2), bucket_id=IRENE_BUCKET),)
+                (_invoice("V-Q2", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 5, 2), bucket_id=IRENE_BUCKET),)
             )
         )
         report = _verify(revision.calculation_revision_id, bucket_id=IRENE_BUCKET, objects=objects)
@@ -541,7 +542,7 @@ def test_m303_second_quarter_invoice_addition_does_not_touch_the_first(tmp_path:
             build_invoice_catalogue(
                 (
                     *invoices.load().values(),
-                    _invoice("V-Q1", kind=InvoiceKind.ISSUED, issued_at=date(2026, 2, 2), bucket_id=IRENE_BUCKET),
+                    _invoice("V-Q1", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 2, 2), bucket_id=IRENE_BUCKET),
                 )
             )
         )
@@ -553,18 +554,18 @@ def test_m130_scope_is_the_invoices_linked_to_a_contributor(tmp_path: Path) -> N
     """Income evidence reads a retention only through the row the invoice is linked to."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         contributor = "a" * 64
-        linked = _invoice("V-LINK", kind=InvoiceKind.ISSUED, issued_at=date(2026, 2, 2)).model_copy(
+        linked = _invoice("V-LINK", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 2, 2)).model_copy(
             update={"linked_transaction_ids": (contributor,)}
         )
-        unlinked = _invoice("V-LOOSE", kind=InvoiceKind.ISSUED, issued_at=date(2026, 2, 3))
+        unlinked = _invoice("V-LOOSE", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 2, 3))
         invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository)
         invoices.save(build_invoice_catalogue((linked, unlinked)))
         ports = build_invoice_catalogue_read_ports(bucket_id=_BUCKET)
         with bundled_indexed_authority().operation() as operation:
-            period = Period.from_year_and_code(2026, "1T")
-            revision = operation.snapshot("130", filing_year=2026, period="1T").revision
+            period = Period.from_year_and_code(_YEAR, "1T")
+            revision = operation.snapshot("130", filing_year=_YEAR, period="1T").revision
             work_unit = WorkUnit.model_construct(
-                bucket_id=_BUCKET, modelo="130", filing_year=2026, period=period, revision_id=revision.id
+                bucket_id=_BUCKET, modelo="130", filing_year=_YEAR, period=period, revision_id=revision.id
             )
             snapshot = capture_invoice_fingerprint(
                 work_unit=work_unit,
@@ -598,18 +599,18 @@ def test_m369_exterior_period_scope_has_no_issue_date_span(tmp_path: Path) -> No
             "oss_ioss_regime": OssIossRegime("union_scheme"),
             "oss_transaction_kind": TransactionKind("oss_union_services"),
         }
-        inside = _invoice("OSS-1", kind=InvoiceKind.ISSUED, issued_at=date(2026, 2, 2)).model_copy(update=oss)
-        other_quarter = _invoice("OSS-2", kind=InvoiceKind.ISSUED, issued_at=date(2026, 5, 2)).model_copy(update=oss)
-        domestic = _invoice("V-1", kind=InvoiceKind.ISSUED, issued_at=date(2026, 2, 3))
+        inside = _invoice("OSS-1", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 2, 2)).model_copy(update=oss)
+        other_quarter = _invoice("OSS-2", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 5, 2)).model_copy(update=oss)
+        domestic = _invoice("V-1", kind=InvoiceKind.ISSUED, issued_at=date(_YEAR, 2, 3))
         invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository)
         invoices.save(build_invoice_catalogue((inside, other_quarter, domestic)))
         with bundled_indexed_authority().operation() as operation:
-            revision = operation.snapshot("369", filing_year=2026, period="EXT-1T").revision
+            revision = operation.snapshot("369", filing_year=_YEAR, period="EXT-1T").revision
             work_unit = WorkUnit.model_construct(
                 bucket_id=_BUCKET,
                 modelo="369",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "EXT-1T"),
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "EXT-1T"),
                 revision_id=revision.id,
             )
             snapshot = capture_invoice_fingerprint(

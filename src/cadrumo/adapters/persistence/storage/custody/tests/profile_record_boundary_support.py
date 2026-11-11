@@ -46,9 +46,9 @@ PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))
 RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
 
-CREATED_AT = datetime(2024, 1, 4, 9, 0, 0, tzinfo=UTC)
-UPDATED_AT = datetime(2024, 6, 15, 14, 32, 17, tzinfo=UTC)
-REPLACED_AT = datetime(2024, 9, 2, 8, 5, 41, tzinfo=UTC)
+CREATED_AT = datetime(1980, 1, 4, 9, 0, 0, tzinfo=UTC)
+UPDATED_AT = datetime(1980, 6, 15, 14, 32, 17, tzinfo=UTC)
+REPLACED_AT = datetime(1980, 9, 2, 8, 5, 41, tzinfo=UTC)
 
 SCHEMA_PINNED_FIELDS = frozenset({"schema_id", "schema_version"})
 """Fields a record validator pins to the loaded schema's own declaration.
@@ -108,22 +108,22 @@ def populated_facts() -> tuple[UserProfileFact, ...]:
             path="activities.iae_epigraph",
             value="765",
             source="setup_wizard",
-            valid_from=date(2024, 1, 1),
-            valid_to=date(2024, 12, 31),
+            valid_from=date(1980, 1, 1),
+            valid_to=date(1980, 12, 31),
         ),
         UserProfileFact(
             path="activities.description",
             value="Servicios de programacion informatica",
             source="modelo_036_import",
-            valid_from=date(2023, 7, 1),
-            valid_to=date(2025, 6, 30),
+            valid_from=date(1979, 7, 1),
+            valid_to=date(1981, 6, 30),
         ),
         UserProfileFact(
             path="censo.status",
             value="alta",
             source="registry_inference",
-            valid_from=date(2022, 4, 15),
-            valid_to=date(2026, 3, 31),
+            valid_from=date(1978, 4, 15),
+            valid_to=date(1982, 3, 31),
         ),
     )
 

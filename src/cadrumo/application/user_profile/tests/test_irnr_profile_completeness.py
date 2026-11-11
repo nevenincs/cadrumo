@@ -10,6 +10,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority_artifact import ProfileCreateContext
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import (
     ProfileSetupState,
@@ -187,8 +188,8 @@ def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work(
     report = ProfilePreflightService(schema=schema).report(
         record=record,
         modelo="210",
-        revision_id="2025",
-        period=Period.from_year_and_code(2026, "1T"),
+        revision_id=revision_covering("210", filing_year_envelope().horizon).id,
+        period=Period.from_year_and_code(filing_year_envelope().horizon, "1T"),
     )
 
     missing_paths = {f"{item.section_key}.{item.field_key}" for item in report.missing}

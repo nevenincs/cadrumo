@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import csv
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_profile_backend_fixture
@@ -79,7 +82,7 @@ def test_non_resident_add_source_jurisdiction_reaches_canonical_exports(
     }
     for index, (description, jurisdiction) in enumerate(expected.items(), start=1):
         _add_manual_row(
-            date=f"2026-04-0{index}",
+            date=date(filing_year_envelope().horizon, 4, index).isoformat(),
             description=description,
             source_jurisdiction=jurisdiction,
         )

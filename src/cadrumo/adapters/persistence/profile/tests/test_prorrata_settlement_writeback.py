@@ -41,6 +41,7 @@ from .....domain.calculations.registry.iva_compensation_annual_partition_binding
 )
 from .....domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -67,8 +68,10 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_EJERCICIO = filing_year_envelope().horizon
+
 _BUCKET_ID = "a98e3d41-e45a-4616-a82b-d3e4bbe94e07"  # was 'prorrata-settlement-writeback'
-_T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(_EJERCICIO, 1, 1, 9, 0, 0, tzinfo=UTC)
 
 _VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 _VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id(
@@ -116,8 +119,8 @@ def _seed_verified_m303_revision(
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
-    period = Period.from_year_and_code(2026, period_code)
-    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token)
+    period = Period.from_year_and_code(_EJERCICIO, period_code)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_EJERCICIO, period=period.registry_token)
     # Filed as an ingreso, so the positive result the disposition declares is observed with it.
     values.setdefault(_RESULTADO, Decimal("100.00"))
     # The settlement snapshot every local M303 filing persists reads the final
@@ -129,7 +132,7 @@ def _seed_verified_m303_revision(
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
+        filing_year=_EJERCICIO,
         period=period,
         revision_id=revision_id,
     )
@@ -151,7 +154,7 @@ def _seed_verified_m303_revision(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id=revision_id,
-            modelo_year=2026,
+            modelo_year=_EJERCICIO,
             period=period.registry_token,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -170,10 +173,10 @@ def _seed_verified_m303_revision(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=2026,
+        filing_year=_EJERCICIO,
         period=period,
         revision_id=revision_id,
-        name=f"303-2026-{period_code}",
+        name=f"303-{_EJERCICIO}-{period_code}",
         created_at=_T0,
         updated_at=verified_at,
         current_calculation_revision_id=calculation_revision_id,
@@ -246,7 +249,7 @@ def test_m303_settlement_creates_prorrata_register_entry_when_none_exists(
             operation=operation,
         )
 
-        entry = prorrata_repository.load().entry_for(2026)
+        entry = prorrata_repository.load().entry_for(_EJERCICIO)
         filed_revision = calculation_repository.load().get(revision.calculation_revision_id)
 
     assert entry is not None
@@ -263,24 +266,24 @@ def test_m303_settlement_preserves_existing_register_facts(
 ) -> None:
     """Settlement write-back replaces only the whole-entity settlement fields."""
     existing = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_EJERCICIO,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-        source_observation_ref="303:2025:4T",
+        source_observation_ref=f"303:{_EJERCICIO - 1}:4T",
         source_registry_snapshot_refs=(
-            published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
+            published_authority_operation().snapshot("303", filing_year=_EJERCICIO - 1, period="4T").snapshot_ref,
         ),
     )
     sector_entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_EJERCICIO,
         regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=None,
         sector_id="arrendamiento",
         provisional_percentage=Decimal("60"),
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
-        authorisation_reference="AEAT-AUTH-2026-001",
+        authorisation_reference=f"AEAT-AUTH-{_EJERCICIO}-001",
         source_registry_snapshot_refs=(),
     )
 
@@ -308,13 +311,13 @@ def test_m303_settlement_preserves_existing_register_facts(
 
         register = prorrata_repository.load()
 
-    carried = register.entry_for(2026)
-    retained_sector = register.entry_for(2026, sector_id="arrendamiento")
+    carried = register.entry_for(_EJERCICIO)
+    retained_sector = register.entry_for(_EJERCICIO, sector_id="arrendamiento")
     assert carried is not None
     assert carried.regime == ProrrataRegisterRegime.from_registry("general")
     assert carried.provisional_percentage == Decimal("80")
     assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
-    assert carried.source_observation_ref == "303:2025:4T"
+    assert carried.source_observation_ref == f"303:{_EJERCICIO - 1}:4T"
     assert carried.definitive_percentage == Decimal("75")
     assert carried.definitive_volume_con_derecho == Decimal("150000.00")
     assert carried.definitive_volume_sin_derecho == Decimal("50000.00")
@@ -326,13 +329,13 @@ def test_m303_settlement_preserves_existing_activity_rows(
 ) -> None:
     """Filing 4T cannot erase the canonical DP30305 activity evidence."""
     general_entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_EJERCICIO,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         source_registry_snapshot_refs=(),
     )
     activity_row = ProrrataActivityRow(
-        ejercicio=2026,
+        ejercicio=_EJERCICIO,
         activity_id="retail-general",
         slot=1,
         cnae_code="471",
@@ -340,7 +343,7 @@ def test_m303_settlement_preserves_existing_activity_rows(
         operaciones_con_derecho=Decimal("150000.00"),
         prorrata_type=ProrrataActivityRowType.GENERAL,
         percentage=Decimal("75"),
-        evidence_reference="evidence:dp30305:retail-general:2026",
+        evidence_reference=f"evidence:dp30305:retail-general:{_EJERCICIO}",
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
@@ -367,7 +370,7 @@ def test_m303_settlement_preserves_existing_activity_rows(
         persisted = prorrata_repository.load()
 
     assert persisted.activity_rows == (activity_row,)
-    settled_entry = persisted.entry_for(2026)
+    settled_entry = persisted.entry_for(_EJERCICIO)
     assert settled_entry is not None
     assert settled_entry.definitive_percentage == Decimal("75")
 

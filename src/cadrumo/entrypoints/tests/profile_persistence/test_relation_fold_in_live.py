@@ -86,15 +86,16 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000180"
 _PROFILE_LABEL = "Relation fold-in profile"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon - 1  # the annual declarations close in the following year
+_T0 = datetime(_YEAR + 1, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR + 1, 1, 10, 11, 0, tzinfo=UTC)
 
 
 _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")

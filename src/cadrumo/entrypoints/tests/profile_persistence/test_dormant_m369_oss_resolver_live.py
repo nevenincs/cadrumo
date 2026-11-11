@@ -58,6 +58,7 @@ from cadrumo.domain.calculations.registry.export_parse_models import ParsedExpor
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
@@ -102,7 +103,7 @@ _M369_BUCKET = "36900000-0000-4000-8000-000000000013"
 # Modelo 369 applies only to a filer enrolled in the OSS/IOSS special regime.
 _OSS_ENROLMENT = (UserProfileFact(path="iva.oss_enrolled", value=True),)
 _M369_REVISION = "esquema-union"
-_M369_YEAR = 2026
+_M369_YEAR = filing_year_envelope().horizon
 _DEFAULT_OSS_REGIME = OssIossRegime("union_scheme")
 
 # DR369 v1.1, T36901: positions 9/14 state VOES/D; positions 56/73
@@ -170,7 +171,7 @@ def _m369_candidates() -> tuple[OssIossLedgerCandidate, ...]:
     return (
         _m369_candidate(
             ledger_id="oss-de-services",
-            transaction_date=date(2026, 2, 15),
+            transaction_date=date(_M369_YEAR, 2, 15),
             destination_member_state="de",
             transaction_kind="oss_union_services",
             base_amount=Decimal("100.00"),
@@ -178,7 +179,7 @@ def _m369_candidates() -> tuple[OssIossLedgerCandidate, ...]:
         ),
         _m369_candidate(
             ledger_id="oss-fr-services",
-            transaction_date=date(2026, 2, 16),
+            transaction_date=date(_M369_YEAR, 2, 16),
             destination_member_state="fr",
             transaction_kind="oss_union_services",
             base_amount=Decimal("200.00"),
@@ -186,7 +187,7 @@ def _m369_candidates() -> tuple[OssIossLedgerCandidate, ...]:
         ),
         _m369_candidate(
             ledger_id="oss-de-goods",
-            transaction_date=date(2026, 2, 17),
+            transaction_date=date(_M369_YEAR, 2, 17),
             destination_member_state="de",
             transaction_kind="oss_union_goods_distance_sale",
             base_amount=Decimal("300.00"),
@@ -359,7 +360,7 @@ def _assert_exterior_detail(
     assert detail_value("categoria") == "D"
     assert detail_value("1-declarante-pais") == "US"
     assert detail_value("1-declarante-numero-de-operador-en-el-regimen-neuoss") == "EU724000000001"
-    assert detail_value("2-ejercicio-y-periodo-ejercicio") == 2026
+    assert detail_value("2-ejercicio-y-periodo-ejercicio") == _M369_YEAR
     assert detail_value("2-ejercicio-y-periodo-tipo-de-periodo") == "T"
     assert detail_value("2-ejercicio-y-periodo-periodo") == int(period_token[-2])
     assert (
@@ -401,10 +402,10 @@ def _assert_exterior_correction_pages(layout: ExportLayoutDefinition, parsed: Pa
 @pytest.mark.parametrize(
     ("period_token", "operation_date", "issued_at", "expected_envelope_period", "expected_detail_period"),
     (
-        ("EXT-1T", date(2026, 2, 15), date(2026, 5, 15), b"1T", b"01"),
-        ("EXT-2T", date(2026, 5, 15), date(2026, 8, 15), b"2T", b"02"),
-        ("EXT-3T", date(2026, 8, 15), date(2026, 11, 15), b"3T", b"03"),
-        ("EXT-4T", date(2026, 11, 15), date(2027, 2, 15), b"4T", b"04"),
+        ("EXT-1T", date(_M369_YEAR, 2, 15), date(_M369_YEAR, 5, 15), b"1T", b"01"),
+        ("EXT-2T", date(_M369_YEAR, 5, 15), date(_M369_YEAR, 8, 15), b"2T", b"02"),
+        ("EXT-3T", date(_M369_YEAR, 8, 15), date(_M369_YEAR, 11, 15), b"3T", b"03"),
+        ("EXT-4T", date(_M369_YEAR, 11, 15), date(_M369_YEAR + 1, 2, 15), b"4T", b"04"),
     ),
 )
 def test_m369_exterior_period_calculate_review_export_e2e(
@@ -519,7 +520,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     # corresponding closer carry 1T..4T. T36901 positions 218-219 instead
     # carry the numeric quarter 1..4, padded to two bytes.
     assert wire[10:12] == expected_envelope_period
-    assert wire.endswith(b"</T36902026" + expected_envelope_period + b"0000>")
+    assert wire.endswith(b"</T3690" + str(_M369_YEAR).encode("ascii") + expected_envelope_period + b"0000>")
     assert period_token.encode("ascii") not in wire
     layout = (
         published_authority_operation()
@@ -671,7 +672,7 @@ def _exterior_row_for_rate_kind(rate_kind: IvaRateKind) -> OssIossLedgerObservat
     return OssIossLedgerObservation.model_validate(
         {
             "ledger_id": f"unsupported-{rate_kind.value}",
-            "transaction_date": date(2026, 2, 15),
+            "transaction_date": date(_M369_YEAR, 2, 15),
             "regime": OssIossRegime("external_scheme"),
             "destination_member_state": "de",
             "rate_kind": rate_kind,
@@ -735,7 +736,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 (
                     _m369_invoice(
                         invoice_number="OSS-DE-SERV-001",
-                        issued_at=date(2026, 2, 15),
+                        issued_at=date(_M369_YEAR, 2, 15),
                         counterparty_name="DE Consumer",
                         counterparty_tax_id="DE123456789",
                         counterparty_country="DE",
@@ -745,7 +746,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                     ),
                     _m369_invoice(
                         invoice_number="OSS-FR-SERV-001",
-                        issued_at=date(2026, 2, 16),
+                        issued_at=date(_M369_YEAR, 2, 16),
                         counterparty_name="FR Consumer",
                         counterparty_tax_id="FR12345678901",
                         counterparty_country="FR",
@@ -843,7 +844,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
 ) -> None:
     """OSS period attribution is the art. 75 devengo date, and says which one it used.
 
-    Two invoices, both issued in Q2 2026. One records a Q1 operation date, so
+    Two invoices, both issued in Q2. One records a Q1 operation date, so
     it devengo'd in Q1 and belongs on Q1's Modelo 369; the other records none,
     so its Q2 placement is a substitution the operator is told about. Asserting
     both directions matters: a change that moved every invoice one quarter
@@ -857,18 +858,18 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
             (
                 _m369_invoice(
                     invoice_number="OSS-DE-Q1-OPERATION",
-                    issued_at=date(2026, 4, 10),
+                    issued_at=date(_M369_YEAR, 4, 10),
                     counterparty_name="DE Consumer",
                     counterparty_tax_id="DE123456789",
                     counterparty_country="DE",
                     transaction_kind=TransactionKind("oss_union_services"),
                     base_amount=Decimal("100.00"),
                     iva_amount=Decimal("19.00"),
-                    operation_date=date(2026, 3, 28),
+                    operation_date=date(_M369_YEAR, 3, 28),
                 ),
                 _m369_invoice(
                     invoice_number="OSS-FR-NO-OPERATION-DATE",
-                    issued_at=date(2026, 4, 12),
+                    issued_at=date(_M369_YEAR, 4, 12),
                     counterparty_name="FR Consumer",
                     counterparty_tax_id="FR12345678901",
                     counterparty_country="FR",
@@ -1016,7 +1017,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             (
                 _m369_invoice(
                     invoice_number="OSS-FR-GOODS-UNROUTED-001",
-                    issued_at=date(2026, 2, 17),
+                    issued_at=date(_M369_YEAR, 2, 17),
                     counterparty_name="FR Consumer Goods",
                     counterparty_tax_id="FR98765432109",
                     counterparty_country="FR",
@@ -1153,7 +1154,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
             (
                 _m369_invoice(
                     invoice_number="OSS-FR-GOODS-ZERO-001",
-                    issued_at=date(2026, 2, 18),
+                    issued_at=date(_M369_YEAR, 2, 18),
                     counterparty_name="FR Zero Consumer Goods",
                     counterparty_tax_id="FR00000000000",
                     counterparty_country="FR",

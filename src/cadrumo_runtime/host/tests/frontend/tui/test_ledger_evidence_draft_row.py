@@ -9,6 +9,7 @@ them.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -26,9 +27,12 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
 )
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.ledger.evidence_draft import draft_lines
 
 from ....frontend.tui.runtime_evidence import RuntimeEvidenceTuiDoorV1
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -45,8 +49,8 @@ _DEGRADED = LabelReadingFallback(
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
         supplier_tax_id="B00015081",
-        invoice_number="T-0042-2026",
-        invoice_date="2026-02-14",
+        invoice_number=f"T-0042-{_YEAR}",
+        invoice_date=date(_YEAR, 2, 14).isoformat(),
         taxable_base=Decimal("60.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("12.60"),

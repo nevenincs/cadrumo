@@ -25,6 +25,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.cli.modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
@@ -34,6 +35,8 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -92,9 +95,9 @@ def test_native_work_history_matches_pinned_encrypted_oracle_including_discard(
         adjacent = create_work_unit(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "2T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
+            revision_id=revision_covering("130", _YEAR).id,
             actor="native-history",
             ports=build_work_lifecycle_ports(bucket_id=bucket_id),
             operation=authority_operation,

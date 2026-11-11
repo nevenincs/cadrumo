@@ -15,10 +15,13 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ...calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ...calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ON_DATE = date(2025, 1, 1)
+_YEAR = filing_year_envelope().horizon
+
+_ON_DATE = date(_YEAR, 1, 1)
 
 
 def test_iva_category_has_every_named_member(operation: PinnedAuthorityOperation) -> None:

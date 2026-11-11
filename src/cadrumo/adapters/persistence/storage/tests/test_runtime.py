@@ -41,7 +41,7 @@ from .registered_bucket import publish_registration_capsule
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2099, 5, 26, 12, 15, 0, tzinfo=UTC)
+_NOW = datetime.now(UTC) + timedelta(days=1)
 _DEK = b"d" * 32
 _BUCKET_A_ID = "094d94e7-4474-407c-8971-d9c1a2476db0"
 _BUCKET_B_ID = "d9df0562-55c9-43c8-8486-b79d4016cfbc"

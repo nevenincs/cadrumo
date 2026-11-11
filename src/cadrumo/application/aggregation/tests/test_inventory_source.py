@@ -83,6 +83,7 @@ from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
 _ESTIMATION_REGIME = "irpf.estimation_regime"
+_YEAR = newest_authored_edition("100")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -248,7 +249,7 @@ def _binding(operation: InventoryProjectionOperation, target: str) -> BindingDef
 
 
 def _revision(*, inventory: bool) -> ModeloRevision:
-    base = published_snapshot("100", filing_year=2025, period="0A").revision
+    base = published_snapshot("100", filing_year=_YEAR, period="0A").revision
     bindings = (
         (
             _binding("complete_acquisition_cost", "0181"),
@@ -515,7 +516,7 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
     reverse = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(zeta, alpha)))
     ).resolve(_context(_revision(inventory=True), activities=2))
-    changed_movement = alpha.period_movements[0].model_copy(update={"movement_date": date(2025, 3, 1)})
+    changed_movement = alpha.period_movements[0].model_copy(update={"movement_date": date(_YEAR, 3, 1)})
     changed = InventoryLedger.model_validate(alpha.model_copy(update={"period_movements": (changed_movement,)}))
     mutated = InventorySourceResolver(
         inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(changed, zeta)))
@@ -533,7 +534,7 @@ def _retired(ledger: InventoryLedger) -> InventoryLedger:
     entry = InventoryLedgerHistoryEntry(
         correction_id="out",
         kind=InventoryHistoryKind.RETIRED,
-        recorded_at=datetime(2026, 1, 1, tzinfo=UTC),
+        recorded_at=datetime(_YEAR + 1, 1, 1, tzinfo=UTC),
         actor="test",
         request_fingerprint="a" * 64,
         retirement_reason=InventoryRetirementReason.CREATED_IN_ERROR,
@@ -559,7 +560,7 @@ def test_a_retired_inventory_without_stock_facts_leaves_the_cohort() -> None:
     empty = _retired(
         InventoryLedger(
             actividad_id="zeta",
-            year=2025,
+            year=_YEAR,
             valuation_method=ValuationMethod.FIFO,
             opening_stock=Decimal("0.00"),
             closing_authority_record=None,
@@ -829,10 +830,10 @@ def _terminal_origin_binding(operation: InventoryProjectionOperation, target: st
 def _terminal_origin_revision() -> ModeloRevision:
     """Build the inventory row-template cohort on a self-contained revision."""
     return ModeloRevision(
-        id="renta-2025-inventory-terminal-origin",
-        localization_key="registry.modelo.100.2025",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
+        id=f"renta-{_YEAR}-inventory-terminal-origin",
+        localization_key=f"registry.modelo.100.{_YEAR}",
+        valid_from=date(_YEAR + 1, 1, 1),
+        period_selector=PeriodSelector(years=(_YEAR,), periods=("0A",)),
         legal_refs=("ley-35-2006:art-30",),
         source_refs=("aeat-renta-2025-manual",),
         bindings=(

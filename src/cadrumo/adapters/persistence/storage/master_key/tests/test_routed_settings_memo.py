@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "bafde89c-041e-4756-882b-933aaf16cad8"  # was '11111111-1111-1111-1111-111111111111'
 _DEK = b"d" * 32
-_NOW = datetime(2026, 1, 1, tzinfo=UTC)
+_NOW = datetime(1980, 1, 1, tzinfo=UTC)
 
 
 def _session() -> BucketSession:

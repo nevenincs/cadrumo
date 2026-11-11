@@ -37,6 +37,7 @@ from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -45,6 +46,9 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ...domain.transactions.models import Transaction
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import registered_executor_case_support as conformance
+
+_YEAR = filing_year_envelope().horizon
+
 
 SESSION_CLIENT = UUID("5aa00000-0000-4000-8000-0000000000dd")
 AUTOMATION_LABEL = f"automation:external-client.attended.{SESSION_CLIENT}"
@@ -78,7 +82,7 @@ def seed_row(
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(profile_id),
-            booked_date=date(2025, 1, 21),
+            booked_date=date(_YEAR, 1, 21),
             amount=ROW_AMOUNT,
             direction=TransactionDirection.OUTGOING,
             description=description,
@@ -183,7 +187,7 @@ def seed_invoice(profile_id: UUID, *, number: str) -> str:
             kind=InvoiceKind.RECEIVED,
             bucket_id=bucket_id,
             invoice_number=number,
-            issued_at=date(2025, 1, 21),
+            issued_at=date(_YEAR, 1, 21),
             counterparty_name="Synthetic Supplier",
             counterparty_tax_id="B00010157",
             counterparty_country="ES",

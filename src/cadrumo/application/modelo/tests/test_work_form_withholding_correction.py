@@ -13,6 +13,7 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -38,7 +39,7 @@ from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _CREDITS = {
     "0596": "renta-retencion-soportada-trabajo",
     "0597": "renta-retencion-soportada-capital-mobiliario",

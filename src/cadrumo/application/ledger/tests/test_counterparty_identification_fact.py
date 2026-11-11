@@ -24,6 +24,8 @@ from datetime import UTC, datetime
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.classification import resolve_iva_classification_catalogue
 from ....domain.iva.schema import EUMemberState, IvaTerritorialScope
@@ -36,10 +38,12 @@ from ..counterparty_establishment import (
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .counterparty_establishment_support import InMemoryCounterpartyEstablishmentRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
-_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
+_ASSERTED_AT = datetime(_YEAR, 4, 17, 11, 5, tzinfo=UTC)
 _CIF = "B00015016"
 _DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_mainland")
 

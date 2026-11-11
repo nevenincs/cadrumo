@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from ....core.text_bounds import FILING_TEXT_CAPACITY
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -20,7 +21,7 @@ from ..profile_export_binding import identity_from_profile_facts, resolve_declar
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "20000000-0000-4000-8000-000000000611"
-_CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
+_CLOCK = datetime(filing_year_envelope().horizon, 7, 9, tzinfo=UTC)
 _STORED = "Privada" + "Q" * FILING_TEXT_CAPACITY
 _PERSON = {"identity.tax_id": "12345678Z", "taxpayer_type.entity_type": "natural_person"}
 

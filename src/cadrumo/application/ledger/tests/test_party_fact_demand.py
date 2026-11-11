@@ -35,6 +35,7 @@ from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.classification import (
     CustomerTaxStatus,
     IvaInvoiceClassificationCriteria,
@@ -53,9 +54,11 @@ from ..classification_assembly import (
 )
 from ..classifier_inputs import ClassifierInputs
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DATE = date(2026, 3, 10)
+_DATE = date(_YEAR, 3, 10)
 _ASSERTED = ClassifierInputSource.OPERATOR_ASSERTION
 
 _GERMAN_IVA_NUMBER = "DE811234567"

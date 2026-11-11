@@ -49,6 +49,7 @@ from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -295,7 +296,10 @@ def test_replay_refuses_an_admission_that_is_not_this_profiles_period_independen
         "profile": {"profile_id": _OTHER_PROFILE},
         "definition": {"definition_id": _request(other_definition).definition_id},
         "action": {"action": AccessAction.START},
-        "periods": {"periods": frozenset({Period.from_year_and_code(2026, "1T")}), "period_independent": False},
+        "periods": {
+            "periods": frozenset({Period.from_year_and_code(filing_year_envelope().horizon, "1T")}),
+            "period_independent": False,
+        },
     }[mismatch]
 
     with pytest.raises(ProfileAccessRefusedError) as refused:

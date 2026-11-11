@@ -26,7 +26,7 @@ def test_refused_shapes_name_their_violation(token: str, expected: RepositoryIdV
     assert repository_id_violation(token) is expected
 
 
-@pytest.mark.parametrize("token", ("303", "2026:1T", "a.b", "name-with-dash", "C:x", "uuid-0000", "a "))
+@pytest.mark.parametrize("token", ("303", "1986:1T", "a.b", "name-with-dash", "C:x", "uuid-0000", "a "))
 def test_admissible_shapes_pass(token: str) -> None:
     assert repository_id_violation(token) is None
 

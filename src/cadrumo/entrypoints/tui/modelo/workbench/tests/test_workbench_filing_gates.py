@@ -34,6 +34,7 @@ from ......application.modelo.work_form_next_step import ModeloFormNextAction, b
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
@@ -142,7 +143,9 @@ def _with_current_file(form: ModeloWorkForm) -> ModeloWorkForm:
     revision = form.calculation_revision_id
     assert revision is not None
     export = ModeloFormExport(
-        exported_at=datetime(2026, 4, 2, tzinfo=UTC), calculation_revision_id=revision, current=True
+        exported_at=datetime(filing_year_envelope().horizon, 4, 2, tzinfo=UTC),
+        calculation_revision_id=revision,
+        current=True,
     )
     return form.model_copy(update={"last_export": export})
 

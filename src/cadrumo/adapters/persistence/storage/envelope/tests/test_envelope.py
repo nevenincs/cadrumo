@@ -33,7 +33,7 @@ class _DemoPayloadV2(BaseModel):
     note: str = ""
 
 
-_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
+_ENVELOPE_WRITTEN_AT = datetime(1980, 5, 28, 12, 0, 0, tzinfo=UTC)
 
 
 class TestEnvelopeShape:
@@ -53,7 +53,7 @@ class TestEnvelopeShape:
         with pytest.raises(ValidationError):
             Envelope[_DemoPayloadV1](
                 schema_version=1,
-                written_at=datetime(2026, 4, 27, 12, 0, 0),
+                written_at=datetime(1980, 4, 27, 12, 0, 0),
                 classification=SensitivityClass.OPERATIONAL,
                 payload=_DemoPayloadV1(name="x", count=1),
             )
@@ -75,7 +75,7 @@ class TestEnvelopeRoundTrip:
     def test_plaintext_round_trip(self, tmp_path: Path) -> None:
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
-            written_at=datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC),
+            written_at=datetime(1980, 1, 15, 10, 30, 0, tzinfo=UTC),
             classification=SensitivityClass.FINANCIAL,
             payload=_DemoPayloadV1(name="hola", count=42),
         )
@@ -90,7 +90,7 @@ class TestEnvelopeRoundTrip:
         assert loaded == env
 
     def test_load_round_trips_timezone(self, tmp_path: Path) -> None:
-        explicit = datetime(2026, 4, 27, 12, 0, 0, tzinfo=UTC)
+        explicit = datetime(1980, 4, 27, 12, 0, 0, tzinfo=UTC)
         env = Envelope[_DemoPayloadV1](
             schema_version=1,
             written_at=explicit,

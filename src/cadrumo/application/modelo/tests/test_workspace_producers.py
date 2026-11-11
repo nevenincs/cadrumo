@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..workspace_models import (
     ModeloWorkspaceContributorIdentityV1,
     ModeloWorkspaceLocaleSummaryV1,
@@ -20,6 +21,8 @@ from ..workspace_producers import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _DIGEST = "a" * 64
 _COMPARISON_DOMAIN = "b" * 64
@@ -228,9 +231,9 @@ def test_readiness_capture_carries_the_typed_profile_refusal_verdict() -> None:
     report = ProjectionModeloReadiness(
         profile_id="00000000-0000-4000-8000-000000000130",
         modelo="130",
-        revision_id="2019-y-siguientes",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
+        revision_id=str(revision_covering("130", _YEAR).id),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "2T"),
         profile_ready=False,
         per_operation_requirements_assessed=True,
         profile_refusal="setup not declared complete",
@@ -262,7 +265,7 @@ def test_registry_port_captures_the_admission_specific_projection() -> None:
         port = ModeloWorkspaceRegistryPortV1(
             authority=operation,
             modelo_id="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
         )
         captured = port.capture_projection_with_epoch()
@@ -281,13 +284,13 @@ def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() 
         inspection_only = ModeloWorkspaceRegistryPortV1(
             authority=operation,
             modelo_id="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
         ).capture_projection_with_epoch()
         snapshot_only = ModeloWorkspaceRegistryPortV1(
             authority=operation,
             modelo_id="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
             grade=RegistryAuthorityGrade.APPLICABILITY,
         ).capture_projection_with_epoch()

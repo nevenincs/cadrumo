@@ -20,6 +20,7 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -46,7 +47,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = PublicPeriod(filing_year=2026, code="1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 
 
 def _request(*, profile_id: UUID = _PROFILE) -> OperationRequest[ModeloWorkCreateRequest]:
@@ -87,7 +89,7 @@ def _receipt(condition: OperationTerminalCondition, effect: OperationEffect) -> 
         revision=1,
         condition=condition,
         effect=effect,
-        settled_at=datetime(2026, 3, 10, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 3, 10, tzinfo=UTC),
         result_ref="f" * 64 if condition is OperationTerminalCondition.SUCCEEDED else None,
         refusal_ref=MODELO_WORK_CREATE_APPLICABILITY_REFUSAL_CODE
         if condition is OperationTerminalCondition.REFUSED
@@ -104,7 +106,7 @@ def test_request_schema_and_exact_period_access() -> None:
         request=cast(OperationRequest[BaseModel], cast(object, request)),
         context=_context(registration),
     )
-    assert resolved.request.periods == frozenset({Period.from_year_and_code(2026, "1T")})
+    assert resolved.request.periods == frozenset({Period.from_year_and_code(_YEAR, "1T")})
     assert AccessAction.COMMIT in resolved.policy.actions
     assert not resolved.policy.allow_period_independent
     admitted = OperationAccessRequest(

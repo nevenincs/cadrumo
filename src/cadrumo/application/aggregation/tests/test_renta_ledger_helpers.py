@@ -22,6 +22,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.prose_elision import PROSE_ELISION_MARKER
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..business_proportion import business_proportion
@@ -33,6 +34,8 @@ from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = newest_authored_edition("100")
+
 
 # ---------------------------------------------------------------------------
 # _resolve_annual_period — accept ANNUAL, reject monthly / quarterly
@@ -40,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_resolve_annual_period_accepts_annual_period_instance() -> None:
-    period = renta_income_aggregation_period(2025, "0A")
+    period = renta_income_aggregation_period(_YEAR, "0A")
 
     resolved = resolve_annual_period(period)
 
@@ -48,7 +51,7 @@ def test_resolve_annual_period_accepts_annual_period_instance() -> None:
 
 
 def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> None:
-    quarterly = renta_income_aggregation_period(2025, "2T")
+    quarterly = renta_income_aggregation_period(_YEAR, "2T")
 
     with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly"):
         resolve_annual_period(quarterly)

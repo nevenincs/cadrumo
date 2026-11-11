@@ -10,10 +10,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventType
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.errors import TransactionValidationError
 from ..actions_common import build_ledger_bucket_event, require_recordable_reason
 from ..actions_lifecycle import reset_ledger_catalogue
 from ..reset_operation import LedgerResetRequest
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -26,7 +29,7 @@ def _event_takes(reason: str) -> bool:
         build_ledger_bucket_event(
             bucket_id=_PROFILE,
             event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
-            occurred_at=datetime(2026, 4, 1, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 4, 1, tzinfo=UTC),
             actor="operator",
             object_id="a" * 64,
             payload={"reason": reason},

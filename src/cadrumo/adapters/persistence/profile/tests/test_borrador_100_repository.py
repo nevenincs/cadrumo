@@ -27,17 +27,21 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "0acc74be-7842-4530-95f8-8ffca3a6b654"
 _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
-_CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
-_WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2025, "0A")
+_CAPTURED_AT = datetime(_YEAR, 4, 3, 10, 0, tzinfo=UTC)
+_WRITTEN_AT = datetime(_YEAR, 4, 3, 10, 5, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR - 1, "0A")
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="100",
-    revision_id="2025",
-    modelo_year=2025,
+    revision_id=revision_covering("100", _YEAR - 1).id,
+    modelo_year=_YEAR - 1,
     period="0A",
 )
 
@@ -82,7 +86,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         snapshot_id="a" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
@@ -104,7 +108,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         snapshot_id="b" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
@@ -139,7 +143,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
         snapshot_id="c" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
@@ -167,7 +171,7 @@ def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
         snapshot_id="abcdef" + "1" * 58,
         bucket_id=_BUCKET_ID,
         modelo="100",
-        filing_year=2025,
+        filing_year=_YEAR - 1,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,

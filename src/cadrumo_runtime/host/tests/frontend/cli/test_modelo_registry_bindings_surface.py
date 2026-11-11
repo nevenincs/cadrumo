@@ -7,6 +7,7 @@ import json
 import sys
 from collections.abc import Iterator, Sequence
 from contextvars import ContextVar
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,14 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_grade_exercises,
+    filing_year_envelope,
+    split_exercise_revisions,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -29,6 +37,51 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+
+def _exercise_with_one_revision(modelo_id: str) -> int:
+    """Return the newest supported exercise that exactly one authored revision of a modelo covers."""
+    revisions = authored_revisions(modelo_id)
+    return next(
+        year
+        for year in reversed(filing_year_envelope().years)
+        if sum(
+            1
+            for revision in revisions
+            if revision.valid_from.year <= year and (revision.valid_to is None or year <= revision.valid_to.year)
+        )
+        == 1
+    )
+
+
+def _last_exercise_of_the_m202_design_before_the_prior_year_quota_base() -> int:
+    """Return the last exercise of the Modelo 202 design that predates the prior-year quota-base binding.
+
+    That design has two bindings and its first installment relates to no earlier one, which is the shape
+    the self-relation guidance test reads.
+    """
+    revisions = authored_revisions("202")
+    with bundled_indexed_authority().operation() as operation:
+        first_with_quota_base = next(
+            index
+            for index, metadata in enumerate(revisions)
+            if "modelo-202-cuota-base-ejercicio-anterior"
+            in {str(binding.id) for binding in operation.revision("202", str(metadata.id)).bindings}
+        )
+    earlier = revisions[first_with_quota_base - 1]
+    assert earlier.valid_to is not None
+    return earlier.valid_to.year
+
+
+_EXERCISE = filing_year_envelope().horizon
+_EXERCISE_TEXT = str(_EXERCISE)
+# Modelo 303 splits one exercise between two designs at a period boundary; a bare year there is ambiguous.
+_M303_SPLIT_EXERCISE = split_exercise_revisions("303", early_period="1T", late_period="2T")[0].valid_from.year
+_M303_SINGLE_REVISION_EXERCISE = _exercise_with_one_revision("303")
+_M303_SINGLE_REVISION_TEXT = str(_M303_SINGLE_REVISION_EXERCISE)
+_M100_EXERCISE = filing_grade_exercises("100")[-1]
+_M200_EXERCISE = filing_grade_exercises("200")[-1]
+_M202_EXERCISE = _last_exercise_of_the_m202_design_before_the_prior_year_quota_base()
 
 _active_native_profile: ContextVar[NativeCliProfileFixture | None] = ContextVar(
     "bindings_surface_native_profile",
@@ -61,7 +114,7 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
                 "identity.name": "Operator",
                 "identity.surnames": "Example",
                 "activities.description": "design",
-                "censo.activity_start_date": "2025-01-01",
+                "censo.activity_start_date": date(_EXERCISE, 1, 1).isoformat(),
                 "contact.postcode": "28013",
             },
         )
@@ -96,7 +149,7 @@ def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
     # pinned rather than assumed.
 
     result = _invoke_in_english(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", _EXERCISE_TEXT, "--period", "1T"],
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
@@ -177,7 +230,7 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
             "--modelo",
             "303",
             "--year",
-            "2025",
+            _M303_SINGLE_REVISION_TEXT,
         ],
     )
 
@@ -185,12 +238,12 @@ def test_bindings_list_warning_names_only_the_missing_scope_filter() -> None:
     notices = unwrap_envelope_notices(result.output)
     (notice,) = [item for item in notices if item["code"] == "modelo.bindings.list.unscoped_revision"]
     assert notice["context"]["modelo_filter"] == "303"
-    assert notice["context"]["year_filter"] == "2025"
+    assert notice["context"]["year_filter"] == _M303_SINGLE_REVISION_TEXT
     assert notice["context"]["period_filter"] == ""
     assert notice["context"]["missing_filters"] == "--period"
     assert {binding["argument_name"]: binding["value"] for binding in notice["action"]["argument_bindings"]} == {
         "modelo": "303",
-        "year": 2025,
+        "year": _M303_SINGLE_REVISION_EXERCISE,
     }
 
 
@@ -209,7 +262,7 @@ def test_bindings_list_without_period_refuses_a_year_with_multiple_revisions() -
             "--modelo",
             "303",
             "--year",
-            "2026",
+            str(_M303_SPLIT_EXERCISE),
         ]
     )
     assert result.exit_code != 0, result.output
@@ -234,7 +287,7 @@ def test_bindings_list_omits_scope_warning_when_year_and_period_are_supplied() -
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
         ],
@@ -269,7 +322,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
             "--modelo",
             "200",
             "--year",
-            "2025",
+            str(_M200_EXERCISE),
             "--period",
             "0A",
             "--missing",
@@ -308,7 +361,7 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
             "--modelo",
             "202",
             "--year",
-            "2024",
+            str(_M202_EXERCISE),
             "--period",
             "1P",
             "--missing",
@@ -332,7 +385,7 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
             "--modelo",
             "202",
             "--year",
-            "2024",
+            str(_M202_EXERCISE),
             "--period",
             "2P",
             "--missing",
@@ -353,7 +406,7 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
             "--modelo",
             "202",
             "--year",
-            "2024",
+            str(_M202_EXERCISE),
             "--period",
             "3P",
             "--missing",
@@ -363,8 +416,8 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
     assert "modelo-202-pagos-fraccionados-anteriores" in three_p.output
     assert three_p.output.count("relation_input\tmodelo-202-pagos-fraccionados-anteriores\t") == 1
 
-    two_p_snapshot = published_snapshot("202", filing_year=2024, period="2P")
-    three_p_snapshot = published_snapshot("202", filing_year=2024, period="3P")
+    two_p_snapshot = published_snapshot("202", filing_year=_M202_EXERCISE, period="2P")
+    three_p_snapshot = published_snapshot("202", filing_year=_M202_EXERCISE, period="3P")
     ((_, two_p_provider),) = relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
     ((_, three_p_provider),) = relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
     assert two_p_provider.required_period_anchors_for_target("2P") == ((0, "1P"),)
@@ -385,7 +438,7 @@ def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() 
             "--modelo",
             "200",
             "--year",
-            "2025",
+            str(_M200_EXERCISE),
             "--period",
             "0A",
         ],
@@ -410,7 +463,7 @@ def test_bindings_resolve_echoes_override_for_known_key() -> None:
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
             "--binding",
@@ -433,7 +486,7 @@ def test_bindings_resolve_echoes_override_for_known_key() -> None:
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
             "--binding",
@@ -462,7 +515,7 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
             "--modelo",
             "200",
             "--year",
-            "2025",
+            str(_M200_EXERCISE),
             "--period",
             "0A",
         ],
@@ -487,7 +540,7 @@ def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics()
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
         ],
@@ -514,7 +567,7 @@ def test_bindings_resolve_rejects_unknown_binding_with_suggestion_list() -> None
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
             "--binding",
@@ -541,7 +594,7 @@ def test_bindings_resolve_rejects_malformed_override_syntax() -> None:
             "--modelo",
             "303",
             "--year",
-            "2026",
+            _EXERCISE_TEXT,
             "--period",
             "1T",
             "--binding",
@@ -667,7 +720,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
             "--modelo",
             "100",
             "--year",
-            "2025",
+            str(_M100_EXERCISE),
             "--period",
             "0A",
         ],
@@ -676,7 +729,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
     payload = unwrap_schema_envelope(result.output)
     bindings = payload["bindings"]
     assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
-    snapshot = published_snapshot("100", filing_year=2025, period="0A")
+    snapshot = published_snapshot("100", filing_year=_M100_EXERCISE, period="0A")
     known_binding_ids = {binding.id for binding in snapshot.revision.bindings}
     emitted_binding_ids = {row["binding_id"] for row in bindings}
     assert emitted_binding_ids <= known_binding_ids
@@ -716,7 +769,7 @@ def test_bindings_list_exposes_m100_suffered_work_withholding_as_a_payer_record_
             "--modelo",
             "100",
             "--year",
-            "2024",
+            str(_M100_EXERCISE),
             "--period",
             "0A",
         ],
@@ -747,14 +800,14 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     # The readiness column is catalogue text -- the payload field is built with
     # tr() -- and the default output language is Spanish, so the language is
     # pinned rather than assumed.
-    scope = ["--modelo", "200", "--year", "2025", "--period", "0A"]
+    scope = ["--modelo", "200", "--year", str(_M200_EXERCISE), "--period", "0A"]
     result = _invoke_in_english(["--format", "json", "app", "modelo", "bindings", "list", *scope])
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in unwrap_schema_envelope(result.output)["bindings"]}
 
     # Cross-check against the authoritative snapshot: every relation-prefill
     # binding's own id must surface as its relation input on the listed row.
-    snapshot = published_snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=_M200_EXERCISE, period="0A")
     expected = {
         str(binding.id): {str(binding.id)}
         for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)

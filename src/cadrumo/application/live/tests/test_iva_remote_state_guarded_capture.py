@@ -27,11 +27,12 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 29, 10, tzinfo=UTC)
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 9, 29, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 

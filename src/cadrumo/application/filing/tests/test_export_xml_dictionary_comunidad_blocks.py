@@ -27,6 +27,8 @@ from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from ....domain.calculations.registry.tests.published_authority import published_source_reference
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.filing.errors import FilingExportValidationError
 from ..export_xml_dictionary_modelo100 import (
@@ -37,7 +39,8 @@ from ..export_xml_dictionary_modelo100 import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
+_YEAR = newest_authored_edition("100")
+_REVISION_ID = str(revision_covering("100", _YEAR).id)
 _SHARED_TOTAL = "0564"
 
 
@@ -48,11 +51,16 @@ def _declarations(operation: PinnedAuthorityOperation) -> Mapping[str, str]:
         return registry_modelo_100_xml_declarations()
 
 
-def _entries():
+def _layout_and_catalogues():
     modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "100")
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[_REVISION_ID]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")
+    return layout, catalogues
+
+
+def _entries():
+    layout, catalogues = _layout_and_catalogues()
     return xml_dictionary_entries(
         layout,
         sources=catalogues.sources,
@@ -80,8 +88,8 @@ def test_aeat_declares_the_comunidad_blocks_as_a_choice() -> None:
     A ``sequence`` would have meant writing the others as zero, which is what the
     sign-branch pair next door requires. The model group is the whole difference.
     """
-    xsd = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "files", _MODELO_100_2024_XSD)
-    text = xsd.read_bytes().decode("iso-8859-1")
+    source = published_source_reference(f"aeat-dr-100-{_YEAR}-xsd")
+    text = (bundled_path() / source.corpus_path).read_bytes().decode("iso-8859-1")
     start = text.find('complexType name="tipo_DeduccionAutonomicaRes"')
     assert start != -1, "the bundled XSD no longer declares tipo_DeduccionAutonomicaRes"
     body = text[start : text.find("</xs:complexType>", start)]

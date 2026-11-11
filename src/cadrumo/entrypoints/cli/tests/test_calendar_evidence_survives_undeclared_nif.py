@@ -26,24 +26,26 @@ from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, Fil
 from ....application.overview.calendar_evidence import calendar_filing_evidence_from_sources
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.aeat_literal_fixtures import FILED_ARTEFACT_PATH_FIXTURE, aeat_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
+_YEAR = filing_year_envelope().horizon
 _REAL_NIF = "12345678Z"
-_PERIOD = Period.from_year_and_code(2024, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _filed_observation() -> FiledDeclaracionObservation:
     """One genuinely filed Modelo 303 declaration, authenticated as the real NIF."""
     return FiledDeclaracionObservation(
         modelo="303",
-        ejercicio=2024,
+        ejercicio=_YEAR,
         period=_PERIOD,
-        expediente_id="20243031T000001",
+        expediente_id=f"{_YEAR}3031T000001",
         status="ALTA",
-        presented_at=datetime(2024, 4, 15, 10, 0, tzinfo=UTC),
+        presented_at=datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
         authenticated_identity=_REAL_NIF,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -52,12 +54,12 @@ def _filed_observation() -> FiledDeclaracionObservation:
                 content_type="text/html",
                 byte_count=2048,
                 sha256="a" * 64,
-                captured_at=datetime(2024, 4, 15, 10, 5, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 4, 15, 10, 5, tzinfo=UTC),
             ),
         ),
         registry_snapshot_ref=published_snapshot(
             "303",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=_PERIOD.registry_token,
         ).snapshot_ref,
     )

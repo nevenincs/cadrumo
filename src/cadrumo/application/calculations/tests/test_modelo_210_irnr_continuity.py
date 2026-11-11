@@ -11,7 +11,7 @@ cuota_diferencial (cuota minus retenciones).
 
 The cross-renta continuity under test: a non-resident UK landlord (Gran
 Bretaña, GB) with a Convenio row files the same property-rental declaration
-for two consecutive renta years (2025, 2026). The GB/general Convenio row
+for two consecutive renta years (the two newest filing-grade ones). The GB/general Convenio row
 in the initial seed carries rate=0.24, which coincides with the TRLIRNR
 Art 25.1.a baseline (24%). The invariant: the same country_of_fiscal_residence
 (GB / general) resolves to the same tipo_gravamen (0.24) via the Convenio
@@ -26,7 +26,7 @@ making the override path exercisable without authoring new registry data.
 This module is the cross-year behavior coverage for Modelo 210.
 It drives the REAL primary engine (real registry authority, real
 calculate_registry_snapshot, real formula evaluation — no mocks) for two
-distinct renta years (2025, 2026), recording each through the
+distinct renta years (the two newest filing-grade ones), recording each through the
 ``cross-year observation`` and cross-checking via
 ``the cross-year behavior assertion``.
 
@@ -39,8 +39,8 @@ parameter-table regression (e.g. the rate silently changed to 0.00) would fail
 it. The M210 convenio-rate mutation test proves the engine reads the registry
 parameter; this test's job is cross-renta grounding across two annual groupings.
 
-Registry extension note: the M210 2025 revision was extended to open-ended
-(valid_to removed, period_selector year_from=2025) because the TRLIRNR
+Registry extension note: the newest M210 revision was extended to open-ended
+(valid_to removed) because the TRLIRNR
 Art 24-25 rate schedule is year-stable. This is a grounded engineering
 decision documented in the revision.toml; a genuine statutory rate change
 would require a new dated revision.
@@ -59,13 +59,13 @@ from ....domain.calculations.registry.bindings import resolve_available_bound_in
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "210"
-_YEAR_N = 2025
-_YEAR_N_PLUS_1 = 2026
+_YEAR_N, _YEAR_N_PLUS_1 = filing_grade_exercises(_MODELO)[-2:]
 
 # UK landlord scenario (Olivia persona from section D2.4): GB/general Convenio
 # row carries rate=0.24, coinciding with the TRLIRNR Art 25.1.a baseline.
@@ -79,8 +79,8 @@ _TIPO_GRAVAMEN_CONVENIO = Decimal("0.24")  # GB/general Convenio row = TRLIRNR a
 
 # The rental base for each year — distinct so a cross-year base bleed
 # surfaces as strict inequality in the cuota_integra assertion.
-_BASE_YEAR_N = Decimal("18000.00")  # 2025 rental income
-_BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # 2026 rental income (slightly higher)
+_BASE_YEAR_N = Decimal("18000.00")  # rental income of year N
+_BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # rental income of year N + 1 (slightly higher)
 
 # Profile-binding id for country_of_fiscal_residence (enum/text channel).
 _COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
@@ -343,7 +343,7 @@ def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct() -> None:
     """Year N+1: same GB landlord, same Convenio rate — treaty-rate determinism across years.
 
     The GB/general Convenio row is year-stable (no annual override change).
-    The engine must resolve the same 0.24 for 2026 as for 2025.
+    The engine must resolve the same 0.24 for year N + 1 as for year N.
     """
     values, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 

@@ -142,15 +142,16 @@ from cadrumo.entrypoints.tests.profile_persistence.ready_profile_taxpayer import
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "18018018-0180-4180-8180-180180180180"
 _BUCKET_ID = _PROFILE_ID
-_YEAR = 2025
+_PRORRATA_YEAR = filing_year_envelope().horizon
+_YEAR = _PRORRATA_YEAR - 1
 _T0 = datetime(_YEAR, 1, 5, 10, 0, tzinfo=UTC)
 _T1 = datetime(_YEAR, 3, 31, 14, 0, tzinfo=UTC)
-_PRORRATA_YEAR = 2026
 _PRORRATA_PERIOD = Period.from_year_and_code(_PRORRATA_YEAR, "1T")
 _PRORRATA_T0 = datetime(_PRORRATA_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _PRORRATA_T1 = datetime(_PRORRATA_YEAR, 3, 31, 14, 0, tzinfo=UTC)
@@ -617,8 +618,8 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                    source_observation_ref="303:2025:4T",
-                    source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
+                    source_observation_ref=f"303:{_YEAR}:4T",
+                    source_registry_snapshot_refs=(m303_registry_snapshot_ref(_YEAR, "4T"),),
                 ),
             ),
         ),

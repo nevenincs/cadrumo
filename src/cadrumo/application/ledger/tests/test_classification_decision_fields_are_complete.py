@@ -23,6 +23,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.transactions.classification_origin import CLASSIFICATION_DECISION_FIELDS, classification_facts
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
@@ -31,6 +33,8 @@ from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from ..classify_requests import LedgerClassifyPatch
 from ..models import BulkClassifyRow, ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ..update_contracts import LedgerUpdatePatch
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -107,7 +111,7 @@ def _row() -> Transaction:
         {
             "raw": RawTransaction(
                 provider_transaction_id="synthetic-decision-fields-row",
-                booked_date=date(2026, 4, 10),
+                booked_date=date(_YEAR, 4, 10),
                 amount=Decimal("121.00"),
                 currency="EUR",
                 counterparty="Synthetic Supplier",
@@ -117,7 +121,7 @@ def _row() -> Transaction:
                     source_sha256="b" * 64,
                     source_row_index=1,
                     source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2026, 4, 14, 9, 30, tzinfo=UTC),
+                    ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
                     provider_name="csv",
                 ),
                 raw_fields={"source": "synthetic"},
@@ -165,7 +169,7 @@ def test_a_decision_field_the_fingerprint_reads_moves_it() -> None:
 def test_a_stated_accrual_date_is_a_decision_field_the_origin_reads() -> None:
     """The date the operator states for Renta changes the facts a classification origin is read from."""
     row = _row()
-    stated = row.model_copy(update={"accrual_date": date(2026, 3, 30)})
+    stated = row.model_copy(update={"accrual_date": date(_YEAR, 3, 30)})
 
     assert "accrual_date" in CLASSIFICATION_DECISION_FIELDS
     assert classification_facts(stated) != classification_facts(row)

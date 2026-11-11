@@ -28,8 +28,8 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "a" * 64
-_STARTED_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
-_COMPLETED_AT = datetime(2026, 6, 1, 8, 5, tzinfo=UTC)
+_STARTED_AT = datetime(1980, 6, 1, 8, 0, tzinfo=UTC)
+_COMPLETED_AT = datetime(1980, 6, 1, 8, 5, tzinfo=UTC)
 
 
 def _completed_operation() -> ConfigResetOperation:

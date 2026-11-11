@@ -45,6 +45,11 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
+
+_YEAR = filing_year_envelope().horizon
+
+
 Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
@@ -53,11 +58,11 @@ Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
-T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+T0 = datetime(_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
+T1 = datetime(_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
+T2 = datetime(_YEAR, 1, 15, 14, 0, 0, tzinfo=UTC)
+T3 = datetime(_YEAR, 4, 15, 15, 0, 0, tzinfo=UTC)
+T4 = datetime(_YEAR, 4, 16, 12, 0, 0, tzinfo=UTC)
 TAX_ID = "X0001500M"
 PROFILE_ID = "13000000-0000-4000-8000-000000000001"
 
@@ -128,9 +133,9 @@ def seed_work_unit(
     return create_work_unit(
         bucket_id=PROFILE_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=open_ended_revision("130").id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repository),
         clock=T0,
         operation=operation,

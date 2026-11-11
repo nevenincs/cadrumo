@@ -27,6 +27,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
@@ -40,7 +41,7 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _WALLET_DECIDED_AT = datetime(_YEAR, 4, 1, 10, tzinfo=UTC)
 _BASE = Decimal("12000.00")

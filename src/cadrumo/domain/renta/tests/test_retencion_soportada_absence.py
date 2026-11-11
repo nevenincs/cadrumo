@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from ....core.retencion_soportada import RetencionSoportadaClase
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.irpf_income_categories import resolve_irpf_income_category_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..retencion_soportada_absence import (
     ABSENCE_ATTESTATION_NOTE_MAX_LENGTH,
     RetencionSoportadaAbsence,
@@ -28,13 +29,14 @@ from ..retencion_soportada_applicability import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_EXERCISE = filing_year_envelope().horizon
+_AT = datetime(1980, 4, 2, 9, 0, tzinfo=UTC)
 _NOTE = "Rental with no withholding: the tenant is a private individual."
 
 
 def _attestation(**overrides: object) -> RetencionSoportadaAbsence:
     payload: dict[str, object] = {
-        "ejercicio": 2025,
+        "ejercicio": _EXERCISE,
         "income_class": "arrendamiento_inmueble_urbano",
         "note": _NOTE,
         "attested_at": _AT.isoformat(),
@@ -47,7 +49,7 @@ def test_an_attestation_round_trips_and_withdraws_without_losing_when_it_was_mad
     attestation = _attestation()
     assert attestation.active
     assert attestation.kind == "absence_attestation"
-    assert attestation.identity == (2025, RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO)
+    assert attestation.identity == (_EXERCISE, RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO)
     assert RetencionSoportadaAbsence.model_validate_json(attestation.model_dump_json()) == attestation
 
     withdrawn = attestation.withdrawn(_AT + timedelta(days=3))
@@ -67,7 +69,7 @@ def test_an_attestation_round_trips_and_withdraws_without_losing_when_it_was_mad
         {"state": "withdrawn"},
         {"withdrawn_at": (_AT + timedelta(days=1)).isoformat()},
         {"state": "withdrawn", "withdrawn_at": (_AT - timedelta(days=1)).isoformat()},
-        {"attested_at": "2026-04-02T09:00:00"},
+        {"attested_at": _AT.replace(tzinfo=None).isoformat()},
         {"ejercicio": 999},
         {"income_class": "pension"},
         {"kind": "payer_certificate"},
@@ -98,7 +100,7 @@ def test_the_note_at_its_limit_is_kept() -> None:
 def test_every_category_the_table_names_is_declared_by_the_bundled_vocabulary(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    vocabulary = resolve_irpf_income_category_catalogue(effective_date=date(2026, 3, 10), authority=operation)
+    vocabulary = resolve_irpf_income_category_catalogue(effective_date=date(_EXERCISE, 3, 10), authority=operation)
     declared = {str(token) for token in vocabulary.all_categories}
     named = {
         token

@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _PROFILE = UUID("aa000000-0000-4000-8000-0000000000aa")
 _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
-_NOW = datetime(2026, 10, 2, tzinfo=UTC)
+_NOW = datetime(1980, 10, 2, tzinfo=UTC)
 _REFUSAL_CODE = "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO"
 _MESSAGE_KEY = "aggregation.grouping.errors.unsupported_modelo"
 

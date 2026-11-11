@@ -40,13 +40,14 @@ from cadrumo.application.ledger.usage_ratio_repository import load_usage_ratio_p
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.usage_ratios.errors import UsageRatioValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "12121212-1212-4212-8212-121212121212"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 
 
 def _eligible_category() -> SpendingCategory:

@@ -47,8 +47,11 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 from .published_authority_support import published_authority_operation
+
+_YEAR = filing_year_envelope().horizon
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
@@ -61,7 +64,7 @@ M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="M200_REFUND_RESULT_CASILLA",
 )
-_SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
+_SEEDED_REVISION_AT = datetime(_YEAR, 6, 3, 16, 0, tzinfo=UTC)
 
 
 def export_m303_filing_evidence(period: Period, *, operation: PinnedAuthorityOperation) -> FilingInstanceEvidence:
@@ -166,7 +169,7 @@ def seed_revision(
     bucket_id: str,
     state: CalculationRevisionState,
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period: str = "1T",
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[BindingId, str] | None = None,

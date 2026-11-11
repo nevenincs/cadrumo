@@ -91,6 +91,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...adapter_composition_work_ports import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue", "secure_objects"]
@@ -128,12 +129,12 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
 _M202 = "202"
 _M200 = "200"
-_FILING_YEAR = 2025
-_PRIOR_M200_YEAR = 2024  # filing_year_delta = -1 from the 2025 M202 ejercicio
+_FILING_YEAR = newest_authored_edition(_M202)
+_PRIOR_M200_YEAR = _FILING_YEAR - 1  # filing_year_delta = -1 from the M202 ejercicio
 
 # M202 source_casilla_id 34 is the instalment ingresado that the self-pago relations
 # read; M200 source_casilla_id DP200014B:00599 is the prior cuota del ejercicio
@@ -147,7 +148,7 @@ _M200_CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surfa
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
-# Bound casillas on the M202/2025 revision under test.
+# Bound casillas on the M202 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
     "01",
     surface="_CASILLA_BASE",
@@ -202,7 +203,7 @@ _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
 # DISTINCT non-equal known c34 values for each of the three M202 instalments
 # (1P/2P/3P). Distinct values make the fold unmistakable: a single-period
 # copy, an off-by-period fold, or a silent blank cannot reproduce the sum.
-# The M200 filing year (2025) sources the same-year M202 instalments
+# The M200 filing year sources the same-year M202 instalments
 # (filing_year_delta = 0 per the relation declaration).
 _M202_C34_PAGOS: dict[str, Decimal] = {
     "1P": Decimal("3100.00"),

@@ -66,6 +66,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.justificante.schema import Justificante
 from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
@@ -75,9 +76,9 @@ from .supervised_operation_rig import build_supervised_operation, operation_acce
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 9, 29, 12, tzinfo=UTC)
 _MODELO = "130"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _EXPEDIENTE = "202613000010001A"
 _CSV = "ABCD1234EFGH5678"
@@ -276,7 +277,7 @@ def _parsed_receipt() -> Justificante:
         modelo=_MODELO,
         ejercicio=str(_YEAR),
         period=_PERIOD,
-        presented_at=datetime(2026, 4, 18, 9, 0),
+        presented_at=datetime(_YEAR, 4, 18, 9, 0),
         tax_id=_TAX_ID,
         verification_url=CSV_CONSULTATION_URL_FIXTURE,
         source_pdf_path=Path("synthetic-justificante.pdf"),

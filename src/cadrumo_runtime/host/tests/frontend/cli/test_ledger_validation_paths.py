@@ -15,6 +15,7 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -22,6 +23,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .ledger_validation_support import (
@@ -34,6 +36,8 @@ from .ledger_validation_support import (
     invoke,
 )
 from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -82,7 +86,7 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "50.00",
             "--direction",
@@ -117,7 +121,7 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "-49.99",
             "--direction",
@@ -150,7 +154,7 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -201,7 +205,7 @@ def test_ledger_add_gross_mismatch_above_substrate_hints_recargo_amount(
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "150.00",
             "--direction",
@@ -234,8 +238,8 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
 ) -> None:
     """A net bank receipt can still carry the invoice base and IVA facts.
 
-    Persona repro: professional invoice 2000 + 420 IVA, 300 IRPF withheld,
-    bank receipt 2120. The operator first records the bank movement and then
+    Persona repro: professional invoice 2100 + 441 IVA, 315 IRPF withheld,
+    bank receipt 2226. The operator first records the bank movement and then
     classifies it with the invoice substrate. The production CLI path must
     persist those facts so Modelo 303 and Renta aggregation can read them.
     """
@@ -247,9 +251,9 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
             "ledger",
             "add",
             "--date",
-            "2025-07-15",
+            date(_YEAR, 7, 15).isoformat(),
             "--amount",
-            "2120.00",
+            "2226.00",
             "--direction",
             "INCOMING",
             "--description",
@@ -268,11 +272,11 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
             "--classification",
             "BUSINESS",
             "--taxable-base",
-            "2000.00",
+            "2100.00",
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            "420.00",
+            "441.00",
             "--irpf-category",
             "actividad_economica",
         ],
@@ -284,9 +288,9 @@ def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
 
-    assert transaction["amount"] == "2120"
-    assert transaction["taxable_base"] == "2000"
-    assert transaction["iva_amount"] == "420"
+    assert transaction["amount"] == "2226"
+    assert transaction["taxable_base"] == "2100"
+    assert transaction["iva_amount"] == "441"
     assert transaction["iva_rate"] == "0.21"
     assert transaction["irpf_category"] == "actividad_economica"
 
@@ -303,7 +307,7 @@ def test_ledger_classify_refuses_activity_income_when_base_cash_would_be_iva_siz
             "ledger",
             "add",
             "--date",
-            "2025-07-15",
+            date(_YEAR, 7, 15).isoformat(),
             "--amount",
             "2000.00",
             "--direction",
@@ -356,7 +360,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
             "ledger",
             "add",
             "--date",
-            "2025-07-15",
+            date(_YEAR, 7, 15).isoformat(),
             "--amount",
             "1060.00",
             "--direction",
@@ -419,7 +423,7 @@ def _add_net_rent_payment() -> str:
             "ledger",
             "add",
             "--date",
-            "2025-04-05",
+            date(_YEAR, 4, 5).isoformat(),
             "--amount",
             "2754.00",
             "--direction",
@@ -518,7 +522,7 @@ def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) ->
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "49.99",
             "--direction",
@@ -804,7 +808,7 @@ def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path
     assert classified.exit_code == 0, classified.output
 
     preflight = invoke(
-        ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
+        ["app", "ledger", "preflight", "--year", str(_YEAR), "--period", "1T"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert preflight.exit_code == 0, preflight.output
@@ -859,7 +863,7 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     assert allocate.exit_code == 0, allocate.output
 
     preflight = invoke(
-        ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
+        ["app", "ledger", "preflight", "--year", str(_YEAR), "--period", "1T"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert preflight.exit_code == 0, preflight.output
@@ -902,7 +906,7 @@ def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state:
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "50.00",
             "--direction",
@@ -936,7 +940,7 @@ def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "50.00",
             "--direction",

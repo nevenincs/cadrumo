@@ -67,7 +67,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from .generate_base import SEDE_ORIGIN
+from .generate_base import SEDE_ORIGIN, declared_filing_years
+
+#: The exercise the quarterly specimens are filed for: the second before the declared horizon.
+_SPECIMEN_EXERCISE = declared_filing_years().horizon - 2
 
 _COLUMN_A_BOX_X = 264.0
 """Column A box-number x0, inside the profile's 250-290 anchor band."""
@@ -175,8 +178,8 @@ def _rows_for(periodo: str) -> tuple[_Modelo111Row, ...]:
 
 MODELO_111_FIXTURES: tuple[Modelo111Fixture, ...] = tuple(
     Modelo111Fixture(
-        filename=f"111/2024-{periodo}.pdf",
-        ejercicio="2024",
+        filename=f"111/{_SPECIMEN_EXERCISE}-{periodo}.pdf",
+        ejercicio=str(_SPECIMEN_EXERCISE),
         periodo=periodo,
         tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",

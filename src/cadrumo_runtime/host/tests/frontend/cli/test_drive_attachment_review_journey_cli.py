@@ -33,7 +33,7 @@ def _drive_attachment(data: bytes, *, name: str = "invoice.xml") -> str:
             source=AttachmentSource.GOOGLE_DRIVE,
             source_reference=f"https://drive.google.com/file/d/{_DRIVE_FILE_ID}",
             mime_type="application/xml",
-            captured_at=datetime(2026, 8, 23, 10, 30, tzinfo=UTC),
+            captured_at=datetime(1980, 8, 23, 10, 30, tzinfo=UTC),
             bucket_id=bucket_id,
             metadata={"drive_file_name": name, "secret_material": "must-not-leak"},
             notes="operator-private note",

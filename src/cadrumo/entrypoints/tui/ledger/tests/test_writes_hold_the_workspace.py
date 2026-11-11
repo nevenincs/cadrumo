@@ -14,6 +14,7 @@ import asyncio
 import threading
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol, cast, override
@@ -52,6 +53,7 @@ from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect, OperationTerminalCondition
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.enums import BusinessClassification
 from ...components.dialogs import ConfirmScreen
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -132,6 +134,8 @@ from .workspace_fixtures import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _OVERVIEW_ROW = tuple(LedgerWorkspaceArea).index(LedgerWorkspaceArea.OVERVIEW)
 UNKNOWN = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
@@ -493,7 +497,7 @@ def _entry_add(gate: Gate, _tmp_path: Path) -> _Flow:
     body = LedgerEntryAddScreen(entries_controller(), held)
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
-        body.query_one("#entries-add-booked-date", Input).value = "2026-03-14"
+        body.query_one("#entries-add-booked-date", Input).value = date(_YEAR, 3, 14).isoformat()
         body.query_one("#entries-add-amount", Input).value = "120.50"
         body.query_one("#entries-add-description", Input).value = "Material de oficina"
         await _press(pilot, body, "entries-add-review")
@@ -702,7 +706,7 @@ def _capital_good(gate: Gate, _tmp_path: Path) -> _Flow:
         for selector, value in (
             ("#capital-identifier", "BI-02"),
             ("#capital-description", "Synthetic delivery van"),
-            ("#capital-year", "2025"),
+            ("#capital-year", str(_YEAR)),
             ("#capital-ledger-id", "tx-synthetic-02"),
             ("#capital-cuota", "4200.00"),
             ("#capital-prorrata", "80"),
@@ -810,7 +814,7 @@ def _invoice_entry(gate: Gate, _tmp_path: Path) -> _Flow:
             ("counterparty-name", "Hardware Profesional Sur SL"),
             ("counterparty-nif", "B00015099"),
             ("invoice-number", "A-0003"),
-            ("invoice-date", "2026-03-27"),
+            ("invoice-date", date(_YEAR, 3, 27).isoformat()),
             ("taxable-base", "1200.00"),
             ("iva-rate", "21"),
         ):

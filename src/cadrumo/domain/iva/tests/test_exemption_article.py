@@ -18,10 +18,13 @@ from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.iva_legal_vocabulary import resolve_iva_exemption_article_catalogue
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..classification import IvaClassificationResult
 from ..schema import IvaCategory, IvaExemptionArticle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_classification_result_accepts_no_exemption_article_by_default() -> None:
@@ -83,6 +86,6 @@ def test_exemption_article_catalogue_membership_matches_accepted_correction(
         IvaExemptionArticle("art_20_uno_14").value,
         IvaExemptionArticle("art_20_other").value,
     }
-    catalogue = resolve_iva_exemption_article_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    catalogue = resolve_iva_exemption_article_catalogue(effective_date=date(_YEAR, 1, 1), authority=operation)
     actual = {member.value for member in catalogue.all_articles}
     assert actual == expected

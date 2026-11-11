@@ -34,6 +34,7 @@ from .....application.modelo.m145_communication_records import (
 from .....core.period import Period, PeriodError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -42,6 +43,9 @@ from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("145", _YEAR).id)
+
 
 def _command(
     *,
@@ -49,7 +53,7 @@ def _command(
     note: str | None = "Initial local communication",
 ) -> M145CommunicationCreateCommand:
     return M145CommunicationCreateCommand(
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=period_token,
         field_values=valid_field_values(),
         note=note,
@@ -78,16 +82,16 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
     assert record.bucket_id == runtime.bucket_id
     assert record.modelo == "145"
     assert record.service_owner == "cadrumo.application.modelo"
-    assert record.communication_year == 2026
+    assert record.communication_year == _YEAR
     assert record.period_token is M145CommunicationPeriod.COMMUNICATION
-    assert record.revision_id == "2012-01-31-y-siguientes"
+    assert record.revision_id == _REVISION_ID
     assert record.state.value == "created"
     assert record.field_values == valid_field_values()
     assert record.communication_record_id == derive_m145_communication_record_id(
         bucket_id=runtime.bucket_id,
-        communication_year=2026,
+        communication_year=_YEAR,
         period_token=M145CommunicationPeriod.COMMUNICATION,
-        revision_id="2012-01-31-y-siguientes",
+        revision_id=_REVISION_ID,
         field_values=valid_field_values(),
     )
     assert "rd-439-2007:art-88" in record.legal_refs
@@ -189,10 +193,10 @@ def test_each_m145_event_scope_selects_its_own_snapshot_without_a_filing_period(
 ) -> None:
     contract = build_m145_communication_service_contract(
         period_token=period_token,
-        filing_year=2026,
+        filing_year=_YEAR,
         operation=operation,
     )
-    snapshot = operation.snapshot("145", filing_year=2026, period=period_token.value)
+    snapshot = operation.snapshot("145", filing_year=_YEAR, period=period_token.value)
 
     assert contract.period_token == period_token.value
     assert snapshot.period == period_token.value
@@ -203,7 +207,7 @@ def test_each_m145_event_scope_selects_its_own_snapshot_without_a_filing_period(
 def test_create_m145_communication_command_refuses_an_undeclared_event_token(invalid_token: str) -> None:
     with pytest.raises(ValidationError, match="period_token"):
         M145CommunicationCreateCommand(
-            communication_year=2026,
+            communication_year=_YEAR,
             period_token=invalid_token,
             field_values=valid_field_values(),
         )
@@ -212,7 +216,7 @@ def test_create_m145_communication_command_refuses_an_undeclared_event_token(inv
 @pytest.mark.parametrize("period_token", list(M145CommunicationPeriod))
 def test_an_m145_event_token_is_not_a_filing_period(period_token: M145CommunicationPeriod) -> None:
     with pytest.raises(PeriodError):
-        Period.from_year_and_code(2026, period_token.value)
+        Period.from_year_and_code(_YEAR, period_token.value)
 
 
 def test_create_m145_communication_record_refuses_undeclared_casilla_id(
@@ -220,7 +224,7 @@ def test_create_m145_communication_record_refuses_undeclared_casilla_id(
     operation: PinnedAuthorityOperation,
 ) -> None:
     command = M145CommunicationCreateCommand(
-        communication_year=2026,
+        communication_year=_YEAR,
         field_values={"perceptor.no-declarado": "x"},
     )
     with (
@@ -240,7 +244,7 @@ def test_create_m145_communication_record_uses_real_registry_membership() -> Non
 
     modelos, _catalogues = bundled_registry_tree()
     modelo = next(m for m in modelos if m.id == "145")
-    revision = select_revision(modelo, filing_year=2026, period="comunicacion")
+    revision = select_revision(modelo, filing_year=_YEAR, period="comunicacion")
 
     assert undeclared_casilla_ids(revision, valid_field_values()) == ()
     assert undeclared_casilla_ids(revision, {"perceptor.no-declarado": "x"}) == ("perceptor.no-declarado",)

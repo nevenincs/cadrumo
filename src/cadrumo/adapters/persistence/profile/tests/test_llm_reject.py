@@ -32,6 +32,7 @@ from cadrumo.application.ledger.llm_review_workflow import (
     execute_reviewed_decision,
 )
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -43,7 +44,8 @@ from .llm_suggestion_support import classification_suggestion
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "289258a6-d3b8-4261-9d44-6ed6657c6ea0"  # was 'bucket-reject'
 _UNKNOWN_TRANSACTION_ID = "f" * 64
 
@@ -64,8 +66,8 @@ def repositories(
 def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     raw = RawTransaction(
         provider_transaction_id="row-reject",
-        booked_date=date(2026, 5, 1),
-        value_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
+        value_date=date(_YEAR, 5, 1),
         amount=amount,
         currency="EUR",
         counterparty="Proveedor SL",

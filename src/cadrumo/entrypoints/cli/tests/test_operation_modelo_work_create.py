@@ -26,32 +26,36 @@ from ....application.operations.public_period import PublicPeriod
 from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .. import operation_modelo_work_create as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_PERIOD = Period.from_year_and_code(2026, "1T")
-_REVISION = "2026-y-siguientes"
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_REVISION = revision_serving_period("303", _YEAR, "1T").id
 _OPERATION_ID = "a" * 64
 
 
 def _unit() -> ModeloWorkMetadataSnapshot:
-    instant = datetime(2026, 3, 10, tzinfo=UTC)
+    instant = datetime(_YEAR, 3, 10, tzinfo=UTC)
     return ModeloWorkMetadataSnapshot.from_work_unit(
         WorkUnit(
             work_unit_id=derive_work_unit_id(
                 bucket_id=str(_PROFILE),
                 modelo="303",
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=_PERIOD,
                 revision_id=_REVISION,
             ),
             bucket_id=str(_PROFILE),
             modelo="303",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=_PERIOD,
             revision_id=_REVISION,
             name="Draft",
@@ -188,7 +192,7 @@ def test_mismatched_success_preserves_bad_receipt_as_refusal(monkeypatch: pytest
     if altered == "profile":
         projection = projection.model_copy(update={"profile_id": _OTHER})
     elif altered == "period":
-        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=2026, code="2T")})
+        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=_YEAR, code="2T")})
     elif altered == "modelo":
         projection = projection.model_copy(
             update={"outcome": outcome.model_copy(update={"unit": unit.model_copy(update={"modelo": "130"})})}
@@ -232,7 +236,7 @@ def test_malformed_refusal_never_becomes_success(monkeypatch: pytest.MonkeyPatch
     if altered == "profile":
         projection = projection.model_copy(update={"profile_id": _OTHER})
     elif altered == "period":
-        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=2026, code="2T")})
+        projection = projection.model_copy(update={"period": PublicPeriod(filing_year=_YEAR, code="2T")})
     elif altered == "modelo":
         projection = projection.model_copy(update={"outcome": outcome.model_copy(update={"modelo": "130"})})
     effect = OperationEffect.UNKNOWN if altered == "effect" else OperationEffect.NONE

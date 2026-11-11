@@ -17,6 +17,7 @@ import pytest
 from cadrumo.application.aggregation.tests.renta_gasto_aggregation_support import (
     gasto_transaction,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -48,10 +49,12 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_Q1_2024 = Period.from_year_and_code(2025, "1T")
-_Q2_2024 = Period.from_year_and_code(2025, "2T")
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
+_Q2 = Period.from_year_and_code(_YEAR, "2T")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 
 
@@ -62,14 +65,14 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=2024, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=_YEAR - 1, period="4T").snapshot_ref
 
 
 def _save_priced_gasto_row(secure_objects: SecureObjectRepository, provider_id: str) -> None:
-    """Save one 2025-02-01 gasto of 1000.00 base plus 210.00 IVA under ``provider_id``."""
+    """Save one gasto booked on 1 February of 1000.00 base plus 210.00 IVA under ``provider_id``."""
     row = gasto_transaction(
         provider_id,
-        value_date=date(2025, 2, 1),
+        value_date=date(_YEAR, 2, 1),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
@@ -80,14 +83,14 @@ def _save_priced_gasto_row(secure_objects: SecureObjectRepository, provider_id: 
 
 
 def _save_general_prorrata_entry(secure_objects: SecureObjectRepository) -> None:
-    """Register the 2025 GENERAL prorrata at a 70 percent provisional share, settled at the same share.
+    """Register the GENERAL prorrata for the year at a 70 percent provisional share, settled at the same share.
 
     The annual return prices expenses only at the definitive percentage, so the settlement is what
     lets it resolve the share the instalments already use.
     """
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("70"),
@@ -105,16 +108,16 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
 ) -> None:
     """Full path: persist -> load from repo -> aggregate -> correct casilla 02 value."""
     q1_a_base, q1_b_base, q2_base = Decimal("120.00"), Decimal("80.00"), Decimal("300.00")
-    q1_a = gasto_transaction("q1-a", value_date=date(2025, 2, 1), taxable_base=q1_a_base)
-    q1_b = gasto_transaction("q1-b", value_date=date(2025, 3, 15), taxable_base=q1_b_base)
-    q2_only = gasto_transaction("q2-only", value_date=date(2025, 5, 10), taxable_base=q2_base)
+    q1_a = gasto_transaction("q1-a", value_date=date(_YEAR, 2, 1), taxable_base=q1_a_base)
+    q1_b = gasto_transaction("q1-b", value_date=date(_YEAR, 3, 15), taxable_base=q1_b_base)
+    q2_only = gasto_transaction("q2-only", value_date=date(_YEAR, 5, 10), taxable_base=q2_base)
 
     tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((q1_a, q1_b, q2_only)))
 
     result_q1 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -133,12 +136,12 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     assert result_q1.issues == ()
     assert result_q1.out_of_window_summary is not None
     assert result_q1.out_of_window_summary.count == 1
-    assert result_q1.out_of_window_summary.min_filing_date == date(2025, 5, 10)
-    assert result_q1.out_of_window_summary.max_filing_date == date(2025, 5, 10)
+    assert result_q1.out_of_window_summary.min_filing_date == date(_YEAR, 5, 10)
+    assert result_q1.out_of_window_summary.max_filing_date == date(_YEAR, 5, 10)
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q2_2024,
+        period=_Q2,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -158,10 +161,10 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     secure_objects: SecureObjectRepository,
 ) -> None:
     """Out-of-window rows surface as one compact period-exclusion summary."""
-    in_window = gasto_transaction("row-in-window", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
+    in_window = gasto_transaction("row-in-window", value_date=date(_YEAR, 2, 1), taxable_base=Decimal("50.00"))
     wrong_direction_out_of_window = gasto_transaction(
         "row-wrong-direction-out-of-window",
-        value_date=date(2025, 5, 10),
+        value_date=date(_YEAR, 5, 10),
         taxable_base=Decimal("90.00"),
         direction=TransactionDirection.INCOMING,
     )
@@ -170,7 +173,7 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -186,19 +189,19 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     assert result.issues == ()
     assert result.out_of_window_summary is not None
     assert result.out_of_window_summary.count == 1
-    assert result.out_of_window_summary.min_filing_date == date(2025, 5, 10)
-    assert result.out_of_window_summary.max_filing_date == date(2025, 5, 10)
+    assert result.out_of_window_summary.min_filing_date == date(_YEAR, 5, 10)
+    assert result.out_of_window_summary.max_filing_date == date(_YEAR, 5, 10)
 
 
 def test_repository_backed_aggregation_partition_matches_full_scan(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The partitioned result matches the full-scan result for declared values."""
-    q1_row = gasto_transaction("row-q1", value_date=date(2025, 2, 1), taxable_base=Decimal("50.00"))
-    q3_row = gasto_transaction("row-q3", value_date=date(2025, 8, 1), taxable_base=Decimal("70.00"))
+    q1_row = gasto_transaction("row-q1", value_date=date(_YEAR, 2, 1), taxable_base=Decimal("50.00"))
+    q3_row = gasto_transaction("row-q3", value_date=date(_YEAR, 8, 1), taxable_base=Decimal("70.00"))
     wrong_direction_q3_row = gasto_transaction(
         "row-q3-wrong-direction",
-        value_date=date(2025, 9, 1),
+        value_date=date(_YEAR, 9, 1),
         taxable_base=Decimal("30.00"),
         direction=TransactionDirection.INCOMING,
     )
@@ -208,7 +211,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
 
     partitioned = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -222,7 +225,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     full_scan = aggregate_renta_gasto_ledger(
         catalogue,
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -235,8 +238,8 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     assert partitioned.issues == ()
     assert partitioned.out_of_window_summary is not None
     assert partitioned.out_of_window_summary.count == 2
-    assert partitioned.out_of_window_summary.min_filing_date == date(2025, 8, 1)
-    assert partitioned.out_of_window_summary.max_filing_date == date(2025, 9, 1)
+    assert partitioned.out_of_window_summary.min_filing_date == date(_YEAR, 8, 1)
+    assert partitioned.out_of_window_summary.max_filing_date == date(_YEAR, 9, 1)
     full_scan_issue_ids = {i.transaction_id for i in full_scan.issues}
     assert full_scan_issue_ids == {q3_row.transaction_id}
     assert wrong_direction_q3_row.transaction_id not in full_scan_issue_ids
@@ -258,7 +261,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
     """An EXENTO taxpayer's non-deductible input IVA joins the M130 gasto end to end."""
     row = gasto_transaction(
         "row-exento",
-        value_date=date(2025, 2, 1),
+        value_date=date(_YEAR, 2, 1),
         amount=Decimal("9600.00"),
         taxable_base=Decimal("8000.00"),
         iva_amount=Decimal("1600.00"),
@@ -270,7 +273,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
     def _run(profile_record: UserProfileRecord | None) -> Decimal:
         result = aggregate_renta_gasto_ledger_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
-            period=_Q1_2024,
+            period=_Q1,
             modelo="130",
             target_casilla_id=_M130_GASTOS_CASILLA,
             accept_activity_marker=True,
@@ -310,7 +313,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -333,7 +336,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     _save_priced_gasto_row(secure_objects, "row-ninguna")
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("ninguna"),
             especial_transition=None,
             source_registry_snapshot_refs=(),
@@ -342,7 +345,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -367,7 +370,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
 
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=_Q1_2024,
+        period=_Q1,
         modelo="130",
         target_casilla_id=_M130_GASTOS_CASILLA,
         accept_activity_marker=True,
@@ -383,14 +386,14 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
 
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
-        period=Period.from_year_and_code(2025, "0A"),
+        period=Period.from_year_and_code(_YEAR, "0A"),
         ports=InvoiceCatalogueReadPorts(
             invoice_reader=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             transaction_reader=TransactionCatalogueRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
             ),
         ),
-        profile_year=2025,
+        profile_year=_YEAR,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),

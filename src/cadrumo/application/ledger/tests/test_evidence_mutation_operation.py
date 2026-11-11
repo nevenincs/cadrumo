@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import date, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....application.ledger.evidence import (
@@ -43,6 +44,8 @@ from ....core.operations import OperationEffect, OperationFrontendProjection, pr
 from ....core.secure_object_write import SecureObjectWrite
 from .evidence_mutation_support import EVIDENCE_MUTATION_PROFILE, evidence_mutation_record
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,10 +93,10 @@ def test_update_contracts_allow_only_explicit_empty_mask_and_only_update_permits
 @pytest.mark.parametrize(
     "patch",
     [
-        {"invoice_date": "08/05/2026"},
+        {"invoice_date": date(_YEAR, 5, 8).strftime("%d/%m/%Y")},
         {"invoice_date": "20260508"},
-        {"invoice_date": "2026-02-30"},
-        {"invoice_date": " 2026-05-08"},
+        {"invoice_date": f"{_YEAR}-02-30"},
+        {"invoice_date": f" {date(_YEAR, 5, 8).isoformat()}"},
         {"iva_rate": "100.01"},
         {"iva_rate": "-1"},
         {"taxable_base": "1e3"},
@@ -106,9 +109,9 @@ def test_update_request_refuses_a_date_or_figure_the_record_cannot_hold(patch: d
 
 
 def test_update_request_admits_a_canonical_date_and_rate() -> None:
-    patch = LedgerEvidenceUpdatePatch(invoice_date="2026-05-08", iva_rate="21", taxable_base="100.5")
+    patch = LedgerEvidenceUpdatePatch(invoice_date=date(_YEAR, 5, 8).isoformat(), iva_rate="21", taxable_base="100.5")
 
-    assert (patch.invoice_date, patch.iva_rate, patch.taxable_base) == ("2026-05-08", "21", "100.5")
+    assert (patch.invoice_date, patch.iva_rate, patch.taxable_base) == (date(_YEAR, 5, 8).isoformat(), "21", "100.5")
 
 
 @pytest.mark.parametrize("frontend", sorted(OperationFrontendProjection))

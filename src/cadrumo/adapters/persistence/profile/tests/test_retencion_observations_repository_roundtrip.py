@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -35,12 +35,15 @@ from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.sql.tests.raw_key_writer import save_with_raw_key
 from .retencion_observation_authoring import replace_retencion_observations, save_retencion_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _observation(*, nif: str, scheme: RetencionScheme, retencion: Decimal) -> RetencionObservation:
@@ -52,7 +55,7 @@ def _observation(*, nif: str, scheme: RetencionScheme, retencion: Decimal) -> Re
         scheme=scheme,
         taxable_base=retencion * Decimal("5"),
         retencion_amount=retencion,
-        accrued_on="2024-03-15",
+        accrued_on=date(_YEAR, 3, 15).isoformat(),
     )
 
 
@@ -67,14 +70,14 @@ def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Pa
         save_retencion_observation(
             repo,
             modelo="180",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
             observation=original,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             captured_at=captured_at,
             source_metadata={"origin": "pull"},
         )
-        loaded = repo.load_observations("180", Period.from_year_and_code(2024, "0A"))
+        loaded = repo.load_observations("180", Period.from_year_and_code(_YEAR, "0A"))
 
         assert loaded == (original,)
 
@@ -83,7 +86,7 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
     """Two NIFs, and one NIF across two schemes, persist as distinct rows (key carries NIF+scheme)."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         records = (
             _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
             _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
@@ -94,7 +97,7 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
             save_retencion_observation(
                 repo,
                 modelo="180",
-                filing_year=2024,
+                filing_year=_YEAR,
                 period=period,
                 observation=record,
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -116,15 +119,15 @@ def test_object_key_hashes_the_nif_never_cleartext() -> None:
     """The object key carries the sha256 of the NIF, never the plaintext value."""
     key = retencion_observation_key(
         "180",
-        2024,
-        Period.from_year_and_code(2024, "0A"),
+        _YEAR,
+        Period.from_year_and_code(_YEAR, "0A"),
         "00001500M",
         RetencionScheme("actividades_economicas"),
     )
     assert "00001500M" not in key
     digest = hashlib.sha256("00001500M".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
-    assert key == f"180:2024:0A:{digest}:{RetencionScheme('actividades_economicas').value}"
+    assert key == f"180:{_YEAR}:0A:{digest}:{RetencionScheme('actividades_economicas').value}"
 
 
 def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
@@ -135,14 +138,14 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
         save_retencion_observation(
             repo,
             modelo="180",
-            filing_year=2023,
-            period=Period.from_year_and_code(2023, "0A"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR - 1, "0A"),
             observation=obs,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         # A different year window must not see the 2023 row.
-        assert repo.load_observations("180", Period.from_year_and_code(2024, "0A")) == ()
-        assert repo.load_observations("180", Period.from_year_and_code(2023, "0A")) == (obs,)
+        assert repo.load_observations("180", Period.from_year_and_code(_YEAR, "0A")) == ()
+        assert repo.load_observations("180", Period.from_year_and_code(_YEAR - 1, "0A")) == (obs,)
 
 
 def test_public_observation_contract_rejects_dropped_field() -> None:
@@ -171,7 +174,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         full = (
             _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
             _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
@@ -180,7 +183,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=full,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -190,7 +193,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=full[:2],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -212,7 +215,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         declared = (
             _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
             _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
@@ -221,7 +224,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=declared,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -229,7 +232,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
 
         replacement = repo.build_observation_payload(
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observation=_observation(
                 nif="00001503P",
@@ -240,7 +243,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
         with pytest.raises(PathContainmentError):
-            replace_records(repo, (replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
+            replace_records(repo, (replacement,), (*stale_identifiers, f"180:{_YEAR}:0A:../escape:x"))
 
         survived = repo.load_observations("180", period)
         assert set(survived) == set(declared)
@@ -256,11 +259,11 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(
                 _observation(
@@ -278,7 +281,7 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(carried,),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -291,8 +294,8 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
     """Only the addressed (modelo, filing_year, period) window is replaced."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        target = Period.from_year_and_code(2024, "0A")
-        neighbour = Period.from_year_and_code(2023, "0A")
+        target = Period.from_year_and_code(_YEAR, "0A")
+        neighbour = Period.from_year_and_code(_YEAR - 1, "0A")
         neighbour_row = _observation(
             nif="00001506B",
             scheme=RetencionScheme("actividades_economicas"),
@@ -301,7 +304,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2023,
+            filing_year=_YEAR - 1,
             period=neighbour,
             observations=(neighbour_row,),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -309,7 +312,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=target,
             observations=(
                 _observation(
@@ -337,7 +340,7 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         padded = _observation(
             nif=" 12345678z ",
             scheme=RetencionScheme("actividades_economicas"),
@@ -354,7 +357,7 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(
 
         # Modelo 111 is periodic; the observations accrue in the first quarter.
         aggregation = aggregate_retenciones_111(
-            (padded, canonical), period=Period.from_year_and_code(2024, "1T"), operation=operation
+            (padded, canonical), period=Period.from_year_and_code(_YEAR, "1T"), operation=operation
         )
         assert aggregation.total_perceptors == 1
         assert len(aggregation.rollups) == 1
@@ -362,7 +365,7 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(padded, canonical),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -374,12 +377,12 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(
 
 def test_padded_nif_keys_to_the_canonical_object_key() -> None:
     """A padded declaration and its canonical form address the same stored row."""
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     padded_key = retencion_observation_key(
-        "180", 2024, period, " 12345678z ", RetencionScheme("actividades_economicas")
+        "180", _YEAR, period, " 12345678z ", RetencionScheme("actividades_economicas")
     )
     canonical_key = retencion_observation_key(
-        "180", 2024, period, "12345678Z", RetencionScheme("actividades_economicas")
+        "180", _YEAR, period, "12345678Z", RetencionScheme("actividades_economicas")
     )
     assert padded_key == canonical_key
 
@@ -396,7 +399,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         row_a = _observation(
             nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
         )
@@ -406,7 +409,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         replace_retencion_observations(
             repo,
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observations=(row_a, row_b),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -418,7 +421,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         key_a = repo.extract_identifier(
             repo.build_observation_payload(
                 modelo="180",
-                filing_year=2024,
+                filing_year=_YEAR,
                 period=period,
                 observation=row_a,
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -427,7 +430,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         write_b = repo.to_secure_object_write(
             repo.build_observation_payload(
                 modelo="180",
-                filing_year=2024,
+                filing_year=_YEAR,
                 period=period,
                 observation=row_b,
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -453,8 +456,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 @pytest.mark.parametrize(
     "captured_at",
     [
-        datetime(2024, 4, 15, 10, 30),
-        datetime(2024, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+        datetime(_YEAR, 4, 15, 10, 30),
+        datetime(_YEAR, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
     ],
 )
 def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime, tmp_path: Path) -> None:
@@ -470,8 +473,8 @@ def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime,
         save_retencion_observation(
             RetencionObservationRepositoryAdapter(objects=profile.repository),
             modelo="180",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
             observation=_observation(
                 nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
             ),
@@ -487,15 +490,15 @@ def test_repository_accepts_a_utc_capture_instant(tmp_path: Path) -> None:
         scheme=RetencionScheme("actividades_economicas"),
         retencion=Decimal("100"),
     )
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         save_retencion_observation(
             RetencionObservationRepositoryAdapter(objects=profile.repository),
             modelo="180",
-            filing_year=2024,
+            filing_year=_YEAR,
             period=period,
             observation=observation,
-            captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 4, 15, 10, 30, tzinfo=UTC),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("180", period) == (
@@ -507,7 +510,7 @@ def _capture_payload(repo: RetencionObservationRepositoryAdapter, period: Period
     """Build one fully-populated adapter record through its public builder."""
     return repo.build_observation_payload(
         modelo="180",
-        filing_year=2024,
+        filing_year=_YEAR,
         period=period,
         observation=_observation(
             nif="00001500M",
@@ -515,7 +518,7 @@ def _capture_payload(repo: RetencionObservationRepositoryAdapter, period: Period
             retencion=Decimal("100"),
         ),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 15, 10, 30, tzinfo=UTC),
         source_metadata={"ingestion_run": "run-7", "operator": "aggregate-cli"},
     )
 
@@ -529,7 +532,7 @@ def test_capture_kind_survives_the_encrypted_boundary_as_the_enum(tmp_path: Path
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         built = _capture_payload(repo, period)
 
         repo.save(built)
@@ -550,7 +553,7 @@ def test_a_stored_envelope_missing_the_capture_kind_refuses_to_load(tmp_path: Pa
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        period = Period.from_year_and_code(2024, "0A")
+        period = Period.from_year_and_code(_YEAR, "0A")
         built = _capture_payload(repo, period)
         write = repo.to_secure_object_write(built)
 
@@ -583,7 +586,7 @@ def test_an_evidence_authority_value_cannot_enter_this_store(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        built = _capture_payload(repo, Period.from_year_and_code(2024, "0A"))
+        built = _capture_payload(repo, Period.from_year_and_code(_YEAR, "0A"))
         invalid = dict(built.model_dump(mode="python"))
         invalid["source_kind"] = "aeat_sede_justificante"
 

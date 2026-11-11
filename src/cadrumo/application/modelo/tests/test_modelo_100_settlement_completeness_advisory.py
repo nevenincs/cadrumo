@@ -31,6 +31,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -154,11 +155,11 @@ def test_emits_no_finding_when_satisfied() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Registration on the real M100 2024 + 2025 revisions (read from the snapshot)
+# Registration on the two newest real M100 revisions (read from the snapshot)
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", newest_authored_editions("100", 2))
 def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     """The settlement-completeness ADVISORY is wired on the live revision.
 

@@ -52,8 +52,8 @@ class CancellationScope:
 
 
 class DeadlineAccess:
-    execution_deadline = datetime(2026, 8, 13, 19, tzinfo=UTC)
-    cleanup_deadline = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    execution_deadline = datetime(1980, 8, 13, 19, tzinfo=UTC)
+    cleanup_deadline = datetime(1980, 8, 13, 20, tzinfo=UTC)
 
 
 class EventEmitter:

@@ -36,11 +36,14 @@ from ....application.modelo.reconciliation_records import (
 )
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import modelo_reconcile_commands as handler
 from .. import operation_modelo_reconciliation_import as bridge
 from ..modelo_reconcile_results import ModeloReconcileResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _WORK_UNIT_ID = "1" * 64
@@ -50,12 +53,12 @@ _OPERATION_ID = "a" * 64
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "casilla_id"),
     [
-        pytest.param("100", 2024, "0A", "0604", id="100"),
-        pytest.param("111", 2024, "1T", "30", id="111"),
-        pytest.param("130", 2024, "1T", "19", id="130"),
-        pytest.param("190", 2024, "0A", "decl.retenciones-total", id="190"),
-        pytest.param("303", 2024, "1T", "iva.resultado", id="303"),
-        pytest.param("390", 2022, "0A", "iva.anual.resultado-regimen-general", id="390"),
+        pytest.param("100", _YEAR, "0A", "0604", id="100"),
+        pytest.param("111", _YEAR, "1T", "30", id="111"),
+        pytest.param("130", _YEAR, "1T", "19", id="130"),
+        pytest.param("190", _YEAR, "0A", "decl.retenciones-total", id="190"),
+        pytest.param("303", _YEAR, "1T", "iva.resultado", id="303"),
+        pytest.param("390", _YEAR, "0A", "iva.anual.resultado-regimen-general", id="390"),
     ],
 )
 def test_import_handler_renders_registered_declaration_report(
@@ -91,7 +94,7 @@ def test_import_handler_renders_registered_declaration_report(
         verdict=ModeloReconciliationVerdict.MISMATCHES,
         diffs=(diff,),
         advisories=(advisory,),
-        reconciled_at=datetime(2026, 6, 1, 12, tzinfo=UTC),
+        reconciled_at=datetime(1980, 6, 1, 12, tzinfo=UTC),
         narrative="One filed casilla differs.",
     )
     projection = ModeloReconciliationImportProjection.from_report(report)

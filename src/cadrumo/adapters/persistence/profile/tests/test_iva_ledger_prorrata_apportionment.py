@@ -48,6 +48,10 @@ from cadrumo.core.prorrata_register import (
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    revision_serving_period,
+)
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
@@ -61,14 +65,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark
 
 
 _BUCKET_ID = "78787878-7878-4878-8878-787878787878"
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
+_LAYOUT_REVISION = str(revision_serving_period("303", _YEAR, "1T").id)
 _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
 _DEDUCIBLE_BASE_BINDING: BindingId = "modelo-303-iva-soportado-interiores-base"
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=_YEAR - 1, period="4T").snapshot_ref
 
 
 def _deduction_authority(provider_id: str) -> dict[str, object]:
@@ -111,8 +117,8 @@ def _raw_transaction(
 ) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 2, 10),
-        value_date=date(2026, 2, 10),
+        booked_date=date(_YEAR, 2, 10),
+        value_date=date(_YEAR, 2, 10),
         amount=amount,
         currency="EUR",
         counterparty=counterparty,
@@ -122,7 +128,7 @@ def _raw_transaction(
             source_sha256="7" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -142,7 +148,7 @@ def fully_taxable_purchase_row(provider_id: str) -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("10.50"),
             **_deduction_authority(provider_id),
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -168,7 +174,7 @@ def _classified_purchase(provider_id: str, classification: InputClassification) 
             "iva_amount": Decimal("10.50"),
             "input_classification": classification,
             **_deduction_authority(provider_id),
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -190,7 +196,7 @@ def fully_taxable_sale_row(provider_id: str) -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -225,7 +231,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A taxpayer recorded as no-prorrata keeps the previous full-deduction output."""
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -252,7 +258,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
             ProrrataRegister(
                 entries=(
                     ProrrataRegisterEntry(
-                        ejercicio=2026,
+                        ejercicio=_YEAR,
                         regime=ProrrataRegisterRegime.from_registry("ninguna"),
                         especial_transition=None,
                         source_registry_snapshot_refs=(),
@@ -285,7 +291,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The active provisional percentage bites only on deducible IVA cuota fields."""
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -316,12 +322,12 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
             ProrrataRegister(
                 entries=(
                     ProrrataRegisterEntry(
-                        ejercicio=2026,
+                        ejercicio=_YEAR,
                         regime=ProrrataRegisterRegime.from_registry("general"),
                         especial_transition=None,
                         provisional_percentage=Decimal("80"),
                         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                        source_observation_ref="303:2025:4T",
+                        source_observation_ref=f"303:{_YEAR - 1}:4T",
                         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                     ),
                 ),
@@ -363,12 +369,12 @@ def _seed_register(
         ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
-                    ejercicio=2026,
+                    ejercicio=_YEAR,
                     regime=regime,
                     especial_transition=None,
                     provisional_percentage=percentage,
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-                    source_observation_ref="303:2025:4T",
+                    source_observation_ref=f"303:{_YEAR - 1}:4T",
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
             ),
@@ -386,7 +392,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
     (10.50 * 80% = 8.400): the regime-aware branch must not perturb a single
     Decimal on the general path. The base and devengado bindings are untouched.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -435,7 +441,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
     = 18.90 — an art. 106 result, not the flat general 80% of the whole
     (which would be 25.20). Bases stay full; devengado is untouched.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -489,7 +495,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
     percentage applied to the whole deducible cuota, proving especial is an
     extension of the single aggregation path rather than a fork.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -553,7 +559,7 @@ def test_especial_refuses_an_unclassified_deducible_input(
     the general percentage of a cuota that may be wholly deductible or wholly
     non-deductible.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -606,7 +612,7 @@ def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
         "iva_rate": Decimal("0.21"),
         "iva_amount": Decimal("10.50"),
         **_deduction_authority(provider_id),
-        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(_YEAR, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if sector_id is None:
@@ -618,13 +624,13 @@ def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
 
 def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_YEAR,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
-        source_observation_ref=f"303:2025:4T:{sector_id or 'comun'}",
+        source_observation_ref=f"303:{_YEAR - 1}:4T:{sector_id or 'comun'}",
         source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
 
@@ -640,7 +646,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
     the sector-aware path composes correctly and does not perturb the aggregate
     when the partition is trivial.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -734,7 +740,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
     figure is an oracle claim proven in the verification test; here the
     structural claim is that the three percentages are applied independently.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -849,7 +855,7 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
             entries.append(
                 ProrrataRegisterEntry.model_validate(
                     {
-                        "ejercicio": 2026,
+                        "ejercicio": _YEAR,
                         "sector_id": "comercio",
                         "regime": sector_regime,
                         "especial_transition": None,
@@ -894,7 +900,7 @@ def test_especial_settlement_applies_the_definitive_percentage_to_the_common_sli
     non-deductible and common deduct 10,50 + 0 + 10,50 x 56 % = 16,38 when the
     settlement liquidation is the quarter they fall in.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -943,7 +949,7 @@ def test_sectorized_settlement_applies_each_sector_definitive_and_refuses_a_part
     one of the two declared sectors is refused rather than mixing definitive
     and provisional sectors.
     """
-    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
+    revision = published_authority_operation().revision_with_export_layouts("303", _LAYOUT_REVISION)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)

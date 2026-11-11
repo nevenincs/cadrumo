@@ -62,7 +62,7 @@ def test_a_row_of_plain_values_carries_no_formula_column(tmp_path: Path) -> None
     Without this, a predicate that answered "formula" for every row would pass
     the positive case above and refuse every workbook in the product.
     """
-    rows = _rows_of(tmp_path, [["a", 12, "2026-05-01", None]], read_only=True)
+    rows = _rows_of(tmp_path, [["a", 12, "1986-05-01", None]], read_only=True)
 
     assert first_formula_cell_column(rows[0]) is None
 

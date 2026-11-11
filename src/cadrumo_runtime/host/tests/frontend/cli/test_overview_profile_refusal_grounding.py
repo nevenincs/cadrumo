@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Sequence
+from datetime import date
 
 import pytest
 from click.testing import Result
@@ -28,10 +29,13 @@ from cadrumo.application.user_profile.preflight import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
 from .overview_native_support import invoke_native_overview
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -133,7 +137,17 @@ def test_an_unanswered_fact_renders_as_a_warning_naming_its_profile_edit(
     """
     result = _invoke(
         native_overview_profile,
-        ["--format", "json", "app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"],
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            date(_YEAR, 1, 1).isoformat(),
+            "--to",
+            date(_YEAR, 3, 31).isoformat(),
+        ],
     )
 
     assert result.exit_code == 0, result.output
@@ -152,7 +166,16 @@ def test_an_unanswered_fact_renders_as_a_text_warning_beside_the_rows(
 ) -> None:
     """The text rendering keeps the rows and states each unanswered fact on its warning line."""
     result = _invoke(
-        native_overview_profile, ["app", "overview", "calendar", "--from", "2026-01-01", "--to", "2026-03-31"]
+        native_overview_profile,
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            date(_YEAR, 1, 1).isoformat(),
+            "--to",
+            date(_YEAR, 3, 31).isoformat(),
+        ],
     )
 
     assert result.exit_code == 0, result.output

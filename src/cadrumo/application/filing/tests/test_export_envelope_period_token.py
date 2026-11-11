@@ -13,14 +13,17 @@ import pytest
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_exports import FilingEnvelopePrefixRole
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from ..export_envelope import envelope_closer_bytes, envelope_period_token, render_envelope_prefix_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
+
 #: A Modelo 308 solicitud for a new means of transport, which its design files under ``0A``.
-_ANNUAL_308 = Period.from_year_and_code(2022, "0A")
+_ANNUAL_308 = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _software_identity() -> AeatProductSoftwareIdentity:
@@ -33,12 +36,12 @@ def _software_identity() -> AeatProductSoftwareIdentity:
 
 @pytest.mark.parametrize("code", ["1T", "4T", "0A", "01", "12", "1P"])
 def test_a_two_character_filing_period_prints_itself(code: str) -> None:
-    assert envelope_period_token(Period.from_year_and_code(2025, code)) == code
+    assert envelope_period_token(Period.from_year_and_code(_YEAR, code)) == code
 
 
 @pytest.mark.parametrize("code", ["EXT-1T", "EXT-4T", "EVENT-3"])
 def test_a_period_with_no_two_character_representation_is_refused(code: str) -> None:
-    period = Period.from_year_and_code(2025, code)
+    period = Period.from_year_and_code(_YEAR, code)
 
     with pytest.raises(FilingExportValidationError, match="envelope representation"):
         envelope_period_token(period)
@@ -58,13 +61,13 @@ def test_the_declared_period_prefix_field_renders_the_period_to_its_declared_ext
 
 def test_the_relative_closer_spends_two_characters_on_the_period() -> None:
     """``aeat-dr-308-2019`` M30800 row 15 declares ``</T3080AAAAPP0000>`` at eighteen bytes."""
-    assert envelope_closer_bytes(modelo=Modelo("308"), period=_ANNUAL_308) == b"</T308020220A0000>"
-    quarterly = Period.from_year_and_code(2022, "3T")
-    assert envelope_closer_bytes(modelo=Modelo("308"), period=quarterly) == b"</T308020223T0000>"
+    assert envelope_closer_bytes(modelo=Modelo("308"), period=_ANNUAL_308) == f"</T3080{_YEAR}0A0000>".encode("ascii")
+    quarterly = Period.from_year_and_code(_YEAR, "3T")
+    assert envelope_closer_bytes(modelo=Modelo("308"), period=quarterly) == f"</T3080{_YEAR}3T0000>".encode("ascii")
 
 
 def test_the_closer_refuses_a_period_the_envelope_cannot_print() -> None:
-    period = Period.from_year_and_code(2025, "EXT-1T")
+    period = Period.from_year_and_code(_YEAR, "EXT-1T")
 
     with pytest.raises(FilingExportValidationError, match="declares its bare quarter"):
         envelope_closer_bytes(modelo=Modelo("369"), period=period)

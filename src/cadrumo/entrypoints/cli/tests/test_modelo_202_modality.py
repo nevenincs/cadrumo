@@ -42,6 +42,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -51,6 +52,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 __all__ = ["isolated_cli_backend"]
 
 
+_YEAR = filing_year_envelope().horizon
 _INCN_ABOVE_THRESHOLD = Decimal("6_000_001.00")
 _INCN_AT_THRESHOLD = Decimal("6_000_000.00")
 _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
@@ -99,7 +101,7 @@ def test_incn_above_threshold_yields_art_40_3_mandatory() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_ABOVE_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert verdict.legal_refs  # legal grounding must be populated
@@ -113,7 +115,7 @@ def test_incn_at_threshold_yields_art_40_2_optional() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_AT_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_2_OPTIONAL
 
@@ -125,7 +127,7 @@ def test_incn_below_threshold_yields_art_40_2_optional() -> None:
     """
 
     profile = _sl_profile(incn=_INCN_BELOW_THRESHOLD)
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.ART_40_2_OPTIONAL
 
@@ -140,7 +142,7 @@ def test_incn_undeclared_yields_incomplete() -> None:
     """
 
     profile = _sl_profile(incn=None)
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
@@ -157,7 +159,7 @@ def test_natural_person_yields_incomplete_modality() -> None:
     """
 
     profile = _natural_person_profile()
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
@@ -171,7 +173,7 @@ def test_attribution_entity_yields_incomplete_modality() -> None:
     """
 
     profile = _attribution_entity_profile()
-    verdict = derive_modelo_202_modality(profile, effective_date=date(2025, 12, 31))
+    verdict = derive_modelo_202_modality(profile, effective_date=date(_YEAR, 12, 31))
 
     assert verdict.modality is Modelo202Modality.INCOMPLETE
 
@@ -270,11 +272,11 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
             "--modelo",
             "202",
             "--year",
-            "2026",
+            str(_YEAR),
             "--period",
             "1P",
             "--revision",
-            "2025-y-siguientes",
+            str(open_ended_revision("202").id),
         ],
     )
     assert result.exit_code == 0, result.output
