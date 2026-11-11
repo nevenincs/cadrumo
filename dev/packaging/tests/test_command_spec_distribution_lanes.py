@@ -119,9 +119,6 @@ def validate_target(path, target):
     elif path[-1] in {"annotation", "model"}:
         if not isinstance(value, type):
             raise AssertionError(target.identity)
-    elif path[-1] == "click_type":
-        if not callable(value) and not callable(getattr(value, "convert", None)):
-            raise AssertionError(target.identity)
     else:
         raise AssertionError(f"unrecognized deferred-target role {path}: {target.identity}")
     return value

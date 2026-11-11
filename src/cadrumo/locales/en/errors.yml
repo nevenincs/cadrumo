@@ -735,6 +735,10 @@ errors:
       not match its contract.
     canonical_operation_financial_operand_custody: The financial operand custody transition
       order was violated.
+    canonical_profile_kdf_background_yielded: Background key-derivation work stepped
+      aside for a sign-in.
+    canonical_profile_kdf_strengthening_point_refused: A measured key-derivation setting
+      cannot strengthen this profile's password protection.
     canonical_schema_resolution: The command schema projection is incomplete.
     canonical_structured_invoice_read: The structured invoice could not be read by
       the selected reader.

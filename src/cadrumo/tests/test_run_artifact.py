@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 import sys
 import time
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -251,3 +254,30 @@ def test_a_digest_that_is_not_alphanumeric_is_refused_and_never_recorded(tmp_pat
         run_scoped_digest("site", lambda: "not/a/digest", cache_root=tmp_path)
 
     assert run_scoped_digest("site", lambda: "abcd", cache_root=tmp_path) == "abcd"
+
+
+def test_an_entry_another_worker_retires_during_retirement_is_skipped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Path] = []
+    for digest in ("aaaa", "bbbb"):
+        run_artifact("kind", digest, publish=_counting_publisher(calls), verify=_verify, cache_root=tmp_path)
+    victim = tmp_path / "kind" / "aaaa"
+    assert victim.is_dir()
+    real_iterdir = Path.iterdir
+
+    def listing_raced_by_another_retirement(path: Path) -> Iterator[Path]:
+        # Another worker removes the entry once this worker has listed it, before it reads the entry's age.
+        for entry in real_iterdir(path):
+            yield entry
+            if entry == victim and os.path.isdir(victim):
+                shutil.rmtree(victim)
+
+    monkeypatch.setattr(Path, "iterdir", listing_raced_by_another_retirement)
+    newest = run_artifact(
+        "kind", "cccc", publish=_counting_publisher(calls), verify=_verify, cache_root=tmp_path, retain=3
+    )
+
+    assert newest.published_by_this_call
+    assert not victim.exists()
+    assert (tmp_path / "kind" / "bbbb").is_dir()

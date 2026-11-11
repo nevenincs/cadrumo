@@ -26,13 +26,19 @@ from ...operations.error_detail import build_operation_error_detail
 from ...operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1, error_next_step
 from ..iva_wallet_binding import apply_iva_compensation_decision_binding
 from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
-from ..preconditions import IVA_WALLET_OPENING_BALANCE_SCENARIOS, MODELO_PRECONDITION_PROFILES
+from ..preconditions import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+    MODELO_PRECONDITION_PROFILES,
+)
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "34343434-3434-4343-8343-343434343434"
 _TAXPAYER_REF = "taxpayeralpha"
 _PERIOD_CODE = "2T"
+# The opening balance a second quarter carries is the first quarter's closing one.
+_CARRIED_FROM_CODE = "1T"
 _M303_PRIOR_COMPENSATION_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
     surface="_M303_PRIOR_COMPENSATION_CASILLA",
@@ -48,9 +54,9 @@ def _supported_filing_years() -> tuple[int, ...]:
     return years
 
 
-def _refuse_unseeded_carry(filing_year: int) -> ModeloIvaWalletReconciliationBlocked:
+def _refuse_unseeded_carry(filing_year: int, period_code: str = _PERIOD_CODE) -> ModeloIvaWalletReconciliationBlocked:
     """Ask Modelo 303 to carry a prior compensation with no recorded wallet authority."""
-    period = Period.from_year_and_code(filing_year, _PERIOD_CODE)
+    period = Period.from_year_and_code(filing_year, period_code)
     backend: dict[BindingId, Decimal] = {}
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
         apply_iva_compensation_decision_binding(
@@ -61,7 +67,7 @@ def _refuse_unseeded_carry(filing_year: int) -> ModeloIvaWalletReconciliationBlo
             revision=published_snapshot(
                 form_for_role("iva.periodic"),
                 filing_year=filing_year,
-                period=_PERIOD_CODE,
+                period=period_code,
             ).revision,
             taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={_M303_PRIOR_COMPENSATION_CASILLA: Decimal("800")},
@@ -84,8 +90,20 @@ def test_unseeded_carry_refusal_names_the_opening_balance_in_every_supported_yea
         )
         assert step.modelo == form_for_role("iva.periodic")
         assert step.filing_year == filing_year
-        assert step.period_code == _PERIOD_CODE
+        assert step.period_code == _CARRIED_FROM_CODE
         assert step.words.strip() != ""
+
+
+def test_a_first_quarter_refusal_names_the_previous_years_fourth_quarter_in_every_supported_year() -> None:
+    """Across the year end, the balance a first quarter carries is the previous year's fourth quarter's."""
+    for filing_year in _supported_filing_years():
+        error = _refuse_unseeded_carry(filing_year, "1T")
+        step = error.operation_next_step(OutputLanguage.ES)
+        assert isinstance(step, OperationOpenIvaWalletOpeningBalanceStepV1)
+        assert (step.filing_year, step.period_code) == (filing_year - 1, "4T")
+        verdict = error.precondition_failure.verdict
+        bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+        assert bound == {"filing_year": filing_year - 1, "period": "4T"}
 
 
 def test_unseeded_carry_refusal_keeps_its_own_verdict_and_message() -> None:
@@ -114,7 +132,7 @@ def test_refusal_detail_carries_the_opening_balance_step() -> None:
 
     assert detail is not None
     assert isinstance(detail.next_step, OperationOpenIvaWalletOpeningBalanceStepV1)
-    assert detail.next_step.period_code == _PERIOD_CODE
+    assert detail.next_step.period_code == _CARRIED_FROM_CODE
 
 
 def test_a_refusal_the_opening_balance_would_not_settle_names_no_door() -> None:
@@ -150,22 +168,28 @@ def test_unseeded_carry_refusal_names_the_opening_balance_command_in_every_suppo
         assert verdict.action is not None, f"the {filing_year} refusal names no action"
         assert verdict.action.action_id == "operator.modelo.iva_wallet.seed"
         bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
-        assert bound == {"filing_year": filing_year, "period": _PERIOD_CODE}
+        assert bound == {"filing_year": filing_year, "period": _CARRIED_FROM_CODE}
         assert verdict.missing_argument_names == ("amount",)
 
 
 @pytest.mark.parametrize("leaf", ["modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export"])
 def test_every_refusal_the_opening_balance_settles_names_the_command_on_every_leaf(leaf: str) -> None:
-    """The declared profile of each opening-balance scenario carries the action; no other wallet scenario does."""
+    """Opening-balance scenarios name the seed, override scenarios the override; no other wallet scenario names one."""
     scenarios = {
         profile.scenario_id.rsplit(".", 1)[-1]: profile
         for profile in MODELO_PRECONDITION_PROFILES
         if profile.condition_id == f"{leaf}.iva_wallet.ready"
     }
     assert set(IVA_WALLET_OPENING_BALANCE_SCENARIOS) <= set(scenarios)
+    assert set(IVA_WALLET_OVERRIDE_SCENARIOS) <= set(scenarios)
     for scenario, profile in scenarios.items():
         if scenario in IVA_WALLET_OPENING_BALANCE_SCENARIOS:
             assert profile.action is not None, f"{leaf} {scenario} names no action"
             assert profile.action.action_id == "operator.modelo.iva_wallet.seed"
+        elif scenario in IVA_WALLET_OVERRIDE_SCENARIOS:
+            assert profile.action is not None, f"{leaf} {scenario} names no action"
+            assert profile.action.action_id == "operator.modelo.iva_wallet.override"
         else:
-            assert profile.action is None, f"{leaf} {scenario} is not settled by the opening balance"
+            assert profile.action is None, (
+                f"{leaf} {scenario} is settled by neither the opening balance nor an override"
+            )

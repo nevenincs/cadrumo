@@ -748,6 +748,10 @@ errors:
       a szerződésével.
     canonical_operation_financial_operand_custody: Megsértették a pénzügyi operandusok
       megőrzésének rögzített átmeneti sorrendjét.
+    canonical_profile_kdf_background_yielded: A háttérben futó kulcsszármaztatás átadta
+      a helyet egy bejelentkezésnek.
+    canonical_profile_kdf_strengthening_point_refused: Egy mért kulcsszármaztatási
+      beállítás nem erősítheti meg a profil jelszavas védelmét.
     canonical_schema_resolution: A parancsséma vetítése hiányos.
     canonical_structured_invoice_read: A kiválasztott olvasó nem tudta beolvasni a
       strukturált számlát.

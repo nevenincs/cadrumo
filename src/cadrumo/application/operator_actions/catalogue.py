@@ -472,6 +472,37 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.iva_wallet.override",
+            target_command_key="modelo.iva_wallet.override",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="amount",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="amount",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="evidence_locator",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="evidence_locator",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="filing_year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="filing_year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="reason",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="reason",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.work.file",
             target_command_key="modelo.work.file",
             argument_specifications=(

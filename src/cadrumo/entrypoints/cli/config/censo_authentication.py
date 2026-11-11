@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, Literal, cast
 
-import click
 import typer
+from pydantic_core import PydanticCustomError
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.output import write_stderr
@@ -36,6 +38,7 @@ from ....core.auth_provider import (
     AuthProviderKind,
     ClaveMovilRoute,
 )
+from ....core.cli_value_parsers import CliChoice
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
@@ -138,22 +141,33 @@ def _prompt_field(client: FrontendClient, path: str) -> None:
         write_stderr(tr("cli.censo_auth.still_missing", field=path))
 
 
+def _prompt_choice(text: str, choices: Sequence[str], *, default: str | None) -> str:
+    """Prompt until the operator enters one of ``choices``, re-asking with the refusal."""
+    admit = CliChoice.of(choices)
+
+    def admitted(value: str) -> str:
+        try:
+            return admit(value)
+        except PydanticCustomError as refusal:
+            raise typer.BadParameter(refusal.message()) from refusal
+
+    # A Literal type lets the prompt show the accepted set beside the question.
+    shown = cast(Any, Literal).__getitem__(tuple(choices))
+    return cast(str, typer.prompt(text, type=shown, value_proc=admitted, default=default))
+
+
 def censo_authentication_configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
     """Prompt for and save the census authentication provider configuration."""
     choices = known_auth_provider_ids()
-    provider = typer.prompt(
-        tr("cli.censo_auth.method"),
-        type=click.Choice(choices),
-        default=readiness.provider or None,
-    )
+    provider = _prompt_choice(tr("cli.censo_auth.method"), choices, default=readiness.provider or None)
     kind = AuthProviderKind(provider)
     route = None
     certificate = None
     if kind is AuthProviderKind.CLAVE_MOVIL:
         route = ClaveMovilRoute(
-            typer.prompt(
+            _prompt_choice(
                 tr("cli.censo_auth.route"),
-                type=click.Choice(tuple(item.value for item in ClaveMovilRoute)),
+                tuple(item.value for item in ClaveMovilRoute),
                 default=readiness.route or DEFAULT_CLAVE_MOVIL_ROUTE.value,
             )
         )

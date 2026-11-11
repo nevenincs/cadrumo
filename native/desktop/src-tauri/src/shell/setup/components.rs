@@ -70,7 +70,8 @@ use cadrumo_application::{
         },
         plan::{PlanEntry, SetupPlan},
         state::{
-            BlockedReason, CheckMode, ItemState, RecoveryAction, SetupStep, StaleReason, StatusRow,
+            BlockedReason, CheckMode, ItemState, RecoveryAction, RemovalOffer, SetupStep,
+            StaleReason, StatusRow,
         },
     },
     value::Sha256Digest,
@@ -1598,6 +1599,15 @@ fn row(row: &StatusRow) -> wire::Row {
         recovery_action_id: row.recovery_action_id().map(str::to_owned),
         version: row.version.clone(),
         size_bytes: row.size_estimate_bytes,
+        removals: row
+            .removals
+            .iter()
+            .map(|offer| match (row.item, offer) {
+                (ItemId::Browser, _) => Removal::Browser,
+                (ItemId::LocalAi, RemovalOffer::Whole) => Removal::LocalAi,
+                (ItemId::LocalAi, RemovalOffer::ProgramOnly) => Removal::LocalAiProgram,
+            })
+            .collect(),
     }
 }
 

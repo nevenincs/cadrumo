@@ -114,7 +114,7 @@ def _json_type(parameter: ParameterSpec) -> JsonType:
 def _choices(parameter: ParameterSpec, resolver: TargetResolver) -> tuple[str, ...]:
     if parameter.value.choices:
         return parameter.value.choices
-    target = parameter.value.click_type or parameter.value.annotation
+    target = parameter.value.parser or parameter.value.annotation
     try:
         value = resolver(target)
     except (ImportError, AttributeError, InternalInvariantError):
@@ -124,7 +124,7 @@ def _choices(parameter: ParameterSpec, resolver: TargetResolver) -> tuple[str, .
     # The Enum branch above leaves a partially-narrowed `type[Unknown]` in the
     # negative arm; restate the plain object the remaining lookup runs against.
     resolved = cast("object", value)
-    # A click type's ``choices`` is whatever the type declares; only a real
+    # A parser's ``choices`` is whatever the parser declares; only a real
     # sequence of tokens is a choice set.
     declared: object = getattr(resolved, "choices", ())
     if not is_object_list_or_tuple(declared):

@@ -134,24 +134,19 @@ def validate_parameter_default(kind: object, literal: object, factory: object) -
 
 
 def validate_value_contract(
-    click_type: object,
     parser: object,
     choices: tuple[str, ...],
 ) -> None:
-    """Validate mutually exclusive conversion hooks and choices."""
+    """Validate that choices are well formed and exclusive of a parser."""
     _raise_first(
         (
-            (
-                click_type is not None and parser is not None,
-                "value contract cannot declare both a Click type and parser",
-            ),
             (
                 len(choices) != len(set(choices)) or any(not choice for choice in choices),
                 "value contract choices must be unique non-empty strings",
             ),
             (
-                bool(choices) and (click_type is not None or parser is not None),
-                "value contract choices cannot be combined with a Click type or parser",
+                bool(choices) and parser is not None,
+                "value contract choices cannot be combined with a parser",
             ),
         )
     )

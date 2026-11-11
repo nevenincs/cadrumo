@@ -355,6 +355,7 @@ class SessionAuthorityCore:
                             profile_id=self.binding.profile_id,
                             connection_id=session.connection_id,
                             session_id=session.session_id,
+                            session_kind=session.kind,
                             reason=reason,
                             kind=kind,
                         )

@@ -213,6 +213,13 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
         profile_bound_write=True,
     ),
     ActionTarget(
+        "modelo.iva_wallet.override",
+        ("app", "modelo", "iva-wallet", "override"),
+        "IvaWalletOverrideResult",
+        required_inputs=("filing_year", "period", "amount", "reason", "evidence_locator"),
+        profile_bound_write=True,
+    ),
+    ActionTarget(
         "modelo.verification_report.list",
         ("app", "modelo", "verification-report", "list"),
         "VerificationReportListResult",

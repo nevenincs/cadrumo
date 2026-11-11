@@ -170,8 +170,11 @@ class InstalledCli:
                     },
                 },
             }
+        # The exit status and output sizes are what tell a crashed or replaced
+        # launcher from a command that refused without an envelope.
         raise InstalledCliError(
-            f"{command_identity}: no CLI JSON envelope",
+            f"{command_identity}: no CLI JSON envelope (exit {completed.returncode}, "
+            f"stdout {len(completed.stdout)} chars, stderr {len(completed.stderr)} chars)",
             diagnostic_code="acceptance.installed_cli.non_json_failure",
             commands=tuple(self.commands),
         ) from exc

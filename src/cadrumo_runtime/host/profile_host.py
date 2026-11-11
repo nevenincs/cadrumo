@@ -37,6 +37,7 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     OsLockState,
     ProfileAccessState,
+    SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_administration import (
@@ -114,7 +115,7 @@ class RuntimeProfileHost:
         recipient: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient] | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
-        retired: Callable[[SessionEvent], None] | None = None,
+        retired: Callable[[SessionEvent, SessionKind], None] | None = None,
         operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
         suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
@@ -233,7 +234,8 @@ class RuntimeProfileHost:
                 reason=retirement.reason,
                 generation_lineage=None if generation is None else generation.lineage,
                 generation=None if generation is None else generation.generation,
-            )
+            ),
+            retirement.session_kind,
         )
 
     def _require_approval_binding(self, binding: RuntimeApprovalBinding) -> None:

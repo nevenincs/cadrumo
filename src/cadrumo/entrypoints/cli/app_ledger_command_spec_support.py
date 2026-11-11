@@ -41,7 +41,7 @@ def irpf_category_option(help_key: str) -> OptionSpec:
         declarations=("--irpf-category",),
         value=ValueContract(
             DeferredTarget("builtins", "str"),
-            click_type=DeferredTarget(".common", "IRPF_CATEGORY_CHOICE", __package__),
+            parser=DeferredTarget(".common", "parse_published_irpf_category", __package__),
         ),
         default=ParameterDefault.value(None),
         help_key=TranslationKey(help_key),

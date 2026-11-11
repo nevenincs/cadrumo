@@ -884,6 +884,43 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
     assert not hasattr(exc, "suggestion")
 
 
+@pytest.mark.parametrize(
+    ("divergence", "reason_identity"),
+    [
+        ("filed_history_only", "filed_history_requires_override"),
+        ("wallet_missing", "local_recurrence_requires_override"),
+        ("wallet_stale", "stale_wallet_local_recurrence_requires_override"),
+    ],
+)
+def test_iva_wallet_refusal_only_an_override_settles_names_the_override_for_its_period(
+    divergence: IvaCompensationDivergence,
+    reason_identity: str,
+) -> None:
+    """A carry only the taxpayer's override can settle names that override, bound to the refused period."""
+    decision = _blocked_wallet_decision(divergence=divergence, reason_identity=reason_identity)
+    backend: dict[BindingId, Decimal] = {}
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
+        apply_iva_compensation_decision_binding(
+            "303",
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
+            bucket_id=_BUCKET_ID,
+            revision=_test_revision(),
+            taxpayer_nif="12345678Z",
+            caller_binding_values={},
+            backend_binding_values=backend,
+            decision=decision,
+        )
+
+    assert backend == {}, "a refused carry writes no binding value"
+    verdict = raised.value.precondition_failure.verdict
+    assert verdict.action is not None, f"{reason_identity} names no action"
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+    assert bound == {"filing_year": _FILING_YEAR, "period": "1T"}
+    assert set(verdict.missing_argument_names) == {"amount", "evidence_locator", "reason"}
+
+
 def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
         apply_iva_compensation_decision_binding(
@@ -1162,8 +1199,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    import click
-
+    from ....core.cli_value_parsers import CliChoice
     from ...wizard.catalogue import build_setup_flow
     from ...wizard.command_parameters import SETUP_OPTION_INFOS
     from ...wizard.commands import build_wizard_command
@@ -1179,8 +1215,8 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     build_wizard_command(flow, mode="create", operation=operation)
     option = SETUP_OPTION_INFOS["iva-regime"]
     assert option is not None, "the command builder materialized no --iva-regime option"
-    choice_type = option.click_type
-    assert isinstance(choice_type, click.Choice)
+    choice_type = option.parser
+    assert isinstance(choice_type, CliChoice)
     choice_set = set(choice_type.choices)
     assert choice_set == wizard_values
     assert IVARegime("NO_APLICA").value not in choice_set

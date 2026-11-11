@@ -76,7 +76,7 @@ pub fn list(added: &[&str]) -> Value {
         .iter()
         .map(|model| json!({"lane": LOCAL, "model": model}))
         .collect();
-    json!({"unreadable": false, "models": models, "reading": null, "local_lanes": [LOCAL], "revision": revision()})
+    json!({"unreadable": false, "models": models, "reading": null, "reading_source": "none", "local_lanes": [LOCAL], "revision": revision()})
 }
 
 fn lane(id: &str, provider: &str, auth_kind: &str, mode: &str, saved: bool) -> Value {
@@ -696,7 +696,7 @@ fn a_download_off_a_local_lanes_list_is_refused() {
                 json!({"unreadable": false, "models": [
                     {"lane": LOCAL, "model": ADDED},
                     {"lane": HOSTED, "model": elsewhere},
-                ], "reading": null, "local_lanes": [LOCAL], "revision": revision()}),
+                ], "reading": null, "reading_source": "none", "local_lanes": [LOCAL], "revision": revision()}),
             );
         assert_eq!(
             refusal(admission_of(replies).download(&requested(lane, model))),
@@ -709,7 +709,7 @@ fn a_download_off_a_local_lanes_list_is_refused() {
 #[test]
 fn an_unreadable_list_admits_no_added_model_but_keeps_the_recommended_ones() {
     let unreadable = json!({
-        "unreadable": true, "models": [], "reading": null, "local_lanes": [LOCAL], "revision": revision(),
+        "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": [LOCAL], "revision": revision(),
     });
     let replies = || {
         Replies::serving(&[TEXT], &[], &[(TEXT, Some(GB))])
@@ -743,7 +743,7 @@ fn a_removal_selects_every_model_on_a_local_lanes_lists_once() {
 #[test]
 fn a_removal_selects_nothing_from_a_list_nobody_can_read_or_a_lane_that_is_not_local() {
     let unreadable = json!({
-        "unreadable": true, "models": [], "reading": null, "local_lanes": [LOCAL], "revision": revision(),
+        "unreadable": true, "models": [], "reading": null, "reading_source": "none", "local_lanes": [LOCAL], "revision": revision(),
     });
     let listed =
         admission_of(Replies::serving(&[], &[], &[]).answering("local_models", unreadable))

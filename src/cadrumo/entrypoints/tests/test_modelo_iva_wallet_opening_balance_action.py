@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -25,7 +26,7 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.next_step import OperationOpenIvaWalletOpeningBalanceStepV1
 from ...application.operator_surface.action_targets import resolve_recorded_precondition_action
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.operator_action_enums import ActionArgumentStatus, ActionConditionality
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -39,9 +40,34 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CALCULATE = "modelo.work.calculate"
 _PERIOD_CODE = "1T"
+# A first quarter carries the closing balance of the previous year's fourth.
+_CARRIED_FROM_CODE = "4T"
 _PROFILE_CLOCK = datetime(TARGET_YEAR, 4, 2, 9, 0, tzinfo=UTC)
 _OPENING_BALANCE_ACTION_ID = "operator.modelo.iva_wallet.seed"
 _OPENING_BALANCE_COMMAND_KEY = "modelo.iva_wallet.seed"
+_SEED = "modelo.iva-wallet.seed"
+
+
+def _follow_the_served_door(driver, registry, resolved, *, profile_id: UUID):
+    """Record the opening balance the refusal's served action names, declaring a zero balance."""
+    assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
+    verdict = resolved.projection.precondition_verdict()
+    assert verdict is not None
+    served = resolve_recorded_precondition_action(verdict)
+    assert served.action is not None
+    bound = {item.argument_name: item.value for item in served.argument_bindings if item.value is not None}
+    definition = registry.lookup(_SEED)
+    payload = definition.request_type.model_validate(
+        {
+            "profile_id": profile_id,
+            "period": {"filing_year": bound["filing_year"], "code": bound["period"]},
+            "amount": "0.00",
+        },
+    )
+    _submitted, observed = asyncio.run(
+        driver.run(definition_id=_SEED, subject_ref=profile_operation_subject(str(profile_id)), payload=payload)
+    )
+    return observed.projection
 
 
 def test_an_unseeded_wallet_refusal_names_the_opening_balance_command_to_every_consumer(
@@ -90,7 +116,15 @@ def test_an_unseeded_wallet_refusal_names_the_opening_balance_command_to_every_c
                 OperationErrorDetailV1,
             )
         )
+        # Follow the served door exactly: the seed command with the arguments the
+        # refusal bound, and the filer's own amount, then calculate again.
+        followed = _follow_the_served_door(driver, registry, resolved, profile_id=profile_id)
+        _resubmitted, recalculated = asyncio.run(
+            driver.run(definition_id=_CALCULATE, subject_ref=unit.work_unit_id, payload=payload)
+        )
 
+    assert followed.terminal_condition is OperationTerminalCondition.SUCCEEDED, followed
+    assert recalculated.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, recalculated.projection
     projection = observed.projection
     assert projection.terminal_condition is OperationTerminalCondition.REFUSED
     assert projection.refusal_ref == "REFUSED_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED"
@@ -103,8 +137,8 @@ def test_an_unseeded_wallet_refusal_names_the_opening_balance_command_to_every_c
 
     # The window's step to the IVA balance's opening-balance entry.
     assert isinstance(detail.next_step, OperationOpenIvaWalletOpeningBalanceStepV1)
-    assert detail.next_step.filing_year == TARGET_YEAR
-    assert detail.next_step.period_code == _PERIOD_CODE
+    assert detail.next_step.filing_year == TARGET_YEAR - 1
+    assert detail.next_step.period_code == _CARRIED_FROM_CODE
 
     # The catalogue action, resolved the way a process without the command graph resolves it.
     verdict = detail.precondition_verdict()
@@ -117,7 +151,7 @@ def test_an_unseeded_wallet_refusal_names_the_opening_balance_command_to_every_c
     assert served.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
     assert served.no_recovery_outcome is None
     bound = {item.argument_name: item for item in served.argument_bindings}
-    assert bound["filing_year"].value == TARGET_YEAR
-    assert bound["period"].value == _PERIOD_CODE
+    assert bound["filing_year"].value == TARGET_YEAR - 1
+    assert bound["period"].value == _CARRIED_FROM_CODE
     assert bound["amount"].status is ActionArgumentStatus.MISSING
     assert served.missing_argument_names == ("amount",)

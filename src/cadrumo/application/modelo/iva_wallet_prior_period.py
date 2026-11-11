@@ -17,7 +17,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
     M303_COMPENSATION_AVAILABLE_CASILLA,
 )
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.iva.refund_eligibility import (
     RefundEligibilityOutcome,
     redeme_enrolment_state,
@@ -129,12 +129,18 @@ _NO_PRIOR_PERIOD_OBSERVATION: Final = _PriorPeriodCarryEvidence(
 def _prior_period_observation_requirement(
     snapshot: RegistrySnapshot,
 ) -> RegistryFoldRequirement | None:
+    return _prior_compensation_requirement(snapshot.revision, filing_year=snapshot.filing_year, period=snapshot.period)
+
+
+def _prior_compensation_requirement(
+    revision: ModeloRevision, *, filing_year: int, period: str
+) -> RegistryFoldRequirement | None:
     requirements = tuple(
         requirement
         for requirement in previous_filing_observation_requirements(
-            snapshot.revision,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
+            revision,
+            filing_year=filing_year,
+            period=period,
         )
         if requirement.source_modelo == form_for_role("iva.periodic")
         and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
@@ -150,6 +156,20 @@ def _prior_period_source_period(requirement: RegistryFoldRequirement) -> Period:
         if requirement.filing_periods
         else Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
     )
+
+
+def prior_compensation_source_period(revision: ModeloRevision, carry_period: Period) -> Period | None:
+    """The Modelo 303 period whose closing balance ``carry_period``'s prior compensation reads.
+
+    It is the period an opening balance is declared for, since a period's
+    declared balance is the one the period after it carries; ``revision`` is the
+    edition calculating ``carry_period``, whose own requirement names it.
+    ``None`` when the revision reads no single earlier period for it.
+    """
+    requirement = _prior_compensation_requirement(
+        revision, filing_year=carry_period.filing_year, period=carry_period.registry_token
+    )
+    return None if requirement is None else _prior_period_source_period(requirement)
 
 
 def _prior_period_observation_is_usable(

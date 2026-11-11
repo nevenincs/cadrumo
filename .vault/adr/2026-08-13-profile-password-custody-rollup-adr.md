@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-28'
+modified: '2026-11-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e71f9c22859bf5392f5066d630994cbbcfdc1dd3c225f39b16f740ce1c2e079'
+body_hash: 'sha256:612239d75f67a42d4194706f3bb472089f1373d07d7d6c2de3cefdb36fc49305'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -164,3 +164,21 @@ The wording "This protocol is enforced at the application enrollment boundary" a
 ## Amendment 2026-10-28: orchestrated first-login waiting is bounded by the shared timeout
 
 Accepted under the user's explicit first-login and multi-service signal/slot ruling recorded in2026-10-28-debug-startup-reliability-adr. For an exact runtime-owned first-login attempt that supplies one absolute timeout deadline, waiting for the installation KDF permit, child attestation, request/result and sentinel-verified proof consumes that same remaining deadline; the ordinary15-second wrap/unwrap wall-clock default does not cut off this orchestrated attempt, and process launch never extends its timeout budget. The earlier15-second default remains for callers that supply no orchestration deadline. The finite Argon2id grid, calibration sample/total budgets, parameter-strength floor, child OS CPU/memory/process ceilings, ready attestation before secret delivery, sentinel proof, strict environment, secret-free IPC metadata and exact cleanup/containment remain unchanged. A timeout in the orchestrated path is explicitly KDF_TIMEOUT and grants no key or candidate. Permit waiting uses release/exit/cancellation signals in the same lock domain, preserving interoperation with already-running workers rather than creating a parallel permit.
+
+## Amendment 2026-11-11: sign-in strengthening of a fallback password envelope
+
+Accepted under operator approval relayed by CADRUMO-COORDINATOR on 2026-11-10 (about 19:20 Madrid) for automatic KDF strengthening at login. Flagged as a security-sensitive change.
+
+A profile whose committed password envelope holds the fixed `64 MiB, t=3, p=1` fallback is strengthened at a human password sign-in, without the person typing anything more. Profiles were enrolled at the fallback wherever calibration could not finish on the host (amendment 2026-11-10 above); the only other way out was a manual same-password rotation, which the profile page now offers through its fallback notice.
+
+Strengthening is a password replacement in every respect except its trigger. It re-mints the password envelope over the same DEK and DEK epoch, as the successor generation naming the committed envelope as predecessor, under the custody transaction lock and the existing compare-and-swap. The record is re-headed and automation custody is retired exactly as in a rotation. The lifecycle event records a distinct proof descriptor, so the profile's history tells an automatic strengthening from a person's rotation. The sentinel, the recovery wrapper, the grid, the band, the eligibility floor and the fallback are unchanged. The new point must rank strictly above the committed one in the calibration order and pass the existing eligibility rule; otherwise nothing is written. Parameters never weaken, and a calibration that again ends at the fallback leaves the profile as it is.
+
+Binding constraints:
+
+1. Prerequisite: the password-replacement journal and sign-in preflight that Transactions and immutable capsule publication already requires are built before strengthening is enabled. On 2026-11-11 the journal records only creation and deletion, and rotation relies on step order alone, so a crash between the re-head and the envelope swap leaves a record that names an envelope that was never published. The replacement journal records the proposed envelope bytes and digest before the re-head; the next sign-in's preflight publishes or rolls back. This covers manual rotation and recovery reset as well. Building it is execution of this record's accepted design, not a new decision.
+2. Calibration needs no secret and runs before it is needed, never inside the custody transaction lock. A runtime-owned process calibrates after a fallback profile's successful sign-in, and the measured point is held in runtime memory for that host and runtime boot only. Each sample takes the installation KDF lease as it does today, and the calibration yields before each sample to any waiting unlock or sign-in. A later sign-in to that profile uses the held point; it never calibrates on the sign-in path.
+3. The rewrap runs inside the sign-in attempt, after the password is proven and before any session binds, with the password the runtime already holds for that attempt. No password is retained beyond the attempt's existing lifetime, and none is written anywhere.
+4. Strengthening runs only when the profile's host has no other live session and no enrolled automation custody, because the generation change ends those sessions and retires that custody. Otherwise the sign-in proceeds unchanged on the fallback envelope, and the fallback notice remains.
+5. After the replacement commits, the attempt follows its own replacement. The runtime retires the replaced binding as it does after a rotation and launches a successor worker on the new generation. There it proves the same password against the committed envelope, then binds, publishes and mints the receipt for the new generation as usual. If that second proof fails or times out, the attempt reports its typed refusal. The replacement stands and is never rolled back, and the next sign-in with the same password opens the stronger envelope.
+
+The cost is paid once per profile: one wrap derivation, one unlock derivation at the new point and a worker launch, all inside one sign-in. That sign-in stays pending on the 2026-10-28 signals until it finishes. `2026-10-28-debug-startup-reliability-adr` carries the matching scoped exception for an attempt that follows its own committed replacement. Reconsider when calibration reliably completes at enrollment on supported hosts, because few new profiles would then hold the fallback.

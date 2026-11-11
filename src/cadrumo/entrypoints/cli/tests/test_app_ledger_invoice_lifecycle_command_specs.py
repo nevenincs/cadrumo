@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _DEFAULT_CONSTRAINT = (None, None, False, True, False, True, True, False, True, False, False)
 _NO_TRANSPORT = ("none", "not_applicable", "not_applicable")
-_NO_VALUE_HOOKS = (None, None, None, None, ())
+_NO_VALUE_HOOKS = (None, None, None, ())
 
 
 def _parameter_contract(parameter: ArgumentSpec | OptionSpec) -> tuple[object, ...]:
@@ -36,7 +36,7 @@ def _parameter_contract(parameter: ArgumentSpec | OptionSpec) -> tuple[object, .
             value.annotation.identity,
             *(
                 target.identity if target is not None else None
-                for target in (value.click_type, value.parser, value.completion, value.callback)
+                for target in (value.parser, value.completion, value.callback)
             ),
             value.choices,
         ),
