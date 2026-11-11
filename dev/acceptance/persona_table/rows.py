@@ -26,6 +26,8 @@ from cadrumo.tests.personas import (
     values_in_force,
 )
 
+from .counterparties import is_compared
+
 
 class Stage(StrEnum):
     """How one stage of a row ended."""
@@ -247,8 +249,8 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
 
     A return is owed when an obligation states it applicable, the persona's
     history files or calculates it, or a value is stated for it. Values stated
-    per counterparty (informative returns) are not compared yet, so they do not
-    make a row's oracle. ``persona`` is read under any envelope; its year
+    per counterparty are an oracle only for the informative returns whose
+    type-2 record the table compares (``counterparties.DESIGNS``). ``persona`` is read under any envelope; its year
     tokens are resolved here against ``horizon``, and a return whose year falls
     outside ``envelope.floor..horizon`` is not a row of this replay.
     """
@@ -263,13 +265,16 @@ def planned_rows(persona: Persona, horizon: int, envelope: YearEnvelope) -> list
 
 
 def _stated_values(persona: Persona, envelope: YearEnvelope) -> dict[tuple[str, int | None, str], list[ExpectedValue]]:
-    """The values in force per return, leaving out per-counterparty values; a return with only concepts maps to none."""
+    """The values in force per return, leaving out per-counterparty values the table cannot compare.
+
+    A return with only concepts maps to none.
+    """
     stated: dict[tuple[str, int | None, str], list[ExpectedValue]] = {}
     for year, value in in_force(persona.expectations.values, envelope):
-        if value.counterparty is not None:
+        if value.counterparty is not None and not is_compared(value):
             continue
         found = stated.setdefault((value.modelo, year, value.period), [])
-        if value.casillas or value.not_sourced or value.refusal is not None:
+        if value.casillas or value.not_sourced or value.refusal is not None or is_compared(value):
             found.append(value)
     return stated
 

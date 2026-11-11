@@ -56,7 +56,8 @@ from cadrumo.application.modelo.work_verification_contracts import (
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.public_scalar import restore_scalar
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.entrypoints.tests.persona_materialisation import (
     PERSONA_ACTOR,
     MaterialisedPersona,
@@ -78,6 +79,7 @@ from cadrumo.tests.personas import (
     read_persona,
 )
 
+from .counterparties import DESIGNS, counterparty_mismatches, is_compared
 from .rows import (
     PlannedRow,
     Stage,
@@ -155,11 +157,14 @@ def _short(error: BaseException) -> str:
 
 
 def _values(persona: Persona, envelope: YearEnvelope, plan: PlannedRow) -> list[ExpectedValue]:
-    """The persona's counterparty-free stated values in force for the planned return, under the replay's envelope."""
+    """The persona's stated values in force for the planned return, under the replay's envelope.
+
+    A value stated per counterparty is taken only for a return whose type-2 record is compared.
+    """
     return [
         value
         for year, value in in_force(persona.expectations.values, envelope)
-        if value.counterparty is None
+        if (value.counterparty is None or is_compared(value))
         and value.modelo == plan.modelo
         and value.period == plan.period
         and year == plan.year
@@ -220,6 +225,7 @@ def _run_return(
     revision_id = calculated.calculation_revision_id
     verify, verify_reason = _verify(world, work_unit_id, revision_id)
     export, export_detail, export_reason = _export(world, plan, exports, work_unit_id, revision_id)
+    calculate, reasons = _with_counterparties(calculate, reasons, values, materialised.persona, plan, exports, export)
     reasons += [reason for reason in (verify_reason, export_reason) if reason]
     return TableRow.from_plan(
         plan,
@@ -339,11 +345,50 @@ def _verify(world: PersonaWorld, work_unit_id: str, revision_id: str) -> tuple[S
     )
 
 
+def _export_path(plan: PlannedRow, exports: Path) -> Path:
+    return exports / f"{plan.persona}-{plan.modelo}-{plan.year}-{plan.period}.txt"
+
+
+def _counterparty_mismatches(
+    persona: Persona, plan: PlannedRow, values: list[ExpectedValue], output: Path
+) -> list[str]:
+    """Each stated counterparty value the written fichero does not give, read through the registry layout."""
+    with bundled_indexed_authority().operation() as operation:
+        layout = _export_layout(operation, plan)
+        return counterparty_mismatches(values, persona.identities, layout, output.read_bytes())
+
+
+def _export_layout(operation: PinnedAuthorityOperation, plan: PlannedRow) -> ExportLayoutDefinition:
+    """The fixed-width layout of the revision the law selects for the planned return."""
+    revision = operation.revision_for_context(plan.modelo, filing_year=plan.year, period=plan.period)
+    return operation.revision_with_export_layouts(plan.modelo, revision.id).export_layouts[0]
+
+
+def _with_counterparties(
+    calculate: Stage,
+    reasons: list[str],
+    values: list[ExpectedValue],
+    persona: Persona,
+    plan: PlannedRow,
+    exports: Path,
+    export: Stage,
+) -> tuple[Stage, list[str]]:
+    """The calculate stage once the written fichero has been compared with the counterparties the persona states."""
+    if not any(is_compared(value) for value in values) or plan.modelo not in DESIGNS:
+        return calculate, reasons
+    if export is not Stage.PASSED:
+        return Stage.MISMATCH, [*reasons, "counterparties not compared: no fichero written"]
+    mismatches = _counterparty_mismatches(persona, plan, values, _export_path(plan, exports))
+    if not mismatches:
+        return calculate, reasons
+    return Stage.MISMATCH, [*reasons, "; ".join(mismatches)]
+
+
 def _export(
     world: PersonaWorld, plan: PlannedRow, exports: Path, work_unit_id: str, revision_id: str
 ) -> tuple[Stage, str, str]:
     """The export stage, what was written, and the reason it was not."""
-    output = exports / f"{plan.persona}-{plan.modelo}-{plan.year}-{plan.period}.txt"
+    output = _export_path(plan, exports)
     output.parent.mkdir(parents=True, exist_ok=True)
     try:
         exported = settle_operation(
