@@ -128,6 +128,8 @@ kind = "nif"
 value = "00000006Y"
 name = "Andrés"
 surnames = "Vidal Soler"
+province = "46"
+ceuta_melilla_deduction = false
 
 [[identities]]
 role = "arrendador.titular"
