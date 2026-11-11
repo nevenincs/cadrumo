@@ -51,7 +51,7 @@ from .relation_prefill_support import empty_profile_read_ports
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "10006042-0000-4000-8000-000000000100"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T0 = datetime(1980, 1, 10, 10, 0, tzinfo=UTC)
 _MODELO = Modelo("100").value
 #: The prior-year Modelo 100 boxes a Modelo 130 reads, all a 130 filer's store shows of that return.
 _M130_READS: tuple[CasillaId, ...] = tuple(

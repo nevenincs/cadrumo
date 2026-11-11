@@ -15,6 +15,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
@@ -22,7 +23,7 @@ from .preflight_transaction_support import preflight_transaction
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _OTHER_BUCKET_ID = "23232323-2323-4323-8323-232323232323"
-_Q2_2026 = Period.from_year_and_code(2026, "2T")
+_Q2_CURRENT = Period.from_year_and_code(filing_year_envelope().horizon, "2T")
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
 
         report = preflight_ledger_tax_readiness(
             bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
+            period=_Q2_CURRENT,
             usage_ratio_profile_loader=load_usage_ratios,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
@@ -63,7 +64,7 @@ def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path
 
             report = preflight_ledger_tax_readiness(
                 bucket_id=profile.bucket_id,
-                period=_Q2_2026,
+                period=_Q2_CURRENT,
                 usage_ratio_profile_loader=load_usage_ratios,
                 invoice_reader=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
                 operation=_authority_operation_for_test,
@@ -80,7 +81,7 @@ def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObje
         with pytest.raises(TransactionValidationError, match="bucket_id"):
             preflight_ledger_tax_readiness(
                 bucket_id=_BUCKET_ID,
-                period=_Q2_2026,
+                period=_Q2_CURRENT,
                 usage_ratio_profile_loader=load_usage_ratios,
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=objects),
                 invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),

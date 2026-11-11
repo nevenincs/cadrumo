@@ -21,6 +21,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -47,8 +48,10 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_EXERCISE = filing_year_envelope().horizon
+
 _BUCKET_ID = "21000000-0000-4000-8000-000000000021"
-_WHEN = datetime(2026, 8, 10, 12, 0, tzinfo=UTC)
+_WHEN = datetime(1980, 8, 10, 12, 0, tzinfo=UTC)
 _EVIDENCE_REFERENCE = "CSV-303-2025-1T-S21"
 _DECLARATION_TYPE_LOCATOR = "modelo-303-page-01:declaration-type:13:1"
 #: A positive result: the only sign a domiciliation (or ingreso) disposition admits.
@@ -61,7 +64,7 @@ def _submitted_file_declaration_type(
     locator: str = _DECLARATION_TYPE_LOCATOR,
 ) -> ObservedHeaderFact:
     with bundled_indexed_authority().operation() as operation:
-        header_key = m303_declaration_type_header_key(filing_year=2025, period="1T", operation=operation)
+        header_key = m303_declaration_type_header_key(filing_year=_EXERCISE, period="1T", operation=operation)
     return ObservedHeaderFact(
         header_key=header_key,
         value=value,
@@ -84,7 +87,7 @@ def _source_header_disposition(
 
 def _filed_observation() -> RegistryModeloObservation:
     """The filed M303 result the declaration-type header must agree with."""
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_EXERCISE, "1T")
     snapshot = published_authority_operation().snapshot(
         "303", filing_year=period.filing_year, period=period.registry_token
     )
@@ -92,7 +95,7 @@ def _filed_observation() -> RegistryModeloObservation:
     definition = casillas_by_id(snapshot.revision)[result_casilla]
     return RegistryModeloObservation(
         modelo="303",
-        filing_year=2025,
+        filing_year=_EXERCISE,
         period="1T",
         observations=(
             CasillaObservation(
@@ -106,7 +109,7 @@ def _filed_observation() -> RegistryModeloObservation:
 
 
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_EXERCISE, "1T")
     revision_id = (
         published_authority_operation()
         .snapshot(
@@ -120,16 +123,16 @@ def _work_unit(*, modelo: str = "303") -> WorkUnit:
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
             modelo=modelo,
-            filing_year=2025,
+            filing_year=_EXERCISE,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
         modelo=modelo,
-        filing_year=2025,
+        filing_year=_EXERCISE,
         period=period,
         revision_id=revision_id,
-        name=f"{modelo}-2025-1T prior-domiciliation proof",
+        name=f"{modelo}-{_EXERCISE}-1T prior-domiciliation proof",
         created_at=_WHEN,
         updated_at=_WHEN,
     )
@@ -446,7 +449,7 @@ def test_official_evidence_stores_the_header_projection_not_the_supplied_one(
                 stamped_revision_id=revision_id_for_observation(_filed_observation()),
             )
         )
-        loaded = observation_repository.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        loaded = observation_repository.load_observation("303", Period.from_year_and_code(_EXERCISE, "1T"))
 
     assert loaded is not None
     assert loaded.result_disposition == _source_header_disposition(ResultDisposition.DOMICILIACION)
