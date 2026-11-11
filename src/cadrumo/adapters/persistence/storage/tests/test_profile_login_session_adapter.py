@@ -25,7 +25,7 @@ from ..profile_login_session import build_profile_login_session_port
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
-_NOW = datetime(2026, 8, 25, 12, tzinfo=UTC)
+_NOW = datetime(1980, 8, 25, 12, tzinfo=UTC)
 _DEK = bytes(range(32))
 
 

@@ -48,7 +48,8 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from cadrumo.core.period import Period
+from cadrumo.core.period import Period, accepted_filing_period_codes
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -91,7 +92,13 @@ _PROFILE_ID = UUID("b1270000-0000-4000-8000-000000000001")
 _SESSION_ID = UUID("b1270000-0000-4000-8000-000000000002")
 _OPERATION_ID = "a" * 64
 _DOCUMENT: dict[str, JsonValue] = {"message": "ñ" * (PROJECTION_PAGE_BYTES * 3 // 4), "changed": False}
-_NOW = datetime(2026, 9, 28, tzinfo=UTC)
+_NOW = datetime(1980, 9, 28, tzinfo=UTC)
+
+
+def _supported_years() -> tuple[int, ...]:
+    """The supported filing years, read from the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().years
 
 
 def _result() -> OperationResultProjectionRequestV1:
@@ -589,7 +596,7 @@ def test_full_page_worker_and_runtime_envelopes_fit_real_frames(release_kind: st
     assert len(page.decode()) == PROJECTION_PAGE_BYTES
     destination = uuid4()
     periods = frozenset(
-        Period.from_year_and_code(year, f"{month:02d}") for year in range(2020, 2030) for month in range(1, 13)
+        Period.from_year_and_code(year, code) for year in _supported_years() for code in accepted_filing_period_codes()
     )
     definition = "a" * 128
     request = OperationAccessRequest(

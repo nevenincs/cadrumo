@@ -12,6 +12,7 @@ from textwrap import dedent
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from .test_config_reset import (
@@ -26,6 +27,10 @@ from .test_config_reset import (
 from .test_config_reset_recovery import SETTINGS_PREAMBLE, child_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: The supported year before the horizon, and the horizon itself.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
+_HORIZON_YEAR = filing_year_envelope().horizon
 
 _LOCK_TIMEOUT_SECONDS = 15.0
 _MUTATION_TIMEOUT_SECONDS = 1.0
@@ -372,7 +377,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
 
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        persist_filing(PROFILE_A_ID, filing_year=2025, seed="a")
+        persist_filing(PROFILE_A_ID, filing_year=_PRIOR_YEAR, seed="a")
 
         started = _run_child(root, _START_HARNESS, check=True)
         operation = ConfigResetOperation.model_validate_json(started.stdout)
@@ -391,7 +396,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
         original_retention = operation.targets[0].retention
         assert original_fingerprint is not None
         assert original_retention is not None
-        persist_filing(PROFILE_A_ID, filing_year=2024, seed="2")
+        persist_filing(PROFILE_A_ID, filing_year=_HORIZON_YEAR, seed="2")
         # The filing grows the retained set, which is what the retention
         # recheck below asserts -- but it does NOT move the capsule digest: it
         # lands in the database, which the inventory covers by path only, and

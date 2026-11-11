@@ -24,13 +24,15 @@ from .....application.ledger.extraction_draft_store import write_extraction_draf
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....core.field_origin import FieldOrigin
 from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL, provenance_stamp_transport
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _DIGEST = "d" * 64
-_CLOUD_STAMP = "llm:openai-text-extract:gpt-4.1:rates-2026A-abcdef"
-_LOCAL_STAMP = "llm:local-text-extract:qwen2.5:3b:rates-2026A-abcdef"
+_RATES_QUALIFIER = f"rates-{filing_year_envelope().horizon}A-abcdef"
+_CLOUD_STAMP = f"llm:openai-text-extract:gpt-4.1:{_RATES_QUALIFIER}"
+_LOCAL_STAMP = f"llm:local-text-extract:qwen2.5:3b:{_RATES_QUALIFIER}"
 
 _TEXT_LAYER = TranscriberIdentity(
     transport=LOCAL_TRANSPORT_LABEL,
@@ -164,7 +166,7 @@ def _dispatch(*, bucket_id: str, address: str = _DIGEST) -> ConsentedDispatch:
         provider="openai",
         model="gpt-4.1",
         surface="cli",
-        recorded_at=datetime(2026, 3, 10, 9, 30, tzinfo=UTC),
+        recorded_at=datetime(1980, 3, 10, 9, 30, tzinfo=UTC),
     )
 
 

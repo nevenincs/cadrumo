@@ -28,7 +28,7 @@ from .admitted_lease import admitted_access_status, public_descriptions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_AT = datetime(2026, 10, 3, 12, tzinfo=UTC)
+_AT = datetime(1980, 10, 3, 12, tzinfo=UTC)
 _READ = "auth.local-read"
 _FOUND = {"outcome": "found", "operations": [operation_summary(public_descriptions()[_READ])]}
 _STATUS_REFUSALS = (

@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_A_ID = "f06b58c0-56c1-4f38-9a03-7f6d716bf246"
 _BUCKET_B_ID = "a1d7c210-82f7-4573-9d17-9502f6e73373"
-_STATE_UPDATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_STATE_UPDATED_AT = datetime(1980, 5, 25, 13, 45, 0, tzinfo=UTC)
 
 
 def _state_for_label(label: str) -> WorkflowState:

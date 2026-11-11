@@ -45,7 +45,7 @@ from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(1980, 5, 25, 13, 45, 0, tzinfo=UTC)
 _PAYLOAD_A = b"%PDF-1.4\n%attachment-iteration-binding-A\n" + b"\x00" * 32
 _PAYLOAD_B = b"%PDF-1.4\n%attachment-iteration-binding-B\n" + b"\x11" * 48
 #: A well-formed digest with no blob behind it. Refused by the pre-existing

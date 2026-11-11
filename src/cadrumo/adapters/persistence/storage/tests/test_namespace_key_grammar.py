@@ -18,12 +18,15 @@ import pytest
 
 from .....application.calculations.observations_repository import member_observation_key, observation_key
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.repository import transaction_index_object_key, transaction_object_key
 from ..errors import NamespaceRegistryError
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_HORIZON_YEAR = filing_year_envelope().horizon
 
 _MEMBER_ID = "GRUPO-MEMBER-PLACEHOLDER-A"
 """Obviously-synthetic stand-in for a grupo member identifier.
@@ -104,7 +107,7 @@ def test_transaction_catalogue_pre_correction_grammar_rejected_the_live_keys() -
 
 def test_calculation_observation_grammar_describes_single_and_member_keys() -> None:
     shapes = _declared_shapes(CALCULATION_OBSERVATIONS_NAMESPACE.object_key_grammar)
-    period = Period.from_year_and_code(2024, "1T")
+    period = Period.from_year_and_code(_HORIZON_YEAR, "1T")
 
     single_key = observation_key("353", period)
     member_key = member_observation_key("353", period, _MEMBER_ID)
@@ -120,7 +123,7 @@ def test_calculation_observation_grammar_describes_single_and_member_keys() -> N
     assert _matches_any(member_key, shapes)
 
     # Anti-tautology: a truncated two-segment key is not a valid observation key.
-    assert not _matches_any("100:2024", shapes)
+    assert not _matches_any(f"100:{_HORIZON_YEAR}", shapes)
 
 
 def test_member_segment_addresses_one_identity_across_spellings() -> None:
@@ -132,7 +135,7 @@ def test_member_segment_addresses_one_identity_across_spellings() -> None:
     pull and space-padded in the next persisted as two rows and was enumerated
     twice.
     """
-    period = Period.from_year_and_code(2024, "1T")
+    period = Period.from_year_and_code(_HORIZON_YEAR, "1T")
     canonical = member_observation_key("353", period, _MEMBER_ID)
 
     for variant in (_MEMBER_ID.lower(), f"  {_MEMBER_ID}  ", f"{_MEMBER_ID.lower()}\t"):
@@ -148,7 +151,7 @@ def test_member_segment_addresses_one_identity_across_spellings() -> None:
 def test_calculation_observation_pre_correction_grammar_rejected_the_member_key() -> None:
     """The retired ``{modelo}:{filing_year}:{period}`` grammar dropped the member row."""
     drifted = _declared_shapes("{modelo}:{filing_year}:{period}")
-    period = Period.from_year_and_code(2024, "1T")
+    period = Period.from_year_and_code(_HORIZON_YEAR, "1T")
 
     assert not _matches_any(member_observation_key("353", period, _MEMBER_ID), drifted)
     # The single-filer key was always covered; only the member variant drifted.
@@ -190,7 +193,7 @@ def test_templated_namespaces_admit_their_real_keys_and_refuse_traversal() -> No
     (for path-rooted grammars) path separators by declaration. Only a ``..``
     traversal segment is refused.
     """
-    period = Period.from_year_and_code(2024, "1T")
+    period = Period.from_year_and_code(_HORIZON_YEAR, "1T")
     observations = CALCULATION_OBSERVATIONS_NAMESPACE
     assert observations.singleton_object_key is None
 

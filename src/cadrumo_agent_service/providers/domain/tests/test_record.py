@@ -25,7 +25,7 @@ from ..record import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FAKE_KEY = "sk-test-NOT-A-REAL-KEY-domain-0001"
-_UPDATED_AT = datetime(2026, 10, 13, 9, 0, tzinfo=UTC)
+_UPDATED_AT = datetime(1980, 10, 13, 9, 0, tzinfo=UTC)
 
 
 def _record(*, secret: str = _FAKE_KEY) -> ProviderSettingsRecord:
