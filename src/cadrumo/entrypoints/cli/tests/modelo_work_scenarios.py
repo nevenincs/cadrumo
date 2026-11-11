@@ -32,11 +32,13 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from .cli_fixture_worlds import cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
-_YEAR = filing_year_envelope().horizon
+#: The filing year every scenario here defaults to: the registry's horizon. A caller that
+#: addresses the work these helpers create by modelo, year and period names this year.
+SCENARIO_FILING_YEAR = filing_year_envelope().horizon
 _WIZARD_REGISTRATION_MODULES = (catalogue, persistence)
 _M111_PROFESSIONAL_NIF = "B00015016"
 _M111_PROFESSIONAL_NAME = "Asesoria Profesional SL"
-_M111_PAID_ON = date(_YEAR, 1, 15)
+_M111_PAID_ON = date(SCENARIO_FILING_YEAR, 1, 15)
 MODELO_OPERATOR_PROFILE_LABEL = "operator"
 #: The seeded profile's machine identity. A profile id is a UUID; the
 #: readable "operator" above is the operator-chosen LABEL, and the two are
@@ -135,7 +137,7 @@ def create_attribution_entity_intracom_profile() -> None:
 def create_m130_work_unit(*, period: str = "1T") -> str:
     return create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=_YEAR,
+        filing_year=SCENARIO_FILING_YEAR,
         period=period,
         revision=open_ended_revision("130").id,
     )
@@ -146,14 +148,14 @@ def create_m303_work_unit() -> str:
     modelo = next(candidate for candidate in modelos if candidate.id == "303")
     return create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=_YEAR,
+        filing_year=SCENARIO_FILING_YEAR,
         period="1T",
-        revision=str(select_revision(modelo, filing_year=_YEAR, period="1T").id),
+        revision=str(select_revision(modelo, filing_year=SCENARIO_FILING_YEAR, period="1T").id),
     )
 
 
 def m111_withholding_invoice_arguments(
-    *, paid_on: date = _M111_PAID_ON, invoice_number: str = f"M111-PROF-{_YEAR}-001"
+    *, paid_on: date = _M111_PAID_ON, invoice_number: str = f"M111-PROF-{SCENARIO_FILING_YEAR}-001"
 ) -> list[str]:
     """Return the ``ledger invoice add`` arguments for one Modelo 111 withholding invoice.
 
@@ -179,7 +181,7 @@ def m111_withholding_invoice_arguments(
 def m111_withholding_aggregate_arguments(
     invoice_id: str,
     *,
-    filing_year: int = _YEAR,
+    filing_year: int = SCENARIO_FILING_YEAR,
     period: str = "1T",
     paid_on: date = _M111_PAID_ON,
     allocation_id: str = "m111-professional-allocation-1",
@@ -228,7 +230,7 @@ def m111_withholding_aggregate_arguments(
 
 def capture_m111_invoice_withholding(
     *,
-    filing_year: int = _YEAR,
+    filing_year: int = SCENARIO_FILING_YEAR,
     period: str = "1T",
     paid_on: date = _M111_PAID_ON,
 ) -> None:
@@ -243,8 +245,8 @@ def capture_m111_invoice_withholding(
     window has not opened yet -- supplies its own ``filing_year``, ``period``
     and ``paid_on``.
     """
-    canonical = (filing_year, period) == (_YEAR, "1T")
-    invoice_number = f"M111-PROF-{_YEAR}-001" if canonical else f"M111-PROF-{filing_year}-{period}-001"
+    canonical = (filing_year, period) == (SCENARIO_FILING_YEAR, "1T")
+    invoice_number = f"M111-PROF-{SCENARIO_FILING_YEAR}-001" if canonical else f"M111-PROF-{filing_year}-{period}-001"
     allocation_id = (
         "m111-professional-allocation-1" if canonical else f"m111-professional-allocation-{filing_year}-{period}"
     )
@@ -273,7 +275,7 @@ def capture_m111_invoice_withholding(
 
 
 def create_calculable_modelo_work_unit(
-    *, filing_year: int = _YEAR, period: str = "1T", paid_on: date = _M111_PAID_ON
+    *, filing_year: int = SCENARIO_FILING_YEAR, period: str = "1T", paid_on: date = _M111_PAID_ON
 ) -> str:
     """Create a Modelo 111 work unit whose ``work calculate`` succeeds.
 

@@ -41,6 +41,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     GB_NON_RESIDENT_PROFILE_FACTS,
+    SCENARIO_FILING_YEAR,
     create_calculable_modelo_work_unit,
     create_m130_work_unit,
     invoke_modelo_scenario_cli,
@@ -55,6 +56,9 @@ from .modelo_profile_seed import ProfileSeeder, seed_profile
 __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+#: The year the shared scenario helpers create and capture work for.
+_SCENARIO_YEAR = str(SCENARIO_FILING_YEAR)
 
 
 def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> None:
@@ -139,7 +143,7 @@ def test_work_status_resolves_a_visible_filing_target(seed_profile: ProfileSeede
         [
             "--format", "json",
             "app", "modelo", "work", "status",
-            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--modelo", "130", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -402,7 +406,7 @@ def test_work_revisions_resolves_a_visible_filing_target(seed_profile: ProfileSe
         [
             "--format", "json",
             "app", "modelo", "work", "revisions",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -434,7 +438,7 @@ def test_work_calculate_resolves_a_visible_filing_target(seed_profile: ProfileSe
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -452,7 +456,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: 
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -462,7 +466,7 @@ def test_work_verify_defaults_to_current_draft_for_visible_target(seed_profile: 
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -484,7 +488,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
@@ -493,7 +497,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
         [
             "--format", "json",
             "app", "modelo", "work", "verify",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert verified.exit_code == 0, verified.output
@@ -502,7 +506,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
         [
             "--format", "json",
             "app", "modelo", "work", "status",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert status.exit_code == 0, status.output
@@ -515,7 +519,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
         [
             "--format", "json",
             "app", "modelo", "work", "file",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert filed.exit_code == 0, filed.output
@@ -532,7 +536,7 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
         [
             "--format", "json",
             "app", "modelo", "work", "status",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--modelo", "111", "--year", _SCENARIO_YEAR, "--period", "1T",
         ],
     )  # fmt: skip
     assert filed_status.exit_code == 0, filed_status.output
