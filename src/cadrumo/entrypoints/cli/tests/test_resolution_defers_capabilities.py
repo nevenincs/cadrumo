@@ -41,7 +41,6 @@ RESOLUTION_LOADERS: dict[str, str] = {
     "app/modelo/work/verify": "annotation pulls registry and persistence it may use only at execution",
     "app/modelo/work/amend": "annotation pulls the registry it may use only at execution",
     "app/modelo/casillas": "annotation pulls the registry package root",
-    "app/review/queue": "annotation resolves through application.review -> domain.calculations",
 }
 
 

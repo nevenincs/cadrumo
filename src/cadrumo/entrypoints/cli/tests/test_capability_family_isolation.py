@@ -75,12 +75,6 @@ _CAPABILITY_FAMILIES: dict[str, frozenset[str]] = {
 #: Each states the families and the reason, because this is where the judgement
 #: sits; a bare list would record only that someone found them inconvenient.
 _PENDING_ADJUDICATION: dict[frozenset[Capability], str] = {
-    frozenset({"encrypted-facts"}): (
-        "loads the registry package root and its `ids` leaf, because "
-        "`domain.calculations._row_source_identity` takes `BindingId` from there. "
-        "The same module imports `ContentDigest` from `core.identity`; `BindingId` "
-        "belongs beside it. A placement fix, not a threshold"
-    ),
     frozenset({"encrypted-facts", "network"}): (
         "1 of the 21 nodes is heavy, `app/ledger/import`. It "
         "loads the registry through `ledger.actions_common` typing against "
