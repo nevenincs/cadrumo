@@ -155,6 +155,7 @@ from ...application.modelo.work_filing_contracts import (
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...application.operations.composition import OperationComposedServices, compose_operation_services
+from ...application.operations.error_detail import OperationErrorDetailV1, operation_error_detail_schema
 from ...application.operations.frontend_projection import OperationPublicProjectionV1
 from ...application.operations.frontend_requests import (
     OperationObservationRequestV1,
@@ -197,7 +198,11 @@ from ...application.wizard.imputation_election import YEAR_QUESTION_ID
 from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...core.time.clock import frozen_clock, now
@@ -506,9 +511,60 @@ def settle_operation(
             if terminal.terminal_condition is OperationTerminalCondition.REFUSED
             else terminal.failure_error_code
         )
-        detail = "no detail" if result is None else result.model_dump_json(exclude={"profile_id"})
+        detail = _served_words(world, terminal)
+        if detail is None and result is not None:
+            # A refusal a definition records as its own typed result carries its sentence in that result.
+            detail = _result_words(result.model_dump(mode="json", exclude={"profile_id"}))
+            detail = result.model_dump_json(exclude={"profile_id"}) if detail is None else detail
+        if detail is None:
+            detail = "no detail"
         raise PersonaMaterialisationError(f"{definition_id} settled {terminal.terminal_condition} ({code}): {detail}")
     return result
+
+
+def _result_words(value: object) -> str | None:
+    """The ``refusal_words`` sentence a typed refusal result carries, on one line, wherever it nests."""
+    if isinstance(value, Mapping):
+        words = str(value.get("refusal_words") or "")
+        if words.strip():
+            return " ".join(words.split())
+        children: Sequence[object] = tuple(value.values())
+    elif isinstance(value, list | tuple):
+        children = value
+    else:
+        return None
+    found: str | None = None
+    for child in children:
+        found = _result_words(child)
+        if found is not None:
+            break
+    return found
+
+
+def _served_words(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> str | None:
+    """The sentence the application serves an operator for a refused or failed operation, on one line.
+
+    This reads the recorded error detail through the settled-result read, as the command line and the
+    workbench do, so the words are those a frontend shows. ``None`` when the operation recorded none.
+    """
+    if terminal.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
+        return None
+    contract = terminal.definition_contract
+    resolved = asyncio.run(
+        world.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=terminal.operation_id,
+                terminal_revision=terminal.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=operation_error_detail_schema(),
+            ),
+            OperationErrorDetailV1,
+        )
+    )
+    if not isinstance(resolved, OperationResultProjectionSuccessV1):
+        return None
+    words = resolved.projection.refusal_words if isinstance(resolved.projection, OperationErrorDetailV1) else None
+    return None if words is None else " ".join(words.split())
 
 
 def run_operation[Projection: BaseModel](
