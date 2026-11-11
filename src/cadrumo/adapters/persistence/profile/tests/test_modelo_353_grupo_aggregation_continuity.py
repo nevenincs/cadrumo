@@ -64,6 +64,7 @@ from .....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
@@ -79,7 +80,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "353"
 
 #: The two distinct renta years the grupo aggregation + carry spans.
-_RENTA_YEARS = (2025, 2026)
+_RENTA_YEARS = (filing_year_envelope().horizon - 1, filing_year_envelope().horizon)
 
 #: Each member's 322 result casilla (key) maps to the 353 reconciliation casilla
 #: (value) that carries the per_grupo_member cross-member SUM of it. The 353's

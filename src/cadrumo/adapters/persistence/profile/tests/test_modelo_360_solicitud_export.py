@@ -53,6 +53,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.models import RefundAccount
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
@@ -67,7 +68,7 @@ __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _TAX_ID = "12345678Z"
 _SYNTHETIC_IBAN = "ES9121000418450200051332"
