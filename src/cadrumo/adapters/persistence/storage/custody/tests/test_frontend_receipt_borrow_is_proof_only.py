@@ -36,7 +36,7 @@ from .receipt_sign_in import RECEIPT_LOGIN_ID, sign_in_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_OPENED = datetime(2026, 10, 5, 9, 0, tzinfo=UTC)
+_OPENED = datetime(1980, 10, 5, 9, 0, tzinfo=UTC)
 _EPOCH = "proof-only-epoch"
 _SERVICE = acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE
 

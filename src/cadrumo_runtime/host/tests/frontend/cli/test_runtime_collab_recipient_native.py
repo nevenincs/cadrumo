@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Mapping
+from datetime import date
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from click.testing import Result
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
     NativeCliProfileFixture,
@@ -23,6 +25,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -37,7 +41,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Collaboration",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
     "contact.postcode": "28013",
 }
 

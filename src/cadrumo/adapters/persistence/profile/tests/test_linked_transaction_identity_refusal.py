@@ -13,6 +13,7 @@ from .....application.ledger.models import ManualLedgerTransactionCommand, Manua
 from .....application.ledger.persistence_ports import LedgerPersistenceConflictError
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....domain.buckets.event import BucketEventHistoryCatalogue
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
@@ -28,6 +29,8 @@ from .ledger_action_persistence_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple[str, str]:
@@ -45,14 +48,14 @@ def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("59.29"),
                 direction=TransactionDirection.OUTGOING,
                 description="CARGO SUSCRIPCION NUBE SOFTWARE",
                 idempotency_key="linked-identity-refusal",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 9, 0, tzinfo=UTC),
         )
         link_manual_transaction_invoice(
             bucket_id=BUCKET_ID,
@@ -60,7 +63,7 @@ def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple
             invoice_id=invoice.invoice_id,
             actor="operator",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 9, 1, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 9, 1, tzinfo=UTC),
         )
     return created.ref.transaction_id, invoice.invoice_id
 
@@ -98,7 +101,7 @@ def test_linked_identity_change_refusal_leaves_encrypted_reciprocal_records_unch
             actor="operator",
             source_command="tui.ledger.transaction.update",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 9, 2, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 9, 2, tzinfo=UTC),
         )
 
     reopened_transactions = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
@@ -141,7 +144,7 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
             actor="concurrent-operator",
             source_command="tui.ledger.transaction.update",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 9, 2, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 9, 2, tzinfo=UTC),
         )
     assert concurrent.ref.transaction_id == transaction_id
 
@@ -176,7 +179,7 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
             ports=ports,
             catalogue=opened_catalogue,
             expected_current=opened,
-            occurred_at=datetime(2026, 5, 2, 9, 3, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 9, 3, tzinfo=UTC),
         )
 
     reopened_transactions = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)

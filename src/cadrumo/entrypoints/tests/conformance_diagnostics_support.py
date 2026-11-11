@@ -19,8 +19,8 @@ from .conformance_family_contract import (
 _CLAUDE = "llm:claude:conformance-model"
 _CODEX = "llm:codex:conformance-model"
 _CALLER = "cadrumo.application.ledger.llm_classification"
-_WINDOW_START = date(2026, 4, 1)
-_WINDOW_END = date(2026, 4, 30)
+_WINDOW_START = date(1980, 4, 1)
+_WINDOW_END = date(1980, 4, 30)
 
 # Seeded through the production recorder. Only the two Claude runs inside the
 # window survive the provider and date filters; the other two prove each
@@ -33,7 +33,7 @@ _SEEDED_RUNS = (
         model="conformance-model",
         duration_ms=900,
         succeeded=True,
-        started_at=datetime(2026, 3, 31, 23, 0, tzinfo=UTC),
+        started_at=datetime(1980, 3, 31, 23, 0, tzinfo=UTC),
     ),
     LLMRunRecord(
         run_id="conformance-run-first",
@@ -42,7 +42,7 @@ _SEEDED_RUNS = (
         model="conformance-model",
         duration_ms=1200,
         succeeded=True,
-        started_at=datetime(2026, 4, 1, 9, 0, tzinfo=UTC),
+        started_at=datetime(1980, 4, 1, 9, 0, tzinfo=UTC),
     ),
     LLMRunRecord(
         run_id="conformance-run-other-provider",
@@ -51,7 +51,7 @@ _SEEDED_RUNS = (
         model="conformance-model",
         duration_ms=800,
         succeeded=True,
-        started_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+        started_at=datetime(1980, 4, 2, 9, 0, tzinfo=UTC),
     ),
     LLMRunRecord(
         run_id="conformance-run-failed",
@@ -61,7 +61,7 @@ _SEEDED_RUNS = (
         duration_ms=45000,
         succeeded=False,
         error_kind="LLMClassifierError",
-        started_at=datetime(2026, 4, 3, 9, 0, tzinfo=UTC),
+        started_at=datetime(1980, 4, 3, 9, 0, tzinfo=UTC),
     ),
 )
 

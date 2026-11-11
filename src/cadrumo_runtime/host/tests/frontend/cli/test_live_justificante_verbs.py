@@ -25,6 +25,7 @@ from cadrumo.application.live.justificante_read_operation import (
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.justificante_composition import build_justificante_capture_service
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -39,6 +40,8 @@ from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 # INTENTIONAL: integration because it exercises the local justificante read verbs and
 # registration wiring without contacting AEAT.
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -130,13 +133,13 @@ def _prepare_snapshot(profile_id: UUID, _storage_root: Path) -> JustificanteCapt
     pdf_bytes = b"%PDF-1.4\njustificante period cli smoke\n%%EOF"
     return build_justificante_capture_service(str(profile_id)).capture(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="202613000010001A",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        expediente_id=f"{_YEAR}13000010001A",
         csv="ABCD1234EFGH5678",
         pdf_bytes=pdf_bytes,
         pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-        captured_at=datetime(2026, 4, 20, 10, 30, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 20, 10, 30, tzinfo=UTC),
     )
 
 
@@ -156,13 +159,13 @@ def test_justificante_list_and_view_emit_registry_period_tokens(tmp_path: Path, 
         assert len(listed_rows) == 1
         assert listed_rows[0]["snapshot_id"] == snapshot.snapshot_id
         assert listed_rows[0]["modelo"] == "130"
-        assert listed_rows[0]["filing_year"] == 2026
+        assert listed_rows[0]["filing_year"] == _YEAR
         assert listed_rows[0]["period"] == "1T"
-        assert "2026 1T" not in listed.output
+        assert f"{_YEAR} 1T" not in listed.output
 
         viewed = _invoke_justificante(session, ["view", snapshot.snapshot_id[:12]])
         assert viewed.exit_code == 0, viewed.output
         viewed_payload = unwrap_cli_result(viewed)
-        assert viewed_payload["filing_year"] == 2026
+        assert viewed_payload["filing_year"] == _YEAR
         assert viewed_payload["period"] == "1T"
-        assert "period\t2026 1T" not in viewed.output
+        assert f"period\t{_YEAR} 1T" not in viewed.output

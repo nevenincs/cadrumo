@@ -171,7 +171,7 @@ def test_undeclared_rentas_do_not_exclude(*, operation: PinnedAuthorityOperation
     entered a rentas figure for keeps the mínimo, because the alternative would
     zero the allowance for every ordinary young child.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     facts: dict[str, object] = {"renta_family.descendiente.0.birth_date": f"{year - 10}-05-01"}
     _inject(facts, snapshot, operation=operation)
@@ -185,7 +185,7 @@ def test_excluded_descendant_does_not_consume_a_birth_order_rank(*, operation: P
     GENERATE the mínimo. An excluded descendant generates none, so the younger
     child is "el primero" and takes the first tranche, not the second.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     over_cap = _thresholds(snapshot).rentas_anuales_limite + Decimal("1")
     facts: dict[str, object] = {
@@ -204,7 +204,7 @@ def test_excluded_descendant_does_not_consume_a_birth_order_rank(*, operation: P
 
 def test_own_return_above_norma_2a_figure_excludes(*, operation: PinnedAuthorityOperation) -> None:
     """ "No procederá la aplicación del mínimo ... presenten declaración ... superiores a 1.800 euros"."""
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     above = _thresholds(snapshot).declaracion_propia_rentas_limite + Decimal("1")
     facts: dict[str, object] = {
@@ -224,7 +224,7 @@ def test_own_return_at_or_below_norma_2a_figure_keeps_the_minimo(*, operation: P
     aplicar el mínimo por descendientes." Filing a return is not disqualifying
     on its own.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     at_figure = _thresholds(snapshot).declaracion_propia_rentas_limite
     facts: dict[str, object] = {
@@ -244,7 +244,7 @@ def test_rentas_below_norma_2a_figure_without_own_return_keep_the_minimo(
     Isolates the two conditions: a descendant with rentas between the norma 2ª
     figure and the Art. 58.1 ceiling who files NO return keeps the full mínimo.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     thresholds = _thresholds(snapshot)
     between = thresholds.declaracion_propia_rentas_limite + Decimal("1")
@@ -270,7 +270,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half(*, operation:
     partes iguales." Custody is not mentioned. Expected value is the published
     first-child tranche halved, per that sentence.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
@@ -288,7 +288,7 @@ def test_conjunta_return_is_not_prorated(*, operation: PinnedAuthorityOperation)
     joint return must take the FULL tranche, proving the halving is driven by
     the individual-return signal rather than by marital status alone.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
@@ -301,7 +301,7 @@ def test_conjunta_return_is_not_prorated(*, operation: PinnedAuthorityOperation)
 
 def test_unpartnered_individual_filer_takes_the_full_minimo(*, operation: PinnedAuthorityOperation) -> None:
     """No signal of a second entitled contribuyente means no prorrateo."""
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
@@ -318,7 +318,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions(*, operation:
     Both directions are asserted from the same partnered-individual profile, so
     neither outcome can be produced by the derivation alone.
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     full = _parameter(snapshot, "primer-hijo")
     base: dict[str, object] = {
@@ -338,7 +338,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions(*, operation:
 
 def test_shared_custody_still_prorates_without_any_partner_signal(*, operation: PinnedAuthorityOperation) -> None:
     """Custodia compartida is preserved as a trigger of the general rule."""
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
@@ -421,7 +421,7 @@ def test_new_facts_survive_a_serialisation_round_trip() -> None:
     from ....domain.contribuyente.descendant_facts import descendant_facts_from_list, descendant_list_from_facts
 
     original = DescendantInfo(
-        birth_date=date(2010, 5, 1),
+        birth_date=date(1999, 5, 1),
         rentas_anuales_euros=Decimal("9500.55"),
         presenta_declaracion_propia=True,
         prorrata_minimo=False,
@@ -443,7 +443,7 @@ def test_an_unreadable_rentas_figure_refuses_rather_than_restoring_the_minimo() 
     with pytest.raises(ProfileAnswerTypeError):
         descendant_list_from_facts(
             {
-                "renta_family.descendiente.0.birth_date": "2010-05-01",
+                "renta_family.descendiente.0.birth_date": "1999-05-01",
                 "renta_family.descendiente.0.rentas_anuales": "not-a-number",
             },
         )
@@ -458,7 +458,7 @@ def test_profile_carrying_the_new_facts_produces_a_prorated_and_capped_aggregate
     excluded descendants contribute nothing AND surrender their birth-order
     ranks, so the surviving child is "el primero".
     """
-    year = 2024
+    year = _ENGINE_FILING_YEARS[-1]
     snapshot = _snapshot(year)
     thresholds = _thresholds(snapshot)
     profile = RentaFamilyProfile(

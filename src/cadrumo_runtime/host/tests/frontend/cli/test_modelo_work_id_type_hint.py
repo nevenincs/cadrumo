@@ -25,6 +25,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -37,10 +38,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 __all__ = ["seed_profile", "seeded_runtime_backend"]
 
-_WORK_UNIT_CREATED_AT = datetime(2026, 5, 28, 15, 0, tzinfo=UTC)
+_WORK_UNIT_CREATED_AT = datetime(1980, 5, 28, 15, 0, tzinfo=UTC)
 
 
-def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
+def _seed_work_unit_without_revision(
+    *, modelo: str = "130", filing_year: int = filing_year_envelope().horizon, period: str = "1T"
+) -> str:
     """Persist a work unit with NO calculation revision and return its id.
 
     A work unit that was created (``work create``) but never calculated

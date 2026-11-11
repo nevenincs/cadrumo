@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.form_codes import resolve_form_codes
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..business_premises import (
     BusinessPremisesLease,
@@ -41,7 +42,7 @@ def _lease_invoice(
 ) -> Invoice:
     base = Decimal("1000.00")
     iva = Decimal("210.00")
-    issued_at = date(2025, 3, 1)
+    issued_at = date(filing_year_envelope().horizon, 3, 1)
     return Invoice.model_validate(
         {
             "invoice_id": derive_invoice_id(

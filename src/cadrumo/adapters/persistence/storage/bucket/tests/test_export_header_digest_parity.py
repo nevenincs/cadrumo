@@ -30,7 +30,7 @@ from ..export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-_CREATED_AT = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
+_CREATED_AT = datetime(1980, 5, 14, 12, 0, 0, tzinfo=UTC)
 _VALID_DIGEST = sha256_hex(b"archive-manifest-bytes")
 
 _MALFORMED = (

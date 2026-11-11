@@ -84,7 +84,7 @@ _UNSAFE_IDS: tuple[str, ...] = (
     "a/b",
     "a\\b",
 )
-_FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 18, 0, 0, tzinfo=UTC)
+_FOREIGN_CLASS_WRITTEN_AT = datetime(1980, 5, 26, 18, 0, 0, tzinfo=UTC)
 
 
 @dataclass(frozen=True)

@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import InvoiceKind
 from ..errors import FilterParseError
 from ..filter import (
@@ -42,6 +43,8 @@ from ..filter import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _clause(key: str, value: str) -> FilterClause:
@@ -57,7 +60,7 @@ def _clause(key: str, value: str) -> FilterClause:
     "clauses",
     (
         (),
-        (_clause("status", "pending"), _clause("period", "2026-Q1")),
+        (_clause("status", "pending"), _clause("period", f"{_YEAR}-Q1")),
     ),
 )
 def test_ensure_unique_keys_accepts_empty_and_distinct_key_sets(clauses: tuple[FilterClause, ...]) -> None:
@@ -91,7 +94,7 @@ def test_ensure_unique_keys_rejects_scope_tagged_duplicates(scope: str, expected
     "clauses",
     (
         (),
-        (_clause("status", "pending"), _clause("period", "2026-Q1")),
+        (_clause("status", "pending"), _clause("period", f"{_YEAR}-Q1")),
     ),
 )
 def test_ensure_known_keys_accepts_empty_and_allowed_key_sets(clauses: tuple[FilterClause, ...]) -> None:

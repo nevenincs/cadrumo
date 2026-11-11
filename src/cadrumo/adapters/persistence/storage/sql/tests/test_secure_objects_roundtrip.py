@@ -45,7 +45,7 @@ def test_write_provenance_matches_the_persisted_column_width() -> None:
         "object_key": "one",
         "classification": SensitivityClass.FINANCIAL,
         "schema_version": 1,
-        "written_at": datetime(2026, 5, 1, tzinfo=UTC),
+        "written_at": datetime(1980, 5, 1, tzinfo=UTC),
         "payload": b"body",
     }
     assert SecureObjectWrite.model_validate({**fields, "write_provenance": "p" * 255}).write_provenance == "p" * 255
@@ -123,9 +123,9 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
 @pytest.mark.parametrize(
     ("label", "written_at"),
     [
-        ("naive", datetime(2026, 5, 1, 12, 0)),
-        ("plus_one_hour", datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))),
-        ("minus_five_hours", datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=-5)))),
+        ("naive", datetime(1980, 5, 1, 12, 0)),
+        ("plus_one_hour", datetime(1980, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))),
+        ("minus_five_hours", datetime(1980, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=-5)))),
     ],
 )
 def test_save_refuses_a_written_at_that_could_not_be_read_back(
@@ -178,7 +178,7 @@ def test_save_accepts_and_reads_back_a_utc_aware_written_at(tmp_path: Path) -> N
     funnel had simply started rejecting every instant.
     """
 
-    written_at = datetime(2026, 5, 1, 12, 0, tzinfo=UTC)
+    written_at = datetime(1980, 5, 1, 12, 0, tzinfo=UTC)
     with ephemeral_secure_repo(tmp_path, "written-at-utc.db") as (_db_path, _engine, repo):
         repo.save(
             namespace="aeat-test",
@@ -207,7 +207,7 @@ def test_secure_object_write_dto_and_save_share_one_written_at_contract(tmp_path
     rejects.
     """
 
-    offset_instant = datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))
+    offset_instant = datetime(1980, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))
     with (
         ephemeral_secure_repo(tmp_path, "written-at-dto.db") as (_db_path, _engine, repo),
         pytest.raises(CoreValidationError),
@@ -382,7 +382,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
     with ephemeral_secure_repo(tmp_path, "record.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.record"
         natural_key = "record-key-non-default"
-        written_at = datetime(2026, 5, 21, 10, 30, 0, tzinfo=UTC)
+        written_at = datetime(1980, 5, 21, 10, 30, 0, tzinfo=UTC)
         payload = b"strict-record-roundtrip-payload"
         repo.save(
             namespace=namespace,
@@ -460,7 +460,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=3,
-            written_at=datetime(2026, 5, 21, 10, 35, 0, tzinfo=UTC),
+            written_at=datetime(1980, 5, 21, 10, 35, 0, tzinfo=UTC),
             payload=b"mutation-sentinel-payload",
         )
         assert (
@@ -512,7 +512,7 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=2,
-            written_at=datetime(2026, 5, 21, 10, 40, 0, tzinfo=UTC),
+            written_at=datetime(1980, 5, 21, 10, 40, 0, tzinfo=UTC),
             payload=b"older-schema-sentinel-payload",
         )
 

@@ -19,6 +19,7 @@ from .....application.operations.subject_reference import OperationSubjectKind, 
 from .....core.errors.error_codes import build_error_envelope
 from .....core.operations import profile_operation_subject
 from .....core.period import PeriodError
+from .....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....tests.production_operation_registry import production_operation_registry
 from ..catalogue import OperationCatalogueEntryV1, OperationCatalogueV1, build_operation_catalogue
 from ..request_form import (
@@ -237,7 +238,7 @@ def test_a_registered_refusal_a_validator_raises_is_shown_in_the_words_the_comma
     document: dict[str, object] = {
         "profile_id": str(_PROFILE_ID),
         "modelo": "210",
-        "year": 2025,
+        "year": filing_grade_exercises("210")[-1],
         "period_code": "evento",
         "missing": True,
     }

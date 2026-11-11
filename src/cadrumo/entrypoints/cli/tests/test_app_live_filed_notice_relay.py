@@ -36,10 +36,14 @@ from ....application.live.remote_state_models import (
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..app_live_commands import filed_capture_notices, filed_pull_all_notices, filed_pull_all_result_and_lines
 from ..app_live_filed_results import FiledCaptureResult, FiledCaptureSourcesResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
+_OTHER_YEAR = filing_year_envelope().floor
 
 
 class _CaptureReportFields(TypedDict):
@@ -59,7 +63,7 @@ def _answered_pair() -> FiledHistoryPairOutcome:
     """A pair that answered with filings, so it raises no advisory of its own."""
     return FiledHistoryPairOutcome(
         modelo="303",
-        ejercicio=2025,
+        ejercicio=_YEAR,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
         walk_attempted=True,
         walk_completed=True,
@@ -139,7 +143,7 @@ def test_the_transport_keeps_run_advisories_and_evidence_advisories_distinct() -
     """
     refused = FiledHistoryPairOutcome(
         modelo="303",
-        ejercicio=2024,
+        ejercicio=_OTHER_YEAR,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
         walk_attempted=True,
         walk_completed=False,
@@ -188,14 +192,14 @@ def _submitted_file_notice() -> Notice:
         severity=NoticeSeverity.WARNING,
         code="live.filed.pull.submitted_file_extraction_failed",
         message=(
-            "Modelo 303 filing 1T 2025 (expediente 2025303000000001) could not be read through its "
+            f"Modelo 303 filing 1T {_YEAR} (expediente {_YEAR}303000000001) could not be read through its "
             "submitted-file layout. Parser reason: modelo-303-layout record ended early"
         ),
         context={
             "modelo": "303",
-            "filing_year": "2025",
+            "filing_year": str(_YEAR),
             "period": "1T",
-            "expediente_id": "2025303000000001",
+            "expediente_id": f"{_YEAR}303000000001",
             "reason": "modelo-303-layout record ended early",
         },
     )
@@ -205,7 +209,7 @@ def _capture_report_fields(
     notice: Notice,
     *,
     captured_count: int = 1,
-    observation_paths: tuple[str, ...] = ("303/2025/1T/manifest.json",),
+    observation_paths: tuple[str, ...] = (f"303/{_YEAR}/1T/manifest.json",),
     reached_count: int | None = None,
 ) -> _CaptureReportFields:
     fields: _CaptureReportFields = {
@@ -234,26 +238,26 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
     single_report = FiledDataCaptureReport(
         output_root="var/filed",
         modelo="303",
-        year=2025,
+        year=_YEAR,
         **_capture_report_fields(notice),
     )
     source_report = SourceFiledDataCaptureReport(
         output_root="var/filed",
         target_modelo="303",
-        target_year=2025,
-        target_period=Period.from_year_and_code(2025, "1T"),
+        target_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
         **_capture_report_fields(notice),
     )
     bulk_report = BulkFiledDataCaptureReport(
         output_root="var/filed",
         modelos=("303",),
-        year_from=2025,
-        year_to=2025,
+        year_from=_YEAR,
+        year_to=_YEAR,
         failed_count=0,
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="303",
-                year=2025,
+                year=_YEAR,
                 walk_attempted=True,
                 walk_completed=True,
                 row_count=1,
@@ -428,13 +432,13 @@ def test_every_limit_bearing_filed_read_reports_its_own_truncation() -> None:
     bulk = BulkFiledDataCaptureReport(
         output_root="var/filed",
         modelos=("303",),
-        year_from=2025,
-        year_to=2025,
+        year_from=_YEAR,
+        year_to=_YEAR,
         failed_count=0,
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="303",
-                year=2025,
+                year=_YEAR,
                 walk_attempted=True,
                 walk_completed=True,
                 row_count=6,
@@ -469,13 +473,13 @@ def test_a_capture_given_no_limit_keeps_its_notices_untouched() -> None:
     report = BulkFiledDataCaptureReport(
         output_root="var/filed",
         modelos=("303",),
-        year_from=2025,
-        year_to=2025,
+        year_from=_YEAR,
+        year_to=_YEAR,
         failed_count=0,
         pair_outcomes=(
             FiledCapturePairOutcome(
                 modelo="303",
-                year=2025,
+                year=_YEAR,
                 walk_attempted=True,
                 walk_completed=True,
                 row_count=9999,

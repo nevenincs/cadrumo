@@ -32,29 +32,33 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....core.register_scoping_signal import RegisterScopingSignal
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_commands as handler
 from .. import operation_filed_read as bridge
 from ..app_live_filed_results import FiledDiscoverResult, FiledListResult
 from .operation_bridge_support import bind_profile_submission
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
-_PRESENTED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
+_PRESENTED_AT = datetime(_YEAR, 3, 6, 7, 8, tzinfo=UTC)
 
 
 def _list_projection() -> FiledListPublicResultV1:
     return FiledListPublicResultV1(
         modelo_filter="303",
-        year_from=2024,
-        year_to=2025,
+        year_from=_YEAR - 1,
+        year_to=_YEAR,
         row_count=1,
         failed_count=1,
         rows=(
             FiledListingRowPublicV1(
                 modelo="303",
-                year=2025,
+                year=_YEAR,
                 period="1T",
                 expediente_id="202520013522222B",
                 status="presented",
@@ -67,7 +71,7 @@ def _list_projection() -> FiledListPublicResultV1:
         failures=(
             FiledListingFailurePublicV1(
                 modelo="303",
-                year=2024,
+                year=_YEAR - 1,
                 period="4T",
                 expediente_id="202420013522222B",
                 error_type="TimeoutError",
@@ -82,7 +86,7 @@ def _discover_projection() -> FiledDiscoverPublicResultV1:
         pairs=(
             FiledDiscoverPairPublicV1(
                 modelo="303",
-                ejercicio=2025,
+                ejercicio=_YEAR,
                 signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
             ),
         ),
@@ -112,7 +116,7 @@ _bind_discover = partial(
 
 def _list_read() -> bridge.FiledListRead:
     return bridge.read_filed_list_for_cli(
-        cast(typer.Context, cast(object, None)), modelo="303", year_from=2024, year_to=2025
+        cast(typer.Context, cast(object, None)), modelo="303", year_from=_YEAR - 1, year_to=_YEAR
     )
 
 
@@ -134,8 +138,8 @@ def test_list_submits_exact_profile_scope_and_restores_listing_rows(
     assert read.rows == (
         FiledDataListingRow(
             modelo="303",
-            year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             expediente_id="202520013522222B",
             status="presented",
             presented_at=_PRESENTED_AT,
@@ -146,7 +150,7 @@ def test_list_submits_exact_profile_scope_and_restores_listing_rows(
     )
     assert len(submitted) == 1
     request, options = submitted[0]
-    assert request == FiledListRequest(profile_id=_PROFILE, modelo="303", year_from=2024, year_to=2025)
+    assert request == FiledListRequest(profile_id=_PROFILE, modelo="303", year_from=_YEAR - 1, year_to=_YEAR)
     assert options["definition_id"] == FILED_LIST_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
     assert options["result_type"] is FiledListPublicResultV1
@@ -182,9 +186,9 @@ def test_list_scope_or_receipt_mismatch_refuses_correlated_operation(
     if mismatch == "model":
         projection = projection.model_copy(update={"modelo_filter": None})
     elif mismatch == "year_range":
-        projection = projection.model_copy(update={"year_to": 2024})
+        projection = projection.model_copy(update={"year_to": _YEAR - 1})
     elif mismatch == "row_scope":
-        rows = (projection.rows[0].model_copy(update={"year": 2023}),)
+        rows = (projection.rows[0].model_copy(update={"year": _YEAR - 2}),)
         projection = projection.model_copy(update={"rows": rows})
     elif mismatch == "effect":
         effect = OperationEffect.UNKNOWN
@@ -215,7 +219,7 @@ def test_discover_submits_exact_profile_and_restores_report(monkeypatch: pytest.
 
     expected_pair = FiledHistoryDiscoveryPair(
         modelo="303",
-        ejercicio=2025,
+        ejercicio=_YEAR,
         signals=(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,),
     )
     assert bound_profiles == [_PROFILE]
@@ -271,7 +275,7 @@ def test_list_command_preserves_existing_result_and_lines(monkeypatch: pytest.Mo
     envelopes: list[dict[str, object]] = []
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler.filed_list_cmd(cast(typer.Context, cast(object, None)), modelo="303", year_from=2024, year_to=2025)
+    handler.filed_list_cmd(cast(typer.Context, cast(object, None)), modelo="303", year_from=_YEAR - 1, year_to=_YEAR)
 
     assert len(envelopes) == 1
     envelope = envelopes[0]
@@ -285,7 +289,7 @@ def test_list_command_preserves_existing_result_and_lines(monkeypatch: pytest.Mo
     lines = cast(tuple[str, ...], envelope["lines"])
     assert "row_count=1" in lines
     assert "failed_count=1" in lines
-    assert "303\t2025\t1T\t202520013522222B" in lines[2]
+    assert f"303\t{_YEAR}\t1T\t202520013522222B" in lines[2]
 
 
 def _list_read_for_command(

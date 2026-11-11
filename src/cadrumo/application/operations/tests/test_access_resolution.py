@@ -20,6 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 
 from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..access_resolution import (
     ADMISSION_ENTRY_ACTIONS,
@@ -40,6 +41,8 @@ from ..access_resolution import (
 from ..frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _RESULT_SCHEMA_ID = "test.access.result"
@@ -160,7 +163,7 @@ def test_empty_periods_bind_period_independent_work() -> None:
 
 
 def test_exact_periods_bind_period_restricted_work() -> None:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
 
     resolved = bind_operation_access(
         _context(AccessAction.START),
@@ -235,7 +238,7 @@ def _admitted(
     )
 
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def test_single_period_admission_returns_the_admitted_period() -> None:
@@ -253,7 +256,7 @@ def test_single_period_admission_returns_the_admitted_period() -> None:
         _admitted(periods=frozenset({_PERIOD}), definition_id="test.other"),
         _admitted(periods=frozenset({_PERIOD}), action=AccessAction.START),
         _admitted(),
-        _admitted(periods=frozenset({_PERIOD, Period.from_year_and_code(2026, "2T")})),
+        _admitted(periods=frozenset({_PERIOD, Period.from_year_and_code(_YEAR, "2T")})),
     ],
     ids=["other-profile", "other-definition", "not-a-submission", "period-independent", "two-periods"],
 )

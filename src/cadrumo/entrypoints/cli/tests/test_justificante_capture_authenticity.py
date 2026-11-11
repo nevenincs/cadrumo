@@ -40,17 +40,21 @@ from cadrumo.entrypoints.justificante_composition import (
     build_justificante_capture_service,
 )
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 # Canonical UUIDv4 profile identity; a readable label cannot address a bucket.
 _BUCKET_ID = "1a5c0000-0000-4000-8000-000000000042"
 _CSV = "ABCD1234EFGH5678"
 _AEAT = Settings.external_constants().aeat
-_CAPTURED_AT = datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 7, 18, 10, 5, 0, tzinfo=UTC)
 
 _DENIAL_HTML = (
     "<html><p>No se ha podido recuperar ningun documento catalogado con ese CSV "
@@ -78,8 +82,8 @@ def _capture(
     payload = _pdf_bytes(marker)
     return service.capture(
         modelo=Modelo("130").value,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         expediente_id="202613000522456T",
         csv=_CSV,
         pdf_bytes=payload,

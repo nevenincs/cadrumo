@@ -124,7 +124,7 @@ def test_clave_dni_fecha_refusals_are_key_only() -> None:
 
     with (
         pytest.raises(ValidationError) as excinfo,
-        override_settings(cadrumo_clave_movil_dni_fecha="2030-02-31"),
+        override_settings(cadrumo_clave_movil_dni_fecha="1990-02-31"),
     ):
         pytest.fail("the with-block must not execute when the date does not resolve")
     _assert_key_only(

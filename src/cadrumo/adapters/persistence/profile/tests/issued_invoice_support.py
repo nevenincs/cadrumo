@@ -5,9 +5,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import InvoiceKind
+
+_YEAR = filing_year_envelope().horizon
 
 
 def issued_consulting_invoice(invoice_number: str, *, iva_rate: IvaRate, bucket_id: str | None = None) -> Invoice:
@@ -26,7 +29,7 @@ def issued_consulting_invoice(invoice_number: str, *, iva_rate: IvaRate, bucket_
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
+            "issued_at": date(_YEAR, 4, 1),
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",

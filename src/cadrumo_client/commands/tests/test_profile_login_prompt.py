@@ -56,7 +56,7 @@ _PASSWORD = "runtime-login-test-passphrase"  # noqa: S105 - synthetic test input
 
 
 def _receipt(*, resumed: bool = False, persisted: bool = True) -> ProfileHumanLoginReceipt:
-    opened = datetime(2026, 9, 27, 12, 0, tzinfo=UTC)
+    opened = datetime(1980, 9, 27, 12, 0, tzinfo=UTC)
     return ProfileHumanLoginReceipt(
         authenticated_at=opened,
         idle_deadline=opened + timedelta(minutes=15),

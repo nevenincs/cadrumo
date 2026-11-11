@@ -39,7 +39,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
-from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference, published_snapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -53,6 +58,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # LIS DT 44ª (Ley 7/2024) sets its first transitional micro-empresa scale, 21 % / 22 %,
 # for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
+
+_HORIZON = filing_year_envelope().horizon
+_FLOOR = filing_year_envelope().floor
+# The newest exercise whose Modelo 200 edition reaches filing grade, so a calculation over it is admitted.
+_M200_CALCULABLE_YEAR = filing_grade_exercises("200")[-1]
 
 
 # ---------------------------------------------------------------------------
@@ -292,9 +302,9 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     )
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="202",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1P",
-        revision="2025-y-siguientes",
+        revision=str(revision_covering("202", _HORIZON).id),
     )
 
     result = invoke_cached_cli(
@@ -363,20 +373,20 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(open_ended_revision("130").id),
     )
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
-        filing_year=2026,
+        filing_year=_HORIZON,
         source_key="oracle-calc",
     )
     # Casilla 02 (gastos) is bucket-bound (ledger-aggregated); seed the 4.000 gasto
     # as a deductible expense row rather than supplying --casilla 02.
     seed_m130_expense_transaction(
         amount=Decimal("4000.00"),
-        filing_year=2026,
+        filing_year=_HORIZON,
         source_key="oracle-calc",
     )
 
@@ -432,9 +442,9 @@ def test_modelo_303_calculate_surface_is_reachable(
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
-        revision=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
+        revision=str(published_snapshot("303", filing_year=_HORIZON, period="1T").revision.id),
     )
 
     # Supply zero-value manual casillas so the engine can complete the
@@ -482,9 +492,9 @@ def test_modelo_100_calculate_surface_is_reachable(
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="100",
-        filing_year=2024,
+        filing_year=_FLOOR,
         period="0A",
-        revision="2024",
+        revision=str(revision_covering("100", _FLOOR).id),
     )
 
     result = invoke_cached_cli(
@@ -524,9 +534,9 @@ def test_modelo_130_malformed_numeric_binding_refuses_not_reclassified(
     _seed_natural_person_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
-        filing_year=2026,
+        filing_year=_HORIZON,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(open_ended_revision("130").id),
     )
 
     result = invoke_cached_cli(
@@ -580,9 +590,9 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
     )
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
-        filing_year=2024,
+        filing_year=_M200_CALCULABLE_YEAR,
         period="0A",
-        revision="2024",
+        revision=str(revision_covering("200", _M200_CALCULABLE_YEAR).id),
     )
 
     result = invoke_cached_cli(

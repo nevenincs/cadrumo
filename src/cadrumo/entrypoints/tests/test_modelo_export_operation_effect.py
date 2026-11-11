@@ -52,13 +52,15 @@ from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationEffect
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.adapter_composition_ports import build_modelo_export_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
-_CLOCK = datetime(2026, 1, 2, 10, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CLOCK = datetime(_YEAR, 1, 2, 10, tzinfo=UTC)
 
 
 class _Events:
@@ -88,12 +90,12 @@ class _Context:
 
 def _calculated_revision(operation: PinnedAuthorityOperation) -> str:
     """Calculate a synthetic first-quarter Modelo 130, which stays an unverified draft."""
-    period = Period.from_year_and_code(2025, "1T")
-    snapshot = operation.snapshot("130", filing_year=2025, period=period.registry_token)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period=period.registry_token)
     unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="130",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
         ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation).work_lifecycle_ports,

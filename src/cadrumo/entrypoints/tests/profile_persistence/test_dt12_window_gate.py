@@ -40,6 +40,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.rescate_type import RescateType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -47,7 +48,11 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "20000000-0000-4000-8000-0000000d1200"
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
+# The general window runs the contingencia year and the two exercises after it,
+# so a contingencia four exercises back has closed before the rescate.
+_CLOSED_CONTINGENCIA_YEAR = _FILING_YEAR - 4
+_CLOSED_WINDOW_LAST_YEAR = _CLOSED_CONTINGENCIA_YEAR + 2
 _ANNUAL_PERIOD = "0A"
 _REDUCCION_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 
@@ -80,7 +85,7 @@ def _create_m100_work_unit(*, operation: PinnedAuthorityOperation) -> tuple[str,
         filing_year=_FILING_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
-        clock=datetime(2026, 6, 30, 12, 0, tzinfo=UTC),
+        clock=datetime(_FILING_YEAR + 1, 6, 30, 12, 0, tzinfo=UTC),
         ports=WorkLifecyclePorts(
             work_unit_repository=WorkUnitCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),
@@ -124,12 +129,12 @@ def test_out_of_window_withholds_the_reduccion(tmp_path: Path, *, operation: Pin
     """Declared years proving the window closed WITHHOLD the 40% reducción."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
-        # Contingencia 2020 (general branch): window closes end-2022; a 2024
-        # rescate is out of window.
+        # A closed contingencia (general branch): the window ended before the
+        # rescate exercise.
         bundle = _build_bundle(
             work_unit_id,
-            rescate_plan_pensiones_contingencia_year=2020,
-            rescate_plan_pensiones_rescate_year=2024,
+            rescate_plan_pensiones_contingencia_year=_CLOSED_CONTINGENCIA_YEAR,
+            rescate_plan_pensiones_rescate_year=_FILING_YEAR,
             operation=operation,
         )
 
@@ -137,7 +142,8 @@ def test_out_of_window_withholds_the_reduccion(tmp_path: Path, *, operation: Pin
     assert "dt12_regime_window_closed" in _reasons(bundle)
     closed = next(d for d in bundle.shortcut_diagnostics if str(d.reason) == "dt12_regime_window_closed")
     assert closed.casilla_id == reduccion_casilla_id
-    assert "2020" in closed.message and "2022" in closed.message
+    assert str(_CLOSED_CONTINGENCIA_YEAR) in closed.message
+    assert str(_CLOSED_WINDOW_LAST_YEAR) in closed.message
     # Advisory-asserted: no casilla in reach carries DT 12ª's own grounding.
     assert closed.asserted_legal_refs == ("ley-35-2006:dt-12",)
 
@@ -148,11 +154,11 @@ def test_in_window_injects_the_reduccion_without_advisory(
     """An in-window rescate injects the 40% reducción and raises no window advisory."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
-        # Contingencia 2024, rescate 2024: inside the general window [2024, 2026].
+        # Contingencia and rescate in the same exercise: inside the general window.
         bundle = _build_bundle(
             work_unit_id,
-            rescate_plan_pensiones_contingencia_year=2024,
-            rescate_plan_pensiones_rescate_year=2024,
+            rescate_plan_pensiones_contingencia_year=_FILING_YEAR,
+            rescate_plan_pensiones_rescate_year=_FILING_YEAR,
             operation=operation,
         )
 
@@ -164,9 +170,11 @@ def test_rescate_year_defaults_to_filing_year(tmp_path: Path, *, operation: Pinn
     """Omitting --rescate-year uses the work unit filing year for the window check."""
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         work_unit_id, reduccion_casilla_id = _create_m100_work_unit(operation=operation)
-        # Contingencia 2020, rescate_year omitted -> defaults to filing year 2024
-        # -> out of the [2020, 2022] window -> withheld.
-        bundle = _build_bundle(work_unit_id, rescate_plan_pensiones_contingencia_year=2020, operation=operation)
+        # Closed contingencia, rescate_year omitted -> defaults to the filing year
+        # -> out of the closed window -> withheld.
+        bundle = _build_bundle(
+            work_unit_id, rescate_plan_pensiones_contingencia_year=_CLOSED_CONTINGENCIA_YEAR, operation=operation
+        )
 
     assert reduccion_casilla_id not in bundle.casilla_inputs
     assert "dt12_regime_window_closed" in _reasons(bundle)
@@ -193,8 +201,8 @@ def test_parcial_type_adds_guidance_advisory(tmp_path: Path, *, operation: Pinne
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_tipo=RescateType.PARCIAL,
-            rescate_plan_pensiones_contingencia_year=2024,
-            rescate_plan_pensiones_rescate_year=2024,
+            rescate_plan_pensiones_contingencia_year=_FILING_YEAR,
+            rescate_plan_pensiones_rescate_year=_FILING_YEAR,
             operation=operation,
         )
 
@@ -213,8 +221,8 @@ def test_total_type_adds_no_guidance_advisory(tmp_path: Path, *, operation: Pinn
         bundle = _build_bundle(
             work_unit_id,
             rescate_plan_pensiones_tipo=RescateType.TOTAL,
-            rescate_plan_pensiones_contingencia_year=2024,
-            rescate_plan_pensiones_rescate_year=2024,
+            rescate_plan_pensiones_contingencia_year=_FILING_YEAR,
+            rescate_plan_pensiones_rescate_year=_FILING_YEAR,
             operation=operation,
         )
 

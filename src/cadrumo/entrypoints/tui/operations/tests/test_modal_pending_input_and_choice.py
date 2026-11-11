@@ -50,8 +50,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _OPERATION_ID = "a" * 64
 _INTERACTION_ID = "b" * 64
-_NOW = datetime(2026, 9, 27, tzinfo=UTC)
-_EXPIRY = datetime(2026, 9, 27, 0, 30, tzinfo=UTC)
+_NOW = datetime(1980, 9, 27, tzinfo=UTC)
+_EXPIRY = datetime(1980, 9, 27, 0, 30, tzinfo=UTC)
 _PRESENTATION = "modelo.edit.apply"
 
 type _Kind = Literal[OperationInteractionKind.INPUT, OperationInteractionKind.CHOICE]

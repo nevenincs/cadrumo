@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 from typing import NoReturn
 from uuid import UUID
@@ -78,6 +78,7 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.invoices.rule_findings import (
     InvoiceRuleFindingCode,
@@ -101,6 +102,11 @@ from .supervisor_test_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+_AVAILABLE_REVISION_IDS = tuple(revision.id for revision in authored_revisions("210"))
+_CUTOFF_ON = date(_YEAR, 4, 15).isoformat()
+_EXPORT_ON = date(_YEAR, 4, 16).isoformat()
 
 #: A distinctive context value: it reaches the encrypted detail and never the journal bytes.
 _ROW_IDENTITY = "ledger-row-7f3a9c"
@@ -347,10 +353,10 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
     profile_id = UUID("a0347100-3a01-4b0a-aeee-347102030405")
     error = NoRevisionForPeriodError(
         modelo_id="210",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         revision_id=None,
-        available_revision_ids=("2025", "2026-y-siguientes"),
+        available_revision_ids=_AVAILABLE_REVISION_IDS,
     )
 
     attempts: list[NoRevisionForPeriodError] = []
@@ -359,7 +365,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         attempts.append(error)
         raise error
 
-    period = PublicPeriod(filing_year=2025, code="1T")
+    period = PublicPeriod(filing_year=_YEAR, code="1T")
     if definition_id == "modelo.work.create":
         definition = build_modelo_work_create_definition(unavailable_ports)
         registration = build_modelo_work_create_registration(definition)
@@ -367,7 +373,7 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
     else:
         definition = build_modelo_readiness_definition(unavailable_ports)
         registration = build_modelo_readiness_registration(definition)
-        payload = ModeloReadinessOperationRequest(profile_id=profile_id, modelo="210", filing_year=2025, period=period)
+        payload = ModeloReadinessOperationRequest(profile_id=profile_id, modelo="210", filing_year=_YEAR, period=period)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(profile_id)) as profile:
         journal, leases, operands = operation_repositories(
@@ -419,9 +425,9 @@ def test_modelo_scope_failure_retains_its_public_detail_over_durable_settlement(
         assert detail.message_key == "errors.snapshot.no_revision_for_period"
         context = {entry.key: entry.value for entry in detail.context}
         assert context["modelo_id"] == "210"
-        assert context["filing_year"] == "2025"
+        assert context["filing_year"] == str(_YEAR)
         assert context["period"] == "1T"
-        assert context["available_revision_ids"] == "2025, 2026-y-siguientes"
+        assert context["available_revision_ids"] == ", ".join(_AVAILABLE_REVISION_IDS)
         assert OperationErrorDetailV1.model_validate_json(detail.model_dump_json()) == detail
 
 
@@ -432,12 +438,12 @@ _PRIVATE_NIF = "ESB00015016"
 _PAST_CUTOFF_CONTEXT: dict[str, object] = {
     "calculation_revision_id": "calc-0001",
     "modelo": "303",
-    "filing_year": "2026",
+    "filing_year": str(_YEAR),
     "period": "1T",
-    "payment_cutoff_on": "2026-04-15",
+    "payment_cutoff_on": _CUTOFF_ON,
     "payment_cutoff_source": "filing_window",
     "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
-    "export_on": "2026-04-16",
+    "export_on": _EXPORT_ON,
 }
 
 
@@ -520,7 +526,7 @@ def test_a_catalogue_refusal_serves_its_finished_sentence_in_the_worker_language
     assert detail.refusal_words == resolve_error_message(_past_cutoff_refusal(**_PAST_CUTOFF_CONTEXT), locale=language)
     assert detail.refusal_words is not None
     assert "Orden HAC/3625/2003, art. 3" in detail.refusal_words
-    assert "2026-04-15" in detail.refusal_words
+    assert _CUTOFF_ON in detail.refusal_words
     # The machine-readable facts the CLI and MCP read are unchanged.
     assert detail.error_code == get_registered_error_code(ModeloDomiciliationPastCutoffError).code
     assert detail.message_key == "errors.refused.refused_modelo_domiciliation_past_cutoff"
@@ -594,7 +600,7 @@ def test_a_record_fault_with_no_registered_rule_serves_the_record_fault_sentence
 
 def _quarterless_refusal() -> BaseException:
     """The refusal the Modelo 100 estimate raises for a year with no quarterly declaration, with its step."""
-    year = 2025
+    year = _YEAR
     return ModeloProjectNoM130UnitsError(
         context={"year": year},
         translated_message="application.modelo.projection_words.no_m130_units",
@@ -623,9 +629,9 @@ def test_a_refusal_releases_the_step_it_serves_worded_in_the_worker_language(
     for language, detail in served.items():
         step = detail.next_step
         assert isinstance(step, OperationCreateWorkStepV1)
-        assert (step.modelo, step.filing_year, step.period_code) == ("130", 2025, "1T")
+        assert (step.modelo, step.filing_year, step.period_code) == ("130", _YEAR, "1T")
         assert detail.refusal_words_language is OutputLanguage(language)
-        assert "130" in step.words and "2025" in step.words
+        assert "130" in step.words and str(_YEAR) in step.words
         words[language] = step.words
     assert len(set(words.values())) == len(words)
 

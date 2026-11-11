@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -25,12 +26,14 @@ from ...core.model_roles import ModelRole
 from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.iva.schema import InvoiceKind
 from ...tests.inventory import FIXTURES_DIR
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PROFILE = UUID("76767676-7676-4767-8676-767676767676")
+_INVOICE_DATE = date(filing_year_envelope().horizon, 5, 1).isoformat()
 
 #: A Spanish libro registro whose column names only the mapping lane can read.
 _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
@@ -83,7 +86,7 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
             counterparty_nif="B00010157",
             counterparty_name="Synthetic supplier",
             invoice_number="PIN-WIZARD",
-            invoice_date="2026-05-01",
+            invoice_date=_INVOICE_DATE,
             taxable_base="100.00",
             iva_rate="21",
             currency="EUR",
@@ -94,7 +97,10 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
             operation=authority_operation,
         )
         path = tmp_path / "synthetic.csv"
-        payload = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nB00000281,Supplier,PIN-BOOK,2026-05-01,100.00,21\n"
+        payload = (
+            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+            f"B00000281,Supplier,PIN-BOOK,{_INVOICE_DATE},100.00,21\n"
+        ).encode()
         path.write_bytes(payload)
         source = read_bulk_invoice_import_source(path, mapper=ports.mapper, expected_sha256=sha256_hex(payload))
         imported = import_invoices_from_rows(

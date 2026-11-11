@@ -610,7 +610,7 @@ def expense_row(
             "purchase_invoice_evidence_id": evidence_id,
             "taxable_base": base,
             "category_id": SpendingCategory.from_registry("asesoria_fiscal").value,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(1980, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -682,22 +682,22 @@ def test_m100_expense_lands_once_in_the_year_its_criterion_names(
 def test_m130_expense_accumulates_once_from_the_quarter_its_criterion_names(
     operation: PinnedAuthorityOperation, period: str, criterion: str, expected: Decimal
 ) -> None:
-    row, invoices = expense_ledger(date(2025, 4, 1), date(2025, 7, 10))
-    profile = renta_imputation_criterion_profile(operation, declared((2025, criterion)))
+    row, invoices = expense_ledger(date(LATER, 4, 1), date(LATER, 7, 10))
+    profile = renta_imputation_criterion_profile(operation, declared((LATER, criterion)))
     resolution = resolve_m130(ActivityAssetHistory(), period, rows=(row,), profile=profile, invoices=invoices)
     assert m130_box(resolution) == expected
 
 
 def test_an_expense_row_with_no_invoice_under_accrual_stays_unresolved(operation: PinnedAuthorityOperation) -> None:
-    row = expense_row(date(2025, 4, 1), evidence_id=None)
-    profile = renta_imputation_criterion_profile(operation, declared((2025, DEVENGO)))
+    row = expense_row(date(LATER, 4, 1), evidence_id=None)
+    profile = renta_imputation_criterion_profile(operation, declared((LATER, DEVENGO)))
     resolution = resolve_m130(ActivityAssetHistory(), "2T", rows=(row,), profile=profile)
     assert m130_box(resolution) == ZERO
     assert "unresolved_binding" in {item.reason for item in resolution.diagnostics}
 
 
 def test_an_unset_criterion_withholds_the_expense_box(operation: PinnedAuthorityOperation) -> None:
-    row, invoices = expense_ledger(date(2025, 4, 1), date(2025, 4, 2))
+    row, invoices = expense_ledger(date(LATER, 4, 1), date(LATER, 4, 2))
     resolution = resolve_m130(
         ActivityAssetHistory(),
         "2T",
@@ -711,14 +711,14 @@ def test_an_unset_criterion_withholds_the_expense_box(operation: PinnedAuthority
 def test_an_unpaid_received_invoice_under_accrual_keeps_the_box_withheld(operation: PinnedAuthorityOperation) -> None:
     """It accrues, but only a ledger row carries the category that picks its box."""
     invoices = InMemoryInvoiceCatalogueRepository()
-    invoices.save(build_invoice_catalogue((received(date(2025, 4, 1), linked=()),)))
-    profile = renta_imputation_criterion_profile(operation, declared((2025, DEVENGO)))
+    invoices.save(build_invoice_catalogue((received(date(LATER, 4, 1), linked=()),)))
+    profile = renta_imputation_criterion_profile(operation, declared((LATER, DEVENGO)))
     resolution = resolve_m130(ActivityAssetHistory(), "2T", profile=profile, invoices=invoices)
     assert "unresolved_binding" in {item.reason for item in resolution.diagnostics}
 
 
 _CREDIT_M130_06 = "modelo-130-actividad-economica-retenciones-cumulative"
-_FIRST_QUARTER_ACCRUAL = (date(2025, 3, 20), date(2025, 4, 10))
+_FIRST_QUARTER_ACCRUAL = (date(LATER, 3, 20), date(LATER, 4, 10))
 
 
 @pytest.mark.parametrize(
@@ -732,10 +732,10 @@ def test_m130_first_quarter_income_and_credit_follow_the_criterion(
     row, invoice = paid_invoice(*_FIRST_QUARTER_ACCRUAL)
     resolution = resolve(
         operation,
-        declared((2025, criterion)),
+        declared((LATER, criterion)),
         rows=(row,),
         invoices=(invoice,),
-        year=2025,
+        year=LATER,
         modelo="130",
         period="1T",
     )
@@ -747,10 +747,10 @@ def _first_quarter_accrual(operation: PinnedAuthorityOperation, period: str) -> 
     row, invoice = paid_invoice(*_FIRST_QUARTER_ACCRUAL)
     return resolve(
         operation,
-        declared((2025, DEVENGO)),
+        declared((LATER, DEVENGO)),
         rows=(row,),
         invoices=(invoice,),
-        year=2025,
+        year=LATER,
         modelo="130",
         period=period,
     )
@@ -787,7 +787,7 @@ def test_the_retencion_credit_is_filing_grade_beside_the_boxes_the_criterion_pla
     operation: PinnedAuthorityOperation, modelo: str, period: str
 ) -> None:
     """The criterion places each row's retencion with its income, so no box the ledger feeds is capped."""
-    snapshot = operation.snapshot(modelo, filing_year=2025, period=period)
+    snapshot = operation.snapshot(modelo, filing_year=LATER, period=period)
     assert not capped_binding_reach(
         snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
     )

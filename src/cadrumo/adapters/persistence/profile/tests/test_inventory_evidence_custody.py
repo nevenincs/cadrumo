@@ -19,12 +19,15 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.evidence import admit_evidence_file, ingest_evidence_file
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .evidence_test_support import BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _ports(objects: SecureObjectRepository) -> LedgerEvidencePorts:

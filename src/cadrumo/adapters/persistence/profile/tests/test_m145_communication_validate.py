@@ -31,6 +31,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.calculations.registry.temporal import select_revision
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -39,11 +40,13 @@ from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def _m145_revision():
     modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "145")
-    return select_revision(modelo, filing_year=2026, period="comunicacion")
+    return select_revision(modelo, filing_year=_YEAR, period="comunicacion")
 
 
 def _snapshot_casillas() -> dict[str, CasillaDefinition]:
@@ -72,7 +75,7 @@ def _create_and_validate(
     """Create a communication record from ``field_values`` and validate it in a fresh profile."""
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=field_values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=field_values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -93,7 +96,7 @@ def test_validate_m145_communication_record_accepts_registry_backed_required_fie
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -139,7 +142,7 @@ def test_explicit_ordinary_page_blank_preserves_required_and_grounded_value_guar
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=ports,
             operation=operation,
@@ -168,7 +171,7 @@ def test_page_indicator_accepts_only_the_official_blank_or_c_wire_tokens(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=ports,
             operation=operation,
@@ -200,7 +203,7 @@ def test_page_indicator_rejects_noncanonical_markers_and_blank_representations(
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
         record = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=ports,
             operation=operation,

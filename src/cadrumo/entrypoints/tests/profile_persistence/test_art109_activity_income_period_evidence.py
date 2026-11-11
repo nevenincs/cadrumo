@@ -36,6 +36,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -64,12 +65,14 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_substance_suppor
     workflow_profile,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000408"
-_Q1_2026 = Period.from_year_and_code(2026, "1T")
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
 _ADVISORY_BINDING_VALUE = "advisory_binding_value"
 
 
@@ -87,7 +90,7 @@ def _raw_transaction(provider_id: str, *, value_date: date, amount: Decimal) -> 
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -97,7 +100,7 @@ def _raw_transaction(provider_id: str, *, value_date: date, amount: Decimal) -> 
 def _activity_invoice(
     provider_id: str,
     *,
-    value_date: date = date(2026, 2, 15),
+    value_date: date = date(_YEAR, 2, 15),
     base: Decimal,
     iva: Decimal,
     withholding: Decimal,
@@ -122,7 +125,7 @@ def _activity_invoice(
             "irpf_category": "actividad_economica",
             "tipo_actividad": TipoActividad.A05_PROFESIONALES,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -131,7 +134,7 @@ def _activity_invoice(
 def _gross_only_activity_receipt(provider_id: str, *, amount: Decimal) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(provider_id, value_date=date(2026, 2, 20), amount=amount),
+            "raw": _raw_transaction(provider_id, value_date=date(_YEAR, 2, 20), amount=amount),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -145,7 +148,7 @@ def _gross_only_activity_receipt(provider_id: str, *, amount: Decimal) -> Transa
             "irpf_category": "actividad_economica",
             "tipo_actividad": TipoActividad.A05_PROFESIONALES,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -255,9 +258,9 @@ def _calculate_m130_draft(
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=_Q1_2026,
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=_Q1,
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
         ),

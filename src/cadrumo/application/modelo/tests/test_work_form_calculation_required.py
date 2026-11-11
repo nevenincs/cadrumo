@@ -25,6 +25,7 @@ from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnve
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevisionState
@@ -41,7 +42,7 @@ from .work_form_fixture import built_form, form_casilla, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _SALARY: CasillaId = validated_casilla_id("0003", surface="_SALARY")
 _EARLIER_NEGATIVE_BASE_BOX = "1388"
 _EARLIER_NEGATIVE_BASE: BindingId = "renta-base-liquidable-negativa-general-anterior"
@@ -160,7 +161,7 @@ def test_the_inputs_named_are_the_ones_the_engine_refused_without(operation: Pin
 
 def test_a_carry_between_periods_of_one_year_is_not_named(operation: PinnedAuthorityOperation) -> None:
     """Modelo 130's earlier instalments are produced by this campaign's own declarations; the form waits for them."""
-    revision = form_snapshot(operation, "130", 2026, "2T").revision
+    revision = form_snapshot(operation, "130", _YEAR, "2T").revision
 
     assert calculation_required_inputs(revision, registry_period="2T").casilla_ids == frozenset()
 

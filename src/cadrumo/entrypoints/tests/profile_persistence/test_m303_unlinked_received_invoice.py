@@ -3,7 +3,7 @@
 LIVA art. 99.Uno deducts the input IVA in the period it is borne, on holding the
 factura (art. 97), whether or not the bill has been paid: the payment movement is
 no part of the deduction. APP-QA recorded one received, confirmed invoice with its
-PDF stored and no movement linked, and the Modelo 303 for 2026 1T refused instead
+PDF stored and no movement linked, and the Modelo 303 for its 1T refused instead
 of deducting it.
 
 The expected boxes come from the official 303 instructions alone: a domestic
@@ -68,6 +68,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -85,9 +86,9 @@ from .ready_profile_taxpayer import ready_profile_tax_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET = "44444444-4444-4444-8444-444444442026"
-_YEAR = 2026
-_T0 = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 4, 2, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 4, 2, 9, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 4, 2, 10, 0, tzinfo=UTC)
 
 #: The boxes the official instructions give for the quarter.
 _EXPECTED: dict[str, Decimal] = {
@@ -158,7 +159,7 @@ def _seed_quarter(
     facts: tuple[UserProfileFact, ...] = (),
     wallet_decision: bool = True,
 ) -> _Quarter:
-    """The 2026 1T with one confirmed received invoice, its factura stored and no movement linked."""
+    """The 1T with one confirmed received invoice, its factura stored and no movement linked."""
     seed_ready_profile(bucket_id=_BUCKET, at=_T0, facts=facts)
     work_units = WorkUnitCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     calculations = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -177,7 +178,7 @@ def _seed_quarter(
             counterparty_name="Asesoría Ejemplo SLP",
             counterparty_tax_id="B81000069",
             counterparty_country="ES",
-            invoice_number="SLP-2026-QA1",
+            invoice_number=f"SLP-{_YEAR}-QA1",
             issued_at=date(_YEAR, 2, 10),
             taxable_base=Decimal("300.00"),
             iva_rate=Decimal("21"),
@@ -190,7 +191,7 @@ def _seed_quarter(
     )
     add_attachment(
         AttachmentStore(objects=secure_objects),
-        content=AttachmentBytesContent(data=b"%PDF-1.4 synthetic factura SLP-2026-QA1"),
+        content=AttachmentBytesContent(data=f"%PDF-1.4 synthetic factura SLP-{_YEAR}-QA1".encode("ascii")),
         request=AttachmentIngestionRequest(
             kind=AttachmentKind.INVOICE_PDF,
             source=AttachmentSource.LOCAL_FILE,

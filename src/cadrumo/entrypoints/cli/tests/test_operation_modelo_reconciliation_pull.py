@@ -23,7 +23,11 @@ from ....application.modelo.reconciliation_pull_operation import (
 from ....application.modelo.reconciliation_records import ModeloReconciliationVerdict
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import operation_modelo_reconciliation_pull as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -43,8 +47,8 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(
         bucket_id=str(_PROFILE),
         work_unit_id=_WORK_UNIT_ID,
         modelo="130",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
     )
     source_ref = bridge.reconciliation_pull_source_ref(
         source,
@@ -57,7 +61,7 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(
         source_kind=source,
         source_path=source_ref,
         verdict=ModeloReconciliationVerdict.MATCHES,
-        reconciled_at=datetime(2026, 9, 29, tzinfo=UTC),
+        reconciled_at=datetime(_YEAR + 1, 9, 29, tzinfo=UTC),
     )
     calls: list[tuple[str, object]] = []
     monkeypatch.setattr(bridge, "bound_profile_client", lambda _ctx: client)
@@ -75,7 +79,7 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(
         assert scope["period"] == unit.period
         assert scope["year"] == unit.filing_year
         assert scope["limit"] == 1
-        calls.append(("capture", {"profile_id": _PROFILE, "modelo": "130", "year": 2024, "period": unit.period}))
+        calls.append(("capture", {"profile_id": _PROFILE, "modelo": "130", "year": _YEAR, "period": unit.period}))
         return SimpleNamespace(
             report=SimpleNamespace(
                 captured_count=1,
@@ -134,7 +138,7 @@ def test_pull_uses_one_bound_profile_for_selection_capture_and_reconciliation(
         ),
         (
             "capture",
-            {"profile_id": _PROFILE, "modelo": "130", "year": 2024, "period": unit.period},
+            {"profile_id": _PROFILE, "modelo": "130", "year": _YEAR, "period": unit.period},
         ),
         (
             "reconcile",

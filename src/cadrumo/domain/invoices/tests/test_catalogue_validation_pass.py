@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator, Mapping
-from datetime import date
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Final
 
@@ -28,11 +28,13 @@ from ..models import Invoice
 from .invoice_catalogue_seed import (
     CENT,
     SLOT_FRACTIONS,
+    STANDING_DEVENGO,
     TRANSITIONAL_WINDOWS,
     SeedCase,
     fields_set,
     seed_payload,
     seed_payloads,
+    window_middle,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -109,12 +111,11 @@ def test_each_line_carries_the_statutory_fraction_of_its_devengo_date() -> None:
             assert line.iva_amount == expected
 
 
-_OUT_OF_WINDOW: Final = (
-    ("RATE_5", date(2023, 1, 1), date(2022, 12, 31)),
-    ("RATE_5", date(2024, 9, 30), date(2024, 10, 1)),
-    ("RATE_2", date(2024, 10, 1), date(2024, 9, 30)),
-    ("RATE_2", date(2024, 12, 31), date(2025, 1, 1)),
-    ("RATE_7.5", date(2024, 12, 31), date(2025, 1, 1)),
+_DAY: Final = timedelta(days=1)
+_OUT_OF_WINDOW: Final = tuple(
+    case
+    for slot, (start, end) in TRANSITIONAL_WINDOWS.items()
+    for case in ((slot, start, start - _DAY), (slot, end, end + _DAY))
 )
 
 
@@ -139,20 +140,21 @@ def test_a_rate_accepted_on_one_date_is_still_refused_the_day_it_is_not_in_force
 
 def test_an_operation_date_outside_the_window_is_refused_though_the_issue_date_differs() -> None:
     """The devengo is the operation date, and the pass keys its answer by that date."""
-    inside = seed_payload(SeedCase(1, date(2024, 12, 31), ("RATE_2",), issued_offset=2))
-    outside = seed_payload(SeedCase(2, date(2025, 1, 1), ("RATE_2",), issued_offset=1))
+    closing = TRANSITIONAL_WINDOWS["RATE_2"][1]
+    inside = seed_payload(SeedCase(1, closing, ("RATE_2",), issued_offset=2))
+    outside = seed_payload(SeedCase(2, closing + _DAY, ("RATE_2",), issued_offset=1))
     entries = {_decode_alone(inside).invoice_id: inside, "f" * 64: outside}
 
     with pytest.raises(ValidationError) as caught:
         InvoiceCatalogue.model_validate_json(json.dumps({"invoices": entries}))
 
-    assert "line rate RATE_2 was not in force on 2025-01-01" in _first_message(caught.value)
+    assert f"line rate RATE_2 was not in force on {(closing + _DAY).isoformat()}" in _first_message(caught.value)
 
 
 def test_a_cuota_at_the_wrong_rate_is_refused_after_the_same_rate_was_accepted() -> None:
     """A memoised rate still meets each line's own arithmetic."""
-    accepted = seed_payload(SeedCase(1, date(2024, 11, 15), ("RATE_7.5",)))
-    wrong = seed_payload(SeedCase(2, date(2024, 11, 15), ("RATE_7.5",)))
+    accepted = seed_payload(SeedCase(1, window_middle("RATE_7.5"), ("RATE_7.5",)))
+    wrong = seed_payload(SeedCase(2, window_middle("RATE_7.5"), ("RATE_7.5",)))
     wrong_lines = wrong["lines"]
     assert isinstance(wrong_lines, list)
     wrong_line = dict(wrong_lines[0])
@@ -170,8 +172,8 @@ def test_a_cuota_at_the_wrong_rate_is_refused_after_the_same_rate_was_accepted()
 
 def test_an_invalid_tax_id_is_refused_naming_its_field_once_after_a_valid_one() -> None:
     """Refusals are raised afresh per invoice, so the field prefix is never applied twice."""
-    valid = seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
-    invalid = seed_payload(SeedCase(2, date(2025, 7, 7), ("RATE_21",), counterparty=("B12345670", "ES")))
+    valid = seed_payload(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
+    invalid = seed_payload(SeedCase(2, STANDING_DEVENGO, ("RATE_21",), counterparty=("B12345670", "ES")))
     with pytest.raises(ValidationError) as alone:
         _decode_alone(invalid)
     entries = {_decode_alone(valid).invoice_id: valid, "f" * 64: invalid, "e" * 64: dict(invalid)}
@@ -186,9 +188,9 @@ def test_an_invalid_tax_id_is_refused_naming_its_field_once_after_a_valid_one() 
 
 def test_a_simplified_intra_community_supply_without_a_tax_id_is_refused_in_a_catalogue() -> None:
     """The applicability catalogue answered once still refuses every invoice it governs."""
-    allowed = seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",), counterparty=(None, "ES")))
+    allowed = seed_payload(SeedCase(1, STANDING_DEVENGO, ("RATE_21",), counterparty=(None, "ES")))
     allowed["invoice_class"] = "SIMPLIFICADA"
-    refused = seed_payload(SeedCase(2, date(2025, 7, 7), ("EXEMPT",), counterparty=(None, "ES")))
+    refused = seed_payload(SeedCase(2, STANDING_DEVENGO, ("EXEMPT",), counterparty=(None, "ES")))
     refused["invoice_class"] = "SIMPLIFICADA"
     refused["iva_category"] = "domestic_reverse_charge"
     with pytest.raises(ValidationError) as alone:
@@ -204,7 +206,7 @@ def test_a_simplified_intra_community_supply_without_a_tax_id_is_refused_in_a_ca
 
 def test_a_catalogue_key_that_is_not_its_invoice_id_is_refused() -> None:
     """The key check runs on the decoded invoice after the shared pass."""
-    payload = seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    payload = seed_payload(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     invoice_id = _decode_alone(payload).invoice_id
 
     with pytest.raises(ValidationError, match=f"does not match invoice_id '{invoice_id}'"):
@@ -213,7 +215,7 @@ def test_a_catalogue_key_that_is_not_its_invoice_id_is_refused() -> None:
 
 def test_a_stored_invoice_id_that_is_not_derived_from_its_content_is_refused() -> None:
     """The derived identity is recomputed for every invoice the pass decodes."""
-    payload = seed_payload(SeedCase(1, date(2025, 7, 7), ("RATE_21",)))
+    payload = seed_payload(SeedCase(1, STANDING_DEVENGO, ("RATE_21",)))
     tampered = {**payload, "invoice_id": "0" * 64}
 
     with pytest.raises(ValidationError, match="invoice_id must match the stable hash derived"):
@@ -234,7 +236,7 @@ def test_one_pass_encloses_every_validator_of_an_invoice_and_of_a_catalogue(monk
         return real(rate, on_date)
 
     monkeypatch.setattr(models, "iva_rate_percentage", counted)
-    on = date(2024, 11, 15)
+    on = window_middle("RATE_5")
     Invoice.model_validate_json(json.dumps(seed_payload(SeedCase(1, on, ("RATE_21", "RATE_21", "RATE_10")))))
     assert sorted(asked) == [("RATE_10", on), ("RATE_21", on)]
 

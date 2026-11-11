@@ -6,6 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
@@ -20,9 +21,10 @@ def filing_source(
     *, profile_id: UUID, calculation_revision_id: str, filed_by: str, now: datetime
 ) -> tuple[WorkUnit, ModeloRecord]:
     """Build a valid filing receipt whose profile and period match its unit."""
-    period = Period.from_year_and_code(2026, "1T")
+    exercise = filing_year_envelope().horizon
+    period = Period.from_year_and_code(exercise, "1T")
     unit_id = derive_work_unit_id(
-        bucket_id=str(profile_id), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+        bucket_id=str(profile_id), modelo="303", filing_year=exercise, period=period, revision_id="test-revision"
     )
     filing_id = derive_filing_record_id(
         work_unit_id=unit_id,
@@ -33,7 +35,7 @@ def filing_source(
         work_unit_id=unit_id,
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=2026,
+        filing_year=exercise,
         period=period,
         revision_id="test-revision",
         name="First-quarter return",
@@ -50,7 +52,7 @@ def filing_source(
         calculation_revision_id=calculation_revision_id,
         bucket_id=str(profile_id),
         modelo="303",
-        filing_year=2026,
+        filing_year=exercise,
         period=period,
         filed_at=now,
         filed_by=filed_by,

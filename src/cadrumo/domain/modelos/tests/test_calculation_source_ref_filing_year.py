@@ -16,6 +16,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -31,10 +32,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _PINNED_ID_WITHOUT_FILING_YEAR = "d43701b3ec3ddbbefb0cbf9872adc9d9950732760be2093e70af7faf094610e5"
 _WORK_UNIT_ID = "b" * 64
 _PRIMARY_REF = "percepcion:" + "1" * 64
+_SOURCE_YEAR = filing_year_envelope().floor
+_OTHER_SOURCE_YEAR = filing_year_envelope().horizon
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="193",
-    revision_id="2025-y-siguientes",
-    modelo_year=2026,
+    revision_id=str(revision_covering("193", _OTHER_SOURCE_YEAR).id),
+    modelo_year=_OTHER_SOURCE_YEAR,
     period="0A",
 )
 
@@ -75,7 +78,7 @@ def _revision_id(source_filing_year: int | None) -> str:
 
 
 def _revision(source_filing_year: int | None) -> CalculationRevision:
-    created = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+    created = datetime(1980, 2, 1, 9, 0, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=_revision_id(source_filing_year),
         work_unit_id=_WORK_UNIT_ID,
@@ -95,9 +98,9 @@ def test_source_refs_without_a_filing_year_keep_the_id_they_were_stored_under() 
 
 
 def test_a_recorded_filing_year_joins_the_revision_identity() -> None:
-    assert _revision_id(2025) != _PINNED_ID_WITHOUT_FILING_YEAR
-    assert _revision_id(2025) != _revision_id(2026)
-    assert _revision_id(2025) == _revision_id(2025)
+    assert _revision_id(_SOURCE_YEAR) != _PINNED_ID_WITHOUT_FILING_YEAR
+    assert _revision_id(_SOURCE_YEAR) != _revision_id(_OTHER_SOURCE_YEAR)
+    assert _revision_id(_SOURCE_YEAR) == _revision_id(_SOURCE_YEAR)
 
 
 def test_a_revision_persisted_before_the_field_existed_round_trips_with_its_id() -> None:
@@ -115,10 +118,10 @@ def test_a_revision_persisted_before_the_field_existed_round_trips_with_its_id()
 
 
 def test_a_revision_with_the_field_round_trips_it() -> None:
-    revision = _revision(2025)
+    revision = _revision(_SOURCE_YEAR)
 
     loaded = CalculationRevision.model_validate_json(revision.model_dump_json())
 
     assert loaded == revision
-    assert loaded.source_provenance[1].source_filing_year == 2025
+    assert loaded.source_provenance[1].source_filing_year == _SOURCE_YEAR
     assert derive_calculation_revision_id_from_revision(loaded) == revision.calculation_revision_id

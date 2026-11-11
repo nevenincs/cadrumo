@@ -63,7 +63,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.
 _CREDENTIAL_INPUT = "destroy-reaps-session-artefacts-password"
 _LABEL = "Destroy operator"
 _UNRELATED_PROFILE_ID = UUID("2b6d4c19-8e30-4a55-9c71-0d3f8a6e5417")
-_INSTANT = datetime(2026, 8, 15, 10, 15, 0, tzinfo=UTC)
+_INSTANT = datetime(1980, 8, 15, 10, 15, 0, tzinfo=UTC)
 
 
 def _close_live_login() -> None:

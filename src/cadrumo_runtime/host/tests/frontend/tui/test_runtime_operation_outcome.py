@@ -94,6 +94,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -146,7 +147,8 @@ _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _LAPSED_SESSION_ID = UUID("7cc00000-0000-4000-8000-0000000000cc")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
+_NOW = datetime(1980, 10, 4, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
 _ES_IBAN = "ES9121000418450200051332"
 _REFUSAL_CODE = "REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION"
 _REFUSAL_KEY = "errors.refused.refused_ledger_own_account_register_validation"
@@ -825,7 +827,7 @@ def _asset_revision(asset_id: str = _ASSET_ID) -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="outcome fixture allocation",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=date(_YEAR, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -840,17 +842,17 @@ def _asset_forecast(revision: ActivityAssetRevision) -> ScheduledAmortizationCha
     return schedule_charge(
         revision,
         ScheduleAuthority(
-            tax_year=2025,
+            tax_year=_YEAR,
             asset_kind=revision.asset_kind,
             method=revision.amortization.method,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=date(_YEAR + 10, 1, 1),
             authority_generation="outcome-fixture-v1",
             source_reference="outcome fixture only",
         ),
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_YEAR, 1, 1),
+        covered_until=date(_YEAR + 1, 1, 1),
         history=AssetScheduleHistory(),
         requested_free_amount=None,
     )

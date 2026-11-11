@@ -13,16 +13,19 @@ from ....application.modelo.work_form_field_vocabulary import (
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .file_flow_test_support import Repos, calculation_ports_for_test, seed_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def test_explicit_cli_bound_input_survives_saved_revision_and_form_context(
     repos: Repos, operation: PinnedAuthorityOperation
 ) -> None:
     units, calculations, _, verification, events = repos
-    unit = seed_work_unit(units, filing_year=2025, period="4T")
+    unit = seed_work_unit(units, filing_year=_YEAR, period="4T")
     fields = ModeloCalculationInputFieldsV1(
         casilla_overrides=(
             ModeloCalculationOverride(key="05", value="355926.98"),

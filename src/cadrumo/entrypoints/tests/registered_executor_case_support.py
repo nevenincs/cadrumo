@@ -434,7 +434,7 @@ def observation() -> CensalObservation:
             referencia_catastral="1234567VK4713C0001AB",
         ),
         domicilio_notificacion=CensalObservationAddress(),
-        captured_at=datetime(2026, 8, 24, 18, tzinfo=UTC),
+        captured_at=datetime(1980, 8, 24, 18, tzinfo=UTC),
         source_url=aeat_url("sede", "/censo/consulta"),
     )
 

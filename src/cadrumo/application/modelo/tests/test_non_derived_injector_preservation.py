@@ -28,8 +28,9 @@ writes nothing at all, and the test would pass against a function that had been
 gutted.
 
 One trap worth naming, because it is invisible at the call site: the Madrid
-injector is gated on filing year 2025. Probing it at 2024 returns before writing
-anything, which reads as a broken test rather than a year gate.
+injector is gated on the one filing year the registry declares for the deduction.
+Probing it at any other year returns before writing anything, which reads as a
+broken test rather than a year gate.
 """
 
 from __future__ import annotations
@@ -40,8 +41,10 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
@@ -55,7 +58,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MARRIAGE_FULL_YEAR = "renta_taxpayer.marriage_full_year"
 _STATE_ATTRIBUTION = "tax_residence.state_attribution_ratio"
-_MADRID_YEAR = 2025
+_MARRIAGE_EXERCISE = newest_authored_edition("100")
 
 #: Values no branch of these injectors can produce. The marriage flag is 0 or 1,
 #: the attribution ratio is 1 or 0, and the Madrid count is a non-negative
@@ -67,8 +70,16 @@ _UNREACHABLE_RATIO = Decimal("0.5")
 _UNREACHABLE_COUNT = Decimal("42")
 
 
+def _madrid_year(operation: PinnedAuthorityOperation) -> int:
+    """The one filing year the registry declares the Madrid nacimiento/adopcion deduccion for."""
+    coordinate = date(filing_year_envelope().horizon, 12, 31)
+    return FamilyFactResolutionContext(authority=operation, filing_period=coordinate, devengo_date=coordinate).integer(
+        "madrid-nacimiento-adopcion-applicability"
+    )
+
+
 def _married_profile() -> dict[str, Any]:
-    return {"renta_taxpayer.marriage_date": date(2024, 6, 1)}
+    return {"renta_taxpayer.marriage_date": date(_MARRIAGE_EXERCISE, 6, 1)}
 
 
 def _common_regime_profile() -> dict[str, Any]:
@@ -82,7 +93,7 @@ def _common_regime_profile() -> dict[str, Any]:
 
 def test_marriage_facts_preserve_a_stored_value() -> None:
     seeded: dict[str, Any] = {**_married_profile(), _MARRIAGE_FULL_YEAR: _UNREACHABLE_FLAG}
-    inject_derived_marriage_facts(seeded, 2024)
+    inject_derived_marriage_facts(seeded, _MARRIAGE_EXERCISE)
 
     assert seeded[_MARRIAGE_FULL_YEAR] == _UNREACHABLE_FLAG
 
@@ -90,7 +101,7 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
     # absent, and writes something DIFFERENT, so the survival above is
     # deference rather than the injector doing nothing.
     computed: dict[str, Any] = _married_profile()
-    inject_derived_marriage_facts(computed, 2024)
+    inject_derived_marriage_facts(computed, _MARRIAGE_EXERCISE)
     assert _MARRIAGE_FULL_YEAR in computed
     assert computed[_MARRIAGE_FULL_YEAR] != _UNREACHABLE_FLAG
 
@@ -128,12 +139,13 @@ def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
 def test_madrid_count_preserves_a_stored_value_for_a_non_madrid_filer() -> None:
     """Outside Madrid the injector only defaults, so a stored value survives."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        madrid_year = _madrid_year(_authority_operation_for_test)
         seeded: dict[str, Any] = {
             "tax_residence.ccaa": "cataluna",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
         inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+            seeded, madrid_year, authored_year=madrid_year, operation=_authority_operation_for_test
         )
 
         assert seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] == _UNREACHABLE_COUNT
@@ -148,16 +160,17 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
     assertion above cannot be read as "this key is never computed".
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        madrid_year = _madrid_year(_authority_operation_for_test)
         seeded: dict[str, Any] = {
             "tax_residence.ccaa": "madrid",
             "renta_taxpayer.marital_status": "1",
             "renta_filing.declaration_type": "1",
-            "renta_family.descendiente.0.birth_date": f"{_MADRID_YEAR}-03-01",
+            "renta_family.descendiente.0.birth_date": f"{madrid_year}-03-01",
             "renta_family.descendiente.0.convivencia": "true",
             _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
         }
         inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+            seeded, madrid_year, authored_year=madrid_year, operation=_authority_operation_for_test
         )
 
         resolved = seeded[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY]
@@ -169,6 +182,7 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
 def test_unidad_familiar_base_preserves_a_stored_value() -> None:
     """The sibling Madrid key is default-only and never overwritten."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        madrid_year = _madrid_year(_authority_operation_for_test)
         determinable_madrid: dict[str, Any] = {
             "tax_residence.ccaa": "madrid",
             "renta_taxpayer.marital_status": "1",
@@ -176,7 +190,7 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
         }
         seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
         inject_derived_autonomic_deduccion_facts(
-            seeded, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+            seeded, madrid_year, authored_year=madrid_year, operation=_authority_operation_for_test
         )
 
         assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
@@ -187,7 +201,7 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
         # the injector never touching the key at all.
         computed: dict[str, Any] = dict(determinable_madrid)
         inject_derived_autonomic_deduccion_facts(
-            computed, _MADRID_YEAR, authored_year=_MADRID_YEAR, operation=_authority_operation_for_test
+            computed, madrid_year, authored_year=madrid_year, operation=_authority_operation_for_test
         )
         assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
         assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT

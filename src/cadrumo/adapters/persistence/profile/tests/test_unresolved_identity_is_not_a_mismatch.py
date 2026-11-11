@@ -32,6 +32,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -50,9 +51,9 @@ _BUCKET_ID = "39039039-0390-4390-8390-390390390391"
 _OWNER_NIF = "X0001500M"
 _OTHER_NIF = "B12345678"
 _CSV = "JUSTIDENTITY1T"
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
-_CLOCK = datetime(2025, 4, 15, 9, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR, 4, 15, 9, 0, tzinfo=UTC)
 
 
 def _persist_justificante() -> None:

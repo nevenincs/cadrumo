@@ -29,6 +29,7 @@ from ....application.modelo.filing_chain_reconciliation import FilingReconciliat
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_commands as handler
 from .. import operation_filed_bulk as bridge
 from .. import operation_profile_operation as profile_operation
@@ -36,6 +37,9 @@ from ..app_live_filed_results import FiledCaptureResult
 from .filed_capture_projection_support import confirmed_reconciliation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_FROM_YEAR, _MID_YEAR, _YEAR = filing_year_envelope().years[-3:]
+_BEFORE_YEAR = _FROM_YEAR - 1
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "c" * 64
@@ -76,23 +80,23 @@ def _pair(
 def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
     persisted = not dry_run
     reconciliation_rows = (
-        () if dry_run else (confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=2025, period="1T"),)
+        () if dry_run else (confirmed_reconciliation(bucket_id=str(_PROFILE), filing_year=_YEAR, period="1T"),)
     )
     return FiledBulkCapturePublicResultV1(
         output_root=str(_OUTPUT_ROOT),
         modelos=("303", "390"),
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         dry_run=dry_run,
         captured_count=1 if persisted else 0,
         reached_count=3,
         pair_outcomes=(
-            _pair("303", 2025, rows=2, reached=2, captured=1 if persisted else 0),
-            _pair("303", 2024),
-            _pair("303", 2023),
-            _pair("390", 2025),
-            _pair("390", 2024, rows=1, reached=1),
-            _pair("390", 2023, attempted=False, completed=False),
+            _pair("303", _YEAR, rows=2, reached=2, captured=1 if persisted else 0),
+            _pair("303", _MID_YEAR),
+            _pair("303", _FROM_YEAR),
+            _pair("390", _YEAR),
+            _pair("390", _MID_YEAR, rows=1, reached=1),
+            _pair("390", _FROM_YEAR, attempted=False, completed=False),
         ),
         failed_count=1,
         sync_run_ref=_SYNC_RUN_REF if persisted else None,
@@ -112,7 +116,7 @@ def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
         failures=(
             FiledBulkFailureV1(
                 modelo="390",
-                year=2024,
+                year=_MID_YEAR,
                 period="4T",
                 expediente_id="20240000000000001X",
                 error_type="RegisterReadError",
@@ -122,7 +126,7 @@ def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
         skipped_casillas=(
             FiledBulkSkippedCasillaV1(
                 modelo="303",
-                year=2025,
+                year=_YEAR,
                 period="1T",
                 expediente_id="20250000000000001A",
                 casilla_id="casilla.address",
@@ -174,8 +178,8 @@ def _read(*, dry_run: bool = False) -> bridge.FiledBulkCaptureRead:
     return bridge.read_filed_bulk_capture_for_cli(
         cast(typer.Context, cast(object, None)),
         output_root=_OUTPUT_ROOT,
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         modelos=("303", "390"),
         limit=7,
         dry_run=dry_run,
@@ -197,14 +201,14 @@ def test_bulk_capture_submits_exact_profile_and_preserves_report_lanes(monkeypat
     assert report.sync_run_ref == _SYNC_RUN_REF
     assert report.captured_count == 1
     assert report.failed_count == 1
-    assert report.failures[0].period == Period.from_year_and_code(2024, "4T")
-    assert report.skipped_casillas[0].period == Period.from_year_and_code(2025, "1T")
+    assert report.failures[0].period == Period.from_year_and_code(_MID_YEAR, "4T")
+    assert report.skipped_casillas[0].period == Period.from_year_and_code(_YEAR, "1T")
     assert report.skipped_casillas[0].reason == "non_numeric"
     assert report.evidence_notices[0].context == {"reason": "capture"}
     assert report.recapture_notices[0].code == "live.filed.recapture_test"
     reconciliation = report.reconciliation_results[0]
     assert reconciliation.outcome is FilingReconciliationOutcome.CONFIRMED
-    assert reconciliation.period == Period.from_year_and_code(2025, "1T")
+    assert reconciliation.period == Period.from_year_and_code(_YEAR, "1T")
     assert reconciliation.notices[0].context == {"reason": "receipt"}
     assert profile_bindings == [_PROFILE]
     assert len(submissions) == 1
@@ -212,8 +216,8 @@ def test_bulk_capture_submits_exact_profile_and_preserves_report_lanes(monkeypat
     assert request == FiledBulkCaptureRequest(
         profile_id=_PROFILE,
         output_root=_OUTPUT_ROOT,
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         modelos=("303", "390"),
         limit=7,
         dry_run=False,
@@ -229,8 +233,8 @@ def test_bulk_capture_without_a_named_root_leaves_the_default_to_the_worker(monk
     read = bridge.read_filed_bulk_capture_for_cli(
         cast(typer.Context, cast(object, None)),
         output_root=None,
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         modelos=("303", "390"),
         limit=7,
         dry_run=False,
@@ -281,20 +285,20 @@ def test_bulk_capture_rejects_mismatched_receipt_or_scope(monkeypatch: pytest.Mo
     elif mismatch == "refusal_code":
         refusal_code = "unexpected_refusal"
     elif mismatch == "scope":
-        projection = projection.model_copy(update={"year_to": 2024})
+        projection = projection.model_copy(update={"year_to": _MID_YEAR})
     elif mismatch == "modelos":
         projection = projection.model_copy(update={"modelos": ("303",)})
     elif mismatch == "dry_run":
         projection = _projection(dry_run=True)
         effect = OperationEffect.NONE
     elif mismatch == "failure_scope":
-        failure = projection.failures[0].model_copy(update={"year": 2022})
+        failure = projection.failures[0].model_copy(update={"year": _BEFORE_YEAR})
         projection = projection.model_copy(update={"failures": (failure,)})
     elif mismatch == "skipped_scope":
         skipped = projection.skipped_casillas[0].model_copy(update={"modelo": "721"})
         projection = projection.model_copy(update={"skipped_casillas": (skipped,)})
     else:
-        row = projection.reconciliations[0].model_copy(update={"filing_year": 2022})
+        row = projection.reconciliations[0].model_copy(update={"filing_year": _BEFORE_YEAR})
         projection = projection.model_copy(update={"reconciliations": (row,)})
     _bind(monkeypatch, projection, effect=effect, condition=condition, refusal_code=refusal_code)
 
@@ -340,8 +344,8 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
         cast(typer.Context, cast(object, None)),
         selected_modelos=("303", "390"),
         year=None,
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         output_root=_OUTPUT_ROOT,
         limit=7,
         dry_run=False,
@@ -349,8 +353,8 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
 
     assert bridge_calls == [
         {
-            "year_from": 2023,
-            "year_to": 2025,
+            "year_from": _FROM_YEAR,
+            "year_to": _YEAR,
             "output_root": _OUTPUT_ROOT,
             "modelos": ("303", "390"),
             "limit": 7,
@@ -398,8 +402,8 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
         "modelo": None,
         "year": None,
         "modelos": ["303", "390"],
-        "year_from": 2023,
-        "year_to": 2025,
+        "year_from": _FROM_YEAR,
+        "year_to": _YEAR,
         "captured_count": 1,
         "reached_count": 3,
         "failed_count": 1,
@@ -421,8 +425,8 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
                 "outcome": "confirmed",
                 "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
                 "modelo": "303",
-                "filing_year": 2025,
-                "period": {"filing_year": 2025, "code": "1T"},
+                "filing_year": _YEAR,
+                "period": {"filing_year": _YEAR, "code": "1T"},
                 "member_nif": "X1234567A",
                 "filing_record_id": "record-1",
                 "affected_filing_record_ids": ["record-2", "record-3"],
@@ -434,7 +438,7 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
         "failures": [
             {
                 "modelo": "390",
-                "year": 2024,
+                "year": _MID_YEAR,
                 "period": "4T",
                 "expediente_id": "20240000000000001X",
                 "error_type": "RegisterReadError",
@@ -443,12 +447,12 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
         ],
     }
     assert [(pair["modelo"], pair["year"]) for pair in payload["pair_outcomes"]] == [
-        ("303", 2025),
-        ("303", 2024),
-        ("303", 2023),
-        ("390", 2025),
-        ("390", 2024),
-        ("390", 2023),
+        ("303", _YEAR),
+        ("303", _MID_YEAR),
+        ("303", _FROM_YEAR),
+        ("390", _YEAR),
+        ("390", _MID_YEAR),
+        ("390", _FROM_YEAR),
     ]
     assert result.reached_count == 3
     assert result.pair_outcomes == list(read.report.pair_outcomes)
@@ -486,8 +490,8 @@ def test_bulk_preview_cli_emits_reached_without_persisted_evidence(monkeypatch: 
         cast(typer.Context, cast(object, None)),
         selected_modelos=("303", "390"),
         year=None,
-        year_from=2023,
-        year_to=2025,
+        year_from=_FROM_YEAR,
+        year_to=_YEAR,
         output_root=_OUTPUT_ROOT,
         limit=7,
         dry_run=True,

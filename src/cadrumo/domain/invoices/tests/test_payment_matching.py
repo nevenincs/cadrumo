@@ -36,7 +36,15 @@ from ..service import (
     invoice_settlement,
     suggest_reconciliations,
 )
-from .payment_matching_support import build_invoice, build_movement, day, movement_names, recorded_scenario
+from .payment_matching_support import (
+    YEAR,
+    build_invoice,
+    build_movement,
+    day,
+    iso_day,
+    movement_names,
+    recorded_scenario,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -88,9 +96,9 @@ def test_already_linked_invoices_and_movements_are_never_suggested() -> None:
 
 
 def test_the_number_in_the_description_outranks_the_gap_the_gap_the_counterparty_the_counterparty_the_amount() -> None:
-    row = build_movement("m", on="2026-10-10", description="PAGO FRA PT-0412 TRAZO", counterparty="Otra Empresa")
-    numbered = build_invoice("PT-0412", issued="2026-08-01")
-    close = build_invoice("PT-0999", issued="2026-10-09", party="Otra Empresa SL")
+    row = build_movement("m", on=iso_day(10, 10), description="PAGO FRA PT-0412 TRAZO", counterparty="Otra Empresa")
+    numbered = build_invoice("PT-0412", issued=iso_day(8, 1))
+    close = build_invoice("PT-0999", issued=iso_day(10, 9), party="Otra Empresa SL")
     found = suggest_payments([row], [close, numbered])
     assert [one.pair.invoice.invoice_number for one in found] == ["PT-0412"]
     best = found[0]
@@ -100,48 +108,48 @@ def test_the_number_in_the_description_outranks_the_gap_the_gap_the_counterparty
     assert best.others[0].counterparty is True
 
     # Without a number the shorter gap wins over the counterparty.
-    plain = build_movement("p", on="2026-10-10", counterparty="Papeleria Trazo")
-    same_party = build_invoice("A-1", issued="2026-09-01")
-    nearer = build_invoice("B-1", issued="2026-10-08", party="Nadie SA")
+    plain = build_movement("p", on=iso_day(10, 10), counterparty="Papeleria Trazo")
+    same_party = build_invoice("A-1", issued=iso_day(9, 1))
+    nearer = build_invoice("B-1", issued=iso_day(10, 8), party="Nadie SA")
     assert suggest_payments([plain], [same_party, nearer])[0].pair.invoice.invoice_number == "B-1"
 
     # With equal numbers and gaps, the counterparty wins over the amount.
-    twin_row = build_movement("t", on="2026-10-10", amount="36.30", counterparty="Papeleria Trazo")
-    right_party = build_invoice("C-1", issued="2026-10-08")
-    other_party = build_invoice("C-2", issued="2026-10-08", party="Nadie SA")
+    twin_row = build_movement("t", on=iso_day(10, 10), amount="36.30", counterparty="Papeleria Trazo")
+    right_party = build_invoice("C-1", issued=iso_day(10, 8))
+    other_party = build_invoice("C-2", issued=iso_day(10, 8), party="Nadie SA")
     assert suggest_payments([twin_row], [other_party, right_party])[0].pair.invoice.invoice_number == "C-1"
 
     # With nothing else apart, the nearer amount wins.
-    cents = build_movement("c", on="2026-10-10", amount="36.31")
-    exact = build_invoice("D-1", issued="2026-10-08")
-    off = build_invoice("D-2", issued="2026-10-08", base="30.01")
+    cents = build_movement("c", on=iso_day(10, 10), amount="36.31")
+    exact = build_invoice("D-1", issued=iso_day(10, 8))
+    off = build_invoice("D-2", issued=iso_day(10, 8), base="30.01")
     assert off.grand_total == Decimal("36.31") and exact.grand_total == Decimal("36.30")
     assert suggest_payments([cents], [exact, off])[0].pair.invoice.invoice_number == "D-2"
 
 
 def test_a_payment_up_to_three_days_before_the_invoice_ranks_by_its_gap_and_earlier_ranks_last() -> None:
     assert EARLY_RANK_GAP_DAYS == 3
-    row = build_movement("p", on="2026-10-10")
+    row = build_movement("p", on=iso_day(10, 10))
     # Gaps: -3 (ranks 3), -4 (ranks after everything made after issue), +9 (ranks 9).
-    three_before = build_invoice("E-3", issued="2026-10-13")
-    four_before = build_invoice("E-4", issued="2026-10-14")
-    nine_after = build_invoice("E-9", issued="2026-10-01")
+    three_before = build_invoice("E-3", issued=iso_day(10, 13))
+    four_before = build_invoice("E-4", issued=iso_day(10, 14))
+    nine_after = build_invoice("E-9", issued=iso_day(10, 1))
     assert suggest_payments([row], [four_before, nine_after])[0].pair.invoice.invoice_number == "E-9"
     assert suggest_payments([row], [nine_after, three_before])[0].pair.invoice.invoice_number == "E-3"
     assert suggest_payments([row], [four_before, three_before])[0].pair.gap == -3
 
 
 def test_each_invoice_is_offered_one_movement_and_each_movement_gets_one_invoice() -> None:
-    first = build_movement("first", on="2026-10-03", counterparty="Papeleria Trazo")
-    second = build_movement("second", on="2026-10-20", counterparty="Papeleria Trazo")
-    only = build_invoice("ONE-1", issued="2026-10-02")
+    first = build_movement("first", on=iso_day(10, 3), counterparty="Papeleria Trazo")
+    second = build_movement("second", on=iso_day(10, 20), counterparty="Papeleria Trazo")
+    only = build_invoice("ONE-1", issued=iso_day(10, 2))
     found = suggest_payments([first, second], [only])
     assert _suggested(found, movement_names(first, second)) == [("first", "ONE-1")]
     assert [other.invoice.invoice_number for other in found[0].others] == []
 
 
 def test_equal_candidates_are_ambiguous_tied_invoices_for_one_movement_and_tied_movements_for_one_invoice() -> None:
-    row = build_movement("row", on="2026-10-06", counterparty="Arroyo")
+    row = build_movement("row", on=iso_day(10, 6), counterparty="Arroyo")
     left = build_invoice("AA-118", party="Arroyo Asesores")
     right = build_invoice("AA-119", party="Arroyo Asesores")
     found = suggest_payments([row], [left, right])
@@ -151,9 +159,9 @@ def test_equal_candidates_are_ambiguous_tied_invoices_for_one_movement_and_tied_
     assert found[0].pair.invoice.invoice_number == lower.invoice_number
     assert [tie.invoice.invoice_number for tie in found[0].ties] == [higher.invoice_number]
 
-    a = build_movement("a", on="2026-10-12", direction="INCOMING")
-    b = build_movement("b", on="2026-10-12", direction="INCOMING")
-    issued = build_invoice("N-5", kind="issued", issued="2026-10-09")
+    a = build_movement("a", on=iso_day(10, 12), direction="INCOMING")
+    b = build_movement("b", on=iso_day(10, 12), direction="INCOMING")
+    issued = build_invoice("N-5", kind="issued", issued=iso_day(10, 9))
     names = movement_names(a, b)
     both = suggest_payments([a, b], [issued])
     assert sorted(_suggested(both, names)) == [("a", "N-5"), ("b", "N-5")]
@@ -164,10 +172,10 @@ def test_equal_candidates_are_ambiguous_tied_invoices_for_one_movement_and_tied_
 
 
 def test_staging_a_link_withdraws_every_suggestion_that_uses_the_same_invoice_or_movement() -> None:
-    a = build_movement("a", on="2026-10-12", direction="INCOMING")
-    b = build_movement("b", on="2026-10-12", direction="INCOMING")
-    issued = build_invoice("N-5", kind="issued", issued="2026-10-09")
-    other = build_invoice("N-6", kind="issued", issued="2026-09-01")
+    a = build_movement("a", on=iso_day(10, 12), direction="INCOMING")
+    b = build_movement("b", on=iso_day(10, 12), direction="INCOMING")
+    issued = build_invoice("N-5", kind="issued", issued=iso_day(10, 9))
+    other = build_invoice("N-6", kind="issued", issued=iso_day(9, 1))
     found = suggest_payments([a, b], [issued, other], staged={a.transaction_id: issued.invoice_id})
     # The rival takes the other invoice; the staged one is offered to no one.
     assert _suggested(found, movement_names(a, b)) == [("b", "N-6")]
@@ -175,8 +183,8 @@ def test_staging_a_link_withdraws_every_suggestion_that_uses_the_same_invoice_or
 
 
 def test_suggestions_run_newest_movement_first() -> None:
-    old = build_movement("old", on="2026-10-02")
-    new = build_movement("new", on="2026-10-20", amount="12.10")
+    old = build_movement("old", on=iso_day(10, 2))
+    new = build_movement("new", on=iso_day(10, 20), amount="12.10")
     small = build_invoice("S-1", base="10.00")
     big = build_invoice("S-2")
     found = suggest_payments([old, new], [small, big])
@@ -184,8 +192,8 @@ def test_suggestions_run_newest_movement_first() -> None:
 
 
 def test_a_value_date_is_the_day_a_movement_counts_for() -> None:
-    booked = build_movement("v", on="2026-10-02")
-    valued = booked.model_copy(update={"raw": booked.raw.model_copy(update={"value_date": date(2026, 10, 9)})})
+    booked = build_movement("v", on=iso_day(10, 2))
+    valued = booked.model_copy(update={"raw": booked.raw.model_copy(update={"value_date": date(YEAR, 10, 9)})})
     assert suggest_payments([valued], [build_invoice("V-1")])[0].pair.gap == 8
 
 
@@ -206,10 +214,10 @@ def test_a_name_inside_the_other_is_the_same_party_as_the_link_suggestion_reads_
 
 def test_the_picker_sorts_invoices_by_whether_they_settle_and_shows_what_is_staged_or_linked() -> None:
     row = build_movement("row")
-    settles_it = build_invoice("S-1", issued="2026-10-04")
-    elsewhere = build_invoice("S-2", issued="2026-10-03", linked=("c" * 64,))
-    taken_by = build_invoice("S-3", issued="2026-10-02")
-    different = build_invoice("O-1", issued="2026-10-05", base="81.82")
+    settles_it = build_invoice("S-1", issued=iso_day(10, 4))
+    elsewhere = build_invoice("S-2", issued=iso_day(10, 3), linked=("c" * 64,))
+    taken_by = build_invoice("S-3", issued=iso_day(10, 2))
+    different = build_invoice("O-1", issued=iso_day(10, 5), base="81.82")
     issued = build_invoice("I-1", kind="issued")
     choices = invoice_choices(
         row,
@@ -232,11 +240,11 @@ def test_the_picker_sorts_invoices_by_whether_they_settle_and_shows_what_is_stag
 
 def test_an_invoice_no_movement_settles_is_offered_the_open_movements_near_its_day() -> None:
     assert PICK_HORIZON_DAYS == 10
-    ticket = build_invoice("T-1", issued="2026-10-15", base="48.26")
+    ticket = build_invoice("T-1", issued=iso_day(10, 15), base="48.26")
     assert ticket.grand_total == Decimal("58.39")
 
     def row(name: str, offset: int, amount: str = "58.39", **facts: Any) -> Transaction:
-        return build_movement(name, amount=amount, on=day(offset, date(2026, 10, 15)), **facts)
+        return build_movement(name, amount=amount, on=day(offset, date(YEAR, 10, 15)), **facts)
 
     near = row("near", 2, "58.40")
     exact = row("exact", PICK_HORIZON_DAYS)
@@ -264,10 +272,10 @@ def test_an_invoice_no_movement_settles_is_offered_the_open_movements_near_its_d
 
 
 def test_movements_that_settle_the_same_are_offered_nearest_amount_then_nearest_day() -> None:
-    ticket = build_invoice("T-2", issued="2026-10-15", base="48.26")
-    exact_far = build_movement("exact_far", amount="58.39", on="2026-10-25")
-    cent_near = build_movement("cent_near", amount="58.40", on="2026-10-16")
-    exact_near = build_movement("exact_near", amount="58.39", on="2026-10-16")
+    ticket = build_invoice("T-2", issued=iso_day(10, 15), base="48.26")
+    exact_far = build_movement("exact_far", amount="58.39", on=iso_day(10, 25))
+    cent_near = build_movement("cent_near", amount="58.40", on=iso_day(10, 16))
+    exact_near = build_movement("exact_near", amount="58.39", on=iso_day(10, 16))
     names = movement_names(exact_far, cent_near, exact_near)
     offered = movement_choices(ticket, [exact_far, cent_near, exact_near])
     assert [names[c.transaction.transaction_id] for c in offered] == ["exact_near", "exact_far", "cent_near"]
@@ -287,9 +295,9 @@ def test_what_the_window_may_offer_is_what_the_link_writer_takes() -> None:
 
 def test_the_suggestions_agree_with_the_link_suggestion_on_amount_and_counterparty() -> None:
     invoices = [
-        build_invoice("R-1", issued="2026-10-01"),
-        build_invoice("R-2", issued="2026-10-05", base="100.00", party="Otra Empresa SL"),
-        build_invoice("R-3", kind="issued", issued="2026-10-06", base="1500.00", retention="225.00"),
+        build_invoice("R-1", issued=iso_day(10, 1)),
+        build_invoice("R-2", issued=iso_day(10, 5), base="100.00", party="Otra Empresa SL"),
+        build_invoice("R-3", kind="issued", issued=iso_day(10, 6), base="1500.00", retention="225.00"),
     ]
     rows = [
         build_movement("m1", amount="36.30", counterparty="papeleria trazo sl"),

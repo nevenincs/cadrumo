@@ -524,7 +524,7 @@ def _large_profile_status() -> ProfileStatus:
             credential_authenticated=True,
             profile_id=uuid4(),
             session_id=uuid4(),
-            session_expires_at=datetime(2026, 10, 1, tzinfo=UTC),
+            session_expires_at=datetime(1980, 10, 1, tzinfo=UTC),
             grant_state=None,
             grant_expires_at=None,
             grant_valid=False,
@@ -602,7 +602,7 @@ def _large_session_inventory() -> SessionInventoryReply:
                 kind=SessionKind.HUMAN,
                 state=SessionState.ACTIVE,
                 scope=_large_scope(),
-                expires_at=datetime(2026, 10, 1, tzinfo=UTC),
+                expires_at=datetime(1980, 10, 1, tzinfo=UTC),
             ),
         ),
     )

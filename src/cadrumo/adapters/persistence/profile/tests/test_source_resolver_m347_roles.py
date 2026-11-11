@@ -14,6 +14,11 @@ from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole, TravelAgencyMediationType
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
@@ -43,6 +48,11 @@ from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+# The design Modelo 347 used before its newest authored edition, and the newest.
+_M347_OLD_DESIGN = authored_revisions("347")[-2].id
+_M347_CURRENT_DESIGN = revision_covering("347", _YEAR).id
+
 
 # ---------------------------------------------------------------------------
 
@@ -57,7 +67,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             bucket_id=bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="CAP-ES-001",
-            issued_at=date(2026, 2, 3),
+            issued_at=date(_YEAR, 2, 3),
             counterparty_tax_id="B00015016",
             counterparty_name="Cliente Domestico SL",
             counterparty_country="ES",
@@ -69,7 +79,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             bucket_id=bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="CAP-DE-001",
-            issued_at=date(2026, 2, 10),
+            issued_at=date(_YEAR, 2, 10),
             counterparty_tax_id="DE345678901",
             counterparty_name="Kunde GmbH",
             counterparty_country="DE",
@@ -83,7 +93,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             bucket_id=bucket_id,
             kind=InvoiceKind.RECEIVED,
             invoice_number="CAP-IT-001",
-            issued_at=date(2026, 3, 5),
+            issued_at=date(_YEAR, 3, 5),
             counterparty_tax_id="IT12345678901",
             counterparty_name="Servizi SRL",
             counterparty_country="IT",
@@ -146,9 +156,9 @@ def test_capability_parity_m347_excludes_the_intracommunity_operations(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="347",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "0A"),
-            revision=modelo_revision("347", "2011-2024"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision=modelo_revision("347", _M347_OLD_DESIGN),
         ),
     )
 
@@ -173,7 +183,7 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-US-2026-001",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(_YEAR, 4, 1),
         counterparty_tax_id="US000000001",
         counterparty_name="Acme Imports Inc",
         counterparty_country="US",
@@ -187,9 +197,9 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
         CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "0A"),
-            revision=modelo_revision("347", "2011-2024"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision=modelo_revision("347", _M347_OLD_DESIGN),
         ),
     )
 
@@ -219,7 +229,7 @@ def test_m347_excludes_the_imports_and_exports_of_goods(
         bucket_id=None,
         kind=kind,
         invoice_number=f"M347-GOODS-{kind.value.upper()}-2026-001",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(_YEAR, 4, 1),
         counterparty_tax_id="US000000001",
         counterparty_name="Acme Imports Inc",
         counterparty_country="US",
@@ -243,7 +253,7 @@ def test_m347_declares_an_operation_assimilated_to_an_export_and_discloses_the_o
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ASIMILADA-2026-001",
-        issued_at=date(2026, 4, 1),
+        issued_at=date(_YEAR, 4, 1),
         counterparty_tax_id="US000000001",
         counterparty_name="Acme Shipping Inc",
         counterparty_country="US",
@@ -265,7 +275,7 @@ def _withheld_invoice(bucket_id: str, *, kind: InvoiceKind, invoice_number: str)
         bucket_id=bucket_id,
         kind=kind,
         invoice_number=invoice_number,
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         counterparty_tax_id="B00015016",
         counterparty_name="Profesional Retenido SL",
         base_total=Decimal("3500.00"),
@@ -335,15 +345,15 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     mediated_sale = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-AGENCY-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="B00015016",
         counterparty_name="Cliente Agencia SL",
         counterparty_country="ES",
@@ -357,7 +367,7 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ORDINARY-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="B00015016",
         counterparty_name="Cliente Agencia SL",
         counterparty_country="ES",
@@ -387,15 +397,15 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     air_transport_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AIR-2026-001",
-        issued_at=date(2026, 5, 2),
+        issued_at=date(_YEAR, 5, 2),
         counterparty_tax_id="B00010140",
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
@@ -409,7 +419,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-HOTEL-2026-001",
-        issued_at=date(2026, 5, 2),
+        issued_at=date(_YEAR, 5, 2),
         counterparty_tax_id="B00010140",
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
@@ -443,7 +453,7 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-ABSENT-ROLE-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor SL",
         counterparty_country="ES",
@@ -455,9 +465,9 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
         context=CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "0A"),
-            revision=modelo_revision("347", "2025-y-siguientes"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision=modelo_revision("347", _M347_CURRENT_DESIGN),
         ),
     )
     # The one advisory left is the record gap every Spanish declarado carries
@@ -502,7 +512,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ROLE-COLLECTION-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -518,7 +528,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ROLE-ORDINARY-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -530,9 +540,9 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         context=CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "0A"),
-            revision=modelo_revision("347", "2025-y-siguientes"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
+            revision=modelo_revision("347", _M347_CURRENT_DESIGN),
         ),
     )
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
@@ -576,16 +586,16 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
 
     collection_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -602,7 +612,7 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ORDINARIA-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -635,15 +645,15 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     collection_shaped_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-002",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -661,7 +671,7 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-003",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Cliente Pagador SL",
         counterparty_country="ES",
@@ -701,16 +711,16 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
 
     subvencion_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-SUBVENCION-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
@@ -722,7 +732,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-PAGO-ORDINARIO-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
@@ -739,7 +749,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         f"collectible_invoice:{ordinary_invoice.invoice_id}",
     }
     # The same counterparty under two claves is two declarado records, and the type 1
-    # count is the number of records (designs 2011 and 2025, positions 136-144).
+    # count is the number of records (old and current designs, positions 136-144).
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("7000.00")
 
@@ -751,15 +761,15 @@ def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     subvencion_shaped_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-SUBVENCION-2026-002",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Beneficiario Subvencion SL",
         counterparty_country="ES",
@@ -798,16 +808,16 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
 
     outside_activity_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AL-MARGEN-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
@@ -819,7 +829,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-DENTRO-ACTIVIDAD-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
@@ -835,7 +845,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         f"payable_invoice:{within_activity_purchase.invoice_id}",
     }
     # The same counterparty under two claves is two declarado records, and the type 1
-    # count is the number of records (designs 2011 and 2025, positions 136-144).
+    # count is the number of records (old and current designs, positions 136-144).
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("7000.00")
 
@@ -847,15 +857,15 @@ def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     outside_activity_shaped_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AL-MARGEN-2026-002",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor Al Margen SL",
         counterparty_country="ES",
@@ -881,15 +891,15 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     unrelated_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-SIN-ROL-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor SL",
         counterparty_country="ES",
@@ -918,15 +928,15 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2025-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_CURRENT_DESIGN),
     )
     undeclared_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-SIN-DECLARAR-2026-001",
-        issued_at=date(2026, 5, 1),
+        issued_at=date(_YEAR, 5, 1),
         counterparty_tax_id="C0001502D",
         counterparty_name="Proveedor SL",
         counterparty_country="ES",

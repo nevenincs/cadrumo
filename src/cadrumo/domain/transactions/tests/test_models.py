@@ -15,6 +15,7 @@ from ....core.concepto_ingreso import ConceptoIngreso
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
 from ..date_partition import OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary
@@ -31,6 +32,9 @@ from ..models import Transaction, derive_transaction_id
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..volumen_ingresos import counts_toward_volumen_de_ingresos
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -44,7 +48,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def _sample_raw(
     *,
     provider_id: str = "provider-row-1",
-    value_date: date | None = date(2026, 4, 10),
+    value_date: date | None = date(_YEAR, 4, 10),
     amount: Decimal = Decimal("123.45"),
     currency: str = "EUR",
     description: str = "Office rent",
@@ -53,7 +57,7 @@ def _sample_raw(
 ) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
         value_date=value_date,
         amount=amount,
         currency=currency,
@@ -64,7 +68,7 @@ def _sample_raw(
             source_sha256="a" * 64,
             source_row_index=source_row_index,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": description},
@@ -78,7 +82,7 @@ def test_provenance_source_path_is_stored_as_basename_only() -> None:
         source_sha256="b" * 64,
         source_row_index=1,
         source_format=SourceFormat.CSV,
-        ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
         provider_name="CSV provider",
     )
     assert provenance.source_path == Path("bank-2026.csv")
@@ -99,7 +103,7 @@ def test_provenance_basename_survives_rehydration_unchanged() -> None:
         source_sha256="c" * 64,
         source_row_index=3,
         source_format=SourceFormat.CSV,
-        ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+        ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
         provider_name="CSV provider",
     )
     rehydrated = RawProvenance.model_validate_json(original.model_dump_json())
@@ -345,8 +349,8 @@ def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> N
 
     assert restored != original
     assert restored.concepto_ingreso is None
-    assert counts_toward_volumen_de_ingresos(restored.concepto_ingreso, effective_date=date(2026, 4, 1))
-    assert not counts_toward_volumen_de_ingresos(original.concepto_ingreso, effective_date=date(2026, 4, 1))
+    assert counts_toward_volumen_de_ingresos(restored.concepto_ingreso, effective_date=date(_YEAR, 4, 1))
+    assert not counts_toward_volumen_de_ingresos(original.concepto_ingreso, effective_date=date(_YEAR, 4, 1))
 
 
 def test_concepto_ingreso_rejects_a_token_outside_the_closed_set() -> None:
@@ -611,7 +615,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
                     "evidence_kind": "purchase_invoice_evidence",
                     "actor": "operator-A",
                     "source_command": "aeat app ledger add",
-                    "linked_at": datetime(2026, 4, 14, 10, 0, tzinfo=UTC),
+                    "linked_at": datetime(_YEAR, 4, 14, 10, 0, tzinfo=UTC),
                     "bucket_event_id": "c" * 64,
                 },
             ),
@@ -620,7 +624,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
                     "previous_transaction_id": "b" * 64,
                     "actor": "operator-B",
                     "source_command": "aeat app ledger update",
-                    "edited_at": datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
+                    "edited_at": datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
                     "bucket_event_id": "d" * 64,
                 },
             ),
@@ -652,7 +656,7 @@ def test_transaction_lifecycle_lineage_round_trips_through_json() -> None:
                     "state": TransactionLifecycleState.ARCHIVED,
                     "actor": "operator-A",
                     "source_command": "aeat app ledger archive",
-                    "changed_at": datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
+                    "changed_at": datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
                     "reason": "wrong account import",
                     "bucket_event_id": "e" * 64,
                 },
@@ -684,7 +688,7 @@ def test_transaction_lifecycle_lineage_rejects_noop_transition() -> None:
                         "state": TransactionLifecycleState.ACTIVE,
                         "actor": "operator-A",
                         "source_command": "aeat app ledger archive",
-                        "changed_at": datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
+                        "changed_at": datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
                     },
                 ),
             },
@@ -754,7 +758,7 @@ def test_classification_history_entry_round_trips_through_json() -> None:
     """`ClassificationHistoryEntry` must survive JSON round-trip with reserved slots."""
     entry = ClassificationHistoryEntry(
         business_classification=BusinessClassification.BUSINESS,
-        classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        classified_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC),
         classified_by="manual",
         reason="client invoice",
     )
@@ -768,13 +772,13 @@ def test_classification_history_entry_round_trips_typed_decision_provenance() ->
     """A populated typed `DecisionProvenance` must survive the JSON boundary intact."""
     entry = ClassificationHistoryEntry(
         business_classification=BusinessClassification.BUSINESS,
-        classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+        classified_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC),
         classified_by="manual",
         reason="operator override of the rule engine",
         confidence=Decimal("0.85"),
         provenance=DecisionProvenance(
             decided_by="rule:utilities-v2",
-            decided_at=datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+            decided_at=datetime(_YEAR, 4, 18, 8, 30, tzinfo=UTC),
             reason="matched recurring utilities pattern",
             confidence=Decimal("0.62"),
             manual_override=True,
@@ -793,11 +797,11 @@ def test_decision_provenance_rejects_bare_dict_payload() -> None:
     payload = json.loads(
         ClassificationHistoryEntry(
             business_classification=BusinessClassification.BUSINESS,
-            classified_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
+            classified_at=datetime(_YEAR, 4, 18, 9, 0, tzinfo=UTC),
             classified_by="manual",
             provenance=DecisionProvenance(
                 decided_by="manual",
-                decided_at=datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+                decided_at=datetime(_YEAR, 4, 18, 8, 30, tzinfo=UTC),
             ),
         ).model_dump_json()
     )
@@ -810,7 +814,7 @@ def test_decision_provenance_rejects_bare_dict_payload() -> None:
 def test_decision_provenance_preserves_non_string_key_refusal_cause() -> None:
     payload: dict[object, object] = {
         "decided_by": "manual",
-        "decided_at": datetime(2026, 4, 18, 8, 30, tzinfo=UTC),
+        "decided_at": datetime(_YEAR, 4, 18, 8, 30, tzinfo=UTC),
         1: "non-string key",
     }
 
@@ -833,8 +837,8 @@ def _ofx_sample_raw(*, provider_id: str, description: str = "Office rent") -> Ra
     """Return a sample row tagged as an OFX export of the same movement."""
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 10),
-        value_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
+        value_date=date(_YEAR, 4, 10),
         amount=Decimal("123.45"),
         currency="EUR",
         counterparty="Landlord SL",
@@ -844,7 +848,7 @@ def _ofx_sample_raw(*, provider_id: str, description: str = "Office rent") -> Ra
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.OFX,
-            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="OFX provider",
         ),
         raw_fields={"MEMO": description},
@@ -887,7 +891,7 @@ def test_import_fingerprint_distinguishes_genuinely_different_movements() -> Non
     """A different amount, date, currency, or direction produces a different fingerprint."""
     base = _sample_raw()
     other_amount = _sample_raw(amount=Decimal("999.99"))
-    other_date = _sample_raw(value_date=date(2026, 4, 11))
+    other_date = _sample_raw(value_date=date(_YEAR, 4, 11))
     other_currency = _sample_raw(currency="USD")
 
     base_fingerprint = derive_import_fingerprint(base, direction=TransactionDirection.OUTGOING)
@@ -1079,16 +1083,16 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     }
 
     index_entries = (
-        OutOfWindowTransactionIndexEntry(transaction_id="a" * 64, filing_date=date(2026, 1, 5)),
-        OutOfWindowTransactionIndexEntry(transaction_id="b" * 64, filing_date=date(2026, 3, 20)),
-        OutOfWindowTransactionIndexEntry(transaction_id="c" * 64, filing_date=date(2026, 2, 1)),
+        OutOfWindowTransactionIndexEntry(transaction_id="a" * 64, filing_date=date(_YEAR, 1, 5)),
+        OutOfWindowTransactionIndexEntry(transaction_id="b" * 64, filing_date=date(_YEAR, 3, 20)),
+        OutOfWindowTransactionIndexEntry(transaction_id="c" * 64, filing_date=date(_YEAR, 2, 1)),
     )
     summary = OutOfWindowTransactionSummary.from_index_entries(index_entries)
 
     assert summary is not None
     assert summary.count == 3
-    assert summary.min_filing_date == date(2026, 1, 5)
-    assert summary.max_filing_date == date(2026, 3, 20)
+    assert summary.min_filing_date == date(_YEAR, 1, 5)
+    assert summary.max_filing_date == date(_YEAR, 3, 20)
     assert summary.model_dump().keys() == {"count", "min_filing_date", "max_filing_date"}
 
 

@@ -26,6 +26,7 @@ from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings im
     activity_asset_amortization_casillas,
     renta_first_slice_binding_target_casillas,
 )
+from ...calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ...categories.spending_category import SpendingCategory
 from ...categories.spending_category_catalogue import (
@@ -40,7 +41,7 @@ from ..first_slice_routing import (
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 
 # The routing check reads no dated authority, so any snapshot year serves.
-_FILING_YEAR = 2025
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _routable_categories(
@@ -63,7 +64,7 @@ def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[Sp
         casilla_factory=validated_casilla_id,
         model_code="100",
         fact_id="modelo-100-first-slice-expense-routing-mapping",
-        effective_date=date(2025, 12, 31),
+        effective_date=date(_FILING_YEAR, 12, 31),
         authority=operation,
     )
 
@@ -108,10 +109,10 @@ def test_every_spending_category_routes_to_a_first_slice_casilla(operation: Pinn
     """
 
     routing = _first_slice_expense_routing(operation)
-    categories = _routable_categories(operation, date(2025, 12, 31))
+    categories = _routable_categories(operation, date(_FILING_YEAR, 12, 31))
     unrouted = [category for category in categories if category not in routing]
     assert unrouted == []
-    amortizable = amortizable_spending_categories(effective_date=date(2025, 12, 31), authority=operation)
+    amortizable = amortizable_spending_categories(effective_date=date(_FILING_YEAR, 12, 31), authority=operation)
     assert not set(routing) & set(amortizable)
 
 
@@ -234,8 +235,8 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: Pin
     floor = directory.supported_filing_years.floor
     authored_years = sorted(int(revision.id) for revision in directory.revisions)
     supported = [year for year in authored_years if year >= floor]
-    assert 2022 in supported
-    assert 2025 in supported
+    assert floor in supported
+    assert newest_authored_edition("100") in supported
 
     for year in supported:
         snapshot = operation.snapshot(Modelo("100"), filing_year=year, period="0A")

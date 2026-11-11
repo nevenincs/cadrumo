@@ -7,11 +7,14 @@ from typing import get_type_hints
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import ReviewSeverity, ReviewState
 from ..operator import ReviewQueueRow
 from ..read_projections import ReviewQueueRowProjection, snapshot_review_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 # ``ReviewQueueRow.since`` is a UtcInstant, whose validator is a custom core-schema
 # hook that operation models may not carry; the wire row restates it as ``datetime``
@@ -48,7 +51,7 @@ def test_snapshot_copies_every_operator_row_fact() -> None:
         blocking=False,
         current_owner_surface="ledger",
         canonical_next_command="aeat app ledger view",
-        since=datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
+        since=datetime(_YEAR, 1, 2, 3, 4, 5, tzinfo=UTC),
         summary="needs review",
     )
 

@@ -90,9 +90,13 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_STARTED = datetime(2026, 8, 24, 9, tzinfo=UTC)
+_STARTED = datetime(_YEAR, 8, 24, 9, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 _DEFINITION_ID = "operations.observation.test"
 

@@ -55,8 +55,8 @@ from .conformance_family_contract import (
 
 _SOUND_NAMESPACE = TEST_SESSION_LIFECYCLE_NAMESPACE.namespace
 _TORN_NAMESPACE = TEST_RUNTIME_PROFILE_NAMESPACE.namespace
-_SEEDED_PROGRESS_AT = datetime(2026, 4, 2, 9, 30, 11, tzinfo=UTC)
-_OBSERVED_AT = datetime(2026, 4, 2, 9, 31, 0, tzinfo=UTC)
+_SEEDED_PROGRESS_AT = datetime(1980, 4, 2, 9, 30, 11, tzinfo=UTC)
+_OBSERVED_AT = datetime(1980, 4, 2, 9, 31, 0, tzinfo=UTC)
 
 OBSERVED_SITE = SiteHealthStatus(
     state=SiteHealthState.MANTENIMIENTO,
@@ -177,7 +177,7 @@ def _prepare_connectivity(context: ConformanceFamilyContext) -> ConformancePrepa
                     html_fragment="<html>synthetic maintenance page</html>",
                     detected_markers=("mantenimiento", "retry-after:120"),
                 ),
-                observed_at="2026-04-02T09:31:00Z",
+                observed_at="1980-04-02T09:31:00Z",
                 retry_after_seconds=120,
             ),
         ),

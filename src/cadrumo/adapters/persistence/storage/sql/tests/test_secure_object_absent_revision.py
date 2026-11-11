@@ -163,7 +163,7 @@ def test_lineage_gate_refuses_an_absent_revision_id_directly(tmp_path: Path) -> 
     """
     from ..secure_object_crypto import derive_revision_id, verify_revision_self_consistency
 
-    written_at = datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
+    written_at = datetime(1980, 1, 2, 3, 4, 5, tzinfo=UTC)
     object_key = b"\x11" * 32
     payload_hash = "a" * 64
     ciphertext_hash = "b" * 64

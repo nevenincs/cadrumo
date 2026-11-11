@@ -5,7 +5,7 @@ same profile record and the same invoice catalogue: the CLI through its
 overview read ports, the TUI through its secure workbench generation
 provider. A counterparty above the RGAT art. 33.1 floor ("hayan superado la
 cifra de 3.005,06 euros durante el año natural correspondiente") makes the
-2025 declaration owed whether the profile answers no or leaves the question
+filing-year declaration owed whether the profile answers no or leaves the question
 unanswered, and both surfaces must show that row.
 """
 
@@ -29,6 +29,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -43,8 +44,8 @@ from .production_operation_registry import production_operation_registry
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "34700000-0000-4000-8000-000000000347"
-_FILING_YEAR = 2025
-_CLOCK = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_grade_exercises("347")[-1]
+_CLOCK = datetime(_FILING_YEAR + 1, 1, 15, 9, 0, tzinfo=UTC)
 _THRESHOLD = "obligations.third_party_transactions_above_347_threshold"
 
 _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
@@ -53,7 +54,7 @@ _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="design"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor - 1, 1, 1)),
     )
 )
 

@@ -37,6 +37,7 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
@@ -81,9 +82,11 @@ pytestmark = [
 ]
 
 _DEFINITION = MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-_FIRST = Period.from_year_and_code(2026, "1T")
-_OTHER = Period.from_year_and_code(2026, "2T")
-_CREATED = datetime(2020, 1, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(open_ended_revision("130").id)
+_FIRST = Period.from_year_and_code(_YEAR, "1T")
+_OTHER = Period.from_year_and_code(_YEAR, "2T")
+_CREATED = datetime(1980, 1, 1, tzinfo=UTC)
 
 
 def _unit(profile_id: UUID, *, period: Period, revision: str, name: str) -> WorkUnit:
@@ -91,13 +94,13 @@ def _unit(profile_id: UUID, *, period: Period, revision: str, name: str) -> Work
         work_unit_id=derive_work_unit_id(
             bucket_id=str(profile_id),
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             revision_id=revision,
         ),
         bucket_id=str(profile_id),
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision,
         name=name,
@@ -180,7 +183,7 @@ def _submit(
     request = ModeloWorkMetadataRequest(
         profile_id=profile_id,
         modelo="130",
-        year=2026,
+        year=_YEAR,
         period=PublicPeriod.from_period(period),
     )
     return _submit_payload(connection, profile_id, session_id, request.model_dump_json())
@@ -269,7 +272,7 @@ def _publish_later_candidate(
     # administration_subject still owns the parent process's proven
     # profile session. This is a real encrypted catalogue write;
     # the worker and its operation never borrow that session.
-    later = _unit(profile_id, period=_FIRST, revision="2026-history-b", name="Revision B")
+    later = _unit(profile_id, period=_FIRST, revision=f"{_YEAR}-history-b", name="Revision B")
     assert later.work_unit_id != original.work_unit_id
     repository.save(upsert_work_unit(repository.load(), later))
     assert {item.work_unit_id for item in repository.load()} == {
@@ -338,8 +341,8 @@ def _refuse_ambiguous_and_invalid_reads(api: VerifiedConnection, profile_id: UUI
             {
                 "profile_id": str(profile_id),
                 "modelo": "130",
-                "year": 2026,
-                "period": {"filing_year": 2026, "code": "not-a-period"},
+                "year": _YEAR,
+                "period": {"filing_year": _YEAR, "code": "not-a-period"},
             }
         ),
     )
@@ -353,8 +356,8 @@ def _refuse_ambiguous_and_invalid_reads(api: VerifiedConnection, profile_id: UUI
             {
                 "profile_id": str(profile_id),
                 "modelo": "130",
-                "year": 1899,
-                "period": {"filing_year": 2026, "code": "1T"},
+                "year": filing_year_envelope().floor - 1,
+                "period": {"filing_year": _YEAR, "code": "1T"},
             }
         ),
     )
@@ -403,8 +406,8 @@ def test_recorded_read_keeps_original_revision_after_new_catalogue_candidate(tmp
         tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
     ) as subject:
         profile_id = subject.store.binding.profile_id
-        original = _unit(profile_id, period=_FIRST, revision="2019-y-siguientes", name="Revision A")
-        other_period = _unit(profile_id, period=_OTHER, revision="2019-y-siguientes", name="Other period")
+        original = _unit(profile_id, period=_FIRST, revision=_REVISION, name="Revision A")
+        other_period = _unit(profile_id, period=_OTHER, revision=_REVISION, name="Other period")
         repository = _repository(profile_id)
         repository.save(upsert_work_unit(upsert_work_unit(repository.load(), original), other_period))
         api_key = _issue_scoped_key(subject)

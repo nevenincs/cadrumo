@@ -41,35 +41,35 @@ def test_date_parsers_accept_contract_formats_and_reject_foreign_formats() -> No
             "iso8601",
             parse_iso8601_date,
             (
-                ("2024-12-31", (2024, 12, 31)),
-                ("2000-01-01", (2000, 1, 1)),
-                ("  2023-06-15  ", (2023, 6, 15)),
+                ("1984-12-31", (1984, 12, 31)),
+                ("1980-01-01", (1980, 1, 1)),
+                ("  1983-06-15  ", (1983, 6, 15)),
             ),
             (
-                "31/12/2024",
-                "31-12-2024",
+                "31/12/1984",
+                "31-12-1984",
                 "not-a-date",
-                "2024/12/31",
+                "1984/12/31",
             ),
         ),
         (
             "ddmmyyyy",
             parse_ddmmyyyy_date,
             (
-                ("31-12-2024", (2024, 12, 31)),
-                ("31/12/2024", (2024, 12, 31)),
-                ("01-01-2000", (2000, 1, 1)),
-                ("  15/06/2023  ", (2023, 6, 15)),
+                ("31-12-1984", (1984, 12, 31)),
+                ("31/12/1984", (1984, 12, 31)),
+                ("01-01-1980", (1980, 1, 1)),
+                ("  15/06/1983  ", (1983, 6, 15)),
             ),
             (
-                "2024-12-31",
-                "2024/12/31",
+                "1984-12-31",
+                "1984/12/31",
                 "not-a-date",
-                "20241231",
-                "31.12.2024",
-                "32-01-2024",
-                "00-01-2024",
-                "31-02-2024",
+                "19841231",
+                "31.12.1984",
+                "32-01-1984",
+                "00-01-1984",
+                "31-02-1984",
             ),
         ),
     )
@@ -122,7 +122,7 @@ def test_refused_dates_are_diagnosed_by_shape_and_never_logged_in_clear_text(
 def test_date_shape_classes_every_character_without_carrying_it() -> None:
     """The mask is built from literals: same shape in, same mask out."""
     assert date_shape("1997-13-45") == "9999-99-99"
-    assert date_shape("2001-13-45") == "9999-99-99"
+    assert date_shape("1981-13-45") == "9999-99-99"
     assert date_shape("31/12/1998") == "99/99/9999"
     assert date_shape("nacimiento") == "AAAAAAAAAA"
     assert date_shape("12 de mayo") == "99 AA AAAA"
@@ -133,7 +133,7 @@ def test_date_shape_classes_every_character_without_carrying_it() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw", ["20260115", "2026-W03-4", "2026W034", "2026-015", "2026-1-15", "", "   ", "2026-02-30"]
+    "raw", ["19860115", "1986-W03-4", "1986W034", "1986-015", "1986-1-15", "", "   ", "1986-02-30"]
 )
 def test_strict_iso_date_refuses_every_shape_but_the_extended_calendar_date(raw: str) -> None:
     with pytest.raises(ValueError, match="expected YYYY-MM-DD"):
@@ -141,13 +141,13 @@ def test_strict_iso_date_refuses_every_shape_but_the_extended_calendar_date(raw:
 
 
 def test_strict_iso_date_accepts_the_extended_calendar_date_with_surrounding_space() -> None:
-    assert require_iso8601_date(" 2026-01-15 ") == date(2026, 1, 15)
+    assert require_iso8601_date(" 1986-01-15 ") == date(1986, 1, 15)
 
 
 def test_optional_strict_iso_date_keeps_blank_absent_and_refuses_lenient_shapes() -> None:
     assert require_iso8601_date_unless_blank(None) is None
     assert require_iso8601_date_unless_blank("  ") is None
-    assert require_iso8601_date_unless_blank("2026-01-15") == date(2026, 1, 15)
-    for raw in ("20260115", "2026-W03-4"):
+    assert require_iso8601_date_unless_blank("1986-01-15") == date(1986, 1, 15)
+    for raw in ("19860115", "1986-W03-4"):
         with pytest.raises(ValueError, match="expected YYYY-MM-DD"):
             require_iso8601_date_unless_blank(raw)

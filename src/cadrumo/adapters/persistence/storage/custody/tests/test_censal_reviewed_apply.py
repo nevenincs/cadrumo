@@ -48,7 +48,7 @@ from ......application.user_profile.tests.record_session_scope import bound_prof
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CREDENTIAL_INPUT = "censal-reviewed-apply-passphrase"
-_NOW = datetime(2026, 8, 24, 16, tzinfo=UTC)
+_NOW = datetime(1980, 8, 24, 16, tzinfo=UTC)
 
 
 @contextmanager

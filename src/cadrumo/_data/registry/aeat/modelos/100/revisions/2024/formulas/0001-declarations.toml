@@ -1,48 +1,25 @@
 [[revisions."2024".formulas]]
 id = "renta-incremento-guarderia-0613"
 target_casilla_id = "0613"
-# Art. 81.2 LIRPF: incremento deducción maternidad por gastos de guardería.
+# Art. 81 LIRPF, as rewritten by Ley 31/2022 art. 64 from 2023-01-01:
+# incremento de la deducción por maternidad por gastos de custodia.
 #
-# Cap = min(incremento_prorrateado_por_hijo, cotizaciones_SS_madre_2024) when the
-# increment is positive, and zero otherwise.
+# The box is the prorated increment the descendant fold resolves, and nothing
+# else bounds it. That redaction limits the increase in two ways only: up to
+# 1.000 euros (apartado 2), prorated by qualifying months and capped at the
+# unsubsidised spend paid for that child (apartado 3). The earlier limit at the
+# mother's cotizaciones devengadas was not carried into it, and the Renta 2024
+# manual says the limitation has disappeared, so no cotizaciones figure is read.
 #
-# The first term replaces what used to be two: the household spend total and a
-# flat "hijos × 1.000". That pair carried no month rule at all, so a child in
-# the guardería for two months earned the same ceiling as one there all year —
-# a measured 833,33 € over-grant on the manual's own worked case, whose stated
-# answer is 166,67.
-#
-# Art. 81.3 third paragraph prorates the increase "proporcionalmente al número
-# de meses en que se cumplan de forma simultánea los requisitos exigidos en el
-# artículo 81.1 y 2" and caps it at the spend incurred "en relación con ese
-# hijo" — per child, by its own words. Neither the proration nor the per-child
-# bound is expressible here: this schema has no per-descendant fold, and an
-# aggregate min over the household also lets one child's unused ceiling absorb
-# another child's excess spend. So the fold happens where the descendant
-# records live and the registry consumes one resolved value, exactly as the
-# mínimo por descendientes aggregate does.
-#
-# The cotizaciones term stays a term. It is a separate ceiling of the same
-# article and is under its own review; folding it into the resolved value would
-# decide that question here by accident.
-#
-# Art. 81.2 caps the increment at the mother's cotizaciones y cuotas totales a
-# la Seguridad Social y Mutualidades, so that figure is read only when there is
-# an increment to cap. With none (no qualifying descendant, or no guardería
-# spend) the box is a computed zero and the figure is not asked for. Where the
-# increment is positive the figure stays required: if_then_else evaluates only
-# its selected branch, so an absent cotizaciones fact still refuses the
-# calculation rather than standing in as zero.
-expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [{ binding = "renta-profile-incremento-guarderia" }, { literal = "0" }] },
-    { op = "min", args = [
-        { binding = "renta-profile-incremento-guarderia" },
-        { binding = "renta-profile-cotizaciones-ss-madre" },
-    ] },
-    { literal = "0" },
-] }
+# Both remaining limits are per child: "en relación con ese hijo". This schema
+# has no per-descendant fold, and an aggregate min over the household would let
+# one child's unused ceiling absorb another child's excess spend. So the fold
+# happens where the descendant records live and the registry consumes one
+# resolved value, exactly as the mínimo por descendientes aggregate does. With
+# no qualifying descendant or no guardería spend that value is a computed zero.
+expression = { binding = "renta-profile-incremento-guarderia" }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-81"]
+legal_refs = ["ley-35-2006:art-81", "ley-31-2022:art-64"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
 
 [[revisions."2024".formulas.source_citations]]
@@ -50,9 +27,11 @@ source_ref = "aeat-renta-2024-manual-parte1"
 required_text = [
     "incremento",
     "guarder",
-    "cotizaciones",
-    # The proration this formula now defers to, pinned so a source that stopped
-    # stating it reds the load rather than leaving the claim unbacked.
+    # The removal of the cotizaciones limit, pinned so a source that stopped
+    # stating it reds the load rather than leaving the uncapped box unbacked.
+    "la limitación del importe de la deducción a las cotizaciones devengadas en el período impositivo",
+    "gasto efectivo no subvencionado",
+    # The proration this formula defers to.
     "se calculará proporcionalmente al número de meses",
 ]
 [[revisions."2024".formulas]]

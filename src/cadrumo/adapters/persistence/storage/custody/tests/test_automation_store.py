@@ -74,7 +74,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
-NOW = datetime(2026, 9, 26, tzinfo=UTC)
+NOW = datetime(1980, 9, 26, tzinfo=UTC)
 _CREDENTIAL_INPUT = "synthetic-automation-profile-passphrase"
 
 

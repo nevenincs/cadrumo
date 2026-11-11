@@ -75,12 +75,13 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
 from ...live_state_composition import compose_filed_observation_persistence_ports
 from .file_flow_test_support import calculation_ports_for_test
+from .m130_m100_annual_support import m100_non_relation_zero_bindings
 from .observation_seeding_support import save_stamped_observation
 from .ready_profile_taxpayer import ready_profile_tax_id
 
@@ -88,9 +89,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _NO_HISTORY_BUCKET = "10006041-0000-4000-8000-000000000001"
 _PULLED_HISTORY_BUCKET = "10006041-0000-4000-8000-000000000002"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-_YEAR = 2024
+_T0 = datetime(filing_year_envelope().horizon, 1, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(filing_year_envelope().horizon, 1, 10, 11, 0, tzinfo=UTC)
+_YEAR = newest_authored_edition("100")
 _M100_ANNUAL_PERIOD = "0A"
 _M130_QUARTERS = ("1T", "2T", "3T", "4T")
 
@@ -217,37 +218,6 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
     )
 
 
-def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    """Zero-default every M100 binding that is neither profile- nor source-resolved.
-
-    The two ``relation_prefill`` pagos bindings are deliberately left UNSET so the
-    enrolled relation resolver is the only thing that can fill them, which is what
-    makes the comparison a statement about the observation store rather than about
-    the caller channel.
-    """
-    snapshot = published_authority_operation().snapshot(
-        Modelo("100").value,
-        filing_year=_YEAR,
-        period=_M100_ANNUAL_PERIOD,
-    )
-    return {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.source
-        not in (
-            "profile",
-            _RELATION_PREFILL_SOURCE,
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_estimacion_directa_aggregation",
-            "ledger_iva_aggregation",
-            "ledger_oss_aggregation",
-            "collectible_invoice",
-            "payable_invoice",
-            "retencion_soportada",
-        )
-    }
-
-
 def _calculate_m100_annual(
     secure_objects: SecureObjectRepository, *, bucket_id: str, operation: PinnedAuthorityOperation
 ):
@@ -289,7 +259,7 @@ def _calculate_m100_annual(
     ) as _calculation_ports_334:
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            binding_values=_non_relation_zero_bindings(),
+            binding_values=m100_non_relation_zero_bindings(),
             ports=_calculation_ports_334,
             clock=_T1,
         )

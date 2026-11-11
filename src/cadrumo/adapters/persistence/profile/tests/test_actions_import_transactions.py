@@ -12,11 +12,14 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     parsed_import_transaction,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +43,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
         bucket_event_repository=event_repository,
         actor="operator-A",
         source_command="aeat app ledger import",
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
     )
     duplicate_import = import_ledger_transactions(
         bucket_id=BUCKET_ID,
@@ -50,7 +53,7 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
         bucket_event_repository=event_repository,
         actor="operator-A",
         source_command="aeat app ledger import",
-        occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 4, 9, 31, tzinfo=UTC),
     )
 
     assert first_import.summary.imported == 2
@@ -98,7 +101,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 6, 7, 9, 0, tzinfo=UTC),
     )
     assert first.summary.imported == 2
     assert first.summary.skipped == 0
@@ -111,7 +114,7 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 5, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 6, 7, 9, 5, tzinfo=UTC),
     )
     assert second.summary.imported == 0
     assert second.summary.skipped == 2
@@ -135,7 +138,7 @@ def test_import_skips_true_transaction_id_collision_within_batch(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         actor="operator-A",
-        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 6, 7, 9, 0, tzinfo=UTC),
     )
     assert result.summary.imported == 1
     assert result.summary.skipped == 1

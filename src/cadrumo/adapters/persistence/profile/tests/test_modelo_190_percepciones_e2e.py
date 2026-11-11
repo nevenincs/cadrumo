@@ -26,6 +26,7 @@ from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
@@ -34,6 +35,7 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FILING_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "36363636-3636-4363-8363-363636363636"
 _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="test")
 
@@ -41,14 +43,14 @@ _TOTAL_PERCEPCIONES = validated_casilla_id("decl.total-percepciones", surface="t
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        annual_period = Period.from_year_and_code(2024, "0A")
-        source_period = Period.from_year_and_code(2024, "2T")
+        annual_period = Period.from_year_and_code(_FILING_YEAR, "0A")
+        source_period = Period.from_year_and_code(_FILING_YEAR, "2T")
         repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         ports = PercepcionObservationPorts(repository=repository)
         replace_percepcion_observations(
             repository,
             modelo="111",
-            filing_year=2024,
+            filing_year=_FILING_YEAR,
             period=source_period,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             observations=[
@@ -57,7 +59,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 perceptor_observation("00001501Y", RetencionClave.from_registry("A")),
             ],
         )
-        snapshot = published_authority_operation().snapshot("190", filing_year=2024, period="0A")
+        snapshot = published_authority_operation().snapshot("190", filing_year=_FILING_YEAR, period="0A")
         resolution = WithholdingSourceResolver(
             ports=ports,
             retencion_ports=RetencionObservationPorts(
@@ -67,7 +69,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="190",
-                filing_year=2024,
+                filing_year=_FILING_YEAR,
                 period=annual_period,
                 revision=snapshot.revision,
                 profile=withholding_work_profile(published_authority_operation(), profile_id=_BUCKET_ID),

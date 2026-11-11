@@ -39,7 +39,7 @@ def test_cli_sign_in_status_distinguishes_selection_from_missing_and_unusable(st
                     "assistant_auth": "provider_sign_in",
                     "credential_state": "unset",
                     "generation": "a" * 64,
-                    "updated_at": "2026-10-18T00:00:00Z",
+                    "updated_at": "1980-10-18T00:00:00Z",
                 }
             )
         )
@@ -109,7 +109,7 @@ def _selected() -> StoredProviderRecord:
                 "assistant_auth": "provider_sign_in",
                 "credential_state": "unset",
                 "generation": "a" * 64,
-                "updated_at": "2026-10-18T00:00:00Z",
+                "updated_at": "1980-10-18T00:00:00Z",
             }
         )
     )

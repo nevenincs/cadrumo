@@ -9,10 +9,14 @@ from pathlib import Path
 from typing import Final
 from uuid import UUID
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..split_check_operation import LedgerSplitCheckPart, check_split
+
+_YEAR = filing_year_envelope().horizon
 
 SPLIT_CHECK_PROFILE: Final = UUID("33333333-3333-4333-8333-333333333333")
 
@@ -20,11 +24,11 @@ SPLIT_CHECK_PROFILE: Final = UUID("33333333-3333-4333-8333-333333333333")
 def split_parent(
     amount: str = "10.00", state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE
 ) -> Transaction:
-    moment = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
+    moment = datetime(_YEAR - 2, 4, 14, 9, 30, tzinfo=UTC)
     raw = RawTransaction(
         provider_transaction_id="parent",
-        booked_date=date(2024, 4, 10),
-        value_date=date(2024, 4, 10),
+        booked_date=date(_YEAR - 2, 4, 10),
+        value_date=date(_YEAR - 2, 4, 10),
         amount=Decimal(amount),
         currency="EUR",
         counterparty="Supplier SL",

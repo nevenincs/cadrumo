@@ -40,9 +40,13 @@ from cadrumo.domain.bienes_inversion.register import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...tests.operation_host_fakes import RecordingEvents
+
+_FIRST_YEAR = filing_year_envelope().floor
+_DISPOSAL_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,7 +141,7 @@ def _request(**overrides: object) -> OperationRequest[BaseModel]:
         "profile_id": _PROFILE,
         "identifier": "bien-1",
         "description": "Delivery van",
-        "acquisition_year": 2024,
+        "acquisition_year": _FIRST_YEAR,
         "acquisition_ledger_id": "ledger-1",
         "cuota_soportada": PublicDecimal(decimal="2100.00"),
         "prorrata_inicial_pct": PublicDecimal(decimal="60"),
@@ -158,7 +162,7 @@ def _existing_record(authority_operation: PinnedAuthorityOperation) -> BienInver
             BienInversionDeclarationCommand(
                 identifier="bien-1",
                 description="Existing delivery van",
-                acquisition_year=2024,
+                acquisition_year=_FIRST_YEAR,
                 acquisition_ledger_id="ledger-existing",
                 cuota_soportada=Decimal("2100.00"),
                 prorrata_inicial_pct=Decimal("60"),
@@ -178,7 +182,11 @@ def test_declared_identifier_is_bounded_at_the_ledger_asset_link_length() -> Non
 @pytest.mark.parametrize(
     ("overrides", "expected_reason", "expected_words_key"),
     [
-        ({"disposal_year": 2026}, "disposal_incomplete", "application.bienes_inversion.served.disposal_regime_missing"),
+        (
+            {"disposal_year": _DISPOSAL_YEAR},
+            "disposal_incomplete",
+            "application.bienes_inversion.served.disposal_regime_missing",
+        ),
         (
             {"disposal_regime": "sujeta_no_exenta"},
             "disposal_incomplete",

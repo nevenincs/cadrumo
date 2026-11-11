@@ -31,10 +31,10 @@ _STORED_WITHOUT_WORDING = frozenset({"segundo_ciclo_infantil_inicio_mes"})
 def test_every_stored_descendant_leaf_but_one_has_served_wording() -> None:
     with bundled_indexed_authority().operation() as authority:
         full = DescendantInfo(
-            birth_date=date(2021, 5, 17),
+            birth_date=date(1981, 5, 17),
             relacion=descendant_relacion_adoption_token(authority=authority),
-            inscripcion_registro_civil_date=date(2021, 9, 1),
-            death_date=date(2025, 2, 3),
+            inscripcion_registro_civil_date=date(1981, 9, 1),
+            death_date=date(1985, 2, 3),
             discapacidad_grado=65,
             convive_con_contribuyente=False,
             dependencia_economica=True,
@@ -125,7 +125,7 @@ def test_stored_ascendants_are_rows_holding_only_the_leaves_they_state() -> None
             f"{_ASCENDANT_OBJECT}.1.fallecimiento": "  ",
             # A leaf nothing stores, and a descendant row, are not ascendant facts.
             f"{_ASCENDANT_OBJECT}.1.discapacidad_clave": "1",
-            "renta_family.descendiente.0.birth_date": "2020-01-01",
+            "renta_family.descendiente.0.birth_date": "1980-01-01",
         }
     )
     assert group.state is ProfileFamilyGroupState.ROWS
@@ -172,7 +172,7 @@ def _descendant_group(
 
 
 def test_a_stated_count_larger_than_the_stored_rows_is_incomplete_and_still_serves_the_rows() -> None:
-    group, rows = _descendant_group({_DESCENDANT_COUNT: "3", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+    group, rows = _descendant_group({_DESCENDANT_COUNT: "3", f"{_DESCENDANT_OBJECT}.0.birth_date": "1979-03-14"})
 
     assert group.state is ProfileFamilyGroupState.INCOMPLETE
     assert (group.stated_count, group.row_count) == ("3", 1)
@@ -193,7 +193,7 @@ def test_a_stated_count_with_no_stored_row_is_incomplete_not_unknown() -> None:
 
 
 def test_a_count_equal_to_the_stored_rows_is_rows_and_says_nothing_more() -> None:
-    group, rows = _descendant_group({_DESCENDANT_COUNT: "1", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+    group, rows = _descendant_group({_DESCENDANT_COUNT: "1", f"{_DESCENDANT_OBJECT}.0.birth_date": "1979-03-14"})
 
     assert group.state is ProfileFamilyGroupState.ROWS
     assert (group.stated_count, group.row_count, group.incomplete_words) == ("1", 1, None)
@@ -201,7 +201,7 @@ def test_a_count_equal_to_the_stored_rows_is_rows_and_says_nothing_more() -> Non
 
 
 def test_stored_rows_with_no_stated_count_are_rows_and_not_incomplete() -> None:
-    group, rows = _descendant_group({f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+    group, rows = _descendant_group({f"{_DESCENDANT_OBJECT}.0.birth_date": "1979-03-14"})
 
     assert group.state is ProfileFamilyGroupState.ROWS
     assert (group.stated_count, group.row_count, group.incomplete_words) == (None, 1, None)
@@ -212,11 +212,11 @@ def test_a_count_below_the_stored_rows_or_not_a_number_is_not_incomplete() -> No
     below, _ = _descendant_group(
         {
             _DESCENDANT_COUNT: "1",
-            f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14",
-            f"{_DESCENDANT_OBJECT}.1.birth_date": "2021-05-17",
+            f"{_DESCENDANT_OBJECT}.0.birth_date": "1979-03-14",
+            f"{_DESCENDANT_OBJECT}.1.birth_date": "1981-05-17",
         }
     )
-    garbled, _ = _descendant_group({_DESCENDANT_COUNT: "several", f"{_DESCENDANT_OBJECT}.0.birth_date": "2019-03-14"})
+    garbled, _ = _descendant_group({_DESCENDANT_COUNT: "several", f"{_DESCENDANT_OBJECT}.0.birth_date": "1979-03-14"})
 
     assert below.state is ProfileFamilyGroupState.ROWS
     assert garbled.state is ProfileFamilyGroupState.ROWS

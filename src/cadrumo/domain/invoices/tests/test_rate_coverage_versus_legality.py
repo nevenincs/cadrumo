@@ -36,11 +36,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.errors import IvaRateNotFoundError
 from ...iva.lookup import rate_table_covers, rate_table_covers_any_positive_tier
 from ...iva.schema import EUMemberState, IvaRateKind
 from ..enums import IvaRate, iva_rate_percentage
 from ..figures import FigureFindingCode, rate_refusal_finding, rate_refusal_is_coverage_gap
+from .invoice_catalogue_seed import STANDING_DEVENGO, window_middle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,7 +55,7 @@ def _authority_operation() -> Iterator[None]:
 
 
 #: Inside every tier's coverage, and the rates genuinely stood on this date.
-_COVERED = date(2024, 6, 1)
+_COVERED = STANDING_DEVENGO
 #: The tiers bearing a positive ordinary rate, spelled out rather than imported
 #: so an edit to the predicate's own tuple cannot move this in step with it.
 _POSITIVE_TIERS = (IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced"))
@@ -121,7 +123,7 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     refusal this module exists to prevent, and would otherwise do it silently.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        on_date = date(2023, 6, 1)
+        on_date = date(filing_year_envelope().floor, 6, 1)
         assert iva_rate_percentage(rate, on_date) is not None
         assert rate_table_covers(
             EUMemberState.from_registry("es"), on_date, IvaRateKind("general"), operation=_authority_operation_for_test
@@ -167,8 +169,8 @@ def test_a_refusal_on_a_covered_date_is_a_legality_finding_quoting_its_cause() -
     finding = rate_refusal_finding(rate, _COVERED, coverage_gap=False, cause=caught.value)
 
     assert finding.code is FigureFindingCode.LINE_RATE_NOT_IN_FORCE
-    assert finding.message == f"line rate RATE_2 was not in force on 2024-06-01: {caught.value}"
-    assert dict(finding.values) == {"slot": str(rate), "on_date": "2024-06-01"}
+    assert finding.message == f"line rate RATE_2 was not in force on {_COVERED.isoformat()}: {caught.value}"
+    assert dict(finding.values) == {"slot": str(rate), "on_date": _COVERED.isoformat()}
 
 
 def test_a_coverage_gap_finding_makes_no_claim_about_the_law() -> None:
@@ -183,13 +185,13 @@ def test_a_coverage_gap_finding_makes_no_claim_about_the_law() -> None:
     finding = rate_refusal_finding(rate, _COVERED, coverage_gap=True)
 
     assert finding.code is FigureFindingCode.LINE_RATE_COVERAGE_GAP
-    assert finding.message == "line rate RATE_21 is not covered by the rate registry on 2024-06-01"
+    assert finding.message == f"line rate RATE_21 is not covered by the rate registry on {_COVERED.isoformat()}"
 
 
 def test_a_covered_date_resolves_normally() -> None:
     """Guards against a refusal that fires for every date and looks like a fix."""
     assert iva_rate_percentage(IvaRate.from_registry("RATE_21"), _COVERED) == Decimal("0.21")
-    assert iva_rate_percentage(IvaRate.from_registry("RATE_2"), date(2024, 11, 1)) == Decimal("0.02")
+    assert iva_rate_percentage(IvaRate.from_registry("RATE_2"), window_middle("RATE_2")) == Decimal("0.02")
 
 
 def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None:

@@ -32,6 +32,11 @@ from ....domain.calculations.registry.errors import RegistryError
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    newest_authored_editions,
+)
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_profile_schema,
@@ -53,7 +58,8 @@ from ..profile_export_binding import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _BUCKET = "7e3c1a52-8f0d-4b6e-9a21-3c5d7e9f1b24"
-_T0 = datetime(2026, 1, 1, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 1, 1, tzinfo=UTC)
+_M100_YEAR = newest_authored_edition("100")
 _DECLARANTE_NIF: CasillaId = validated_casilla_id("DPNIF_D", surface="_DECLARANTE_NIF")
 _DECLARANTE_NAME: CasillaId = validated_casilla_id("DP_APENOM_D", surface="_DECLARANTE_NAME")
 _SPOUSE_NIF: CasillaId = validated_casilla_id("DPNIF_C", surface="_SPOUSE_NIF")
@@ -82,7 +88,7 @@ def _fact_index(*facts: UserProfileFact) -> dict[str, UserProfileFactValue]:
     return profile_fact_index(_record(*facts), published_profile_schema())
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", newest_authored_editions("100", 2))
 def test_the_declarant_identity_casillas_are_filled_from_the_profile(filing_year: int) -> None:
     """The real Modelo 100 identity casillas read the profile, not a placeholder."""
     revision = published_snapshot("100", filing_year=filing_year, period="0A").revision
@@ -100,7 +106,7 @@ def test_the_calculation_holds_what_the_filed_record_addresses(*, operation: Pin
     Both halves read one binding through one resolution, so the calculation and
     the XML declaration cannot state two names for the same declarant.
     """
-    snapshot = published_snapshot("100", filing_year=2024, period="0A")
+    snapshot = published_snapshot("100", filing_year=_M100_YEAR, period="0A")
     revision = snapshot.revision
     record = _record(*_DECLARANTE)
     casilla_values = resolve_profile_text_casilla_inputs(
@@ -129,7 +135,7 @@ def test_the_calculation_holds_what_the_filed_record_addresses(*, operation: Pin
 
 def test_a_gated_spouse_slot_is_neither_filled_nor_reported_for_an_individual_filing() -> None:
     """The spouse NIF exists only on a joint declaration; an individual one has no such slot."""
-    revision = published_snapshot("100", filing_year=2024, period="0A").revision
+    revision = published_snapshot("100", filing_year=_M100_YEAR, period="0A").revision
 
     resolved = resolve_profile_text_casilla_inputs(
         revision,
@@ -144,7 +150,7 @@ def test_a_gated_spouse_slot_is_neither_filled_nor_reported_for_an_individual_fi
     assert _SPOUSE_NIF not in {gap.casilla_id for gap in resolved.gaps}
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
+@pytest.mark.parametrize("filing_year", newest_authored_editions("100", 2))
 def test_a_declaration_type_stored_as_a_number_still_fills_its_text_casilla(filing_year: int) -> None:
     """The individual declaration type ``"1"`` is restored as a number yet still fills TIPOTRIBUTACION."""
     revision = published_snapshot("100", filing_year=filing_year, period="0A").revision
@@ -159,7 +165,7 @@ def test_a_declaration_type_stored_as_a_number_still_fills_its_text_casilla(fili
 
 
 def test_an_absent_profile_name_stays_absent_and_names_the_fields_to_declare() -> None:
-    revision = published_snapshot("100", filing_year=2024, period="0A").revision
+    revision = published_snapshot("100", filing_year=_M100_YEAR, period="0A").revision
 
     resolved = resolve_profile_text_casilla_inputs(
         revision,
@@ -172,10 +178,15 @@ def test_an_absent_profile_name_stays_absent_and_names_the_fields_to_declare() -
 
 
 def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields() -> None:
-    revision = published_snapshot("100", filing_year=2024, period="0A").revision
+    revision = published_snapshot("100", filing_year=_M100_YEAR, period="0A").revision
     facts = _fact_index(UserProfileFact(path="identity.tax_id", value="12345678Z"))
 
-    diagnostics = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids=frozenset())
+    diagnostics = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids=frozenset(),
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
 
     (advisory,) = (diagnostic for diagnostic in diagnostics if diagnostic.casilla_id == _DECLARANTE_NAME)
     assert (advisory.reason, advisory.source_kind) == ("unresolved_binding", "profile")
@@ -184,7 +195,12 @@ def test_the_gap_reaches_the_operator_as_an_advisory_naming_the_profile_fields()
         assert field in str(advisory.message)
         assert field in advisory.remedy
     assert advisory.legal_refs
-    supplied = profile_text_casilla_gap_diagnostics(revision, facts, supplied_casilla_ids={_DECLARANTE_NAME})
+    supplied = profile_text_casilla_gap_diagnostics(
+        revision,
+        facts,
+        supplied_casilla_ids={_DECLARANTE_NAME},
+        derived_selectors=published_profile_schema().derived_selectors,
+    )
     assert _DECLARANTE_NAME not in {diagnostic.casilla_id for diagnostic in supplied}
 
 
@@ -225,14 +241,15 @@ def test_a_result_clave_is_not_given_a_declaration_kind(
     modelo: str, period: str, grade: RegistryAuthorityGrade
 ) -> None:
     """A design's "Tipo de declaracion" that holds the result clave (I, U, G, N) is a different fact."""
-    revision = published_snapshot(modelo, filing_year=2025, period=period, grade=grade).revision
+    exercise = filing_year_envelope().horizon
+    revision = published_snapshot(modelo, filing_year=exercise, period=period, grade=grade).revision
     casilla_id = validated_casilla_id("decl.tipo-declaracion", surface="test")
     (casilla,) = (casilla for casilla in revision.casillas if casilla.id == casilla_id)
 
     resolved = resolve_declaration_period_inputs(
         revision,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, period),
+        filing_year=exercise,
+        period=Period.from_year_and_code(exercise, period),
         declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
@@ -247,15 +264,16 @@ def test_the_modelo_341_period_casilla_takes_the_filing_period() -> None:
     Periodo" @107+2); the "D" clave is a separate literal campo. No declaration
     kind may land on it.
     """
+    exercise = filing_year_envelope().horizon
     revision = published_snapshot(
-        "341", filing_year=2025, period="2T", grade=RegistryAuthorityGrade.APPLICABILITY
+        "341", filing_year=exercise, period="2T", grade=RegistryAuthorityGrade.APPLICABILITY
     ).revision
     casilla_id = validated_casilla_id("decl.periodo", surface="test")
 
     resolved = resolve_declaration_period_inputs(
         revision,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "2T"),
+        filing_year=exercise,
+        period=Period.from_year_and_code(exercise, "2T"),
         declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
@@ -376,7 +394,7 @@ def test_every_required_calculation_supplied_text_casilla_has_a_source(*, operat
 
 def test_an_identity_casilla_left_unbound_is_caught() -> None:
     """Detector teeth: the gate reports a declarant NIF that no binding answers any more."""
-    snapshot = published_snapshot("100", filing_year=2024, period="0A")
+    snapshot = published_snapshot("100", filing_year=_M100_YEAR, period="0A")
     unbound = tuple(
         casilla.model_copy(update={"input_kind": InputKind.INFORMATIONAL, "binding": None})
         if casilla.id == _DECLARANTE_NIF

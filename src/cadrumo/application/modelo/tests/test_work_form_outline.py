@@ -1,6 +1,6 @@
 """The form serves a navigation outline and readable part headings, both drawn from the registry layout.
 
-The 2025 Modelo 100 declares its outline and the headings of its technical
+The newest Modelo 100 declares its outline and the headings of its technical
 parts in reviewed generator input; every other layout falls back to one group
 per page. Either way the outline names every section once and rolls up the
 attention its boxes ask for. The casillas the layout could not position and the
@@ -22,6 +22,14 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormOutlineGroup,
     FormOutlineSection,
+)
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    newest_authored_edition,
+    newest_authored_editions,
+    revision_covering,
+    supported_authored_exercises,
 )
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..work_form import build_modelo_work_form
@@ -45,6 +53,12 @@ from .work_form_fixture import built_form, form_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+_YEAR_100 = newest_authored_edition("100")
+"""The exercise of the newest authored Modelo 100 edition."""
+_YEAR_100_THREE_EDITIONS_BACK = newest_authored_editions("100", 3)[0]
+"""The exercise of an authored Modelo 100 edition older than the two newest."""
+
 
 def _fields(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     return tuple(field for page in form.pages for section in page.sections for field in section_fields(section))
@@ -55,10 +69,10 @@ def _section_groups(form: ModeloWorkForm) -> tuple[ModeloFormOutlineGroup, ...]:
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
-def test_the_2025_renta_names_every_page_section_and_group_in_words(
+def test_the_newest_renta_names_every_page_section_and_group_in_words(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    form = built_form(operation, "100", 2025, "0A", language=language)
+    form = built_form(operation, "100", _YEAR_100, "0A", language=language)
 
     technical = [page.id for page in form.pages if page.heading.disclosure is ModeloFormTextDisclosure.TECHNICAL]
     technical += [
@@ -73,11 +87,11 @@ def test_the_2025_renta_names_every_page_section_and_group_in_words(
     assert {group.heading.text for group in form.outline}.isdisjoint({group.id for group in form.outline})
 
 
-def test_the_2025_headings_do_not_name_another_editions_part_of_the_same_id(
+def test_the_newest_headings_do_not_name_another_editions_part_of_the_same_id(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    current = built_form(operation, "100", 2025, "0A")
-    earlier = built_form(operation, "100", 2023, "0A")
+    current = built_form(operation, "100", _YEAR_100, "0A")
+    earlier = built_form(operation, "100", _YEAR_100_THREE_EDITIONS_BACK, "0A")
 
     def heading(form: ModeloWorkForm, section_id: str) -> tuple[str, ModeloFormTextDisclosure]:
         section = next(
@@ -90,7 +104,9 @@ def test_the_2025_headings_do_not_name_another_editions_part_of_the_same_id(
     assert [group.id for group in _section_groups(earlier)] == [page.id for page in earlier.pages if page.sections]
 
 
-@pytest.mark.parametrize(("modelo", "year", "code"), [("100", 2025, "0A"), ("303", 2026, "1T"), ("130", 2025, "1T")])
+@pytest.mark.parametrize(
+    ("modelo", "year", "code"), [("100", _YEAR_100, "0A"), ("303", _YEAR, "1T"), ("130", _YEAR, "1T")]
+)
 def test_the_outline_names_every_section_once_and_counts_what_it_holds(
     operation: PinnedAuthorityOperation, modelo: str, year: int, code: str
 ) -> None:
@@ -111,7 +127,7 @@ def test_the_outline_names_every_section_once_and_counts_what_it_holds(
 
 
 def test_a_layout_without_an_outline_groups_its_sections_by_page(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
 
     assert _layout(operation, "303", form.registry_revision_id).outline == ()
     assert [(group.id, group.heading) for group in _section_groups(form)] == [
@@ -120,7 +136,7 @@ def test_a_layout_without_an_outline_groups_its_sections_by_page(operation: Pinn
 
 
 def test_the_renta_outline_follows_the_declared_groups(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "100", 2025, "0A")
+    form = built_form(operation, "100", _YEAR_100, "0A")
     declared = _layout(operation, "100", form.registry_revision_id).outline
 
     groups = _section_groups(form)
@@ -133,14 +149,14 @@ def test_the_renta_outline_follows_the_declared_groups(operation: PinnedAuthorit
 def _calculated_renta(
     operation: PinnedAuthorityOperation, lifecycle: CalculationRevisionState | None
 ) -> ModeloWorkForm:
-    """The 2025 Renta after a calculation that left every computed box empty, so each one could not be worked out."""
-    snapshot = form_snapshot(operation, "100", 2025, "0A")
+    """The newest Renta after a calculation that left every computed box empty, so each one could not be worked out."""
+    snapshot = form_snapshot(operation, "100", _YEAR_100, "0A")
     rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
     review = ModeloWorkReview(
         bucket_id="13000000-0000-4000-8000-000000000100",
         modelo="100",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        filing_year=_YEAR_100,
+        period=Period.from_year_and_code(_YEAR_100, "0A"),
         registry_revision_id=snapshot.revision.id,
         work_unit_id="e" * 64,
         calculation_revision_id="f" * 64,
@@ -187,7 +203,7 @@ def test_boxes_the_calculation_could_not_work_out_need_the_filer_until_the_decla
 def test_a_section_applies_as_its_page_does_unless_every_box_is_proven_not_to(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
     pages = {page.id: page for page in form.pages}
     section = next(
         section
@@ -233,7 +249,7 @@ def _with_outline(layout: FormLayoutDefinition, outline: tuple[FormOutlineGroup,
 def test_the_layout_refuses_an_outline_that_hides_repeats_or_invents_a_section(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    layout = _layout(operation, "100", "2025")
+    layout = _layout(operation, "100", str(revision_covering("100", _YEAR_100).id))
     groups = layout.outline
     assert _with_outline(layout, groups).outline == groups
 
@@ -251,15 +267,13 @@ def test_the_layout_refuses_an_outline_that_hides_repeats_or_invents_a_section(
 
 
 _PARITY_CONTEXTS = (
-    ("100", 2025, "0A"),
-    ("100", 2024, "0A"),
-    ("130", 2025, "1T"),
-    ("131", 2025, "1T"),
-    ("182", 2025, "0A"),
-    ("184", 2025, "0A"),
-    ("303", 2026, "1T"),
-    ("303", 2025, "1T"),
-    ("390", 2025, "0A"),
+    *(("100", year, "0A") for year in newest_authored_editions("100", 2)[::-1]),
+    ("130", _YEAR, "1T"),
+    ("131", _YEAR, "1T"),
+    ("182", _YEAR, "0A"),
+    ("184", _YEAR, "0A"),
+    *(("303", year, "1T") for year in sorted(set(supported_authored_exercises("303")))[-2:][::-1]),
+    ("390", filing_grade_exercises("390")[-1], "0A"),
 )
 
 
@@ -306,7 +320,7 @@ def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figu
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Figures no placed box reads still count as could-not-calculate, in a group the navigator can open."""
-    form = built_form(operation, "100", 2025, "0A", calculated=True)
+    form = built_form(operation, "100", _YEAR_100, "0A", calculated=True)
     failed = [field for field in form.working_figures if field.origin is ModeloFormOrigin.CALCULATION_FAILED]
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.WORKING_FIGURES)
 
@@ -320,7 +334,7 @@ def test_a_failed_working_figure_is_counted_and_reached_through_the_working_figu
 def test_unplaced_casillas_that_ask_for_a_value_are_reached_through_the_unplaced_group(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "182", 2025, "0A")
+    form = built_form(operation, "182", _YEAR, "0A")
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.UNPLACED)
 
     asked = sum(1 for item in form.unplaced if item.field.origin is ModeloFormOrigin.NEEDS_INPUT)
@@ -332,7 +346,7 @@ def test_unplaced_casillas_that_ask_for_a_value_are_reached_through_the_unplaced
 def test_a_group_of_a_list_kept_apart_names_no_section_and_the_form_holds_one_only_for_a_non_empty_list(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    form = built_form(operation, "182", 2025, "0A")
+    form = built_form(operation, "182", _YEAR, "0A")
     group = next(group for group in form.outline if group.kind is ModeloFormOutlineKind.UNPLACED)
 
     with pytest.raises(ValidationError):

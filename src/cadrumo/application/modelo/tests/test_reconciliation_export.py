@@ -8,6 +8,7 @@ from uuid import UUID
 import pytest
 
 from ....core.external_constants import OutputLanguage
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...storage.calc_sheets.records import TabName
 from ..reconciliation_export import build_modelo_reconciliation_export_plan
 from ..reconciliation_export_labels import ReconciliationWorkbookLabels
@@ -53,7 +54,7 @@ def reconciliation_plan_fixture(projection: ModeloReconciliationListProjection):
     return build_modelo_reconciliation_export_plan(
         projection,
         publication_id=UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
-        exported_at=datetime(2026, 10, 7, tzinfo=UTC),
+        exported_at=datetime(filing_year_envelope().horizon, 10, 7, tzinfo=UTC),
         label=lambda key: key,
     )
 
@@ -87,12 +88,12 @@ def test_human_review_leads_with_localized_facts_and_keeps_full_identity_in_refe
     plan = build_modelo_reconciliation_export_plan(
         projection,
         publication_id=UUID(int=1),
-        exported_at=datetime(2026, 10, 7, tzinfo=UTC),
+        exported_at=datetime(filing_year_envelope().horizon, 10, 7, tzinfo=UTC),
         label=ReconciliationWorkbookLabels(OutputLanguage.EN),
     )
     cells = {(cell.address.tab, cell.address.a1): cell.value for cell in plan.value_cells}
     assert cells[TabName.FORM, "A2"] == "Reconciliation R-aaaaaaaa"
-    assert cells[TabName.FORM, "B2"] == "2026-03-10 12:00 UTC"
+    assert cells[TabName.FORM, "B2"] == f"{filing_year_envelope().horizon}-03-10 12:00 UTC"
     assert cells[TabName.FORM, "F2"] == "Differences found"
     assert cells[TabName.FORM, "G2"] == "Filing receipt"
     assert cells[TabName.DETALLE, "A2"] == "R-aaaaaaaa"

@@ -22,10 +22,13 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.errors import ModeloValidationError
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import FILE_FLOW_PROFILE_ID, FileFlowRepos
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 15, 13, 0, tzinfo=UTC)
 
 
 def _history_ports(repos: FileFlowRepos) -> ModeloHistoryPorts:
@@ -40,7 +43,7 @@ def _history_ports(repos: FileFlowRepos) -> ModeloHistoryPorts:
     )
 
 
-def _create(repos: FileFlowRepos, *, period: str = "1T", filing_year: int = 2026, operation: PinnedAuthorityOperation):
+def _create(repos: FileFlowRepos, *, period: str = "1T", filing_year: int = _YEAR, operation: PinnedAuthorityOperation):
     """Create one modelo 130 work unit through the real lifecycle service."""
     wu_repo, _, _, _, bv_repo = repos
     return create_work_unit(
@@ -48,7 +51,7 @@ def _create(repos: FileFlowRepos, *, period: str = "1T", filing_year: int = 2026
         modelo="130",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
-        revision_id="2019-y-siguientes",
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
         operation=operation,
@@ -140,8 +143,8 @@ class TestAssembly:
         _, _, _, _, _bv_repo = repos
         _create(repos, operation=operation)
 
-        assert assemble_modelo_lifecycle_history("130", filing_year=2025, ports=_history_ports(repos)).events == ()
-        assert assemble_modelo_lifecycle_history("130", filing_year=2026, ports=_history_ports(repos)).events
+        assert assemble_modelo_lifecycle_history("130", filing_year=_YEAR - 1, ports=_history_ports(repos)).events == ()
+        assert assemble_modelo_lifecycle_history("130", filing_year=_YEAR, ports=_history_ports(repos)).events
 
     def test_period_narrows_the_history(self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods of the same modelo stay separable."""
@@ -238,7 +241,7 @@ class TestPersistedPayloadFallback:
             "actor": "legacy-emitter",
             "object_type": BucketEventObjectType.CALCULATION_REVISION,
             "object_id": "d" * 64,
-            "payload": {"modelo": "130", "year": "2026", "period": "1T"},
+            "payload": {"modelo": "130", "year": str(_YEAR), "period": "1T"},
         }
         emit_bucket_events(
             repository=bv_repo,
@@ -251,6 +254,6 @@ class TestPersistedPayloadFallback:
             ),
         )
 
-        narrowed = assemble_modelo_lifecycle_history("130", filing_year=2026, ports=_history_ports(repos))
+        narrowed = assemble_modelo_lifecycle_history("130", filing_year=_YEAR, ports=_history_ports(repos))
 
         assert [event.actor for event in narrowed.events] == ["legacy-emitter"]

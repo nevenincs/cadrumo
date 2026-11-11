@@ -441,9 +441,9 @@ def test_roll_forward_balances_core_cases() -> None:
             "generated-loss-added",
             verification_substance_casilla_values(
                 (M200_BIN_OPEN_CASILLA, "5000"),
-                (M200_BIN_APPLIED_CASILLA, "2000"),
+                (M200_BIN_APPLIED_CASILLA, "2500"),
                 (M200_BIN_GENERATED_CASILLA, "-4000"),
-                (M200_BIN_CLOSING_CASILLA, "7000"),
+                (M200_BIN_CLOSING_CASILLA, "6500"),
             ),
             True,
             False,

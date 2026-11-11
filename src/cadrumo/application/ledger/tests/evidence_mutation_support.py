@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
+
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....application.ledger.evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 EVIDENCE_MUTATION_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-EVIDENCE_MUTATION_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+EVIDENCE_MUTATION_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def evidence_mutation_record() -> PurchaseInvoiceEvidence:
@@ -25,7 +29,7 @@ def evidence_mutation_record() -> PurchaseInvoiceEvidence:
         media_kind=MediaKind.PDF,
         supplier="Before SL",
         invoice_number="INV-2026-05",
-        invoice_date="2026-05-08",
+        invoice_date=date(_YEAR, 5, 8).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),

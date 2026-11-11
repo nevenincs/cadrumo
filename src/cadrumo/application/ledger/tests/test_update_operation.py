@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from uuid import UUID
 
 import pytest
@@ -10,11 +10,14 @@ from pydantic import ValidationError
 
 from ....application.review.filter import LedgerReviewStatus
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.models import OperationIdentity, OperationTerminalReceipt
 from .. import update_contracts as contracts
 from .. import update_operation as operation
 from ..transaction_projection import LedgerTransactionProjection
 from .transaction_projection_support import ledger_transaction_projection
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,7 +49,7 @@ def _receipt(
         revision=1,
         condition=condition,
         effect=effect,
-        settled_at=datetime(2026, 4, 15, tzinfo=UTC),
+        settled_at=datetime(_YEAR, 4, 15, tzinfo=UTC),
         result_ref=None if refused else "f" * 64,
         refusal_ref=contracts.LEDGER_UPDATE_VALIDATION_REFUSAL_CODE if refused else None,
         refusal_detail_ref="e" * 64 if refused else None,
@@ -57,7 +60,7 @@ def test_wire_request_preserves_explicit_null_and_rejects_unselected_values() ->
     request = contracts.LedgerUpdateRequest(
         profile_id=_PROFILE,
         transaction_id="b" * 12,
-        patch=contracts.LedgerUpdatePatch(booked_date="2026-04-16", group_label=None),
+        patch=contracts.LedgerUpdatePatch(booked_date=date(_YEAR, 4, 16).isoformat(), group_label=None),
         patch_fields=("booked_date", "group_label"),
     )
 
@@ -66,7 +69,7 @@ def test_wire_request_preserves_explicit_null_and_rejects_unselected_values() ->
         contracts.LedgerUpdateRequest(
             profile_id=_PROFILE,
             transaction_id="b" * 12,
-            patch=contracts.LedgerUpdatePatch(booked_date="2026-04-16", direction="INFLOW"),
+            patch=contracts.LedgerUpdatePatch(booked_date=date(_YEAR, 4, 16).isoformat(), direction="INFLOW"),
             patch_fields=("booked_date",),
         )
 

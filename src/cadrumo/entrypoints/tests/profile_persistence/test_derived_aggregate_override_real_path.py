@@ -64,6 +64,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
@@ -79,9 +80,10 @@ from .eligible_descendants_support import eligible_descendants
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "51300000-0000-4000-8000-000000000513"
-_YEAR = 2024
+# The second-newest authored edition: the newest does not calculate from this test's profile.
+_YEAR = newest_authored_editions("100", 2)[0]
 _PERIOD_CODE = "0A"
-_T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR + 1, 8, 4, 10, 0, tzinfo=UTC)
 
 #: The estatal Art. 58/61 aggregate casilla the derived path feeds.
 _ESTATAL_CASILLA = "0513"
@@ -115,23 +117,12 @@ _MESH_OWNED_SOURCES = frozenset(
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
 
-#: Profile-sourced bindings this profile leaves unresolved and that the M100
-#: formula chain nonetheless requires a value for. They are unrelated to the
-#: Art. 58 aggregate under test and are supplied as caller zeros -- exactly as
-#: the sibling engine test does -- so the calculation reaches casilla 0513. The
-#: two mínimo bindings are deliberately NOT in this set: caller-supplying either
-#: would decide the very question the probe asks.
-_UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = ("renta-profile-cotizaciones-ss-madre",)
-
-
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
-    values: dict[BindingId, Decimal] = {
+    return {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
-    values.update(dict.fromkeys(_UNRELATED_PROFILE_BINDINGS, Decimal("0")))
-    return values
 
 
 @pytest.fixture
@@ -168,7 +159,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 
 
 def _calculate_estatal_minimo() -> Decimal:
-    """Run the real M100/2024/0A calculate action and return casilla 0513.
+    """Run the real M100 annual calculate action and return casilla 0513.
 
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.

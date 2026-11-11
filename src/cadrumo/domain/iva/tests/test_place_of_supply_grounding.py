@@ -27,6 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.resources.bundled_data import bundled_path
@@ -41,7 +42,7 @@ from ..supply_nature import SupplyNature
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 _ON = date(_YEAR, 6, 1)
 
 # The consolidated law, read once. Every article this table cites is an anchor
@@ -76,8 +77,8 @@ def _grounded_row_fields() -> dict[str, object]:
         "rule_id": "R_test",
         "legal_references": ("ley-37-1992:art-68",),
         "establishing_reference": "ley-37-1992:art-68",
-        "valid_from": date(2025, 1, 1),
-        "valid_to": date(2025, 12, 31),
+        "valid_from": date(_YEAR, 1, 1),
+        "valid_to": date(_YEAR, 12, 31),
     }
 
 
@@ -183,7 +184,7 @@ def test_row_validator_accepts_the_complete_grounded_and_exempt_shapes() -> None
                 "legal_basis_exempt": True,
                 "legal_references": (),
                 "establishing_reference": "",
-                "valid_from": date(2025, 1, 1),
+                "valid_from": date(_YEAR, 1, 1),
                 "valid_to": None,
             },
             "declares no validity window",
@@ -216,7 +217,7 @@ def test_row_validator_rejects_incomplete_kind_shapes(overrides: dict[str, objec
 
 def test_grounded_row_validator_rejects_an_inverted_window() -> None:
     fields = _grounded_row_fields()
-    fields.update(valid_from=date(2026, 1, 1), valid_to=date(2025, 12, 31))
+    fields.update(valid_from=date(_YEAR + 1, 1, 1), valid_to=date(_YEAR, 12, 31))
 
     with pytest.raises(ValueError, match="validity window ends before it starts"):
         IvaPlaceOfSupplyRule.model_validate(fields)
@@ -376,7 +377,7 @@ def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
         with pytest.raises(IvaCatalogueError, match="no place-of-supply grounding for year"):
             place_of_supply_rule(
                 "R05_domestic_at_rate_tier",
-                on=date(1990, 1, 1),
+                on=date(filing_year_envelope().floor - 1, 1, 1),
                 operation=_authority_operation_for_test,
-                projected_year=1990,
+                projected_year=filing_year_envelope().floor - 1,
             )

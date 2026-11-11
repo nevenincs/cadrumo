@@ -57,7 +57,7 @@ from cadrumo.core.classification.policies import SensitivityClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(1980, 7, 4, 12, 0, tzinfo=UTC)
 
 
 def _fresh_public_key_hex() -> str:

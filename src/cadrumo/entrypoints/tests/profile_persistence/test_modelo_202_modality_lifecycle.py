@@ -27,6 +27,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.user_profile.values import create_user_profile_record
 from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
@@ -89,7 +90,10 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-_CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
+_M202_YEAR = filing_year_envelope().horizon
+#: The M200 return a first-payment-period M202 builds on: the previous year's return is not yet due in 1P.
+_PRIOR_M200_YEAR = _M202_YEAR - 2
+_CLOCK = datetime(_M202_YEAR, 6, 5, 10, 0, tzinfo=UTC)
 _BUCKET_ID = "69ba4fa8-427a-4853-8758-9ead443fb20c"
 _TAX_ID = "B00015016"
 _M202_RELATION_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
@@ -154,7 +158,7 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(2020, 1, 1),
+        activity_start_date=date(_PRIOR_M200_YEAR - 4, 1, 1),
         incn_prior_12_months=incn,
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -199,24 +203,24 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
     snapshot = published_authority_operation().snapshot(
-        "200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        "200", filing_year=_PRIOR_M200_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="200",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_PRIOR_M200_YEAR,
+        period=Period.from_year_and_code(_PRIOR_M200_YEAR, "0A"),
         revision_id=snapshot.revision.id,
         ports=_work_ports(work_repo),
         clock=_CLOCK,
         operation=operation,
     )
-    evidence_reference_id = "JUSTM20020240A"
+    evidence_reference_id = f"JUSTM200{_PRIOR_M200_YEAR}0A"
     casilla_values = {_M200_CUOTA_EJERCICIO: Decimal("0")}
     persist_justificante_metadata(
         evidence_reference_id,
         modelo="200",
-        filing_year=2024,
+        filing_year=_PRIOR_M200_YEAR,
         period="0A",
         captured_at=_CLOCK,
         tax_id=_TAX_ID,
@@ -238,11 +242,11 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
         CalculationObservationRepository().prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="200",
-                filing_year=2024,
+                filing_year=_PRIOR_M200_YEAR,
                 period="0A",
                 observations=registry_grounded_observations(
                     modelo="200",
-                    filing_year=2024,
+                    filing_year=_PRIOR_M200_YEAR,
                     period="0A",
                     casilla_values=casilla_values,
                     grade=RegistryAuthorityGrade.CALCULATION,
@@ -253,7 +257,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
             stamped_revision_id=snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "aeat_expediente_id": "EXP-M200-2024-0A",
+                "aeat_expediente_id": f"EXP-M200-{_PRIOR_M200_YEAR}-0A",
                 "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": _TAX_ID,
             },
@@ -264,13 +268,13 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
 def _create_first_payment_work_unit(
     work_repo: WorkUnitCatalogueRepository, operation: PinnedAuthorityOperation
 ) -> WorkUnit:
-    """Create the 2026 first-payment-period modelo 202 work unit over ``work_repo``."""
-    snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
+    """Create the first-payment-period modelo 202 work unit over ``work_repo``."""
+    snapshot = published_authority_operation().snapshot("202", filing_year=_M202_YEAR, period="1P")
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="202",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1P"),
+        filing_year=_M202_YEAR,
+        period=Period.from_year_and_code(_M202_YEAR, "1P"),
         revision_id=snapshot.revision.id,
         ports=_work_ports(work_repo),
         clock=_CLOCK,
@@ -294,12 +298,12 @@ def _calculate_m202(
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
     verification_repo = VerificationReportCatalogueRepository()
-    snapshot = published_authority_operation().snapshot("202", filing_year=2026, period="1P")
+    snapshot = published_authority_operation().snapshot("202", filing_year=_M202_YEAR, period="1P")
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="202",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1P"),
+        filing_year=_M202_YEAR,
+        period=Period.from_year_and_code(_M202_YEAR, "1P"),
         revision_id=snapshot.revision.id,
         ports=_work_ports(work_repo),
         clock=_CLOCK,
@@ -486,7 +490,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         file_missing_bindings = file_context["missing_bindings"]
         assert isinstance(file_missing_bindings, tuple)
         assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
-        export_path = tmp_path / "modelo-202-2026-1P.txt"
+        export_path = tmp_path / f"modelo-202-{_M202_YEAR}-1P.txt"
         with (
             pytest.raises(ModeloRequiredBindingsMissingError) as export_error,
             bundled_indexed_authority().operation() as operation,

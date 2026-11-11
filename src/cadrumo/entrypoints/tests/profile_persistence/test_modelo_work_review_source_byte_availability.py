@@ -15,6 +15,8 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import T0, Repos
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
@@ -80,7 +82,9 @@ def _assert_rows_cite_registry_provenance(review: ModeloWorkReview, snapshot: Re
 def test_fixed_width_review_assembles_without_record_design_bytes(
     repos: Repos, operation: PinnedAuthorityOperation
 ) -> None:
-    review, snapshot = _review(repos, operation, modelo=ModeloCode("130"), filing_year=2026, period_code="1T")
+    review, snapshot = _review(
+        repos, operation, modelo=ModeloCode("130"), filing_year=filing_year_envelope().horizon, period_code="1T"
+    )
     record_designs = {
         str(source_id)
         for source_id, source in snapshot.sources.items()
@@ -102,7 +106,9 @@ def test_fixed_width_review_assembles_without_record_design_bytes(
 def test_xml_dictionary_review_resolves_official_paths_from_embedded_dictionary(
     repos: Repos, operation: PinnedAuthorityOperation
 ) -> None:
-    review, snapshot = _review(repos, operation, modelo=ModeloCode("100"), filing_year=2023, period_code="0A")
+    review, snapshot = _review(
+        repos, operation, modelo=ModeloCode("100"), filing_year=newest_authored_edition("100"), period_code="0A"
+    )
 
     _assert_rows_cite_registry_provenance(review, snapshot)
     addressed = [row for row in review.casillas if row.estado_casilla_oficial is EstadoCasillaOficial.ADDRESSED]

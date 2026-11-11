@@ -58,7 +58,7 @@ def _row(*, certificado_id: str = "2596230606502", concepto: str = "Sample") -> 
         titular_nombre="Test S.L.",
         destinatario_nif="B12345678",
         destinatario_nombre="Test S.L.",
-        fecha_emision=date(2025, 3, 10),
+        fecha_emision=date(1980, 3, 10),
         fecha_notificacion=None,
         modo_notificacion=None,
         leida=None,
@@ -74,7 +74,7 @@ def _snapshot(
 ) -> NotificationsSnapshot:
     return NotificationsSnapshot(
         rows=rows,
-        captured_at=captured_at or datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
+        captured_at=captured_at or datetime(1980, 3, 15, 10, 0, tzinfo=UTC),
         source_url=source_url,
     )
 
@@ -210,14 +210,14 @@ class TestLatest:
             bucket_id=secure_engine.bucket_id,
             snapshot=_snapshot(
                 rows=(_row(concepto="older"),),
-                captured_at=datetime(2025, 1, 1, tzinfo=UTC),
+                captured_at=datetime(1980, 1, 1, tzinfo=UTC),
             ),
         )
         newer = svc.capture(
             bucket_id=secure_engine.bucket_id,
             snapshot=_snapshot(
                 rows=(_row(concepto="newer"),),
-                captured_at=datetime(2025, 6, 1, tzinfo=UTC),
+                captured_at=datetime(1980, 6, 1, tzinfo=UTC),
             ),
         )
         latest = svc.latest(bucket_id=secure_engine.bucket_id)

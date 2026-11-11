@@ -8,10 +8,13 @@ from textual.widgets import Button, Input, Select, Static
 
 from .....application.modelo.work_calculation_contracts import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.settling import settle
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _ATTACHMENT_ID = "a" * 64
 
@@ -60,7 +63,7 @@ async def test_m303_evidence_screen_can_request_secure_admission_at_an_explicit_
         )
         await settle(pilot)
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "true"
-        app.screen.query_one("#m303-evidence-observed-at", Input).value = "2026-09-22T12:00:00Z"
+        app.screen.query_one("#m303-evidence-observed-at", Input).value = f"{_YEAR}-09-22T12:00:00Z"
         app.screen.query_one("#m303-evidence-submit", Button).press()
         await settle(pilot)
 
@@ -68,7 +71,7 @@ async def test_m303_evidence_screen_can_request_secure_admission_at_an_explicit_
         assert submission is not None
         assert submission.existing_evidence is None
         assert submission.observed_at is not None
-        assert submission.observed_at.isoformat() == "2026-09-22T12:00:00+00:00"
+        assert submission.observed_at.isoformat() == f"{_YEAR}-09-22T12:00:00+00:00"
         app.exit(None)
 
 
@@ -78,9 +81,9 @@ async def test_m303_evidence_screen_can_request_secure_admission_at_an_explicit_
     [
         (_ATTACHMENT_ID, "", ""),
         ("", _ATTACHMENT_ID, ""),
-        (_ATTACHMENT_ID, _ATTACHMENT_ID, "2025-04-01T12:00:00Z"),
+        (_ATTACHMENT_ID, _ATTACHMENT_ID, f"{_YEAR - 1}-04-01T12:00:00Z"),
         ("", "", ""),
-        ("", "", "2025-04-01T12:00:00"),
+        ("", "", f"{_YEAR - 1}-04-01T12:00:00"),
         ("not-a-digest", "not-a-digest", ""),
     ],
     ids=["id-only", "sha-only", "both-paths", "neither-path", "naive-instant", "malformed-pair"],

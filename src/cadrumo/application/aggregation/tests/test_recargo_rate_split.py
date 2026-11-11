@@ -21,6 +21,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
@@ -32,8 +33,9 @@ from ..modelo_bindings_invoice_iva import ScreenedInvoiceIva, screened_invoice_i
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"
-_PERIOD = Period.from_year_and_code(2026, "2T")
-_ISSUED = date(2026, 5, 12)
+_YEAR = filing_year_envelope().horizon
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
+_ISSUED = date(_YEAR, 5, 12)
 
 
 def _line(description: str, base: str, rate: str, cuota: str) -> InvoiceLine:

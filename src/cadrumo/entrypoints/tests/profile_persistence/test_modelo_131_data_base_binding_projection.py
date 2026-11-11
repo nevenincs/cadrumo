@@ -33,10 +33,13 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_work_lifecycle_ports,
 )
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "31313131-1313-4131-8131-313131313131"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -60,7 +63,7 @@ def _store_objective_estimation_profile(objects: SecureObjectRepository) -> None
                     UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
                     UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
                     UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-                    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 1, 1, 1)),
                 )
             ),
             created_at=_T0,
@@ -82,9 +85,9 @@ def _seed_m131_work_unit(work_unit_repository: WorkUnitCatalogueRepository, *, o
     return create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="131",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2026",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(revision_serving_period("131", _YEAR, "1T").id),
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_T0,
         operation=operation,

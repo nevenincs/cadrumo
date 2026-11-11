@@ -36,6 +36,7 @@ from ....domain.calculations.registry.modelo_obligation_scope import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
@@ -60,7 +61,8 @@ from ..coverage import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-_TODAY = date(2026, 7, 1)
+_YEAR = filing_year_envelope().horizon
+_TODAY = date(_YEAR, 7, 1)
 
 
 def _paying_autonomo() -> TaxpayerProfile:
@@ -322,7 +324,7 @@ def test_calendar_attaches_coverage_by_default(
     """
     calendar = build_overview_calendar(
         _paying_autonomo(),
-        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         operation=authority_operation,
         today=_TODAY,
     )

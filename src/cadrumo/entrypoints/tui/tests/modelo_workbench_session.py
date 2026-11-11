@@ -58,6 +58,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
@@ -82,7 +83,8 @@ if TYPE_CHECKING:
     from ..operations.controller_port import OperationResponseControlPort
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
-_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_HORIZON = filing_year_envelope().horizon
+_T0 = datetime(_HORIZON, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ACTOR = "operator:tui-modelo"
 
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
@@ -345,7 +347,7 @@ def real_workbench(
     tmp_path: Path,
     *,
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _HORIZON,
     period_code: str = "1T",
     extra_facts: tuple[UserProfileFact, ...] = (),
 ) -> Generator[InstalledModeloWorkbench]:

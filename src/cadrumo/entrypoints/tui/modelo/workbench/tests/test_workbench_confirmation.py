@@ -31,6 +31,7 @@ from ......application.modelo.work_form_typing_effect import ModeloFormDisplacem
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen
@@ -86,7 +87,7 @@ def _typed_input(value: str = "250") -> ModeloFormField:
 
 def _unwritable_assumed() -> ModeloFormField:
     """An assumed manual box whose kind of value cannot be entered here yet."""
-    return _assumed("05", "2024").model_copy(
+    return _assumed("05", str(filing_year_envelope().floor)).model_copy(
         update={
             "data_type": "year",
             "editability": ModeloFormEditability.NOT_WRITABLE,

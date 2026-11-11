@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -53,16 +53,20 @@ from cadrumo.entrypoints.cli.prorrata_register_results import (
 )
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _SOURCE_KIND = "aeat_sede_justificante"
-_CAPTURED_AT = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_WHOLE_SEED_CURRENT_YEAR = 2026
-_WHOLE_SEED_PRIOR_YEAR = 2025
-_SECTOR_PRIOR_YEAR = 2024
-_SECTOR_CURRENT_YEAR = 2025
+_CAPTURED_AT = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_WHOLE_SEED_CURRENT_YEAR = _YEAR
+_WHOLE_SEED_PRIOR_YEAR = _YEAR - 1
+_SECTOR_PRIOR_YEAR = _YEAR - 1
+_SECTOR_CURRENT_YEAR = _YEAR
 _SETTLEMENT_PERIOD = "4T"
 _PRIOR_DEFINITIVE = Decimal("87")
 _PORCENTAJE_ID: CasillaId = validated_casilla_id(
@@ -76,7 +80,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Prorrata",
     "activities.description": "synthetic prorrata register profile",
-    "censo.activity_start_date": "2020-01-01",
+    "censo.activity_start_date": date(filing_year_envelope().floor, 1, 1).isoformat(),
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -174,7 +178,7 @@ def _store_prior_settlement_observation() -> None:
     )
 
 
-_GROSS_YEAR = 2026
+_GROSS_YEAR = _YEAR
 
 
 def _declare_gross(profile: RegisteredCliProfile, amount: str, *extra: str) -> Result:
@@ -582,7 +586,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
             ProrrataRegister(
                 entries=(
                     ProrrataRegisterEntry(
-                        ejercicio=2024,
+                        ejercicio=_YEAR - 1,
                         regime=ProrrataRegisterRegime.from_registry("general"),
                         especial_transition=None,
                         source_registry_snapshot_refs=(),
@@ -594,7 +598,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
 
         repository.upsert_entry(
             ProrrataRegisterEntry(
-                ejercicio=2025,
+                ejercicio=_YEAR,
                 regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 provisional_percentage=Decimal("60"),
@@ -606,14 +610,14 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
 
         reloaded = repository.load()
         assert reloaded.sector_definitions == (definition,)
-        assert {entry.ejercicio for entry in reloaded.entries} == {2024, 2025}
+        assert {entry.ejercicio for entry in reloaded.entries} == {_YEAR - 1, _YEAR}
 
 
 def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="77873c85-0589-4b50-b184-7e8f33dc4471"):
         repository = ProrrataRegisterRepository()
         entry = ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("especial"),
             especial_transition=None,
             provisional_percentage=Decimal("60"),
@@ -665,7 +669,7 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
     renders. The emitted value stays the untranslated transport token.
     """
     entry = ProrrataRegisterEntry(
-        ejercicio=2024,
+        ejercicio=_YEAR - 1,
         regime=regime,
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=kind,

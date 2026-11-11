@@ -18,8 +18,11 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import derive_transaction_id
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import BUCKET_ID, repositories
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +31,7 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand.model_validate(
         {
             "bucket_id": BUCKET_ID,
-            "booked_date": date(2026, 5, 1),
+            "booked_date": date(_YEAR, 5, 1),
             "amount": Decimal("75.00"),
             "direction": TransactionDirection.OUTGOING,
             "description": "bank fee",
@@ -53,7 +56,7 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
         created = create_manual_transaction(
             _command(own_account_id="acc-01"),
             ports=bound_ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
     assert created.transaction.own_account_id == "acc-01"
     assert created.ref.transaction_id == derive_transaction_id(created.transaction.raw, own_account_id="acc-01")
@@ -67,7 +70,7 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
             actor="operator",
             source_command="aeat app ledger update",
             ports=edit_ports,
-            occurred_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 8, 0, tzinfo=UTC),
         )
     assert noted.transaction.own_account_id == "acc-01"
     assert noted.ref.transaction_id == created.ref.transaction_id
@@ -80,7 +83,7 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
             actor="operator",
             source_command="aeat app ledger update",
             ports=move_ports,
-            occurred_at=datetime(2026, 5, 3, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 3, 8, 0, tzinfo=UTC),
         )
     assert moved.transaction.own_account_id == "acc-02"
     assert moved.ref.transaction_id == derive_transaction_id(moved.transaction.raw, own_account_id="acc-02")
@@ -102,7 +105,7 @@ def test_an_unbound_add_keeps_the_unbound_id(secure_objects: SecureObjectReposit
         created = create_manual_transaction(
             _command(),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     assert created.transaction.own_account_id is None

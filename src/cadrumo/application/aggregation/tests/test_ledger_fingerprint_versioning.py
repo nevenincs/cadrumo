@@ -29,6 +29,7 @@ import pytest
 
 from ....core.hashing import sha256_hex
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.iva.schema import EUMemberState
@@ -55,14 +56,18 @@ from ..ledger_filing_snapshot import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_CAPTURED_AT = datetime(2026, 1, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_BOOKED = date(_YEAR, 2, 10)
+_ACCRUAL = date(_YEAR, 3, 30)
+_MOVED_OPERATION = date(_YEAR, 4, 2)
+_CAPTURED_AT = datetime(1980, 1, 1, tzinfo=UTC)
 _LEGAL_REFS = ("ley-37-1992-art-97",)
 _SOURCE_REFS = ("aeat-modelo-303",)
 
 
 def _iva_transaction(transaction_id: str, *, direction: TransactionDirection, taxable_base: Decimal) -> Transaction:
     """Build the minimal transaction needed by the fingerprint contract tests."""
-    booked_date = date(2026, 2, 10)
+    booked_date = _BOOKED
     iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
     fields: dict[str, object] = {
         "raw": RawTransaction(
@@ -163,7 +168,7 @@ def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -
 @pytest.mark.parametrize("version", [1, 2, 3])
 def test_the_older_field_sets_do_not_see_a_new_operation_date_or_a_detached_evidence(version: int) -> None:
     purchase = _purchase()
-    moved = purchase.model_copy(update={"operation_date": date(2026, 3, 30), "deduction_provenance": None})
+    moved = purchase.model_copy(update={"operation_date": _ACCRUAL, "deduction_provenance": None})
     assert row_fingerprint(moved, field_set_version=version) == row_fingerprint(purchase, field_set_version=version)
     assert row_fingerprint(moved, field_set_version=5) != row_fingerprint(purchase, field_set_version=5)
 
@@ -183,7 +188,7 @@ def test_v7_appends_exactly_the_stated_accrual_date_to_v6_and_is_current() -> No
 @pytest.mark.parametrize("version", [1, 2, 3, 5, 6])
 def test_a_stated_accrual_date_is_drift_under_v7_and_quiet_under_every_older_field_set(version: int) -> None:
     purchase = _purchase()
-    stated = purchase.model_copy(update={"accrual_date": date(2026, 3, 30)})
+    stated = purchase.model_copy(update={"accrual_date": _ACCRUAL})
     assert row_fingerprint(stated, field_set_version=version) == row_fingerprint(purchase, field_set_version=version)
     assert row_fingerprint(stated, field_set_version=7) != row_fingerprint(purchase, field_set_version=7)
 
@@ -202,31 +207,31 @@ def _evidence_row_of(transaction: Transaction) -> LedgerEvidenceRow:
 
 def test_an_iva_operation_date_change_alone_leaves_the_accrual_date_alone() -> None:
     """The two dates are separate facts: moving the IVA devengo never rewrites the Renta one."""
-    stated = _purchase().model_copy(update={"accrual_date": date(2026, 3, 30)})
-    moved = stated.model_copy(update={"operation_date": date(2026, 4, 2)})
-    assert moved.accrual_date == stated.accrual_date == date(2026, 3, 30)
+    stated = _purchase().model_copy(update={"accrual_date": _ACCRUAL})
+    moved = stated.model_copy(update={"operation_date": _MOVED_OPERATION})
+    assert moved.accrual_date == stated.accrual_date == _ACCRUAL
     assert row_fingerprint(moved, field_set_version=6) != row_fingerprint(stated, field_set_version=6)
     assert row_fingerprint(moved) != row_fingerprint(stated)
 
     before_row = _evidence_row_of(stated)
     after_row = _evidence_row_of(moved)
-    assert before_row.accrual_date == after_row.accrual_date == "2026-03-30"
+    assert before_row.accrual_date == after_row.accrual_date == _ACCRUAL.isoformat()
     assert before_row.operation_date is None
-    assert after_row.operation_date == "2026-04-02"
+    assert after_row.operation_date == _MOVED_OPERATION.isoformat()
 
 
 def test_the_evidence_row_carries_the_stated_accrual_date_and_an_older_row_loads_without_it() -> None:
     purchase = _purchase()
-    stated = purchase.model_copy(update={"accrual_date": date(2026, 3, 30)})
+    stated = purchase.model_copy(update={"accrual_date": _ACCRUAL})
     assert _evidence_row_of(purchase).accrual_date is None
-    assert _evidence_row_of(stated).accrual_date == "2026-03-30"
+    assert _evidence_row_of(stated).accrual_date == _ACCRUAL.isoformat()
     older = {key: value for key, value in _evidence_row_of(purchase).model_dump().items() if key != "accrual_date"}
     assert LedgerEvidenceRow.model_validate(older).accrual_date is None
 
 
 def test_a_v6_snapshot_stays_quiet_on_an_accrual_date_and_a_current_one_drifts() -> None:
     before = _purchase()
-    stated = before.model_copy(update={"accrual_date": date(2026, 3, 30)})
+    stated = before.model_copy(update={"accrual_date": _ACCRUAL})
     v6 = _sealed_under_v6(before)
     assert v6.fingerprint_field_set_version == 6
     narrower = evaluate_ledger_filing_staleness(v6, _catalogue(stated))
@@ -288,7 +293,7 @@ def test_a_v5_snapshot_stays_quiet_on_a_vehicle_use_and_on_an_untouched_row() ->
 
 def test_a_v5_snapshot_still_detects_drift_in_a_v5_fact() -> None:
     before = _purchase()
-    after = before.model_copy(update={"operation_date": date(2026, 3, 30)})
+    after = before.model_copy(update={"operation_date": _ACCRUAL})
     verdict = evaluate_ledger_filing_staleness(_sealed_under_v5(before), _catalogue(after))
     assert verdict.is_stale is True
     assert verdict.changed == (before.transaction_id,)
@@ -527,8 +532,8 @@ def test_a_bundle_stored_before_v3_hydrates_unchanged_and_compares_under_its_own
                 {
                     "transaction_id": purchase.transaction_id,
                     "fingerprint": fingerprint,
-                    "booked_date": "2026-02-10",
-                    "value_date": "2026-02-10",
+                    "booked_date": _BOOKED.isoformat(),
+                    "value_date": _BOOKED.isoformat(),
                     "amount": "242.00",
                     "currency": "EUR",
                     "direction": purchase.direction.value,

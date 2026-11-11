@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.published_authority import published_legal_reference
 from ..lookup import (
     rate_kinds_for_declared_rate,
     select_unique_rate_kind,
@@ -17,6 +18,15 @@ from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind, spanish_eu_member_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+# The temporary rates are bounded by RD-ley 4/2024 art. 1; its window is read from the
+# published provision.
+_RDL_4_2024 = published_legal_reference("real-decreto-ley-4-2024:art-1")
+assert _RDL_4_2024.effective_to is not None
+_WINDOW_OPENS = _RDL_4_2024.effective_from
+_WINDOW_CLOSES = _RDL_4_2024.effective_to
+_WINDOW_YEAR = _WINDOW_OPENS.year
+_AFTER_WINDOW = _WINDOW_CLOSES + timedelta(days=1)
 
 _ES = EUMemberState.from_registry("es")
 _GENERAL = IvaRateKind("general")
@@ -28,11 +38,11 @@ _ZERO = IvaRateKind("zero")
 @pytest.mark.parametrize(
     ("declared_rate", "on_date", "expected"),
     [
-        (Decimal("0.05"), date(2024, 7, 1), _REDUCED),
-        (Decimal("0.02"), date(2024, 10, 1), _SUPER_REDUCED),
-        (Decimal("0.075"), date(2024, 12, 31), _REDUCED),
-        (Decimal("0"), date(2025, 1, 1), _ZERO),
-        (Decimal("0.02"), date(2025, 1, 1), None),
+        (Decimal("0.05"), _WINDOW_OPENS, _REDUCED),
+        (Decimal("0.02"), date(_WINDOW_YEAR, 10, 1), _SUPER_REDUCED),
+        (Decimal("0.075"), _WINDOW_CLOSES, _REDUCED),
+        (Decimal("0"), _AFTER_WINDOW, _ZERO),
+        (Decimal("0.02"), _AFTER_WINDOW, None),
     ],
 )
 def test_unique_projection_uses_published_rate_windows(

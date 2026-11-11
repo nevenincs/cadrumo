@@ -30,6 +30,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.next_step import OperationOpenProfileFieldStepV1
 from ..errors import RetencionesWindowEmptyError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
@@ -40,6 +41,7 @@ from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
 _PERCEPTOR_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M115_PERCEPTOR_BINDING_ID = "modelo-115-perceptores"
 _M115_BASE_BINDING_ID = "modelo-115-base-retenciones"
@@ -130,14 +132,14 @@ def _observation(nif: str) -> RetencionObservation:
         scheme=RetencionScheme("arrendamiento_urbano"),
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("190.00"),
-        accrued_on="2024-03-15",
+        accrued_on=date(_YEAR, 3, 15).isoformat(),
         modelo_180_property=Modelo180PropertyEvidence(
             property_key=f"property-{nif}",
             situation="1",
             cadastral_reference=f"{nif}PROPERTY",
             recipient_province_code="28",
             modality="1",
-            accrual_year=2024,
+            accrual_year=_YEAR,
             withholding_percentage=Decimal("19.00"),
             address=Modelo180StructuredAddress(
                 province_code="28",
@@ -160,7 +162,7 @@ def _m180_revision_with_retenciones_source() -> ModeloRevision:
     Simulates the registry re-stamp via ``model_copy`` so the resolver is
     exercised before the registry cutover lands.
     """
-    snapshot = _authority_snapshot("180", 2024, "0A")
+    snapshot = _authority_snapshot("180", _YEAR, "0A")
     existing = next(b for b in snapshot.revision.bindings if str(b.id) == _PERCEPTOR_BINDING_ID)
     flipped = existing.model_copy(update={"source": BindingSourceKind.RETENCIONES_AGGREGATION})
     other = tuple(b for b in snapshot.revision.bindings if str(b.id) != _PERCEPTOR_BINDING_ID)
@@ -171,8 +173,8 @@ def _context(revision: ModeloRevision) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="180",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         revision=revision,
     )
 
@@ -190,14 +192,14 @@ def _context_for(*, modelo: str, filing_year: int, period: str, revision: Modelo
 def test_resolver_materialises_distinct_perceptor_count() -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
     repository = _InMemoryRetencionObservationRepository()
-    period = Period.from_year_and_code(2024, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     # 00001500M appears twice (e.g. two payments) but is ONE perceptor; the
     # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
     # so seed via two NIFs plus a repeat to prove distinctness through the
     # aggregator, not the store.)
     repository.replace_observations(
         modelo="115",
-        filing_year=2024,
+        filing_year=_YEAR,
         period=period,
         observations=[_observation("00001500M"), _observation("00001501Y")],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -215,10 +217,10 @@ def test_resolver_materialises_distinct_perceptor_count() -> None:
 def test_resolver_materialises_modelo_115_count_and_base_from_application_port() -> None:
     """M115 01/02 resolve from application-port per-perceptor observations."""
     repository = _InMemoryRetencionObservationRepository()
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     repository.replace_observations(
         modelo="115",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         observations=[
             RetencionObservation(
@@ -229,15 +231,15 @@ def test_resolver_materialises_modelo_115_count_and_base_from_application_port()
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 taxable_base=Decimal("2700.00"),
                 retencion_amount=Decimal("513.00"),
-                accrued_on="2026-03-15",
+                accrued_on=date(_YEAR, 3, 15).isoformat(),
             ),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    snapshot = _authority_snapshot("115", 2026, "1T")
+    snapshot = _authority_snapshot("115", _YEAR, "1T")
 
     resolution = _resolver(repository).resolve(
-        _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+        _context_for(modelo="115", filing_year=_YEAR, period="1T", revision=snapshot.revision),
     )
 
     assert resolution.binding_values == {
@@ -260,10 +262,10 @@ def test_modelo_115_box_03_and_the_modelo_180_total_are_the_withholdings_practis
     quarters = {"1T": (1, 2, 3), "2T": (4, 5, 6), "3T": (7, 8, 9), "4T": (10, 11, 12)}
     quarter_withheld: list[Decimal] = []
     for code, months in quarters.items():
-        period = Period.from_year_and_code(2026, code)
+        period = Period.from_year_and_code(_YEAR, code)
         repository.replace_observations(
             modelo="115",
-            filing_year=2026,
+            filing_year=_YEAR,
             period=period,
             observations=[
                 RetencionObservation(
@@ -274,15 +276,15 @@ def test_modelo_115_box_03_and_the_modelo_180_total_are_the_withholdings_practis
                     scheme=RetencionScheme("arrendamiento_urbano"),
                     taxable_base=Decimal("1000.03"),
                     retencion_amount=Decimal("190.01"),
-                    accrued_on=f"2026-{month:02d}-15",
+                    accrued_on=date(_YEAR, month, 15).isoformat(),
                 )
                 for month in months
             ],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        snapshot = _authority_snapshot("115", 2026, code)
+        snapshot = _authority_snapshot("115", _YEAR, code)
         resolution = _resolver(repository).resolve(
-            _context_for(modelo="115", filing_year=2026, period=code, revision=snapshot.revision),
+            _context_for(modelo="115", filing_year=_YEAR, period=code, revision=snapshot.revision),
         )
         result = calculate_registry_snapshot(
             snapshot,
@@ -291,7 +293,7 @@ def test_modelo_115_box_03_and_the_modelo_180_total_are_the_withholdings_practis
                 validated_casilla_id("04"): Decimal("0"),
             },
             binding_values=resolution.binding_values,
-            date_context={"filing_period": date(2026, 12, 31)},
+            date_context={"filing_period": date(_YEAR, 12, 31)},
         )
         assert result.values[validated_casilla_id("02")] == Decimal("3000.09")
         assert result.values[validated_casilla_id("03")] == Decimal("570.03")
@@ -304,10 +306,10 @@ def test_modelo_115_box_03_and_the_modelo_180_total_are_the_withholdings_practis
 def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_application_port() -> None:
     """M111 source bindings resolve the real registry's per-scheme count/base/retention selectors."""
     repository = _InMemoryRetencionObservationRepository()
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     repository.replace_observations(
         modelo="111",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         observations=[
             RetencionObservation(
@@ -318,7 +320,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
                 scheme=RetencionScheme("rendimientos_trabajo"),
                 taxable_base=Decimal("100.00"),
                 retencion_amount=Decimal("10.00"),
-                accrued_on="2026-01-31",
+                accrued_on=date(_YEAR, 1, 31).isoformat(),
             ),
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -328,7 +330,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
                 scheme=RetencionScheme("actividades_economicas"),
                 taxable_base=Decimal("200.00"),
                 retencion_amount=Decimal("20.00"),
-                accrued_on="2026-02-28",
+                accrued_on=date(_YEAR, 2, 28).isoformat(),
             ),
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -338,7 +340,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("300.00"),
                 retencion_amount=Decimal("30.00"),
-                accrued_on="2026-03-15",
+                accrued_on=date(_YEAR, 3, 15).isoformat(),
             ),
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -348,15 +350,15 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
                 scheme=RetencionScheme("premios"),
                 taxable_base=Decimal("400.00"),
                 retencion_amount=Decimal("40.00"),
-                accrued_on="2026-03-20",
+                accrued_on=date(_YEAR, 3, 20).isoformat(),
             ),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    snapshot = _authority_snapshot("111", 2026, "1T")
+    snapshot = _authority_snapshot("111", _YEAR, "1T")
 
     resolution = _resolver(repository).resolve(
-        _context_for(modelo="111", filing_year=2026, period="1T", revision=snapshot.revision),
+        _context_for(modelo="111", filing_year=_YEAR, period="1T", revision=snapshot.revision),
     )
 
     assert resolution.binding_values == _M111_BINDING_VALUES
@@ -371,10 +373,10 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
 
 def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
     """A declaring M115 revision without per-perceptor evidence refuses zero materialisation."""
-    snapshot = _authority_snapshot("115", 2026, "1T")
+    snapshot = _authority_snapshot("115", _YEAR, "1T")
     with pytest.raises(RetencionesWindowEmptyError) as exc_info:
         _resolver(_InMemoryRetencionObservationRepository()).resolve(
-            _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+            _context_for(modelo="115", filing_year=_YEAR, period="1T", revision=snapshot.revision),
         )
 
     assert exc_info.value.translated_message == "application.aggregation.retenciones.window_empty_lease"
@@ -393,14 +395,14 @@ def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
 
 def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payment_attestation() -> None:
     """An explicit matching profile fact is the sole empty-window zero authority."""
-    snapshot = _authority_snapshot("115", 2026, "1T")
+    snapshot = _authority_snapshot("115", _YEAR, "1T")
     resolver = RetencionesAggregationSourceResolver(
         ports=RetencionObservationPorts(repository=_InMemoryRetencionObservationRepository()),
-        m115_no_relevant_payment_periods=frozenset({(2026, "1T")}),
+        m115_no_relevant_payment_periods=frozenset({(_YEAR, "1T")}),
     )
 
     resolution = resolver.resolve(
-        _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+        _context_for(modelo="115", filing_year=_YEAR, period="1T", revision=snapshot.revision),
     )
 
     assert resolution.binding_values == {
@@ -414,9 +416,9 @@ def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payme
         resolver.resolve(
             _context_for(
                 modelo="115",
-                filing_year=2026,
+                filing_year=_YEAR,
                 period="2T",
-                revision=_authority_snapshot("115", 2026, "2T").revision,
+                revision=_authority_snapshot("115", _YEAR, "2T").revision,
             ),
         )
 
@@ -444,13 +446,13 @@ def test_resolver_is_silent_when_revision_declares_no_retenciones_binding() -> N
     Modelo 303 (IVA) declares no retenciones_aggregation binding. (M180/M193 DO
     declare it, so this uses a non-retenciones modelo.)
     """
-    snapshot = _authority_snapshot("303", 2024, "1T")
+    snapshot = _authority_snapshot("303", _YEAR, "1T")
     resolution = _resolver(_InMemoryRetencionObservationRepository()).resolve(
         CalculationSourceContext(
             bucket_id="operator",
             modelo="303",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision=snapshot.revision,
         ),
     )

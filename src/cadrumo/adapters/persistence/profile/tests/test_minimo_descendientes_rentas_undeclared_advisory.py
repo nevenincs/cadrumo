@@ -34,6 +34,7 @@ from .....application.modelo.tests.advisory_diagnostic_repositories import advis
 from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.user_profile.values import UserProfileFact
@@ -48,7 +49,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "7b7b7b7b-7b7b-4b7b-8b7b-7b7b7b7b7b7b"
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
 _ANNUAL_PERIOD = "0A"
 #: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
 _QUARTERLY_PERIOD = "1T"

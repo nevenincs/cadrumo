@@ -44,6 +44,7 @@ from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionCondi
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -58,7 +59,9 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecy
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_covering("130", _YEAR).id)
+_T0 = datetime(_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ADDRESSING_PROFILE_ID = "13000000-0000-4000-8000-000000000230"
 
 
@@ -94,9 +97,9 @@ def _seed_work_unit(
     return create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=_REVISION_ID,
         ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=clock,
         operation=operation,
@@ -124,8 +127,8 @@ def _seed_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2026,
+            revision_id=_REVISION_ID,
+            modelo_year=_YEAR,
             period="1T",
         ),
         state=state,
@@ -133,7 +136,7 @@ def _seed_revision(
         casilla_values={_OUTPUT_CASILLA: output},
         observations=registry_grounded_observations(
             modelo="130",
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
             casilla_values={_OUTPUT_CASILLA: output},
         ),
@@ -159,7 +162,7 @@ def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mut
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         first = _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         captured, _revision_id = repository.load_revisioned()
-        second_revision_id = "2019-y-siguientes-post-capture"
+        second_revision_id = f"{_REVISION_ID}-post-capture"
         second_payload = first.model_dump()
         second_payload.update(
             work_unit_id=derive_work_unit_id(
@@ -170,7 +173,7 @@ def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mut
                 revision_id=second_revision_id,
             ),
             revision_id=second_revision_id,
-            name="130-2026-1T-post-capture",
+            name=f"130-{_YEAR}-1T-post-capture",
             created_at=_T0 + timedelta(seconds=1),
             updated_at=_T0 + timedelta(seconds=1),
         )
@@ -197,8 +200,8 @@ def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mut
                 ModeloWorkSelectorRequest(
                     bucket_id=profile.bucket_id,
                     modelo="130",
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                 ),
                 catalogue=captured,
                 bucket_id=profile.bucket_id,
@@ -234,8 +237,8 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
 
     visible = ModeloVisibleFilingTarget(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=bucket_id,
     )
     exact = ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=bucket_id)
@@ -296,8 +299,8 @@ def test_revision_pick_defaults_are_command_specific_under_one_work_unit(
     )
     visible = ModeloVisibleFilingTarget(
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         bucket_id=bucket_id,
     )
     work_repository.save(
@@ -502,11 +505,11 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
 
 
 def _capture_period() -> Period:
-    return Period.from_year_and_code(2026, "1T")
+    return Period.from_year_and_code(_YEAR, "1T")
 
 
 def _capture_request(bucket_id: str | None) -> ModeloWorkSelectorRequest:
-    return ModeloWorkSelectorRequest(bucket_id=bucket_id, modelo="130", filing_year=2026, period=_capture_period())
+    return ModeloWorkSelectorRequest(bucket_id=bucket_id, modelo="130", filing_year=_YEAR, period=_capture_period())
 
 
 def _capture_source_imports() -> str:
@@ -557,7 +560,7 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
         request = _capture_request(profile.bucket_id)
         stale = capture_modelo_work_resolution(request, catalogue_repository=repository)
 
-        successor_revision_id = "2019-y-siguientes-successor"
+        successor_revision_id = f"{_REVISION_ID}-successor"
         successor_work_unit_id = derive_work_unit_id(
             bucket_id=first_unit.bucket_id,
             modelo=first_unit.modelo,
@@ -569,7 +572,7 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
         payload.update(
             work_unit_id=successor_work_unit_id,
             revision_id=successor_revision_id,
-            name="130-2026-1T-successor",
+            name=f"130-{_YEAR}-1T-successor",
             created_at=_T0 + timedelta(seconds=1),
             updated_at=_T0 + timedelta(seconds=1),
         )

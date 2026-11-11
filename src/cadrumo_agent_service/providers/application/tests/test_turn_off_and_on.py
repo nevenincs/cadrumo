@@ -163,7 +163,7 @@ def test_a_record_an_earlier_build_removed_still_reads_off_and_turns_on_as_unset
                     "assistant_auth": "direct_api",
                     "credential_state": "disabled",
                     "generation": "a" * 64,
-                    "updated_at": "2026-10-18T00:00:00Z",
+                    "updated_at": "1980-10-18T00:00:00Z",
                 }
             )
         )

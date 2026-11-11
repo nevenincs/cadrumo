@@ -22,6 +22,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import (
     ModeloIVAProfile,
 )
@@ -129,7 +130,7 @@ def empty_m303_export_arrivals(
 
 def m303_filing_facts(
     *,
-    filing_year: int = 2026,
+    filing_year: int = filing_year_envelope().horizon,
     period_code: str = "4T",
     annual_volume_nonzero: bool = False,
 ) -> M303FilingFacts:

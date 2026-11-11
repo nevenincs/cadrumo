@@ -15,11 +15,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....core.aggregation import IntracomOperationType
 from ....core.errors.hierarchy import CoreValidationError
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from ....domain.calculations.registry.tests.published_authority import published_legal_reference
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
@@ -46,6 +49,29 @@ from ..figures_preview_operation import (
 )
 from ..tests.catalogue_creation_fakes import in_memory_catalogue_creation_ports
 from .figures_preview_support import APRIL, PROFILE, NoRate, Unreachable, preview_draft, preview_line, public_decimal
+
+_YEAR = filing_year_envelope().horizon
+_FLOOR_YEAR = filing_year_envelope().floor
+
+# RDL 20/2012 art. 23.Dos fixed the 21 % general rate from the day it entered into force.
+_RDL_20_2012_GENERAL_RATE_START = published_legal_reference("real-decreto-ley-20-2012:art-23-dos").effective_from
+
+
+def _transitional_rate_day() -> date:
+    """Return a day inside the window in which the registry publishes the 7.5 % reduced rate."""
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact("iva-rate-schedule")
+    starts = [
+        variant.valid_from
+        for variant in fact.variants
+        if any(selector.name == "rate_role" and selector.value == "coexisting-7.5" for selector in variant.selectors)
+        and variant.valid_from is not None
+    ]
+    assert starts, "the registry publishes no 7.5 % window"
+    return min(starts) + timedelta(days=31)
+
+
+_TRANSITIONAL_RATE_DAY = _transitional_rate_day()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -216,14 +242,14 @@ _TABLE = (
     # RDL 4/2024: 7.5 % stood in the last quarter of 2024. 100.00 + 7.50.
     _Case(
         "rate-in-force-on-its-date",
-        {"issued_at": date(2024, 11, 1), **_lines(preview_line(iva_rate="RATE_7.5"))},
+        {"issued_at": _TRANSITIONAL_RATE_DAY, **_lines(preview_line(iva_rate="RATE_7.5"))},
         "would_accept",
         total="107.50",
     ),
     # The operation date decides over the issue date.
     _Case(
         "operation-date-decides",
-        {"operation_date": date(2024, 11, 1), **_lines(preview_line(iva_rate="RATE_7.5"))},
+        {"operation_date": _TRANSITIONAL_RATE_DAY, **_lines(preview_line(iva_rate="RATE_7.5"))},
         "would_accept",
         total="107.50",
     ),
@@ -721,7 +747,7 @@ def test_a_correction_refuses_a_retention_that_disagrees_with_the_stored_base(
         ({"rectifies_invoice_number": "F-1"}, InvoiceRuleFindingCode.RECTIFIED_INVOICE_NOT_ALLOWED),
         ({"counterparty_tax_id": None}, InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_REQUIRED),
         ({"counterparty_tax_id": "B00000282"}, InvoiceRuleFindingCode.COUNTERPARTY_TAX_ID_INVALID),
-        ({"operation_date": date(2026, 4, 1)}, InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH),
+        ({"operation_date": date(_YEAR, 4, 1)}, InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH),
     ),
     ids=("no-series", "no-rectified-number", "number-on-ordinary", "no-tax-id", "bad-checksum", "date-without-role"),
 )
@@ -744,7 +770,7 @@ def test_a_stored_operation_date_can_move_and_cannot_be_taken_away(operation: Pi
         operation_date_role="OPERATION_PERFORMED",
     )
 
-    moved = _preview(_correction(stored=stored, operation_date=date(2026, 4, 1)), operation=operation)
+    moved = _preview(_correction(stored=stored, operation_date=date(_YEAR, 4, 1)), operation=operation)
     taken = _preview(_correction(stored=stored), operation=operation)
 
     assert moved.verdict == "would_accept"
@@ -934,11 +960,11 @@ def test_a_date_inside_the_registry_support_carries_no_projection_finding(
 @pytest.mark.parametrize(
     ("on_date", "fraction", "cuota"),
     (
-        # AEAT 2020 IVA manual, art. 90: 18 % until 31 August 2012.
-        (date(2012, 8, 31), "0.18", "18.00"),
+        # AEAT 2020 IVA manual, art. 90: 18 % until the day before RDL 20/2012 art. 23.Dos took effect.
+        (_RDL_20_2012_GENERAL_RATE_START - timedelta(days=1), "0.18", "18.00"),
         # RDL 20/2012 art. 23.Dos: 21 % from the next day.
-        (date(2012, 9, 1), "0.21", "21.00"),
-        (date(2020, 12, 31), "0.21", "21.00"),
+        (_RDL_20_2012_GENERAL_RATE_START, "0.21", "21.00"),
+        (date(_FLOOR_YEAR - 2, 12, 31), "0.21", "21.00"),
     ),
 )
 def test_a_date_before_the_filing_years_reads_its_published_rate_and_warns(
@@ -955,7 +981,7 @@ def test_a_date_before_the_filing_years_reads_its_published_rate_and_warns(
 
 
 def test_the_earliest_projected_date_answers_the_grounded_rate(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(preview_draft(issued_at=date(2021, 1, 1)), operation=operation)
+    answer = _preview(preview_draft(issued_at=date(_FLOOR_YEAR - 1, 1, 1)), operation=operation)
 
     assert {slot.slot: slot for slot in answer.rate_slots}["RATE_21"].fraction == PublicDecimal(decimal="0.21")
     assert FigureFindingCode.RATE_DATE_PROJECTED in [item.code for item in answer.findings]
@@ -1059,7 +1085,7 @@ def test_the_request_round_trips_through_json() -> None:
     (
         ("counterparty_country", {"counterparty_country": "FR"}),
         ("iva_category", {"iva_category": "no_such_category"}),
-        ("operation_date", {"operation_date": date(2026, 4, 1)}),
+        ("operation_date", {"operation_date": date(_YEAR, 4, 1)}),
         ("series", {"invoice_class": "RECTIFICATIVA", "series": "R"}),
         ("invoice_class", {"invoice_class": "RECTIFICATIVA"}),
         ("rectifies_invoice_number", {"rectifies_invoice_number": "F-1"}),

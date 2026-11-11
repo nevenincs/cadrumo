@@ -35,6 +35,11 @@ from ....core.identity.hex_ids import CalculationRevisionId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    revision_covering,
+    revision_serving_period,
+)
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -73,6 +78,7 @@ _M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id("gastos-deducibles-previo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
 _PROFILE_ID = "13000000-0000-4000-8000-000000000330"
 
 
@@ -161,7 +167,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: Repos
     """
     wu_repo, _cr_repo, _vr_repo, bv_repo = repos
 
-    snap = published_authority_operation().snapshot("130", filing_year=2026, period="1T")
+    snap = published_authority_operation().snapshot("130", filing_year=_YEAR, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
     assert str(casilla_02.input_kind) == "computed", "box 02 adds the simplified-modality provision to the expenses"
@@ -173,9 +179,9 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: Repos
         work_unit = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(revision_covering("130", _YEAR).id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T0,
@@ -224,9 +230,9 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         work_unit = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
+            revision_id=str(revision_covering("130", _YEAR).id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T0,
@@ -236,9 +242,9 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     # C02 (gastos) are ledger-owned, so the income is a real ledger row.
     seed_m130_income_transaction(
         amount=Decimal("10000"),
-        filing_year=2026,
+        filing_year=_YEAR,
         source_key="substance-c15-cap-income",
-        value_date=date(2026, 4, 5),
+        value_date=date(_YEAR, 4, 5),
         bucket_id=_PROFILE_ID,
     )
     casilla_inputs: dict[CasillaId, Decimal] = {
@@ -337,9 +343,9 @@ def test_m131_c11_is_capped_at_the_positive_c10_whatever_the_carry(repos: Repos)
         work_unit = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="131",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "2T"),
-            revision_id="2026",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "2T"),
+            revision_id=str(revision_serving_period("131", _YEAR, "2T").id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T0,
@@ -408,9 +414,9 @@ def test_observation_tampering_is_detected_by_verify_path(repos: Repos) -> None:
         work_unit = create_work_unit(
             bucket_id=_PROFILE_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2019-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(revision_covering("130", _YEAR).id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
             clock=T0,
@@ -491,14 +497,14 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
     """
     checklist = _data_inventory_checklist(
         modelo="180",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         bucket_id=None,
     )
     assert _M180_PERCEPTOR_BASE not in {entry.casilla_id for entry in checklist.required_manual}
     assert _M180_PERCEPTOR_BASE not in {entry.casilla_id for entry in checklist.optional_manual}
     required = next(entry for entry in checklist.detail_row_fields if entry.casilla_id == _M180_PERCEPTOR_BASE)
-    snapshot = published_authority_operation().snapshot("180", filing_year=2024, period="0A")
+    snapshot = published_authority_operation().snapshot("180", filing_year=_YEAR, period="0A")
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M180_PERCEPTOR_BASE)
     expected_legal_refs = frozenset(str(r) for r in casilla.legal_refs)
     expected_source_refs = frozenset(str(r) for r in casilla.source_refs)
@@ -518,8 +524,8 @@ def test_required_manual_checklist_excludes_absent_registry_definition() -> None
     """The public checklist cannot invent an entry for an absent casilla."""
     checklist = _data_inventory_checklist(
         modelo="180",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "0A"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
         bucket_id=None,
     )
     entries = (

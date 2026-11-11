@@ -35,6 +35,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -47,6 +48,7 @@ from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.schema import InvoiceKind
 from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 from .invoice_confirmation_test_support import (
@@ -60,6 +62,9 @@ from .invoice_confirmation_test_support import (
     serving_a_loopback_reader,
 )
 from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+
+_YEAR = filing_year_envelope().horizon
+_PRINTED_DATE = date(_YEAR, 3, 10).strftime("%d/%m/%Y")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -75,7 +80,7 @@ _BOTH_PARTIES_PRINTED = (
     f"CIF emisor: {_ISSUER_CIF}",
     f"NIF cliente: {_BILLED_NIF}",
     "Numero de factura: 2026-0500",
-    "Fecha: 10/03/2026",
+    f"Fecha: {_PRINTED_DATE}",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -89,7 +94,7 @@ _ONE_PARTY_PRINTED = (
     "Factura de Acme Suministros SL",
     f"CIF emisor: {_ISSUER_CIF}",
     "Numero de factura: 2026-0501",
-    "Fecha: 10/03/2026",
+    f"Fecha: {_PRINTED_DATE}",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -97,8 +102,8 @@ _ONE_PARTY_PRINTED = (
 )
 
 _COMMON_FIGURES = {
-    "invoice_date": "2026-03-10",
-    "invoice_date_anchor": "10/03/2026",
+    "invoice_date": date(_YEAR, 3, 10).isoformat(),
+    "invoice_date_anchor": _PRINTED_DATE,
     "taxable_base": "100,00",
     "taxable_base_anchor": "100,00",
     "iva_rate": "21",

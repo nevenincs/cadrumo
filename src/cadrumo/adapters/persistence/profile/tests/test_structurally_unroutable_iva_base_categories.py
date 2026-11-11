@@ -15,6 +15,7 @@ from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueRead
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.models import TransactionCatalogue
@@ -23,9 +24,11 @@ from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_Q1_2025 = Period.from_year_and_code(2025, "1T")
+_Q1 = Period.from_year_and_code(_YEAR, "1T")
 _BUCKET_ID = "38383838-3838-4838-8838-383838383838"
 
 
@@ -60,7 +63,7 @@ def _catalogue_read_ports(
 
 
 def _m303_revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=_Q1.filing_year, period="1T").revision
 
 
 def _resolve_q1_2025(repository: TransactionCatalogueRepository):
@@ -78,8 +81,8 @@ def _resolve_q1_2025(repository: TransactionCatalogueRepository):
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2025,
-            period=_Q1_2025,
+            filing_year=_YEAR,
+            period=_Q1,
             revision=_m303_revision(),
         ),
     )

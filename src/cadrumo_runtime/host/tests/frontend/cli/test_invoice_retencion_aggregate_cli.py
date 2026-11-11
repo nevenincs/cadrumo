@@ -56,6 +56,7 @@ from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -76,9 +77,10 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
-_M111_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 5, 1, 9, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 5, 1, 10, 0, tzinfo=UTC)
+_M111_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _professional_services_invoice(
@@ -86,12 +88,12 @@ def _professional_services_invoice(
     bucket_id: str,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     number: str = "F-PROV-900",
-    issued_at: date = date(2025, 3, 15),
+    issued_at: date = date(_YEAR, 3, 15),
     counterparty_country: str = "ES",
     counterparty_tax_id: str = "B00015016",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",
@@ -139,7 +141,7 @@ def _withholding_evidence_payload(
         source_id=invoice.invoice_id,
         perceptor_tax_id=invoice.counterparty_tax_id or "",
         perceptor_legal_name=invoice.counterparty_name,
-        transaction_date=date(2025, 3, 31),
+        transaction_date=date(_YEAR, 3, 31),
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
@@ -154,7 +156,7 @@ def _withholding_evidence_payload(
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
         payment_event_id=payment_event_id,
-        payment_occurred_on=date(2025, 3, 31),
+        payment_occurred_on=date(_YEAR, 3, 31),
         allocation_id=allocation_id,
         allocated_base=Decimal("1000.00"),
         allocated_withholding=Decimal("150.00"),
@@ -175,7 +177,7 @@ _M111_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="withholding operator activity"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="censo.activity_start_date", value=date(filing_year_envelope().floor, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
         # The invoices withhold retención from a professional, and Modelo 111 applies only
         # to a payer of income subject to retención.
@@ -270,7 +272,7 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -324,7 +326,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
             lambda bucket_id: _professional_services_invoice(
                 bucket_id=bucket_id,
                 number="F-PROV-READBACK",
-                issued_at=date(2025, 3, 15),
+                issued_at=date(_YEAR, 3, 15),
             ),
         ),
         invoke_cli=run_cadrumo_cli,
@@ -339,7 +341,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -372,7 +374,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -387,7 +389,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
         assert json.loads(replay.output)["result"]["withholding_window"] == first_window
 
         omitted = session.invoke_password(
-            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"
+            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", str(_YEAR), "--period", "1T"
         )
         assert omitted.exit_code == 0, omitted.output
         omitted_window = json.loads(omitted.output)["result"]["withholding_window"]
@@ -402,7 +404,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -429,7 +431,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -446,7 +448,7 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(
         )
         assert stale.exit_code != 0
         after_stale = session.invoke_password(
-            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"
+            "--language", "en", "app", "modelo", "aggregate", "--modelo", "111", "--year", str(_YEAR), "--period", "1T"
         )
         assert after_stale.exit_code == 0, after_stale.output
         assert json.loads(after_stale.output)["result"]["withholding_window"] == replacement_window
@@ -495,7 +497,7 @@ def test_issued_invoice_retencion_is_refused_and_not_routed(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -559,7 +561,7 @@ def test_an_invoice_with_two_defects_is_refused_naming_both(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -621,7 +623,7 @@ def _producer_created_invoice(
             counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number=number,
-            issued_at=date(2025, 3, 15),
+            issued_at=date(_YEAR, 3, 15),
             taxable_base=Decimal("1000.00"),
             iva_rate=Decimal("21"),
             currency="EUR",
@@ -675,7 +677,7 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",
@@ -753,7 +755,7 @@ def test_producer_without_retention_is_excluded_from_m111(
             "--modelo",
             "111",
             "--year",
-            "2025",
+            str(_YEAR),
             "--period",
             "1T",
             "--received-invoice-retencion",

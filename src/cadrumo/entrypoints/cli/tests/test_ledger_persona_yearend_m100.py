@@ -31,6 +31,7 @@ import json
 import re
 from collections.abc import Callable, Sequence
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -79,12 +80,23 @@ def _year_of(row: dict[str, object]) -> int:
     return int(date_str[:4])
 
 
+@cache
+def _corpus_years() -> tuple[int, ...]:
+    """Return the calendar years the corpus rows are dated in, oldest first."""
+    return tuple(sorted({_year_of(r) for r in list_ledger_rows_via_cli()}))
+
+
+def _annual_year() -> int:
+    """Return the corpus year whose business income and expense the reviewer sums."""
+    return _corpus_years()[0]
+
+
 # --- Annual reach: the operator wants the whole year, not one quarter --------
 def test_corpus_spans_both_years() -> None:
     """The full-year reviewer must see rows in 2025 AND 2026 (cross-year ledger)."""
     rows = list_ledger_rows_via_cli()
     years = {_year_of(r) for r in rows}
-    assert {2025, 2026} <= years, years
+    assert len(years) == 2 and max(years) == min(years) + 1, years
 
 
 def test_annual_review_filter_renders_full_year() -> None:
@@ -94,17 +106,17 @@ def test_annual_review_filter_renders_full_year() -> None:
     token works, so the operator is not forced to walk four quarters — but the
     output is a row dump, not a totalled picture.
     """
-    annual = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
+    annual = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", f"year={_annual_year()}"])
     assert annual.exit_code == 0, annual.output
     # The annual filter must contain rows dated across the year, not just Q1.
-    assert "2025-01" in annual.output, annual.output
-    assert "2025-12" in annual.output or "2025-11" in annual.output, annual.output
+    assert f"{_annual_year()}-01" in annual.output, annual.output
+    assert f"{_annual_year()}-12" in annual.output or f"{_annual_year()}-11" in annual.output, annual.output
 
 
 def test_all_four_quarters_reviewable() -> None:
     """Each 2025 quarter is independently reviewable (per-period is the only roll-up)."""
     for q in ("1T", "2T", "3T", "4T"):
-        result = _invoke(["app", "ledger", "review", "--filter", f"period={q}", "--filter", "year=2025"])
+        result = _invoke(["app", "ledger", "review", "--filter", f"period={q}", "--filter", f"year={_annual_year()}"])
         assert result.exit_code == 0, f"{q}: {result.output}"
 
 
@@ -118,8 +130,8 @@ def test_check_surfaces_both_years_as_touched_periods() -> None:
     checked = _invoke(["--format", "json", "app", "ledger", "check"])
     assert checked.exit_code == 0, checked.output
     result = json.loads(checked.output)["result"]
-    assert "2025" in result["periods"], result["periods"]
-    assert "2026" in result["periods"], result["periods"]
+    for year in _corpus_years():
+        assert str(year) in result["periods"], result["periods"]
 
 
 # --- Annual income vs expense picture: assembled by hand from list JSON ------
@@ -164,7 +176,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
 
     # Assemble the annual picture by hand: there is no verb that does this.
     rows = list_ledger_rows_via_cli()
-    rows_2025 = [r for r in rows if _year_of(r) == 2025]
+    rows_2025 = [r for r in rows if _year_of(r) == _annual_year()]
     business_2025 = [r for r in rows_2025 if r.get("business_classification") == "BUSINESS"]
     income_rows = [r for r in business_2025 if r.get("direction") == "INCOMING"]
     income = sum(Decimal(str(r.get("amount", "0"))) for r in income_rows)
@@ -185,7 +197,7 @@ def test_full_year_total_equals_sum_of_its_quarters() -> None:
     Proves the operator CAN reconstruct the year from per-period views — but
     only by summing four separate queries; the CLI offers no annual aggregate.
     """
-    rows_2025 = [r for r in list_ledger_rows_via_cli() if _year_of(r) == 2025]
+    rows_2025 = [r for r in list_ledger_rows_via_cli() if _year_of(r) == _annual_year()]
 
     def _quarter(month: int) -> int:
         return (month - 1) // 3 + 1
@@ -265,12 +277,12 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     no income, expense, or net-activity figure — confirming the year-end Renta
     picture is not a first-class CLI output.
     """
-    status = _invoke(["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", "2025"])
+    status = _invoke(["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", str(_annual_year())])
     assert status.exit_code == 0, status.output
     result = json.loads(status.output)["result"]
     # Counts and readiness exist ...
     assert "total_count" in result and "ready" in result, result
-    assert result["period"] == {"filing_year": 2025, "code": "0A"}, result
+    assert result["period"] == {"filing_year": _annual_year(), "code": "0A"}, result
     # ... but no monetary roll-up field is present on the status surface.
     money_fields = {"income", "expense", "net", "total_amount", "ingresos", "gastos"}
     assert not (money_fields & set(result)), f"unexpected money rollup field: {result}"

@@ -1,6 +1,6 @@
 """A bien de inversión reaches its own deducible boxes on Modelo 303 and 390.
 
-Every Modelo 303 diseño de registro from 2022 onwards asks for the cuota
+Every Modelo 303 diseño de registro asks for the cuota
 soportada in pairs split by what was acquired: operaciones interiores corrientes
 [28]/[29] against bienes de inversión [30]/[31], importaciones [32]/[33] against
 [34]/[35], adquisiciones intracomunitarias [36]/[37] against [38]/[39], and box
@@ -46,6 +46,11 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    revision_serving_period,
+)
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -102,7 +107,7 @@ def _transaction(purchase: _Purchase, booked: date) -> Transaction:
             evidence_digest="b" * 64,
         ),
         "investment_asset_id": purchase.asset_id,
-        "classified_at": datetime(2026, 9, 1, 12, 0, tzinfo=UTC),
+        "classified_at": datetime(1980, 9, 1, 12, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if purchase.category == _AIC:
@@ -198,15 +203,21 @@ _MANUAL_QUARTER = (
     _Purchase("aic-bi", _AIC, "intra_eu_investment", Decimal("8000.00"), Decimal("1680.00"), "BI-AIC"),
 )
 
-# Each supported filing year, at a quarter inside it; 2024 carries two editions.
-_QUARTERS = (
-    (2022, "2T", 5),
-    (2023, "2T", 5),
-    (2024, "2T", 5),
-    (2024, "4T", 11),
-    (2025, "2T", 5),
-    (2026, "2T", 5),
-)
+
+def _edition_quarters() -> tuple[tuple[int, str, int], ...]:
+    """Each supported filing year at a quarter inside it, once per Modelo 303 edition that serves the year."""
+    quarters: list[tuple[int, str, int]] = []
+    for filing_year in filing_year_envelope().years:
+        served: set[str] = set()
+        for period, month in (("2T", 5), ("4T", 11)):
+            edition = str(revision_serving_period("303", filing_year, period).id)
+            if edition not in served:
+                served.add(edition)
+                quarters.append((filing_year, period, month))
+    return tuple(quarters)
+
+
+_QUARTERS = _edition_quarters()
 
 
 @pytest.mark.parametrize(("filing_year", "period", "month"), _QUARTERS)
@@ -251,7 +262,7 @@ def test_each_deducible_pair_splits_corrientes_from_bienes_de_inversion(
     assert _box(values, "iva.cuota-deducible-total") == Decimal("28770.00")
 
 
-@pytest.mark.parametrize(("filing_year", "period", "month"), [row for row in _QUARTERS if row[0] >= 2023])
+@pytest.mark.parametrize(("filing_year", "period", "month"), _QUARTERS)
 def test_the_numbered_corrientes_boxes_carry_only_the_corrientes_cuota(
     filing_year: int,
     period: str,
@@ -259,7 +270,7 @@ def test_the_numbered_corrientes_boxes_carry_only_the_corrientes_cuota(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """From 2023 the numbered cuota boxes project their sources, and [45] projects the total."""
+    """The numbered cuota boxes project their sources, and [45] projects the total."""
     booked = date(filing_year, month, 10)
     observations = _observations(
         ((purchase, booked) for purchase in _MANUAL_QUARTER),
@@ -281,12 +292,13 @@ def test_the_numbered_corrientes_boxes_carry_only_the_corrientes_cuota(
 def test_an_investment_row_without_its_register_record_reaches_no_box(*, operation: PinnedAuthorityOperation) -> None:
     """The split cannot become a way to claim a bien de inversión the register does not hold."""
     orphan = _Purchase("orphan", _DOMESTIC, "domestic_investment", Decimal("4000.00"), Decimal("840.00"), "BI-ORPHAN")
-    transaction = _transaction(orphan, date(2025, 5, 10))
+    filing_year = filing_year_envelope().horizon
+    transaction = _transaction(orphan, date(filing_year, 5, 10))
 
     with pytest.raises(BienInversionValidationError, match="no reciprocal bienes-inversion record"):
         aggregate_iva_ledger_observations(
             TransactionCatalogue.from_transactions((transaction,)),
-            period=Period.from_year_and_code(2025, "2T"),
+            period=Period.from_year_and_code(filing_year, "2T"),
             ledger_profile_id=_PROFILE_ID,
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_PROFILE_ID,
@@ -319,7 +331,7 @@ _ANNUAL_TO_QUARTERLY = (
 )
 
 
-@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
+@pytest.mark.parametrize("filing_year", filing_grade_exercises("390"))
 def test_the_annual_boxes_equal_the_sum_of_the_four_quarters(
     filing_year: int,
     *,

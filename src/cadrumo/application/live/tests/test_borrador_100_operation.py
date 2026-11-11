@@ -27,6 +27,7 @@ from ....core.operations import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -57,11 +58,13 @@ from .borrador_100_operation_support import (
 )
 from .test_borrador_100 import InMemoryBorradorRepository
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-_PERIOD = Period.from_year_and_code(2023, "0A")
+_PERIOD = Period.from_year_and_code(_YEAR, "0A")
 _HUMAN_SOURCE = "file-import:sha256:" + "a" * 64
 _CERTIFICATE = "renta-retencion-soportada-trabajo"
-# The 2023 borrador profile prints casillas 0505, 0545, 0546, 0585 and 0586. All
+# The newest borrador profile prints casillas 0505, 0545, 0546, 0585 and 0586. All
 # five are computed in that revision, so no admitted binding owns any of them.
 _PROFILE_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
@@ -145,8 +148,8 @@ def test_real_registration_compiles_distinct_closed_human_query_and_import_schem
 
 @pytest.mark.asyncio
 async def test_shared_canonical_view_preserves_scalars_and_withholds_query_provenance(subject: Subject) -> None:
-    # 2025 admits a decimal and a text binding to the borrador, so both scalar kinds are read back.
-    period = Period.from_year_and_code(2025, "0A")
+    # The newest year admits a decimal and a text binding to the borrador, so both scalar kinds are read back.
+    period = Period.from_year_and_code(_YEAR, "0A")
     snapshot = _snapshot(
         subject.operation,
         period=period,
@@ -195,12 +198,12 @@ async def test_canonical_list_state_order_and_empty_latest_keep_exact_pin(
     result = cast(contracts.Borrador100ReadExecutionResult, subject.operands.values[-1]).projection
     assert tuple(row.snapshot_id for row in result.rows) == (older.snapshot_id, newer.snapshot_id)
     assert tuple(row.state for row in result.rows) == (SnapshotLifecycleState.SUPERSEDED, SnapshotLifecycleState.ACTIVE)
-    request = _read_request(query=True, kind="latest", filing_year=2024)
+    request = _read_request(query=True, kind="latest", filing_year=_YEAR - 1)
     await module.Borrador100ReadExecutor(subject.compose, query=True).execute(
         request, subject.context(request.definition_id)
     )
     latest = cast(contracts.Borrador100QueryExecutionResult, subject.operands.values[-1]).projection
-    assert latest.filing_year == 2024 and latest.snapshot is None and latest.rows == ()
+    assert latest.filing_year == _YEAR - 1 and latest.snapshot is None and latest.rows == ()
 
 
 @pytest.mark.asyncio
@@ -299,7 +302,7 @@ async def test_import_reuses_actual_multi_save_supersession(subject: Subject, tm
 @pytest.mark.parametrize("defect", ["year", "profile", "coverage"])
 def test_prepare_refuses_bad_parser_receipt_before_commit(subject: Subject, tmp_path: Path, defect: str) -> None:
     if defect == "year":
-        subject.parser.change = {"ejercicio": "2024"}
+        subject.parser.change = {"ejercicio": str(_YEAR - 1)}
     elif defect == "profile":
         subject.parser.change = {"extraction_profile_id": "different-profile"}
     else:
@@ -485,4 +488,4 @@ def test_projector_rejects_cross_purpose_receipt(subject: Subject) -> None:
             ),
         )
     with pytest.raises(ValidationError):
-        contracts.Borrador100ReadRequest(profile_id=PROFILE_ID, kind="list", filing_year=2025)
+        contracts.Borrador100ReadRequest(profile_id=PROFILE_ID, kind="list", filing_year=_YEAR)

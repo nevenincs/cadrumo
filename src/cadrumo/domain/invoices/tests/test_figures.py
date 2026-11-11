@@ -34,6 +34,7 @@ from ..figures import (
     settlement_amount,
 )
 from ..models import Invoice, InvoiceLine
+from .invoice_catalogue_seed import STANDING_DEVENGO, window_middle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +87,7 @@ def _invoice(lines: tuple[InvoiceLine, ...], **overrides: object) -> Invoice:
         "bucket_id": None,
         "kind": InvoiceKind.RECEIVED.value,
         "invoice_number": "SYN-1",
-        "issued_at": date(2026, 4, 15).isoformat(),
+        "issued_at": STANDING_DEVENGO.isoformat(),
         "counterparty_name": "Synthetic supplier",
         "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
@@ -425,9 +426,9 @@ _NONNUMERIC = {"EXEMPT", "NOT_SUBJECT"}
 @pytest.mark.parametrize(
     ("on_date", "transitional_in_force", "transitional_out"),
     (
-        (date(2023, 6, 1), {"RATE_5": "0.05"}, {"RATE_2", "RATE_7.5"}),
-        (date(2024, 11, 1), {"RATE_2": "0.02", "RATE_7.5": "0.075"}, {"RATE_5"}),
-        (date(2026, 4, 15), {}, {"RATE_2", "RATE_5", "RATE_7.5"}),
+        (window_middle("RATE_5"), {"RATE_5": "0.05"}, {"RATE_2", "RATE_7.5"}),
+        (window_middle("RATE_2"), {"RATE_2": "0.02", "RATE_7.5": "0.075"}, {"RATE_5"}),
+        (STANDING_DEVENGO, {}, {"RATE_2", "RATE_5", "RATE_7.5"}),
     ),
 )
 def test_each_rate_slot_in_and_out_of_force_through_the_real_authority(

@@ -19,9 +19,12 @@ from ....application.modelo.export_contracts import ModeloExportResult
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..modelo_export_commands import export_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _ADVISORY_CODE = "modelo.export.completeness_unverified"
 
@@ -34,13 +37,13 @@ def _result(
         work_unit_id="b" * 64,
         bucket_id="bucket-operator",
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         output_path=tmp_path / "modelo-130.txt",
         byte_size=128,
         file_sha256="a" * 64,
         format="fichero-boe",
-        exported_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 5, 21, 12, 0, tzinfo=UTC),
         actor="operator",
         bucket_event_id="event-1",
         completeness_unverified=completeness_unverified,
@@ -81,7 +84,7 @@ def test_unverified_domiciliation_cutoff_emits_warning_with_the_tui_wording(tmp_
     warning = next(notice for notice in notices if notice.code == "modelo.export.domiciliation_cutoff_unverified")
     assert warning.severity is NoticeSeverity.WARNING
     assert warning.message.startswith("The filing window declares no direct-debit deadline")
-    assert warning.context == {"modelo": "130", "filing_year": "2026", "period": "1T"}
+    assert warning.context == {"modelo": "130", "filing_year": str(_YEAR), "period": "1T"}
 
 
 def test_known_domiciliation_cutoff_emits_no_cutoff_warning(tmp_path: Path) -> None:

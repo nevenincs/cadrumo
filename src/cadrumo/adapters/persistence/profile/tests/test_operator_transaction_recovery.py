@@ -71,7 +71,7 @@ def _workflow_database_path(storage_root: Path, bucket_id: str) -> Path:
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
-_STARTED_AT = datetime(2026, 7, 16, 17, 0, tzinfo=UTC)
+_STARTED_AT = datetime(1980, 7, 16, 17, 0, tzinfo=UTC)
 
 
 def _create_profile(*, provider: str) -> None:

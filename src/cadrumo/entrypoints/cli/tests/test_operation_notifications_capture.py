@@ -21,17 +21,21 @@ from ....application.live.notifications_capture_operation import (
     NotificationsCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .. import app_live_notifications_commands as handler
 from .. import operation_notifications_capture as bridge
 from ..app_live_notifications_results import NotificationsCaptureResult
 from .operation_bridge_support import bind_profile_submission
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OPERATION_ID = "a" * 64
-_CAPTURED_AT = datetime(2025, 3, 6, 7, 8, tzinfo=UTC)
-_PERSISTED_AT = datetime(2025, 3, 6, 7, 9, tzinfo=UTC)
+_CAPTURED_AT = datetime(_YEAR, 3, 6, 7, 8, tzinfo=UTC)
+_PERSISTED_AT = datetime(_YEAR, 3, 6, 7, 9, tzinfo=UTC)
 _SOURCE_URL = "https://sede.example/notifications"
 
 

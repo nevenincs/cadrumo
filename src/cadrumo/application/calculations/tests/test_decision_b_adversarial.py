@@ -11,6 +11,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..cross_period_clean_state import (
     OFFICIAL_EVIDENCE_DELTA_BLOCKERS,
     relax_same_year_local_chain,
@@ -23,6 +24,9 @@ from ..cross_period_models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_TARGET_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _TARGET_YEAR - 1
 
 _DELTA: tuple[CrossPeriodCleanStateBlocker, ...] = tuple(OFFICIAL_EVIDENCE_DELTA_BLOCKERS)
 _M130_SOURCE_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_19")
@@ -71,8 +75,8 @@ def _evidence(
 
 def test_same_year_app_filing_only_delta_is_admitted() -> None:
     """The legitimate case: same-year app_filing, only official-evidence delta -> admitted."""
-    ev = _evidence(filing_year=2026, source_kind="app_filing", blockers=_DELTA)
-    out = relax_same_year_local_chain(ev, target_filing_year=2026)
+    ev = _evidence(filing_year=_TARGET_YEAR, source_kind="app_filing", blockers=_DELTA)
+    out = relax_same_year_local_chain(ev, target_filing_year=_TARGET_YEAR)
     assert out.clean
     assert out.non_official_local_chain_advisory
     assert out.blockers == ()
@@ -85,8 +89,8 @@ def test_same_year_app_filing_with_extra_blocker_stays_blocking() -> None:
     record is a genuine defect; relaxing it would launder a corrupt chain.
     """
     for extra in _NON_DELTA_BLOCKERS:
-        ev = _evidence(filing_year=2026, source_kind="app_filing", blockers=(*_DELTA, extra))
-        out = relax_same_year_local_chain(ev, target_filing_year=2026)
+        ev = _evidence(filing_year=_TARGET_YEAR, source_kind="app_filing", blockers=(*_DELTA, extra))
+        out = relax_same_year_local_chain(ev, target_filing_year=_TARGET_YEAR)
         assert not out.clean, f"{extra.value} must keep the row blocking"
         assert not out.non_official_local_chain_advisory, extra.value
         assert extra in out.blockers, extra.value
@@ -94,8 +98,8 @@ def test_same_year_app_filing_with_extra_blocker_stays_blocking() -> None:
 
 def test_cross_year_app_filing_stays_blocking() -> None:
     """ATTACK: a cross-year (prior-year) app_filing chain must NOT relax (anti-laundering)."""
-    ev = _evidence(filing_year=2025, source_kind="app_filing", blockers=_DELTA)
-    out = relax_same_year_local_chain(ev, target_filing_year=2026)
+    ev = _evidence(filing_year=_PRIOR_YEAR, source_kind="app_filing", blockers=_DELTA)
+    out = relax_same_year_local_chain(ev, target_filing_year=_TARGET_YEAR)
     assert not out.clean
     assert not out.non_official_local_chain_advisory
 
@@ -103,14 +107,14 @@ def test_cross_year_app_filing_stays_blocking() -> None:
 def test_non_app_filing_source_stays_blocking() -> None:
     """ATTACK: only app_filing relaxes; operator_manual/official/None must NOT."""
     for kind in _NON_APP_SOURCE_KINDS:
-        ev = _evidence(filing_year=2026, source_kind=kind, blockers=_DELTA)
-        out = relax_same_year_local_chain(ev, target_filing_year=2026)
+        ev = _evidence(filing_year=_TARGET_YEAR, source_kind=kind, blockers=_DELTA)
+        out = relax_same_year_local_chain(ev, target_filing_year=_TARGET_YEAR)
         assert not out.non_official_local_chain_advisory, kind
 
 
 def test_clean_row_is_not_falsely_flagged() -> None:
     """A row with no blockers is returned unchanged (no spurious advisory)."""
-    ev = _evidence(filing_year=2026, source_kind="app_filing", blockers=())
-    out = relax_same_year_local_chain(ev, target_filing_year=2026)
+    ev = _evidence(filing_year=_TARGET_YEAR, source_kind="app_filing", blockers=())
+    out = relax_same_year_local_chain(ev, target_filing_year=_TARGET_YEAR)
     assert out.clean
     assert not out.non_official_local_chain_advisory

@@ -10,6 +10,7 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -48,8 +49,10 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 _BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
-_ANNUAL_2025 = Period.from_year_and_code(2025, "0A")
+_ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _M100_ASESORIA_CASILLA = "0199"
 
 
@@ -73,7 +76,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _prior_m303_snapshot_ref():
-    return published_authority_operation().snapshot("303", filing_year=2024, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=_YEAR - 1, period="4T").snapshot_ref
 
 
 def _raw_transaction(
@@ -83,8 +86,8 @@ def _raw_transaction(
 ) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2025, 4, 5),
-        value_date=date(2025, 4, 5),
+        booked_date=date(_YEAR, 4, 5),
+        value_date=date(_YEAR, 4, 5),
         amount=amount,
         currency="EUR",
         counterparty="Proveedor SL",
@@ -94,7 +97,7 @@ def _raw_transaction(
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2025, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="CSV provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -119,7 +122,7 @@ def _transaction(
             "category_id": category.value,
             "taxable_base": taxable_base,
             "iva_amount": iva_amount,
-            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -164,12 +167,12 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
     def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
         return aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2025,
+            period=_ANNUAL,
             ports=_renta_ports(
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
                 invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             ),
-            profile_year=2025,
+            profile_year=_YEAR,
             profile_record=profile_record,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         )
@@ -195,15 +198,15 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
     assert general.observations[0].deductible_amount == Decimal("8000.00")
 
 
-def _aggregate_2025_expenses(secure_objects: SecureObjectRepository):
+def _aggregate_expenses(secure_objects: SecureObjectRepository):
     return aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=_BUCKET_ID,
-        period=_ANNUAL_2025,
+        period=_ANNUAL,
         ports=_renta_ports(
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         ),
-        profile_year=2025,
+        profile_year=_YEAR,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     )
 
@@ -224,7 +227,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     )
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("90"),
@@ -236,7 +239,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         ),
     )
 
-    result = _aggregate_2025_expenses(secure_objects)
+    result = _aggregate_expenses(secure_objects)
 
     assert result.issues == ()
     assert result.observations[0].deductible_amount == Decimal("1063.00")
@@ -260,7 +263,7 @@ def _save_priced_row_with_prorrata(
     settled = None if definitive is None else Decimal(definitive)
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal(provisional),
@@ -279,7 +282,7 @@ def test_the_annual_return_takes_the_definitive_prorrata_not_the_provisional(
     """LIVA art. 105.Cuatro and Seis: 1000 + 210 x (1 - 0,60) = 1084, not 1000 + 210 x (1 - 0,80) = 1042."""
     _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive="60")
 
-    result = _aggregate_2025_expenses(secure_objects)
+    result = _aggregate_expenses(secure_objects)
 
     assert result.issues == (), [(issue.reason, issue.detail) for issue in result.issues]
     assert result.observations[0].deductible_amount == Decimal("1084.00")
@@ -292,7 +295,7 @@ def test_an_unsettled_year_leaves_the_iva_bearing_row_unresolved(
     """No definitive percentage: the row reports why it is missing, and 1042 is not offered in its place."""
     _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive=None)
 
-    result = _aggregate_2025_expenses(secure_objects)
+    result = _aggregate_expenses(secure_objects)
 
     assert result.observations == ()
     assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.DEFINITIVE_PRORRATA_PENDING]
@@ -315,7 +318,7 @@ def test_an_unsettled_year_still_counts_a_row_with_no_iva(
         TransactionCatalogue.from_transactions((untaxed,)),
     )
 
-    result = _aggregate_2025_expenses(secure_objects)
+    result = _aggregate_expenses(secure_objects)
 
     assert result.issues == ()
     assert result.observations[0].deductible_amount == Decimal("500.00")
@@ -329,7 +332,7 @@ def test_a_quarter_keeps_the_provisional_prorrata_it_is_liquidated_at(
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id=_BUCKET_ID,
-        period=Period.from_year_and_code(2025, "2T"),
+        period=Period.from_year_and_code(_YEAR, "2T"),
         modelo="130",
         target_casilla_id=validated_casilla_id("02"),
         accept_activity_marker=True,
@@ -357,14 +360,14 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     )
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_YEAR,
             regime=ProrrataRegisterRegime.from_registry("ninguna"),
             especial_transition=None,
             source_registry_snapshot_refs=(),
         ),
     )
 
-    result = _aggregate_2025_expenses(secure_objects)
+    result = _aggregate_expenses(secure_objects)
 
     assert result.issues == ()
     assert result.observations[0].deductible_amount == Decimal("1000.00")
@@ -403,7 +406,7 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
             transaction_repository.save(TransactionCatalogue.from_transactions((row,)))
             secondary_prorrata_repository.upsert_entry(
                 ProrrataRegisterEntry(
-                    ejercicio=2025,
+                    ejercicio=_YEAR,
                     regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("90"),
@@ -417,12 +420,12 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
 
             result = aggregate_renta_ledger_expenses_from_repositories(
                 bucket_id=runtime.secondary.bucket_id,
-                period=_ANNUAL_2025,
+                period=_ANNUAL,
                 ports=_renta_ports(
                     transaction_repository=transaction_repository,
                     invoice_repository=invoice_repository,
                 ),
-                profile_year=2025,
+                profile_year=_YEAR,
                 profile_record=_profile_with_iva_regime(),
                 prorrata_register_repository=secondary_prorrata_repository,
             )
@@ -439,6 +442,6 @@ def test_repository_wrapper_refuses_an_implicit_prorrata_repository() -> None:
     with pytest.raises(TypeError, match="prorrata_register_repository"):
         cast(Any, aggregate_renta_ledger_expenses_from_repositories)(
             bucket_id=_BUCKET_ID,
-            period=_ANNUAL_2025,
+            period=_ANNUAL,
             ports=cast(Any, None),
         )

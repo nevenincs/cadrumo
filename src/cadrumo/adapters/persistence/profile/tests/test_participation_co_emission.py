@@ -41,6 +41,7 @@ from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bind
 )
 from cadrumo.domain.calculations.registry.m303_casilla_roles import m303_resultado_final_casilla
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -61,7 +62,8 @@ from .filing_report_support import seed_filing_gate_report
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 BUCKET_ID = "5fb44bbf-c0c5-4701-b2a9-d4d521e66fb5"  # was 'modelo-participation-co-emission'
-T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+_EXERCISE = filing_year_envelope().horizon
+T0 = datetime(1980, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
@@ -93,24 +95,24 @@ def seed_borrador(
     wu_repo: WorkUnitCatalogueRepository,
 ) -> tuple[CalculationRevision, WorkUnit]:
     """Persist a BORRADOR revision over two ledger transactions plus its work unit."""
-    snapshot = published_snapshot("303", filing_year=2024, period="2T")
+    snapshot = published_snapshot("303", filing_year=_EXERCISE, period="2T")
     revision_id_seed = str(snapshot.revision.id)
     revision_casillas = casillas_by_id(snapshot.revision)
     work_unit_id = derive_work_unit_id(
         bucket_id=BUCKET_ID,
         modelo="303",
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "2T"),
+        filing_year=_EXERCISE,
+        period=Period.from_year_and_code(_EXERCISE, "2T"),
         revision_id=revision_id_seed,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=BUCKET_ID,
         modelo=ModeloCode("303"),
-        filing_year=2024,
-        period=Period.from_year_and_code(2024, "2T"),
+        filing_year=_EXERCISE,
+        period=Period.from_year_and_code(_EXERCISE, "2T"),
         revision_id=revision_id_seed,
-        name="303-2024-2T",
+        name=f"303-{_EXERCISE}-2T",
         created_at=T0,
         updated_at=T0,
     )
@@ -237,8 +239,8 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
             assert verified_entry.calculation_revision_id == revision.calculation_revision_id
             assert verified_entry.revision_state == "verificado_completo"
             assert verified_entry.modelo == "303"
-            assert verified_entry.filing_year == 2024
-            assert verified_entry.period == Period.from_year_and_code(2024, "2T")
+            assert verified_entry.filing_year == _EXERCISE
+            assert verified_entry.period == Period.from_year_and_code(_EXERCISE, "2T")
             assert verified_entry.filing_record_id is None
 
             # --- FILE (replaces the verified entry in place, gaining filing_record_id) ---

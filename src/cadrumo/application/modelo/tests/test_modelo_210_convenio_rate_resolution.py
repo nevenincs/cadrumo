@@ -43,6 +43,7 @@ from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_
 from ....domain.calculations.registry.iva_regime_vocabulary import default_iva_regime
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
@@ -58,7 +59,8 @@ from ..verification_report_facts import m210_unresolved_outcome_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DEVENGO_DATE = date(2025, 12, 31)
+_EXERCISE = filing_year_envelope().horizon
+_DEVENGO_DATE = date(_EXERCISE, 12, 31)
 
 
 @pytest.fixture(autouse=True)
@@ -167,7 +169,7 @@ def test_olivia_gb_general_resolves_convenio_override_matching_baseline(
 
     profile = _irnr_profile("GB")
 
-    rate, findings = _resolve_m210_rate(profile, "general", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "general", _EXERCISE, m210_snapshot)
 
     assert rate == Decimal("0.24")
     assert findings == []
@@ -185,7 +187,7 @@ def test_khadija_ma_interest_convenio_override_replaces_baseline(
     """
 
     profile = _irnr_profile("MA")
-    rate, findings = _resolve_m210_rate(profile, "interest", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "interest", _EXERCISE, m210_snapshot)
 
     assert rate == Decimal("0.10")
     assert findings == []
@@ -205,7 +207,7 @@ def test_dividend_baseline_resolves_unconditional_art_25_1_f_rate(
     """
 
     profile = _resident_profile()
-    rate, findings = _resolve_m210_rate(profile, "dividend", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "dividend", _EXERCISE, m210_snapshot)
 
     assert rate == Decimal("0.19")
     assert findings == []
@@ -224,7 +226,7 @@ def test_felipe_ar_pension_uses_domestic_tariff_without_blocking(
     """
 
     profile = _irnr_profile("AR")
-    rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "pension", _EXERCISE, m210_snapshot)
 
     assert rate is None
     assert findings == []
@@ -242,7 +244,7 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
 
     profile = _irnr_profile("ZW")
 
-    rate, findings = _resolve_m210_rate(profile, "general", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "general", _EXERCISE, m210_snapshot)
 
     assert rate is None
     assert len(findings) == 1
@@ -265,7 +267,7 @@ def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
     """
 
     profile = _resident_profile()
-    rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
+    rate, findings = _resolve_m210_rate(profile, "pension", _EXERCISE, m210_snapshot)
 
     assert rate is None
     assert findings == []
@@ -308,7 +310,7 @@ def _unresolved_rate_outcome(
         context={
             "tipo_renta": tipo_renta,
             "country": country,
-            "filing_year": "2025",
+            "filing_year": str(_EXERCISE),
             "baseline_parameter": "m210-tipo-gravamen",
             "country_binding": "m210-profile-country-of-fiscal-residence",
         },
@@ -324,7 +326,7 @@ def test_m210_unresolved_outcome_findings_passes_through_empty_outcomes(
         (),
         profile=_irnr_profile("GB"),
         snapshot=m210_snapshot,
-        year=2025,
+        year=_EXERCISE,
         devengo_date=_DEVENGO_DATE,
         tipo_renta="general",
     )
@@ -345,7 +347,7 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
         (outcome,),
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
-        year=2025,
+        year=_EXERCISE,
         devengo_date=_DEVENGO_DATE,
         tipo_renta="general",
     )
@@ -371,7 +373,7 @@ def test_m210_unresolved_outcome_findings_refuses_an_undeclared_tipo(
             (outcome,),
             profile=_resident_profile(),
             snapshot=m210_snapshot,
-            year=2025,
+            year=_EXERCISE,
             devengo_date=_DEVENGO_DATE,
             tipo_renta="royalty",
         )
@@ -393,7 +395,7 @@ def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
         ),
         profile=_irnr_profile("MA"),
         snapshot=m210_snapshot,
-        year=2025,
+        year=_EXERCISE,
         devengo_date=_DEVENGO_DATE,
         tipo_renta="interest",
     )

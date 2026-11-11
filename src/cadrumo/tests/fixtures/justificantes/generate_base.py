@@ -24,8 +24,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tomllib
 from dataclasses import dataclass
+from datetime import date, datetime, time
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
@@ -33,6 +36,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
+from ....core.resources.bundled_data import bundled_path
 from ..provenance import FIXTURE_PROVENANCE_SYNTHETIC
 
 SYNTHETIC_SANITIZER_VERSION = "0.1.0-synthetic"
@@ -48,6 +52,75 @@ them would erase the distinction the provenance gate exists to check.
 Named here rather than inlined at the write site so both halves of that pair
 have a declared home and can be cross-referenced.
 """
+
+
+@dataclass(frozen=True)
+class DeclaredFilingYears:
+    """The floor and horizon the supported-filing-years declaration resolves to."""
+
+    floor: int
+    horizon: int
+
+
+@cache
+def declared_filing_years() -> DeclaredFilingYears:
+    """Read the floor and horizon from the one supported-filing-years declaration.
+
+    Every specimen exercise these generators write is placed relative to the
+    declared envelope rather than written as a year. This package is core-only
+    shared support, so it reads the bundled declaration itself instead of
+    importing the registry resolver, and resolves a floor declared relative to
+    the horizon the way the declaration states it.
+    """
+    declaration = bundled_path("registry", "aeat", "legal", "supported-filing-years.toml")
+    declared = tomllib.loads(declaration.read_text(encoding=UTF_8_ENCODING))["supported_filing_years"]
+    horizon = int(declared["horizon"])
+    if "floor" in declared:
+        return DeclaredFilingYears(floor=int(declared["floor"]), horizon=horizon)
+    return DeclaredFilingYears(floor=horizon - int(declared["filing_grade_years_before_horizon"]), horizon=horizon)
+
+
+def _authored_revisions(modelo: str) -> tuple[dict[str, object], ...]:
+    """Every authored revision declaration of ``modelo`` in the bundled registry source."""
+    revisions = bundled_path("registry", "aeat", "modelos", modelo, "revisions")
+    authored: list[dict[str, object]] = []
+    for path in sorted(revisions.glob("*/revision.toml")):
+        for revision in tomllib.loads(path.read_text(encoding=UTF_8_ENCODING))["revisions"].values():
+            assert isinstance(revision, dict)
+            authored.append({str(key): value for key, value in revision.items()})
+    return tuple(authored)
+
+
+def _start(modelo: str, revision: dict[str, object]) -> date:
+    start = revision.get("valid_from")
+    if not isinstance(start, date):
+        raise TypeError(f"modelo {modelo}: an authored revision declares no start date")
+    return start
+
+
+def authored_revision_starts(modelo: str) -> tuple[date, ...]:
+    """Return the first day of each authored revision of ``modelo``, earliest first."""
+    return tuple(sorted(_start(modelo, revision) for revision in _authored_revisions(modelo)))
+
+
+def open_ended_revision_start(modelo: str) -> date:
+    """Return the first day of the one authored revision of ``modelo`` that declares no end."""
+    starts = [_start(modelo, revision) for revision in _authored_revisions(modelo) if "valid_to" not in revision]
+    if len(starts) != 1:
+        raise LookupError(f"modelo {modelo}: expected one open-ended authored revision, found {len(starts)}")
+    return starts[0]
+
+
+def presentation_timestamp(day: date, at: time) -> str:
+    """Write a receipt's presentation instant the way AEAT prints it: ``YYYY-MM-DD HH:MM:SS``."""
+    return datetime.combine(day, at).isoformat(sep=" ")
+
+
+_FILING_YEARS = declared_filing_years()
+#: The base receipts are filed in the horizon year: three for its first quarter, and
+#: the annual Renta of the exercise that closed before it.
+_RECEIPT_YEAR = _FILING_YEARS.horizon
+_RENTA_EXERCISE = _RECEIPT_YEAR - 1
 
 
 @dataclass(frozen=True)
@@ -95,28 +168,28 @@ value the PDF prints, instead of repeating it.
 
 FIXTURES: tuple[Fixture, ...] = (
     Fixture(
-        filename="modelo_130_2026Q1.pdf",
+        filename=f"modelo_130_{_RECEIPT_YEAR}Q1.pdf",
         modelo="130",
-        ejercicio="2026",
+        ejercicio=str(_RECEIPT_YEAR),
         periodo="1T",
         tax_id="00000000T",
         full_name="DEMO AUTONOMO UNO",
         csv="ABCD1234EFGH5678",
-        presented_at="2026-04-10 11:23:45",
-        presentation_id="13020260410ABCD1234EFGH5678",
+        presented_at=presentation_timestamp(date(_RECEIPT_YEAR, 4, 10), time(11, 23, 45)),
+        presentation_id=f"130{date(_RECEIPT_YEAR, 4, 10):%Y%m%d}ABCD1234EFGH5678",
         total_ingresar="1234.56",
         total_devolver=None,
     ),
     Fixture(
-        filename="modelo_303_2026Q1.pdf",
+        filename=f"modelo_303_{_RECEIPT_YEAR}Q1.pdf",
         modelo="303",
-        ejercicio="2026",
+        ejercicio=str(_RECEIPT_YEAR),
         periodo="1T",
         tax_id="00000000T",
         full_name="DEMO AUTONOMO UNO",
         csv="ZZZZ9999YYYY8888",
-        presented_at="2026-04-11 09:05:00",
-        presentation_id="30320260411ZZZZ9999YYYY8888",
+        presented_at=presentation_timestamp(date(_RECEIPT_YEAR, 4, 11), time(9, 5)),
+        presentation_id=f"303{date(_RECEIPT_YEAR, 4, 11):%Y%m%d}ZZZZ9999YYYY8888",
         total_ingresar=None,
         total_devolver="450.00",
     ),
@@ -126,28 +199,28 @@ FIXTURES: tuple[Fixture, ...] = (
     # against; the quarterly 111 declaración renders under ``111/`` carry the
     # epígrafe table and no receipt total, which reconciles nothing.
     Fixture(
-        filename="modelo_111_2026Q1.pdf",
+        filename=f"modelo_111_{_RECEIPT_YEAR}Q1.pdf",
         modelo="111",
-        ejercicio="2026",
+        ejercicio=str(_RECEIPT_YEAR),
         periodo="1T",
         tax_id="00000000T",
         full_name="DEMO AUTONOMO UNO",
         csv="EFGH5678IJKL9012",
-        presented_at="2026-04-17 13:40:12",
-        presentation_id="11120260417EFGH5678IJKL9012",
+        presented_at=presentation_timestamp(date(_RECEIPT_YEAR, 4, 17), time(13, 40, 12)),
+        presentation_id=f"111{date(_RECEIPT_YEAR, 4, 17):%Y%m%d}EFGH5678IJKL9012",
         total_ingresar=MODELO_111_2026_Q1_TOTAL_A_INGRESAR,
         total_devolver=None,
     ),
     Fixture(
-        filename="modelo_100_2025A.pdf",
+        filename=f"modelo_100_{_RENTA_EXERCISE}A.pdf",
         modelo="100",
-        ejercicio="2025",
+        ejercicio=str(_RENTA_EXERCISE),
         periodo="0A",
         tax_id="00000000T",
         full_name="DEMO AUTONOMO UNO",
         csv="MNOP4321QRST8765",
-        presented_at="2026-06-20 17:45:12",
-        presentation_id="10020260620MNOP4321QRST8765",
+        presented_at=presentation_timestamp(date(_RECEIPT_YEAR, 6, 20), time(17, 45, 12)),
+        presentation_id=f"100{date(_RECEIPT_YEAR, 6, 20):%Y%m%d}MNOP4321QRST8765",
         total_ingresar="780.40",
         total_devolver=None,
     ),

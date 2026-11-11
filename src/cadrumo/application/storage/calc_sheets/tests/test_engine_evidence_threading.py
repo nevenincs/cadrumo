@@ -23,6 +23,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from .....domain.modelos.ledger_filing_snapshot import (
@@ -42,6 +43,9 @@ _SNAPSHOT_FINGERPRINT = "c" * 64
 _COUNTERPARTY = "Suministros Iberia SL"
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 @cache
 def _snapshot() -> RegistrySnapshot:
     """The bundled modelo 303 calculation snapshot every test here exports."""
@@ -51,9 +55,9 @@ def _snapshot() -> RegistrySnapshot:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        on=date(2025, 4, 1),
+        on=date(_YEAR, 4, 1),
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
@@ -68,7 +72,7 @@ def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
     return LedgerEvidenceRow(
         transaction_id=transaction_id,
         fingerprint=_SNAPSHOT_FINGERPRINT,
-        booked_date="2025-02-14",
+        booked_date=date(_YEAR, 2, 14).isoformat(),
         amount=Decimal("121.00"),
         currency="EUR",
         direction="outflow",
@@ -100,7 +104,7 @@ def _ledger_evidence(*, transaction_id: str = _CONTRIBUTOR_ID) -> LedgerFilingEv
                 source_refs=("operator-manual-evidence",),
             ),
         ),
-        captured_at=datetime(2026, 6, 3, 15, 0, tzinfo=UTC),
+        captured_at=datetime(1980, 6, 3, 15, 0, tzinfo=UTC),
     )
 
 

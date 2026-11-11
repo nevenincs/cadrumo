@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     create_modelo_operator_profile,
     invoke_modelo_scenario_cli,
@@ -41,7 +42,7 @@ __all__ = ["isolated_cli_backend", "seed_profile"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("seed_profile")]
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _calculate_m130_draft() -> str:
@@ -57,7 +58,7 @@ def _calculate_m130_draft() -> str:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "130", "--year", str(_FILING_YEAR), "--period", "1T",
-            "--revision", "2019-y-siguientes",
+            "--revision", str(open_ended_revision("130").id),
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output

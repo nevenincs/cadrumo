@@ -45,6 +45,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 from cadrumo.tests.env_scope import ready_clave_settings
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+
 if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
@@ -52,12 +54,12 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLOCK = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
+_CLOCK = datetime(filing_year_envelope().horizon, 1, 15, 12, 0, tzinfo=UTC)
 _TAX_ID = "B00015016"
 _SOURCE_PERIOD = "0A"
-_SOURCE_YEAR = 2024
 _TARGET_PERIOD = "0A"
-_TARGET_YEAR = 2025
+_TARGET_YEAR = newest_authored_edition("202")
+_SOURCE_YEAR = _TARGET_YEAR - 1
 _SOURCE_BIN_CASILLA = validated_casilla_id("00671", surface="M200 prior loss stock")
 _TARGET_BASE_INPUT_CASILLA = validated_casilla_id("DP200012:00501", surface="M200 positive base input")
 _TARGET_APPLIED_BIN_CASILLA = validated_casilla_id("DP200014:00547", surface="M200 applied loss amount")
@@ -77,7 +79,7 @@ def _seed_legal_entity_profile(bucket_id: str, operation: PinnedAuthorityOperati
             UserProfileFact(path="identity.legal_name", value="Test Company SL"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            UserProfileFact(path="censo.activity_start_date", value=date(_SOURCE_YEAR - 4, 1, 1).isoformat()),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
         ),
         persona_id="sociedad-limitada",

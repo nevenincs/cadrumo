@@ -13,6 +13,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 
 from ....core.aggregation import IntracomOperationType
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind
@@ -36,6 +37,9 @@ from ..service import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -73,7 +77,7 @@ def _valid_invoice(
         {
             "kind": kind,
             "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
+            "issued_at": date(_YEAR, 4, 1),
             "counterparty_name": counterparty_name,
             "counterparty_tax_id": counterparty_tax_id,
             "counterparty_country": counterparty_country,
@@ -117,8 +121,8 @@ def _maximally_populated_invoice() -> Invoice:
             "series": "R",
             "rectifies_invoice_number": "F-2026-099",
             "invoice_number": "F-2026-100",
-            "issued_at": date(2026, 4, 10),
-            "operation_date": date(2026, 4, 8),
+            "issued_at": date(_YEAR, 4, 10),
+            "operation_date": date(_YEAR, 4, 8),
             "operation_date_role": InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
             "counterparty_name": "Consultora Ibérica SL",
             "counterparty_tax_id": "B00015016",
@@ -146,8 +150,8 @@ def _maximally_populated_invoice() -> Invoice:
             "recargo_amount": Decimal("52.00"),
             "suplido_amount": Decimal("25.00"),
             "payment_id": _HEX64_C,
-            "created_at": datetime(2026, 5, 5, 9, 30, 0, tzinfo=UTC),
-            "updated_at": datetime(2026, 6, 11, 16, 45, 30, tzinfo=UTC),
+            "created_at": datetime(1980, 5, 5, 9, 30, 0, tzinfo=UTC),
+            "updated_at": datetime(1980, 6, 11, 16, 45, 30, tzinfo=UTC),
         },
     )
 
@@ -168,7 +172,7 @@ def _foreign_currency_invoice() -> Invoice:
         {
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "F-2026-300",
-            "issued_at": date(2026, 3, 14),
+            "issued_at": date(_YEAR, 3, 14),
             "counterparty_name": "Hosting Inc",
             "counterparty_tax_id": "US987654321",
             "counterparty_country": "US",
@@ -179,7 +183,7 @@ def _foreign_currency_invoice() -> Invoice:
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "fx_rate": Decimal("0.92"),
-            "fx_rate_date": date(2026, 3, 14),
+            "fx_rate_date": date(_YEAR, 3, 14),
             "fx_rate_source": "ECB",
         },
     )
@@ -216,14 +220,14 @@ def test_persistence_round_trip_preserves_catalogue() -> None:
     assert populated.recargo_amount == Decimal("52.00")
     assert populated.suplido_amount == Decimal("25.00")
     assert populated.payment_id == _HEX64_C
-    assert populated.created_at == datetime(2026, 5, 5, 9, 30, 0, tzinfo=UTC)
-    assert populated.updated_at == datetime(2026, 6, 11, 16, 45, 30, tzinfo=UTC)
+    assert populated.created_at == datetime(1980, 5, 5, 9, 30, 0, tzinfo=UTC)
+    assert populated.updated_at == datetime(1980, 6, 11, 16, 45, 30, tzinfo=UTC)
     assert populated.lines[0].oss_rate_kind == IvaRateKind("general")
     assert populated.lines[0].spending_category_id == "consultoria"
 
     foreign = next(invoice for invoice in restored if invoice.invoice_number == "F-2026-300")
     assert foreign.fx_rate == Decimal("0.92")
-    assert foreign.fx_rate_date == date(2026, 3, 14)
+    assert foreign.fx_rate_date == date(_YEAR, 3, 14)
     assert foreign.fx_rate_source == "ECB"
 
 

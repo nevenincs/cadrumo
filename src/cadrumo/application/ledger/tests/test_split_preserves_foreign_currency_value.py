@@ -23,11 +23,14 @@ from decimal import Decimal
 import pytest
 
 from ....core.money.rounding import round_to_cents
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
 from ...aggregation.currency_predicates import is_non_eur_without_conversion
 from ..actions_split_merge import split_child_eur_values
 from .iva_transaction_support import iva_transaction
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -37,7 +40,7 @@ _RATE = Decimal("0.1")
 # against a parent value of 121.00. Without the residual rule a cent vanishes.
 _CHILD_AMOUNTS = (Decimal("403.33"), Decimal("403.33"), Decimal("403.34"))
 _IVA_RATE = Decimal("0.21")
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 
 
 def _domestic_parent() -> Transaction:
@@ -125,7 +128,7 @@ def test_a_child_built_from_a_converted_parent_is_not_an_unconverted_row() -> No
             "raw": child.raw.model_copy(update={"currency": parent.raw.currency}),
             "fx_rate": parent.fx_rate,
             "value_in_eur": values[0],
-            "modified_at": datetime(2026, 1, 1, tzinfo=UTC),
+            "modified_at": datetime(_YEAR, 1, 1, tzinfo=UTC),
         },
     )
 

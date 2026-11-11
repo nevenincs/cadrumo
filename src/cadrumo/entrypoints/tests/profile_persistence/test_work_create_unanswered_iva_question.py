@@ -46,6 +46,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.form_codes import form_for_role
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS
 from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from cadrumo.entrypoints.tests.dependency_operation_gating_support import (
@@ -62,7 +63,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "44444444-4444-4444-8444-444444440126"
-_T0 = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC)
 _UNANSWERED = "iva.redeme_enrolled"
 
 

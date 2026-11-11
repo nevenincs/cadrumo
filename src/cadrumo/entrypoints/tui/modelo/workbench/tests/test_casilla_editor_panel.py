@@ -36,6 +36,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....components.host import ScreenHostApp
 from ....tests.frame import screen_text
 from ....tests.settling import settle
@@ -55,6 +56,8 @@ from ..sources import OpenSourceSurface
 from .workbench_fixture import FakeActions, fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _LANGUAGES = ("es", "en", "ca", "hu")
 _SIZES = [(80, 24), (140, 40)]
@@ -449,11 +452,11 @@ def test_where_it_comes_from_names_the_earlier_declarations_a_value_is_carried_f
         update={
             "source": ModeloFormValueSource(
                 family=SourceFamily.EARLIER_FILINGS,
-                earlier_filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(2025, "4T")),),
+                earlier_filings=(ModeloFormEarlierFiling(modelo="130", period=Period.from_year_and_code(_YEAR, "4T")),),
             )
         }
     )
-    period = Period.from_year_and_code(2025, "4T")
+    period = Period.from_year_and_code(_YEAR, "4T")
     with override_settings(cadrumo_output_language="es"):
         where = where_from_text(carried)
         filing = tr("workspace.modelo.origin_source.imported.named_filing", modelo="130", period=period_words(period))

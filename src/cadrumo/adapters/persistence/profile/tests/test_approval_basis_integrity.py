@@ -69,10 +69,14 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "3f8c21a4-9d0e-4b77-8c1a-5e2b7d904f16"
-_Q1_2026 = Period.from_year_and_code(2026, "1T")
+_Q1_2026 = Period.from_year_and_code(_YEAR, "1T")
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(

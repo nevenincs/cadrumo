@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...adapter_composition_work_ports import build_expedientes_ports
 from ...overview_evidence_composition import (
     local_calendar_filing_evidence,
@@ -29,16 +30,19 @@ from ...overview_evidence_composition import (
     local_modelo_record_calendar_events,
 )
 
+_YEAR = filing_year_envelope().horizon
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_RANGE = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+_RANGE = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
 
 
 def test_live_events_loader_degrades_to_notice() -> None:
     events, notice = local_live_calendar_events(
         "bogus-bucket",
         _RANGE,
-        as_of=date(2025, 6, 1),
+        as_of=date(_YEAR, 6, 1),
         expedientes_ports=build_expedientes_ports(bucket_id="bogus-bucket"),
     )
     assert events == ()

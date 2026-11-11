@@ -12,6 +12,7 @@ import pytest
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..work_form_field_vocabulary import address_key
 from ..work_form_models import (
     ModeloFormSourceGroupKind,
@@ -22,9 +23,11 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_every_box_sits_in_exactly_one_group_in_form_order(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
 
     grouped = [address_key(address) for group in form.source_groups for address in group.addresses]
 
@@ -35,7 +38,7 @@ def test_every_box_sits_in_exactly_one_group_in_form_order(operation: PinnedAuth
 
 
 def test_record_fed_boxes_read_as_not_read_yet_before_any_calculation(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "303", 2026, "1T")
+    form = built_form(operation, "303", _YEAR, "1T")
 
     records = next(group for group in form.source_groups if group.kind is ModeloFormSourceGroupKind.RECORDS)
 
@@ -50,7 +53,7 @@ def test_record_fed_boxes_read_as_not_read_yet_before_any_calculation(operation:
 def test_the_carried_groups_are_the_groups_said_in_the_forms_language(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    form = built_form(operation, "303", 2026, "1T", language=language)
+    form = built_form(operation, "303", _YEAR, "1T", language=language)
 
     assert form.source_groups == worded_source_groups(form)
     names = [group.name for group in form.source_groups]

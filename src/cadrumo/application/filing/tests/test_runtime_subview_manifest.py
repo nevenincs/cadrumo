@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
@@ -20,11 +21,13 @@ from ..runtime import RegistryModeloSubview, build_runtime_schema_provider, subv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_EXERCISE = filing_year_envelope().horizon
+
 
 def test_subview_projects_revision_completeness_manifest() -> None:
-    # Modelo 130 1T/2025 declares a completeness manifest (it is a covered
+    # Modelo 130 1T of the horizon exercise declares a completeness manifest (it is a covered
     # modelo in the workbook parity gate), so its subview must carry it intact.
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = published_snapshot("130", filing_year=_EXERCISE, period="1T", on=date(_EXERCISE, 4, 1))
     assert snapshot.revision.completeness_manifest is not None
 
     subview = subview_from_snapshot(snapshot)
@@ -34,7 +37,7 @@ def test_subview_projects_revision_completeness_manifest() -> None:
 
 
 def test_build_runtime_schema_provider_subview_carries_manifest() -> None:
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(_EXERCISE, "1T")
     provider = build_runtime_schema_provider(modelos=("130",), filing_year=period.filing_year, period=period)
 
     subview = provider.get_subview("130")

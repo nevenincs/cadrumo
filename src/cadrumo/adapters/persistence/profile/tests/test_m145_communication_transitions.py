@@ -36,6 +36,7 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.write_unit_recorder import WriteUnitRecorder
 from ...storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...storage.tests.secure_sql import isolated_runtime_profile
@@ -46,6 +47,8 @@ from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_mark_m145_communication_record_delivered_to_payer_persists_transition(
     tmp_path: Path,
@@ -53,7 +56,7 @@ def test_mark_m145_communication_record_delivered_to_payer_persists_transition(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -85,7 +88,7 @@ def test_m145_communication_record_transitions_are_idempotent_after_success(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -137,7 +140,7 @@ def test_m145_transition_and_existing_create_refuse_divergent_registry_coordinat
     operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
-        command = M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values())
+        command = M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values())
         created = create_m145_communication_record(
             command,
             bucket_id=runtime.bucket_id,
@@ -172,7 +175,7 @@ def test_mark_m145_communication_record_locally_completed_requires_prior_deliver
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -205,7 +208,7 @@ def test_mark_m145_communication_record_delivered_to_payer_requires_valid_record
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -245,7 +248,7 @@ def test_communication_creation_commits_record_and_event_in_one_transaction(
 
         with recorder.recording():
             create_m145_communication_record(
-                M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+                M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
                 bucket_id=runtime.bucket_id,
                 ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
                 operation=operation,
@@ -266,7 +269,7 @@ def test_communication_transitions_commit_their_events_in_one_transaction(
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -305,7 +308,7 @@ def test_split_communication_write_shape_commits_between_stores(
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -343,7 +346,7 @@ def test_communication_transitions_persist_their_history_events(
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            M145CommunicationCreateCommand(communication_year=2026, field_values=valid_field_values()),
+            M145CommunicationCreateCommand(communication_year=_YEAR, field_values=valid_field_values()),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,

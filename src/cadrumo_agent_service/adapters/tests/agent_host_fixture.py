@@ -106,7 +106,7 @@ def main() -> None:
             "schema": "cadrumo-agent.log/1",
             "pid": os.getpid(),
             "seq": 1,
-            "timestamp": "2026-10-14T12:30:15.123+00:00",
+            "timestamp": "1980-10-14T12:30:15.123+00:00",
             "level": "DEBUG",
             "service": "gateway",
             "name": "cadrumo_agent.gateway",
@@ -120,7 +120,7 @@ def main() -> None:
 import json, os, sys
 from pathlib import Path
 entry = {"schema": "cadrumo-agent.log/1", "pid": os.getpid(), "seq": 1,
-         "timestamp": "2026-10-14T12:30:15.124+00:00", "level": "ERROR",
+         "timestamp": "1980-10-14T12:30:15.124+00:00", "level": "ERROR",
          "service": "worker", "name": "cadrumo_agent.worker", "message": "worker relayed probe"}
 line = json.dumps(entry) + "\\n"
 root = Path(sys.argv[1])

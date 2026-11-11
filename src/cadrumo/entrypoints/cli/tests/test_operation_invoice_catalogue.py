@@ -31,11 +31,15 @@ from ....application.invoices.catalogue_read_projection import CatalogueInvoiceS
 from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.figures import settlement_amount
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from .. import ledger_business_invoice_commands as handler
 from .. import operation_invoice_catalogue as bridge
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -52,7 +56,7 @@ def _record() -> tuple[Invoice, CatalogueInvoiceSnapshot]:
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=Decimal("137.25"),
         iva_rate=Decimal("21"),
         currency="EUR",
@@ -119,7 +123,7 @@ def test_add_bridge_uses_the_captured_request_profile(monkeypatch: pytest.Monkey
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=PublicDecimal(decimal="137.25"),
         iva_rate=PublicDecimal(decimal="21"),
         currency="EUR",

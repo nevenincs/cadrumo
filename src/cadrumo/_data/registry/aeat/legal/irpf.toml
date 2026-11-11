@@ -7326,6 +7326,33 @@ required_text = [
     "tendrán derecho a una deducción en la cuota íntegra",
 ]
 
+[legal."ley-31-2022:art-64"]
+# The redaction of LIRPF art. 81 in force from 2023-01-01. Cited by itself
+# because the bundled art-81 extract does not carry this redaction's apartado 3.
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022.html#a6-6"
+document_id = "BOE-A-2022-22128"
+article = "64"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a6-6"
+published_at = 2022-12-24
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-11
+reviewed_by = "verified against the bundled BOE-A-2022-22128 consolidated text, article 64"
+notes = """\
+Ley 31/2022 art. 64 rewrites LIRPF art. 81 with effect from 2023-01-01, as corrected by BOE-A-2023-5478. \
+Apartado 2 allows the maternity deduction to increase by up to 1.000 euros for guardería custody spend; \
+apartado 3 prorates that increase by qualifying months and limits it to the unsubsidised spend paid for \
+that child. The redaction carries no limit at the cotizaciones devengadas, which the earlier art. 81.2 \
+imposed. Grounds Modelo 100 casilla 0613 from ejercicio 2023."""
+required_text = [
+    "Ampliación de la deducción por maternidad",
+    "se podrá incrementar hasta en 1.000 euros adicionales",
+    "tendrá como límite el importe total del gasto efectivo no subvencionado",
+]
+
 [legal."ley-49-2002:art-19"]
 # The article that ESTABLISHES the IRPF donativos deduction, which modelo 100's
 # Anexo A boxes G, H, J and M are the bases of. Read from the bundled

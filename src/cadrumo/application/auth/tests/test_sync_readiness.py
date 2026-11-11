@@ -82,7 +82,7 @@ def test_nie_requires_support_instead_of_date() -> None:
 def test_identity_mismatch_blocks_even_with_contrast() -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,
-        {"identity.tax_id": "12345678Z", "auth.dni_nie": "00001005Q", "auth.fecha_validez": "2030-01-01"},
+        {"identity.tax_id": "12345678Z", "auth.dni_nie": "00001005Q", "auth.fecha_validez": "1980-01-01"},
     )
     assert not result.ready
     assert any(item.field == "auth.identity_alignment" and not item.satisfied for item in result.requirements)

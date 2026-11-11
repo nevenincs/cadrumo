@@ -29,6 +29,11 @@ import type {
   LedgerRow,
 } from "../src/shell/ledger";
 import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
+import {
+  fixtureDay,
+  fixtureYear,
+  fixtureYearFrom,
+} from "../src/dev/fixtureDates";
 
 // What the ledger's own records offer a field. No page is opened.
 
@@ -37,7 +42,7 @@ const invoice = (changes: Partial<CatalogueInvoice>) =>
     kind: "issued",
     invoice_number: "1",
     invoice_class: "COMPLETA",
-    issued_at: "2026-01-01",
+    issued_at: fixtureDay(1, 1),
     counterparty_name: "Norte, S.L.",
     counterparty_tax_id: "B00000001",
     counterparty_country: "ES",
@@ -50,7 +55,7 @@ const row = (changes: Partial<LedgerRow["transaction"]>) =>
   ({
     group_label: null,
     transaction: {
-      date: "2026-01-01",
+      date: fixtureDay(1, 1),
       description: "",
       counterparty: "",
       counterparty_country: null,
@@ -60,7 +65,12 @@ const row = (changes: Partial<LedgerRow["transaction"]>) =>
   }) as unknown as LedgerRow;
 
 const knownText = (text: string, counterparty: string | null = null) =>
-  ({ text, uses: 1, last_used: "2020-01-01", counterparty }) as KnownText;
+  ({
+    text,
+    uses: 1,
+    last_used: fixtureDay(1, 1, -6),
+    counterparty,
+  }) as KnownText;
 
 test("the history follows what is staged and held, and repeats none of it", () => {
   const options = descriptionOptions(
@@ -88,7 +98,7 @@ test("a party of the history fills country and state, and is found by its tax id
       country: "ES",
       identification_state: "ES",
       uses: 3,
-      last_used: "2020-01-01",
+      last_used: fixtureDay(1, 1, -6),
     },
   ];
   const options = counterpartyOptions([], null, [], known);
@@ -144,7 +154,10 @@ test("an element's stated references offer the history's, and only those", () =>
 test("a capital good is offered by its identifier, this year's first", () => {
   const good = (identifier: string, acquisition_year: number) =>
     ({ identifier, acquisition_year, description: "Nave" }) as CapitalGood;
-  const options = capitalGoodOptions([good("A", 2024), good("B", 2026)], 2026);
+  const options = capitalGoodOptions(
+    [good("A", fixtureYearFrom(-2)), good("B", fixtureYear)],
+    fixtureYear,
+  );
   expect(options.map((option) => option.value)).toEqual(["B", "A"]);
   expect(options[0]!.note).toBe("Nave");
   expect(options[0]!.fills).toBeUndefined();
@@ -152,8 +165,8 @@ test("a capital good is offered by its identifier, this year's first", () => {
 
 test("a name under two tax ids stays two parties, told apart by the note", () => {
   const options = partyNameOptions([
-    invoice({ counterparty_tax_id: "B00000001", issued_at: "2026-02-01" }),
-    invoice({ counterparty_tax_id: "B00000002", issued_at: "2026-03-01" }),
+    invoice({ counterparty_tax_id: "B00000001", issued_at: fixtureDay(2, 1) }),
+    invoice({ counterparty_tax_id: "B00000002", issued_at: fixtureDay(3, 1) }),
   ]);
   expect(options.map((option) => option.value)).toEqual([
     "Norte, S.L.",
@@ -188,19 +201,19 @@ test("the same kind ranks first, then the newest", () => {
         kind: "issued",
         counterparty_name: "Issued",
         counterparty_tax_id: "A",
-        issued_at: "2026-09-01",
+        issued_at: fixtureDay(9, 1),
       }),
       invoice({
         kind: "received",
         counterparty_name: "Old received",
         counterparty_tax_id: "B",
-        issued_at: "2026-01-01",
+        issued_at: fixtureDay(1, 1),
       }),
       invoice({
         kind: "received",
         counterparty_name: "New received",
         counterparty_tax_id: "C",
-        issued_at: "2026-02-01",
+        issued_at: fixtureDay(2, 1),
       }),
     ],
     { kind: "received" },
@@ -225,11 +238,18 @@ test("a fill reaches only what is still empty", () => {
 
 test("an invoice number is noted with its date as the window writes it", () => {
   const offered = invoiceNumberOptions(
-    [invoice({ issued_at: "2026-01-05", counterparty_name: "Norte, S.L." })],
+    [
+      invoice({
+        issued_at: fixtureDay(1, 5),
+        counterparty_name: "Norte, S.L.",
+      }),
+    ],
     {},
     "en",
   );
-  expect(offered.map((one) => one.note)).toEqual(["Jan 5, 2026 · Norte, S.L."]);
+  expect(offered.map((one) => one.note)).toEqual([
+    `Jan 5, ${fixtureYear} · Norte, S.L.`,
+  ]);
 });
 
 test("a pick offers no tax decision", () => {
@@ -295,7 +315,7 @@ test("a line description of this party comes first", () => {
     [
       invoice({
         counterparty_name: "Other",
-        issued_at: "2026-09-01",
+        issued_at: fixtureDay(9, 1),
         lines: [{ description: "Theirs" }] as CatalogueInvoice["lines"],
       }),
       invoice({
@@ -329,16 +349,16 @@ test("a cadastral reference the leases record is offered once, newest first", ()
   const options = referenciaCatastralOptions([
     invoice({
       referencia_catastral: "9999999VH9999S0001AB",
-      issued_at: "2026-01-05",
+      issued_at: fixtureDay(1, 5),
     }),
-    invoice({ referencia_catastral: null, issued_at: "2026-09-01" }),
+    invoice({ referencia_catastral: null, issued_at: fixtureDay(9, 1) }),
     invoice({
       referencia_catastral: "8888888VH8888S0001CD",
-      issued_at: "2026-05-01",
+      issued_at: fixtureDay(5, 1),
     }),
     invoice({
       referencia_catastral: "9999999vh9999s0001ab",
-      issued_at: "2026-02-01",
+      issued_at: fixtureDay(2, 1),
     }),
   ]);
   expect(options.map((option) => option.value)).toEqual([

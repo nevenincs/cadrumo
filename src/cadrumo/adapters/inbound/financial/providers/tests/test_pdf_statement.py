@@ -104,7 +104,7 @@ def test_balances_totals_and_invented_movements_are_dropped_and_reported() -> No
     """The measured model mistakes never reach a row, and each is named in the warnings."""
     reader = _reader(
         echo_summary_lines=True,
-        invented=(invented_movement(booked_date="01.01.2025", amount="100.00"),),
+        invented=(invented_movement(booked_date="01.01.1980", amount="100.00"),),
     )
     provider = _provider(reader)
     fixture, expected = _STATEMENTS[1]

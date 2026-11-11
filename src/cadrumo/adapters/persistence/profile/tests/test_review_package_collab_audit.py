@@ -77,7 +77,7 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
+_NOW = datetime(1980, 7, 4, 12, 0, tzinfo=UTC)
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-COLLAB-AUDIT-TEST"
 _CRYPTO_CAPABILITY = RecipientEncryptionAdapter()
 

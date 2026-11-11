@@ -7,6 +7,7 @@ frontend unit contracts, without native admission or encrypted persistence proof
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from types import ModuleType, SimpleNamespace
 from typing import Literal, cast
 from uuid import UUID
@@ -52,12 +53,17 @@ from ....application.review.filter import LedgerReviewStatus
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.errors import TransactionIdPrefixError
 from .. import ledger_lifecycle_cli as lifecycle
 from .. import ledger_llm_cli
 from .. import operation_ledger_classify as operator_bridge
 from .. import operation_ledger_prefix_read as prefix_read
+
+_YEAR = filing_year_envelope().horizon
+_BOOKED_ON = date(_YEAR, 1, 1).isoformat()
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -108,8 +114,8 @@ def _review(mode: _Mode, *, children: int = 2) -> LedgerLlmReviewProjection:
 def _classified(*, profile: UUID = _PROFILE, transaction_id: str = _TRANSACTION) -> LedgerClassifyOperationResult:
     transaction = LedgerTransactionProjection(
         transaction_id=transaction_id,
-        date="2026-01-01",
-        booked_date="2026-01-01",
+        date=_BOOKED_ON,
+        booked_date=_BOOKED_ON,
         value_date=None,
         amount="100",
         currency="EUR",
@@ -135,14 +141,14 @@ def _classified(*, profile: UUID = _PROFILE, transaction_id: str = _TRANSACTION)
         notes="",
         lifecycle_state="active",
         classified_by=_PROVENANCE,
-        classified_at="2026-01-01T00:00:00Z",
+        classified_at="1980-01-01T00:00:00Z",
         classification_reason="Reviewed invoice",
         classification_confidence="0.9",
         source_jurisdiction=None,
         value_in_eur=None,
         fx_rate=None,
-        created_at="2026-01-01T00:00:00Z",
-        modified_at="2026-01-01T00:00:00Z",
+        created_at="1980-01-01T00:00:00Z",
+        modified_at="1980-01-01T00:00:00Z",
     )
     return LedgerClassifyOperationResult(
         outcome="classified",

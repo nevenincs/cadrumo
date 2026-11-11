@@ -17,6 +17,7 @@ from ....core.operations import OperationEffect
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import ResolvedOperationAccess
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationRegistry
@@ -29,7 +30,7 @@ from ..m036_operation_ports import M036OperationPorts
 from .test_m036_lifecycle_service import M036LifecycleServiceDeclarationRepository, M036LifecycleServiceEventRepository
 
 PROFILE_ID = UUID("32323232-3232-4232-8232-323232323232")
-INSTANT = datetime(2026, 10, 1, 12, tzinfo=UTC)
+INSTANT = datetime(filing_year_envelope().horizon, 10, 1, 12, tzinfo=UTC)
 
 
 class CommitFence:

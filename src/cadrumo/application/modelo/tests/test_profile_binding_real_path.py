@@ -41,6 +41,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context,
     published_profile_schema,
@@ -57,6 +58,7 @@ from ...user_profile.projections import profile_fact_index
 from ..calculation_notes import note_fact_text
 from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
 from ..profile_derived_facts import (
+    inject_derived_activity_tipo_clave_fact,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
@@ -71,9 +73,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000477"
 _BUCKET_ID = _PROFILE_ID
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
+_M130_YEAR = filing_year_envelope().horizon
 _PERIOD = "0A"
-_CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(filing_year_envelope().horizon, 5, 27, 9, 0, 0, tzinfo=UTC)
 _M100_2025_XSD = (
     REPO_ROOT
     / "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files"
@@ -128,7 +131,7 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0045 renta-profile-marriage-full-year (derived from marriage_date at bind time)
             # 0046 renta-profile-marriage-month-start
             # 0047 renta-profile-marriage-month-end
-            UserProfileFact(path="renta_taxpayer.marriage_date", value=date(2023, 6, 15)),
+            UserProfileFact(path="renta_taxpayer.marriage_date", value=date(_YEAR - 2, 6, 15)),
             # 0012 renta-profile-taxpayer-birth-date
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             # 0013 renta-profile-spouse-tax-id
@@ -162,6 +165,10 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0168 renta-modelo-100-estimacion-directa-modalidad-clave (derived from the regime, for a filer
             # with economic-activity income)
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+            # 0166 renta-modelo-100-estimacion-directa-actividad-tipo-clave (derived from the activity's
+            # censal tipo de actividad under the direct-estimation regime)
+            UserProfileFact(path="activities.0.description", value="Instalaciones de fontaneria"),
+            UserProfileFact(path="activities.0.tipo_actividad", value="A03"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
         ),
@@ -266,6 +273,8 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)
     # Casilla 0168's modality follows the same declared regime.
     inject_derived_estimation_modality_fact(fact_index, operation=authority_operation)
+    # Casilla 0166's tipo de actividad clave follows the regime and the activity's censal tipo.
+    inject_derived_activity_tipo_clave_fact(fact_index)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
     absent = {
@@ -564,7 +573,7 @@ def test_an_unrecorded_m130_modality_is_reported_unresolved_with_its_profile_pat
 ) -> None:
     """Box 02's provision compares the modality as text, so its absence is an answerable gap, not a crash."""
     resolved = resolve_profile_sourced_bindings(
-        published_snapshot("130", filing_year=2026, period="1T"),
+        published_snapshot("130", filing_year=_M130_YEAR, period="1T"),
         bucket_id=_BUCKET_ID,
         profile_record=_m130_record(),
         operation=authority_operation,
@@ -595,7 +604,7 @@ def test_the_unrecorded_m130_modality_note_names_the_profile_field_in_every_lang
     authority_operation: PinnedAuthorityOperation, locale: str, words: str
 ) -> None:
     resolved = resolve_profile_sourced_bindings(
-        published_snapshot("130", filing_year=2026, period="1T"),
+        published_snapshot("130", filing_year=_M130_YEAR, period="1T"),
         bucket_id=_BUCKET_ID,
         profile_record=_m130_record(),
         operation=authority_operation,
@@ -611,7 +620,7 @@ def test_a_recorded_m130_modality_reaches_the_text_channel(
     authority_operation: PinnedAuthorityOperation, modality: str
 ) -> None:
     resolved = resolve_profile_sourced_bindings(
-        published_snapshot("130", filing_year=2026, period="1T"),
+        published_snapshot("130", filing_year=_M130_YEAR, period="1T"),
         bucket_id=_BUCKET_ID,
         profile_record=_m130_record(UserProfileFact(path="irpf.estimation_regime", value=modality)),
         operation=authority_operation,

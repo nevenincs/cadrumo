@@ -49,6 +49,7 @@ from cadrumo.application.operations.projection_services import OperationWorkspac
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 from cadrumo.entrypoints.adapter_composition_work_ports import build_verification_repository_bundle
 
@@ -57,7 +58,8 @@ from ...domain.calculations.registry.tests.published_authority import published_
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-_NOW = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR + 1, 3, 4, 9, 0, 0, tzinfo=UTC)
 _OPERATION_ID = "1" * 64
 _DEFINITION_ID = MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 _BUCKET_ID = "0f629c46-1dc8-4cb1-8d02-aa0ee4f45a45"
@@ -83,12 +85,12 @@ def _unreachable_attachment_store_factory(_bucket_id: str) -> NoReturn:
 
 def _work_unit_id() -> str:
     """Derive a real work-unit identifier from the live registry authority."""
-    period = Period.from_year_and_code(2025, "1T")
-    revision_id = published_snapshot("131", filing_year=2025, period=period.registry_token).revision.id
+    period = Period.from_year_and_code(_YEAR, "1T")
+    revision_id = published_snapshot("131", filing_year=_YEAR, period=period.registry_token).revision.id
     return derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="131",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
     )

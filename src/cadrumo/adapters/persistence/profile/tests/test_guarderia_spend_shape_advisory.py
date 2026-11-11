@@ -44,6 +44,7 @@ from .....application.modelo.tests.advisory_diagnostic_repositories import advis
 from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.contribuyente.family_types import GuarderiaMonthSpend
@@ -60,7 +61,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
-_FILING_YEAR = 2024
+_FILING_YEAR = newest_authored_edition("100")
 _GUARDERIA_CASILLA: CasillaId = "0613"
 _ANNUAL_PERIOD = "0A"
 #: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
@@ -72,7 +73,6 @@ _SHAPE_COLLECTOR_KINDS = frozenset(
     {
         _KIND,
         "guarderia_segundo_ciclo_month_undeclared",
-        "guarderia_cotizaciones_ceiling_unbounded",
     },
 )
 

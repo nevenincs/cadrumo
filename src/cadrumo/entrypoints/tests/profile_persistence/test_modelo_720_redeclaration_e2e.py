@@ -61,6 +61,7 @@ from ....application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime
 from ....domain.user_profile.values import create_user_profile_record
@@ -121,10 +122,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 _BUCKET_ID = "9a1c0e5e-2b1c-4f0e-8f7c-9d2f5b6a7c31"
-_CLOCK_N = datetime(2024, 3, 15, 9, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 9, 0, 0, tzinfo=UTC)
-_YEAR_N = 2023
-_YEAR_N_PLUS_1 = 2024
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
+_CLOCK_N = datetime(_YEAR_N + 1, 3, 15, 9, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1 + 1, 3, 15, 9, 0, 0, tzinfo=UTC)
 _PERIOD = "0A"
 
 _CUENTAS_VALORACION: CasillaId = validated_casilla_id("cuentas.valoracion", surface="_CUENTAS_VALORACION")
@@ -205,7 +206,7 @@ def _register_and_declare_the_assets() -> None:
                 country_code=country,
                 identifier=identifier,
                 description="synthetic foreign asset",
-                held_since=date(2015, 1, 1),
+                held_since=date(_YEAR_N - 8, 1, 1),
             ),
         )
         declare_foreign_asset(
@@ -226,7 +227,7 @@ def _worksheet_rows() -> tuple[Modelo720RowObservation, ...]:
             country_code="LU",
             currency_code="EUR",
             asset_identifier=_CUENTAS_IBAN,
-            acquisition_date=date(2019, 4, 1),
+            acquisition_date=date(_YEAR_N - 4, 4, 1),
             valuation_amount=_CUENTAS_N1,
             valuation_event=M720ValuationEvent.YEAR_END,
         ),
@@ -237,7 +238,7 @@ def _worksheet_rows() -> tuple[Modelo720RowObservation, ...]:
             country_code="DE",
             currency_code="EUR",
             asset_identifier=_VALORES_ISIN,
-            acquisition_date=date(2020, 9, 15),
+            acquisition_date=date(_YEAR_N - 3, 9, 15),
             valuation_amount=_VALORES_N1,
             valuation_event=M720ValuationEvent.YEAR_END,
         ),
@@ -555,7 +556,7 @@ def test_modelo_721_declares_no_independent_evidence_source(tmp_path: Path) -> N
     with _secure_backend(tmp_path):
         snapshot = published_authority_operation().snapshot(
             Modelo("721").value,
-            filing_year=2024,
+            filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
             grade=RegistryAuthorityGrade.APPLICABILITY,
         )

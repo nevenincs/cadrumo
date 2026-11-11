@@ -36,11 +36,15 @@ from cadrumo.domain.modelos.protocols import (
 )
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 if TYPE_CHECKING:
     from cadrumo.domain.modelos.work_unit import WorkUnit
 
 
-SEED_CLOCK = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+SEED_CLOCK = datetime(_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
 """The fixed instant every seeded source is stamped with.
 
 Clock-free identity is a contract elsewhere, so a seeded chain must not vary

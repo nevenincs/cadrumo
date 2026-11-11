@@ -30,6 +30,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -45,10 +46,10 @@ from .verification_substance_support import workflow_profile as plain_workflow_p
 BUCKET_ID = "30300000-0000-4000-8000-000000000303"
 _PERSONA_ID = "autonomo-alta-reciente"
 TAX_ID = persona_tax_id("alta.titular")
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_CALCULATED_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
+_T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
+_CALCULATED_AT = datetime(_YEAR, 4, 5, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
 
 

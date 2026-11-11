@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .parser_boundary_m100_support import corpus_specimens
 from .verification_chain_support import (
     COMPUTED_CASILLAS_M123_2019,
     COMPUTED_CASILLAS_M123_2024,
@@ -34,8 +35,13 @@ _M123_2024_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
 @pytest.mark.parametrize(
     "pdf_stem,year,period,computed_set,closure_ids",
     [
-        ("2023-1T", 2023, "1T", COMPUTED_CASILLAS_M123_2019, _M123_2019_CLOSURE_CASILLAS),
-        ("2024-1T", 2024, "1T", COMPUTED_CASILLAS_M123_2024, _M123_2024_CLOSURE_CASILLAS),
+        (stem, year, period, computed_set, closure_ids)
+        for (stem, year, period), computed_set, closure_ids in zip(
+            corpus_specimens("123"),
+            (COMPUTED_CASILLAS_M123_2019, COMPUTED_CASILLAS_M123_2024),
+            (_M123_2019_CLOSURE_CASILLAS, _M123_2024_CLOSURE_CASILLAS),
+            strict=True,
+        )
     ],
 )
 def test_verification_chain_m123_engine_recomputes_closure_casillas(

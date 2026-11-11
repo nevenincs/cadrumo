@@ -46,7 +46,7 @@ pytestmark = [
 # edition before it.
 _REVIEWED_EDITION = newest_authored_edition("100")
 
-_CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(_REVIEWED_EDITION + 1, 6, 29, 12, 0, tzinfo=UTC)
 
 #: The withholding the synthetic payer's certificate states.
 _CERTIFIED_RETENCION = Decimal("4200")

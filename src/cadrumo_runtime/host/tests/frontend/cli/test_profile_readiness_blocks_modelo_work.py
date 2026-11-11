@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -16,12 +17,20 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.application.user_profile.language_resolver import mirror_profile_output_language_hint
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
 from .cli_runner import invoke_cached_cli
 from .profile_cli_support import invoke_protected_profile
+
+_YEAR = filing_year_envelope().horizon
+_RENTA = newest_authored_edition("100")
 
 __all__ = ["isolated_cli_backend"]
 
@@ -72,8 +81,8 @@ def _create_defaulted_natural_person_profile(profile_name: str) -> None:
 @pytest.mark.parametrize(
     ("profile_name", "modelo", "filing_year", "period"),
     (
-        ("lucia_defaults_broken", "303", "2024", "1T"),
-        ("ana_defaults_broken", "100", "2025", "0A"),
+        ("lucia_defaults_broken", "303", str(_YEAR), "1T"),
+        ("ana_defaults_broken", "100", str(_RENTA), "0A"),
     ),
     ids=("m303-defaulted-profile", "m100-defaulted-profile"),
 )
@@ -203,21 +212,21 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "app", "overview", "calendar",
-                "--from", "2026-01-01",
-                "--to", "2026-12-31",
+                "--from", date(_YEAR, 1, 1).isoformat(),
+                "--to", date(_YEAR, 12, 31).isoformat(),
                 "--show-suppressed",
             ],
         )  # fmt: skip
         assert calendar.exit_code == 0, calendar.output
-        assert "100\t2025 0A" in calendar.output
-        assert "suppressed	130	2026 1T	verdict=not_applicable" in calendar.output
-        assert "suppressed	303	2026 1T	verdict=not_applicable" in calendar.output
+        assert f"100\t{_RENTA} 0A" in calendar.output
+        assert f"suppressed	130	{_YEAR} 1T	verdict=not_applicable" in calendar.output
+        assert f"suppressed	303	{_YEAR} 1T	verdict=not_applicable" in calendar.output
 
         readiness = _invoke_profile_cli(
             "pere-landlord",
             [
                 "app", "modelo", "readiness",
-                "--modelo", "100", "--revision-id", "2025", "--year", "2025", "--period", "0A",
+                "--modelo", "100", "--revision-id", revision_covering("100", _RENTA).id, "--year", str(_RENTA), "--period", "0A",
             ],
         )  # fmt: skip
         assert readiness.exit_code == 2, readiness.output
@@ -227,8 +236,8 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "app", "modelo", "work", "create",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
-                "--name", "Pere renta 2025", "--by", "continuity-test",
+                "--modelo", "100", "--year", str(_RENTA), "--period", "0A",
+                "--name", f"Pere renta {_RENTA}", "--by", "continuity-test",
             ],
         )  # fmt: skip
         assert renta.exit_code == 0, renta.output
@@ -238,7 +247,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
             "pere-landlord",
             [
                 "--format", "json", "app", "modelo", "work", "calculate",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
+                "--modelo", "100", "--year", str(_RENTA), "--period", "0A",
                 "--casilla", "0003=27000", "--casilla", "0102=8400",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
                 "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
@@ -257,7 +266,7 @@ def test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_r
                 "pere-landlord",
                 [
                     "app", "modelo", "work", "create",
-                    "--modelo", modelo, "--year", "2026", "--period", period,
+                    "--modelo", modelo, "--year", str(_YEAR), "--period", period,
                 ],
             )  # fmt: skip
             assert refused.exit_code == 2, refused.output
@@ -292,7 +301,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
 
         work_create = _invoke_profile_cli(
             "comunidad-sin-actividad",
-            ["app", "modelo", "work", "create", "--modelo", "184", "--year", "2025", "--period", "0A"],
+            ["app", "modelo", "work", "create", "--modelo", "184", "--year", str(_RENTA), "--period", "0A"],
         )  # fmt: skip
         assert work_create.exit_code == 2, work_create.output
         assert "Activity description" in work_create.output, work_create.output
@@ -326,7 +335,7 @@ def test_economic_activity_m100_derives_the_direct_estimation_modality_from_the_
     with native_profile_view_server(load_settings().cadrumo_storage_root):
         work_create = _invoke_profile_cli(
             "autonomo-renta",
-            ["app", "modelo", "work", "create", "--modelo", "100", "--year", "2025", "--period", "0A"],
+            ["app", "modelo", "work", "create", "--modelo", "100", "--year", str(_RENTA), "--period", "0A"],
         )  # fmt: skip
         assert work_create.exit_code == 0, work_create.output
 
@@ -334,7 +343,7 @@ def test_economic_activity_m100_derives_the_direct_estimation_modality_from_the_
             "autonomo-renta",
             [
                 "app", "modelo", "work", "calculate",
-                "--modelo", "100", "--year", "2025", "--period", "0A",
+                "--modelo", "100", "--year", str(_RENTA), "--period", "0A",
                 "--casilla", "0003=27000",
                 "--binding", "renta-base-liquidable-negativa-general-anterior=0",
                 "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",

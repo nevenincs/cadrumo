@@ -11,27 +11,27 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import CAS
 
 from ....core.casilla_id import CasillaId
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_M131_ADVISORY_PREDICATE_IDS = {
-    "2019-2023": "modelo-131-2019-2023-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2024": "modelo-131-2024-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2025": "modelo-131-2025-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-    "2026": "modelo-131-2026-pago-fraccionado-determinado-cuando-rendimientos-positivos",
-}
-_M131_REVISION_IDS = tuple(sorted(_M131_ADVISORY_PREDICATE_IDS))
+#: Every shipped id is ``modelo-131-<revision stem>-<this suffix>``; the stem is the revision's own,
+#: so the lookup is by suffix within each authored revision rather than by a spelled-out id.
+_M131_ADVISORY_PREDICATE_SUFFIX = "-pago-fraccionado-determinado-cuando-rendimientos-positivos"
+_M131_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("131"))
 
 
 @lru_cache
 def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
     """Load the shipped M131 silent-under-declaration advisory from the authority."""
     revision = published_revision("131", revision_id)
-    predicate_id = _M131_ADVISORY_PREDICATE_IDS[revision_id]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
+    (predicate,) = (
+        p for p in revision.verification_predicates if p.predicate_id.endswith(_M131_ADVISORY_PREDICATE_SUFFIX)
+    )
+    assert predicate.predicate_id.startswith("modelo-131-")
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["01", "02"])'
     return predicate

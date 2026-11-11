@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -61,7 +65,7 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
             "ledger",
             "add",
             "--date",
-            "2025-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--amount",
             "121",
             "--direction",
@@ -103,7 +107,7 @@ def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
             "ledger",
             "add",
             "--date",
-            "2025-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--amount",
             "1000",
             "--direction",
@@ -148,7 +152,7 @@ def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
             "ledger",
             "add",
             "--date",
-            "2025-01-01",
+            date(_YEAR, 1, 1).isoformat(),
             "--amount",
             "60.50",
             "--direction",

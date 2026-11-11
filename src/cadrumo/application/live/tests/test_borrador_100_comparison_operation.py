@@ -25,6 +25,7 @@ from ....core.operations import (
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
@@ -45,8 +46,10 @@ from ..borrador_100_comparison import (
 )
 from .borrador_100_operation_support import PROFILE_ID, Subject
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-_SETTLED_AT = datetime(2026, 10, 1, 12, tzinfo=UTC)
+_SETTLED_AT = datetime(_YEAR, 10, 1, 12, tzinfo=UTC)
 
 
 class _UnreadRepository:
@@ -78,7 +81,7 @@ def _request(profile_id: UUID = PROFILE_ID) -> OperationRequest[module.Borrador1
         definition_id=module.BORRADOR_100_COMPARE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(profile_id)),
         payload=module.Borrador100CompareRequest(
-            profile_id=profile_id, filing_year=2025, output_language=OutputLanguage.EN
+            profile_id=profile_id, filing_year=_YEAR - 1, output_language=OutputLanguage.EN
         ),
     )
 
@@ -144,7 +147,7 @@ def test_the_projector_releases_only_a_no_effect_success() -> None:
     result = module.Borrador100CompareExecutionResult(
         projection=Borrador100ComparisonProjection(
             profile_id=PROFILE_ID,
-            filing_year=2025,
+            filing_year=_YEAR - 1,
             language=OutputLanguage.EN,
             status=words,
             stale_reasons=(),

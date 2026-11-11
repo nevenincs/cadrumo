@@ -14,6 +14,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -88,12 +89,14 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
+_YEAR = filing_grade_exercises("390")[-1]
+
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390390"
-_CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR + 1, 6, 5, 11, 0, 0, tzinfo=UTC)
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 
 
@@ -138,18 +141,18 @@ def _persist_390_draft(
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="390",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        revision_id="2025",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision_id=str(revision_covering("390", _YEAR).id),
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET_ID,
         modelo=ModeloCode("390"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        revision_id="2025",
-        name="390-2025-0A",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision_id=str(revision_covering("390", _YEAR).id),
+        name=f"390-{_YEAR}-0A",
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -157,7 +160,7 @@ def _persist_390_draft(
     casilla_values: dict[CasillaId, Decimal] = {}
     operation = published_authority_operation()
     screen_stamp = calculation_screen_stamp(
-        operation.snapshot("390", filing_year=2025, period=work_unit.period.registry_token), operation=operation
+        operation.snapshot("390", filing_year=_YEAR, period=work_unit.period.registry_token), operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -300,7 +303,7 @@ def _seed_303_cross_period_sources(
     csv_periods: set[str],
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = published_authority_operation().snapshot("390", filing_year=2025, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
     source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
         source_casilla_ids_by_period.setdefault(
@@ -315,14 +318,14 @@ def _seed_303_cross_period_sources(
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
         evidence_reference_id = f"AEATCSV{period}"
-        source_snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period)
+        source_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
-            _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
+            _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_YEAR)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, period),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, period),
             revision_id=source_snapshot.revision.id,
             ports=WorkLifecyclePorts(
                 work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
@@ -366,11 +369,11 @@ def _seed_303_cross_period_sources(
             observation_repository.prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo="303",
-                    filing_year=2025,
+                    filing_year=_YEAR,
                     period=period,
                     observations=registry_grounded_observations(
                         modelo="303",
-                        filing_year=2025,
+                        filing_year=_YEAR,
                         period=period,
                         casilla_values=values,
                     ),
@@ -480,8 +483,8 @@ def _clean_state_repair_evidence(
     return CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
@@ -500,8 +503,8 @@ def _clean_state_repair_verdict(
     return CrossPeriodCleanStateVerdict(
         bucket_id=_BUCKET_ID,
         target_modelo="390",
-        target_filing_year=2025,
-        target_period=Period.from_year_and_code(2025, "0A"),
+        target_filing_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "0A"),
         dependencies=(evidence,),
     )
 

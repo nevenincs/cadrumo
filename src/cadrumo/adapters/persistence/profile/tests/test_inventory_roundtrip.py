@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 from sqlalchemy import select
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.inventory.closing_foundations import InventoryLedgerError
 from .....domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
@@ -54,6 +55,8 @@ from ...storage.tests.secure_sql import (
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _PRIVATE_COMPONENT_ID = "S165-PRIVATE-FREIGHT-COMPONENT"
 _PRIVATE_INVOICE_REFERENCE = "S165-PRIVATE-PURCHASE-INVOICE-EVIDENCE"
@@ -123,7 +126,7 @@ def _complete_acquisition() -> InventoryAcquisitionCost:
 def _populated_ledger() -> InventoryLedger:
     return InventoryLedger(
         actividad_id="iae.501.1",
-        year=2024,
+        year=_YEAR,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("1500.00"),
         closing_authority_record=None,
@@ -144,14 +147,14 @@ def _populated_ledger() -> InventoryLedger:
         period_movements=(
             MovementRecord.from_purchase_acquisition(
                 movement_id="mv-2024-001",
-                movement_date=date(2024, 2, 15),
+                movement_date=date(_YEAR, 2, 15),
                 sku="widget-blue",
                 quantity=Decimal("75"),
                 acquisition_cost=_complete_acquisition(),
             ),
             MovementRecord(
                 movement_id="mv-2024-002",
-                movement_date=date(2024, 5, 30),
+                movement_date=date(_YEAR, 5, 30),
                 kind=MovementKind.COGS,
                 sku="widget-blue",
                 quantity=Decimal("40"),

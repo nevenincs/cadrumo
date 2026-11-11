@@ -16,12 +16,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_cells_carry_openpyxl_values_and_type_codes() -> None:
     (sheet,) = read_xls_workbook(
-        xls_workbook_bytes([("Book", [["label", 12.5, date(2025, 3, 11)], [None, XlsFormula(7), "tail"]])])
+        xls_workbook_bytes([("Book", [["label", 12.5, date(1985, 3, 11)], [None, XlsFormula(7), "tail"]])])
     )
 
     assert sheet.name == "Book"
     assert [[(cell.value, cell.data_type) for cell in row] for row in sheet.rows] == [
-        [("label", "s"), (12.5, "n"), (datetime(2025, 3, 11), "n")],
+        [("label", "s"), (12.5, "n"), (datetime(1985, 3, 11), "n")],
         [(None, "n"), (7.0, "f"), ("tail", "s")],
     ]
 

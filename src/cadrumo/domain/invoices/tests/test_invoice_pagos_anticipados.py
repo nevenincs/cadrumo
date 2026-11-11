@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_operation_date_role
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.lookup import coexisting_tier_rates
 from ...iva.schema import InvoiceKind, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..catalogue import InvoiceCatalogue, decode_authenticated_invoice_catalogue
@@ -34,6 +35,7 @@ from ..enums import PaymentStatus
 from ..errors import InvoiceValidationError
 from ..models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
 from ..rule_findings import InvoiceRuleFindingCode
+from .invoice_catalogue_seed import window_middle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,11 +47,12 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
+_YEAR = filing_year_envelope().horizon
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
 # A date inside the registry's temporary 2 % super-reducido window; only its end
 # date is load-bearing, and that is read from the registry.
-_WINDOW_PROBE = date(2024, 11, 15)
+_WINDOW_PROBE = window_middle("RATE_2")
 
 
 def _rated_line() -> InvoiceLine:
@@ -78,7 +81,7 @@ def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "2026/ANT-1",
-        "issued_at": date(2026, 6, 20),
+        "issued_at": date(_YEAR, 6, 20),
         "counterparty_name": "Cliente SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
@@ -88,7 +91,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "currency": "EUR",
         "lines": (_rated_line(),),
         "payment_status": PaymentStatus.PAID,
-        "operation_date": date(2026, 6, 10),
+        "operation_date": date(_YEAR, 6, 10),
         "operation_date_role": require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED"),
     }
     payload.update(overrides)
@@ -99,7 +102,7 @@ def test_a_fully_collected_advance_payment_devengues_on_collection() -> None:
     """The truthful pago anticipado invoice is representable."""
     invoice = _invoice()
 
-    assert invoice.operation_date == date(2026, 6, 10)
+    assert invoice.operation_date == date(_YEAR, 6, 10)
     assert invoice.operation_date_role == require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED")
 
 

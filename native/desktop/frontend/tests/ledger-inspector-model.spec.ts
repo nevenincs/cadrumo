@@ -26,6 +26,7 @@ import { holdLedgerPeriods, ledgerPeriod } from "../src/shell/ledgerPeriods";
 import "./support/servedClassifications";
 import { hexId, movement } from "./support/ledger";
 import { planRecorded, recordedCheck } from "./support/stagedCheck";
+import { fixtureDay } from "../src/dev/fixtureDates";
 
 // What the movement inspector works out without drawing. No page is
 // opened.
@@ -397,31 +398,41 @@ test("a date that crosses a quarter is named, one within it is not", () => {
   const probe = (day: string) =>
     recorded.periods.probes.days.find((found) => found.day === day)!;
   const served = answerPeriods("en", {
-    days: ["2026-03-31", "2026-04-01", "2026-10-15", "2026-12-31"],
+    days: [
+      fixtureDay(3, 31),
+      fixtureDay(4, 1),
+      fixtureDay(10, 15),
+      fixtureDay(12, 31),
+    ],
   })!;
   const row = movement(hexId("a"), {
-    date: "2026-03-31",
-    booked_date: "2026-03-31",
+    date: fixtureDay(3, 31),
+    booked_date: fixtureDay(3, 31),
   });
   const crossing = effectiveFacts(row, {
-    booked_date: { kind: "set", value: "2026-04-01" },
+    booked_date: { kind: "set", value: fixtureDay(4, 1) },
   });
   const within = effectiveFacts(
-    movement(hexId("b"), { date: "2026-10-15", booked_date: "2026-10-15" }),
-    { booked_date: { kind: "set", value: "2026-12-31" } },
+    movement(hexId("b"), {
+      date: fixtureDay(10, 15),
+      booked_date: fixtureDay(10, 15),
+    }),
+    { booked_date: { kind: "set", value: fixtureDay(12, 31) } },
   );
   // Nothing is named for a day whose quarter is not served.
   expect(quarterMove(row.transaction, crossing)).toBeNull();
   holdLedgerPeriods("en", served);
   try {
     expect(quarterMove(row.transaction, crossing)).toEqual({
-      from: ledgerPeriod(probe("2026-03-31").quarterly),
-      to: ledgerPeriod(probe("2026-04-01").quarterly),
+      from: ledgerPeriod(probe(fixtureDay(3, 31)).quarterly),
+      to: ledgerPeriod(probe(fixtureDay(4, 1)).quarterly),
     });
     expect(
       quarterMove(
-        movement(hexId("b"), { date: "2026-10-15", booked_date: "2026-10-15" })
-          .transaction,
+        movement(hexId("b"), {
+          date: fixtureDay(10, 15),
+          booked_date: fixtureDay(10, 15),
+        }).transaction,
         within,
       ),
     ).toBeNull();

@@ -19,6 +19,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..value_presentation import format_casilla_value
 from ..work_form_declaration_facts import ModeloFormEditClosure
 from ..work_form_field_vocabulary import (
@@ -38,8 +39,10 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _EN = OutputLanguage.EN
-_FORMS = (("303", 2026, "1T"), ("303", 2026, "4T"), ("130", 2026, "1T"), ("111", 2026, "1T"), ("390", 2025, "0A"))
+_FORMS = (("303", _YEAR, "1T"), ("303", _YEAR, "4T"), ("130", _YEAR, "1T"), ("111", _YEAR, "1T"), ("390", _YEAR, "0A"))
 
 
 def _field(**update: object) -> ModeloFormField:
@@ -69,16 +72,16 @@ def test_a_page_that_does_not_apply_says_so_for_its_period_and_one_that_applies_
             assert page.applicability_words == (expected if page.applies is False else None), (modelo, page.id)
             worded += page.applies is False
     assert worded, "some real page does not apply in the periods built"
-    assert does_not_apply_words(Period.from_year_and_code(2026, "1T"), _EN) == tr(
+    assert does_not_apply_words(Period.from_year_and_code(_YEAR, "1T"), _EN) == tr(
         "workspace.modelo.applicability.quarter", locale="en"
     )
-    assert does_not_apply_words(Period.from_year_and_code(2025, "0A"), _EN) == tr(
+    assert does_not_apply_words(Period.from_year_and_code(_YEAR, "0A"), _EN) == tr(
         "workspace.modelo.applicability.year", locale="en"
     )
 
 
 def test_the_form_names_the_modelo_apart_from_its_number(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "130", 2026, "1T", entered=frozenset())
+    form = built_form(operation, "130", _YEAR, "1T", entered=frozenset())
 
     assert form.modelo_name is not None and "130" not in form.modelo_name
     assert form.modelo_title == tr("workspace.modelo.modelo_title", modelo="130", title=form.modelo_name, locale="en")
@@ -100,7 +103,7 @@ def test_a_box_the_design_fixes_shows_a_figure_it_holds_and_none_when_it_holds_n
 
 
 def test_the_filed_wording_follows_the_recorded_closure(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "210", 2025, "0A", entered=frozenset())
+    form = built_form(operation, "210", _YEAR, "0A", entered=frozenset())
     asking = next(field for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT)
 
     closed = worded_form(

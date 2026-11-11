@@ -16,6 +16,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.schema import ModeloValueKind
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import ModeloFormOrigin
@@ -27,7 +28,7 @@ from .work_form_fixture import uncalculated_review
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "130"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _PERIOD = "1T"
 
 

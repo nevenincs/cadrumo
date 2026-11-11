@@ -55,6 +55,7 @@ from .....domain.calculations.registry.bindings import (
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -75,10 +76,10 @@ _MODELO_123 = "123"
 _MODELO_193 = "193"
 
 #: Two distinct renta years.
-_YEAR_N = 2025
-_YEAR_N_PLUS_1 = 2026
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 
-_CLOCK = datetime(2027, 2, 1, 9, 0, 0, tzinfo=UTC)
+_CLOCK = datetime(_YEAR_N_PLUS_1 + 1, 2, 1, 9, 0, 0, tzinfo=UTC)
 
 
 _M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = validated_casilla_id("01")

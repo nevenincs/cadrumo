@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -76,6 +76,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -112,7 +113,7 @@ from cadrumo_runtime.host.session_hold_operations import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 10, 18, 9, tzinfo=UTC)
+_NOW = datetime(1980, 10, 18, 9, tzinfo=UTC)
 _PROFILE = UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")
 _SESSION = UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")
 _BOOT = UUID("cccccccc-cccc-4ccc-8ccc-cccccccccccc")
@@ -689,9 +690,9 @@ def test_a_refusal_with_no_declared_detail_relays_its_recorded_error_detail_and_
         ModeloDomiciliationPastCutoffError(
             translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
             context={
-                "payment_cutoff_on": "2026-04-15",
+                "payment_cutoff_on": date(filing_year_envelope().horizon, 4, 15).isoformat(),
                 "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
-                "export_on": "2026-04-16",
+                "export_on": date(filing_year_envelope().horizon, 4, 16).isoformat(),
             },
         )
     )

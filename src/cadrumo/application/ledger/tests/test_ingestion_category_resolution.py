@@ -30,6 +30,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
@@ -43,10 +44,12 @@ from ..classification_category_resolution import declared_category_from_document
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ES = IvaTerritorialScope.from_registry("es_mainland")
-_WHEN = date(2026, 3, 1)
+_WHEN = date(_YEAR, 3, 1)
 
 
 def _fact[T](value: T) -> DeclaredFact[T]:

@@ -8,12 +8,14 @@ count is taken on the real encrypted repository behind the real CLI.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from traceback import extract_stack
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_cli_result
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
@@ -22,6 +24,8 @@ from .profile_world_fixtures import recorded_fx_isolated_backend
 __all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -37,7 +41,7 @@ def _add_row() -> str:
             "ledger",
             "add",
             "--date",
-            "2026-05-02",
+            date(_YEAR, 5, 2).isoformat(),
             "--amount",
             "42.00",
             "--direction",
@@ -76,7 +80,7 @@ def test_a_ledger_update_invocation_loads_the_catalogue_once(catalogue_loads: li
     transaction_id = _add_row()
     catalogue_loads.clear()
 
-    result = _invoke(["app", "ledger", "update", transaction_id[:12], "--group", "Cierre 2025"])
+    result = _invoke(["app", "ledger", "update", transaction_id[:12], "--group", f"Cierre {_YEAR}"])
 
     assert result.exit_code == 0, result.output
     assert len(catalogue_loads) == 1, catalogue_loads

@@ -92,13 +92,9 @@ _BUCKET_ID = "31111111-1111-4111-8111-111111111111"
 _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
 _SPOUSE_TAX_ID = "00001005Q"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
 _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
-_YEAR_OPERATOR_FACTS: dict[int, tuple[UserProfileFact, ...]] = {
-    2024: (UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),),
-}
-"""The operator inputs a year's own design adds, which the 2024 nursery-cap term reads and no profile derives."""
 _RESIDENCE: BindingId = "renta-profile-tax-residence-ccaa"
 _WORK_INCOME: CasillaId = "0003"
 _SAVINGS_INCOME: CasillaId = "0429"
@@ -170,8 +166,8 @@ def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activit
                 # These scenarios own the family situation: the persona's single status never fills a gap they leave.
                 without=(*(() if economic_activity else _SALARIED_OMISSIONS), "renta_family.situacion_familiar"),
             ),
-            created_at=datetime(2026, 4, 1, tzinfo=UTC),
-            updated_at=datetime(2026, 4, 1, tzinfo=UTC),
+            created_at=datetime(1980, 4, 1, tzinfo=UTC),
+            updated_at=datetime(1980, 4, 1, tzinfo=UTC),
             context=profile_creation_context_for_test(),
         ),
     )
@@ -390,7 +386,7 @@ def profile_factory(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> G
             year: int = _YEAR,
         ) -> _Profile:
             _seed_taxpayer(
-                (*(_married_facts() if renta_facts is None else renta_facts), *_YEAR_OPERATOR_FACTS.get(year, ())),
+                _married_facts() if renta_facts is None else renta_facts,
                 economic_activity=economic_activity,
             )
             return _Profile(

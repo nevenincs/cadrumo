@@ -4,6 +4,7 @@ import type {
   NotificationsSummary,
   ProfileViews,
 } from "../../src/shell/views";
+import { fixtureDay } from "../../src/dev/fixtureDates";
 
 test("profile reads hide previous snapshots on the first commit and ignore late replies", async ({
   page,
@@ -32,7 +33,7 @@ test("profile reads hide previous snapshots on the first commit and ignore late 
         }),
     };
     const snapshot: FilingCalendar = {
-      range: { from_date: "2026-01-01", to_date: "2026-12-31" },
+      range: { from_date: fixtureDay(1, 1), to_date: fixtureDay(12, 31) },
       entries: [],
       events: [],
       warnings: [],

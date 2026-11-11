@@ -11,6 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
@@ -34,6 +35,8 @@ from ..workspace_producers import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 
 type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
@@ -66,7 +69,7 @@ class _UnresolvedForwardReference(BaseModel):
 @cache
 def _snapshot():
     """Use one real, exported authority snapshot with generated export layouts."""
-    return published_snapshot("303", filing_year=2025, period="4T")
+    return published_snapshot("303", filing_year=_YEAR, period="4T")
 
 
 @cache
@@ -78,7 +81,7 @@ def _manifest() -> ModeloWorkspaceFieldManifestV1:
 def _inspection():
     """Use one real, exported static-inspection projection for the same coordinate."""
     with bundled_indexed_authority().operation() as operation:
-        return operation.capture_law_selected_projection("303", filing_year=2025, period="4T").projection
+        return operation.capture_law_selected_projection("303", filing_year=_YEAR, period="4T").projection
 
 
 @cache
@@ -327,7 +330,7 @@ def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> Non
 def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
     """Two filing coordinates never validate each other's capture."""
     snapshot = _snapshot()
-    other = published_snapshot("303", filing_year=2025, period="3T")
+    other = published_snapshot("303", filing_year=_YEAR, period="3T")
 
     captured = capture_modelo_workspace_manifest(snapshot)
     other_capture = capture_modelo_workspace_manifest(other)

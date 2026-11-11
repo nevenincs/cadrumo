@@ -79,7 +79,7 @@ _SOURCE_SHA = "b" * 64
 #: headings kept, no JSON and no field names.
 _TRANSCRIBED_PAGE = """FACTURA 2026-0142
 Proveedor: EJEMPLO SL B00015016
-Fecha: 10/03/2026
+Fecha: 10/03/1980
 Base imponible 100,00 EUR
 IVA (21%) 21,00 EUR
 TOTAL 121,00 EUR
@@ -90,7 +90,7 @@ def _extraction_json(**overrides: str | None) -> str:
     payload: dict[str, str | None] = {
         "supplier_tax_id": _SUPPLIER_CIF,
         "invoice_number": "2026-0142",
-        "invoice_date": "10/03/2026",
+        "invoice_date": "10/03/1980",
         "taxable_base": "100,00",
         "iva_rate": "21",
         "iva_amount": "21,00",
@@ -148,7 +148,7 @@ class TestGroundExtractedFields:
         draft = ground_extracted_fields(fields, raw_text_length=42, origin=FieldOrigin.VISION, operation=operation)
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
-        assert draft.invoice_date == "2026-03-10"
+        assert draft.invoice_date == "1980-03-10"
         assert draft.taxable_base == 100
         assert draft.iva_rate == 21
         assert draft.iva_amount == 21
@@ -175,11 +175,11 @@ class TestGroundExtractedFields:
     def test_iso8601_date_also_grounds(self, *, operation: PinnedAuthorityOperation) -> None:
         """A model that normalises the printed day-first date to ISO-8601 still grounds."""
         fields = ExtractedInvoiceResponse(
-            fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="2026-03-10")),
+            fields=ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="1980-03-10")),
             anchors=ExtractedFieldAnchors(),
         )
         draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.VISION, operation=operation)
-        assert draft.invoice_date == "2026-03-10"
+        assert draft.invoice_date == "1980-03-10"
 
     def test_unparsable_amount_is_dropped(self, *, operation: PinnedAuthorityOperation) -> None:
         fields = ExtractedInvoiceResponse(

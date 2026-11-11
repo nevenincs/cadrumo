@@ -12,7 +12,7 @@ import asyncio
 import threading
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Literal, cast
 from uuid import UUID
@@ -143,6 +143,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
 from cadrumo.entrypoints.tui.ledger.entries_browse import LedgerEntriesBrowseScreen
@@ -176,13 +177,15 @@ from ....frontend.tui.runtime_ledger_entries import (
 from ....frontend.tui.runtime_ledger_tools import compose_runtime_ledger_tools
 from .unsupported_result import raises_unsupported_result
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = ENTRIES_PROFILE_ID
 _OTHER_PROFILE_ID = UUID("8ee00000-0000-4000-8000-0000000000ee")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 10, 4, tzinfo=UTC)
+_NOW = datetime(_YEAR, 10, 4, tzinfo=UTC)
 _UNDECLARED_REFUSAL = "REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION"
 _UNDECLARED_REFUSAL_KEY = "errors.refused.refused_ledger_own_account_register_validation"
 _LABEL = "Fixture profile"
@@ -378,7 +381,7 @@ def _doors(client: _Client) -> LedgerEntriesDoorsV1:
     return compose_runtime_ledger_entries_doors(cast(FrontendClient, client), profile_label=_LABEL)
 
 
-_PERIOD = PublicPeriod(filing_year=2026, code="1T")
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 
 
 @dataclass(frozen=True)
@@ -396,7 +399,11 @@ def _cases() -> tuple[_Case, ...]:
     ledger = MemoryEntriesLedger.with_entries(4)
     listed = LedgerListRequest(profile_id=_PROFILE_ID, limit=2)
     added = LedgerAddRequest(
-        profile_id=_PROFILE_ID, booked_date="2026-03-14", amount="10.00", direction="OUTGOING", description="Synthetic"
+        profile_id=_PROFILE_ID,
+        booked_date=date(_YEAR, 3, 14).isoformat(),
+        amount="10.00",
+        direction="OUTGOING",
+        description="Synthetic",
     )
     removed = LedgerRemoveRequest(profile_id=_PROFILE_ID, transaction_id=entry_id(0))
     moved = LedgerLifecycleMutationRequest(profile_id=_PROFILE_ID, transaction_id=entry_id(1))
@@ -614,7 +621,11 @@ def test_a_lifecycle_validation_refusal_is_read_as_the_operations_own_refusal(
 def test_an_add_validation_refusal_is_read_as_the_operations_own_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
     request = LedgerAddRequest(
-        profile_id=_PROFILE_ID, booked_date="2026-03-14", amount="13.13", direction="OUTGOING", description="Synthetic"
+        profile_id=_PROFILE_ID,
+        booked_date=date(_YEAR, 3, 14).isoformat(),
+        amount="13.13",
+        direction="OUTGOING",
+        description="Synthetic",
     )
     refused = MemoryEntriesLedger().add(request)
     observation = _observation(
@@ -631,7 +642,11 @@ def test_an_add_whose_entry_differs_from_the_request_is_unknown(monkeypatch: pyt
     """The receipt reported the entry added; a result for another entry leaves what was added unknown."""
     client = _Client()
     request = LedgerAddRequest(
-        profile_id=_PROFILE_ID, booked_date="2026-03-14", amount="10.00", direction="OUTGOING", description="Synthetic"
+        profile_id=_PROFILE_ID,
+        booked_date=date(_YEAR, 3, 14).isoformat(),
+        amount="10.00",
+        direction="OUTGOING",
+        description="Synthetic",
     )
     other = MemoryEntriesLedger().add(request.model_copy(update={"amount": "11.00"}))
     observation = _observation(LEDGER_ADD_OPERATION_DEFINITION_ID, effect=OperationEffect.UPDATED)

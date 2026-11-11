@@ -9,6 +9,7 @@ parameter comments; every document is synthetic.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -17,6 +18,7 @@ from cadrumo.adapters.inbound.einvoice.application_translation import translate_
 from cadrumo.adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
 from cadrumo.application.ledger.withheld_tax_findings import withheld_tax_findings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -176,7 +178,14 @@ def test_facturae_reads_an_irpf_withholding(document: bytes, rate: str, amount: 
     assert _kinds(parsed) == []
 
 
-@pytest.mark.parametrize("issued_on", ["2015-06-30", "2025-06-30", "not a date"])
+@pytest.mark.parametrize(
+    "issued_on",
+    [
+        date(filing_year_envelope().floor - 1, 6, 30).isoformat(),
+        date(filing_year_envelope().horizon, 6, 30).isoformat(),
+        "not a date",
+    ],
+)
 def test_the_irpf_code_is_read_whatever_date_the_invoice_states(issued_on: str) -> None:
     document = _facturae(header=_withheld("04", "15.00", "1000.00", "150.00")).replace(
         b"<TaxesOutputs>",

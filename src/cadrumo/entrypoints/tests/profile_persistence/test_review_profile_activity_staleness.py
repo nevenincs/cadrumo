@@ -58,9 +58,11 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
 _PROFILE_ID = "12345678-1234-4234-8234-123456789abc"
 _TAX_ID = "12345678Z"
 

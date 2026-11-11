@@ -85,7 +85,6 @@ def prior_base_binding_values(
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
         # Art. 81.2 LIRPF guarderia bindings: zero in non-guarderia scenarios.
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),

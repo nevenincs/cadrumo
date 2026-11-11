@@ -77,7 +77,7 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
             f"bearer {_JWT}": "token keyed",
             _OBJECT_KEY: "object keyed",
             _OTHER_OBJECT_KEY: "second object keyed",
-            "report": _Payload(path=Path("var/report.json"), amount=Decimal("12.30"), day=date(2026, 5, 13)),
+            "report": _Payload(path=Path("var/report.json"), amount=Decimal("12.30"), day=date(1986, 5, 13)),
             "nested": {
                 "tax_id": _NIF,
                 "callback": _URL,
@@ -99,7 +99,7 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
         "token:sha256:0a2c77ea": "token keyed",
         CLI_OBJECT_KEY_PLACEHOLDER: "object keyed",
         f"{CLI_OBJECT_KEY_PLACEHOLDER}#2": "second object keyed",
-        "report": {"path": "var/report.json", "amount": "12.30", "day": "2026-05-13"},
+        "report": {"path": "var/report.json", "amount": "12.30", "day": "1986-05-13"},
         "nested": {
             "tax_id": "sha256:1c9f9632",
             "callback": "https://example.test",

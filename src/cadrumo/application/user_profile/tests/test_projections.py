@@ -15,6 +15,7 @@ from ....domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_exento_token,
     iva_regime_no_aplica_token,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.values import (
@@ -35,6 +36,8 @@ from ..projections import (
 __all__ = ["catalogue"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE_UUID = "66666666-6666-4666-8666-666666666666"
 _SCHEMA = published_profile_schema()
@@ -329,12 +332,12 @@ def test_the_latest_effective_window_wins_at_one_path() -> None:
     The record model permits this and the schema declares effective-dating
     on most of its fields, so it is a state the projections have to answer
     for. Declaration order here is deliberately the REVERSE of window
-    order, so a projection that ignored the window would return the 2019
+    order, so a projection that ignored the window would return the older
     value.
     """
     facts = (
-        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
-        UserProfileFact(path="contact.postcode", value="08032", valid_from=date(2019, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(1981, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="08032", valid_from=date(1980, 1, 1)),
     )
     record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
@@ -345,7 +348,7 @@ def test_the_latest_effective_window_wins_at_one_path() -> None:
 def test_a_windowed_fact_supersedes_an_unwindowed_one() -> None:
     """An absent window means no stated start, so it orders before every stated one."""
     facts = (
-        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(1981, 1, 1)),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
     record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
@@ -360,8 +363,8 @@ def test_the_two_projections_agree_on_which_fact_is_effective() -> None:
     order, and they agreed only because nothing set a window.
     """
     facts = (
-        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
-        UserProfileFact(path="contact.postcode", value=None, valid_from=date(2019, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(1981, 1, 1)),
+        UserProfileFact(path="contact.postcode", value=None, valid_from=date(1980, 1, 1)),
     )
     record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
@@ -378,9 +381,9 @@ def _year_windowed_threshold_record() -> UserProfileRecord:
     return _record(
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path=_THRESHOLD_PATH, value=True, valid_from=date(2025, 1, 1)),
+            UserProfileFact(path=_THRESHOLD_PATH, value=True, valid_from=date(_YEAR, 1, 1)),
             UserProfileFact(
-                path=_THRESHOLD_PATH, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)
+                path=_THRESHOLD_PATH, value=False, valid_from=date(_YEAR - 1, 1, 1), valid_to=date(_YEAR - 1, 12, 31)
             ),
         ),
     )
@@ -391,18 +394,19 @@ def test_as_of_projection_reads_the_fact_in_force_on_that_date() -> None:
     record = _year_windowed_threshold_record()
 
     by_year = {
-        year: projection_for_taxpayer(record, schema=_SCHEMA, as_of=date(year, 12, 31)) for year in (2023, 2024, 2025)
+        year: projection_for_taxpayer(record, schema=_SCHEMA, as_of=date(year, 12, 31))
+        for year in (_YEAR - 2, _YEAR - 1, _YEAR)
     }
 
-    assert by_year[2024].third_party_transactions_above_347_threshold is False
-    assert by_year[2025].third_party_transactions_above_347_threshold is True
-    # No fact is in force before 2024: the answer is unanswered, not borrowed from a later year.
-    assert by_year[2023].third_party_transactions_above_347_threshold is None
+    assert by_year[_YEAR - 1].third_party_transactions_above_347_threshold is False
+    assert by_year[_YEAR].third_party_transactions_above_347_threshold is True
+    # No fact is in force before the window opens: the answer is unanswered, not borrowed from a later year.
+    assert by_year[_YEAR - 2].third_party_transactions_above_347_threshold is None
     # Without an as-of date the latest window still wins, as every undated reader resolves it.
     assert projection_for_taxpayer(record, schema=_SCHEMA).third_party_transactions_above_347_threshold is True
-    assert record_to_path_values(record, as_of=date(2024, 6, 30))[_THRESHOLD_PATH] == "false"
+    assert record_to_path_values(record, as_of=date(_YEAR - 1, 6, 30))[_THRESHOLD_PATH] == "false"
 
 
 def test_as_of_projection_refuses_a_mapping_that_carries_no_windows() -> None:
     with pytest.raises(UserProfileValidationError):
-        projection_for_taxpayer({"tax.id": "12345678Z"}, schema=_SCHEMA, as_of=date(2025, 12, 31))
+        projection_for_taxpayer({"tax.id": "12345678Z"}, schema=_SCHEMA, as_of=date(_YEAR, 12, 31))

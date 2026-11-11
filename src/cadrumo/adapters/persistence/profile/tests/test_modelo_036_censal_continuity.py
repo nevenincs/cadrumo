@@ -44,6 +44,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -57,16 +58,16 @@ _MODELO = "036"
 #: Two distinct annual contexts. M036 has event-driven period codes; the
 #: filing_year anchors which renta cycle the event belongs to
 #: (Orden EHA/1274/2007 art. 1).
-_YEAR_N = 2025  # alta — earliest valid year for the 2025-02-03 revision
-_YEAR_N_PLUS_1 = 2026  # modificacion
+_YEAR_N = open_ended_revision(_MODELO).valid_from.year  # alta — earliest valid year for the newest revision
+_YEAR_N_PLUS_1 = _YEAR_N + 1  # modificacion
 _ALTA_PERIOD = "alta"
 _MODIFICACION_PERIOD = "modificacion"
 
 #: Context label for the cross-year observation (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "036-censal-alta-modificacion-two-annual-contexts"
 
-_CLOCK_N = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2026, 6, 15, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(_YEAR_N, 3, 1, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1, 6, 15, 10, 0, 0, tzinfo=UTC)
 
 
 _EVENT_KIND_CASILLA: CasillaId = validated_casilla_id("decl.event-kind")

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -33,13 +33,16 @@ from ....core.aggregation import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000111"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 2, 1, 10, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_T0 = datetime(_YEAR, 2, 1, 9, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 2, 1, 10, 0, tzinfo=UTC)
+_ACCRUED_ON = date(_YEAR, 3, 15).isoformat()
 
 
 def _professional_observation() -> RetencionObservation:
@@ -51,7 +54,7 @@ def _professional_observation() -> RetencionObservation:
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("150.00"),
-        accrued_on="2026-03-15",
+        accrued_on=_ACCRUED_ON,
     )
 
 
@@ -65,7 +68,7 @@ def _administrador_observation() -> RetencionObservation:
         scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
         retencion_amount=Decimal("700.00"),  # 2000.00 * 0.35 (art. 101.2 general rate)
-        accrued_on="2026-03-15",
+        accrued_on=_ACCRUED_ON,
     )
 
 
@@ -79,29 +82,29 @@ def _administrador_wrong_rate_observation() -> RetencionObservation:
         scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
         retencion_amount=Decimal("500.00"),  # 25 % — matches no art. 101.2 fixed rate
-        accrued_on="2026-03-15",
+        accrued_on=_ACCRUED_ON,
     )
 
 
 def _calculate_with_observation(
     objects: SecureObjectRepository, operation: PinnedAuthorityOperation, observation: RetencionObservation
 ) -> BucketAggregationCalculationResult:
-    """Persist one retención observation for 1T 2026, create the Modelo 111 work unit and calculate it."""
-    period = Period.from_year_and_code(2026, "1T")
+    """Persist one retención observation for the 1T, create the Modelo 111 work unit and calculate it."""
+    period = Period.from_year_and_code(_YEAR, "1T")
     replace_retencion_observations(
         RetencionObservationRepositoryAdapter(objects=objects),
         modelo="111",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         observations=[observation],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    snapshot = published_authority_operation().snapshot("111", filing_year=2026, period="1T")
+    snapshot = published_authority_operation().snapshot("111", filing_year=_YEAR, period="1T")
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="111",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=period,
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(

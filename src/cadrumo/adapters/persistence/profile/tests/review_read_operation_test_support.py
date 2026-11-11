@@ -31,6 +31,10 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 
 @dataclass(frozen=True, slots=True)
 class ReviewReadConformanceCase:
@@ -43,8 +47,8 @@ class ReviewReadConformanceCase:
 def _transaction() -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="review-read-native-row-1",
-        booked_date=date(2026, 4, 10),
-        value_date=date(2026, 4, 10),
+        booked_date=date(_YEAR, 4, 10),
+        value_date=date(_YEAR, 4, 10),
         amount=Decimal("12.34"),
         currency="EUR",
         counterparty="Fixture supplier",
@@ -54,7 +58,7 @@ def _transaction() -> Transaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 0, tzinfo=UTC),
             provider_name="review-read-fixture",
         ),
         raw_fields={"Concepto": "Review queue native row"},

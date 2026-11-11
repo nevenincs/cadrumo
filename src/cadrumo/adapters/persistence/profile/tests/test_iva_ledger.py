@@ -31,6 +31,7 @@ from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import (
@@ -45,6 +46,8 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture
@@ -111,8 +114,8 @@ def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) 
     return ModeloRevision(
         id=revision_id,
         localization_key=f"test.schema.revision.{revision_id}.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
+        valid_from=date(_YEAR, 1, 1),
+        period_selector=PeriodSelector(year_from=_YEAR, periods=("1T", "2T", "3T", "4T", "0A")),
         legal_refs=("ley-37-1992:art-88",),
         source_refs=("test-iva-ledger-binding",),
         bindings=bindings,
@@ -121,7 +124,7 @@ def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) 
 
 def _modelo_303_iva_revision() -> ModeloRevision:
     return _revision_with_iva_bindings(
-        "2022",
+        "test-modelo-303-iva-revision",
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory("domestic_general"),),
@@ -141,8 +144,7 @@ def _modelo_303_iva_revision() -> ModeloRevision:
     )
 
 
-_Q2_2023 = _period(2023, "2T")
-_Q2_2026 = _period(2026, "2T")
+_Q2 = _period(_YEAR, "2T")
 # Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
 # outside the rate table's coverage: no ES window of any tier reaches back past
 # it.
@@ -165,8 +167,8 @@ _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2026, 4, 5),
-    value_date: date | None = date(2026, 4, 5),
+    booked_date: date = date(_YEAR, 4, 5),
+    value_date: date | None = date(_YEAR, 4, 5),
     amount: Decimal = Decimal("121.00"),
     currency: str = "EUR",
 ) -> RawTransaction:
@@ -183,7 +185,7 @@ def _raw_transaction(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -197,8 +199,8 @@ def _transaction(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    booked_date: date = date(2026, 4, 5),
-    value_date: date | None = date(2026, 4, 5),
+    booked_date: date = date(_YEAR, 4, 5),
+    value_date: date | None = date(_YEAR, 4, 5),
     currency: str = "EUR",
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
@@ -259,7 +261,7 @@ def _transaction(
             "lifecycle_state": lifecycle_state,
             "fx_rate": fx_rate,
             "value_in_eur": value_in_eur,
-            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
     )
@@ -274,7 +276,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     ):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
+            period=_Q2,
             prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=_BUCKET_ID,
                 objects=secure_objects,
@@ -310,7 +312,7 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
         with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
             aggregate_iva_ledger_observations_from_repositories(
                 bucket_id=runtime.primary.bucket_id,
-                period=_Q2_2026,
+                period=_Q2,
                 prorrata_register_repository=foreign_prorrata_repository,
                 transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
                 invoice_reader=InvoiceCatalogueRepository(bucket_id=runtime.primary.bucket_id),
@@ -329,7 +331,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
 
         result = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
+            period=_Q2,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             transaction_repository=TransactionCatalogueRepository(
                 bucket_id=_BUCKET_ID,
@@ -345,10 +347,10 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
         assert result.observations[0].ledger_id == transaction.transaction_id
 
 
-def _aggregate_q2_2026(secure_objects: SecureObjectRepository, operation: PinnedAuthorityOperation):
+def _aggregate_q2(secure_objects: SecureObjectRepository, operation: PinnedAuthorityOperation):
     return aggregate_iva_ledger_observations_from_repositories(
         bucket_id=_BUCKET_ID,
-        period=_Q2_2026,
+        period=_Q2,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
         invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -369,19 +371,19 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     plaintext index entry.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
-        out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
+        in_period = _transaction("row-in-period", value_date=date(_YEAR, 4, 5))
+        out_of_period = _transaction("row-out-of-period", value_date=date(_YEAR, 7, 10))
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
         repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
 
-        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
+        result = _aggregate_q2(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()
         assert result.out_of_window_summary is not None
         assert result.out_of_window_summary.count == 1
-        assert result.out_of_window_summary.min_filing_date == date(2026, 7, 10)
-        assert result.out_of_window_summary.max_filing_date == date(2026, 7, 10)
+        assert result.out_of_window_summary.min_filing_date == date(_YEAR, 7, 10)
+        assert result.out_of_window_summary.max_filing_date == date(_YEAR, 7, 10)
 
 
 def test_repository_backed_projection_summarizes_previously_silent_out_of_window_rows(
@@ -395,15 +397,15 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
     dropping them before aggregation.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
+        in_period = _transaction("row-in-period", value_date=date(_YEAR, 4, 5))
         excluded_out_of_period = _transaction(
             "row-excluded-out-of-period",
-            value_date=date(2026, 7, 1),
+            value_date=date(_YEAR, 7, 1),
             business_classification=BusinessClassification.REVIEWED_EXCLUDED,
         )
         archived_out_of_period = _transaction(
             "row-archived-out-of-period",
-            value_date=date(2026, 7, 2),
+            value_date=date(_YEAR, 7, 2),
             lifecycle_state=TransactionLifecycleState.ARCHIVED,
         )
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -411,14 +413,14 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
             TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
         )
 
-        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
+        result = _aggregate_q2(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()
         assert result.out_of_window_summary is not None
         assert result.out_of_window_summary.count == 2
-        assert result.out_of_window_summary.min_filing_date == date(2026, 7, 1)
-        assert result.out_of_window_summary.max_filing_date == date(2026, 7, 2)
+        assert result.out_of_window_summary.min_filing_date == date(_YEAR, 7, 1)
+        assert result.out_of_window_summary.max_filing_date == date(_YEAR, 7, 2)
 
 
 def test_repository_backed_projection_partition_matches_full_scan(
@@ -432,19 +434,19 @@ def test_repository_backed_projection_partition_matches_full_scan(
     out-of-window issue taxonomy can differ between the two paths.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
+        q2_row_a = _transaction("row-q2-a", value_date=date(_YEAR, 4, 5), taxable_base=Decimal("100.00"))
         q2_row_b = _transaction(
-            "row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"), iva_amount=Decimal("42.00")
+            "row-q2-b", value_date=date(_YEAR, 6, 20), taxable_base=Decimal("200.00"), iva_amount=Decimal("42.00")
         )
         q1_row = _transaction(
-            "row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50")
+            "row-q1", value_date=date(_YEAR, 2, 1), taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50")
         )
         q3_row = _transaction(
-            "row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"), iva_amount=Decimal("15.75")
+            "row-q3", value_date=date(_YEAR, 8, 1), taxable_base=Decimal("75.00"), iva_amount=Decimal("15.75")
         )
         excluded_q3_row = _transaction(
             "row-q3-excluded",
-            value_date=date(2026, 9, 1),
+            value_date=date(_YEAR, 9, 1),
             business_classification=BusinessClassification.REVIEWED_EXCLUDED,
         )
         catalogue = TransactionCatalogue.from_transactions(
@@ -455,7 +457,7 @@ def test_repository_backed_projection_partition_matches_full_scan(
 
         partitioned = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
+            period=_Q2,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -465,7 +467,7 @@ def test_repository_backed_projection_partition_matches_full_scan(
         )
         full_scan = aggregate_iva_ledger_observations(
             catalogue,
-            period=_Q2_2026,
+            period=_Q2,
             operation=_authority_operation_for_test,
         )
 
@@ -481,8 +483,8 @@ def test_repository_backed_projection_partition_matches_full_scan(
         assert partitioned.issues == ()
         assert partitioned.out_of_window_summary is not None
         assert partitioned.out_of_window_summary.count == 3
-        assert partitioned.out_of_window_summary.min_filing_date == date(2026, 2, 1)
-        assert partitioned.out_of_window_summary.max_filing_date == date(2026, 9, 1)
+        assert partitioned.out_of_window_summary.min_filing_date == date(_YEAR, 2, 1)
+        assert partitioned.out_of_window_summary.max_filing_date == date(_YEAR, 9, 1)
 
         full_scan_ids_with_issues = {i.transaction_id for i in full_scan.issues}
         assert full_scan_ids_with_issues == {q1_row.transaction_id, q3_row.transaction_id}

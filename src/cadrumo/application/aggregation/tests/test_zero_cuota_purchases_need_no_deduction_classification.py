@@ -30,6 +30,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import received_flow_direction
 from ....domain.iva.schema import (
@@ -52,9 +53,12 @@ type _ZeroCuotaRowFactory = Callable[..., Transaction]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+#: The newest exercise both annual and quarterly forms file at, for the registry snapshot only.
+_SNAPSHOT_YEAR = filing_grade_exercises("390")[-1]
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _PROFILE_ID = "zero-cuota-inputs"
-_OPERATION_DATE = date(2026, 2, 10)
+_OPERATION_DATE = date(_YEAR, 2, 10)
 
 #: LIVA art. 7 places a Social Security contribution outside the taxable event.
 _RETA_QUOTA = Decimal("314.40")
@@ -356,7 +360,7 @@ def test_neither_row_reaches_a_declared_box_on_either_form(
 
     from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
-    revision = published_snapshot(modelo, filing_year=2025, period=period).revision
+    revision = published_snapshot(modelo, filing_year=_SNAPSHOT_YEAR, period=period).revision
     observations = _aggregate(
         _reta_quota(),
         _exempt_premium(),

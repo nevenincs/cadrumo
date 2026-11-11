@@ -70,7 +70,7 @@ from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(1980, 10, 10, 12, tzinfo=UTC)
 _ALL_ACTIONS = frozenset(AccessAction)
 
 

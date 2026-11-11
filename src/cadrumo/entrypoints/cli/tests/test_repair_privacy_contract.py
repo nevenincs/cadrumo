@@ -22,13 +22,17 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.logging import default_log_file_path
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UUID_PATTERN = re.compile(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-_SESSION_OPENED_AT = datetime(2099, 5, 28, 14, 50, 0, tzinfo=UTC)
-_ROW_WRITTEN_AT = datetime(2099, 5, 28, 14, 55, 0, tzinfo=UTC)
+_SESSION_OPENED_AT = datetime.now(UTC)
+_ROW_WRITTEN_AT = _SESSION_OPENED_AT + timedelta(minutes=5)
 
 
 @pytest.fixture(autouse=True)
@@ -161,7 +165,7 @@ def test_config_repair_integrity_objects_cli_is_metadata_only_for_unreadable_row
     assert active_bucket_id is not None
     namespace = "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"
     sensitive_tax_id = "12345678Z"
-    sensitive_period = "2026Q1"
+    sensitive_period = f"{_YEAR}Q1"
     sensitive_payload = b"wallet-balance=999999; taxpayer=12345678Z"
     _write_row_with_wrong_bucket_key(
         key=b"\xa1" * 32,
@@ -233,7 +237,7 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
     assert active_bucket_id is not None
     namespace = "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"
     sensitive_tax_id = "12345678Z"
-    sensitive_period = "2026Q1"
+    sensitive_period = f"{_YEAR}Q1"
     _write_row_with_wrong_bucket_key(
         key=b"\xc3" * 32,
         namespace=namespace,

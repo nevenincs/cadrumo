@@ -107,7 +107,7 @@ _TEXT_LAYER_PORTS = _text_layer_ports_for_pages((_PRINTED_MENTION,))
 _BASE_REPLY: dict[str, str | None] = {
     "supplier_tax_id": "B1234567X",
     "invoice_number": "RC-2026-0001",
-    "invoice_date": "2026-06-11",
+    "invoice_date": "1980-06-11",
     "taxable_base": "766,30",
     "regime_legend": _PRINTED_MENTION,
     "currency": "EUR",

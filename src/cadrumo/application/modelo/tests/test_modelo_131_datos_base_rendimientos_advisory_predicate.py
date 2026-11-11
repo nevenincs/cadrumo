@@ -39,6 +39,7 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -46,17 +47,17 @@ from ..verification_predicates import evaluate_advisory_predicate_fires, evaluat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-#: One filing year per M131 revision. Each resolves to its revision through the
+#: Every supported filing year. Each resolves to its revision through the
 #: law-determined (modelo, filing_year, period) triple rather than by naming a
 #: revision id, so a re-dated revision cannot silently repoint this gate.
-_REVISION_YEARS = (2023, 2024, 2025, 2026)
+_REVISION_YEARS = filing_year_envelope().years
 
 _SUMA_RENDIMIENTOS_NETOS = validated_casilla_id("01", surface="m131-datos-base-rendimientos-advisory")
 _PAGO_FRACCIONADO_PREVIO_DATOS_BASE = validated_casilla_id("02", surface="m131-datos-base-rendimientos-advisory")
 
 
 def _predicate_id(year: int) -> str:
-    revision = "2019-2023" if year <= 2023 else str(year)
+    revision = revision_serving_period("131", year, "1T").id
     return f"modelo-131-{revision}-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
 
 

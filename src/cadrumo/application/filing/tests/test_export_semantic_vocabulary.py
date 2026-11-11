@@ -18,6 +18,7 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from .. import export as export_module
 from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
@@ -28,6 +29,10 @@ from ..record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUC
 modelo_export_module = import_module("...modelo.export", package=__package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(revision_serving_period("303", _YEAR, "4T").id)
+_LAYOUT_ID = f"generated-modelo-303-{_REVISION_ID}-fichero"
 
 
 def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
@@ -125,7 +130,7 @@ def test_filing_envelope_defining_module_exposes_one_closed_request() -> None:
 
 @pytest.mark.usefixtures("operation")
 def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() -> None:
-    period = Period.from_year_and_code(2023, "4T")
+    period = Period.from_year_and_code(_YEAR, "4T")
     envelope = _m303_envelope_definition()
     occurrence = FilingEnvelopeOccurrence(
         record_id="m303-declaration",
@@ -134,12 +139,12 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
         payload_sha256=sha256(b"body").hexdigest(),
     )
     prefix = b" " * 328
-    closer = b"</T303020234T0000>"
+    closer = f"</T3030{_YEAR}4T0000>".encode("ascii")
     payload = prefix + occurrence.payload + closer
     result = FilingEnvelopeRenderResult(
         draft_id="draft-303",
-        revision_id="2023",
-        layout_id="generated-modelo-303-2023-fichero",
+        revision_id=_REVISION_ID,
+        layout_id=_LAYOUT_ID,
         modelo=Modelo("303"),
         period=period,
         envelope=envelope,
@@ -156,8 +161,8 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
     zero_payload = prefix + closer
     zero_result = FilingEnvelopeRenderResult(
         draft_id="draft-303",
-        revision_id="2023",
-        layout_id="generated-modelo-303-2023-fichero",
+        revision_id=_REVISION_ID,
+        layout_id=_LAYOUT_ID,
         modelo=Modelo("303"),
         period=period,
         envelope=envelope,
@@ -177,8 +182,8 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
     many_payload = prefix + occurrence.payload + second_occurrence.payload + closer
     many_result = FilingEnvelopeRenderResult(
         draft_id="draft-303",
-        revision_id="2023",
-        layout_id="generated-modelo-303-2023-fichero",
+        revision_id=_REVISION_ID,
+        layout_id=_LAYOUT_ID,
         modelo=Modelo("303"),
         period=period,
         envelope=envelope,
@@ -203,8 +208,8 @@ def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() ->
     with pytest.raises(ValueError, match="contiguous"):
         FilingEnvelopeRenderResult(
             draft_id="draft-303",
-            revision_id="2023",
-            layout_id="generated-modelo-303-2023-fichero",
+            revision_id=_REVISION_ID,
+            layout_id=_LAYOUT_ID,
             modelo=Modelo("303"),
             period=period,
             envelope=envelope,

@@ -23,6 +23,7 @@ from ....domain.calculations.registry.runtime_graph import enum_consumed_binding
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -38,18 +39,20 @@ from ..reconcile_population import resolve_casilla_population_scope
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _WORK_UNIT_ID = "b" * 64
+_EXERCISE = filing_year_envelope().horizon
+_M130_REVISION_ID = str(open_ended_revision("130").id)
 
 #: Distinct and fixed rather than "now". The model documents updated_at as equal
 #: to created_at on a fresh draft, so a differing pair is the non-default state a
 #: save-drops-field / load-re-defaults regression would collapse; and a frozen
 #: instant keeps the fixture deterministic.
-_CREATED_AT = datetime(2026, 3, 4, 9, 15, 30, tzinfo=UTC)
-_UPDATED_AT = datetime(2026, 5, 6, 17, 45, 5, tzinfo=UTC)
+_CREATED_AT = datetime(_EXERCISE, 3, 4, 9, 15, 30, tzinfo=UTC)
+_UPDATED_AT = datetime(_EXERCISE, 5, 6, 17, 45, 5, tzinfo=UTC)
 
 
 def _m130_revision() -> ModeloRevision:
     """Return the real bundled Modelo 130 revision used as the subject."""
-    return published_revision("130", "2019-y-siguientes")
+    return published_revision("130", _M130_REVISION_ID)
 
 
 def _calculation(
@@ -75,8 +78,8 @@ def _calculation(
         work_unit_id=_WORK_UNIT_ID,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2026,
+            revision_id=_M130_REVISION_ID,
+            modelo_year=_EXERCISE,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,

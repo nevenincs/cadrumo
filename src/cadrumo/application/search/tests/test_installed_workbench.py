@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 import pickle
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TypedDict
 
@@ -12,6 +12,7 @@ import pytest
 
 from ....core.filing_year import FilingYear
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
@@ -74,8 +75,9 @@ from ..workbench import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 9, 3, 10, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _REVISION_ID = "c" * 64
 _FILING_ID = "f" * 64
@@ -121,7 +123,7 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
             LedgerWorkspaceEntryRefV1(
                 transaction_id="a" * 64,
                 review_status="pending",
-                date="2026-03-14",
+                date=date(_YEAR, 3, 14).isoformat(),
                 amount="1250.00",
                 currency="EUR",
                 direction="outgoing",
@@ -136,7 +138,7 @@ def _ledger() -> LedgerWorkspaceProjectionV1:
         affected_declarations=(
             LedgerAffectedDeclarationRefV1(
                 modelo=ModeloCode("130"),
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=_PERIOD,
                 calculation_revision_id=_REVISION_ID,
                 changed_count=1,
@@ -158,7 +160,7 @@ def _declarations() -> DeclarationsWorkspaceProjectionV1:
         )
         for zone in DeclarationsWorkspaceZone
     )
-    common: _DeclarationIdentity = {"modelo": ModeloCode("130"), "filing_year": 2026, "period": _PERIOD}
+    common: _DeclarationIdentity = {"modelo": ModeloCode("130"), "filing_year": _YEAR, "period": _PERIOD}
     return DeclarationsWorkspaceProjectionV1(
         bucket_id=_BUCKET,
         zones=zones,
@@ -234,7 +236,7 @@ def _aeat_sync() -> AeatSyncWorkspaceProjectionV1:
         reconciliation=(
             AeatSyncWorkspaceReconciliationRowV1(
                 modelo=ModeloCode("130"),
-                filing_year=2026,
+                filing_year=_YEAR,
                 period=_PERIOD,
                 local_state=AeatSyncSourceState.PRESENT,
                 aeat_state=AeatSyncSourceState.ABSENT,
@@ -251,7 +253,7 @@ def _modelo() -> ModeloWorkspaceProjectionV1:
     """Return one preloaded Modelo workspace target without resolving readers."""
     return ModeloWorkspaceProjectionV1.model_construct(
         target=ModeloWorkspaceResolvedTargetV1.model_construct(
-            modelo=ModeloCode("130"), filing_year=2026, period=_PERIOD
+            modelo=ModeloCode("130"), filing_year=_YEAR, period=_PERIOD
         ),
         capabilities=(
             ModeloWorkspaceCapabilityV1.model_construct(disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE),

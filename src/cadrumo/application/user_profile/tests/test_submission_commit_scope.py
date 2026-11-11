@@ -54,7 +54,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(1980, 10, 10, 12, tzinfo=UTC)
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000c1")
 _ALL_ACTIONS = frozenset(AccessAction)
 _WITHOUT_COMMIT = _ALL_ACTIONS - {AccessAction.COMMIT}

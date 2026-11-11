@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormSectionDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..engine import build_export_plan
@@ -44,10 +45,12 @@ from ..workbook_cells import plan_value_blocks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
+_YEAR = filing_year_envelope().horizon
+
 
 @pytest.fixture
 def form_source():
-    snapshot = published_snapshot("130", filing_year=2025, period="4T")
+    snapshot = published_snapshot("130", filing_year=_YEAR, period="4T")
     # Deliberately synthetic layout: tests exercise projection contracts, not
     # the reviewed accuracy of any official form.
     layout = FormLayoutDefinition(
@@ -596,7 +599,7 @@ def test_real_saved_review_is_refused_without_recalculation(form_source):
     baseline = build_review_workbook(
         review_snapshot(amount="99.75"),
         publication_id=UUID(int=2),
-        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+        exported_at=datetime(1980, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     assert not baseline.formula_cells

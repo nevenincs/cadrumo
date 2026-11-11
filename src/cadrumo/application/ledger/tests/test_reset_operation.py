@@ -11,6 +11,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import (
@@ -29,6 +30,8 @@ from ..reset_operation import (
     build_ledger_reset_registration,
 )
 from .registration_access_context_support import registration_access_context
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,7 +72,7 @@ def _report(*, bucket_id: str = str(_PROFILE)) -> LedgerResetReportProjection:
         calculation_revision_id="c" * 64,
         revision_state="FINALIZED",
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
     )
     return LedgerResetReportProjection(

@@ -10,6 +10,11 @@ from cadrumo.application.modelo.tests.verification_substance_fixtures import wor
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    revision_first_exercise,
+)
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -21,7 +26,9 @@ _M202_PREDICATE_ID = "modelo-202-base-imponible-previa-determinada-cuando-result
 _CASILLA_04: CasillaId = validated_casilla_id("04", surface="test_verification_m202_advisory.casilla")
 _CASILLA_13: CasillaId = validated_casilla_id("13", surface="test_verification_m202_advisory.casilla")
 
-_M202_REVISION_IDS = ("2019-2022", "2023-2024", "2025-y-siguientes")
+_M202_REVISION_IDS = tuple(str(revision.id) for revision in authored_revisions("202"))
+_M202_NEWEST_REVISION_ID = str(open_ended_revision("202").id)
+_M202_NEWEST_FIRST_EXERCISE = revision_first_exercise("202", _M202_NEWEST_REVISION_ID)
 
 
 def _m202_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
@@ -86,12 +93,16 @@ def test_m202_advisory_silent_when_no_resultado_contable() -> None:
         assert evaluate_verification_predicates((predicate,), absent, workflow_profile()) == [], revision_id
 
 
-# 2025-only B2 casos especificos tipo-3/tipo-4 tramo guards (deferred-items
+# Newest-revision-only B2 casos especificos tipo-3/tipo-4 tramo guards (deferred-items
 # audit, m202-deferred-items, 2026-06-30): clave 61/62 -> clave 63 and clave
 # 64/65 -> clave 66 are both formula-derived via the ``percent`` operator.
 
-_M202_B2_TIPO_3_PREDICATE_ID = "modelo-202-2025-b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
-_M202_B2_TIPO_4_PREDICATE_ID = "modelo-202-2025-b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4"
+_M202_B2_TIPO_3_PREDICATE_ID = (
+    f"modelo-202-{_M202_NEWEST_FIRST_EXERCISE}-b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
+)
+_M202_B2_TIPO_4_PREDICATE_ID = (
+    f"modelo-202-{_M202_NEWEST_FIRST_EXERCISE}-b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4"
+)
 
 _CASILLA_61: CasillaId = validated_casilla_id("61", surface="test_verification_m202_advisory.casilla")
 _CASILLA_63: CasillaId = validated_casilla_id("63", surface="test_verification_m202_advisory.casilla")
@@ -103,15 +114,15 @@ _M202_B2_TRAMO_CASES = (
 )
 
 
-def _m202_2025_predicate(predicate_id: str) -> VerificationPredicateDefinition:
-    """Load a shipped 2025-y-siguientes-only M202 silent-under-declaration advisory."""
-    revision = published_revision("202", "2025-y-siguientes")
+def _m202_newest_predicate(predicate_id: str) -> VerificationPredicateDefinition:
+    """Load a shipped newest-revision-only M202 silent-under-declaration advisory."""
+    revision = published_revision("202", _M202_NEWEST_REVISION_ID)
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 
 def test_m202_b2_tramo_advisory_ships_and_is_grounded() -> None:
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
-        predicate = _m202_2025_predicate(predicate_id)
+        predicate = _m202_newest_predicate(predicate_id)
         assert predicate.finding_kind == "ADVISORY", predicate_id
         assert predicate.expression == f'implies_nonzero(["{antecedent}", "{consequent}"])', predicate_id
         legal_refs = tuple(str(r) for r in predicate.legal_refs)
@@ -122,7 +133,7 @@ def test_m202_b2_tramo_advisory_ships_and_is_grounded() -> None:
 def test_m202_b2_tramo_advisory_fires_when_base_positive_but_importe_zero() -> None:
     """Positive tramo base with a zero computed importe surfaces a warning advisory."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
-        predicate = _m202_2025_predicate(predicate_id)
+        predicate = _m202_newest_predicate(predicate_id)
         casilla_values: dict[CasillaId, Decimal] = {antecedent: Decimal("50000.00"), consequent: Decimal("0")}
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -136,7 +147,7 @@ def test_m202_b2_tramo_advisory_fires_when_base_positive_but_importe_zero() -> N
 def test_m202_b2_tramo_advisory_holds_when_importe_present() -> None:
     """Positive tramo base and positive computed importe satisfy the implication."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
-        predicate = _m202_2025_predicate(predicate_id)
+        predicate = _m202_newest_predicate(predicate_id)
         casilla_values: dict[CasillaId, Decimal] = {antecedent: Decimal("50000.00"), consequent: Decimal("15000.00")}
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
@@ -146,7 +157,7 @@ def test_m202_b2_tramo_advisory_holds_when_importe_present() -> None:
 def test_m202_b2_tramo_advisory_holds_trivially_when_base_not_used() -> None:
     """No declared tramo base holds trivially (the filer does not use this B2 tramo)."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
-        predicate = _m202_2025_predicate(predicate_id)
+        predicate = _m202_newest_predicate(predicate_id)
 
         explicit_zero: dict[CasillaId, Decimal] = {antecedent: Decimal("0"), consequent: Decimal("0")}
         absent: dict[CasillaId, Decimal] = {}

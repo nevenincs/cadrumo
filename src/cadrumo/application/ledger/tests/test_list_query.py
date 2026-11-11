@@ -22,6 +22,7 @@ from pydantic import ValidationError
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from ....domain.transactions.date_partition import (
     LedgerDatePartition,
@@ -39,6 +40,8 @@ from ..list_operation import ledger_list_row
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
 from ..transaction_projection import LedgerTransactionReviewProjection
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "11111111-1111-4111-8111-111111111111"
@@ -50,7 +53,7 @@ def _transaction(
     amount: Decimal,
     group_label: str | None = None,
     own_account_id: str | None = None,
-    filing_date: date = date(2024, 4, 10),
+    filing_date: date = date(_YEAR, 4, 10),
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_id,
@@ -65,7 +68,7 @@ def _transaction(
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
             provider_name="test",
         ),
         raw_fields={},
@@ -78,8 +81,8 @@ def _transaction(
             "source_jurisdiction": "ES",
             "group_label": group_label,
             "own_account_id": own_account_id,
-            "created_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
-            "modified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "created_at": datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
+            "modified_at": datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
         }
     )
 
@@ -306,7 +309,7 @@ def _cash_accounting_transaction(*, provider_id: str, filing_date: date, operati
                     recargo_amount=Decimal("0.00"),
                 ),
             ),
-            "classified_at": datetime(2024, 4, 14, 9, 30, tzinfo=UTC),
+            "classified_at": datetime(_YEAR, 4, 14, 9, 30, tzinfo=UTC),
             "classified_by": "manual",
         }
     )
@@ -352,17 +355,17 @@ def test_a_period_listing_reads_only_that_periods_date_partition() -> None:
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue.from_transactions(
             (
-                _transaction(provider_id="before", amount=Decimal("1.00"), filing_date=date(2024, 3, 31)),
-                _transaction(provider_id="first", amount=Decimal("2.00"), filing_date=date(2024, 4, 1)),
-                _transaction(provider_id="last", amount=Decimal("3.00"), filing_date=date(2024, 6, 30)),
-                _transaction(provider_id="after", amount=Decimal("4.00"), filing_date=date(2024, 7, 1)),
+                _transaction(provider_id="before", amount=Decimal("1.00"), filing_date=date(_YEAR, 3, 31)),
+                _transaction(provider_id="first", amount=Decimal("2.00"), filing_date=date(_YEAR, 4, 1)),
+                _transaction(provider_id="last", amount=Decimal("3.00"), filing_date=date(_YEAR, 6, 30)),
+                _transaction(provider_id="after", amount=Decimal("4.00"), filing_date=date(_YEAR, 7, 1)),
             )
         ),
     )
 
-    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+    page = _page(repository, _period_query("2T", _YEAR, sort_by=LedgerSortField.DATE))
 
-    assert repository.windows == [(date(2024, 4, 1), date(2024, 6, 30))]
+    assert repository.windows == [(date(_YEAR, 4, 1), date(_YEAR, 6, 30))]
     assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["first", "last"]
     assert page.total == 2
     assert page.truncated is False
@@ -377,10 +380,10 @@ def test_a_period_listing_narrows_the_partition_superset_to_the_filing_date() ->
     page disagree with the full-scan page.
     """
     accrued_in_window = _cash_accounting_transaction(
-        provider_id="accrued-in-window", filing_date=date(2024, 7, 15), operation_date=date(2024, 5, 2)
+        provider_id="accrued-in-window", filing_date=date(_YEAR, 7, 15), operation_date=date(_YEAR, 5, 2)
     )
     filed_in_window = _cash_accounting_transaction(
-        provider_id="filed-in-window", filing_date=date(2024, 5, 20), operation_date=date(2024, 3, 2)
+        provider_id="filed-in-window", filing_date=date(_YEAR, 5, 20), operation_date=date(_YEAR, 3, 2)
     )
     repository = _PartitionOnlyRepository(
         bucket_id=_BUCKET,
@@ -388,16 +391,16 @@ def test_a_period_listing_narrows_the_partition_superset_to_the_filing_date() ->
             (
                 accrued_in_window,
                 filed_in_window,
-                _transaction(provider_id="plain", amount=Decimal("5.00"), filing_date=date(2024, 6, 1)),
+                _transaction(provider_id="plain", amount=Decimal("5.00"), filing_date=date(_YEAR, 6, 1)),
             )
         ),
     )
-    offered = repository.partition_by_date_range(date(2024, 4, 1), date(2024, 6, 30)).in_window
+    offered = repository.partition_by_date_range(date(_YEAR, 4, 1), date(_YEAR, 6, 30)).in_window
     assert accrued_in_window.transaction_id in offered.transactions, (
         "fixture must place the devengo-only row inside the partition superset for this proof to mean anything"
     )
 
-    page = _page(repository, _period_query("2T", 2024, sort_by=LedgerSortField.DATE))
+    page = _page(repository, _period_query("2T", _YEAR, sort_by=LedgerSortField.DATE))
 
     assert [item.transaction.raw.provider_transaction_id for item in page.results] == ["filed-in-window", "plain"]
     assert page.total == 2

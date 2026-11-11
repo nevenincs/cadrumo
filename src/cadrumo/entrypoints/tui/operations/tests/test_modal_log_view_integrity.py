@@ -37,7 +37,7 @@ def _row(sequence: int) -> OperationModalLogRowV1:
     """One projected row; only its sequence matters to these invariants."""
     return OperationModalLogRowV1(
         sequence=sequence,
-        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        timestamp=datetime(1980, 1, 1, tzinfo=UTC),
         kind=OperationEventKind.LOG,
         code="operation.probe",
         severity=None,
@@ -130,7 +130,7 @@ def test_clave_comparison_code_survives_public_event_projection(display_code: st
     notice = OperationPublicNoticeEventV1(
         revision=1,
         sequence=1,
-        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        timestamp=datetime(1980, 1, 1, tzinfo=UTC),
         code="auth.clave-movil.approval-pending",
         notice_code="auth.clave-movil.approval-pending",
         display_code=display_code,
@@ -213,7 +213,7 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
     phase = OperationPublicPhaseEventV1(
         sequence=1,
         revision=1,
-        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        timestamp=datetime(1980, 1, 1, tzinfo=UTC),
         code="operation.phase",
         phase_code="ledger.import.read",
     )

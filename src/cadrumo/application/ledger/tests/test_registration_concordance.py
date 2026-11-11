@@ -44,6 +44,7 @@ from .ledger_value_fixtures import repository
 __all__ = ["repository"]
 
 from ....core.classifier_input_source import ClassifierInputSource
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ..establishment_ladder import (
     CounterpartyEstablishment,
@@ -51,6 +52,8 @@ from ..establishment_ladder import (
     resolve_counterparty_establishment_scope,
 )
 from ..invoice_extraction_authority import default_invoice_extraction_period
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +75,7 @@ _REVERSE_CHARGE = "inversión del sujeto pasivo"
 #: whether it carries the rate on the date, so a schedule change moves the gate
 #: with it rather than leaving a stale literal behind.
 _SPANISH_GENERAL_RATE = Decimal("21")
-_ON_DATE = date(2026, 3, 10)
+_ON_DATE = date(_YEAR, 3, 10)
 
 
 def _registry_legends(operation: PinnedAuthorityOperation):

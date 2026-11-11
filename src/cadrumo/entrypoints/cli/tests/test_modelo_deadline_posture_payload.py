@@ -2,27 +2,31 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ..modelo_results import WorkDeadlinePosturePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+_EFFECTIVE = date(_YEAR, 4, 20)
+_NOMINAL = date(_YEAR, 4, 18)
 _DATES = {
-    "closes_on": date(2026, 4, 20),
-    "nominal_closes_on": date(2026, 4, 18),
+    "closes_on": _EFFECTIVE,
+    "nominal_closes_on": _NOMINAL,
     "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_ONLY,
 }
 
 
 def test_deadline_posture_payload_roundtrips_the_application_date_contract() -> None:
     payload = WorkDeadlinePosturePayload(
-        closes_on=date(2026, 4, 20),
-        nominal_closes_on=date(2026, 4, 18),
+        closes_on=_EFFECTIVE,
+        nominal_closes_on=_NOMINAL,
         holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         days_remaining=0,
     )
@@ -31,8 +35,8 @@ def test_deadline_posture_payload_roundtrips_the_application_date_contract() -> 
 
     assert restored == payload
     dumped = payload.model_dump(mode="json")
-    assert dumped["closes_on"] == "2026-04-20"
-    assert dumped["nominal_closes_on"] == "2026-04-18"
+    assert dumped["closes_on"] == _EFFECTIVE.isoformat()
+    assert dumped["nominal_closes_on"] == _NOMINAL.isoformat()
     assert dumped["holiday_coverage"] == "national_only"
 
 
@@ -44,13 +48,13 @@ def test_deadline_posture_payload_roundtrips_the_application_date_contract() -> 
         {**_DATES, "days_remaining": 0, "days_overdue": 1},
         {**_DATES, "days_remaining": -1},
         {**_DATES, "days_overdue": -1},
-        {**_DATES, "nominal_closes_on": date(2026, 4, 21), "days_remaining": 0},
+        {**_DATES, "nominal_closes_on": _EFFECTIVE + timedelta(days=1), "days_remaining": 0},
         {
-            "closes_on": date(2026, 4, 20),
+            "closes_on": _EFFECTIVE,
             "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_ONLY,
             "days_remaining": 0,
         },
-        {"closes_on": date(2026, 4, 20), "nominal_closes_on": date(2026, 4, 20), "days_remaining": 0},
+        {"closes_on": _EFFECTIVE, "nominal_closes_on": _EFFECTIVE, "days_remaining": 0},
     ),
     ids=[
         "malformed-date",

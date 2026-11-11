@@ -9,7 +9,7 @@ two-band escala of art. 93.2.e).1.º — 24 % on the base liquidable general up 
 
 This module is the cross-year behavior coverage for Modelo 151. It
 drives the REAL registry calculation engine (real authority + the real
-lookup_bracket runtime — no mocks) across two distinct renta years (2024, 2025),
+lookup_bracket runtime — no mocks) across two consecutive renta years,
 records each through the ``cross-year observation``, and cross-checks the
 recorded year-set against the cross-year claim via
 ``the cross-year behavior assertion``.
@@ -19,8 +19,8 @@ The régimen runs for the change-of-residence year + the five following years
 residencia y durante los cinco períodos impositivos siguientes") — a 6-year
 eligibility window. That window is the cross-renta continuity: the régimen (and
 its escala) persists year-over-year within the window, so the same cuota rule
-applies to two consecutive in-window ejercicios. The two enrolled years (2024,
-2025) sit inside one taxpayer's window.
+applies to two consecutive in-window ejercicios. The two enrolled years (the two
+newest supported ones) sit inside one taxpayer's window.
 
 Grounding (non-tautological — A5 / aeat-quality-gates):
 the expected cuota is derived from the BOE escala arithmetic (art. 93.2.e.1º),
@@ -43,6 +43,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,8 +52,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _MODELO = "151"
 
 #: The two distinct renta years enrolled — both inside one taxpayer's 6-year
-#: Beckham window (e.g. change-of-residence year 2022 → window 2022..2027).
-_RENTA_YEARS = (2024, 2025)
+#: Beckham window (the change-of-residence year plus the five that follow).
+_FIRST_YEAR, _SECOND_YEAR = filing_year_envelope().years[-2:]
+_RENTA_YEARS = (_FIRST_YEAR, _SECOND_YEAR)
 
 #: The art. 93.2.e.1º escala threshold and rates (BOE, ley-35-2006:art-93).
 _THRESHOLD = Decimal("600000")
@@ -93,12 +95,12 @@ def _expected_cuota_from_boe_escala(base_liquidable: Decimal) -> Decimal:
 #: Per-year base liquidable general (both above the €600.000 threshold so the
 #: two-band escala is genuinely exercised; distinct per year).
 _BASE_BY_YEAR: dict[int, Decimal] = {
-    2024: Decimal("700000.00"),  # expected cuota 191.000,00
-    2025: Decimal("900000.00"),  # expected cuota 285.000,00
+    _FIRST_YEAR: Decimal("700000.00"),  # expected cuota 191.000,00
+    _SECOND_YEAR: Decimal("900000.00"),  # expected cuota 285.000,00
 }
 _RETENCIONES_BY_YEAR: dict[int, Decimal] = {
-    2024: Decimal("50000.00"),
-    2025: Decimal("70000.00"),
+    _FIRST_YEAR: Decimal("50000.00"),
+    _SECOND_YEAR: Decimal("70000.00"),
 }
 
 
@@ -124,20 +126,20 @@ def test_cuota_matches_boe_escala_at_threshold_crossing() -> None:
     tramos are exercised. The expected cuota (191.000,00) is hand-derived from
     the BOE rates, not the registry formula — non-tautological.
     """
-    result, _produced = _calculate_151(filing_year=2024)
+    result, _produced = _calculate_151(filing_year=_FIRST_YEAR)
 
     assert _produced > 0
-    expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2024])
+    expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[_FIRST_YEAR])
     assert expected == Decimal("191000.00")
     assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected
     # cuota diferencial = cuota − retenciones (art.93.2.f withholding is a pago a cuenta).
-    assert result.values[_CUOTA_DIFERENCIAL_CASILLA] == expected - _RETENCIONES_BY_YEAR[2024]
+    assert result.values[_CUOTA_DIFERENCIAL_CASILLA] == expected - _RETENCIONES_BY_YEAR[_FIRST_YEAR]
 
 
 def test_modelo_151_beckham_enrolls_two_renta_years() -> None:
     """End-to-end enrollment: 151 cuota escala across two in-window renta years.
 
-    Drives the REAL 151 engine for 2024 and 2025 (both inside one taxpayer's
+    Drives the REAL 151 engine for the two newest supported years (both inside one taxpayer's
     6-year Beckham window — the régimen and its escala persist year-over-year,
     the cross-renta continuity), asserts each year's cuota against the
     hand-derived BOE-escala oracle, records each through the cross-year observation,
@@ -152,4 +154,4 @@ def test_modelo_151_beckham_enrolls_two_renta_years() -> None:
         )
 
     # Independent oracle check: the two years' expected cuotas are the BOE values.
-    assert _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2025]) == Decimal("285000.00")
+    assert _expected_cuota_from_boe_escala(_BASE_BY_YEAR[_SECOND_YEAR]) == Decimal("285000.00")

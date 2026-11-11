@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -34,6 +35,10 @@ from .source_resolver_test_support import (
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_YEAR = filing_year_envelope().horizon
+# The design Modelo 347 used before its newest authored edition.
+_M347_OLD_DESIGN = authored_revisions("347")[-2].id
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +126,7 @@ def _same_facts_invoice(*, with_category: bool):
 
     kind = InvoiceKind.ISSUED
     number = "PARITY-2026-001"
-    issued = date(2026, 4, 2)
+    issued = date(_YEAR, 4, 2)
     tax_id = "B00015016"
     return Invoice(
         invoice_id=derive_invoice_id(
@@ -200,9 +205,9 @@ def test_the_informativas_are_unaffected_by_that_divergence(
     context = CalculationSourceContext(
         bucket_id=BUCKET_ID,
         modelo="347",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=modelo_revision("347", "2011-2024"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        revision=modelo_revision("347", _M347_OLD_DESIGN),
     )
 
     resolution = source_resolver(repository).resolve(context)
@@ -321,9 +326,9 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="347",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
-        revision=modelo_revision("347", "2011-2024"),
+        filing_year=_YEAR - 1,
+        period=Period.from_year_and_code(_YEAR - 1, "0A"),
+        revision=modelo_revision("347", _M347_OLD_DESIGN),
     )
 
     # Pinned for the same reason as the M349 proof above: these are the facts
@@ -337,7 +342,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     declared_facts = {
         "party_tax_id": "B00015016",
         "country_code": "ES",
-        "transaction_date": date(2025, 2, 10),
+        "transaction_date": date(_YEAR - 1, 2, 10),
         "base_amount": Decimal("3000.00"),
         "invoice_total_amount": Decimal("3630.00"),
         "intracommunity_clave": None,
@@ -349,7 +354,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         invoice_id=derive_invoice_id(
             kind=InvoiceKind.ISSUED,
             invoice_number="M347-C-2025-001",
-            issued_at=date(2025, 2, 10),
+            issued_at=date(_YEAR - 1, 2, 10),
             counterparty_tax_id="B00015016",
             currency="EUR",
             grand_total=Decimal("3630.00"),
@@ -357,7 +362,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-001",
-        issued_at=date(2025, 2, 10),
+        issued_at=date(_YEAR - 1, 2, 10),
         counterparty_name="Cliente M347 SL",
         counterparty_tax_id="B00015016",
         counterparty_country="ES",
@@ -419,7 +424,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
     unattributed = source_resolver_invoice(
         bucket_id=None,
         invoice_number="F-2026-UNATTRIBUTED",
-        issued_at=date(2026, 1, 15),
+        issued_at=date(_YEAR, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -446,7 +451,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
     foreign = source_resolver_invoice(
         bucket_id=OTHER_BUCKET_ID,
         invoice_number="F-2026-FOREIGN",
-        issued_at=date(2026, 1, 16),
+        issued_at=date(_YEAR, 1, 16),
         counterparty_tax_id="DE987654321",
         base_total=Decimal("500.00"),
         iva_category=IvaCategory("intra_community_supply"),

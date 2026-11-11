@@ -31,6 +31,10 @@ from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.prorrata_register.register import ProrrataRegister
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -39,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: build results by hand rather than by projection, so they state it explicitly.
 _PROVENANCE = BienesInversionParameterProvenance(
     modelo_id="303",
-    revision_id="2025",
+    revision_id=open_ended_revision("303").id,
     parameter_ids=(
         "m303-bien-inversion-ventana-anos-mueble",
         "m303-bien-inversion-ventana-anos-inmueble",
@@ -47,7 +51,7 @@ _PROVENANCE = BienesInversionParameterProvenance(
         "m303-bien-inversion-divisor-inmueble",
         "m303-bien-inversion-regularizacion-umbral-puntos",
     ),
-    resolved_on=_prov_date(2025, 6, 1),
+    resolved_on=_prov_date(_YEAR - 1, 6, 1),
 )
 
 
@@ -77,7 +81,7 @@ def _params_for(year: int) -> BienesInversionRegularizacionParameters:
 
 
 def _general_m303_filing_facts(*, operation: PinnedAuthorityOperation):
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_YEAR, "1T")
     prorrata_register = ProrrataRegister()
     return resolve_m303_filing_facts(
         evidence=export_m303_filing_evidence(period, operation=operation),

@@ -16,6 +16,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.errors.error_codes import build_error_envelope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
@@ -37,6 +38,7 @@ from .withholding_filer_profile_support import quarterly_filer_cadence
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _LANGUAGES = ("en", "es", "ca", "hu")
+_YEAR = filing_year_envelope().horizon
 
 
 def _invoice(
@@ -48,7 +50,7 @@ def _invoice(
     retention_rate: str | None = "0.19",
 ) -> Invoice:
     base = Decimal("1000.00")
-    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2025, 3, 31))
+    rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_YEAR, 3, 31))
     assert rate is not None
     line = InvoiceLine(
         description="Professional services",
@@ -63,7 +65,7 @@ def _invoice(
             "bucket_id": "00000000-0000-4000-8000-000000000455",
             "kind": kind,
             "invoice_number": "CAPTURE-DEFECTS-001",
-            "issued_at": date(2025, 3, 31),
+            "issued_at": date(_YEAR, 3, 31),
             "counterparty_name": "Resident professional SL",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
@@ -90,7 +92,7 @@ def _request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
             "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
             "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
             "exigibility_event_id": "exigibility-q4",
-            "exigibility_occurred_on": date(2025, 12, 15),
+            "exigibility_occurred_on": date(_YEAR, 12, 15),
             "allocation_id": "allocation-q4",
             "allocated_base": Decimal("500.00"),
             "allocated_withholding": Decimal("95.00"),
@@ -106,8 +108,8 @@ def _capture_refusal(invoice: Invoice) -> InvoiceWithholdingDefectsError:
             invoice,
             catalogue_revision_id="a" * 64,
             request=_request(invoice),
-            applicable_year=2025,
-            cadence=quarterly_filer_cadence(2025),
+            applicable_year=_YEAR,
+            cadence=quarterly_filer_cadence(_YEAR),
         )
     return exc_info.value
 
@@ -155,8 +157,8 @@ def test_a_clean_invoice_still_captures_the_projected_liability() -> None:
         invoice,
         catalogue_revision_id="a" * 64,
         request=_request(invoice),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=_YEAR,
+        cadence=quarterly_filer_cadence(_YEAR),
     )
 
     snapshot = capture.command.liability_snapshot

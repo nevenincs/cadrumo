@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import IvaCategory
 from ..enums import TransactionDirection
 from ..errors import LLMClassifierError
@@ -28,6 +29,9 @@ from ..llm import (
 )
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -119,7 +123,7 @@ def test_invalid_split_schema_payloads_are_rejected() -> None:
 
 def test_parse_split_extracts_nested_json_amid_prose(operation: PinnedAuthorityOperation) -> None:
     noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
-    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=2025, operation=operation))
+    response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation))
     assert len(response.children) == 2
     assert response.children[0].iva_category == IvaCategory("domestic_general")
 
@@ -130,7 +134,7 @@ def test_parse_split_rejects_invalid_outputs(operation: PinnedAuthorityOperation
         (
             "no-json",
             lambda: parse_split_response(
-                "no json here", spec=prompt_spec_with_saturation_fields(year=2025, operation=operation)
+                "no json here", spec=prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation)
             ),
         ),
     )
@@ -145,8 +149,8 @@ def test_parse_split_rejects_invalid_outputs(operation: PinnedAuthorityOperation
 def test_build_split_prompt_includes_evidence_and_no_numbers_guard(operation: PinnedAuthorityOperation) -> None:
     raw = RawTransaction(
         provider_transaction_id="row-split",
-        booked_date=date(2025, 3, 1),
-        value_date=date(2025, 3, 1),
+        booked_date=date(_YEAR - 1, 3, 1),
+        value_date=date(_YEAR - 1, 3, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Acme SL",
@@ -156,7 +160,7 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard(operation: Pi
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 6, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "mixed invoice"},
@@ -166,7 +170,7 @@ def test_build_split_prompt_includes_evidence_and_no_numbers_guard(operation: Pi
     )
     prompt = build_split_prompt(
         txn,
-        spec=prompt_spec_with_saturation_fields(year=2025, operation=operation),
+        spec=prompt_spec_with_saturation_fields(year=_YEAR - 1, operation=operation),
         evidence_text="line 1 ... line 2 ...",
     )
     assert "begin evidence" in prompt

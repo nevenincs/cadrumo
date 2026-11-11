@@ -358,7 +358,7 @@ class ObservedClient(_PageClient):
 
     def _settled(self) -> OperationObservationSuccessV1:
         contract = self.registry.lookup_public_contract(AUTH_READ_OPERATION_DEFINITION_ID)
-        moment = datetime(2026, 9, 29, tzinfo=UTC)
+        moment = datetime(1980, 9, 29, tzinfo=UTC)
         projection = OperationPublicProjectionV1(
             operation_id=observed_operation_id(),
             definition_id=AUTH_READ_OPERATION_DEFINITION_ID,

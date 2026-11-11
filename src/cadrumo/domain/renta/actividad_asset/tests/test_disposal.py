@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ActivityAssetDisposal,
     ActivityAssetDisposalFacts,
@@ -20,6 +21,9 @@ from cadrumo.domain.renta.actividad_asset.disposal import (
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+"""The tax year of the disposal; earlier claim years count back from it."""
 
 
 def _refusal(
@@ -47,7 +51,7 @@ def _disposal(
     proceeds: str = "0.00",
     costs: str = "0.00",
     market_value: str | None = None,
-    on: date = date(2025, 6, 30),
+    on: date = date(_YEAR, 6, 30),
     later_affectation_on: date | None = None,
 ) -> ActivityAssetDisposal:
     return ActivityAssetDisposal(
@@ -100,14 +104,14 @@ def _facts(
 
 def _excess_years() -> tuple[ActivityAssetDisposalYearFacts, ...]:
     return (
-        _year(2024, "30000.00", minimum="2142.86", maximum="4800.00"),
-        _year(2025, minimum="2142.86", maximum="4800.00"),
-        _year(2026, minimum="1058.99", maximum="2380.27"),
+        _year(_YEAR - 2, "30000.00", minimum="2142.86", maximum="4800.00"),
+        _year(_YEAR - 1, minimum="2142.86", maximum="4800.00"),
+        _year(_YEAR, minimum="1058.99", maximum="2380.27"),
     )
 
 
 def test_the_disposal_date_is_the_last_service_day() -> None:
-    assert _disposal(on=date(2025, 12, 31)).boundary == date(2026, 1, 1)
+    assert _disposal(on=date(_YEAR, 12, 31)).boundary == date(_YEAR + 1, 1, 1)
 
 
 @pytest.mark.parametrize(
@@ -122,14 +126,18 @@ def test_the_disposal_date_is_the_last_service_day() -> None:
 def test_each_reason_with_proceeds_nets_them_against_the_net_value(reason: ActivityAssetDisposalReason) -> None:
     # Reduction 300 on cost 1,000 leaves 700; 900 proceeds less 50 costs gives 150.
     calculation = calculate_disposal(
-        _facts(_disposal(reason, proceeds="900.00", costs="50.00"), (_year(2024, "150.00"), _year(2025, "150.00"))),
+        _facts(
+            _disposal(reason, proceeds="900.00", costs="50.00"), (_year(_YEAR - 1, "150.00"), _year(_YEAR, "150.00"))
+        ),
     )
     assert calculation.reduction == Decimal("300.00")
     assert calculation.result == Decimal("150.00")
 
 
 def test_scrapping_is_a_loss_of_the_net_value() -> None:
-    calculation = calculate_disposal(_facts(_disposal(ActivityAssetDisposalReason.SCRAPPING), (_year(2025, "100.00"),)))
+    calculation = calculate_disposal(
+        _facts(_disposal(ActivityAssetDisposalReason.SCRAPPING), (_year(_YEAR, "100.00"),))
+    )
     assert calculation.result == Decimal("-900.00")
 
 
@@ -145,7 +153,7 @@ def test_a_donation_is_refused() -> None:
 
 def test_a_withdrawal_computes_no_gain() -> None:
     calculation = calculate_disposal(
-        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(2025, "100.00"),))
+        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(_YEAR, "100.00"),))
     )
     assert calculation.result is None
     assert calculation.transmission_value is None
@@ -164,12 +172,12 @@ def test_amounts_must_be_cents() -> None:
 
 
 def test_the_reduction_follows_the_larger_of_claims_and_minimum_year_by_year() -> None:
-    # M is 100 a year. 2022 is the opening span: max(0, 100) = 100.
-    # 2023: max(100 + 50, 200) = 200. 2024: max(200 + 250, 300) = 450. 2025: max(450 + 0, 400) = 450.
+    # M is 100 a year. The first year is the opening span: max(0, 100) = 100.
+    # The second: max(100 + 50, 200) = 200. The third: max(200 + 250, 300) = 450. The fourth: max(450 + 0, 400) = 450.
     calculation = calculate_disposal(
         _facts(
             _disposal(proceeds="1000.00"),
-            (_year(2022), _year(2023, "50.00"), _year(2024, "250.00"), _year(2025)),
+            (_year(_YEAR - 3), _year(_YEAR - 2, "50.00"), _year(_YEAR - 1, "250.00"), _year(_YEAR)),
         ),
     )
     assert [year.reduction_through for year in calculation.years] == [
@@ -183,11 +191,11 @@ def test_the_reduction_follows_the_larger_of_claims_and_minimum_year_by_year() -
 
 
 def test_the_opening_span_is_one_maximum_of_the_opening_and_its_minimum() -> None:
-    # Three unclaimed years with 500 opening: max(500, 300) = 500, then 2025 claims 50: max(550, 400) = 550.
+    # Three unclaimed years with 500 opening: max(500, 300) = 500, then the fourth claims 50: max(550, 400) = 550.
     calculation = calculate_disposal(
         _facts(
             _disposal(proceeds="1000.00"),
-            (_year(2022), _year(2023), _year(2024), _year(2025, "50.00")),
+            (_year(_YEAR - 3), _year(_YEAR - 2), _year(_YEAR - 1), _year(_YEAR, "50.00")),
             opening="500.00",
         ),
     )
@@ -199,30 +207,30 @@ def test_the_opening_span_is_one_maximum_of_the_opening_and_its_minimum() -> Non
 def test_a_minimum_above_the_opening_reduces_cost_with_a_finding_of_its_effect() -> None:
     # Opening 100, no claims, M 300 over the span: reduction 300, of which the minimum added 200.
     calculation = calculate_disposal(
-        _facts(_disposal(proceeds="1000.00"), (_year(2023), _year(2024), _year(2025)), opening="100.00"),
+        _facts(_disposal(proceeds="1000.00"), (_year(_YEAR - 2), _year(_YEAR - 1), _year(_YEAR)), opening="100.00"),
     )
     assert calculation.reduction == Decimal("300.00")
     assert [
         (f.tax_year, f.effect_on_cost)
         for f in calculation.findings
         if f.kind is ActivityAssetDisposalFindingKind.MINIMUM_EXCEEDED_DEDUCTION
-    ] == [(2025, Decimal("200.00"))]
+    ] == [(_YEAR, Decimal("200.00"))]
 
 
 def test_a_missing_claim_is_a_finding_and_never_a_refusal() -> None:
-    calculation = calculate_disposal(_facts(_disposal(proceeds="1000.00"), (_year(2025, gap=True),)))
+    calculation = calculate_disposal(_facts(_disposal(proceeds="1000.00"), (_year(_YEAR, gap=True),)))
     assert calculation.reduction == Decimal("100.00")
     assert calculation.findings[0].kind is ActivityAssetDisposalFindingKind.CLAIM_GAP
 
 
 def test_a_year_with_no_minimum_authority_counts_only_what_was_deducted() -> None:
-    # 2015 claims 40 with no minimum; 2016 has M 100: max(40 + 0, 100) = 100.
+    # The earlier year claims 40 with no minimum; the later has M 100: max(40 + 0, 100) = 100.
     calculation = calculate_disposal(
-        _facts(_disposal(proceeds="1000.00"), (_year(2015, "40.00", minimum=None), _year(2016))),
+        _facts(_disposal(proceeds="1000.00"), (_year(_YEAR - 1, "40.00", minimum=None), _year(_YEAR))),
     )
     assert calculation.years[0].reduction_through == Decimal("40.00")
     assert calculation.reduction == Decimal("100.00")
-    assert (ActivityAssetDisposalFindingKind.NO_MINIMUM_AUTHORITY, 2015) in [
+    assert (ActivityAssetDisposalFindingKind.NO_MINIMUM_AUTHORITY, _YEAR - 1) in [
         (f.kind, f.tax_year) for f in calculation.findings
     ]
 
@@ -230,18 +238,18 @@ def test_a_year_with_no_minimum_authority_counts_only_what_was_deducted() -> Non
 def test_the_reduction_is_capped_at_the_amortizable_value() -> None:
     # 900 of claims, M 2,000 and an amortizable value of 900 (a residual of 100): 900 reduces cost of 1,000.
     calculation = calculate_disposal(
-        _facts(_disposal(), (_year(2025, "900.00", minimum="2000.00"),), amortizable="900.00"),
+        _facts(_disposal(), (_year(_YEAR, "900.00", minimum="2000.00"),), amortizable="900.00"),
     )
     assert calculation.reduction == Decimal("900.00")
     assert calculation.net_value == Decimal("100.00")
 
 
 def test_excess_above_the_maximum_coefficient() -> None:
-    # 30,000 charged in 2024; C = 4,800 + 4,800 + 2,380.27 = 11,980.27; E = 18,019.73.
+    # 30,000 charged in the first year; C = 4,800 + 4,800 + 2,380.27 = 11,980.27; E = 18,019.73.
     # M is 5,344.71, so R = max(min(30,000, 11,980.27), 5,344.71) and 20,000 - (30,000 - 11,980.27) = 1,980.27.
     calculation = calculate_disposal(
         _facts(
-            _disposal(proceeds="20000.00", on=date(2026, 6, 30)),
+            _disposal(proceeds="20000.00", on=date(_YEAR, 6, 30)),
             _excess_years(),
             acquisition="30000.00",
             amortizable="30000.00",
@@ -257,7 +265,7 @@ def test_excess_above_the_maximum_coefficient() -> None:
 def test_without_the_regime_no_excess_exists_on_the_same_figures() -> None:
     calculation = calculate_disposal(
         _facts(
-            _disposal(proceeds="20000.00", on=date(2026, 6, 30)),
+            _disposal(proceeds="20000.00", on=date(_YEAR, 6, 30)),
             _excess_years(),
             acquisition="30000.00",
             amortizable="30000.00",
@@ -270,13 +278,13 @@ def test_without_the_regime_no_excess_exists_on_the_same_figures() -> None:
 
 def test_a_required_counterfactual_without_a_table_class_is_refused() -> None:
     with pytest.raises(ActividadAssetError) as refused:
-        calculate_disposal(_facts(_disposal(), (_year(2025, "500.00", maximum=None),), excess=True))
+        calculate_disposal(_facts(_disposal(), (_year(_YEAR, "500.00", maximum=None),), excess=True))
     assert refused.value.translated_message == "ledger.actividad_asset.errors.disposal_excess_without_table_class"
 
 
 def test_a_withdrawal_has_no_excess_whatever_the_method() -> None:
     calculation = calculate_disposal(
-        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(2025, "500.00", maximum=None),), excess=True),
+        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(_YEAR, "500.00", maximum=None),), excess=True),
     )
     assert calculation.excess == Decimal("0.00")
 
@@ -284,7 +292,7 @@ def test_a_withdrawal_has_no_excess_whatever_the_method() -> None:
 def test_market_value_above_proceeds_is_the_value_of_transmission() -> None:
     # max(500, 800) - 0 - (1,000 - 100) = -100.
     calculation = calculate_disposal(
-        _facts(_disposal(proceeds="500.00", market_value="800.00"), (_year(2025, "100.00"),)),
+        _facts(_disposal(proceeds="500.00", market_value="800.00"), (_year(_YEAR, "100.00"),)),
     )
     assert calculation.transmission_value == Decimal("800.00")
     assert calculation.result == Decimal("-100.00")
@@ -292,7 +300,7 @@ def test_market_value_above_proceeds_is_the_value_of_transmission() -> None:
 
 def test_market_value_below_proceeds_leaves_the_proceeds() -> None:
     calculation = calculate_disposal(
-        _facts(_disposal(proceeds="500.00", market_value="300.00"), (_year(2025, "100.00"),)),
+        _facts(_disposal(proceeds="500.00", market_value="300.00"), (_year(_YEAR, "100.00"),)),
     )
     assert calculation.transmission_value == Decimal("500.00")
 
@@ -304,7 +312,7 @@ def test_the_value_of_transmission_on_the_form_is_net_of_costs() -> None:
     calculation = calculate_disposal(
         _facts(
             _disposal(proceeds="5000.00", costs="100.00"),
-            (_year(2025, minimum=None),),
+            (_year(_YEAR, minimum=None),),
             acquisition="3000.00",
             amortizable="3000.00",
         ),
@@ -318,14 +326,14 @@ def test_a_higher_market_value_prevails_over_the_price_before_costs_come_off() -
     # Manual Renta 2025, chapter 11: the normal market value prevails where the price is below it,
     # and the costs are deducted from that amount: 800 - 20 = 780.
     calculation = calculate_disposal(
-        _facts(_disposal(proceeds="500.00", costs="20.00", market_value="800.00"), (_year(2025, "100.00"),)),
+        _facts(_disposal(proceeds="500.00", costs="20.00", market_value="800.00"), (_year(_YEAR, "100.00"),)),
     )
     assert calculation.net_transmission_value == Decimal("780.00")
 
 
 def test_a_withdrawal_has_no_value_of_transmission() -> None:
     calculation = calculate_disposal(
-        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(2025, "100.00"),)),
+        _facts(_disposal(ActivityAssetDisposalReason.WITHDRAWAL), (_year(_YEAR, "100.00"),)),
     )
     assert calculation.net_transmission_value is None
 
@@ -335,7 +343,7 @@ def test_whole_element_amounts_take_the_allocation_share() -> None:
     calculation = calculate_disposal(
         _facts(
             _disposal(proceeds="1000.00", costs="100.00"),
-            (_year(2025, "50.00", minimum=None),),
+            (_year(_YEAR, "50.00", minimum=None),),
             acquisition="500.00",
             share="0.5",
             amortizable="500.00",
@@ -347,39 +355,50 @@ def test_whole_element_amounts_take_the_allocation_share() -> None:
 
 
 def test_a_gain_reports_that_no_exemption_was_computed() -> None:
-    calculation = calculate_disposal(_facts(_disposal(proceeds="2000.00"), (_year(2025, "100.00"),)))
+    calculation = calculate_disposal(_facts(_disposal(proceeds="2000.00"), (_year(_YEAR, "100.00"),)))
     assert ActivityAssetDisposalFindingKind.EXEMPTION_NOT_COMPUTED in [f.kind for f in calculation.findings]
 
 
 def test_a_sale_within_the_stated_period_of_a_later_affectation_changes_the_route() -> None:
-    within = _disposal(proceeds="1.00", later_affectation_on=date(2022, 7, 1))
-    after = _disposal(proceeds="1.00", later_affectation_on=date(2022, 6, 30))
-    stated = {"later_affectation_period_years": 3}
+    period_years = 3
+    within = _disposal(proceeds="1.00", later_affectation_on=date(_YEAR - period_years, 7, 1))
+    after = _disposal(proceeds="1.00", later_affectation_on=date(_YEAR - period_years, 6, 30))
+    stated = {"later_affectation_period_years": period_years}
     assert calculate_disposal(
-        _facts(within, (_year(2025),)).model_copy(update=stated)
+        _facts(within, (_year(_YEAR),)).model_copy(update=stated)
     ).route_changed_by_later_affectation
     assert not calculate_disposal(
-        _facts(after, (_year(2025),)).model_copy(update=stated)
+        _facts(after, (_year(_YEAR),)).model_copy(update=stated)
     ).route_changed_by_later_affectation
     # An edition stating no period leaves the route open rather than assuming the ordinary one.
-    assert calculate_disposal(_facts(after, (_year(2025),))).route_changed_by_later_affectation
+    assert calculate_disposal(_facts(after, (_year(_YEAR),))).route_changed_by_later_affectation
 
 
 def test_manual_example_as_an_arithmetic_oracle() -> None:
-    # Renta 2025 manual, part 1: 54,000 of which 40% is land, so 32,400 amortizable at 3% is 972 a year.
-    # 1998 to 2024 is 27 years, 26,244. Half of 2025 by days is 972 x 181 / 365 = 482.01, against the
-    # manual's 486 by months. 210,000 less 13,000 of costs, less (54,000 - 26,726.01), is 169,726.01.
+    # AEAT Renta manual, part 1, worked example: 54,000 of which 40% is land, so 32,400 amortizable
+    # at 3% is 972 a year. Twenty-seven full years claim 26,244. The disposal year is charged up to
+    # the disposal date by days: 972 x days from 1 January to 30 June / days in the year, against the
+    # manual's by-months figure. The reduction is the 27 full years plus that charge, the net value is
+    # the 54,000 cost less it, and the result is 210,000 less 13,000 of costs less that net value.
+    full_years = 27
+    days_in_service = (date(_YEAR, 6, 30) - date(_YEAR, 1, 1)).days + 1
+    days_in_year = (date(_YEAR + 1, 1, 1) - date(_YEAR, 1, 1)).days
+    disposal_year_charge = (Decimal("972.00") * days_in_service / days_in_year).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    reduction = Decimal("972.00") * full_years + disposal_year_charge
+    net_value = Decimal("54000.00") - reduction
     calculation = calculate_disposal(
         _facts(
             _disposal(proceeds="210000.00", costs="13000.00"),
             (
-                *(_year(year, "972.00", minimum=None) for year in range(1998, 2025)),
-                _year(2025, "482.01", minimum=None),
+                *(_year(_YEAR - offset, "972.00", minimum=None) for offset in range(full_years, 0, -1)),
+                _year(_YEAR, str(disposal_year_charge), minimum=None),
             ),
             acquisition="54000.00",
             amortizable="32400.00",
         ),
     )
-    assert calculation.reduction == Decimal("26726.01")
-    assert calculation.net_value == Decimal("27273.99")
-    assert calculation.result == Decimal("169726.01")
+    assert calculation.reduction == reduction
+    assert calculation.net_value == net_value
+    assert calculation.result == Decimal("210000.00") - Decimal("13000.00") - net_value

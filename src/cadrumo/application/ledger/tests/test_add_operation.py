@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....application.ledger.action_ports import LedgerActionPorts
@@ -46,19 +47,21 @@ from .. import add_operation
 from ..own_account_ports import OwnAccountRepositoryProtocol
 from .transaction_projection_support import ledger_transaction_projection
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _TRANSACTION_ID = "b" * 64
 _OPERATION_ID = "a" * 64
 _EVENT_ID = "e" * 64
-_NOW = datetime(2026, 4, 15, 9, 30, tzinfo=UTC)
+_NOW = datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC)
 
 
 def _request() -> LedgerAddRequest:
     return LedgerAddRequest(
         profile_id=_PROFILE,
-        booked_date="2026-04-15",
+        booked_date=date(_YEAR, 4, 15).isoformat(),
         amount="10.00",
         direction="OUTGOING",
         description="Office materials",
@@ -110,7 +113,7 @@ def test_wire_schema_keeps_governed_tokens_as_bounded_strings_and_roundtrips() -
     with pytest.raises(ValidationError):
         LedgerAddRequest(
             profile_id=_PROFILE,
-            booked_date="2026-04-15",
+            booked_date=date(_YEAR, 4, 15).isoformat(),
             amount="1.000",
             direction="OUTGOING",
             description="ambiguous amount",
@@ -222,7 +225,7 @@ def test_prorrata_advisory_facts_are_resolved_from_the_requested_profile_before_
 
     payload = LedgerAddRequest(
         profile_id=_PROFILE,
-        booked_date="2026-04-15",
+        booked_date=date(_YEAR, 4, 15).isoformat(),
         amount="10.00",
         direction="OUTGOING",
         description="Office materials",
@@ -231,12 +234,12 @@ def test_prorrata_advisory_facts_are_resolved_from_the_requested_profile_before_
     )
     input_classification = require_input_classification(
         "exclusively_deductible",
-        effective_date=date(2026, 4, 15),
+        effective_date=date(_YEAR, 4, 15),
         authority=operation,
     )
     command = ManualLedgerTransactionCommand(
         bucket_id=str(_PROFILE),
-        booked_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
         amount=Decimal("10.00"),
         direction=TransactionDirection.OUTGOING,
         description="Office materials",

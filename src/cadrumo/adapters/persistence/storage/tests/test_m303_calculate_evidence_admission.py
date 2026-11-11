@@ -56,6 +56,7 @@ from cadrumo.domain.attachments.m303_filing_evidence import (
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -64,9 +65,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _M303_BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 #: DP30301 Nota 4 asks the Modelo 390 exemption only in the last settlement period, so the attestation cases use 4T.
-_M303_PERIOD = Period.from_year_and_code(2025, "4T")
-_M303_CLOCK = datetime(2026, 1, 2, 10, tzinfo=UTC)
-_M303_OBSERVED_AT = datetime(2025, 12, 31, 12, tzinfo=UTC)
+#: The supported year before the horizon: its last period has closed.
+_PRIOR_YEAR = filing_year_envelope().horizon - 1
+_M303_PERIOD = Period.from_year_and_code(_PRIOR_YEAR, "4T")
+_M303_OBSERVED_AT = datetime(_PRIOR_YEAR, 12, 31, 12, tzinfo=UTC)
+_M303_CLOCK = _M303_OBSERVED_AT + timedelta(days=1, hours=22)
 _OUTSIDE_LAST_PERIOD = "modelo.work.calculate.m303_filing_evidence.exonerado_390_attestation_outside_last_period"
 
 
@@ -100,7 +103,7 @@ def _calculate_context(operation: PinnedAuthorityOperation) -> OperationExecutor
 def _m303_work_unit(
     operation: PinnedAuthorityOperation,
     *,
-    filing_year: int = 2025,
+    filing_year: int = _PRIOR_YEAR,
     period: Period = _M303_PERIOD,
     modelo: str = "303",
     bucket_id: str = _M303_BUCKET_ID,
@@ -174,7 +177,7 @@ def _m303_attestation_input(
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
-            filing_year=2025,
+            filing_year=_PRIOR_YEAR,
             period=_M303_PERIOD,
             asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
             observed_at=_M303_OBSERVED_AT,
@@ -203,7 +206,7 @@ def _crafted_attestation(
         schema_version=1,
         role="m303_exonerado_390_applicability",
         asserted_value=value,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         period=_M303_PERIOD,
         observed_at=_M303_OBSERVED_AT,
         profile_witness=M303Exonerado390ApplicabilityProfileWitness.from_profile_record(profiles.load(_M303_BUCKET_ID)),
@@ -214,7 +217,7 @@ def _crafted_attestation(
         request=AttachmentIngestionRequest(
             kind=kind,
             source=AttachmentSource.INLINE,
-            source_reference="m303-exonerado-390-applicability:2025:4T",
+            source_reference=f"m303-exonerado-390-applicability:{_PRIOR_YEAR}:4T",
             mime_type="application/vnd.cadrumo.m303-exonerado-390-applicability+json",
             captured_at=_M303_CLOCK,
             bucket_id=_M303_BUCKET_ID,
@@ -251,8 +254,8 @@ def _wrong_period(
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "12"),
+            filing_year=_PRIOR_YEAR,
+            period=Period.from_year_and_code(_PRIOR_YEAR, "12"),
             asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
             observed_at=_M303_OBSERVED_AT,
         ),
@@ -459,8 +462,8 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
     """The executor derives the period from the work unit; a month before 12 refuses a supplied attestation."""
     work_unit = _m303_work_unit(
         operation,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "01"),
+        filing_year=_PRIOR_YEAR,
+        period=Period.from_year_and_code(_PRIOR_YEAR, "01"),
     )
     evidence_input = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
@@ -513,7 +516,7 @@ def test_calculation_preparation_authors_a_period_before_the_last_from_the_joint
     operation: PinnedAuthorityOperation,
 ) -> None:
     """1T asks only the joint-return election, and an uncalculated unit replays an empty, known context."""
-    first_quarter = Period.from_year_and_code(2025, "1T")
+    first_quarter = Period.from_year_and_code(_PRIOR_YEAR, "1T")
     work_unit = _m303_work_unit(operation, period=first_quarter)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
         seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)

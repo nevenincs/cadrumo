@@ -23,6 +23,7 @@ from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.calculations.registry.authority import bundled_indexed_authority
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.deadlines.engine import DeadlineEngine
 from ......domain.modelos.codes import ModeloCode
 from ..header import deadline_view
@@ -30,8 +31,9 @@ from .workbench_fixture import synthetic_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_TODAY = date(2025, 4, 10)
-_YEAR = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+_FILING_YEAR = filing_year_envelope().horizon
+_TODAY = date(_FILING_YEAR, 4, 10)
+_YEAR = OverviewCalendarRange(from_date=date(_FILING_YEAR, 1, 1), to_date=date(_FILING_YEAR, 12, 31))
 
 
 def _calendar_words(effective: date) -> str:

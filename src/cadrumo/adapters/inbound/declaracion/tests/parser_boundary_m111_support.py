@@ -5,18 +5,14 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .parser_boundary_m100_support import corpus_specimens
 
 _M111_CASILLA_07: CasillaId = validated_casilla_id("07", surface="declaracion_parser_boundary.casilla")
 _M111_CASILLA_08: CasillaId = validated_casilla_id("08", surface="declaracion_parser_boundary.casilla")
 _M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="declaracion_parser_boundary.casilla")
 _M111_CASILLA_28: CasillaId = validated_casilla_id("28", surface="declaracion_parser_boundary.casilla")
 M111_CASILLA_30: CasillaId = validated_casilla_id("30", surface="declaracion_parser_boundary.casilla")
-M111_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
-    ("2024-1T", 2024, "1T"),
-    ("2024-2T", 2024, "2T"),
-    ("2024-3T", 2024, "3T"),
-    ("2024-4T", 2024, "4T"),
-)
+M111_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = corpus_specimens("111")
 M111_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in M111_CORPUS_PARAMS)
 
 M111_FORM_TIED_CASILLAS: frozenset[CasillaId] = frozenset(
@@ -31,32 +27,35 @@ demanding a form that contradicts its own stated formula. Named here so the
 exemption is a declared property of the form and not a literal in an assertion.
 """
 
-M111_EXPECTED_VALUES_BY_STEM: dict[str, dict[CasillaId, Decimal]] = {
-    "2024-1T": {
+_M111_EXPECTED_VALUES_OLDEST_FIRST: tuple[dict[CasillaId, Decimal], ...] = (
+    {
         _M111_CASILLA_07: Decimal("3"),
         _M111_CASILLA_08: Decimal("12480.00"),
         _M111_CASILLA_09: Decimal("2371.20"),
         _M111_CASILLA_28: Decimal("2371.20"),
         M111_CASILLA_30: Decimal("2371.20"),
     },
-    "2024-2T": {
+    {
         _M111_CASILLA_07: Decimal("4"),
         _M111_CASILLA_08: Decimal("15630.50"),
         _M111_CASILLA_09: Decimal("2969.80"),
         _M111_CASILLA_28: Decimal("2969.80"),
         M111_CASILLA_30: Decimal("2969.80"),
     },
-    "2024-3T": {
+    {
         _M111_CASILLA_07: Decimal("2"),
         _M111_CASILLA_08: Decimal("9145.25"),
         _M111_CASILLA_09: Decimal("1737.60"),
         _M111_CASILLA_28: Decimal("1737.60"),
         M111_CASILLA_30: Decimal("1737.60"),
     },
-    "2024-4T": {
+    {
         M111_CASILLA_30: Decimal("4208.15"),
     },
-}
+)
+M111_EXPECTED_VALUES_BY_STEM: dict[str, dict[CasillaId, Decimal]] = dict(
+    zip(M111_CORPUS_IDS, _M111_EXPECTED_VALUES_OLDEST_FIRST, strict=True)
+)
 """Exactly what each committed M111 render prints, per quarter.
 
 Every quarter carries DIFFERENT amounts, and within a quarter the perceptor

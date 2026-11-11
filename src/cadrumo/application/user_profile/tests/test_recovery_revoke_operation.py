@@ -38,7 +38,7 @@ def _receipt(profile_id: UUID, *, effect: OperationEffect) -> OperationTerminalR
         revision=3,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=effect,
-        settled_at=datetime(2026, 9, 27, 12, tzinfo=UTC),
+        settled_at=datetime(1980, 9, 27, 12, tzinfo=UTC),
         result_ref="b" * 64,
     )
 

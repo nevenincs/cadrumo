@@ -15,13 +15,17 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from ....application.modelo.m303_attestation_operation import ModeloWorkM303AttestationRequest
 from ....application.operations.public_period import PublicPeriod
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..operation_modelo_attestation import run_modelo_m303_attestation
+
+_YEAR = filing_year_envelope().horizon
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_OBSERVED = datetime(2026, 12, 31, 10, tzinfo=UTC)
+_OBSERVED = datetime(_YEAR, 12, 31, 10, tzinfo=UTC)
 
 
 def _client() -> FrontendClient:
@@ -31,7 +35,7 @@ def _client() -> FrontendClient:
 def test_foreign_profile_refused_before_runtime_call() -> None:
     request = ModeloWorkM303AttestationRequest(
         profile_id=_OTHER,
-        period=PublicPeriod(filing_year=2026, code="4T"),
+        period=PublicPeriod(filing_year=_YEAR, code="4T"),
         observed_at=_OBSERVED,
         actor="operator",
     )

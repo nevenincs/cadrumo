@@ -13,7 +13,7 @@ as wired.
 
 These tests drive the real ``aeat`` CLI end to end against an isolated real
 backend -- no mocks, no monkeypatched engine. The expected figures are the AEAT
-Renta 2024 manual's own printed worked example for two mellizos under three whose
+Renta manual's own printed worked example for two mellizos under three whose
 mother met the requirements all twelve months:
 
     numero de meses de cumplimiento de los requisitos: 12 meses
@@ -34,6 +34,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterator, Sequence
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -42,6 +43,11 @@ from click.testing import Result
 
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    manual_editions_printing,
+    supported_authored_exercises,
+)
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -60,30 +66,27 @@ _PROFILE_LABEL = "Maternidad meses arrival test profile"
 
 #: Modelo 100 casilla ``0611`` -- semantic role ``irpf_deduccion_maternidad``.
 _MATERNIDAD_CASILLA_ID = "0611"
+_MATERNIDAD_FORMULA_ID = "renta-deduccion-maternidad-0611"
 
-#: AEAT Renta 2024 manual, deduccion por maternidad worked example: two mellizos,
+#: AEAT Renta manual, deduccion por maternidad worked example: two mellizos,
 #: twelve qualifying months each, "1.200 x 2 hijos = 2.400 euros".
 _ORACLE_TWO_MELLIZOS_TWELVE_MONTHS = Decimal("2400")
 
 #: The same example's per-hijo figure, "(12 meses x 100 euros) = 1.200".
 _ORACLE_ONE_HIJO_TWELVE_MONTHS = Decimal("1200")
 
-#: Born mid-2022, so age two at the 2024 devengo: inside the Art. 81.1 population.
-_MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
-
-# Every profile/relation-sourced binding a minimal M100 2024 calculate needs
+# Every profile/relation-sourced binding a minimal M100 calculate needs
 # besides the descendiente facts under test. Mirrors the fixture in
 # ``test_modelo_100_descendiente_entry_surface.py``; no binding here touches
-# 0611. Its 2024 registry formula reads the profile-derived scalar, so no
+# 0611. Its registry formula reads the profile-derived scalar, so no
 # command-line flag supplies its value.
-# Modelo 100 revision 2024 declares renta-profile-family-minor-children-in-unit
+# The Modelo 100 revision declares renta-profile-family-minor-children-in-unit
 # and renta-profile-marriage-full-year as profile-sourced BOOLEAN bindings, so
 # the profile resolver supplies them; a decimal --binding override for either
 # is refused as a misrouted input channel.
-_REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
+_REQUIRED_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
@@ -91,6 +94,40 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
     "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )  # fmt: skip
+
+
+def _exercises_declaring_every_supplied_binding() -> set[int]:
+    """The authored Renta exercises whose revision declares every binding this module supplies."""
+    supplied = {assignment.partition("=")[0] for assignment in _REQUIRED_BINDING_FLAGS[1::2]}
+    return {
+        exercise
+        for exercise in supported_authored_exercises("100")
+        if supplied
+        <= {binding.id for binding in published_snapshot("100", filing_year=exercise, period="0A").revision.bindings}
+    }
+
+
+#: The newest authored Renta exercise whose bundled Manual practico edition prints
+#: the worked example below and the 1.350 per-hijo cap after an alta posterior, and
+#: whose revision accepts every binding this module supplies.
+_RENTA_YEAR = max(
+    set(
+        manual_editions_printing(
+            "renta", "1.200 x 2 hijos = 2.400 euros", "limite de la deduccion por hijo (1.350 euros)"
+        )
+    )
+    & _exercises_declaring_every_supplied_binding()
+)
+_RENTA_REVISION = published_snapshot("100", filing_year=_RENTA_YEAR, period="0A").revision
+
+
+def _declared_date(years_before: int, month: int, day: int) -> str:
+    """A descendiente date ``years_before`` the calculated exercise, as the flag writes it."""
+    return date(_RENTA_YEAR - years_before, month, day).isoformat()
+
+
+#: Born mid-year two exercises earlier, so age two at the devengo: inside the Art. 81.1 population.
+_MELLIZO_BIRTH = f"NACIMIENTO={_declared_date(2, 6, 1)}"
 
 
 @pytest.fixture
@@ -134,12 +171,12 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
 
 
 def _create_work_unit() -> str:
-    """Create a fresh M100 2024 work unit through the real verb and return its id."""
+    """Create a fresh M100 work unit through the real verb and return its id."""
     created = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "100", "--year", "2024", "--period", "0A", "--revision", "2024",
+            "--modelo", "100", "--year", str(_RENTA_YEAR), "--period", "0A", "--revision", str(_RENTA_REVISION.id),
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -158,13 +195,13 @@ def _declare(*descendiente_specs: str) -> None:
 
 
 def _calculate(*extra_flags: str) -> tuple[int, str]:
-    """Calculate a fresh M100 2024 work unit, returning the exit code and output."""
+    """Calculate a fresh M100 work unit, returning the exit code and output."""
     work_unit_id = _create_work_unit()
     result = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            *_REQUIRED_2024_BINDING_FLAGS,
+            *_REQUIRED_BINDING_FLAGS,
             *extra_flags,
         ],
     )  # fmt: skip
@@ -256,14 +293,14 @@ def test_declaring_fewer_months_moves_the_casilla(runtime_profile: NativeCliProf
 
 
 def test_alta_posterior_reaches_the_1350_per_hijo_cap(runtime_profile: NativeCliProfileFixture) -> None:
-    """The 2024 manual's Art. 81.1 cap rises to 1.350 after a qualifying alta.
+    """The manual's Art. 81.1 cap rises to 1.350 after a qualifying alta.
 
     This child has twelve qualifying months and its declared alta is in the
     first working month. The authority's annual 1.350 cap, rather than an
     application-side reconstruction of the 150 increment, is the oracle.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2024-01-15,MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1")
+    _declare(f"NACIMIENTO={_declared_date(0, 1, 15)},MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1")
 
     exit_code, output = _calculate()
 
@@ -280,7 +317,7 @@ def test_mixed_alta_cap_descendants_are_folded_per_child(runtime_profile: Native
     """
     _seed_natural_person_profile(runtime_profile)
     _declare(
-        "NACIMIENTO=2024-01-15,MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1",
+        f"NACIMIENTO={_declared_date(0, 1, 15)},MESES_TRABAJO=1-12,ALTA_POSTERIOR_MES=1",
         f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
     )
 
@@ -299,14 +336,13 @@ def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: NativeC
 
     assert exit_code == 0, output
     observation = _casilla_0611_observation(output)
-    assert observation["formula_id"] == "renta-deduccion-maternidad-0611"
+    assert observation["formula_id"] == _MATERNIDAD_FORMULA_ID
     assert observation["legal_refs"] == ["ley-35-2006:art-81"]
     source_refs = observation["source_refs"]
     assert isinstance(source_refs, list)
-    assert set(source_refs) == {
-        "aeat-renta-2024-manual-parte1",
-        "aeat-dr-100-2024-dictionary",
-    }
+    (formula,) = (formula for formula in _RENTA_REVISION.formulas if formula.id == _MATERNIDAD_FORMULA_ID)
+    assert formula.source_refs, "the registry formula for 0611 cites no source"
+    assert set(source_refs) == set(formula.source_refs)
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +360,7 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
     and why, or the entry surface is lying again in the opposite direction.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=1-12")
+    _declare(f"NACIMIENTO={_declared_date(9, 4, 1)},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -369,14 +405,14 @@ def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthd
 ) -> None:
     """The under-grant the month window closes, proven through the real CLI.
 
-    Born April 2021, so three years old by the 2024 devengo. A year-end age test
+    Born in April three exercises earlier, so three years old by the devengo. A year-end age test
     excludes the child entirely and the mother receives nothing for a year in
     which she qualified for three months. Art. 81.1 runs "hasta que el menor
     alcance los tres anos de edad", so January to March count and the birthday
     month does not: three months at the authority's 100 euros is 300.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2021-04-15,MESES_TRABAJO=1-12")
+    _declare(f"NACIMIENTO={_declared_date(3, 4, 15)},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -394,13 +430,17 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
     Civil". This child was five at inscription, so the under-three limb grants
     nothing and every month reaching the casilla came from the entry window.
 
-    Inscribed 15 November 2021, so the window runs to October 2024 inclusive:
-    ten months of the 2024 period at the authority's 100 euros is 1.000. The
-    Art. 58.2 window, which counts whole tax PERIODS from the entry period, has
-    already closed on 2023 -- which is the divergence this case exists to show.
+    Inscribed 15 November three exercises earlier, so the window runs to October
+    of the calculated exercise inclusive: ten months of the period at the
+    authority's 100 euros is 1.000. The Art. 58.2 window, which counts whole tax
+    PERIODS from the entry period, has already closed on the exercise before --
+    which is the divergence this case exists to show.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2016-03-02,RELACION=adoptado,INSCRIPCION=2021-11-15,MESES_TRABAJO=1-12")
+    _declare(
+        f"NACIMIENTO={_declared_date(8, 3, 2)},RELACION=adoptado,"
+        f"INSCRIPCION={_declared_date(3, 11, 15)},MESES_TRABAJO=1-12"
+    )
 
     exit_code, output = _calculate()
 
@@ -413,13 +453,16 @@ def test_no_month_before_the_adoption_reaches_the_casilla(
 ) -> None:
     """The over-grant this test removes, driven through the surface an operator uses.
 
-    Born January 2024 and adopted in October. The under-three limb runs from the
+    Born in January of the calculated exercise and adopted in October. The under-three limb runs from the
     BIRTH month for every relacion, so unioning the two limbs granted January to
     September -- months before the child was hers -- and the casilla resolved to
     1.200 where 300 is due. Three eligible months at the authority's 100 euros.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2024-01-10,RELACION=adoptado,INSCRIPCION=2024-10-05,MESES_TRABAJO=1-12")
+    _declare(
+        f"NACIMIENTO={_declared_date(0, 1, 10)},RELACION=adoptado,"
+        f"INSCRIPCION={_declared_date(0, 10, 5)},MESES_TRABAJO=1-12"
+    )
 
     exit_code, output = _calculate()
 
@@ -609,7 +652,7 @@ def test_a_withheld_descendant_under_the_default_relacion_is_not_disclosed(
     be noise on top of the withheld advisory this case already raises.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=1-12")
+    _declare(f"NACIMIENTO={_declared_date(9, 4, 1)},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 

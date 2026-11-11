@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
@@ -11,6 +11,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ....application.ledger import attachment_mutation_operation as operation_module
@@ -37,12 +38,14 @@ from ....domain.attachments.errors import AttachmentNotFoundError
 from ....domain.transactions.errors import TransactionValidationError
 from .transaction_projection_support import ledger_transaction_projection
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _TRANSACTION_ID = "a" * 64
 _ATTACHMENT_ID = "b" * 64
-_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _projection(
@@ -55,8 +58,8 @@ def _projection(
         operation_id=operation_id,
         transaction=ledger_transaction_projection(
             transaction_id=_TRANSACTION_ID,
-            date="2026-05-08",
-            booked_date="2026-05-08",
+            date=date(_YEAR, 5, 8).isoformat(),
+            booked_date=date(_YEAR, 5, 8).isoformat(),
             amount="1.00",
             direction="outgoing",
             counterparty="Supplier SL",

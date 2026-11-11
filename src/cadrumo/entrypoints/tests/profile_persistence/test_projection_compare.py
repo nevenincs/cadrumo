@@ -34,12 +34,15 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_T0 = datetime(2026, 6, 25, 9, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
+_T0 = datetime(_YEAR, 6, 25, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13013013-0130-4130-8130-130130130130"
-_M130_REVISION_ID = "2019-y-siguientes"
+_M130_REVISION_ID = str(open_ended_revision("130").id)
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projection compare test casilla id")
@@ -48,7 +51,7 @@ _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projecti
 def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
     registry_casilla = next(
         item
-        for item in published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in published_authority_operation().snapshot("130", filing_year=_YEAR, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
@@ -77,24 +80,24 @@ def _seed_work_unit(
 def _seed_consecutive_work_units(
     profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> tuple[CalculationRevisionCatalogueRepository, WorkUnit, WorkUnit]:
-    """Open the profile's calculation catalogue and seed its 2025 work unit and, a minute later, its 2026 one."""
+    """Open the profile's calculation catalogue and seed its prior-year work unit and, a minute later, the current-year one."""
     work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
     calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-    work_2025 = _seed_work_unit(
+    work_prior = _seed_work_unit(
         work_repository,
         bucket_id=profile.bucket_id,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         clock=_T0,
         operation=operation,
     )
-    work_2026 = _seed_work_unit(
+    work_current = _seed_work_unit(
         work_repository,
         bucket_id=profile.bucket_id,
-        filing_year=2026,
+        filing_year=_YEAR,
         clock=_T0 + timedelta(minutes=1),
         operation=operation,
     )
-    return calculation_repository, work_2025, work_2026
+    return calculation_repository, work_prior, work_current
 
 
 def _seed_revision(
@@ -149,26 +152,26 @@ def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
-        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
-        revision_2025 = _seed_revision(
+        calculation_repository, work_prior, work_current = _seed_consecutive_work_units(profile, operation)
+        revision_prior = _seed_revision(
             calculation_repository,
-            work_unit=work_2025,
+            work_unit=work_prior,
             value=Decimal("1000.00"),
             clock=_T0 + timedelta(minutes=2),
         )
-        revision_2026 = _seed_revision(
+        revision_current = _seed_revision(
             calculation_repository,
-            work_unit=work_2026,
+            work_unit=work_current,
             value=Decimal("1500.00"),
             clock=_T0 + timedelta(minutes=3),
         )
 
-        assert revision_2025.observations
-        assert revision_2026.observations
+        assert revision_prior.observations
+        assert revision_current.observations
         with bundled_indexed_authority().operation() as operation:
             result = compare_modelo_years(
                 modelo="130",
-                years=(2025, 2026),
+                years=(_PRIOR_YEAR, _YEAR),
                 ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 operation=operation,
             )
@@ -176,7 +179,7 @@ def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     registry_casilla = next(
         item
-        for item in published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in published_authority_operation().snapshot("130", filing_year=_YEAR, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     assert row.delta == Decimal("500.00")
@@ -191,7 +194,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
 ) -> None:
     """The revision-vs-revision delta is the application's own arithmetic on both sides.
 
-    Modelo 130's 2026 1T revision publishes a real, non-zero tolerance
+    Modelo 130's 1T revision publishes a real, non-zero tolerance
     (``0.01``) for the OTHER per-casilla comparators that compare against
     AEAT, where rounding is an artefact. This comparator must NOT read that
     same tolerance: two of the app's OWN revisions differing by exactly that
@@ -201,25 +204,25 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
     merely never having been fed a value small enough to matter.
     """
     published_tolerance = (
-        published_authority_operation().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
+        published_authority_operation().snapshot("130", filing_year=_YEAR, period="1T").verification_policy().tolerance
     )
     assert published_tolerance == Decimal("0.01"), (
-        "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance "
+        "test precondition: modelo 130 1T must publish a real, non-zero tolerance "
         "for this proof to demonstrate the delta comparator does NOT absorb it"
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
-        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
+        calculation_repository, work_prior, work_current = _seed_consecutive_work_units(profile, operation)
         _seed_revision(
             calculation_repository,
-            work_unit=work_2025,
+            work_unit=work_prior,
             value=Decimal("1000.00"),
             clock=_T0 + timedelta(minutes=2),
         )
         _seed_revision(
             calculation_repository,
-            work_unit=work_2026,
+            work_unit=work_current,
             value=Decimal("1000.00") + published_tolerance,
             clock=_T0 + timedelta(minutes=3),
         )
@@ -227,7 +230,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
         with bundled_indexed_authority().operation() as operation:
             result = compare_modelo_years(
                 modelo="130",
-                years=(2025, 2026),
+                years=(_PRIOR_YEAR, _YEAR),
                 ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 operation=operation,
             )

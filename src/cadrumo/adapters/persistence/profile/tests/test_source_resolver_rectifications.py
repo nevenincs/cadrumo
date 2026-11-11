@@ -28,6 +28,7 @@ from cadrumo.application.invoices.source_resolver_ports import (
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
@@ -54,6 +55,9 @@ from .source_resolver_test_support import (
     generation_pinned_authority as generation_pinned_authority,
 )
 from .source_resolver_test_support import secure_profile as secure_profile
+
+_YEAR = filing_year_envelope().horizon
+_PRIOR = _YEAR - 1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -87,9 +91,9 @@ def _m349_context(period: str) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=BUCKET_ID,
         modelo="349",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period),
-        revision=modelo_revision("349", "2020-y-siguientes"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period),
+        revision=modelo_revision("349", revision_covering("349", _YEAR).id),
     )
 
 
@@ -160,8 +164,8 @@ def test_m349_correction_of_the_same_quarter_nets_into_its_one_operator_record()
 
     10,000 supplied and 2,000 corrected in the first quarter declare 8,000, not 12,000.
     """
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 2, 20), base="2000.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 2, 20), base="2000.00"), of="F-1")
 
     resolution = _m349_resolution((supply, correction), period="1T")
 
@@ -174,8 +178,8 @@ def test_m349_correction_of_the_same_quarter_nets_into_its_one_operator_record()
 
 def test_m349_full_correction_of_the_same_quarter_leaves_no_operator_record() -> None:
     """A supply wholly corrected in its own quarter is an operation with nothing left to declare."""
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 2, 20), base="10000.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 2, 20), base="10000.00"), of="F-1")
 
     resolution = _m349_resolution((supply, correction), period="1T")
 
@@ -190,10 +194,12 @@ def test_m349_correction_of_a_filed_earlier_quarter_fills_one_rectification_reco
 
     10,000 filed for 1T and 2,000 corrected in 2T: no 2T operator record, and one record 2026/1T, 8,000 against 10,000.
     """
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="2000.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="2000.00"), of="F-1")
     filed = _FiledDeclarations(
-        M349FiledDeclaration(period=Period.from_year_and_code(2026, "1T"), rows=(_filed_operator(importe="10000.00"),)),
+        M349FiledDeclaration(
+            period=Period.from_year_and_code(_YEAR, "1T"), rows=(_filed_operator(importe="10000.00"),)
+        ),
     )
 
     resolution = _m349_resolution((supply, correction), period="2T", filed=filed)
@@ -201,7 +207,7 @@ def test_m349_correction_of_a_filed_earlier_quarter_fills_one_rectification_reco
     assert _operators(resolution) == []
     rows = _rectifications(resolution)
     assert len(rows) == 1
-    assert (rows[0].ejercicio, rows[0].periodo) == ("2026", "1T")
+    assert (rows[0].ejercicio, rows[0].periodo) == (str(_YEAR), "1T")
     assert rows[0].clave_operacion == "E"
     assert rows[0].nif_comunitario == _DE_OPERATOR
     assert rows[0].base_rectificada == Decimal("8000.00")
@@ -215,11 +221,13 @@ def test_m349_correction_of_a_filed_earlier_quarter_fills_one_rectification_reco
 
 def test_m349_two_corrections_of_one_filed_quarter_share_one_record() -> None:
     """Corrections of one operator, clave and period fold into the one record the design holds for them."""
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    first = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="2000.00"), of="F-1")
-    second = _rectificativa(_supply("R-2", issued_at=date(2026, 5, 20), base="500.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    first = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="2000.00"), of="F-1")
+    second = _rectificativa(_supply("R-2", issued_at=date(_YEAR, 5, 20), base="500.00"), of="F-1")
     filed = _FiledDeclarations(
-        M349FiledDeclaration(period=Period.from_year_and_code(2026, "1T"), rows=(_filed_operator(importe="10000.00"),)),
+        M349FiledDeclaration(
+            period=Period.from_year_and_code(_YEAR, "1T"), rows=(_filed_operator(importe="10000.00"),)
+        ),
     )
 
     rows = _rectifications(_m349_resolution((supply, first, second), period="2T", filed=filed))
@@ -229,14 +237,16 @@ def test_m349_two_corrections_of_one_filed_quarter_share_one_record() -> None:
 
 def test_m349_a_later_correction_starts_from_the_base_an_earlier_rectification_left() -> None:
     """A base already rectified in 2T is what a 3T correction of the same quarter moves from."""
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    first = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="2000.00"), of="F-1")
-    second = _rectificativa(_supply("R-2", issued_at=date(2026, 7, 20), base="500.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    first = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="2000.00"), of="F-1")
+    second = _rectificativa(_supply("R-2", issued_at=date(_YEAR, 7, 20), base="500.00"), of="F-1")
     filed = _FiledDeclarations(
-        M349FiledDeclaration(period=Period.from_year_and_code(2026, "1T"), rows=(_filed_operator(importe="10000.00"),)),
         M349FiledDeclaration(
-            period=Period.from_year_and_code(2026, "2T"),
-            rows=(_filed_rectification(ejercicio="2026", periodo="1T", nueva="8000.00", anterior="10000.00"),),
+            period=Period.from_year_and_code(_YEAR, "1T"), rows=(_filed_operator(importe="10000.00"),)
+        ),
+        M349FiledDeclaration(
+            period=Period.from_year_and_code(_YEAR, "2T"),
+            rows=(_filed_rectification(ejercicio=str(_YEAR), periodo="1T", nueva="8000.00", anterior="10000.00"),),
         ),
     )
 
@@ -253,7 +263,7 @@ def test_m349_a_later_correction_starts_from_the_base_an_earlier_rectification_l
         pytest.param(
             _FiledDeclarations(
                 M349FiledDeclaration(
-                    period=Period.from_year_and_code(2026, "1T"),
+                    period=Period.from_year_and_code(_YEAR, "1T"),
                     rows=(_filed_operator(importe="10000.00", nif="FR12345678901"),),
                 ),
             ),
@@ -263,8 +273,8 @@ def test_m349_a_later_correction_starts_from_the_base_an_earlier_rectification_l
 )
 def test_m349_correction_refuses_when_the_declared_base_is_not_known(filed: _FiledDeclarations | None) -> None:
     """No previously declared base means no record can be filled: not an operator row, not a guessed base."""
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="2000.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="2000.00"), of="F-1")
 
     resolution = _m349_resolution((supply, correction), period="2T", filed=filed)
 
@@ -275,7 +285,7 @@ def test_m349_correction_refuses_when_the_declared_base_is_not_known(filed: _Fil
 
 def test_m349_correction_of_an_invoice_the_catalogue_does_not_hold_refuses() -> None:
     """The corrected period is read off the corrected invoice, so without it the correction has no place."""
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="2000.00"), of="F-MISSING")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="2000.00"), of="F-MISSING")
 
     resolution = _m349_resolution((correction,), period="2T")
 
@@ -285,10 +295,12 @@ def test_m349_correction_of_an_invoice_the_catalogue_does_not_hold_refuses() -> 
 
 def test_m349_correction_above_the_declared_base_refuses() -> None:
     """A rectified base below zero has no place in the record, whose base carries no sign."""
-    supply = _supply("F-1", issued_at=date(2026, 1, 20), base="10000.00")
-    correction = _rectificativa(_supply("R-1", issued_at=date(2026, 4, 20), base="12000.00"), of="F-1")
+    supply = _supply("F-1", issued_at=date(_YEAR, 1, 20), base="10000.00")
+    correction = _rectificativa(_supply("R-1", issued_at=date(_YEAR, 4, 20), base="12000.00"), of="F-1")
     filed = _FiledDeclarations(
-        M349FiledDeclaration(period=Period.from_year_and_code(2026, "1T"), rows=(_filed_operator(importe="10000.00"),)),
+        M349FiledDeclaration(
+            period=Period.from_year_and_code(_YEAR, "1T"), rows=(_filed_operator(importe="10000.00"),)
+        ),
     )
 
     resolution = _m349_resolution((supply, correction), period="2T", filed=filed)
@@ -338,7 +350,7 @@ def test_m347_suplido_does_not_count_towards_the_floor(secure_profile: TestRunti
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="S-1",
-            issued_at=date(2026, 3, 1),
+            issued_at=date(_YEAR, 3, 1),
             counterparty_tax_id="B00015016",
             counterparty_name="Cliente Mandante SL",
             base_total=Decimal("2000.00"),
@@ -360,7 +372,7 @@ def test_m347_declares_the_cuota_and_recargo_without_the_suplido(secure_profile:
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="S-2",
-            issued_at=date(2026, 3, 1),
+            issued_at=date(_YEAR, 3, 1),
             counterparty_tax_id="B00015016",
             counterparty_name="Cliente Mandante SL",
             base_total=Decimal("3000.00"),
@@ -385,10 +397,12 @@ def test_m347_earlier_year_correction_is_declared_in_the_total_but_not_held_agai
     2025 sale is no 2026 operation, but enters the amount, so the record declares 2,000 rather than vanishing.
     """
     bucket_id = secure_profile.bucket_id
-    earlier = _sale("F-2025", issued_at=date(2025, 11, 20), gross="8000.00").model_copy(update={"bucket_id": bucket_id})
-    sale = _sale("F-2026", issued_at=date(2026, 4, 1), gross="6000.00").model_copy(update={"bucket_id": bucket_id})
+    earlier = _sale("F-2025", issued_at=date(_PRIOR, 11, 20), gross="8000.00").model_copy(
+        update={"bucket_id": bucket_id}
+    )
+    sale = _sale("F-2026", issued_at=date(_YEAR, 4, 1), gross="6000.00").model_copy(update={"bucket_id": bucket_id})
     credit = _rectificativa(
-        _sale("R-2026", issued_at=date(2026, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
+        _sale("R-2026", issued_at=date(_YEAR, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
         of="F-2025",
     )
 
@@ -402,10 +416,12 @@ def test_m347_earlier_year_correction_is_declared_in_the_total_but_not_held_agai
 def test_m347_earlier_year_correction_can_take_the_record_negative(secure_profile: TestRuntimeProfile) -> None:
     """The record's sign field: "Se consignará una 'N' cuando el importe anual de las operaciones sea menor que 0"."""
     bucket_id = secure_profile.bucket_id
-    earlier = _sale("F-2025", issued_at=date(2025, 11, 20), gross="9000.00").model_copy(update={"bucket_id": bucket_id})
-    sale = _sale("F-2026", issued_at=date(2026, 4, 1), gross="3100.00").model_copy(update={"bucket_id": bucket_id})
+    earlier = _sale("F-2025", issued_at=date(_PRIOR, 11, 20), gross="9000.00").model_copy(
+        update={"bucket_id": bucket_id}
+    )
+    sale = _sale("F-2026", issued_at=date(_YEAR, 4, 1), gross="3100.00").model_copy(update={"bucket_id": bucket_id})
     credit = _rectificativa(
-        _sale("R-2026", issued_at=date(2026, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
+        _sale("R-2026", issued_at=date(_YEAR, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
         of="F-2025",
     )
 
@@ -418,9 +434,9 @@ def test_m347_earlier_year_correction_can_take_the_record_negative(secure_profil
 def test_m347_same_year_full_correction_is_left_out_as_settled(secure_profile: TestRuntimeProfile) -> None:
     """Arts. 33.1 and 34.4 settle it: a sale undone in its own year leaves no operation above the floor."""
     bucket_id = secure_profile.bucket_id
-    sale = _sale("F-2026", issued_at=date(2026, 3, 1), gross="5000.00").model_copy(update={"bucket_id": bucket_id})
+    sale = _sale("F-2026", issued_at=date(_YEAR, 3, 1), gross="5000.00").model_copy(update={"bucket_id": bucket_id})
     credit = _rectificativa(
-        _sale("R-2026", issued_at=date(2026, 9, 1), gross="5000.00").model_copy(update={"bucket_id": bucket_id}),
+        _sale("R-2026", issued_at=date(_YEAR, 9, 1), gross="5000.00").model_copy(update={"bucket_id": bucket_id}),
         of="F-2026",
     )
 
@@ -439,9 +455,9 @@ def test_m347_upward_correction_stays_a_disclosed_reduction_because_no_field_rec
     and the record gap is disclosed as something the filer supplies, not as an open reading of the law.
     """
     bucket_id = secure_profile.bucket_id
-    sale = _sale("F-2026", issued_at=date(2026, 3, 1), gross="3000.00").model_copy(update={"bucket_id": bucket_id})
+    sale = _sale("F-2026", issued_at=date(_YEAR, 3, 1), gross="3000.00").model_copy(update={"bucket_id": bucket_id})
     raise_ = _rectificativa(
-        _sale("R-2026", issued_at=date(2026, 9, 1), gross="1000.00").model_copy(update={"bucket_id": bucket_id}),
+        _sale("R-2026", issued_at=date(_YEAR, 9, 1), gross="1000.00").model_copy(update={"bucket_id": bucket_id}),
         of="F-2026",
     )
 
@@ -460,9 +476,11 @@ def test_m347_earlier_year_correction_below_the_floor_is_disclosed(secure_profil
     below the floor has no record to carry it; that is left out and named.
     """
     bucket_id = secure_profile.bucket_id
-    earlier = _sale("F-2025", issued_at=date(2025, 11, 20), gross="8000.00").model_copy(update={"bucket_id": bucket_id})
+    earlier = _sale("F-2025", issued_at=date(_PRIOR, 11, 20), gross="8000.00").model_copy(
+        update={"bucket_id": bucket_id}
+    )
     credit = _rectificativa(
-        _sale("R-2026", issued_at=date(2026, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
+        _sale("R-2026", issued_at=date(_YEAR, 5, 1), gross="4000.00").model_copy(update={"bucket_id": bucket_id}),
         of="F-2025",
     )
 
@@ -487,7 +505,7 @@ def _filed_revision(
     modelo: str = "349",
     state: CalculationRevisionState = CalculationRevisionState.PRESENTADO,
     importe: str = "10000.00",
-    updated_at: datetime = datetime(2026, 4, 20, tzinfo=UTC),
+    updated_at: datetime = datetime(_YEAR, 4, 20, tzinfo=UTC),
 ) -> CalculationRevision:
     rows = (_filed_operator(importe=importe),)
     sealed = state is not CalculationRevisionState.BORRADOR
@@ -505,7 +523,9 @@ def _filed_revision(
             source_provenance=(),
         ),
         work_unit_id=work_unit,
-        registry_snapshot_ref=RegistrySnapshotRef(modelo=modelo, revision_id="2026", modelo_year=2026, period="1T"),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo, revision_id=str(_YEAR), modelo_year=_YEAR, period="1T"
+        ),
         state=state,
         casilla_values={},
         observations=(),
@@ -528,8 +548,8 @@ def test_m349_filed_declarations_are_the_current_filed_revision_of_each_period()
         _filed_revision(state=CalculationRevisionState.PRESENTADO_SUPERSEDIDO, importe="1.00"),
         _filed_revision(state=CalculationRevisionState.BORRADOR, importe="2.00"),
         _filed_revision(modelo="303", importe="3.00"),
-        _filed_revision(importe="9000.00", updated_at=datetime(2026, 4, 20, tzinfo=UTC)),
-        _filed_revision(importe="10000.00", updated_at=datetime(2026, 5, 20, tzinfo=UTC)),
+        _filed_revision(importe="9000.00", updated_at=datetime(_YEAR, 4, 20, tzinfo=UTC)),
+        _filed_revision(importe="10000.00", updated_at=datetime(_YEAR, 5, 20, tzinfo=UTC)),
     )
     reader = M349FiledDeclarationAdapter(
         repository=_CalculationRepository(
@@ -540,7 +560,7 @@ def test_m349_filed_declarations_are_the_current_filed_revision_of_each_period()
 
     declarations = reader.load()
 
-    assert [item.period for item in declarations] == [Period.from_year_and_code(2026, "1T")]
+    assert [item.period for item in declarations] == [Period.from_year_and_code(_YEAR, "1T")]
     assert declarations[0].rows == (_filed_operator(importe="10000.00"),)
 
 

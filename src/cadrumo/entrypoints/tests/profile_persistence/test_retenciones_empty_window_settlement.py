@@ -56,11 +56,12 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "44444444-4444-4444-8444-444444440111"
-_T0 = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
+_T0 = datetime(filing_year_envelope().horizon, 4, 2, 9, 0, tzinfo=UTC)
 
 
 @pytest.fixture

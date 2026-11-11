@@ -10,8 +10,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionInput, ManualLedgerTransactionPatch
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +31,7 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
 
     fields: dict[str, object] = {
         "bucket_id": _BUCKET_ID,
-        "booked_date": date(2026, 5, 1),
+        "booked_date": date(_YEAR, 5, 1),
         "amount": Decimal("121.00"),
         "direction": TransactionDirection.OUTGOING,
         "description": "material oficina",
@@ -48,7 +51,7 @@ def test_source_jurisdiction_accepts_iso_3166_alpha2_and_strips_whitespace() -> 
 def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     command = ManualLedgerTransactionCommand(
         bucket_id=f" {_BUCKET_ID} ",
-        booked_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
         amount=Decimal("121.00"),
         currency=" eur ",
         direction=TransactionDirection.OUTGOING,
@@ -186,14 +189,14 @@ def test_manual_ledger_transaction_command_accepts_magnitude_for_either_directio
     # direction alone decides the flow.
     outgoing = ManualLedgerTransactionCommand(
         bucket_id=_BUCKET_ID,
-        booked_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
         amount=Decimal("121.00"),
         direction=TransactionDirection.OUTGOING,
         description="office supplies",
     )
     incoming = ManualLedgerTransactionCommand(
         bucket_id=_BUCKET_ID,
-        booked_date=date(2026, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
         amount=Decimal("121.00"),
         direction=TransactionDirection.INCOMING,
         description="client payment",

@@ -21,6 +21,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.renta_codes import FiscalResidency
@@ -61,7 +62,8 @@ SOURCE_URL = aeat_url("sede", "/")
 WORK_UNIT_ID = "a" * 64
 CALCULATION_REVISION_ID = "b" * 64
 BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
-PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+PERIOD_2025_1T = Period.from_year_and_code(_YEAR, "1T")
 FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 OBSERVED_CASILLA: CasillaId = validated_casilla_id("01", surface="overview calendar observed casilla")
 
@@ -177,7 +179,7 @@ def observed_revision_id() -> str:
     that only wanted the shared taxpayer persona.
     """
     return str(
-        published_selected_revision_id("303", filing_year=2025, period=PERIOD_2025_1T.registry_token),
+        published_selected_revision_id("303", filing_year=_YEAR, period=PERIOD_2025_1T.registry_token),
     )
 
 
@@ -188,19 +190,19 @@ def calendar_engine() -> DeadlineEngine:
 
 @cache
 def april_2025_range() -> OverviewCalendarRange:
-    return OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30))
+    return OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 30))
 
 
 def expediente_declaration(
     expediente_id: str,
     *,
-    presented_at: datetime = datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+    presented_at: datetime = datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
     period: Period = PERIOD_2025_1T,
     estado: str = "ALTA",
 ) -> ExpedientesDeclaration:
     return ExpedientesDeclaration(
         modelo="303",
-        ejercicio=2025,
+        ejercicio=_YEAR,
         period=period,
         expediente_id=expediente_id,
         estado=estado,
@@ -212,7 +214,7 @@ def expedientes_filing_events(
     *declarations: ExpedientesDeclaration,
     snapshot_id: str = "f" * 64,
     authenticated_identity: str | None = None,
-    captured_at: datetime = datetime(2025, 4, 16, 10, 0, tzinfo=UTC),
+    captured_at: datetime = datetime(_YEAR, 4, 16, 10, 0, tzinfo=UTC),
     calendar_range: OverviewCalendarRange | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
     snapshot = PersistedExpedientesSnapshot(
@@ -238,7 +240,7 @@ def calendar_with_evidence(
             profile(),
             calendar_range or april_2025_range(),
             operation=operation,
-            today=date(2025, 4, 10),
+            today=date(_YEAR, 4, 10),
             events=events,
             filing_evidence=filing_evidence,
             engine=DeadlineEngine(authority=operation),
@@ -248,13 +250,13 @@ def calendar_with_evidence(
 def modelo_record(
     *,
     modelo: str = "303",
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     period: Period = PERIOD_2025_1T,
     aeat_accepted: bool = False,
     external_evidence: ExternalEvidence | None = None,
     filed_by: str = "operator",
 ) -> ModeloRecord:
-    filed_at = datetime(2025, 4, 14, 12, 0, tzinfo=UTC)
+    filed_at = datetime(_YEAR, 4, 14, 12, 0, tzinfo=UTC)
     filing_record_id = derive_filing_record_id(
         work_unit_id=WORK_UNIT_ID,
         calculation_revision_id=CALCULATION_REVISION_ID,
@@ -285,11 +287,11 @@ def filed_declaration_observation(
 ) -> _CalendarFiledObservation:
     return _CalendarFiledObservation(
         _modelo="303",
-        _ejercicio=2025,
+        _ejercicio=_YEAR,
         _period=PERIOD_2025_1T,
         _expediente_id=expediente_id,
         _status="ALTA",
-        _presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        _presented_at=datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
         _authenticated_identity="X0001500M",
         _artefacts=artefacts,
     )
@@ -313,7 +315,7 @@ def justificante_metadata(
     *,
     csv: str = "JUST3032025X1T7",
     modelo: str = "303",
-    filing_year: int = 2025,
+    filing_year: int = _YEAR,
     period: Period = PERIOD_2025_1T,
     tax_id: str = "X0001500M",
 ) -> Justificante:
@@ -345,14 +347,14 @@ def external_evidence(
     return ExternalEvidence(
         kind=kind,
         reference_id=reference_id,
-        imported_at=imported_at or datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        imported_at=imported_at or datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
     )
 
 
 def observed_casilla_observations(value: Decimal):
     return registry_grounded_observations(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         casilla_values={OBSERVED_CASILLA: value},
     )
@@ -366,14 +368,14 @@ def calculation_observation_payload(
 ) -> ObservationEnvelopePayload:
     observation = RegistryModeloObservation(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
         observations=observed_casilla_observations(value),
     )
     if source_metadata is None:
         return ObservationEnvelopePayload(
             observation=observation,
-            captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
             source_kind=source_kind,
             stamped_revision_id=observed_revision_id(),
             result_disposition=ResultDispositionProjection(
@@ -385,7 +387,7 @@ def calculation_observation_payload(
         )
     return ObservationEnvelopePayload(
         observation=observation,
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 4, 16, 12, 0, tzinfo=UTC),
         source_kind=source_kind,
         stamped_revision_id=observed_revision_id(),
         source_metadata=source_metadata,

@@ -19,6 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import InvoiceOperationDateRole
 from ..models import Invoice
 from .issued_services_invoice_support import issued_services_invoice
@@ -40,11 +41,11 @@ def test_an_invoice_can_state_its_operation_date_distinct_from_the_issue_date() 
     """The fecha de operación is representable, naming which art. 6.1.i clause it answers."""
     invoice = issued_services_invoice(
         _INVOICE_NUMBER,
-        operation_date=date(2026, 3, 28),
+        operation_date=date(filing_year_envelope().horizon, 3, 28),
         operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
     )
 
-    assert invoice.operation_date == date(2026, 3, 28)
+    assert invoice.operation_date == date(filing_year_envelope().horizon, 3, 28)
     assert invoice.operation_date_role == InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED")
     assert invoice.operation_date != invoice.issued_at
 
@@ -60,7 +61,7 @@ def test_an_ordinary_invoice_declares_no_operation_date() -> None:
 def test_a_date_without_a_role_is_refused() -> None:
     """A bare date would leave a reader guessing which art. 6.1.i clause it answers."""
     with pytest.raises(ValidationError, match="operation_date and operation_date_role must be set together"):
-        issued_services_invoice(_INVOICE_NUMBER, operation_date=date(2026, 3, 28))
+        issued_services_invoice(_INVOICE_NUMBER, operation_date=date(filing_year_envelope().horizon, 3, 28))
 
 
 def test_a_role_without_a_date_is_refused() -> None:

@@ -82,6 +82,7 @@ from ....core.config import Settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -101,7 +102,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TAX_ID = "X0001500M"
 _BUCKET_ID = "30300000-0000-4000-8000-000000000032"
-_YEAR = 2026
+_YEAR = filing_year_envelope().horizon
 _REFUND_PERIOD = "2T"
 _NEXT_PERIOD = "3T"
 #: REDEME-enrolled taxpayers file Modelo 303 MONTHLY, not quarterly (RD
@@ -110,13 +111,13 @@ _NEXT_PERIOD = "3T"
 #: quarterly ``_REFUND_PERIOD``/``_NEXT_PERIOD`` tokens above have no matching
 #: deadline obligation for a REDEME profile, so the REDEME scenario uses its
 #: own monthly period pair with the same ``_FILE_AT``-relative window shape
-#: (period "06" opens 2026-07-01 / closes 2026-07-30, matching quarterly 2T's
+#: (period "06" opens 07-01 / closes 07-30 of the year, matching quarterly 2T's
 #: filing-window alignment with ``_FILE_AT``).
 _REDEME_REFUND_PERIOD = "06"
 _REDEME_NEXT_PERIOD = "07"
-_DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
-_VERIFY_AT = datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC)
-_FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
+_DECIDED_AT = datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC)
+_VERIFY_AT = datetime(_YEAR, 7, 15, 9, 0, 0, tzinfo=UTC)
+_FILE_AT = datetime(_YEAR, 7, 15, 10, 0, 0, tzinfo=UTC)
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.

@@ -28,6 +28,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.errors import ModeloError
 from cadrumo.domain.modelos.verification_report import (
     VerificationCompletenessStatus,
@@ -48,6 +49,7 @@ _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
 
@@ -99,9 +101,9 @@ def test_create_rejects_unknown_period_for_modelo_revision(
         create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id="2025-y-siguientes",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
+            revision_id=str(open_ended_revision("202").id),
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
         )
@@ -129,8 +131,8 @@ def test_create_rejects_unknown_revision_with_helpful_list(
         create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             revision_id="bad-revision",
             ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             operation=operation,
@@ -139,7 +141,7 @@ def test_create_rejects_unknown_revision_with_helpful_list(
     assert "bad-revision" in message
     assert "modelo '130'" in message
     assert "Available revisions:" in message
-    assert "2019-y-siguientes" in message
+    assert str(open_ended_revision("130").id) in message
 
 
 def test_history_for_missing_work_unit_raises(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
@@ -159,13 +161,13 @@ def test_history_records_creation_event(repos: _Repos, operation: PinnedAuthorit
     the work-unit history is complete from its first moment. The
     creation event names when and by whom the unit was provisioned."""
     wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
+    t0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         actor="operator@example.test",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
@@ -189,10 +191,10 @@ def test_history_records_creation_event(repos: _Repos, operation: PinnedAuthorit
     assert event.actor == "operator@example.test"
     assert event.payload == {
         "modelo": "130",
-        "filing_year": "2026",
+        "filing_year": str(_YEAR),
         "period": "1T",
-        "revision_id": "2019-y-siguientes",
-        "name": "130-2026-1T",
+        "revision_id": str(open_ended_revision("130").id),
+        "name": f"130-{_YEAR}-1T",
     }
 
 
@@ -204,14 +206,14 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
     the existing unit and emits no second creation event - the original
     creation event already stands."""
     wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
-    t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
+    t0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
+    t1 = datetime(_YEAR, 1, 15, 13, 0, tzinfo=UTC)
     first = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
         clock=t0,
@@ -219,9 +221,9 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
     reloaded = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
         clock=t1,
@@ -239,15 +241,15 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
 
 def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
-    t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
+    t0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
+    t1 = datetime(_YEAR, 1, 15, 13, 0, tzinfo=UTC)
 
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
         clock=t0,
@@ -280,15 +282,15 @@ def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthority
 
 def test_history_excludes_events_from_other_work_units(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     wu_repo, _cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    t0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
-    t1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
+    t0 = datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC)
+    t1 = datetime(_YEAR, 1, 15, 13, 0, tzinfo=UTC)
 
     target = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
         clock=t0,
@@ -296,9 +298,9 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos, operation:
     other = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "2T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "2T"),
+        revision_id=str(open_ended_revision("130").id),
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
         clock=t0,
@@ -339,13 +341,13 @@ def test_a_real_assembled_row_satisfies_the_tightened_identities(
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        revision_id=str(open_ended_revision("130").id),
         actor="operator@example.test",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         operation=operation,
-        clock=datetime(2026, 1, 15, 12, 0, tzinfo=UTC),
+        clock=datetime(_YEAR, 1, 15, 12, 0, tzinfo=UTC),
     )
 
     history = assemble_work_unit_history(
@@ -366,12 +368,12 @@ def test_history_decodes_persisted_calculation_with_retained_authority_pin(
 ) -> None:
     """History must pass its published pin into encrypted calculation decoding."""
     wu_repo, cr_repo, _fr_repo, vr_repo, bv_repo = repos
-    period = Period.from_year_and_code(2025, "2T")
-    revision_id = operation.snapshot("123", filing_year=2025, period="2T").revision.id
+    period = Period.from_year_and_code(_YEAR, "2T")
+    revision_id = operation.snapshot("123", filing_year=_YEAR, period="2T").revision.id
     unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="123",
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         revision_id=revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
@@ -409,7 +411,7 @@ def test_history_decodes_persisted_calculation_with_retained_authority_pin(
         registry_snapshot_ref=published.revision.registry_snapshot_ref,
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
         findings=(),
-        run_at=datetime(2026, 1, 15, 13, tzinfo=UTC),
+        run_at=datetime(_YEAR, 1, 15, 13, tzinfo=UTC),
         verified_by="operator",
         granted_verificado_completo=False,
     )

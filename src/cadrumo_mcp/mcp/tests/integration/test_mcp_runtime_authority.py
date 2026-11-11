@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 from typing import override
 
@@ -40,6 +41,15 @@ from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
+
+def _supported_prior_year() -> int:
+    """The supported year before the horizon, read from the published authority."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.supported_filing_years().horizon - 1
+
+
+_PRIOR_YEAR = _supported_prior_year()
+
 _SYNTHETIC_MODELO = "130"
 """The modelo whose titles the synthetic publications borrow, and the only one they hold."""
 
@@ -50,11 +60,11 @@ def _a_portal_id() -> str:
 
 async def _assert_all_advertised_authority_queries_refuse(adapter: RuntimeMcpAdapter, code: str) -> None:
     """Ask every query the tool advertises, each with coordinates it accepts, and hold each to one refusal."""
-    scoped = {"modelo": "100", "filing_year": 2024, "period": "0A"}
+    scoped = {"modelo": "100", "filing_year": _PRIOR_YEAR, "period": "0A"}
     requests: dict[str, dict[str, object]] = {
         "modelos": {},
         "support": {},
-        "bindings": {"modelo": "100", "filing_year": 2024},
+        "bindings": {"modelo": "100", "filing_year": _PRIOR_YEAR},
         "describe": scoped,
         "casillas": scoped,
         "casilla": {**scoped, "casilla": "0505"},
@@ -129,16 +139,16 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
             {
                 "query": "describe",
                 "modelo": "100",
-                "filing_year": 2024,
+                "filing_year": _PRIOR_YEAR,
                 "period": "0A",
-                "as_of": "2024-12-31",
+                "as_of": date(_PRIOR_YEAR, 12, 31).isoformat(),
             },
         )
 
         assert described["outcome"] == "published", described
         assert adapter.client is held and held is not None
         assert described["report"]["code"] == "100"
-        assert described["report"]["filing_year"] == 2024
+        assert described["report"]["filing_year"] == _PRIOR_YEAR
         assert described["report"]["period"] == "0A"
         assert described["report"]["revision"]
         assert described["report"]["authority_grade"] == "filing"
@@ -148,14 +158,14 @@ async def test_public_authority_queries_preserve_coordinates_and_support_project
             {
                 "query": "describe",
                 "modelo": "036",
-                "filing_year": 2024,
+                "filing_year": _PRIOR_YEAR,
                 "period": "alta",
-                "as_of": "2024-12-31",
+                "as_of": date(_PRIOR_YEAR, 12, 31).isoformat(),
             },
         )
         assert low_grade["outcome"] == "published"
         assert low_grade["report"]["authority_grade"] == "applicability"
-        assert (low_grade["report"]["filing_year"], low_grade["report"]["period"]) == (2024, "alta")
+        assert (low_grade["report"]["filing_year"], low_grade["report"]["period"]) == (_PRIOR_YEAR, "alta")
 
         with bundled_indexed_authority().operation() as operation:
             canonical_support = registry_support_matrix(operation=operation).model_dump(mode="json")

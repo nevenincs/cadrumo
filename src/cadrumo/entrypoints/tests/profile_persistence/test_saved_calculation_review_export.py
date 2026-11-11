@@ -230,7 +230,7 @@ def test_saved_form_review_reads_staleness_under_the_law_in_force_not_its_retain
 
 def test_new_current_calculation_does_not_replace_historical_export_values(repos: Repos) -> None:
     first = _calculate(repos)
-    _calculate(repos, income="2000")
+    _calculate(repos, income="2500")
     with bundled_indexed_authority().operation() as operation:
         baseline = load_calculation_review_snapshot(
             first.calculation_revision_id, profile_id=UUID(repos[0].bucket_id), operation=operation
@@ -239,11 +239,11 @@ def test_new_current_calculation_does_not_replace_historical_export_values(repos
     plan = build_review_workbook(
         baseline,
         publication_id=UUID(int=1),
-        exported_at=datetime(2026, 10, 7, tzinfo=UTC),
+        exported_at=datetime(1980, 10, 7, tzinfo=UTC),
         label=ReviewWorkbookLabels(OutputLanguage.ES),
     )
     form_values = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
-    assert Decimal("1000") in form_values and Decimal("2000") not in form_values
+    assert Decimal("1000") in form_values and Decimal("2500") not in form_values
     assert not plan.formula_cells
 
 
@@ -257,7 +257,7 @@ def test_real_saved_form_uses_same_native_transport_plan_and_preserves_notes(rep
     plan = build_review_workbook(
         baseline,
         publication_id=UUID(int=123),
-        exported_at=datetime(2026, 10, 7, 14, 30, tzinfo=UTC),
+        exported_at=datetime(1980, 10, 7, 14, 30, tzinfo=UTC),
         label=ReviewWorkbookLabels(OutputLanguage.ES),
     )
     assert baseline.saved_form is not None and not plan.formula_cells

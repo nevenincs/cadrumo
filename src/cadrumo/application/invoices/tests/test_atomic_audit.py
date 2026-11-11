@@ -7,16 +7,20 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ....domain.buckets.event import BucketEventType
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "74747474-7474-4747-8474-747474747474"
-_OCCURRED_AT = datetime(2026, 9, 22, 10, 30, tzinfo=UTC)
+_OCCURRED_AT = datetime(_YEAR, 9, 22, 10, 30, tzinfo=UTC)
 
 
 def test_create_commits_the_catalogue_invoice_and_its_audit_entry_together() -> None:
@@ -47,7 +51,7 @@ def _invoice():
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="ATOMIC-2026-001",
-        issued_at=date(2026, 9, 22),
+        issued_at=date(_YEAR, 9, 22),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",

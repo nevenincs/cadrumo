@@ -20,12 +20,15 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     purchase_invoice,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,7 +50,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         first = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="first reset row",
@@ -55,7 +58,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
                 idempotency_key="reset-first",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
     with ledger_ports_for_test(
         bucket_id=BUCKET_ID,
@@ -66,14 +69,14 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         second = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 3),
+                booked_date=date(_YEAR, 5, 3),
                 amount=Decimal("30.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="second reset row",
                 idempotency_key="reset-second",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 31, tzinfo=UTC),
         )
     invoice_repository.save(
         build_invoice_catalogue(
@@ -90,7 +93,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         invoice_repository=invoice_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert report.reset is True
@@ -139,14 +142,14 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
             created = create_manual_transaction(
                 ManualLedgerTransactionCommand(
                     bucket_id=BUCKET_ID,
-                    booked_date=date(2026, 5, 1),
+                    booked_date=date(_YEAR, 5, 1),
                     amount=Decimal("10.00") + Decimal(index),
                     direction=TransactionDirection.OUTGOING,
                     description=f"bulk reset row {index}",
                     idempotency_key=f"bulk-reset-{index}",
                 ),
                 ports=ports,
-                occurred_at=datetime(2026, 5, 4, 9, index, tzinfo=UTC),
+                occurred_at=datetime(_YEAR, 5, 4, 9, index, tzinfo=UTC),
             )
             created_ids.append(created.ref.transaction_id)
 
@@ -160,7 +163,7 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     assert report.reset is True
@@ -194,14 +197,14 @@ def test_reset_receipt_limit_refuses_before_catalogue_or_event_write(
         create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="row retained after oversized receipt refusal",
                 idempotency_key="reset-receipt-bound",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
     before_transactions = transaction_repository.load()
     before_events = event_repository.load()

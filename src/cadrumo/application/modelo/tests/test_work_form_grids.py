@@ -29,6 +29,7 @@ from ....domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormRepeatingGroupBlock,
 )
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, filing_year_envelope
 from ....domain.modelos.codes import ModeloCode
 from ..work_form import build_modelo_work_form
 from ..work_form_field_vocabulary import (
@@ -48,6 +49,10 @@ from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+_YEAR_390 = filing_grade_exercises("390")[-1]
+"""The newest exercise whose Modelo 390 edition reaches filing grade."""
 
 _LITERAL_RATES_303 = {
     "02": Decimal("0.04"),
@@ -138,7 +143,7 @@ def _by_box(form: ModeloWorkForm) -> dict[str, ModeloFormField]:
 
 
 def _form_303(operation: PinnedAuthorityOperation, literals: Mapping[str, str] | None = None) -> ModeloWorkForm:
-    return _form(operation, "303", 2026, "1T", literals=literals)
+    return _form(operation, "303", _YEAR, "1T", literals=literals)
 
 
 def test_published_literal_scales_print_the_official_rates(operation: PinnedAuthorityOperation) -> None:
@@ -162,7 +167,7 @@ def test_published_literal_scales_print_the_official_rates(operation: PinnedAuth
 
 
 def test_a_numeric_literal_without_declared_scale_claims_no_printed_rate(operation: PinnedAuthorityOperation) -> None:
-    revision = operation.revision_for_context("303", filing_year=2026, period="1T")
+    revision = operation.revision_for_context("303", filing_year=_YEAR, period="1T")
     published = _layout(operation, "303", str(revision.id))
     unscaled = published.model_copy(
         update={
@@ -202,7 +207,7 @@ def test_a_numeric_literal_without_declared_scale_claims_no_printed_rate(operati
             )
         }
     )
-    boxes = _by_box(_form(operation, "303", 2026, "1T", layout_override=unscaled))
+    boxes = _by_box(_form(operation, "303", _YEAR, "1T", layout_override=unscaled))
     assert all(boxes[box].printed_rate is None for box in _LITERAL_RATES_303)
 
 
@@ -236,8 +241,8 @@ def test_a_placeholder_rate_box_claims_no_rate_even_where_its_base_declares_one(
 
 
 def test_every_390_grid_cell_shows_an_official_box_number_or_none(operation: PinnedAuthorityOperation) -> None:
-    form = _form(operation, "390", 2025, "0A")
-    revision = operation.revision_for_context("390", filing_year=2025, period="0A")
+    form = _form(operation, "390", _YEAR_390, "0A")
+    revision = operation.revision_for_context("390", filing_year=_YEAR_390, period="0A")
     layout = operation.form_layout("390", revision.id)
     assert layout is not None
     declared_boxes = {placement.box_number for placement in layout.placements if placement.box_number is not None}
@@ -275,7 +280,7 @@ def test_every_390_grid_cell_shows_an_official_box_number_or_none(operation: Pin
 def test_a_repeating_column_the_design_leaves_unnamed_reads_as_the_label_of_its_box(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    revision = operation.revision_for_context("349", filing_year=2026, period="1T")
+    revision = operation.revision_for_context("349", filing_year=_YEAR, period="1T")
     published = _layout(operation, "349", str(revision.id))
     layout = published.model_copy(
         update={
@@ -308,7 +313,7 @@ def test_a_repeating_column_the_design_leaves_unnamed_reads_as_the_label_of_its_
             )
         }
     )
-    form = _form(operation, "349", 2026, "1T", layout_override=layout)
+    form = _form(operation, "349", _YEAR, "1T", layout_override=layout)
     declared = {
         block.id: block
         for page in layout.pages

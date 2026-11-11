@@ -7,6 +7,7 @@ import sys
 import zipfile
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
@@ -31,6 +32,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
@@ -41,6 +43,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -55,7 +59,7 @@ _PROFILE_FACTS = {
     "identity.name": "Native",
     "identity.surnames": "Review Package",
     "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
+    "censo.activity_start_date": date(_YEAR, 1, 1).isoformat(),
     "withholding.colegio_concertado": "false",
 }
 

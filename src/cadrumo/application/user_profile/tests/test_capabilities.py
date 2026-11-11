@@ -25,7 +25,7 @@ from ..capabilities import CapabilitySource, parse_bool_fact, resolve_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_NOW = datetime(2026, 6, 15, 10, 0, tzinfo=UTC)
+_NOW = datetime(1980, 6, 15, 10, 0, tzinfo=UTC)
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:

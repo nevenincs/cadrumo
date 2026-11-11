@@ -20,10 +20,13 @@ from pydantic import ValidationError
 
 from ....core.descendant_relacion import DescendantRelacion
 from ....domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.contribuyente.descendant import DescendantInfo
 from ..config_descendiente_payloads import ProfileDescendientePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+_BIRTH, _NEXT = filing_year_envelope().years[:2]
 
 
 def _payload_from(canonical: DescendantInfo, *, index: int = 0) -> ProfileDescendientePayload:
@@ -47,10 +50,10 @@ def _payload_from(canonical: DescendantInfo, *, index: int = 0) -> ProfileDescen
 def test_payload_carries_every_canonical_descendant_field() -> None:
     """No canonical ``DescendantInfo`` field is dropped by the CLI projection."""
     canonical = DescendantInfo(
-        birth_date=date(2022, 5, 1),
+        birth_date=date(_BIRTH, 5, 1),
         relacion=DescendantRelacion.from_registry("adoptado"),
-        inscripcion_registro_civil_date=date(2023, 6, 2),
-        acogimiento_resolucion_date=date(2022, 9, 3),
+        inscripcion_registro_civil_date=date(_NEXT, 6, 2),
+        acogimiento_resolucion_date=date(_BIRTH, 9, 3),
         discapacidad_grado=33,
         convive_con_contribuyente=True,
         custodia_compartida=True,
@@ -67,7 +70,7 @@ def test_payload_carries_every_canonical_descendant_field() -> None:
 def test_tax_bearing_values_survive_the_projection() -> None:
     """The deducción-maternidad and guardería inputs reach the wire unchanged."""
     canonical = DescendantInfo(
-        birth_date=date(2022, 5, 1),
+        birth_date=date(_BIRTH, 5, 1),
         meses_madre_trabajo=(1, 2, 3, 4, 5, 6),
         gastos_guarderia_euros=1500,
     )
@@ -81,17 +84,17 @@ def test_tax_bearing_values_survive_the_projection() -> None:
 def test_dates_keep_their_iso_wire_form() -> None:
     """Typing the fields as ``date`` must not change the emitted JSON shape."""
     canonical = DescendantInfo(
-        birth_date=date(2018, 1, 1),
+        birth_date=date(_BIRTH, 1, 1),
         relacion=DescendantRelacion.from_registry("adoptado"),
-        inscripcion_registro_civil_date=date(2019, 3, 4),
-        acogimiento_resolucion_date=date(2018, 7, 5),
+        inscripcion_registro_civil_date=date(_NEXT, 3, 4),
+        acogimiento_resolucion_date=date(_BIRTH, 7, 5),
     )
 
     wire = _payload_from(canonical).model_dump(mode="json")
 
-    assert wire["birth_date"] == "2018-01-01"
-    assert wire["inscripcion_registro_civil_date"] == "2019-03-04"
-    assert wire["acogimiento_resolucion_date"] == "2018-07-05"
+    assert wire["birth_date"] == f"{_BIRTH}-01-01"
+    assert wire["inscripcion_registro_civil_date"] == f"{_NEXT}-03-04"
+    assert wire["acogimiento_resolucion_date"] == f"{_BIRTH}-07-05"
 
 
 def test_relacion_reaches_the_wire_as_its_token() -> None:
@@ -104,7 +107,7 @@ def test_relacion_reaches_the_wire_as_its_token() -> None:
     would read as an ordinary descendant.
     """
     canonical = DescendantInfo(
-        birth_date=date(2015, 1, 1),
+        birth_date=date(_BIRTH, 1, 1),
         relacion=DescendantRelacion.from_registry("acogimiento_temporal"),
     )
 
@@ -140,7 +143,7 @@ def test_payload_refuses_values_the_canonical_record_refuses(
     """Every malformed value the canonical record rejects is rejected at the boundary too."""
     fields: dict[str, object] = {
         "index": 0,
-        "birth_date": date(2020, 1, 1),
+        "birth_date": date(_BIRTH, 1, 1),
         "convive_con_contribuyente": True,
         "custodia_compartida": False,
     }
@@ -154,12 +157,12 @@ def test_disability_grade_uses_the_same_governed_catalogue_at_both_boundaries() 
     grades = accepted_descendant_disability_grades()
     assert grades
     for grade in grades:
-        canonical = DescendantInfo(birth_date=date(2020, 1, 1), discapacidad_grado=grade)
+        canonical = DescendantInfo(birth_date=date(_BIRTH, 1, 1), discapacidad_grado=grade)
         assert _payload_from(canonical).discapacidad_grado == grade
 
     for record, fields in (
-        (DescendantInfo, {"birth_date": date(2020, 1, 1), "discapacidad_grado": 50}),
-        (ProfileDescendientePayload, {"index": 0, "birth_date": date(2020, 1, 1), "discapacidad_grado": 50}),
+        (DescendantInfo, {"birth_date": date(_BIRTH, 1, 1), "discapacidad_grado": 50}),
+        (ProfileDescendientePayload, {"index": 0, "birth_date": date(_BIRTH, 1, 1), "discapacidad_grado": 50}),
     ):
         with pytest.raises(ValidationError, match="governed catalogue"):
             record.model_validate(fields)
@@ -170,9 +173,9 @@ def test_payload_refuses_an_entry_event_predating_birth() -> None:
     with pytest.raises(ValidationError):
         ProfileDescendientePayload(
             index=0,
-            birth_date=date(2020, 1, 1),
+            birth_date=date(_NEXT, 1, 1),
             relacion=DescendantRelacion.from_registry("adoptado"),
-            inscripcion_registro_civil_date=date(2019, 1, 1),
+            inscripcion_registro_civil_date=date(_BIRTH, 1, 1),
             convive_con_contribuyente=True,
             custodia_compartida=False,
         )
@@ -183,7 +186,7 @@ def test_payload_refuses_a_future_entry_event() -> None:
     with pytest.raises(ValidationError):
         ProfileDescendientePayload(
             index=0,
-            birth_date=date(2020, 1, 1),
+            birth_date=date(_BIRTH, 1, 1),
             relacion=DescendantRelacion.from_registry("adoptado"),
             inscripcion_registro_civil_date=date.today() + timedelta(days=365),
             convive_con_contribuyente=True,
@@ -216,11 +219,11 @@ def test_payload_refuses_an_entry_date_the_relacion_cannot_carry(
     """
     fields: dict[str, object] = {
         "index": 0,
-        "birth_date": date(2015, 1, 1),
+        "birth_date": date(_BIRTH, 1, 1),
         "relacion": relacion,
         "convive_con_contribuyente": True,
         "custodia_compartida": False,
-        date_field: date(2018, 1, 1),
+        date_field: date(_NEXT, 1, 1),
     }
 
     with pytest.raises(ValidationError):

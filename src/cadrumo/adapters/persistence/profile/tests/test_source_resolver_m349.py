@@ -15,6 +15,7 @@ from cadrumo.application.invoices.source_resolver import M349_CLAVE_INFERRED_REA
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -37,6 +38,8 @@ from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
     secure_profile: TestRuntimeProfile,
@@ -52,13 +55,13 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
     converted = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-010",
-        issued_at=date(2026, 1, 15),
+        issued_at=date(_YEAR, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
         currency="GBP",
         fx_rate=gbp_rate,
-        fx_rate_date=date(2026, 1, 15),
+        fx_rate_date=date(_YEAR, 1, 15),
         fx_rate_source=ECB_RATE_SOURCE_ID,
     )
     repository.save(build_invoice_catalogue((converted,)))
@@ -83,7 +86,7 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
     unconverted = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-011",
-        issued_at=date(2026, 1, 15),
+        issued_at=date(_YEAR, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -158,7 +161,7 @@ def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() 
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         invoice_number="EXPLICIT-CLAVE-001",
-        issued_at=date(2026, 2, 1),
+        issued_at=date(_YEAR, 2, 1),
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
@@ -181,7 +184,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         invoice_number="SERV-S-001",
-        issued_at=date(2026, 2, 1),
+        issued_at=date(_YEAR, 2, 1),
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
@@ -191,7 +194,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="SERV-I-001",
-        issued_at=date(2026, 2, 1),
+        issued_at=date(_YEAR, 2, 1),
         counterparty_tax_id="DE345678901",
         counterparty_country="DE",
         base_total=Decimal("100.00"),
@@ -210,7 +213,7 @@ def _ic_supply_without_operation_type() -> Invoice:
     return source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="IC-SUPPLY-001",
-        issued_at=date(2026, 1, 15),
+        issued_at=date(_YEAR, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -223,7 +226,7 @@ def _third_country_import() -> Invoice:
         bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="IMPORT-001",
-        issued_at=date(2026, 1, 10),
+        issued_at=date(_YEAR, 1, 10),
         counterparty_tax_id="US99887766",
         counterparty_country="US",
         base_total=Decimal("800.00"),
@@ -326,7 +329,7 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
     unconverted = source_resolver_invoice(
         bucket_id=BUCKET_ID,
         invoice_number="F-2026-012",
-        issued_at=date(2026, 1, 15),
+        issued_at=date(_YEAR, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
@@ -366,11 +369,11 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
         modelo="349",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         revision=select_revision(
             next(candidate for candidate in bundled_registry_tree()[0] if candidate.id == "349"),
-            filing_year=2026,
+            filing_year=_YEAR,
             period="1T",
         ),
     )
@@ -383,7 +386,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
     declared_facts = {
         "party_tax_id": "DE345678901",
         "country_code": "DE",
-        "transaction_date": date(2026, 3, 10),
+        "transaction_date": date(_YEAR, 3, 10),
         "base_amount": Decimal("3000.00"),
         "invoice_total_amount": Decimal("3000.00"),
         "intracommunity_clave": "I",
@@ -395,7 +398,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.RECEIVED,
         invoice_number="IT-SERV-2026-001",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         counterparty_tax_id="DE345678901",
         counterparty_name="Servizi SRL",
         counterparty_country="DE",
@@ -448,7 +451,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.RECEIVED,
             invoice_number="IT-SERV-2026-002",
-            issued_at=date(2026, 3, 11),
+            issued_at=date(_YEAR, 3, 11),
             counterparty_tax_id="B00015016",
             counterparty_name="Servizi SRL",
             counterparty_country="DE",

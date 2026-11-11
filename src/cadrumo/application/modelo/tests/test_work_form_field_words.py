@@ -19,6 +19,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ..edit_apply_scalar_contracts import wire_scalar_value
 from ..source_policy import SourceOverridePolicy
@@ -41,6 +42,8 @@ from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _AMOUNT = Decimal("1234.50")
 
 
@@ -55,7 +58,7 @@ def _bound(form: ModeloWorkForm, *, policy: SourceOverridePolicy | None = None) 
 def test_a_box_offers_going_back_to_its_source_only_while_the_filers_value_replaces_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    field = _bound(built_form(operation, "303", 2026, "1T"))
+    field = _bound(built_form(operation, "303", _YEAR, "1T"))
 
     replaced = revised_field(
         field, editability=ModeloFormEditability.OVERRIDABLE_SOURCE, origin=ModeloFormOrigin.OVERRIDES_SOURCE
@@ -71,7 +74,7 @@ def test_a_box_offers_going_back_to_its_source_only_while_the_filers_value_repla
 
 
 def test_a_confirmable_box_carries_the_value_a_confirmation_stages(operation: PinnedAuthorityOperation) -> None:
-    field = next(field for field in built_form(operation, "130", 2026, "1T").fields() if not field.bindings)
+    field = next(field for field in built_form(operation, "130", _YEAR, "1T").fields() if not field.bindings)
 
     assumed = revised_field(
         field,
@@ -93,7 +96,7 @@ def test_a_confirmable_box_carries_the_value_a_confirmation_stages(operation: Pi
 def test_the_context_names_its_period_in_words_and_an_absent_value_as_nothing(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:
-    form = built_form(operation, "130", 2026, "1T", language=language)
+    form = built_form(operation, "130", _YEAR, "1T", language=language)
 
     context = {
         block.id: block
@@ -104,8 +107,8 @@ def test_the_context_names_its_period_in_words_and_an_absent_value_as_nothing(
     }
 
     assert context["periodo"].value == "1T"
-    assert context["periodo"].value_text == period_words(Period.from_year_and_code(2026, "1T"), language)
-    assert context["ejercicio"].value_text == "2026"
+    assert context["periodo"].value_text == period_words(Period.from_year_and_code(_YEAR, "1T"), language)
+    assert context["ejercicio"].value_text == str(_YEAR)
     assert context["nif"].value is None
     assert context["nif"].value_text == absent_value_text(language)
 
@@ -137,7 +140,7 @@ def _with_record(
 
 
 def test_each_record_value_reads_as_the_table_shows_it(operation: PinnedAuthorityOperation) -> None:
-    form = built_form(operation, "347", 2026, "0A", language=OutputLanguage.ES)
+    form = built_form(operation, "347", _YEAR, "0A", language=OutputLanguage.ES)
 
     def record(block: ModeloFormRepeatingBlock) -> ModeloFormRepeatingRow:
         values = tuple(_AMOUNT if data_type == "money" else None for data_type in block.column_data_types)
@@ -169,7 +172,7 @@ def test_each_record_value_reads_as_the_table_shows_it(operation: PinnedAuthorit
 def test_a_box_holds_the_filers_own_value_when_typed_here_or_replacing_its_source(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    field = _bound(built_form(operation, "303", 2026, "1T"))
+    field = _bound(built_form(operation, "303", _YEAR, "1T"))
 
     own = {
         origin: revised_field(field, origin=origin).filers_own

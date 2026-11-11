@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -18,11 +19,15 @@ from cadrumo.domain.attachments.m303_filing_evidence import (
     parse_m303_exonerado_390_applicability_attestation,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+
+# The attestation is made after the period closes, so it names the last completed exercise.
+_ATTESTED_YEAR = filing_year_envelope().horizon - 1
 
 pytestmark = [
     pytest.mark.integration,
@@ -44,7 +49,7 @@ def test_cli_attests_period_before_any_work_unit_and_refuses_other_periods(
                 "identity.name": "Operator",
                 "identity.surnames": "Operator",
                 "activities.description": "design",
-                "censo.activity_start_date": "2025-01-01",
+                "censo.activity_start_date": date(_ATTESTED_YEAR, 1, 1).isoformat(),
             },
         )
         assert fixture.label is not None
@@ -64,11 +69,11 @@ def test_cli_attests_period_before_any_work_unit_and_refuses_other_periods(
                     "work",
                     "attest-m303-exonerado-390",
                     "--year",
-                    "2025",
+                    str(_ATTESTED_YEAR),
                     "--period",
                     period,
                     "--observed-at",
-                    "2025-12-31T12:00:00+00:00",
+                    datetime(_ATTESTED_YEAR, 12, 31, 12, tzinfo=UTC).isoformat(),
                 ),
                 input=json.dumps({"profile_passphrase": fixture.passphrase}),
             )
@@ -78,7 +83,7 @@ def test_cli_attests_period_before_any_work_unit_and_refuses_other_periods(
         accepted = invoke("4T")
         assert accepted.exit_code == 0, accepted.output
         payload = unwrap_schema_envelope(accepted.output)
-        assert payload["filing_year"] == 2025
+        assert payload["filing_year"] == _ATTESTED_YEAR
         assert payload["attachment_id"] == payload["sha256"]
         rejected = invoke("3T")
         assert rejected.exit_code != 0
@@ -95,7 +100,7 @@ def test_cli_attests_period_before_any_work_unit_and_refuses_other_periods(
             manifests = tuple(store.iter_manifests())
             assert len(manifests) == 1
             evidence = parse_m303_exonerado_390_applicability_attestation(store.read_bytes(payload["attachment_id"]))
-            assert evidence.period == Period.from_year_and_code(2025, "4T")
+            assert evidence.period == Period.from_year_and_code(_ATTESTED_YEAR, "4T")
             assert evidence.asserted_value is M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE
         finally:
             close_active_bucket_session()

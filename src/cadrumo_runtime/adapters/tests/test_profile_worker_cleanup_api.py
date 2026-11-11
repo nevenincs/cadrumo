@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def _api_lease(identity: ProfileWorkerIdentity) -> AccessSession:
 
-    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    instant = datetime(1980, 10, 1, tzinfo=UTC)
 
     return AccessSession(
         session_id=uuid4(),
@@ -417,7 +417,7 @@ def test_human_admission_yield_allows_control_status_and_retirement_without_repl
 
     candidate_id, session_id = uuid4(), uuid4()
 
-    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    instant = datetime(1980, 10, 1, tzinfo=UTC)
 
     login = ProfileLoginOutcome(
         bucket_id=str(fixture.identity.binding.profile_id),
@@ -520,7 +520,7 @@ def test_delayed_human_proof_uses_original_timeout_without_a_phase_failure(
 
     timeout = clock.instant + 600
 
-    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    instant = datetime(1980, 10, 1, tzinfo=UTC)
 
     login = ProfileLoginOutcome(
         bucket_id=str(fixture.identity.binding.profile_id),
@@ -849,7 +849,7 @@ def test_human_admission_cancel_reply_failure_preserves_body_and_actual_cleanup_
 
     cancel_failure = RefusalError(RefusalCode.CONNECTION_CLOSED)
 
-    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    instant = datetime(1980, 10, 1, tzinfo=UTC)
 
     login = ProfileLoginOutcome(
         bucket_id=str(fixture.identity.binding.profile_id),
@@ -978,7 +978,7 @@ def test_human_admission_cancel_merges_cancellation_only_prior_cleanup_owner(
 
     cancel_failure = RefusalError(RefusalCode.CONNECTION_CLOSED)
 
-    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    instant = datetime(1980, 10, 1, tzinfo=UTC)
 
     login = ProfileLoginOutcome(
         bucket_id=str(fixture.identity.binding.profile_id),

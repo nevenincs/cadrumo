@@ -47,6 +47,7 @@ from cadrumo.adapters.persistence.profile.tests.observation_lookup_support impor
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
@@ -54,11 +55,11 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "308"
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_YEAR_N_PLUS_1 = filing_year_envelope().horizon
+_YEAR_N = _YEAR_N_PLUS_1 - 1
 _CONTEXT_LABEL = "308-iva-no-periodico-cadence-year-over-year"
-_CLOCK_N = datetime(2024, 6, 15, 10, 0, 0, tzinfo=UTC)
-_CLOCK_N_PLUS_1 = datetime(2025, 9, 20, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N = datetime(_YEAR_N, 6, 15, 10, 0, 0, tzinfo=UTC)
+_CLOCK_N_PLUS_1 = datetime(_YEAR_N_PLUS_1, 9, 20, 10, 0, 0, tzinfo=UTC)
 
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio")

@@ -181,7 +181,7 @@ def _revision_id(*, varied: str | None = None) -> str:
         "namespace": _NAMESPACE,
         "object_key": b"\x11" * 32,
         "schema_version": 1,
-        "written_at": datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
+        "written_at": datetime(1980, 1, 2, 3, 4, 5, tzinfo=UTC),
         "payload_hash": "a" * 64,
         "ciphertext_hash": "b" * 64,
         "previous_revision_id": "c" * 64,
@@ -194,7 +194,7 @@ def _revision_id(*, varied: str | None = None) -> str:
     elif varied == "schema_version":
         values["schema_version"] = 2
     elif varied == "written_at":
-        values["written_at"] = datetime(2026, 1, 2, 3, 4, 6, tzinfo=UTC)
+        values["written_at"] = datetime(1980, 1, 2, 3, 4, 6, tzinfo=UTC)
     elif varied == "payload_hash":
         values["payload_hash"] = "1" * 64
     elif varied == "ciphertext_hash":

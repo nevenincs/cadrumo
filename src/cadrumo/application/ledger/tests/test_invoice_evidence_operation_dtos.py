@@ -57,12 +57,15 @@ from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
 
 from ....domain.iva.classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
 from .clean_invoice_draft_support import clean_invoice_draft
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -85,7 +88,7 @@ def _draft() -> InvoiceDraft:
         invoice_series="F",
         rectifies_invoice_number="F-2026-0100",
         proposed_supply_nature=SupplyNature.GOODS,
-        invoice_date="2026-03-10",
+        invoice_date=date(_YEAR, 3, 10).isoformat(),
         taxable_base=Decimal("137.25"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("28.82"),
@@ -167,7 +170,7 @@ def _establishment() -> ConfirmedEstablishment:
         source=ClassifierInputSource.DOCUMENT_EVIDENCE,
     )
     criteria = IvaInvoiceClassificationCriteria(
-        transaction_date=date(2026, 3, 10),
+        transaction_date=date(_YEAR, 3, 10),
         issuer_residency=scope,
         customer_residency=other_scope,
         customer_tax_status=tax_status,
@@ -239,7 +242,7 @@ def _invoice():
         counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="F-2026-0142",
-        issued_at=date(2026, 3, 10),
+        issued_at=date(_YEAR, 3, 10),
         taxable_base=Decimal("137.25"),
         iva_rate=Decimal("21"),
         currency="EUR",

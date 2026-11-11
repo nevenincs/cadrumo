@@ -22,6 +22,10 @@ from textual.widgets import Input, OptionList, Static
 from ......application.modelo.work_form_field_vocabulary import address_key
 from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
+from ......domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    supported_authored_exercises,
+)
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
 from ....tests.settling import settle, settle_until
@@ -34,8 +38,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _DIGEST = re.compile(r"\b[0-9a-f]{64}\b")
 _ADDRESSES = [
-    pytest.param({"modelo": "130", "filing_year": 2026, "period_code": "1T"}, id="compact"),
-    pytest.param({"modelo": "100", "filing_year": 2024, "period_code": "0A"}, id="dense"),
+    pytest.param({"modelo": "130", "filing_year": filing_year_envelope().horizon, "period_code": "1T"}, id="compact"),
+    pytest.param(
+        {"modelo": "100", "filing_year": supported_authored_exercises("100")[-1], "period_code": "0A"}, id="dense"
+    ),
 ]
 _HEADER = ("#wb-header", "#wb-deadline", "#wb-result", "#wb-stale", "#wb-chips", "#wb-stepper", "#wb-next")
 

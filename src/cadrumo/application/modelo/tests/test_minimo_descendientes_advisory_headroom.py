@@ -38,6 +38,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ...aggregation.source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from ..minimo_descendientes_advisory_support import (
@@ -95,7 +96,7 @@ def _elision_marker() -> str:
     return marker
 
 
-_HEADROOM_FILING_YEAR = 2025
+_HEADROOM_FILING_YEAR = newest_authored_edition("100")
 
 
 def _headroom_revision() -> ModeloRevision:
@@ -103,7 +104,7 @@ def _headroom_revision() -> ModeloRevision:
 
     These tests measure message length, not grounding, but the advisory reads
     its named-detail limit from the revision, so the revision must be one that
-    declares it (2025); the resident registry authority is real rather than a
+    declares it (the newest authored edition); the resident registry authority is real rather than a
     hand-built stub.
 
     Reached through the compiler and the canonical temporal resolver. Measuring

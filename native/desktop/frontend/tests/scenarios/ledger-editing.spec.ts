@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { showLedgerColumn } from "../support/ledgerPage";
 import { captureUnrecordedQuestions } from "../support/stagedCheckCapture";
 import { label } from "../support/strings";
+import { fixtureDay } from "../../src/dev/fixtureDates";
 
 // Staged editing on the Ledger page over the scenario's ledger: cell
 // editors in the product's grammar, paste, fill, undo and revert, new
@@ -719,7 +720,7 @@ async function fillDraft(target: Page, description: string) {
     ).toBe(true);
   // It opens on its date.
   await expect(cellOf(draft, "date")).toBeFocused();
-  await target.keyboard.type("2026-10-21");
+  await target.keyboard.type(fixtureDay(10, 21));
   await target.keyboard.press("Enter");
   await typeInto(target, cellOf(draft, "description"), description);
   await typeInto(target, cellOf(draft, "amount"), "12.40");

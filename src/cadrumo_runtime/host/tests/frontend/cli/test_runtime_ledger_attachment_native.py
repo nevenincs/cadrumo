@@ -33,6 +33,7 @@ from cadrumo.domain.buckets.event import (
     BucketEventType,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import BucketTransactionRef, Transaction
@@ -48,6 +49,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 from ...native_profile_facts import native_general_iva_facts
 from .profile_cli_support import invoke_native_profile_revealing
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -57,7 +60,7 @@ pytestmark = [
 
 _PROFILE_FACTS = native_general_iva_facts()
 _PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
-_SEED_AT = datetime(2026, 5, 8, 10, 15, tzinfo=UTC)
+_SEED_AT = datetime(_YEAR, 5, 8, 10, 15, tzinfo=UTC)
 
 
 def _reauthenticate(
@@ -232,7 +235,7 @@ def test_native_attach_detach_preserve_full_results_history_and_historical_manif
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=bucket_id,
-                booked_date=date(2026, 5, 7),
+                booked_date=date(_YEAR, 5, 7),
                 amount=Decimal("123.45"),
                 direction=TransactionDirection.OUTGOING,
                 description="Native attachment operation transaction",

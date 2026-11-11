@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -11,7 +11,10 @@ from sqlalchemy import delete, select
 
 from .....core.errors.error_codes import get_registered_error_code
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from .....domain.iva.rates import IVA_RATE_FACT_ID
 from .....domain.iva.schema import IvaCategory, IvaRateKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError
@@ -24,6 +27,8 @@ from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..transaction_iva_migration import MigratedIvaDeductionFact, migrated_iva_rate_kind
 from ..transactions import TransactionCatalogueRepository
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -46,7 +51,7 @@ def _raw(provider_id: str, filing_date: date, amount: Decimal) -> RawTransaction
             source_sha256="d" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 1, 1, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(1980, 1, 1, 9, 0, tzinfo=UTC),
             provider_name="repository guard provider",
         ),
         raw_fields={"Concepto": provider_id},
@@ -80,10 +85,26 @@ def _migrated_iva_fact(rate: Decimal) -> MigratedIvaDeductionFact:
     )
 
 
+def _coexisting_two_percent_window() -> tuple[date, date]:
+    """Return the first and last day the registry publishes Spain's coexisting 2 % super-reduced rate."""
+    with bundled_indexed_authority().operation() as operation:
+        windows = {
+            (variant.valid_from, variant.valid_to)
+            for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
+            if {selector.name: selector.value for selector in variant.selectors}
+            == {"member_state": "es", "kind": "super_reduced", "rate_role": "coexisting-2"}
+        }
+    ((first, last),) = windows
+    assert first is not None
+    assert last is not None
+    return first, last
+
+
 def test_migrated_iva_rate_requires_one_published_tier_on_the_transaction_date() -> None:
     fact = _migrated_iva_fact(Decimal("0.02"))
-    valid = _transaction("historical-two-percent", date(2024, 10, 1), Decimal("102"))
-    withdrawn = _transaction("withdrawn-two-percent", date(2025, 1, 1), Decimal("102"))
+    first_day, last_day = _coexisting_two_percent_window()
+    valid = _transaction("historical-two-percent", first_day, Decimal("102"))
+    withdrawn = _transaction("withdrawn-two-percent", last_day + timedelta(days=1), Decimal("102"))
 
     assert migrated_iva_rate_kind(valid, fact) == IvaRateKind("super_reduced")
     with pytest.raises(LedgerStorageError, match="does not resolve to exactly one legal tier"):
@@ -122,12 +143,12 @@ def test_partition_fallback_matches_complete_index_partition(runtime_profile: Te
     """A stale date index changes only the serving path, not the partition contents."""
 
     repo = TransactionCatalogueRepository(bucket_id=runtime_profile.bucket_id)
-    q1_a = _transaction("partition-q1-a", date(2024, 1, 15), Decimal("10.00"))
-    q1_b = _transaction("partition-q1-b", date(2024, 3, 31), Decimal("20.00"))
-    q2 = _transaction("partition-q2", date(2024, 4, 1), Decimal("30.00"))
+    q1_a = _transaction("partition-q1-a", date(_YEAR, 1, 15), Decimal("10.00"))
+    q1_b = _transaction("partition-q1-b", date(_YEAR, 3, 31), Decimal("20.00"))
+    q2 = _transaction("partition-q2", date(_YEAR, 4, 1), Decimal("30.00"))
     repo.save(TransactionCatalogue.from_transactions([q1_a, q1_b, q2]))
 
-    start, end = date(2024, 1, 1), date(2024, 3, 31)
+    start, end = date(_YEAR, 1, 1), date(_YEAR, 3, 31)
     complete = TransactionCatalogueRepository(bucket_id=runtime_profile.bucket_id).partition_by_date_range(start, end)
     assert complete.index_complete is True
 

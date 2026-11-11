@@ -19,11 +19,14 @@ from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,7 +44,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
         first = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 2),
+                booked_date=date(_YEAR, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="material oficina",
@@ -53,12 +56,12 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
                 idempotency_key="export-first",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 30, tzinfo=UTC),
         )
         second = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("250.00"),
                 direction=TransactionDirection.INCOMING,
                 description="client payment",
@@ -66,7 +69,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
                 idempotency_key="export-second",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 4, 9, 31, tzinfo=UTC),
         )
 
     result = export_ledger_transactions(
@@ -77,7 +80,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
         ),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 5, 10, 0, tzinfo=UTC),
     )
 
     parsed = tuple(csv.DictReader(StringIO(result.payload.decode("utf-8"))))
@@ -115,7 +118,7 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_cou
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 6),
+                booked_date=date(_YEAR, 5, 6),
                 amount=Decimal("1000.00"),
                 direction=TransactionDirection.INCOMING,
                 description="intracommunity client invoice",
@@ -128,14 +131,14 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_cou
                 idempotency_key="export-intracommunity",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 6, 9, 30, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 6, 9, 30, tzinfo=UTC),
         )
 
     exported = export_ledger_transactions(
         LedgerExportCommand(bucket_id=BUCKET_ID, export_format=export_format),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
+        occurred_at=datetime(_YEAR, 5, 6, 10, 0, tzinfo=UTC),
     )
     text = exported.payload.decode("utf-8")
     if export_format is ExportSerializationFormat.CSV:

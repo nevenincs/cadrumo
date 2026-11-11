@@ -48,8 +48,11 @@ from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.core.period import Period
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.adapter_composition_work_ports import build_expedientes_ports
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -70,7 +73,7 @@ def _service(profile: TestRuntimeProfile) -> ExpedientesService:
 def _declaration(
     *,
     modelo: str = "303",
-    ejercicio: int = 2025,
+    ejercicio: int = _YEAR,
     period: str = "1T",
     expediente_id: str = "12345678901234567890",
     estado: str = "ALTA",
@@ -82,7 +85,7 @@ def _declaration(
         period=Period.from_year_and_code(ejercicio, period),
         expediente_id=expediente_id,
         estado=estado,
-        presented_at=presented_at or datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        presented_at=presented_at or datetime(_YEAR, 4, 15, 9, 30, tzinfo=UTC),
     )
 
 
@@ -94,7 +97,7 @@ def _capture(
 ) -> ExpedientesCapture:
     return ExpedientesCapture(
         declarations=declarations,
-        captured_at=captured_at or datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+        captured_at=captured_at or datetime(_YEAR, 4, 15, 10, 0, tzinfo=UTC),
         source_url=_DECLARACION_CONSULT_URL,
         authenticated_identity=authenticated_identity,
     )
@@ -197,14 +200,14 @@ class TestLatest:
             bucket_id=secure_engine.bucket_id,
             capture=_capture(
                 declarations=(_declaration(),),
-                captured_at=datetime(2025, 1, 1, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 1, 1, tzinfo=UTC),
             ),
         )
         newer = svc.capture(
             bucket_id=secure_engine.bucket_id,
             capture=_capture(
                 declarations=(_declaration(modelo="130"),),
-                captured_at=datetime(2025, 6, 1, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 6, 1, tzinfo=UTC),
             ),
         )
         assert svc.latest(bucket_id=secure_engine.bucket_id) == newer

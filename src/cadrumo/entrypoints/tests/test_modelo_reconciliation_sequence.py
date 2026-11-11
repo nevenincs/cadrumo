@@ -80,6 +80,7 @@ from ...core.operations import (
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.work_unit import WorkUnit
 from ...tests.aeat_literal_fixtures import SEDE_TEST_URL_FIXTURE
 from ..justificante_composition import build_justificante_capture_service, load_reconciliation_filed_observation
@@ -91,7 +92,7 @@ from .test_modelo_reconciliation_frontend_parity import session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 9, 29, 12, tzinfo=UTC)
 _EXPEDIENTE_ID = "202513000000001Z"
 _DECLARATION_BODY = b"synthetic filed declaration"
 
@@ -193,7 +194,7 @@ def _observation(unit: WorkUnit, values: dict[str, Decimal]) -> FiledDeclaracion
         period=unit.period,
         expediente_id=_EXPEDIENTE_ID,
         status="ALTA",
-        presented_at=datetime(2025, 4, 20, tzinfo=UTC),
+        presented_at=datetime(unit.filing_year, 4, 20, tzinfo=UTC),
         authenticated_identity=modelo_operation_test_support.SEEDED_SOURCE_TAX_ID,
         artefacts=(
             FiledDeclaracionArtefact(
@@ -424,7 +425,9 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
 
 
 @pytest.mark.parametrize(
-    ("modelo", "year"), [(None, None), ("130", None), ("130", 2025)], ids=["nothing", "modelo-only", "no-period"]
+    ("modelo", "year"),
+    [(None, None), ("130", None), ("130", filing_year_envelope().horizon)],
+    ids=["nothing", "modelo-only", "no-period"],
 )
 def test_a_pull_that_names_neither_a_work_unit_nor_a_complete_filing_is_not_a_request(
     modelo: str | None, year: int | None

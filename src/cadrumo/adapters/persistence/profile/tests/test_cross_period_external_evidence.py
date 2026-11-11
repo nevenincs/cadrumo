@@ -24,6 +24,10 @@ from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind, ModeloRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 _TaxpayerIdentityEvidenceCase = tuple[str, str, str | None, CrossPeriodCleanStateBlocker | None]
@@ -61,7 +65,7 @@ def test_live_capture_evidence_reconciles_taxpayer_identity(
         case_tmp_path = tmp_path / case_label
         case_tmp_path.mkdir()
         with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=BUCKET_ID):
-            persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+            persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR)
             filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
             blockers = external_evidence_blockers(filing, "app_filing", expected_tax_id)
@@ -89,8 +93,8 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
             Justificante(
                 csv=csv,
                 modelo="130",
-                period=Period.from_year_and_code(2025, "1T"),
-                ejercicio="2026",
+                period=Period.from_year_and_code(_YEAR - 1, "1T"),
+                ejercicio=str(_YEAR),
                 presentation_id=None,
                 presented_at=CLOCK,
                 tax_id="X0001500M",
@@ -115,7 +119,7 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv
     """Filed-history metadata cannot point at a different justificante than the filing record."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         csv = "LIVECAP130CSVLOCK"
-        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR)
         filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
         blockers = external_evidence_blockers(
@@ -140,7 +144,7 @@ def test_live_capture_evidence_reconciles_plural_filed_history_justificante_csv(
         case_tmp_path.mkdir()
         with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=BUCKET_ID):
             csv = "LIVECAP130CSVSET"
-            persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+            persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR)
             filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
             blockers = external_evidence_blockers(
@@ -178,7 +182,7 @@ def test_register_identifiers_are_compared_within_their_own_namespace(tmp_path: 
         case_tmp_path.mkdir()
         with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=BUCKET_ID):
             csv = "LIVECAP130PRESID"
-            period = Period.from_year_and_code(2026, "1T")
+            period = Period.from_year_and_code(_YEAR, "1T")
             persist_justificante_metadata(
                 csv,
                 modelo="130",
@@ -219,7 +223,7 @@ def test_an_expediente_is_never_compared_with_a_receipt_identifier(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         csv = "LIVECAP130EXPONLY"
-        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026, presentation_id=None)
+        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR, presentation_id=None)
         filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
         blockers = external_evidence_blockers(
@@ -254,7 +258,7 @@ def test_filed_history_csv_reference_reconciles_however_the_register_spelled_it(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         csv = "LIVECAP130SPELL1"
-        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR)
         filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
         blockers = external_evidence_blockers(
@@ -279,7 +283,7 @@ def test_filed_history_csv_reference_still_refuses_a_different_receipt(tmp_path:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         csv = "LIVECAP130SPELL2"
-        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
+        persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=_YEAR)
         filing = live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
         blockers = external_evidence_blockers(

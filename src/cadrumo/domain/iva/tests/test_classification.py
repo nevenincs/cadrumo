@@ -14,6 +14,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
@@ -24,11 +26,18 @@ from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
+_ON = date(_YEAR, 6, 15)
+# The general-rate record bounded by RD-ley 4/2024 art. 1 ends with that provision.
+_RDL_4_2024 = published_legal_reference("real-decreto-ley-4-2024:art-1")
+assert _RDL_4_2024.effective_to is not None
+_RDL_4_2024_LAST_DAY = _RDL_4_2024.effective_to
+
 
 def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
     """Build a baseline ES-to-ES B2B goods ISSUED criteria with ``overrides`` applied."""
     base: dict[str, object] = {
-        "transaction_date": date(2025, 6, 15),
+        "transaction_date": _ON,
         "issuer_residency": IvaTerritorialScope.from_registry("es_mainland"),
         "customer_residency": IvaTerritorialScope.from_registry("es_mainland"),
         "customer_tax_status": CustomerTaxStatus.from_registry("b2b_iva_registered"),
@@ -307,7 +316,7 @@ def test_eu_member_residency_does_not_require_an_identification_state() -> None:
     State is declared by the branches, and the producer demands it there.
     """
     criteria = IvaInvoiceClassificationCriteria(
-        transaction_date=date(2025, 6, 15),
+        transaction_date=_ON,
         issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
         customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
         customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
@@ -323,7 +332,7 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
     """ES-to-ES domestic GOODS / SERVICES criteria without rate_tier are refused at classification."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=date(2025, 6, 15),
+            transaction_date=_ON,
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
@@ -340,7 +349,7 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # Should NOT raise: construction RC routes to DOMESTIC_REVERSE_CHARGE.
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=date(2025, 6, 15),
+            transaction_date=_ON,
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
@@ -356,7 +365,7 @@ def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
     """Immovable property routes to DOMESTIC_EXEMPT (R04) — rate_tier not needed."""
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=date(2025, 6, 15),
+            transaction_date=_ON,
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
@@ -373,7 +382,7 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # Should NOT raise: ES->DE intra-community supply doesn't need rate_tier.
         criteria = IvaInvoiceClassificationCriteria(
-            transaction_date=date(2025, 6, 15),
+            transaction_date=_ON,
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("eu_member"),
             customer_identification_state=require_eu_member_state("DE"),
@@ -399,18 +408,18 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         earlier = classify_with_registry_rules(
-            _criteria(transaction_date=date(2024, 6, 15), rate_tier=IvaRateKind("general")),
+            _criteria(transaction_date=date(_RDL_4_2024_LAST_DAY.year, 6, 15), rate_tier=IvaRateKind("general")),
             operation=_authority_operation_for_test,
         )
         later = classify_with_registry_rules(
-            _criteria(transaction_date=date(2025, 6, 15), rate_tier=IvaRateKind("general")),
+            _criteria(transaction_date=date(_RDL_4_2024_LAST_DAY.year + 1, 6, 15), rate_tier=IvaRateKind("general")),
             operation=_authority_operation_for_test,
         )
 
         assert earlier.rate is not None
         assert later.rate is not None
         assert earlier.rate.effective_from != later.rate.effective_from
-        assert earlier.rate.effective_until == date(2024, 12, 31)
+        assert earlier.rate.effective_until == _RDL_4_2024_LAST_DAY
         assert later.rate.effective_until is None
         # Same tier, same value, different record: the date is what discriminates.
         assert earlier.rate.pct == later.rate.pct

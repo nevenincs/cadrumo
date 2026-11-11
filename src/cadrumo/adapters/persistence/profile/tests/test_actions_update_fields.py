@@ -14,12 +14,15 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID,
     repositories,
 )
 from .workspace_support import FILING_YEAR
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,14 +40,14 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("75.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="pending row",
                 idempotency_key="typed-patch",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -67,7 +70,7 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
             actor="operator-C",
             source_command="aeat app ledger classify",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert updated.transaction.raw.description == "classified row"
@@ -96,7 +99,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 7, 15),
+                booked_date=date(_YEAR, 7, 15),
                 amount=Decimal("250.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="EU supplier statement row",
@@ -105,7 +108,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
                 source_command="aeat app ledger import",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 7, 15, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 7, 15, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -127,7 +130,7 @@ def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction
             actor="operator-C",
             source_command="aeat app ledger classify",
             ports=ports,
-            occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 7, 16, 10, 0, tzinfo=UTC),
         )
 
     assert created.transaction.source_jurisdiction == "FR"
@@ -148,7 +151,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
-                booked_date=date(2026, 5, 1),
+                booked_date=date(_YEAR, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
                 description="office supplies",
@@ -162,7 +165,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
                 idempotency_key="personal-reclassification",
             ),
             ports=ports,
-            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 1, 8, 0, tzinfo=UTC),
         )
 
     with ledger_ports_for_test(
@@ -178,7 +181,7 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
             actor="operator-C",
             source_command="aeat app ledger classify",
             ports=ports,
-            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+            occurred_at=datetime(_YEAR, 5, 2, 10, 0, tzinfo=UTC),
         )
 
     assert updated.transaction.business_classification is BusinessClassification.PERSONAL

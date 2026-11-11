@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
@@ -39,6 +40,8 @@ from .m145_communication_support import valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_YEAR = filing_year_envelope().horizon
+
 
 def test_m145_communication_service_flow_creates_validates_exports_delivers_and_completes(
     tmp_path: Path, operation: PinnedAuthorityOperation
@@ -46,7 +49,7 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
             M145CommunicationCreateCommand(
-                communication_year=2026,
+                communication_year=_YEAR,
                 field_values=valid_field_values(),
                 note="Initial payer communication",
             ),

@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from dataclasses import replace
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.field_origin import FieldOrigin
@@ -22,6 +21,11 @@ from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+)
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_last_exercise,
 )
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.modelos.filing_record import FilingDeclarationKind
@@ -39,10 +43,9 @@ from ..producer_snapshot import (
 )
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
-_HEX_DIGEST = "a" * 64
-EXPORT_PERIOD = Period.from_year_and_code(2026, "1T")
-_EXPORT_PATH = Path("exports/m130-2026Q1.txt")
-_OTHER_EXPORT_PATH = Path("exports/x.txt")
+EXPORT_PERIOD = Period.from_year_and_code(filing_year_envelope().horizon, "1T")
+#: The last exercise of the oldest Modelo 131 edition, the closed design whose record layout the historical casillas follow.
+MODELO_131_HISTORICAL_YEAR = revision_last_exercise("131", str(authored_revisions("131")[0].id))
 _SCHEMA_PROVIDER_CACHE: dict[tuple[int, str, tuple[str, ...]], RegistrySchemaAccessor] = {}
 
 
@@ -168,10 +171,6 @@ _M130_HOME_DEDUCTION_CASILLA, _M130_PRIOR_RETURN_RESULT_CASILLA = (
     validated_casilla_id("16", surface="test_export.casilla"),
     validated_casilla_id("18", surface="test_export.casilla"),
 )
-_M131_RENDIMIENTO_MODULOS_CASILLA, _M131_VOLUME_AGRARIO_CASILLA = (
-    validated_casilla_id("03", surface="test_export.casilla"),
-    validated_casilla_id("05", surface="test_export.casilla"),
-)
 _M123_PERCEPTORES_CASILLA, _M123_BASE_CASILLA = (
     validated_casilla_id("03", surface="test_export.casilla"),
     validated_casilla_id("06", surface="test_export.casilla"),
@@ -198,14 +197,6 @@ _M123_PREVIOUS_RESULT_CASILLA, _M123_INGRESOS_CUENTA_INPUT_CASILLA = (
     validated_casilla_id("11", surface="test_export.casilla"),
 )
 _M123_MINORACION_CASILLA = validated_casilla_id("13", surface="test_export.casilla")
-_M123_2019_2023_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="test_export.casilla")
-_M123_2019_2023_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="test_export.casilla")
-_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="test_export.casilla")
-_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = validated_casilla_id("04", surface="test_export.casilla")
-_M123_2019_2023_INGRESOS_CUENTA_CASILLA: CasillaId = validated_casilla_id("05", surface="test_export.casilla")
-_M123_2019_2023_TOTAL_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="test_export.casilla")
-_M123_2019_2023_MINORACION_CASILLA: CasillaId = validated_casilla_id("07", surface="test_export.casilla")
-_M123_2019_2023_RESULTADO_CASILLA: CasillaId = validated_casilla_id("08", surface="test_export.casilla")
 _M131_HISTORICAL_01_CASILLA: CasillaId = validated_casilla_id("01", surface="test_export.casilla")
 _M131_HISTORICAL_02_CASILLA: CasillaId = validated_casilla_id("02", surface="test_export.casilla")
 _M131_HISTORICAL_03_CASILLA: CasillaId = validated_casilla_id("03", surface="test_export.casilla")
@@ -221,56 +212,6 @@ _M131_HISTORICAL_12_CASILLA: CasillaId = validated_casilla_id("12", surface="tes
 _M131_HISTORICAL_13_CASILLA: CasillaId = validated_casilla_id("13", surface="test_export.casilla")
 _M131_HISTORICAL_14_CASILLA: CasillaId = validated_casilla_id("14", surface="test_export.casilla")
 _M131_HISTORICAL_15_CASILLA: CasillaId = validated_casilla_id("15", surface="test_export.casilla")
-_M390_REPERCUTIDO_GENERAL_CASILLA = validated_casilla_id("iva.anual.repercutido.general", surface="test_export.casilla")
-_M390_REPERCUTIDO_REDUCIDO_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.reducido", surface="test_export.casilla"
-)
-_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.super-reducido", surface="test_export.casilla"
-)
-# Rate-specific box-layer casillas. The tier casillas above are the rate-BLIND
-# total layer and no longer reach an official box; these do, one per AEAT rate
-# box. A draft populating a tier total while leaving its boxes empty declares a
-# breakdown that does not account for its own total, which the export gate
-# refuses -- so a coherent post-split fixture has to carry both layers.
-#
-# The reducido tier is deliberately split across TWO of its three boxes. What
-# the gate reads is the SUM against the tier total; a fixture giving every tier
-# exactly one box would let per-box exact equality read as the invariant, and it
-# is not one.
-_M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.tipo-21.cuota", surface="test_export.casilla"
-)
-_M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.tipo-10.cuota", surface="test_export.casilla"
-)
-_M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.tipo-5.cuota", surface="test_export.casilla"
-)
-_M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.tipo-4.cuota", surface="test_export.casilla"
-)
-_M390_SOPORTADO_INTERIORES_CASILLA = validated_casilla_id(
-    "iva.anual.soportado.interiores", surface="test_export.casilla"
-)
-_M390_SOPORTADO_IMPORTACIONES_CASILLA = validated_casilla_id(
-    "iva.anual.soportado.importaciones", surface="test_export.casilla"
-)
-_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA = validated_casilla_id(
-    "iva.anual.autorepercutido.intracomunitaria", surface="test_export.casilla"
-)
-_M390_RECARGO_GENERAL_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.recargo.general", surface="test_export.casilla"
-)
-_M390_RECARGO_REDUCIDO_CASILLA = validated_casilla_id(
-    "iva.anual.repercutido.recargo.reducido", surface="test_export.casilla"
-)
-_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA = validated_casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97", surface="test_export.casilla"
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA = validated_casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97", surface="test_export.casilla"
-)
 
 
 def _narrative() -> str:
@@ -368,98 +309,11 @@ def approved_registry_draft():
 
 
 @cache
-def _approved_modelo_131_registry_draft():
-    draft = build_draft(
-        modelo="131",
-        period=EXPORT_PERIOD,
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("1000"),
-            _M131_VOLUME_AGRARIO_CASILLA: Decimal("500"),
-            "modelo-131.page1.actividad-1-epigrafe": "722",
-            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.dpa.epigrafe-iae": ["722"],
-            "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
-            "modelo-131.did.iban": "ES9121000418450200051332",
-        },
-        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
-def _approved_modelo_131_registry_draft_without_direct_debit():
-    draft = build_draft(
-        modelo="131",
-        period=EXPORT_PERIOD,
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("1000"),
-            _M131_VOLUME_AGRARIO_CASILLA: Decimal("500"),
-            "modelo-131.page1.actividad-1-epigrafe": "722",
-            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.dpa.epigrafe-iae": ["722"],
-            "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
-        },
-        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
-def _approved_modelo_131_zero_payable_direct_debit_draft():
-    draft = build_draft(
-        modelo="131",
-        period=EXPORT_PERIOD,
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),
-            _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),
-            "modelo-131.did.iban": "ES9121000418450200051332",
-        },
-        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
-def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_prefix: str):
-    draft = build_draft(
-        modelo="131",
-        period=Period.from_year_and_code(filing_year, "1T"),
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("1000"),
-            _M131_VOLUME_AGRARIO_CASILLA: Decimal("500"),
-            f"{binding_prefix}.page1.110-113.actividad-1-epigrafe": "722",
-            f"{binding_prefix}.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            f"{binding_prefix}.dpa.013-016.epigrafe-iae": ["722"],
-            f"{binding_prefix}.dpa.031-032.vehiculos-afectos": {"1": "2"},
-            f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
-        },
-        schema_provider=export_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
 def approved_modelo_131_historical_registry_draft():
-    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
+    provider = export_schema_provider(filing_year=MODELO_131_HISTORICAL_YEAR, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
-        period=Period.from_year_and_code(2023, "4T"),
+        period=Period.from_year_and_code(MODELO_131_HISTORICAL_YEAR, "4T"),
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -550,66 +404,6 @@ def _approved_modelo_123_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
-@cache
-def _approved_modelo_123_2019_registry_draft():
-    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("123",))
-    draft = build_draft(
-        modelo="123",
-        period=Period.from_year_and_code(2023, "4T"),
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M123_2019_2023_PERCEPTORES_CASILLA: Decimal("5"),
-            _M123_2019_2023_BASE_CASILLA: Decimal("1201.00"),
-            _M123_2019_2023_RETENCIONES_CASILLA: Decimal("228.19"),
-            _M123_2019_2023_PREVIOUS_RESULT_CASILLA: Decimal("0"),
-            _M123_2019_2023_INGRESOS_CUENTA_CASILLA: Decimal("7.50"),
-            _M123_2019_2023_MINORACION_CASILLA: Decimal("12.25"),
-        },
-        schema_provider=provider,
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-@cache
-def _approved_modelo_390_registry_draft():
-    # Modelo 390 (IVA resumen anual): the ledger_iva_aggregation and
-    # relation_prefill/previous_filing bindings behind these bound casillas
-    # resolve to None with no ledger data or prior filings on this bare
-    # schema provider, so build_draft falls through to the direct casilla
-    # overrides below (mirrors the M130/M200 previous_filing/relation-bound
-    # override precedent in this module).
-    provider = export_schema_provider(filing_year=2025, period="0A", modelos=("390",))
-    draft = build_draft(
-        modelo="390",
-        period=Period.from_year_and_code(2025, "0A"),
-        profile=ModeloOperatorProfile(
-            tax_id="12345678Z",
-            display_name="Export registry test",
-        ),
-        inputs={
-            _M390_REPERCUTIDO_GENERAL_CASILLA: Decimal("18000.00"),
-            _M390_REPERCUTIDO_REDUCIDO_CASILLA: Decimal("2100.50"),
-            _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: Decimal("420.00"),
-            _M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA: Decimal("18000.00"),
-            _M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA: Decimal("1600.50"),
-            _M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA: Decimal("500.00"),
-            _M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA: Decimal("420.00"),
-            _M390_SOPORTADO_INTERIORES_CASILLA: Decimal("9800.25"),
-            _M390_SOPORTADO_IMPORTACIONES_CASILLA: Decimal("650.00"),
-            _M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: Decimal("300.00"),
-            _M390_RECARGO_GENERAL_CASILLA: Decimal("1248.00"),
-            _M390_RECARGO_REDUCIDO_CASILLA: Decimal("624.00"),
-            _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: Decimal("0.00"),
-            _M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA: Decimal("0.00"),
-        },
-        schema_provider=provider,
-    )
-    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 def _record_wire_length(record: ExportRecordDefinition) -> int:
     return max((field.offset or 0) + (field.length or 0) - 1 for field in record.fields)
 
@@ -656,11 +450,11 @@ def modelo_151_export_coordinate_draft():
     it contrived values would suggest a completeness this fixture does not have
     and does not need.
     """
-    period = Period.from_year_and_code(2025, "0A")
+    filing_year = filing_year_envelope().horizon
     return build_draft(
         modelo="151",
-        period=period,
+        period=Period.from_year_and_code(filing_year, "0A"),
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Emilio Export Test"),
         inputs={},
-        schema_provider=export_schema_provider(filing_year=2025, period="0A", modelos=("151",)),
+        schema_provider=export_schema_provider(filing_year=filing_year, period="0A", modelos=("151",)),
     )

@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ....core.ledger_known_values import LedgerKnownValueKind
 from ....core.operations import profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations import profile_guard
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
@@ -56,6 +57,8 @@ from .profile_identity_operation_support import (
     unexpected_active_profile_lookup,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
@@ -78,7 +81,7 @@ def _request(definition_id: str, payload: BaseModel) -> OperationRequest[BaseMod
 
 
 def _read_cases() -> tuple[_ReadCase, ...]:
-    period = PublicPeriod.from_period(Period.from_year_and_code(2026, "1T"))
+    period = PublicPeriod.from_period(Period.from_year_and_code(_YEAR, "1T"))
     return (
         _ReadCase(
             "check",

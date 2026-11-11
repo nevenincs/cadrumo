@@ -14,6 +14,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......core.errors.error_codes import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
+from ......core.time.clock import frozen_clock
 from ......tests.log_records import delivered_text
 from ......tests.path_obstruction import obstructed_path
 from ...envelope.contract import Envelope
@@ -33,7 +34,7 @@ from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
-_SESSION_OPENED_AT = datetime(2099, 5, 28, 11, 45, 0, tzinfo=UTC)
+_SESSION_OPENED_AT = datetime(1980, 5, 28, 11, 45, 0, tzinfo=UTC)
 _BAD_DIGESTS = (
     "../" + ("a" * 61),
     ("a" * 63) + "/",
@@ -56,6 +57,17 @@ def bucket_session(*, dek: bytes) -> BucketSession:
         idle_deadline=_SESSION_OPENED_AT + timedelta(minutes=15),
         absolute_deadline=_SESSION_OPENED_AT + timedelta(minutes=240),
     )
+
+
+@pytest.fixture(autouse=True)
+def _session_clock() -> Iterator[None]:
+    """Run each case on the clock the session deadlines were opened under.
+
+    The active-session check reads the clock seam, so the frozen instant keeps
+    the sessions above live for the whole case.
+    """
+    with frozen_clock(_SESSION_OPENED_AT):
+        yield
 
 
 @pytest.fixture

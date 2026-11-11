@@ -39,7 +39,7 @@ FILING_1_ID = _hex64("filing-1")
 _BUCKET_ID = "41e0c259-7c89-4c5f-9908-c5d44d8d77a8"
 _BUCKET_A_ID = "2585593c-dcdb-4af7-8c1a-4852593c2d4e"
 _BUCKET_B_ID = "e46b34f4-5d44-49da-97f8-830ec116d038"
-_WORK_UNIT_CREATED_AT = datetime(2026, 8, 1, tzinfo=UTC)
+_WORK_UNIT_CREATED_AT = datetime(1980, 8, 1, tzinfo=UTC)
 WU_1 = _hex64("wu-1")
 
 

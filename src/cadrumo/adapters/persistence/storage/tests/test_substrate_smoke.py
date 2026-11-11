@@ -29,9 +29,9 @@ from .ephemeral_bucket_session import EphemeralBucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_SECRET_CREATED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_SECRET_CREATED_AT = datetime(1980, 5, 25, 13, 45, 0, tzinfo=UTC)
 _SECRET_EXPIRES_AT = _SECRET_CREATED_AT + timedelta(hours=12)
-_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
+_ENVELOPE_WRITTEN_AT = datetime(1980, 5, 25, 14, 0, 0, tzinfo=UTC)
 
 
 def test_full_chain_secret_round_trip(tmp_path: Path) -> None:

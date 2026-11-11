@@ -18,11 +18,13 @@ import pytest
 from ....core.money.rounding import round_to_cents
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.models import Invoice
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.lookup import coexisting_tier_rates, lookup_rate
+from ....domain.iva.rates import IVA_RATE_FACT_ID
 from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -30,7 +32,7 @@ from ..errors import AggregationValidationError
 from ..oss_ioss_resolver import OssIossLedgerSourceResolver
 from ..oss_ioss_wire_geometry import record_row_slots
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution
-from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter
+from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter, variant_pct
 from .test_oss_detail_sections import (
     BUCKET,
     EXTERIOR,
@@ -46,9 +48,11 @@ from .test_oss_detail_sections import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_SUPPLY = date(2026, 2, 17)
+_YEAR = filing_year_envelope().horizon
+_SUPPLY = date(_YEAR, 2, 17)
 _CUSTOMER = "FR40303265045"
-_LATER_QUARTER = date(2026, 5, 4)
+_LATER_QUARTER = date(_YEAR, 5, 4)
+_RETURN_AGE_LIMIT = 3
 _CORRECTION_RECORD = {
     EXTERIOR: "modelo-369-exterior-t36902",
     UNION: "modelo-369-union-t36908",
@@ -176,7 +180,7 @@ def _regime_correction(regime: Regime, day: date, *, number: str = "R-1", cuota:
     [
         (EXTERIOR, _LATER_QUARTER, "T", "1"),
         (UNION, _LATER_QUARTER, "T", "1"),
-        (IMPORT, date(2026, 3, 4), "M", "2"),
+        (IMPORT, date(_YEAR, 3, 4), "M", "2"),
     ],
     ids=["exterior", "union", "import"],
 )
@@ -187,14 +191,14 @@ def test_a_correction_of_an_earlier_period_takes_a_row_of_that_period_below_zero
     resolution = _resolve_corrections(
         operation, regime, _regime_first(regime, _SUPPLY), _regime_correction(regime, later), on=later
     )
-    assert _correction_rows(resolution, regime) == [("FR", 2026, period_type, period, Decimal("-20.00"))]
+    assert _correction_rows(resolution, regime) == [("FR", _YEAR, period_type, period, Decimal("-20.00"))]
 
 
 def test_corrections_of_one_period_net_into_one_row_and_of_another_take_their_own(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """R-1 -20,00 and R-2 -5,00 name F-1 of 1T; R-3 -10,00 names F-3 of 4T of the year before."""
-    previous = date(2025, 11, 17)
+    previous = date(_YEAR - 1, 11, 17)
     resolution = _resolve_corrections(
         operation,
         UNION,
@@ -210,8 +214,8 @@ def test_corrections_of_one_period_net_into_one_row_and_of_another_take_their_ow
         on=_LATER_QUARTER,
     )
     assert _correction_rows(resolution, UNION) == [
-        ("FR", 2025, "T", "4", Decimal("-10.00")),
-        ("FR", 2026, "T", "1", Decimal("-25.00")),
+        ("FR", _YEAR - 1, "T", "4", Decimal("-10.00")),
+        ("FR", _YEAR, "T", "1", Decimal("-25.00")),
     ]
 
 
@@ -246,10 +250,10 @@ def test_corrections_of_one_invoice_refuse_together_above_what_it_declared(opera
 @pytest.mark.parametrize(
     ("regime", "corrected", "last_inside", "first_outside"),
     [
-        # 1T 2023 closed on 30-04-2023, so the limit is 30-04-2026: 1T 2026 is filed from 1 April, 2T from 1 July.
-        (UNION, date(2023, 2, 17), date(2026, 2, 17), date(2026, 5, 4)),
-        # February 2023 closed on 31-03-2023, so the limit is 31-03-2026: 02/2026 is filed from 1 March, 03 from 1 April.
-        (IMPORT, date(2023, 2, 17), date(2026, 2, 17), date(2026, 3, 4)),
+        # 1T closed on 30 April, so the limit three years on is 30 April: 1T is filed from 1 April, 2T from 1 July.
+        (UNION, date(_YEAR - _RETURN_AGE_LIMIT, 2, 17), date(_YEAR, 2, 17), date(_YEAR, 5, 4)),
+        # February closed on 31 March, so the limit three years on is 31 March: 02 is filed from 1 March, 03 from 1 April.
+        (IMPORT, date(_YEAR - _RETURN_AGE_LIMIT, 2, 17), date(_YEAR, 2, 17), date(_YEAR, 3, 4)),
     ],
     ids=["quarter", "month"],
 )
@@ -307,10 +311,10 @@ def _entered_row(
 @pytest.mark.parametrize(
     ("year", "period_type", "period", "reason"),
     [
-        (2026, "T", "2", "correction_row_invalid"),
-        (2026, "M", "1", "correction_row_invalid"),
-        (2026, "T", "9", "correction_row_invalid"),
-        (2023, "T", "1", "correction_beyond_limit"),
+        (_YEAR, "T", "2", "correction_row_invalid"),
+        (_YEAR, "M", "1", "correction_row_invalid"),
+        (_YEAR, "T", "9", "correction_row_invalid"),
+        (_YEAR - _RETURN_AGE_LIMIT, "T", "1", "correction_beyond_limit"),
     ],
     ids=["same-period", "wrong-type", "no-such-period", "beyond-limit"],
 )
@@ -323,7 +327,7 @@ def test_an_entered_row_the_return_cannot_file_refuses(
 
 
 def test_an_entered_row_of_an_earlier_period_stands(operation: PinnedAuthorityOperation) -> None:
-    resolution = _entered_row(operation, UNION, year=2026, period_type="T", period="1")
+    resolution = _entered_row(operation, UNION, year=_YEAR, period_type="T", period="1")
     assert _correction_rows(resolution, UNION) == []
 
 
@@ -387,7 +391,7 @@ def test_frances_second_reduced_rate_takes_its_own_reduced_row(operation: Pinned
 
 def test_frances_super_reduced_rate_is_written_as_reduced(operation: PinnedAuthorityOperation) -> None:
     """DR369's code is binary, S:Estandar or R:Reducido, and 2,1 is not the standard rate."""
-    on = date(2026, 7, 20)
+    on = date(_YEAR, 7, 20)
     resolution = resolve(
         operation,
         UNION,
@@ -416,6 +420,13 @@ def test_a_cuota_two_rates_of_the_tier_both_explain_refuses(operation: PinnedAut
     """0,10 at 5,5 and at 10 both round to 0,01, so the row's rate is not known."""
     invoice = oss_detail_sections_invoice(UNION, "F-1", country="FR", tier="reduced", base="0.10", cuota="0.01")
     assert _refusal(operation, invoice) == "aggregation.oss_ioss.errors.rate_tier_ambiguous"
+
+
+def _eprs_table_day(operation: PinnedAuthorityOperation) -> date:
+    """The day the typed table is dated: the registry publishes it from the day Germany's ordinary rate starts."""
+    return min(
+        variant.valid_from for variant in ordinary_general_variants(operation)["de"] if variant.valid_from is not None
+    )
 
 
 @pytest.mark.parametrize(
@@ -447,10 +458,10 @@ def test_a_cuota_two_rates_of_the_tier_both_explain_refuses(operation: PinnedAut
         ("se", {"6", "12"}),
     ],
 )
-def test_every_reduced_rate_of_the_1_july_2025_table_is_held(
+def test_every_reduced_rate_of_the_eprs_table_is_held(
     operation: PinnedAuthorityOperation, state: str, rates: set[str]
 ) -> None:
-    on = date(2025, 7, 1)
+    on = _eprs_table_day(operation)
     member, tier = EUMemberState.from_registry(state), IvaRateKind("reduced")
     held = {lookup_rate(member, tier, on, operation=operation).pct}
     held |= {rate.pct for rate in coexisting_tier_rates(member, tier, on, operation=operation)}
@@ -458,19 +469,34 @@ def test_every_reduced_rate_of_the_1_july_2025_table_is_held(
 
 
 @pytest.mark.parametrize(
-    ("state", "tier", "on", "pct"),
+    ("state", "tier", "pct"),
     [
-        ("ee", "general", date(2024, 1, 1), "22"),
-        ("fi", "general", date(2024, 9, 1), "25.5"),
-        ("ee", "reduced", date(2025, 1, 1), "13"),
+        ("ee", "general", "22"),
+        ("fi", "general", "25.5"),
+        ("ee", "reduced", "13"),
     ],
 )
 def test_a_rate_the_national_pages_date_earlier_is_published_from_that_date(
-    operation: PinnedAuthorityOperation, state: str, tier: str, on: date, pct: str
+    operation: PinnedAuthorityOperation, state: str, tier: str, pct: str
 ) -> None:
+    on = _first_day_of_rate(operation, state, tier, pct)
+    assert on < _eprs_table_day(operation), "the rate predates the table, so only the national pages date it"
     record = lookup_rate(EUMemberState.from_registry(state), IvaRateKind(tier), on, operation=operation)
     assert record.pct == Decimal(pct)
     assert record.published_on_date
+
+
+def _first_day_of_rate(operation: PinnedAuthorityOperation, state: str, tier: str, pct: str) -> date:
+    """The first day the registry publishes ``pct`` as ``state``'s rate of ``tier``."""
+    starts = [
+        variant.valid_from
+        for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
+        if {selector.name: selector.value for selector in variant.selectors}.get("member_state") == state
+        and {selector.name: selector.value for selector in variant.selectors}.get("kind") == tier
+        and variant_pct(variant) == Decimal(pct)
+        and variant.valid_from is not None
+    ]
+    return min(starts)
 
 
 def _before_french_general(operation: PinnedAuthorityOperation) -> date:
