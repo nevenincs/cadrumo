@@ -7,6 +7,7 @@ import type {
   SetupPartProgress,
   SetupPlanEntry,
   SetupPlanPart,
+  SetupRemoval,
   SetupReview,
   SetupRow,
   SetupRun,
@@ -162,7 +163,25 @@ const row = (
   recovery_action_id: recoveryAction(item),
   version: null,
   size_bytes: size,
+  removals: [],
 });
+
+/** The removals the engine serves on a row: those of an item with something on
+ * this computer to delete, none for a damaged program that came with Cadrumo. */
+function served(held: SetupRow): SetupRow {
+  const removable =
+    held.failure !== "engine_package_damaged" &&
+    (held.state === "ready" ||
+      held.state === "stale" ||
+      held.state === "failed" ||
+      held.state === "unknown");
+  const removals: SetupRemoval[] = !removable
+    ? []
+    : held.item === "browser"
+      ? ["browser"]
+      : ["local_ai", "local_ai_program"];
+  return { ...held, removals };
+}
 
 function seeds(): Seed[] {
   return [
@@ -390,7 +409,7 @@ export function setupFixture({
     shape === "partial" ||
     shape === "hardware";
 
-  const rows = () => items.map((seed) => seed.row);
+  const rows = () => items.map((seed) => served(seed.row));
   // Signed out there is no profile, so no Google sign-in either; signed in
   // with no runtime to ask, the profile's sign-in cannot be read.
   const account = (): GoogleAccount =>

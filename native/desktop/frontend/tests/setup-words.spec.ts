@@ -118,6 +118,7 @@ function row(fields: Partial<SetupRow>): SetupRow {
     recovery_action_id: null,
     version: null,
     size_bytes: null,
+    removals: [],
     ...fields,
   };
 }
