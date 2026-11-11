@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from ....iva.rates import IVA_RATE_FACT_ID
 from ..authority import bundled_indexed_authority
+from ..facts.payloads import MappingFactPayload
 from ..rate_box_partition import RateBoxPartition
 from ..runtime_graph import expression_casilla_refs
 from ..schema import ModeloRevision
@@ -64,6 +65,7 @@ def spanish_temporary_rate_window(percent: str) -> tuple[date, date]:
         if {selector.name: selector.value for selector in variant.selectors}.get("member_state") == "es"
         and variant.valid_from is not None
         and variant.valid_to is not None
+        and isinstance(variant.payload, MappingFactPayload)
         and any(entry.key == "pct" and entry.value == wanted for entry in variant.payload.entries)
     ]
     assert windows, f"the rate fact dates no closed window for {percent} %"

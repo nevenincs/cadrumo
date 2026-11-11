@@ -41,7 +41,7 @@ def _context() -> typer.Context:
 
 
 def _review(profile_id: UUID, request_id: UUID) -> AutomationReviewProjection:
-    instant = datetime(2026, 11, 2, tzinfo=UTC)
+    instant = datetime(1980, 11, 2, tzinfo=UTC)
     return AutomationReviewProjection(
         receipt=AutomationReceiptProjection(
             request_id=request_id,

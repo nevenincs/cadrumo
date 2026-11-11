@@ -181,7 +181,7 @@ def test_a_sign_off_names_each_frame_that_moved_since_it_was_given() -> None:
     mark = SignOff(
         element_key=_ELEMENT,
         run="current",
-        reviewed_at="2026-09-29T12:00:00+00:00",
+        reviewed_at="1980-09-29T12:00:00+00:00",
         frames={"kept": _FIRST, "redrawn": _FIRST, "dropped": _FIRST},
     )
 

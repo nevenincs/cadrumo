@@ -43,6 +43,12 @@ import {
 import { classLabel, kindLabel, paymentLabel } from "./invoiceWords";
 import { invoiceHiding, withoutHiding } from "./invoiceReveal";
 import { useInvoiceCatalogue } from "./useInvoiceCatalogue";
+import { chordMatches } from "@/shared/chords";
+import { ContextMenu, type MenuAnchor } from "../../ContextMenu";
+import { typing } from "../overview/overviewKeys";
+import { OVERVIEW_CHORD, OVERVIEW_CHORDS } from "../ledgerChords";
+import { EntryOverview } from "../overview/EntryOverview";
+import { invoiceOverview } from "../overview/invoiceOverviewModel";
 
 const KINDS = ["all", "issued", "received"] as const;
 
@@ -339,6 +345,23 @@ export function InvoicesSection({
     drawn: rows,
     within,
   });
+  // An invoice's overview, and the cell it was asked from, which takes the
+  // focus back as it closes unless the overview opened the editor.
+  const [overview, setOverview] = useState<{
+    key: string;
+    column: string;
+  } | null>(null);
+  const [menu, setMenu] = useState<{ key: string; at: MenuAnchor } | null>(
+    null,
+  );
+  const overviewInvoice = overview
+    ? invoices?.find((found) => found.invoice_id === overview.key)
+    : undefined;
+  const openOverview = (key: string) =>
+    setOverview({
+      key,
+      column: grid.current?.activeCell()?.column ?? "number",
+    });
   const set = <K extends keyof typeof filter>(
     key: K,
     value: (typeof filter)[K],
@@ -403,6 +426,7 @@ export function InvoicesSection({
           )
         }
         onActivate={(key) => onEditor({ kind: "open", invoiceId: key })}
+        onMenu={(key, _column, at) => setMenu({ key, at })}
         rowState={(key) =>
           editor?.kind === "open" && editor.invoiceId === key
             ? { current: true }
@@ -426,6 +450,22 @@ export function InvoicesSection({
     <div
       ref={within}
       className="ledger-invoices flex min-h-0 flex-1 flex-col gap-2 p-3"
+      onKeyDown={(event) => {
+        if (
+          event.defaultPrevented ||
+          !OVERVIEW_CHORDS.some((chord) => chordMatches(chord, event))
+        )
+          return;
+        const key = grid.current?.activeCell()?.key;
+        if (
+          !key ||
+          typing(event.target) ||
+          !invoices?.some((found) => found.invoice_id === key)
+        )
+          return;
+        event.preventDefault();
+        openOverview(key);
+      }}
     >
       <div
         role="group"
@@ -559,6 +599,49 @@ export function InvoicesSection({
           }}
           onOpenInvoice={(invoiceId) => onEditor({ kind: "open", invoiceId })}
           say={setToast}
+        />
+      )}
+      {menu && (
+        <ContextMenu
+          label={t("desktop.ledger.menu")}
+          items={[
+            {
+              id: "overview",
+              label: t("desktop.ledger.overview.show"),
+              icon: "eye",
+              chord: OVERVIEW_CHORD,
+              enabled: true,
+            },
+            {
+              id: "open",
+              label: t("desktop.ledger.inspector.invoice.open"),
+              icon: "edit",
+              enabled: true,
+            },
+          ]}
+          at={menu.at}
+          choose={(id) => {
+            const key = menu.key;
+            setMenu(null);
+            if (id === "open") onEditor({ kind: "open", invoiceId: key });
+            else if (id === "overview")
+              // Opened once the menu has handed the focus back to the grid.
+              window.requestAnimationFrame(() => openOverview(key));
+          }}
+        />
+      )}
+      {overview && overviewInvoice && (
+        <EntryOverview
+          model={invoiceOverview(t, locale, overviewInvoice)}
+          action={{
+            label: t("desktop.ledger.inspector.invoice.open"),
+            icon: "edit",
+            run: () => onEditor({ kind: "open", invoiceId: overview.key }),
+          }}
+          onClose={() => setOverview(null)}
+          onClosed={(acted) => {
+            if (!acted) grid.current?.focusCell(overview.key, overview.column);
+          }}
         />
       )}
       <Toast className="ledger-toast">{toast}</Toast>

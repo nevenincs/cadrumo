@@ -36,13 +36,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_run_directory_is_date_partitioned_unique_and_repository_local(tmp_path: Path) -> None:
-    instant = datetime(2026, 9, 8, 12, 34, 56, 123456, tzinfo=UTC)
+    instant = datetime(1980, 9, 8, 12, 34, 56, 123456, tzinfo=UTC)
 
     first = allocate_run_directory(tmp_path, family="audit-runs", label="audit-code", now=instant)
     second = allocate_run_directory(tmp_path, family="audit-runs", label="audit-code", now=instant)
 
-    assert first.parent == tmp_path / "logs" / "audit-runs" / "2026-09-08"
-    assert first.name.startswith("20260908T123456.123456Z-audit-code-")
+    assert first.parent == tmp_path / "logs" / "audit-runs" / "1980-09-08"
+    assert first.name.startswith("19800908T123456.123456Z-audit-code-")
     assert first != second
 
 

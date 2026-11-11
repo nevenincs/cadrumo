@@ -18,6 +18,7 @@ from click.testing import Result
 
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .cli_runner import invoke_cached_cli
 from .runtime_profile_backend import runtime_cli_profile
@@ -33,8 +34,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 
 _FORAL_KEY = "ledger.actividad_asset.errors.foral_territory"
 _UNRESOLVED_KEY = "ledger.actividad_asset.errors.tax_residence_unresolved"
-_IN_SERVICE = date(2024, 3, 1)
-_ASSET_ID = "van-2024"
+_YEAR = filing_year_envelope().horizon
+_IN_SERVICE = date(_YEAR, 3, 1)
+_ASSET_ID = f"van-{_YEAR}"
 
 
 def _forecast(language: str) -> Result:
@@ -42,7 +44,7 @@ def _forecast(language: str) -> Result:
         [
             *("--format", "json", "--language", language),
             *("app", "ledger", "actividad-asset", "forecast", _ASSET_ID),
-            *("--covered-from", date(2024, 1, 1).isoformat(), "--covered-until", date(2025, 1, 1).isoformat()),
+            *("--covered-from", date(_YEAR, 1, 1).isoformat(), "--covered-until", date(_YEAR + 1, 1, 1).isoformat()),
             *("--free-depreciation-amount", str(BASIS)),
         ],
     )

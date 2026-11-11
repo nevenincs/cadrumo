@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ...core.config import override_settings
 from ...core.identity.digest import ContentDigest
+from ...core.json_contract import Notice, ResolvedNoticeAction
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
 from ...domain.iva.establishment import catalogued_country_codes
@@ -30,7 +31,8 @@ from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record
 from .commands import ProfileValidationIssue, ProfileValidationReport
 from .family_question import family_question_items
 from .family_rows import family_row_items
-from .overview import build_profile_overview
+from .overview import ProfileOverview, build_profile_overview
+from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 from .question_view import profile_question_items
@@ -43,6 +45,7 @@ from .view_operation import (
     ProfileViewIssueItem,
     ProfileViewItem,
     ProfileViewMissingItem,
+    ProfileViewNoticeAction,
     ProfileViewNoticeContextEntry,
     ProfileViewNoticeItem,
     ProfileViewOperationRequest,
@@ -210,6 +213,47 @@ def _build_status_source(
     return (status_item,)
 
 
+def _overview_notice_item(notice: Notice) -> ProfileViewNoticeItem:
+    """Project one overview notice, with its success action, onto the page item."""
+    action = notice.action
+    return ProfileViewNoticeItem(
+        severity=notice.severity,
+        code=notice.code,
+        message=notice.message,
+        context=(
+            None
+            if notice.context is None
+            else tuple(
+                ProfileViewNoticeContextEntry(key=key, value=value) for key, value in sorted(notice.context.items())
+            )
+        ),
+        action=(
+            ProfileViewNoticeAction(
+                action_id=action.action.action_id, target_command_key=action.action.target_command_key
+            )
+            if isinstance(action, ResolvedNoticeAction)
+            else None
+        ),
+    )
+
+
+def _overview_section_items(overview: ProfileOverview) -> tuple[ProfileViewItem, ...]:
+    """Flatten each overview section into its heading item followed by its field items."""
+    return tuple(
+        item
+        for section in overview.sections
+        for item in (
+            ProfileViewSectionItem(
+                key=section.key,
+                title=section.title,
+                summary=section.summary,
+                repeatable=section.repeatable,
+            ),
+            *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
+        )
+    )
+
+
 def _build_overview_source(
     record: UserProfileRecord,
     common: ProfileViewCommon,
@@ -225,38 +269,14 @@ def _build_overview_source(
             ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority_operation))),
         },
     )
-    if any(notice.action is not None for notice in overview.notices):
+    custody_notice = profile_kdf_floor_notice(UUID(str(record.profile_id)))
+    notices = (*overview.notices, *(() if custody_notice is None else (custody_notice,)))
+    # A page item carries only a success action; a precondition action has no wire shape here.
+    if any(notice.action is not None and not isinstance(notice.action, ResolvedNoticeAction) for notice in notices):
         return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
-    section_items = tuple(
-        item
-        for section in overview.sections
-        for item in (
-            ProfileViewSectionItem(
-                key=section.key,
-                title=section.title,
-                summary=section.summary,
-                repeatable=section.repeatable,
-            ),
-            *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
-        )
-    )
     missing_items = tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
-    notice_items = tuple(
-        ProfileViewNoticeItem(
-            severity=notice.severity,
-            code=notice.code,
-            message=notice.message,
-            context=(
-                None
-                if notice.context is None
-                else tuple(
-                    ProfileViewNoticeContextEntry(key=key, value=value) for key, value in sorted(notice.context.items())
-                )
-            ),
-        )
-        for notice in overview.notices
-    )
-    return (*section_items, *missing_items, *notice_items)
+    notice_items = tuple(_overview_notice_item(notice) for notice in notices)
+    return (*_overview_section_items(overview), *missing_items, *notice_items)
 
 
 def _build_page_source(

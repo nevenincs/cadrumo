@@ -419,7 +419,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "89770e8d63ebce94a4a4607df3990cbd1d087d535b020999cbf8302d37059979",
+          "calculation_revision_id": "81c4b754bd96b65d0f5050c79678cc7404f9a5501abc9355496a5a8f6630bd75",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4248,7 +4248,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 89770e8d63ebce94a4a4607df3990cbd1d087d535b020999cbf8302d37059979 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 81c4b754bd96b65d0f5050c79678cc7404f9a5501abc9355496a5a8f6630bd75 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"retencion-soportada:2025:trabajo:03db3aff10f31f9bc6be483d4dae776ac1f39a4bc8b5139b29a5592c96bf7e47"},
             {"contributor_binding_source":"retencion_soportada","contributor_source_kind":"retencion_soportada","dependency_treatment":"","fingerprint":null,"lineage_role":"primary","parent_source_ref":null,"resolved_binding_source":"retencion_soportada","resolver_id":"retencion_soportada","source_ref":"profile:<profile-id>:taxpayer_type.irpf_income_categories:2025:capital_mobiliario"},

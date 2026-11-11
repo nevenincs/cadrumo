@@ -40,18 +40,22 @@ from ...application.ledger.invoice_evidence_extract_operation import (
     build_ledger_evidence_extract_definition,
     build_ledger_evidence_extract_registration,
 )
+from ...application.ledger.reading_model_refusal import NO_READING_MODEL_LOCALE_KEY
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
 )
 from ...application.operations.models import OperationRequest
+from ...application.operations.next_step import OperationChooseReadingModelStepV1
 from ...application.operations.registry import OperationRegistry
 from ...core.errors.error_codes import get_registered_error_code
+from ...core.i18n.render import tr
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.llm_vision_evidence_support import png_image
 from ...tests.pdf_fixtures import text_pdf_bytes
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
@@ -63,6 +67,8 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _PROFILE = UUID("7d2e4f6a-8b1c-4d3e-9f5a-6b7c8d9e0f1a")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
@@ -95,7 +101,7 @@ def _stored(profile: TestRuntimeProfile, data: bytes, *, kind: AttachmentKind, m
             sha256=hashlib.sha256(data).hexdigest(),
             mime_type=mime_type,
             bytes_size=len(data),
-            captured_at=datetime(2026, 10, 24, 9, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 10, 24, 9, 0, tzinfo=UTC),
             bucket_id=str(_PROFILE),
             captured_by="operator",
             source_command="aeat app ledger attach",
@@ -151,6 +157,17 @@ def _assert_refused_by_the_reader(
     return detail
 
 
+def _assert_serves_the_sentence_and_step_to_pick_a_model(detail: OperationErrorDetailV1) -> None:
+    """The refusal serves the sentence that tells the person to pick a model, and the step to the choice."""
+    language = detail.refusal_words_language
+    assert language is not None
+    assert detail.refusal_words == tr(NO_READING_MODEL_LOCALE_KEY, locale=language.value)
+    assert detail.refusal_words != tr(EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY, locale=language.value)
+    step = detail.next_step
+    assert isinstance(step, OperationChooseReadingModelStepV1)
+    assert step.words == tr("application.ledger.evidence.next_step.choose_reading_model", locale=language.value)
+
+
 def test_a_text_read_refused_for_its_missing_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
@@ -166,6 +183,7 @@ def test_a_text_read_refused_for_its_missing_model_settles(
     assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
     assert verdict.action is None
+    assert detail.next_step is None, "a model that is installed nowhere is not a model left unpicked"
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
     assert service.runs == [], "a run was sent for a role whose model is not installed"
 
@@ -196,7 +214,7 @@ def test_a_text_read_with_no_selection_settles_naming_the_role_that_needs_one(
     with agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service:
         settled = _settle_and_read_detail(tmp_path, profile, operation, attachment_id, service)
 
-    detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
+    detail = _assert_refused_by_the_reader(settled, NO_READING_MODEL_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
@@ -206,6 +224,7 @@ def test_a_text_read_with_no_selection_settles_naming_the_role_that_needs_one(
     assert facts["role_selection_required"] is True
     assert verdict.action is None
     assert service.runs == []
+    _assert_serves_the_sentence_and_step_to_pick_a_model(detail)
 
 
 def test_a_read_on_an_off_host_lane_without_consent_refuses_and_sends_nothing(

@@ -12,6 +12,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..record_field_renderer import format_field
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
@@ -22,7 +23,9 @@ _SCHEMES = (("esquema-exterior", "EXT-1T"), ("esquema-union", "1T"), ("esquema-i
 def _fields() -> list[ExportFieldDefinition]:
     fields: list[ExportFieldDefinition] = []
     for revision_id, period in _SCHEMES:
-        snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision_id)
+        snapshot = published_snapshot(
+            "369", filing_year=filing_year_envelope().horizon, period=period, revision_id=revision_id
+        )
         fields.extend(
             field
             for layout in snapshot.revision.export_layouts

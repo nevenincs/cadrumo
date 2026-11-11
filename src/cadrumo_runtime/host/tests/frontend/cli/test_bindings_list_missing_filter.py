@@ -25,6 +25,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+
 from .profile_cli_support import partial_taxpayer_invoker
 
 pytestmark = [
@@ -46,7 +48,7 @@ pytestmark = [
 # declarations may add further profile-derived defaults, so the assertions
 # below pin the seeded facts without freezing the complete authority set.
 _MODELO = "100"
-_YEAR = 2025
+_YEAR = newest_authored_edition(_MODELO)
 _PERIOD = "0A"
 _KNOWN_RESOLVED_BINDING_IDS = frozenset(
     {

@@ -21,7 +21,7 @@ def _fresh_public_key_hex() -> str:
 def test_recipient_payload_preserves_every_public_record_field() -> None:
     key = _fresh_public_key_hex()
     fingerprint = sha256(bytes.fromhex(key)).hexdigest()
-    added_at = datetime(2026, 8, 1, tzinfo=UTC)
+    added_at = datetime(1980, 8, 1, tzinfo=UTC)
     row = RecipientFingerprintRowPayload(
         recipient_id="my-accountant",
         label="My accountant",
@@ -52,5 +52,5 @@ def test_recipient_payload_rejects_an_arbitrary_fingerprint() -> None:
             label="My accountant",
             public_key_hex=_fresh_public_key_hex(),
             fingerprint_sha256="0" * 64,
-            added_at=datetime(2026, 8, 1, tzinfo=UTC),
+            added_at=datetime(1980, 8, 1, tzinfo=UTC),
         )

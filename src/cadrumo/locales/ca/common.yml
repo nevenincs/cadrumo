@@ -3601,6 +3601,31 @@ desktop:
     no_rate: Sense tipus de canvi
     no_rate_detail: 'No hi ha tipus de canvi per a aquesta data: el valor en EUR no
       es coneix i no és zero.'
+    overview:
+      close: Tanca el resum
+      group:
+        amounts: Imports
+        links: Vincles
+        origin: Origen
+        reading: Lectura
+        recorded: El que indica el registre
+      kind:
+        document: Document
+        invoice: Factura
+        movement: Moviment
+      no_reading: Cap lectura pendent de revisió
+      not_attached_here: No adjuntat a cap moviment d'aquest període
+      not_linked: Sense vincular
+      nothing_to_fix: No hi ha res a corregir
+      open_movement: Obre a l'inspector
+      open_record: Obre el registre
+      read_only: Només lectura. Obre'l per canviar qualsevol cosa.
+      reading_waiting: Llegit el {date}, pendent de revisió
+      reason: Motiu
+      show: Resum
+      state: Estat
+      used_in: Usat a
+      used_nowhere: No s'usa en cap declaració
     paste:
       apply: Enganxa {count}
       blanks: Cel·les en blanc
@@ -4835,6 +4860,7 @@ desktop:
   setup:
     action:
       check_again: Torna a comprovar
+      reinstall_engine_program: Reinstal·la el programa
       resume: Reprèn
       set_up: Configura
       try_again: Torna-ho a provar
@@ -4857,8 +4883,11 @@ desktop:
       cancelled: Has cancel·lat la configuració.
       damaged_download: La baixada estava malmesa i no s'ha pogut fer servir.
       disk_full: No hi ha prou espai lliure al disc.
+      engine_package_damaged: El programa d'IA local que inclou Cadrumo està malmès
+        o és per a un altre tipus d'ordinador. Repara o reinstal·la Cadrumo per solucionar-ho.
       engine_program_unusable: 'No s''ha pogut iniciar el programa d''IA local: està
-        malmès o no funciona en aquest ordinador. Reparar la IA local el reinstal·la.'
+        malmès o no funciona en aquest ordinador. Reinstal·lar-lo el torna a configurar
+        i conserva els teus models.'
       host_unreachable: No s'ha pogut contactar amb el servidor de baixada. Comprova
         la teva connexió a internet i torna-ho a provar.
       interrupted: La configuració es va interrompre abans d'acabar.

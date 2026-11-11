@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import (
     MINIMAL_PDF,
     N26_HEADER,
     imported_transaction_id,
     invoke,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [
     pytest.mark.integration,
@@ -39,7 +43,7 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -113,7 +117,7 @@ def test_ledger_history_shows_post_hoc_purchase_invoice_evidence_attach(tmp_path
             "ledger",
             "add",
             "--date",
-            "2026-02-15",
+            date(_YEAR, 2, 15).isoformat(),
             "--amount",
             "121.00",
             "--direction",
@@ -184,7 +188,7 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
             "ledger",
             "add",
             "--date",
-            "2026-04-15",
+            date(_YEAR, 4, 15).isoformat(),
             "--amount",
             "242.00",
             "--direction",
@@ -361,7 +365,7 @@ def test_list_and_view_render_accented_descriptions_identically(
     accented = "Reunió de negòcis amb Òscar à Lleida"
     statement = tmp_path / "accents.csv"
     statement.write_text(
-        N26_HEADER + f"2026-04-15,Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
+        N26_HEADER + f"{date(_YEAR, 4, 15).isoformat()},Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
         encoding="utf-8",
     )
     imported = invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])

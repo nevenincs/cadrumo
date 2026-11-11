@@ -102,6 +102,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
@@ -110,6 +111,8 @@ from .executor_context_stand_ins import RecordedEvents, RecordedOperands, Uninte
 from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_YEAR = filing_year_envelope().horizon
 
 _SET_06 = ModeloScalarEditIntentV1(
     address=ModeloEditScalarAddressV1(casilla_id=validated_casilla_id("06")),
@@ -522,7 +525,7 @@ def test_preflight_reads_each_entry_as_typed_through_its_address_grammar(
             for entry in admission.baseline.permitted_surface
             if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
         }
-        revision = work.operation.revision_for_context("130", filing_year=2026, period="1T")
+        revision = work.operation.revision_for_context("130", filing_year=_YEAR, period="1T")
         closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
         entries = (
             ModeloEditParseRequestV1(address=_SET_06.address, entry_locale=OutputLanguage.ES, lexeme=""),
@@ -692,7 +695,7 @@ def test_preflight_reads_a_correction_typed_for_any_box_the_revision_defines(
             for entry in admission.baseline.permitted_surface
             if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
         }
-        revision = work.operation.revision_for_context("130", filing_year=2026, period="1T")
+        revision = work.operation.revision_for_context("130", filing_year=_YEAR, period="1T")
         closed = next(casilla.id for casilla in revision.casillas if casilla.id not in writable)
         entries = (
             ModeloEditParseRequestV1(

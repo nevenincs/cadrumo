@@ -46,6 +46,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..review_package_counter_sign import (
     CounterSignedReceipt,
     counter_sign_review_package,
@@ -62,7 +63,8 @@ from .review_package_signing_support import InMemoryReviewPackageSigningKeypairC
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 7, 3, 12, 0, tzinfo=UTC)
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-COUNTER-SIGN-TEST"
 _SIGNING_CAPABILITY = InMemoryReviewPackageSigningKeypairCapability()
 _PRIMARY_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
@@ -169,8 +171,8 @@ def test_operator_signs_accountant_counter_signs_both_layers_verify(
 @pytest.mark.parametrize(
     "counter_signed_at",
     (
-        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(_YEAR, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(_YEAR, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_counter_sign_refuses_a_naive_or_non_utc_envelope_timestamp(

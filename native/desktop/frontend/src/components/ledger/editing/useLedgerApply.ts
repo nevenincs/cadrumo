@@ -159,6 +159,15 @@ async function readMissing(
         review_status: answer.result.review_status,
         group_label: read.get(id)?.group_label ?? null,
         own_account_id: read.get(id)?.own_account_id ?? null,
+        // The view does not serve a reason's words; a row read through it
+        // carries those of the list's row when there is one. Nothing shows
+        // them: the staged plan reads movements, not their reasons.
+        classification_reason_source:
+          read.get(id)?.classification_reason_source ?? "none",
+        classification_reason_words:
+          read.get(id)?.classification_reason_words ?? "",
+        classification_reason_words_language:
+          read.get(id)?.classification_reason_words_language ?? null,
         withholding: read.get(id)?.withholding ?? [],
       });
     } catch (error) {

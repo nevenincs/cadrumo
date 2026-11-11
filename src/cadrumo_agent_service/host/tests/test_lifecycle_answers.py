@@ -48,6 +48,7 @@ from ..controller import (
 from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
     HOSTED_ROOT_VARIABLE,
+    LOCAL_ENGINE_VARIABLE,
     WORKER_PORT_VARIABLE,
     system_environment,
 )
@@ -95,7 +96,10 @@ class _Events:
 def _running_tree(checkout: Path, root: Path) -> AgentHostController:
     """Start a real hosted gateway, with its worker, as the service starts one."""
     root.mkdir(parents=True)
-    environment = system_environment(os.environ) | {HOSTED_ROOT_VARIABLE: str(root)}
+    environment = system_environment(os.environ) | {
+        HOSTED_ROOT_VARIABLE: str(root),
+        LOCAL_ENGINE_VARIABLE: LocalEngine.LLAMACPP.value,
+    }
     setup = WindowsAgentInvocationRunner().run(
         executable=checkout_interpreter(checkout),
         arguments=(*AGENT_COMMAND_LINE, "setup"),

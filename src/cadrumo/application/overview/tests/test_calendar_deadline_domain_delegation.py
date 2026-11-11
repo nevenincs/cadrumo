@@ -24,6 +24,7 @@ import pytest
 
 from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.effective_close import EffectiveFilingDeadline
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
@@ -39,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # classification tests below to a registry load they do not need.
 _BUCKET_ID = "7390a6bb-5577-4e08-8518-16e6292f690f"
 _MODELO = "130"
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _DUE_SOON_DAYS = 14
 
 
@@ -106,9 +107,9 @@ def test_overview_reads_the_published_first_quarter_close_date() -> None:
     """The overview window retains the published M130 Q1 closing date."""
     unit = _work_unit()
     window = registry_window_for_work_unit(unit)
-    assert window is not None, "Modelo 130 2026 1T must have a bundled registry deadline window"
+    assert window is not None, "Modelo 130 1T must have a bundled registry deadline window"
 
-    assert window.closes_on == date(2026, 4, 20)
+    assert window.closes_on == date(_FILING_YEAR, 4, 20)
 
 
 def test_overview_keeps_its_local_period_fallback_when_no_window_exists() -> None:

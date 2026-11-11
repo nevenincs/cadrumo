@@ -45,7 +45,10 @@ class DeadlineEngineAdapter:
         period: Period,
         today: date | None = None,
     ) -> ModeloDeadline | None:
-        """Delegate to :meth:`DeadlineEngine.target_obligation` for one exact target."""
+        """Delegate to :meth:`DeadlineEngine.target_obligation` for one exact target.
+
+        ``profile`` is the :class:`TaxpayerProfile` it uses.
+        """
         return self._engine.target_obligation(profile, modelo=modelo, period=period, today=today)
 
 

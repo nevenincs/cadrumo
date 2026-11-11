@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -33,6 +33,7 @@ from ....domain.deadlines.models import (
     ObligationStatus,
     TaxpayerProfile,
 )
+from ....domain.deadlines.tests.effective_close_scan import first_unpublished_calendar_year
 from ....domain.deadlines.tests.withdrawn_deadline_window_authority import withdrawn_deadline_window_operation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -72,6 +73,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+_YEAR = _SUPPORT.horizon
+# The shared entry fixture is built for this exercise.
+_ENTRY_YEAR = calendar_entry().period.filing_year
 
 
 _M303_CENSO_ENROLMENT_KEYS = frozenset(
@@ -118,10 +122,21 @@ def _annual_work_unit(*, modelo: str, filing_year: int) -> WorkUnit:
     )
 
 
-@pytest.mark.parametrize(
-    ("modelo", "filing_year", "calendar_range"),
-    (("180", 2023, OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 1, 31))),),
+# An annual campaign for exercise N closes in January of N + 1, so the successor's
+# campaign sits in January of N + 2.
+_HISTORIC_ANNUAL_CASES = tuple(
+    pytest.param(
+        "180",
+        filing_year,
+        OverviewCalendarRange(from_date=date(filing_year + 2, 1, 1), to_date=date(filing_year + 2, 1, 31)),
+        id=f"exercise-{filing_year}",
+    )
+    for filing_year in _SUPPORT.years
+    if filing_year + 2 <= _SUPPORT.horizon
 )
+
+
+@pytest.mark.parametrize(("modelo", "filing_year", "calendar_range"), _HISTORIC_ANNUAL_CASES)
 def test_calendar_does_not_project_historic_annual_work_into_future_registry_window(
     modelo: str,
     filing_year: int,
@@ -174,9 +189,9 @@ def test_calendar_censo_warning_requires_every_modelo_enrolment_key(
 
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
         live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS - {"iva.regime"})),
     )
 
@@ -201,9 +216,9 @@ def test_calendar_censo_warning_is_rendered_in_the_read_language(
 ) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
         live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS - {"iva.regime"})),
     )
     warning = next(item for item in calendar.warnings if item.code == "censo.enrolment_unverified")
@@ -225,9 +240,9 @@ def test_calendar_censo_warning_clears_when_every_modelo_enrolment_key_is_verifi
 ) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
         live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS)),
     )
 
@@ -250,9 +265,9 @@ def test_calendar_keeps_unverified_posture_when_no_censo_is_verified(
     """
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         operation=authority_operation,
-        today=date(2025, 1, 1),
+        today=date(_YEAR, 1, 1),
         live_censo_verified_profile_keys=(),
     )
 
@@ -275,9 +290,9 @@ def test_calendar_entry_marks_censo_enrolment_not_checked_when_no_live_censo_sco
 ) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
 
     modelo_303 = next(entry for entry in calendar.entries if entry.modelo == "303")
@@ -309,9 +324,9 @@ def test_calendar_censo_warning_requires_corporate_modelo_202_enrolment_keys(
 
     calendar = build_overview_calendar(
         _corporate_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
         live_censo_verified_profile_keys=tuple(
             sorted(_M202_CENSO_ENROLMENT_KEYS - {"taxpayer_type.incn_prior_12_months"}),
         ),
@@ -327,9 +342,9 @@ def test_calendar_censo_warning_clears_for_complete_corporate_modelo_202_provena
 ) -> None:
     calendar = build_overview_calendar(
         _corporate_profile(),
-        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 4, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2025, 4, 1),
+        today=date(_YEAR, 4, 1),
         live_censo_verified_profile_keys=tuple(sorted(_M202_CENSO_ENROLMENT_KEYS)),
     )
 
@@ -343,7 +358,7 @@ _INVALID_PAGADORES_ADVISORY_CASES: tuple[tuple[str, dict[str, str], str, str, st
         "not-a-count-secret",
         {
             "irpf.pagadores_count": "not-a-count-secret",
-            "irpf.pagadores_secondary_income": "2000",
+            "irpf.pagadores_secondary_income": "1700",
         },
         "overview filing obligation advisory ignored invalid integer profile value",
         "irpf.pagadores_count",
@@ -391,42 +406,48 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
 _MULTIPLE_PAGADORES_OBLIGATION_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
 
 
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_multi_payer_over_reduced_limit_surfaces_obligation_advisory(
     authority_operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> None:
-    # 2 pagadores, secondary €1,600 > €1,500, total €18,000 over the 2024 reduced
-    # limit (€15,876) → the Art. 96.3 LIRPF obligation advisory fires.
+    # 2 pagadores, secondary €1,600 > €1,500, total €18,000 over the reduced
+    # limit (€15,876 or lower in earlier exercises) → the Art. 96.3 LIRPF obligation advisory fires.
     advisories = build_filing_obligation_advisories(
         {
             "irpf.pagadores_count": "2",
             "irpf.pagadores_secondary_income": "1600",
             "irpf.pagadores_total_work_income": "18000",
         },
-        filing_year=2024,
+        filing_year=filing_year,
         operation=authority_operation,
     )
     assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
 
 
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_multi_payer_under_reduced_limit_does_not_surface_advisory(
     authority_operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> None:
-    # Same multiple-pagadores trigger but total €10,000 is below the 2024 reduced
-    # limit (€15,876) → not obliged, no advisory.
+    # Same multiple-pagadores trigger but total €10,000 is below the reduced
+    # limit → not obliged, no advisory.
     advisories = build_filing_obligation_advisories(
         {
             "irpf.pagadores_count": "2",
             "irpf.pagadores_secondary_income": "1600",
             "irpf.pagadores_total_work_income": "10000",
         },
-        filing_year=2024,
+        filing_year=filing_year,
         operation=authority_operation,
     )
     assert advisories == ()
 
 
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_single_payer_under_general_limit_does_not_surface_advisory(
     authority_operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> None:
     # 1 pagador, total €18,000 below the general €22,000 → no obligation.
     advisories = build_filing_obligation_advisories(
@@ -435,14 +456,16 @@ def test_single_payer_under_general_limit_does_not_surface_advisory(
             "irpf.pagadores_secondary_income": "0",
             "irpf.pagadores_total_work_income": "18000",
         },
-        filing_year=2024,
+        filing_year=filing_year,
         operation=authority_operation,
     )
     assert advisories == ()
 
 
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_multi_payer_total_undeclared_surfaces_conservatively(
     authority_operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> None:
     # Total work income undeclared but the multiple-pagadores trigger is met →
     # the advisory surfaces conservatively rather than granting a false clear.
@@ -451,7 +474,7 @@ def test_multi_payer_total_undeclared_surfaces_conservatively(
             "irpf.pagadores_count": "2",
             "irpf.pagadores_secondary_income": "1600",
         },
-        filing_year=2024,
+        filing_year=filing_year,
         operation=authority_operation,
     )
     assert advisories == (_MULTIPLE_PAGADORES_OBLIGATION_KEY,)
@@ -473,13 +496,13 @@ def test_build_overview_calendar_accepts_observed_events(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     event = build_overview_calendar_events(
-        as_of=date(2025, 3, 13),
-        calendar_range=OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        as_of=date(_YEAR, 3, 13),
+        calendar_range=OverviewCalendarRange(from_date=date(_YEAR, 3, 1), to_date=date(_YEAR, 3, 31)),
         notification_snapshots=(
             PersistedNotificationsSnapshot(
                 snapshot_id="a" * 64,
                 bucket_id=BUCKET_ID,
-                captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
+                captured_at=datetime(_YEAR, 3, 13, 10, 0, tzinfo=UTC),
                 source_url=SOURCE_URL,
                 rows=(
                     RemoteNotification(
@@ -490,21 +513,21 @@ def test_build_overview_calendar_accepts_observed_events(
                         titular_nombre="Test S.L.",
                         destinatario_nif="B00015016",
                         destinatario_nombre="Test S.L.",
-                        fecha_emision=date(2025, 3, 10),
+                        fecha_emision=date(_YEAR, 3, 10),
                         leida=True,
                         source_url=SOURCE_URL,
                     ),
                 ),
-                persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
+                persisted_at=datetime(_YEAR, 3, 13, 10, 5, tzinfo=UTC),
             ),
         ),
     )
 
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        OverviewCalendarRange(from_date=date(_YEAR, 3, 1), to_date=date(_YEAR, 3, 31)),
         operation=authority_operation,
-        today=date(2025, 3, 15),
+        today=date(_YEAR, 3, 15),
         events=event,
     )
 
@@ -518,16 +541,16 @@ def test_build_overview_calendar_accepts_observed_events(
 def test_build_returns_typed_calendar_for_quarterly_window(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """``--from 2026-01-01 --to 2026-04-20`` covers Q1 2026."""
+    """A window from 1 January to 20 April covers the first quarter."""
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
     assert isinstance(calendar, OverviewCalendar)
-    assert calendar.range.from_date == date(2026, 1, 1)
-    assert calendar.range.to_date == date(2026, 4, 20)
+    assert calendar.range.from_date == date(_YEAR, 1, 1)
+    assert calendar.range.to_date == date(_YEAR, 4, 20)
     assert isinstance(calendar.generated_at, datetime)
     assert calendar.generated_at.tzinfo == UTC
 
@@ -535,14 +558,14 @@ def test_build_returns_typed_calendar_for_quarterly_window(
 def test_build_only_emits_entries_inside_range(authority_operation: PinnedAuthorityOperation) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20)),
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
     for entry in calendar.entries:
         # An entry must intersect the inclusive range.
-        assert entry.closes_on >= date(2026, 1, 1)
-        assert entry.opens_on <= date(2026, 4, 20)
+        assert entry.closes_on >= date(_YEAR, 1, 1)
+        assert entry.opens_on <= date(_YEAR, 4, 20)
 
 
 def test_build_orders_entries_by_close_then_modelo_then_period(
@@ -550,9 +573,9 @@ def test_build_orders_entries_by_close_then_modelo_then_period(
 ) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
     keys = [
         (entry.closes_on, entry.modelo, entry.period.filing_year, entry.period.registry_token)
@@ -661,9 +684,9 @@ def test_build_user_state_matches_engine_status_per_entry(
 ) -> None:
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31)),
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
     for entry in calendar.entries:
         assert entry.user_state is user_state_for(entry.status)
@@ -672,16 +695,20 @@ def test_build_user_state_matches_engine_status_per_entry(
 def test_build_uses_evaluation_date_for_historical_special_regime_route(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
+    # The impatriado regime applies to the year of the change and the five that
+    # follow, so a change five exercises before the prior exercise is in its last
+    # year there and over once the evaluation date moves into the next one.
+    prior_year = _YEAR - 1
     profile = calendar_profile().model_copy(
         update={
             "irpf_special_regime": IrpfSpecialRegime.from_registry("impatriado"),
-            "special_regime_start_date": date(2020, 1, 15),
+            "special_regime_start_date": date(prior_year - 5, 1, 15),
         },
     )
-    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    rng = OverviewCalendarRange(from_date=date(prior_year, 1, 1), to_date=date(prior_year, 12, 31))
 
-    active = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2025, 6, 1))
-    expired = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 6, 1))
+    active = build_overview_calendar(profile, rng, operation=authority_operation, today=date(prior_year, 6, 1))
+    expired = build_overview_calendar(profile, rng, operation=authority_operation, today=date(_YEAR, 6, 1))
 
     active_modelos = {entry.modelo for entry in active.entries}
     expired_modelos = {entry.modelo for entry in expired.entries}
@@ -695,12 +722,12 @@ def test_build_empty_range_when_window_covers_no_obligations(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A 1-day window outside every modelo's filing window emits no entries."""
-    # 2026-01-15 lies outside every modelo's January quarterly / monthly window.
+    # 15 January lies outside every modelo's January quarterly / monthly window.
     calendar = build_overview_calendar(
         calendar_profile(),
-        OverviewCalendarRange(from_date=date(2026, 1, 15), to_date=date(2026, 1, 15)),
+        OverviewCalendarRange(from_date=date(_YEAR, 1, 15), to_date=date(_YEAR, 1, 15)),
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
     )
     assert isinstance(calendar.entries, tuple)
 
@@ -723,8 +750,8 @@ def test_build_threads_shift_metadata_onto_every_entry(
         "ccaa_holiday",
         "calendar_unavailable",
     }
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     assert cal.entries, "expected the test profile to produce at least one obligation"
     for entry in cal.entries:
         assert entry.adjusted_closes_on >= entry.closes_on
@@ -765,38 +792,43 @@ def _obligation_with_real_effective_close(
     )
 
 
+# The supported exercise whose 20 April, the nominal close of a first quarter, is a Sunday.
+_SUNDAY_APRIL_20_YEAR = next(year for year in _SUPPORT.years if date(year, 4, 20).weekday() == 6)
+
+
 def test_an_entry_renders_the_overdue_age_and_recargo_from_the_effective_close(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The entry counts lateness from the close the filer actually had.
 
-    Modelo 303 1T 2025 closes nominally on Sunday 20 April, so the filer had
-    until Monday the 21st. The status is the one its producer classified
+    Modelo 303 1T closes nominally on 20 April; in an exercise where that is a
+    Sunday the filer had until Monday the 21st. The status is the one its producer classified
     against that date -- overview re-deciding it could only disagree -- while
     the overdue age and the recargo band are counted from it here.
     """
+    year = _SUNDAY_APRIL_20_YEAR
     obligation = _obligation_with_real_effective_close(
         operation=authority_operation,
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
-        opens_on=date(2025, 4, 1),
-        closes_on=date(2025, 4, 20),
-        payment_cutoff_on=date(2025, 4, 15),
+        period=Period.from_year_and_code(year, "1T"),
+        opens_on=date(year, 4, 1),
+        closes_on=date(year, 4, 20),
+        payment_cutoff_on=date(year, 4, 15),
         status=ObligationStatus.OVERDUE,
     )
 
-    assert obligation.adjusted_closes_on == date(2025, 4, 21), "the Sunday close still runs to the Monday"
+    assert obligation.adjusted_closes_on == date(year, 4, 21), "the Sunday close still runs to the Monday"
 
     entry = calendar_entry_from_obligation(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
-        today=date(2025, 4, 22),
+        today=date(year, 4, 22),
         due_soon_days=14,
         operation=authority_operation,
     )
 
-    assert entry.adjusted_closes_on == date(2025, 4, 21)
+    assert entry.adjusted_closes_on == date(year, 4, 21)
     assert entry.status is ObligationStatus.OVERDUE
     assert entry.days_overdue == 1, "one day past the effective close, not two past the nominal one"
     assert entry.recovery is not None
@@ -809,9 +841,9 @@ def test_an_entry_keeps_the_status_its_producer_classified(
     obligation = _obligation_with_real_effective_close(
         operation=authority_operation,
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
-        opens_on=date(2025, 4, 1),
-        closes_on=date(2025, 4, 20),
+        period=Period.from_year_and_code(_YEAR, "1T"),
+        opens_on=date(_YEAR, 4, 1),
+        closes_on=date(_YEAR, 4, 20),
         status=ObligationStatus.DUE_TODAY,
     )
 
@@ -819,7 +851,7 @@ def test_an_entry_keeps_the_status_its_producer_classified(
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
-        today=date(2025, 4, 21),
+        today=date(_YEAR, 4, 21),
         due_soon_days=14,
         operation=authority_operation,
     )
@@ -845,33 +877,46 @@ def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation):
         obligation,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
-        today=date(2025, 8, 1),
+        today=date(_YEAR, 8, 1),
         due_soon_days=14,
         operation=operation,
     )
 
 
+@pytest.mark.parametrize(
+    "year",
+    [year for year in _SUPPORT.years if date(year, 9, 11).weekday() < 5],
+)
 def test_a_regional_holiday_never_moves_the_effective_close(
     authority_operation: PinnedAuthorityOperation,
+    year: int,
 ) -> None:
-    """The 2025 Diada (Thursday 11 September) is inhábil only in Cataluna (BOE-A-2024-26935).
+    """The Diada (11 September, on a weekday) is inhábil only in Cataluna.
 
     An electronic filing counts days on the State's calendar (Ley 39/2015 art. 31.3),
     so the close stays on the Diada for every filer.
     """
-    entry = _entry_for(_obligation("303", date(2025, 9, 11), authority_operation), authority_operation)
+    entry = _entry_for(_obligation("303", date(year, 9, 11), authority_operation), authority_operation)
 
-    assert entry.adjusted_closes_on == date(2025, 9, 11)
+    assert entry.adjusted_closes_on == date(year, 9, 11)
     assert entry.shift_reason == "business_day"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
 
 
+def _first_saturday(year: int, month: int) -> date:
+    first = date(year, month, 1)
+    return first + timedelta(days=(5 - first.weekday()) % 7)
+
+
+@pytest.mark.parametrize("year", _SUPPORT.years)
 def test_modelo_369_entry_is_not_shifted_on_a_weekend(
     authority_operation: PinnedAuthorityOperation,
+    year: int,
 ) -> None:
-    entry = _entry_for(_obligation("369", date(2025, 10, 18), authority_operation), authority_operation)
+    saturday = _first_saturday(year, 10)
+    entry = _entry_for(_obligation("369", saturday, authority_operation), authority_operation)
 
-    assert entry.adjusted_closes_on == date(2025, 10, 18)
+    assert entry.adjusted_closes_on == saturday
     assert entry.shift_reason == "modelo_exception"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.NOT_SHIFTED
 
@@ -879,10 +924,11 @@ def test_modelo_369_entry_is_not_shifted_on_a_weekend(
 def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """No holiday publication exists for 2028 yet, so a Saturday close cannot be adjusted or certified."""
-    entry = _entry_for(_obligation("303", date(2028, 10, 14), authority_operation), authority_operation)
+    """No holiday publication exists for the first unpublished year, so a Saturday close cannot be adjusted or certified."""
+    saturday = _first_saturday(first_unpublished_calendar_year(authority_operation), 10)
+    entry = _entry_for(_obligation("303", saturday, authority_operation), authority_operation)
 
-    assert entry.adjusted_closes_on == entry.closes_on == date(2028, 10, 14)
+    assert entry.adjusted_closes_on == entry.closes_on == saturday
     assert entry.shift_reason == "calendar_unavailable"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
 
@@ -902,13 +948,13 @@ def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:
     with pytest.raises(ValidationError, match="did not evaluate"):
         OverviewCalendarEntry(
             modelo="303",
-            period=Period.from_year_and_code(2026, "3T"),
-            opens_on=date(2026, 10, 1),
-            closes_on=date(2026, 10, 17),
-            adjusted_closes_on=date(2026, 10, 19),
+            period=Period.from_year_and_code(_YEAR, "3T"),
+            opens_on=date(_YEAR, 10, 1),
+            closes_on=date(_YEAR, 10, 17),
+            adjusted_closes_on=date(_YEAR, 10, 19),
             shift_reason="calendar_unavailable",
             holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-            evaluated_on=date(2026, 8, 1),
+            evaluated_on=date(_YEAR, 8, 1),
             status=ObligationStatus.UPCOMING,
             user_state=user_state_for(ObligationStatus.UPCOMING),
         )
@@ -918,8 +964,8 @@ def test_build_marks_modelo_369_as_modelo_exception(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Modelo 369 obligations bypass the shift; reason must be modelo_exception."""
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
-    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(2026, 4, 1))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 12, 31))
+    cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=date(_YEAR, 4, 1))
     modelo_369 = [entry for entry in cal.entries if entry.modelo == "369"]
     # Whether 369 appears for the test profile depends on the profile's
     # OSS enrolment. When it does appear, the shift must be skipped.
@@ -937,14 +983,14 @@ def test_entry_rejects_adjusted_close_that_precedes_original() -> None:
     """
     with pytest.raises(ValueError, match=r"adjusted_closes_on|may only move"):
         calendar_entry(
-            closes_on=date(2026, 4, 20),
-            adjusted_closes_on=date(2026, 4, 19),
+            closes_on=date(_ENTRY_YEAR, 4, 20),
+            adjusted_closes_on=date(_ENTRY_YEAR, 4, 19),
         )
 
 
 def test_build_is_idempotent_modulo_generated_at(authority_operation: PinnedAuthorityOperation) -> None:
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    today = date(2026, 4, 1)
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    today = date(_YEAR, 4, 1)
     profile = calendar_profile()
     a = build_overview_calendar(profile, rng, operation=authority_operation, today=today)
     b = build_overview_calendar(profile, rng, operation=authority_operation, today=today)
@@ -963,8 +1009,8 @@ def test_calendar_omits_warnings_when_raw_values_not_supplied(
     OverviewCalendar.warnings / completeness preserve backwards
     compatibility for those callers.
     """
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    today = date(2026, 4, 1)
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    today = date(_YEAR, 4, 1)
     cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today)
     assert cal.warnings == ()
     assert cal.completeness.explicitly_set_keys == ()
@@ -984,8 +1030,8 @@ def test_calendar_emits_warning_when_iva_regime_unset(
     key, fix_action supplies the canonical profile-edit action
     command, and affected_modelos lists 303/390.
     """
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    today = date(2026, 4, 1)
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    today = date(_YEAR, 4, 1)
     raw = {"tax.id": "X0001500M", "activity": "design"}
     cal = build_overview_calendar(calendar_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
     iva_warnings = [w for w in cal.warnings if w.code == "iva.regime"]
@@ -1006,8 +1052,8 @@ def test_calendar_completeness_lists_uncomputable_with_reason(
     list it under explicitly_set_keys and the remaining gating keys
     under defaulted_keys.
     """
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    today = date(2026, 4, 1)
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    today = date(_YEAR, 4, 1)
     raw = {
         "tax.id": "X0001500M",
         "activity": "design",
@@ -1028,8 +1074,8 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Deadline-window applicability predicates must be visible as warnings."""
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    today = date(2026, 4, 1)
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
+    today = date(_YEAR, 4, 1)
     raw = {
         "tax.id": "X0001500M",
         "activity": "design",
@@ -1083,12 +1129,12 @@ def _has_employees_warning_through_record_projection(
         setup_state=ProfileSetupState.COMPLETE,
     )
     raw_values = record_to_path_values(record)
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    rng = OverviewCalendarRange(from_date=date(_YEAR, 1, 1), to_date=date(_YEAR, 4, 20))
     cal = build_overview_calendar(
         calendar_profile(),
         rng,
         operation=authority_operation,
-        today=date(2026, 4, 1),
+        today=date(_YEAR, 4, 1),
         raw_values=raw_values,
     )
     return any(warning.code == "has_employees" for warning in cal.warnings)
@@ -1121,31 +1167,39 @@ def test_calendar_completeness_matches_dotted_schema_path_raw_values(
     )
 
 
-# 2026-01-31 is a Saturday: the annual 2025 campaigns that close on it move to
-# Monday 2026-02-02, inside a February range that the nominal date misses.
-_SATURDAY_CLOSE = date(2026, 1, 31)
+# The annual campaigns of the supported exercise whose 31 January close falls on a
+# Saturday move to the Monday, inside a February range that the nominal date misses.
+_SATURDAY_CLOSE_EXERCISE = next(year for year in _SUPPORT.years if date(year + 1, 1, 31).weekday() == 5)
+_SATURDAY_CLOSE = date(_SATURDAY_CLOSE_EXERCISE + 1, 1, 31)
 
 
-_MONDAY_EFFECTIVE_CLOSE = date(2026, 2, 2)
+_MONDAY_EFFECTIVE_CLOSE = _SATURDAY_CLOSE + timedelta(days=2)
 
 
-_FEBRUARY_2026 = OverviewCalendarRange(from_date=date(2026, 2, 1), to_date=date(2026, 2, 28))
+_FEBRUARY = OverviewCalendarRange(
+    from_date=date(_SATURDAY_CLOSE.year, 2, 1),
+    to_date=date(_SATURDAY_CLOSE.year, 2, 28),
+)
+_AFTER_EFFECTIVE_CLOSE = OverviewCalendarRange(
+    from_date=_MONDAY_EFFECTIVE_CLOSE + timedelta(days=1),
+    to_date=_FEBRUARY.to_date,
+)
 
 
 def test_calendar_places_a_work_unit_by_its_effective_deadline(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     assert _SATURDAY_CLOSE.weekday() == 5
-    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
+    work_unit = _annual_work_unit(modelo="180", filing_year=_SATURDAY_CLOSE_EXERCISE)
     window = registry_window_for_work_unit(work_unit, operation=authority_operation)
     assert window is not None
     assert window.closes_on == _SATURDAY_CLOSE
 
     calendar = build_overview_calendar(
         calendar_profile(),
-        _FEBRUARY_2026,
+        _FEBRUARY,
         operation=authority_operation,
-        today=_FEBRUARY_2026.from_date,
+        today=_FEBRUARY.from_date,
         work_units=(work_unit,),
     )
 
@@ -1157,8 +1211,8 @@ def test_calendar_places_a_work_unit_by_its_effective_deadline(
 def test_calendar_leaves_out_a_work_unit_whose_effective_deadline_precedes_the_range(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit = _annual_work_unit(modelo="180", filing_year=2025)
-    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+    work_unit = _annual_work_unit(modelo="180", filing_year=_SATURDAY_CLOSE_EXERCISE)
+    after_effective_close = _AFTER_EFFECTIVE_CLOSE
 
     calendar = build_overview_calendar(
         calendar_profile(),
@@ -1177,16 +1231,16 @@ def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
     obligation = _obligation_with_real_effective_close(
         operation=authority_operation,
         modelo="190",
-        period=Period.from_year_and_code(2025, "0A"),
-        opens_on=date(2026, 1, 1),
+        period=Period.from_year_and_code(_SATURDAY_CLOSE_EXERCISE, "0A"),
+        opens_on=date(_SATURDAY_CLOSE.year, 1, 1),
         closes_on=_SATURDAY_CLOSE,
         status=ObligationStatus.UPCOMING,
     )
-    after_effective_close = OverviewCalendarRange(from_date=date(2026, 2, 3), to_date=date(2026, 2, 28))
+    after_effective_close = _AFTER_EFFECTIVE_CLOSE
 
     assert entry_intersects_range(
         obligation,
-        _FEBRUARY_2026,
+        _FEBRUARY,
         operation=authority_operation,
     )
     assert not entry_intersects_range(

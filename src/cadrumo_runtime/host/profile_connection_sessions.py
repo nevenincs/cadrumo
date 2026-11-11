@@ -352,6 +352,9 @@ class ProfileConnectionSessionMixin:
                 renewed = self._note_person_activity(host, context.connection_id, request.session_id)
                 if isinstance(renewed, AccessDenied):
                     return renewed
+                # The accepted report attends this connection, so the changes it saves are the person's input too.
+                with self._guard:
+                    connection.attended_session_id = request.session_id
             return self._status(connection, host, request.request_id, request.session_id)
 
     def _note_person_activity(

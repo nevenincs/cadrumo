@@ -37,6 +37,11 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..taxation_comparison import (
     TaxationComparisonBasis,
@@ -61,12 +66,14 @@ _REASON_OF = {
 # Importing the renta package registers the first-slice routing check.
 importlib.import_module("....domain.renta", package=__package__)
 
+_M100_YEAR = newest_authored_edition("100")
+
 
 @pytest.fixture(scope="module")
-def snapshot_2025() -> RegistrySnapshot:
-    """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
+def snapshot_m100() -> RegistrySnapshot:
+    """Real Modelo 100 registry snapshot of its newest authored edition (module-level singleton)."""
 
-    return published_snapshot("100", filing_year=2025, period="0A")
+    return published_snapshot("100", filing_year=_M100_YEAR, period="0A")
 
 
 def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -209,7 +216,7 @@ def _compare(snapshot: RegistrySnapshot, inputs: Mapping[CasillaId, Decimal]) ->
     )
 
 
-def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnapshot) -> None:
+def test_high_disparity_couple_conjunta_recommended(snapshot_m100: RegistrySnapshot) -> None:
     """High-disparity couple: €52,000 + €0 → conjunta saves money.
 
     Authority: AEAT Renta WEB 2025 comparative tool confirms that for a
@@ -223,7 +230,7 @@ def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnaps
     - Both cuota fields are populated with real Decimals
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
-    result = _compare(snapshot_2025, inputs)
+    result = _compare(snapshot_m100, inputs)
 
     assert result.recommendation == TaxationRecommendation.CONJUNTA, (
         f"Expected CONJUNTA recommendation for high-disparity couple; "
@@ -237,11 +244,11 @@ def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnaps
     )
     # Verify cuota fields are populated with real amounts.
     assert result.conjunta_cuota_resultante != Decimal("0"), "conjunta cuota should be non-zero"
-    assert result.filing_year == 2025
+    assert result.filing_year == _M100_YEAR
     assert result.modelo == "100"
 
 
-def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025: RegistrySnapshot) -> None:
+def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_m100: RegistrySnapshot) -> None:
     """For a married filer, conjunta is recommended because Art. 84 applies.
 
     Authority: AEAT Renta WEB 2025 — for a married filer declaring under
@@ -260,7 +267,7 @@ def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025:
     - conjunta_resultado < individual_resultado (model is consistent)
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("45000")}
-    result = _compare(snapshot_2025, inputs)
+    result = _compare(snapshot_m100, inputs)
 
     assert result.recommendation == TaxationRecommendation.CONJUNTA, (
         f"Expected CONJUNTA recommendation for €45k filer (Art. 84 reducción); "
@@ -279,7 +286,7 @@ def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025:
     )
 
 
-def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -> None:
+def test_comparison_result_structure_is_typed(snapshot_m100: RegistrySnapshot) -> None:
     """TaxationComparisonResult carries all required typed fields.
 
     Structural wiring check: verifies that the result payload is
@@ -288,16 +295,16 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     reason string is non-empty.
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
-    result = _compare(snapshot_2025, inputs)
+    result = _compare(snapshot_m100, inputs)
 
     assert isinstance(result, TaxationComparisonResult)
-    assert result.filing_year == 2025
+    assert result.filing_year == _M100_YEAR
     assert result.modelo == "100"
-    assert result.revision == "2025"
+    assert result.revision == str(revision_covering("100", _M100_YEAR).id)
     assert result.recommendation_reason is _REASON_OF[result.recommendation]
 
 
-def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapshot) -> None:
+def test_individual_branch_honesty_caveat_surfaces(snapshot_m100: RegistrySnapshot) -> None:
     """Every comparison result discloses the single-earner-only scope limit.
 
     The individual run
@@ -308,14 +315,14 @@ def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapsh
     must be non-silent: present on the typed result regardless of which mode wins.
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
-    result = _compare(snapshot_2025, inputs)
+    result = _compare(snapshot_m100, inputs)
 
     # The first slice is single-earner-faithful only; the flag must say so.
     assert result.individual_branch_single_earner_only is True
 
 
 def test_individual_branch_caveat_present_when_individual_recommended(
-    snapshot_2025: RegistrySnapshot,
+    snapshot_m100: RegistrySnapshot,
 ) -> None:
     """The caveat rides even the INDIVIDUAL and INDIFFERENT recommendations.
 
@@ -326,7 +333,7 @@ def test_individual_branch_caveat_present_when_individual_recommended(
     still carries the disclosure.
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("0")}
-    result = _compare(snapshot_2025, inputs)
+    result = _compare(snapshot_m100, inputs)
 
     assert result.individual_branch_single_earner_only is True
     assert result.recommendation_reason is _REASON_OF[result.recommendation]
@@ -346,22 +353,22 @@ def test_individual_branch_caveat_present_when_individual_recommended(
 
 def test_non_m100_revision_declares_no_comparison() -> None:
     """Modelo 303 declares no filing-mode casilla, so it offers no comparison."""
-    snapshot_303 = published_snapshot("303", filing_year=2025, period="3T")
+    snapshot_303 = published_snapshot("303", filing_year=filing_year_envelope().horizon, period="3T")
 
     assert taxation_comparison_basis(snapshot_303) is None
     assert revision_compares_taxation(snapshot_303) is False
 
 
-def test_comparison_refuses_ambiguous_semantic_role(snapshot_2025: RegistrySnapshot) -> None:
+def test_comparison_refuses_ambiguous_semantic_role(snapshot_m100: RegistrySnapshot) -> None:
     """Conjunta comparison must not choose an arbitrary casilla for a duplicated role."""
     original = next(
         casilla
-        for casilla in snapshot_2025.revision.casillas
+        for casilla in snapshot_m100.revision.casillas
         if casilla.semantic_role == "irpf_cuota_resultante_autoliquidacion"
     )
     duplicate = original.model_copy(update={"id": f"ambiguous-{original.id}"})
-    revision = snapshot_2025.revision.model_copy(update={"casillas": (*snapshot_2025.revision.casillas, duplicate)})
-    snapshot = snapshot_2025.model_copy(update={"revision": revision})
+    revision = snapshot_m100.revision.model_copy(update={"casillas": (*snapshot_m100.revision.casillas, duplicate)})
+    snapshot = snapshot_m100.model_copy(update={"revision": revision})
 
     assert taxation_comparison_basis(snapshot) is None
     assert revision_compares_taxation(snapshot) is False
@@ -370,18 +377,18 @@ def test_comparison_refuses_ambiguous_semantic_role(snapshot_2025: RegistrySnaps
 @pytest.mark.parametrize("missing_role", ["irpf_cuota_resultante_autoliquidacion", "irpf_cuota_diferencial"])
 @pytest.mark.parametrize("missing_mode", ["conjunta", "individual"])
 def test_comparison_refuses_missing_calculated_result(
-    snapshot_2025: RegistrySnapshot, missing_role: str, missing_mode: str
+    snapshot_m100: RegistrySnapshot, missing_role: str, missing_mode: str
 ) -> None:
     """A missing result casilla is refused by name, never read as a zero tax amount."""
-    basis = _basis(snapshot_2025)
-    missing = next(casilla.id for casilla in snapshot_2025.revision.casillas if casilla.semantic_role == missing_role)
+    basis = _basis(snapshot_m100)
+    missing = next(casilla.id for casilla in snapshot_m100.revision.casillas if casilla.semantic_role == missing_role)
     values = {casilla_id: Decimal("0") for casilla_id in basis.result_casillas}
     incomplete = {casilla_id: value for casilla_id, value in values.items() if casilla_id != missing}
 
     with pytest.raises(TaxationComparisonError) as refused:
         compare_taxation_results(
             basis,
-            snapshot=snapshot_2025,
+            snapshot=snapshot_m100,
             conjunta=incomplete if missing_mode == "conjunta" else values,
             individual=values if missing_mode == "conjunta" else incomplete,
         )

@@ -53,6 +53,7 @@ from .custody_ports import (
     map_profile_authentication_proof_failure,
     profile_custody_recovery_envelope_path,
     remove_profile_recovery_envelope,
+    resolve_profile_custody_password_replacement,
     unlock_profile_custody_password,
     unlock_profile_custody_recovery,
 )
@@ -290,6 +291,7 @@ def reset_profile_passphrase_with_recovery(
         evaluation = sessions.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=instant)
         if evaluation.throttled:
             raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+        resolve_profile_custody_password_replacement(profile_id, root=storage_root)
         password = load_profile_custody_password_material(profile_id, root=storage_root)
         if expected_envelope_digest is not None and password.envelope.self_digest != expected_envelope_digest:
             # A prepared bootstrap invocation can replace this exact predecessor

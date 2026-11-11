@@ -17,6 +17,7 @@ from .....core.errors.hierarchy import ProfileAnswerTypeError
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from .....domain.calculations.registry.authority import bundled_indexed_authority
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import parse_descendiente_flag
 from .....tests.env_scope import output_language_scope
@@ -68,9 +69,9 @@ def test_relationship_advisory_matches_the_actual_ambiguous_axis(
     locale: str, descendant_word: str, blood_word: str, custody_word: str
 ) -> None:
     with bundled_indexed_authority().operation():
-        ambiguous = DescendantInfo(birth_date=date(2020, 1, 1), meses_madre_trabajo=(1,))
+        ambiguous = DescendantInfo(birth_date=date(filing_year_envelope().horizon, 1, 1), meses_madre_trabajo=(1,))
         judicial = DescendantInfo(
-            birth_date=date(2020, 1, 1),
+            birth_date=date(filing_year_envelope().horizon, 1, 1),
             meses_madre_trabajo=(1,),
             relacion=DescendantRelacion.from_registry("guarda_y_custodia_judicial"),
         )

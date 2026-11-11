@@ -19,6 +19,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -37,8 +38,10 @@ from ..work_form_findings import finding_action_locale_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(2026, 4, 2, 12, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(revision_serving_period("303", _YEAR, "1T").id)
+_NOW = datetime(_YEAR, 4, 2, 12, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 @dataclass
@@ -74,7 +77,7 @@ def _transaction(provider_id: str, kind: str | None, category: str | None, *, cu
         {
             "raw": RawTransaction(
                 provider_transaction_id=provider_id,
-                booked_date=date(2026, 2, 15),
+                booked_date=date(_YEAR, 2, 15),
                 amount=Decimal("242.125"),
                 currency=currency,
                 description="A real native description containing spaces",
@@ -108,15 +111,15 @@ def _issue(transaction_id: str | None) -> CalculationSourceIssue:
 
 def work_and_target(bucket_id: str, issues: tuple[CalculationSourceIssue, ...]) -> tuple[WorkUnit, CalculationRevision]:
     work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id="2026-y-siguientes"
+        bucket_id=bucket_id, modelo="303", filing_year=_YEAR, period=_PERIOD, revision_id=_REVISION
     )
     work = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION,
         name="Document evidence proof",
         created_at=_NOW,
         updated_at=_NOW,
@@ -133,9 +136,7 @@ def work_and_target(bucket_id: str, issues: tuple[CalculationSourceIssue, ...]) 
     target = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1T"
-        ),
+        registry_snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id=_REVISION, modelo_year=_YEAR, period="1T"),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},

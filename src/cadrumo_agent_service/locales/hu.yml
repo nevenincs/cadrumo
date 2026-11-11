@@ -137,9 +137,15 @@ desktop:
     message_label: Üzenet
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
-    model_does_not_fit_refused: Ez a modell most nem fér el abban, amit ez a
-      számítógép biztosítani tud neki. Válassz kisebb modellt, vagy módosítsd,
-      hol futnak a modellek a helyi MI beállításaiban.
+    model_does_not_fit_memory: Ezt a modellt most nem sikerült {context} token kontextussal
+      betölteni a számítógép szabad memóriájába. Válassz kisebb modellt, vagy zárj
+      be néhány programot, és próbáld újra.
+    model_does_not_fit_refused: Ez a modell most nem fér el abban, amit ez a számítógép
+      biztosítani tud neki. Válassz kisebb modellt, vagy módosítsd, hol futnak a modellek
+      a helyi MI beállításaiban.
+    model_does_not_fit_shortfall: Ennek a modellnek körülbelül {needed} token kontextusra
+      van szüksége ehhez a beszélgetéshez, többre, mint az a {context}, amelyet befogad.
+      Válassz másik modellt vagy másik szolgáltatót ehhez a beszélgetéshez.
     model_not_installed: '{name} (nincs letöltve)'
     model_not_installed_refused: A választott modell nincs ezen a gépen. Töltsd le,
       vagy válassz másik modellt.

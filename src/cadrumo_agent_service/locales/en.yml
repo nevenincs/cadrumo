@@ -134,9 +134,15 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
-    model_does_not_fit_refused: This model doesn't fit in what this computer can
-      give it right now. Choose a smaller model or change where models run in
-      the local AI settings.
+    model_does_not_fit_memory: This model could not be loaded with {context} tokens
+      of context in the memory free on this computer right now. Choose a smaller model,
+      or close some programs and try again.
+    model_does_not_fit_refused: This model doesn't fit in what this computer can give
+      it right now. Choose a smaller model or change where models run in the local
+      AI settings.
+    model_does_not_fit_shortfall: This model needs about {needed} tokens of context
+      for this conversation, more than the {context} it can hold. Choose another model,
+      or another provider for this conversation.
     model_not_installed: '{name} (not downloaded)'
     model_not_installed_refused: The chosen model isn't on this computer. Download
       it, or choose another model.

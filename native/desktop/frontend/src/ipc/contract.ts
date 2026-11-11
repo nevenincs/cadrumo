@@ -307,6 +307,8 @@ export type StartupProgress = {
 
 /** One model the person added by name to a local lane's model list. */
 export type AgentListedModel = { lane: string; model: string };
+/** Where the model documents are read with comes from, as the service serves it. */
+export type AgentReadingSource = "chosen" | "default" | "none";
 
 /**
  * The models the person added to the local lanes' lists, in the order added,
@@ -321,7 +323,11 @@ export type AgentLocalModels =
   | {
       state: "readable";
       models: AgentListedModel[];
+      /** The model documents are read with now, as the service decides it. */
       reading: AgentListedModel | null;
+      /** Where `reading` comes from: the person's stored choice, the
+       * installed default that stands in for none, or none at all. */
+      reading_source: AgentReadingSource;
       local_lanes: string[];
       revision: string;
     }
@@ -895,11 +901,15 @@ export interface HostCommands {
    * item's setup never refuses it.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
-   * without a second review; any other plan awaits an answer as usual. */
+   * without a second review; any other plan awaits an answer as usual.
+   * `reinstall` is the served reinstall of the local AI's program: its
+   * downloaded program is installed afresh, never with a resume or a
+   * download. */
   desktop_setup_start: {
     args: Authorized<{
       item: SetupItemId;
       resume: boolean;
+      reinstall?: boolean;
       download?: SetupModelDownload;
     }>;
     result: DesktopSetup;

@@ -6,14 +6,17 @@ from datetime import date
 
 import pytest
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ...invoices import catalogue_creation
 from .. import counterpart
 from ..counterpart import counterpart_catalogue_entry, counterpart_operation_catalogue_entries
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_EFFECTIVE = date(2026, 3, 14)
+_EFFECTIVE = date(_YEAR, 3, 14)
 
 
 @pytest.mark.parametrize(("declared", "expected"), [("value", "value"), ("  value\t", "value"), (" a, b ", "a, b")])

@@ -12,6 +12,7 @@ import pytest
 from pydantic import BaseModel
 from textual.widgets import Button, Input, Static
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     INVOICE_ADD_VALIDATION_REFUSAL_CODE,
@@ -73,7 +74,9 @@ pytestmark = pytest.mark.hex_entrypoint
 _PROFILE_ID = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _SESSION_ID = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
-_NOW = datetime(2026, 9, 29, tzinfo=UTC)
+_NOW = datetime(1980, 9, 29, tzinfo=UTC)
+_INVOICE_DATE = date(filing_year_envelope().horizon, 3, 16)
+_OPERATION_DATE = date(filing_year_envelope().horizon, 3, 15)
 
 
 class _Client:
@@ -133,7 +136,7 @@ def _entry() -> LedgerInvoiceEntryV1:
         counterparty_nif="B12345678",
         country_code="ES",
         invoice_number="TUI-007",
-        invoice_date=date(2026, 3, 16),
+        invoice_date=_INVOICE_DATE,
         taxable_base=None,
         iva_rate=None,
         lines=(
@@ -149,7 +152,7 @@ def _entry() -> LedgerInvoiceEntryV1:
             ),
         ),
         operation_type=IntracomOperationType.A,
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         recargo_amount=Decimal("0.77"),
         rectifies_invoice_number="TUI-006",
         iva_category=IvaCategory("general"),
@@ -168,7 +171,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         bucket_id=str(_PROFILE_ID),
         kind=InvoiceKind.RECEIVED,
         invoice_number="TUI-007",
-        issued_at=date(2026, 3, 16),
+        issued_at=_INVOICE_DATE,
         counterparty_name="Proveedor Example SL",
         counterparty_tax_id="B12345678",
         counterparty_country="ES",
@@ -200,7 +203,7 @@ def _invoice_snapshot() -> CatalogueInvoiceSnapshot:
         ),
         invoice_class="RECTIFICATIVA",
         series="SER-1",
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         operation_date_role=None,
         iva_category="general",
         rectifies_invoice_number="TUI-006",
@@ -367,14 +370,14 @@ async def test_invoice_add_tui_door_preserves_the_complete_entry_and_worker_tota
         counterparty_tax_id="B12345678",
         counterparty_country="ES",
         invoice_number="TUI-007",
-        issued_at=date(2026, 3, 16),
+        issued_at=_INVOICE_DATE,
         taxable_base=None,
         iva_rate=None,
         currency="USD",
         notes="typed note",
         iva_category="general",
         operation_type=IntracomOperationType.A,
-        operation_date=date(2026, 3, 15),
+        operation_date=_OPERATION_DATE,
         retention_rate=PublicDecimal(decimal="15.0"),
         retention_amount=PublicDecimal(decimal="15.00"),
         invoice_class="RECTIFICATIVA",
@@ -511,7 +514,7 @@ async def test_invoice_entry_clears_private_form_when_the_add_door_reports_expir
             "counterparty_name": "Private counterparty",
             "counterparty_nif": "B12345678",
             "invoice_number": "PRIVATE-007",
-            "invoice_date": "2026-03-16",
+            "invoice_date": _INVOICE_DATE.isoformat(),
             "taxable_base": "100.00",
             "iva_rate": "21",
             "notes": "private note",

@@ -6,6 +6,7 @@ from datetime import date
 
 from ....application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
 from ....application.operations.public_scalar import PublicDecimal
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 
@@ -17,7 +18,7 @@ def received_invoice_snapshot(*, counterparty_tax_id: str | None) -> CatalogueIn
         bucket_id="5aa00000-0000-4000-8000-0000000000aa",
         kind=InvoiceKind.RECEIVED,
         invoice_number="ES-2026-000019",
-        issued_at=date(2026, 3, 11),
+        issued_at=date(filing_year_envelope().horizon, 3, 11),
         counterparty_name="Acme Suministros SL",
         counterparty_tax_id=counterparty_tax_id,
         counterparty_country="ES",

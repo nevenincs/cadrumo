@@ -10,6 +10,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.renta.actividad_asset.disposal import (
     ADMITTED_DISPOSAL_REASONS,
     ActivityAssetDisposalFacts,
@@ -20,10 +21,12 @@ from ..actividad_asset_inputs import InputRefusedError, stated_disposal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_DISPOSAL_ON = date(filing_year_envelope().horizon, 6, 30)
+
 
 def _reader(**amounts: str) -> Callable[[str], str]:
     values = {
-        "asset-disposal-date": "2026-06-30",
+        "asset-disposal-date": _DISPOSAL_ON.isoformat(),
         "asset-disposal-reason": amounts.pop("reason", "sale"),
         "asset-disposal-proceeds": amounts.pop("proceeds"),
         "asset-disposal-costs": amounts.pop("costs"),
@@ -59,7 +62,7 @@ def test_a_written_zero_is_accepted_for_every_admitted_reason(reason: ActivityAs
 
 def test_a_stated_sale_reaches_the_worked_gain() -> None:
     disposal = stated_disposal(_reader(proceeds="7500.25", costs="300.10")).to_domain()
-    assert disposal.disposal_date == date(2026, 6, 30)
+    assert disposal.disposal_date == _DISPOSAL_ON
 
     calculation = calculate_disposal(
         ActivityAssetDisposalFacts(

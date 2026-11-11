@@ -8,6 +8,7 @@ reaching into another suite's module internals.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING, cast
 
 from .....application.ledger.models import ManualLedgerTransactionResult
@@ -27,6 +28,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.identity.transaction_ids import TransactionId
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.models import BucketTransactionRef
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
@@ -34,6 +36,8 @@ from ..controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController
 from ..models import LedgerClassificationSubmissionV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from .review_door_fixtures import MemoryLedgerReviewDoor, projection_review_rows
+
+_YEAR = filing_year_envelope().horizon
 
 if TYPE_CHECKING:
     from textual.screen import Screen
@@ -77,7 +81,7 @@ def ledger_projection(*, unavailable: LedgerWorkspaceArea | None = None) -> Ledg
         LedgerWorkspaceEntryRefV1(
             transaction_id=LEDGER_TX_A,
             review_status="pending",
-            date="2026-03-14",
+            date=date(_YEAR, 3, 14).isoformat(),
             amount="1250.00",
             currency="EUR",
             direction="outgoing",
@@ -88,7 +92,7 @@ def ledger_projection(*, unavailable: LedgerWorkspaceArea | None = None) -> Ledg
         LedgerWorkspaceEntryRefV1(
             transaction_id=LEDGER_TX_B,
             review_status="reviewed",
-            date="2026-03-02",
+            date=date(_YEAR, 3, 2).isoformat(),
             amount="480.50",
             currency="EUR",
             direction="incoming",
@@ -181,8 +185,8 @@ def ledger_reconciled_projection() -> LedgerWorkspaceProjectionV1:
             "affected_declarations": (
                 LedgerAffectedDeclarationRefV1(
                     modelo="303",
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "2T"),
+                    filing_year=_YEAR,
+                    period=Period.from_year_and_code(_YEAR, "2T"),
                     calculation_revision_id="b" * 64,
                     changed_count=2,
                     removed_count=1,

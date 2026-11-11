@@ -620,21 +620,6 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_source": "ledger_iva_aggregation",
-              "detail": "2 ledger row(s) were placed in this period on their bank movement date because no operation date is recorded: c866d7043d51, fcd9d7ce87ab. LIVA art. 75 fixes the devengo by the operation, not the collection, so a sale near a period end can belong to the previous one",
-              "level": "check",
-              "reason": "iva_row_placed_on_movement_date",
-              "remedy": "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount received at its collection, so record the collection date",
-              "resolver_id": "ledger_iva_aggregation",
-              "source_kind": "ledger_iva_aggregation"
-            },
-            "message": "Some ledger rows have no operation date, so their bank date chose the IVA period. IVA falls due when the operation takes place, not when the money moves.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.calculate.source_advisory",
-            "context": {
               "box": "44",
               "casilla_id": "44",
               "detail": "casilla '44': the caller value replaced a different value from backend",
@@ -709,7 +694,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "255e3c7c40929ad80d0199f405618f0af38b03314bdefcd12ce9c0fbca5df777",
+          "calculation_revision_id": "7c760953310ab8bb1d83bcbbc3e27038f7eca4bb168222602fb2af81faae62a8",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1276,7 +1261,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 255e3c7c40929ad80d0199f405618f0af38b03314bdefcd12ce9c0fbca5df777 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 7c760953310ab8bb1d83bcbbc3e27038f7eca4bb168222602fb2af81faae62a8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1287,7 +1272,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1298,7 +1283,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_iva_aggregation",
               "resolver_id": "ledger_iva_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "<object-key>"
             },
             {
               "contributor_binding_source": "prorrata_regularizacion",

@@ -32,33 +32,42 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions_where, filing_year_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — manifest-bearing modelos across the gated set,
 # spanning every shape: pagos fraccionados (130/131), retenciones (111/115/123),
 # IVA (303), sociedades (202/200), and informativas (190/180/349/232/720).
+# Every coordinate is the newest supported exercise, which each of these modelos
+# serves at filing grade; a quarterly coordinate is filed in June of its exercise
+# and an annual one in June of the next.
 #
-# Modelo 200 enters only from its 2025 design, the first it declares at filing
-# grade. Its 2024 revision stays at calculation grade and refuses at the
-# snapshot boundary before the gate runs; that refusal is asserted explicitly in
+# Modelo 200 is gated at filing grade from the design that declares it. Its earlier
+# revision stays at calculation grade and refuses at the snapshot boundary before
+# the gate runs; that refusal is asserted explicitly in
 # ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below.
+_NEWEST_EXERCISE = filing_year_envelope().horizon
 _MANIFEST_MODELOS = [
-    ("130", 2025, "1T", date(2025, 6, 1)),
-    ("111", 2025, "1T", date(2025, 6, 1)),
-    ("115", 2025, "1T", date(2025, 6, 1)),
-    ("123", 2025, "1T", date(2025, 6, 1)),
-    ("131", 2025, "1T", date(2025, 6, 1)),
-    ("303", 2025, "1T", date(2025, 6, 1)),
-    ("202", 2025, "1P", date(2025, 6, 1)),
-    ("200", 2025, "0A", date(2026, 7, 1)),
-    ("190", 2025, "0A", date(2026, 6, 1)),
-    ("180", 2025, "0A", date(2026, 6, 1)),
-    ("349", 2025, "1T", date(2025, 6, 1)),
-    ("232", 2024, "0A", date(2025, 6, 1)),
-    ("720", 2024, "0A", date(2025, 6, 1)),
+    (modelo, _NEWEST_EXERCISE, period, date(_NEWEST_EXERCISE + (1 if period == "0A" else 0), 6, 1))
+    for modelo, period in (
+        ("130", "1T"),
+        ("111", "1T"),
+        ("115", "1T"),
+        ("123", "1T"),
+        ("131", "1T"),
+        ("303", "2T"),
+        ("202", "1P"),
+        ("200", "0A"),
+        ("190", "0A"),
+        ("180", "0A"),
+        ("349", "1T"),
+        ("232", "0A"),
+        ("720", "0A"),
+    )
 ]
 
 
@@ -99,10 +108,17 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, yea
 
 
 # A coordinate whose registry revision declares a rung below filing. Modelo
-# 200's 2024 revision declares `calculation`: it computes, but it ships no
-# export layout, so claiming filing authority for it would be a false
-# capability claim.
-_CALCULATION_GRADE_COORDINATE = ("200", 2024, "0A", date(2024, 12, 31))
+# 200's calculation-grade revision computes, but it ships no export layout, so
+# claiming filing authority for it would be a false capability claim.
+(_CALCULATION_GRADE_REVISION,) = authored_revisions_where(
+    "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.CALCULATION
+)
+_CALCULATION_GRADE_COORDINATE = (
+    "200",
+    _CALCULATION_GRADE_REVISION.valid_from.year,
+    "0A",
+    date(_CALCULATION_GRADE_REVISION.valid_from.year, 12, 31),
+)
 
 
 def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:

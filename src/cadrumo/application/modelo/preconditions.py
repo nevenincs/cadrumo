@@ -353,13 +353,13 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.ledger_preflight.ready",
         "modelo.work.calculate.ledger_preflight.blocked",
     ),
-    # No catalogue action: the statement that no earlier-ejercicio carry is
-    # pending is made on the declaration's own form, which the command line
-    # does not reach; the refusal serves the step that opens that form.
+    # The statement that no earlier-ejercicio carry is pending is the edit the
+    # declaration's form serves; the command line stages the same edit.
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.prior_carries.stated",
         "modelo.work.calculate.prior_carries.renta_negative_general_bases_pending_unstated",
+        action_id="operator.modelo.work.attest_prior_carries",
     ),
     _profile(
         "modelo.work.calculate",

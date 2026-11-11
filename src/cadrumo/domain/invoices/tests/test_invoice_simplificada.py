@@ -24,11 +24,14 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind, IvaCategory
 from ..enums import InvoiceClass, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -58,7 +61,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "kind": InvoiceKind.ISSUED,
         "invoice_class": InvoiceClass.from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
-        "issued_at": date(2026, 5, 3),
+        "issued_at": date(_YEAR, 5, 3),
         "counterparty_name": "Cliente de mostrador",
         "counterparty_tax_id": None,
         "counterparty_country": "ES",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import cast
 
@@ -21,6 +22,7 @@ from .....application.operations.public_period import PublicPeriod
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...components.dialogs import ConfirmScreen
 from ...tests.settling import settle
 from ..entries_add import LedgerEntryAddScreen
@@ -32,6 +34,10 @@ from ..entries_reset import LedgerResetScreen
 from ..models import LedgerFlowState
 from .entries_door_fixtures import REFUSED_ADD_AMOUNT, MemoryEntriesLedger, entries_controller
 from .workspace_fixtures import WorkspaceHostApp
+
+_FIRST_YEAR = filing_year_envelope().floor
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +57,7 @@ def _type(screen: Screen[None], values: dict[str, str]) -> None:
 
 
 _REQUIRED = {
-    "#entries-add-booked-date": "2026-03-14",
+    "#entries-add-booked-date": date(_YEAR, 3, 14).isoformat(),
     "#entries-add-amount": "120.50",
     "#entries-add-description": "Material de oficina",
 }
@@ -81,7 +87,7 @@ async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() ->
             assert browse.selected_id is not None
     [request] = [cast(LedgerAddRequest, request) for request in ledger.requested("add")]
     assert (request.booked_date, request.amount, request.direction, request.description) == (
-        "2026-03-14",
+        date(_YEAR, 3, 14).isoformat(),
         "120.50",
         "OUTGOING",
         "Material de oficina",
@@ -89,7 +95,7 @@ async def test_an_entry_with_only_the_required_facts_is_reviewed_then_added() ->
     assert request.business_classification == "NOT_YET_PROCESSED"
     assert request.taxable_base is None
     browse_request = cast(LedgerListRequest, ledger.requested("list")[0])
-    assert browse_request.filters == ("period=03", "year=2026")
+    assert browse_request.filters == ("period=03", f"year={_YEAR}")
 
 
 @pytest.mark.asyncio
@@ -176,7 +182,7 @@ async def test_export_to_a_typed_path_reports_what_was_written(tmp_path: Path) -
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)
-            _type(screen, {"#entries-export-path": _export_path(tmp_path), "#entries-export-year": "2026"})
+            _type(screen, {"#entries-export-path": _export_path(tmp_path), "#entries-export-year": str(_YEAR)})
             cast("Select[str]", screen.query_one("#entries-export-period", Select)).value = "1T"
             screen.query_one("#entries-export-inactive", Checkbox).value = True
             await _press(pilot, screen, "entries-export-review")
@@ -189,7 +195,7 @@ async def test_export_to_a_typed_path_reports_what_was_written(tmp_path: Path) -
     [request] = [cast(LedgerExportRequest, request) for request in ledger.requested("export")]
     assert request.output_path == _export_path(tmp_path)
     assert request.export_format is ExportSerializationFormat.CSV
-    assert request.period == PublicPeriod(filing_year=2026, code="1T")
+    assert request.period == PublicPeriod(filing_year=_YEAR, code="1T")
     assert request.include_inactive
 
 
@@ -245,7 +251,7 @@ async def test_status_and_checks_read_a_chosen_period_in_words() -> None:
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
             await settle(pilot)
-            _type(screen, {"#entries-health-year": "2026"})
+            _type(screen, {"#entries-health-year": str(_YEAR)})
             cast("Select[str]", screen.query_one("#entries-health-period", Select)).value = "1T"
             await _press(pilot, screen, "entries-health-read")
             assert tr("tui.ledger.entry_tools.health.ready", checked=4) in _text(screen, "#entries-health-status")
@@ -253,7 +259,7 @@ async def test_status_and_checks_read_a_chosen_period_in_words() -> None:
             assert tr("tui.ledger.entry_tools.health.not_ready", findings=1, checked=4) in check
             assert "Category is missing." in check
             assert tr("tui.ledger.entry_tools.health.ready", checked=4) in _text(screen, "#entries-health-preflight")
-    period = PublicPeriod(filing_year=2026, code="1T")
+    period = PublicPeriod(filing_year=_YEAR, code="1T")
     assert cast(LedgerStatusRequest, ledger.requested("status")[0]).period == period
     assert cast(LedgerCheckRequest, ledger.requested("check")[0]).period == period
     assert len(ledger.requested("preflight")) == 1
@@ -359,7 +365,14 @@ def test_period_choices_are_the_canonical_codes_without_instalments() -> None:
 
 
 @pytest.mark.parametrize(
-    ("year", "code"), [("1000", "1T"), ("2000", "1T"), ("2099", "0A"), (" 2026 ", "03"), ("9999", "4T")]
+    ("year", "code"),
+    [
+        ("1000", "1T"),
+        (str(_FIRST_YEAR), "1T"),
+        (str(_YEAR), "0A"),
+        (f" {_YEAR} ", "03"),
+        ("9999", "4T"),
+    ],
 )
 def test_read_period_accepts_any_year_written_with_four_digits(year: str, code: str) -> None:
     period = read_period(year, code)
@@ -367,7 +380,7 @@ def test_read_period_accepts_any_year_written_with_four_digits(year: str, code: 
     assert period == PublicPeriod(filing_year=int(year), code=code)
 
 
-@pytest.mark.parametrize("year", ["999", "0999", "10000", "20x6", "-2026"])
+@pytest.mark.parametrize("year", ["999", "0999", "10000", "20x6", f"-{_YEAR}"])
 def test_read_period_refuses_a_year_not_written_with_four_digits(year: str) -> None:
     with pytest.raises(ValueError, match=tr("tui.ledger.entry_tools.period.invalid")):
         read_period(year, "1T")

@@ -15,7 +15,8 @@ import type {
   AgentProviderLane,
   AgentSelectionRecord,
 } from "./agentSession";
-import { parseEngineHealth } from "./agentSession";
+import { parseAuthKind, parseEngineHealth } from "./agentSession";
+import type { AgentListedModel } from "../ipc/contract";
 import type { AgentRanWith } from "./agentViews";
 import { engineNotRunningWords } from "./engineHealth";
 import type { Translate } from "./strings";
@@ -65,11 +66,13 @@ const servedLanes = (answer: AgentCatalogAnswer): AgentProviderLane[] =>
 const wayId = (lane: AgentProviderLane) =>
   `${lane.provider_id}/${lane.transport}`;
 
-// A lane that states its engine's health outside the contract is not
-// understood, as one without a transport is not: it is not offered.
+// A lane that states its engine's health or what it authenticates with
+// outside the contract is not understood, as one without a transport is not:
+// it is not offered.
 const understood = (lane: AgentProviderLane) =>
   lane.provider_id !== "" &&
   (lane.transport === "api" || lane.transport === "cli") &&
+  parseAuthKind(lane) !== "malformed" &&
   parseEngineHealth(lane) !== "malformed";
 
 /** The health of each local engine's lane the catalog states, by lane id
@@ -247,7 +250,8 @@ export type CatalogChoices = {
 const declaredUnderstood = (lane: AgentDeclaredLane) =>
   typeof lane.provider === "string" &&
   lane.provider !== "" &&
-  (lane.transport === "api" || lane.transport === "cli");
+  (lane.transport === "api" || lane.transport === "cli") &&
+  parseAuthKind(lane) !== "malformed";
 
 /** The declared lanes, each listed under its provider and none choosable. */
 function declaredChoices(
@@ -270,14 +274,19 @@ function declaredChoices(
       .sort(
         (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
       )
-      .map((lane): ProviderWay => {
+      .flatMap((lane): ProviderWay[] => {
+        const authKind = parseAuthKind(lane);
+        if (authKind === "malformed") return [];
         models[key(lane)] = [];
-        return {
-          id: key(lane),
-          transport: lane.transport,
-          selectable: false,
-          unavailableReason: t("desktop.agent.lane_not_observed"),
-        };
+        return [
+          {
+            id: key(lane),
+            transport: lane.transport,
+            authKind,
+            selectable: false,
+            unavailableReason: t("desktop.agent.lane_not_observed"),
+          },
+        ];
       });
     return {
       id,
@@ -345,7 +354,9 @@ export function catalogChoices(
       .sort(
         (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
       )
-      .map((lane): ProviderWay => {
+      .flatMap((lane): ProviderWay[] => {
+        const authKind = parseAuthKind(lane);
+        if (authKind === "malformed") return [];
         const capabilities = provenCapabilities(t, lane);
         const local = lists?.lanes.includes(
           `${lane.provider_id}_${lane.transport}`,
@@ -376,34 +387,37 @@ export function catalogChoices(
           engine !== null && engine !== "malformed"
             ? engineWordsOf(t, engine)
             : null;
-        return {
-          id: wayId(lane),
-          transport: lane.transport,
-          selectable: usable,
-          ...(usable
-            ? {}
-            : {
-                unavailableReason:
-                  runs && noneHeld
-                    ? t("desktop.agent.lane_no_installed_model")
-                    : laneHeldBy(t, lane),
-              }),
-          ...(toDownload ? { modelsToDownload: true } : {}),
-          ...(notRunning ? { engineNotRunning: notRunning } : {}),
-          ...(capabilities.length > 0 ? { capabilities } : {}),
-          ...(lane.catalog.recommended_entry_id
-            ? { defaultModelId: lane.catalog.recommended_entry_id }
-            : {}),
-          ...(writesModel(lane)
-            ? {
-                modelWritten: {
-                  efforts: laneEfforts(lane).map((effort) =>
-                    effortChoice(t, effort),
-                  ),
-                },
-              }
-            : {}),
-        };
+        return [
+          {
+            id: wayId(lane),
+            transport: lane.transport,
+            authKind,
+            selectable: usable,
+            ...(usable
+              ? {}
+              : {
+                  unavailableReason:
+                    runs && noneHeld
+                      ? t("desktop.agent.lane_no_installed_model")
+                      : laneHeldBy(t, lane),
+                }),
+            ...(toDownload ? { modelsToDownload: true } : {}),
+            ...(notRunning ? { engineNotRunning: notRunning } : {}),
+            ...(capabilities.length > 0 ? { capabilities } : {}),
+            ...(lane.catalog.recommended_entry_id
+              ? { defaultModelId: lane.catalog.recommended_entry_id }
+              : {}),
+            ...(writesModel(lane)
+              ? {
+                  modelWritten: {
+                    efforts: laneEfforts(lane).map((effort) =>
+                      effortChoice(t, effort),
+                    ),
+                  },
+                }
+              : {}),
+          },
+        ];
       });
     return {
       id,
@@ -549,6 +563,25 @@ export function selectionRecord(
   if (!entry || entry.installed === false) return null;
   const effort = entry.efforts?.find((held) => held === selection.effort);
   return { ...base, model: entry.model, ...(effort ? { effort } : {}) };
+}
+
+/** The model the service reads documents with, as the column holds a choice:
+ * null where the catalog does not serve its lane or no longer lists it. */
+export function readingSelection(
+  catalog: AgentCatalogAnswer,
+  reading: AgentListedModel,
+): AgentSelection | null {
+  const lane = servedLanes(catalog).find(
+    (held) =>
+      understood(held) &&
+      `${held.provider_id}_${held.transport}` === reading.lane,
+  );
+  if (!lane) return null;
+  return ranSelection(catalog, {
+    provider: lane.provider_id,
+    transport: lane.transport,
+    model: reading.model,
+  });
 }
 
 /** The choice a run was made with, as the column holds it: the inverse of

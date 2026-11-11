@@ -1082,9 +1082,14 @@ application:
           Javítsd vagy töröld a tárolt számlát ahelyett, hogy ugyanazt a dokumentumot
           kétszer erősítenéd meg.'
       label_reading:
+        no_model_selected: 'Nincs kiválasztva olvasásra szolgáló modell, ezért a címkék
+          által nem lefedett %{count} mező üres marad: %{fields}. Válassz modellt,
+          majd olvasd be újra a dokumentumot, vagy töltsd ki magad.'
         reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
           által nem lefedett %{count} mező üres marad: %{fields}. Töltsd ki ezeket
           a mezőket.'
+      next_step:
+        choose_reading_model: Olvasómodell kiválasztása
     periods:
       served:
         annual: Év
@@ -1101,6 +1106,9 @@ application:
         november: November
         october: Október
         september: Szeptember
+    reason:
+      served:
+        command: Paranccsal rögzítve, indoklás nélkül
     staged_check:
       served:
         blocker:
@@ -2453,6 +2461,10 @@ application:
         a(z) %{revision_id} változatban: a nyomtatványdefiníciók olyan értékforrást
         deklarálnak, amelyet egyetlen számítási feloldó sem kezel. Adj hozzá egy feloldót,
         vagy jelöld halasztottként a számítás előtt.'
+      prior_carries_nothing_open: 'A %{filing_year}. évi Modelo %{modelo} bevallásban
+        nincs olyan korábbi évekből származó összeg, amelyről kijelenthetnéd, hogy
+        nincs függőben: mindegyiknek van már értéke vagy kijelentésed, vagy a bevallás
+        nem visz át ilyet. Semmi sem változott.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'A %{filing_year}. évi Modelo %{modelo}
           nem számítható ki: nem ismert, hogy maradt-e korábbi adóévekből még ki nem
@@ -3597,6 +3609,10 @@ application:
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
+      kdf_at_fallback: A profil jelszava a legkisebb védelmet kapta, mert a számítógép
+        a profil létrehozásakor nem tudott időben erősebb beállítást megerősíteni.
+        Változtasd meg a jelszót a megerősítéséhez; ugyanazt a jelszót is megadhatod
+        újra.
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'

@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _run(root: Path, name: str, *, age: float, completed: bool, now: float) -> Path:
-    directory = root / "2026-09-08" / name
+    directory = root / "1980-09-08" / name
     directory.mkdir(parents=True)
     if completed:
         (directory / "run.json").write_text(json.dumps({"exit_status": 0}), encoding="utf-8")
@@ -139,7 +139,7 @@ def test_interrupted_run_requires_a_dead_owner_and_the_grace_period(
 def test_symlinks_are_never_assessed_or_removed(tmp_path: Path) -> None:
     target = tmp_path / "elsewhere"
     target.mkdir()
-    date = tmp_path / "2026-09-08"
+    date = tmp_path / "1980-09-08"
     date.mkdir()
     link = date / "stamp-pytest-999-dddddddd"
     # Unguarded: a host that cannot create a directory symlink raises here and

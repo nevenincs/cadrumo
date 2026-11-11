@@ -17,6 +17,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_targets import sole_bound_casilla
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 from ....domain.modelos.codes import ModeloCode
 from ...aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
 from ..calculation_source_staging import add_expected_missing_binding_diagnostics
@@ -27,7 +28,7 @@ from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_wor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_grade_exercises("390")[-1]
 _REGULARISATION = "modelo-390-prorrata-regularizacion-anual"
 _RESOLVER = BindingSourceKind.PRORRATA_REGULARIZACION.value
 

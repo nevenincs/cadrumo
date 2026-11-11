@@ -38,11 +38,14 @@ from .capsule_record import ProfileRecordSession
 from .custody_ports import (
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
+    profile_custody_password_replacement_pending,
     profile_is_keyring_unavailable,
     refuse_profile_login_without_password_channel,
+    resolve_profile_custody_password_replacement,
     unlock_profile_custody_password,
 )
 from .custody_record_ports import ProfileCustodyPasswordMaterialPort
+from .custody_repository import profile_custody_transaction_lock
 from .language_resolver import refresh_active_profile_output_language
 from .login_session_port import (
     ProfileBucketSessionPort,
@@ -528,6 +531,7 @@ def _authenticate_unthrottled_candidate(
     evaluation = _profile_login_sessions().evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now)
     if evaluation.throttled:
         raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+    _settle_password_replacement(UUID(bucket_id), storage_root=storage_root)
     candidate = _authenticate_candidate_or_record_failure(
         bucket_id=bucket_id,
         storage_root=storage_root,
@@ -543,6 +547,20 @@ def _authenticate_unthrottled_candidate(
         candidate.close()
         raise
     return candidate
+
+
+def _settle_password_replacement(profile_id: UUID, *, storage_root: Path) -> None:
+    """Settle a password replacement a crash left in flight, before the envelope is read.
+
+    The probe takes no lock, so an ordinary sign-in never waits on the custody
+    lock. An intent found by it is settled under that lock; one that appears
+    after the probe belongs to a replacement still running, which fences
+    human sign-in itself.
+    """
+    if not profile_custody_password_replacement_pending(profile_id, root=storage_root):
+        return
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        resolve_profile_custody_password_replacement(profile_id, root=storage_root)
 
 
 def _resolve_login_password(callback: Callable[[], str] | None) -> str:

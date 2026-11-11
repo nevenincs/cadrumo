@@ -20,6 +20,7 @@ from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.work_unit import WorkUnit
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotReading, Borrador100SnapshotService
 from ...live.notification_ports import NotificationType, RemoteNotification
@@ -44,7 +45,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _BUCKET = "5aa00000-0000-4000-8000-0000000000aa"
 _OTHER_BUCKET = "6bb00000-0000-4000-8000-0000000000bb"
-_NOW = datetime(2026, 10, 29, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 10, 29, 12, 0, tzinfo=UTC)
 _NIF = "B00015016"
 
 
@@ -57,7 +59,7 @@ def _notification(*, leida: bool | None) -> RemoteNotification:
         titular_nombre="Synthetic taxpayer",
         destinatario_nif=_NIF,
         destinatario_nombre="Synthetic taxpayer",
-        fecha_emision=date(2026, 10, 1),
+        fecha_emision=date(_YEAR, 10, 1),
         leida=leida,
         source_url="https://sede.example/notification/1",
     )
@@ -125,7 +127,7 @@ class _BorradorRepository:
 
 def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> Borrador100SnapshotReading:
     service = Borrador100SnapshotService(bucket_id=_BUCKET, repository=_BorradorRepository())
-    period = Period.from_year_and_code(2023, "0A")
+    period = Period.from_year_and_code(_YEAR, "0A")
     for index, captured_at in enumerate(captured):
         service.capture(
             filing_year=period.filing_year,

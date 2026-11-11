@@ -6,11 +6,12 @@ calculation is not yet verified, opening one whose
 own form says what it still lacks, filling in one profile detail the refusal
 named, declaring the profile setup complete, opening the ledger movement
 that stops a calculation, opening the Saldo de IVA of a Modelo 303 whose
-carried compensation has no authority yet, or recording the opening IVA
-balance a period's carry reads. The step says which kind, what
-it concerns and the words that offer it, so a frontend does what it already
-knows for that kind and keeps no table of operator action identifiers. The kind
-is closed; an address that cannot be run is refused when the step is built.
+carried compensation has no authority yet, recording the opening IVA
+balance a period's carry reads, or choosing the model documents are read with.
+The step says which kind, what it concerns and the words that offer it, so a
+frontend does what it already knows for that kind and keeps no table of
+operator action identifiers. The kind is closed; an address that cannot be run
+is refused when the step is built.
 
 A profile step addresses the schema path the profile's own facts live at -
 ``activities.description`` - never a private wizard question id, because the
@@ -156,6 +157,20 @@ class OperationOpenIvaWalletOpeningBalanceStepV1(BaseModel):
     words: _Words
 
 
+class OperationChooseReadingModelStepV1(BaseModel):
+    """Choose the model documents are read with, where the window keeps that choice.
+
+    The refusal it accompanies is a reader that had no model picked for the
+    role. Putting it right is the person's choice of a model, which this
+    product's window offers beside the agent; no command line verb makes it.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["choose_reading_model"] = "choose_reading_model"
+    words: _Words
+
+
 type OperationNextStepV1 = Annotated[
     OperationCreateWorkStepV1
     | OperationCalculateWorkStepV1
@@ -165,7 +180,8 @@ type OperationNextStepV1 = Annotated[
     | OperationCompleteProfileSetupStepV1
     | OperationOpenMovementStepV1
     | OperationOpenIvaWalletStepV1
-    | OperationOpenIvaWalletOpeningBalanceStepV1,
+    | OperationOpenIvaWalletOpeningBalanceStepV1
+    | OperationChooseReadingModelStepV1,
     Field(discriminator="kind"),
 ]
 """The step a refusal serves: a closed kind, what it concerns, and the words that offer it."""
@@ -207,6 +223,7 @@ __all__ = [
     "MAX_PROFILE_FIELD_PATH_LENGTH",
     "PROFILE_FIELD_PATH_PATTERN",
     "OperationCalculateWorkStepV1",
+    "OperationChooseReadingModelStepV1",
     "OperationCompleteProfileSetupStepV1",
     "OperationCreateWorkStepV1",
     "OperationNextStepErrorMixin",

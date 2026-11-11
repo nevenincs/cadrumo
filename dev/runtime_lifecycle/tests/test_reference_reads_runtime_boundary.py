@@ -18,6 +18,7 @@ from typing import Final
 import pytest
 
 from cadrumo.core.type_guards import is_str_keyed_dict
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tui.reference.filters import ReferenceFilterError, filters_of, query_from_form
 from cadrumo.entrypoints.tui.reference.reads import (
     ReferenceQuery,
@@ -30,6 +31,9 @@ from cadrumo_client.contracts.command_program import CommandProgram
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+_YEAR = filing_year_envelope().horizon
+_YEAR_TEXT = str(_YEAR)
+_AS_OF = date(_YEAR, 6, 30)
 _REPOSITORY = Path(__file__).resolve().parents[3]
 _COMMAND_LINES: Final = {
     CommandProgram.AEAT: "from cadrumo_runtime.host.frontend.cli.bootstrap import main; main()",
@@ -40,8 +44,8 @@ _AUTHENTICATION_CASES: Final = frozenset({"auth-providers", "apoderado-scopes"})
 _CASES: Final[Mapping[str, tuple[tuple[str, ...], ReferenceQuery]]] = {
     "modelos": (("app", "modelo", "list"), ReferenceQuery(ReferenceRead.MODELOS)),
     "modelos-of-a-year": (
-        ("app", "modelo", "list", "--year", "2024"),
-        ReferenceQuery(ReferenceRead.MODELOS, year=2024),
+        ("app", "modelo", "list", "--year", _YEAR_TEXT),
+        ReferenceQuery(ReferenceRead.MODELOS, year=_YEAR),
     ),
     "modelos-of-a-family": (
         ("app", "modelo", "list", "--domain", "iva"),
@@ -54,8 +58,8 @@ _CASES: Final[Mapping[str, tuple[tuple[str, ...], ReferenceQuery]]] = {
         ReferenceQuery(ReferenceRead.DESCRIBE, modelo="036", period="alta"),
     ),
     "describe-scoped": (
-        ("app", "modelo", "describe", "303", "--year", "2024", "--period", "1T", "--as-of", "2024-06-30"),
-        ReferenceQuery(ReferenceRead.DESCRIBE, modelo="303", year=2024, period="1T", as_of=date(2024, 6, 30)),
+        ("app", "modelo", "describe", "303", "--year", _YEAR_TEXT, "--period", "1T", "--as-of", _AS_OF.isoformat()),
+        ReferenceQuery(ReferenceRead.DESCRIBE, modelo="303", year=_YEAR, period="1T", as_of=_AS_OF),
     ),
     "casillas-filtered": (
         ("app", "modelo", "casillas", "130", "--input-kind", "bound"),
@@ -66,16 +70,16 @@ _CASES: Final[Mapping[str, tuple[tuple[str, ...], ReferenceQuery]]] = {
         ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", required=True),
     ),
     "casillas-scoped": (
-        ("app", "modelo", "casillas", "130", "--year", "2024", "--period", "1T", "--number", "01"),
-        ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", year=2024, period="1T", casilla_number="01"),
+        ("app", "modelo", "casillas", "130", "--year", _YEAR_TEXT, "--period", "1T", "--number", "01"),
+        ReferenceQuery(ReferenceRead.CASILLAS, modelo="130", year=_YEAR, period="1T", casilla_number="01"),
     ),
     "casilla": (
-        ("app", "modelo", "casilla", "130", "01", "--year", "2024", "--period", "1T"),
-        ReferenceQuery(ReferenceRead.CASILLA, modelo="130", casilla="01", year=2024, period="1T"),
+        ("app", "modelo", "casilla", "130", "01", "--year", _YEAR_TEXT, "--period", "1T"),
+        ReferenceQuery(ReferenceRead.CASILLA, modelo="130", casilla="01", year=_YEAR, period="1T"),
     ),
     "formulas": (
-        ("app", "modelo", "formulas", "130", "--year", "2024", "--period", "1T"),
-        ReferenceQuery(ReferenceRead.FORMULAS, modelo="130", year=2024, period="1T"),
+        ("app", "modelo", "formulas", "130", "--year", _YEAR_TEXT, "--period", "1T"),
+        ReferenceQuery(ReferenceRead.FORMULAS, modelo="130", year=_YEAR, period="1T"),
     ),
     "categories": (("app", "ledger", "categories"), ReferenceQuery(ReferenceRead.CATEGORIES)),
     "portals": (("app", "live", "portals", "list"), ReferenceQuery(ReferenceRead.PORTALS)),
@@ -158,9 +162,9 @@ def test_the_bindings_read_names_every_source_the_casillas_command_reports(
     assert document["code"] == printed["code"] and document["revision"] == printed["revision"]
     assert bound <= {row["binding_id"] for row in document["rows"]}
     scoped = json.loads(
-        read_reference(ReferenceQuery(ReferenceRead.BINDINGS, modelo="130", year=2024, period="1T")).model_dump_json()
+        read_reference(ReferenceQuery(ReferenceRead.BINDINGS, modelo="130", year=_YEAR, period="1T")).model_dump_json()
     )
-    assert scoped["filing_year"] == 2024 and scoped["period"] == "1T"
+    assert scoped["filing_year"] == _YEAR and scoped["period"] == "1T"
     assert bound <= {row["binding_id"] for row in scoped["rows"]}
 
 
@@ -169,7 +173,7 @@ def test_the_bindings_read_names_every_source_the_casillas_command_reports(
     [
         ReferenceQuery(ReferenceRead.DESCRIBE, modelo="600"),
         ReferenceQuery(ReferenceRead.DESCRIBE, modelo="999"),
-        ReferenceQuery(ReferenceRead.DESCRIBE, modelo="130", year=2024, period="9Z"),
+        ReferenceQuery(ReferenceRead.DESCRIBE, modelo="130", year=_YEAR, period="9Z"),
         ReferenceQuery(ReferenceRead.PORTAL, portal="portal_that_is_not_catalogued"),
         ReferenceQuery(ReferenceRead.PORTALS, category="auth", modelo="303"),
         ReferenceQuery(ReferenceRead.MODELOS, domain="NOT A FAMILY"),
@@ -200,9 +204,9 @@ def test_a_form_takes_exactly_the_coordinates_its_command_takes() -> None:
         ReferenceRead.CASILLAS,
         {
             "modelo": " 130 ",
-            "year": "2024",
+            "year": _YEAR_TEXT,
             "period": "1T",
-            "as_of": "2024-06-30",
+            "as_of": _AS_OF.isoformat(),
             "input_kind": "bound",
             "required": True,
         },
@@ -210,9 +214,9 @@ def test_a_form_takes_exactly_the_coordinates_its_command_takes() -> None:
     assert query == ReferenceQuery(
         ReferenceRead.CASILLAS,
         modelo="130",
-        year=2024,
+        year=_YEAR,
         period="1T",
-        as_of=date(2024, 6, 30),
+        as_of=_AS_OF,
         input_kind="bound",
         required=True,
     )
@@ -223,9 +227,9 @@ def test_a_form_takes_exactly_the_coordinates_its_command_takes() -> None:
     ("read", "values", "faulty"),
     [
         (ReferenceRead.DESCRIBE, {"modelo": ""}, ("modelo",)),
-        (ReferenceRead.DESCRIBE, {"modelo": "130", "year": "2024"}, ("period",)),
+        (ReferenceRead.DESCRIBE, {"modelo": "130", "year": _YEAR_TEXT}, ("period",)),
         (ReferenceRead.DESCRIBE, {"modelo": "130", "year": "next"}, ("year",)),
-        (ReferenceRead.DESCRIBE, {"modelo": "130", "as_of": "30/06/2024"}, ("as_of",)),
+        (ReferenceRead.DESCRIBE, {"modelo": "130", "as_of": _AS_OF.strftime("%d/%m/%Y")}, ("as_of",)),
         (ReferenceRead.CASILLAS, {"modelo": "130", "input_kind": "guessed"}, ("input_kind",)),
         (ReferenceRead.CASILLA, {"modelo": "130"}, ("casilla",)),
         (ReferenceRead.PORTAL, {}, ("portal",)),

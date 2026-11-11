@@ -746,6 +746,39 @@ class ProfileCustodyPort(Protocol):
         """Load the committed password proof material for one profile."""
         ...
 
+    def stage_password_replacement(
+        self,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyEnvelopePort,
+        rotated: ProfileCustodyEnvelopePort,
+        previous_row_provenance: str,
+        rehead_row_provenance: str,
+        root: Path,
+    ) -> None:
+        """Durably publish the intent of one password-envelope replacement before its record re-head."""
+        ...
+
+    def make_record_durable(self, profile_id: UUID, *, root: Path) -> None:
+        """Make the profile record's committed writes durable against power loss."""
+        ...
+
+    def resolve_password_replacement(self, profile_id: UUID, *, root: Path) -> str:
+        """Settle an in-flight password replacement into one consistent state and name what it did."""
+        ...
+
+    def clear_password_replacement(self, profile_id: UUID, *, root: Path) -> None:
+        """Discard a settled password-replacement intent."""
+        ...
+
+    def password_replacement_pending(self, profile_id: UUID, *, root: Path) -> bool:
+        """Whether a password-replacement intent awaits resolution, without taking any lock."""
+        ...
+
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        """Whether the committed password envelope holds the fixed fallback KDF point."""
+        ...
+
     def is_authentication_proof_failure(
         self,
         error: BaseException,
@@ -1005,11 +1038,59 @@ def replace_profile_custody_password_envelope(
     )
 
 
+def stage_profile_custody_password_replacement(
+    *,
+    profile_id: UUID,
+    current: ProfileCustodyEnvelopePort,
+    rotated: ProfileCustodyEnvelopePort,
+    previous_row_provenance: str,
+    rehead_row_provenance: str,
+    root: Path,
+) -> None:
+    """Durably publish one password replacement's recovery intent through its owner."""
+    profile_custody_port().stage_password_replacement(
+        profile_id=profile_id,
+        current=current,
+        rotated=rotated,
+        previous_row_provenance=previous_row_provenance,
+        rehead_row_provenance=rehead_row_provenance,
+        root=root,
+    )
+
+
+def make_profile_custody_record_durable(profile_id: UUID, *, root: Path) -> None:
+    """Make the profile record's committed writes durable through the custody boundary."""
+    profile_custody_port().make_record_durable(profile_id, root=root)
+
+
+def resolve_profile_custody_password_replacement(profile_id: UUID, *, root: Path) -> str:
+    """Settle an in-flight password replacement through the custody boundary; the caller holds the lock."""
+    return profile_custody_port().resolve_password_replacement(profile_id, root=root)
+
+
+def clear_profile_custody_password_replacement(profile_id: UUID, *, root: Path) -> None:
+    """Discard a settled password-replacement intent through the custody boundary."""
+    profile_custody_port().clear_password_replacement(profile_id, root=root)
+
+
+def profile_custody_password_replacement_pending(profile_id: UUID, *, root: Path) -> bool:
+    """Probe for an unresolved password replacement without taking the custody lock."""
+    return profile_custody_port().password_replacement_pending(profile_id, root=root)
+
+
 def load_profile_custody_password_material(
     profile_id: UUID, *, root: Path | None = None
 ) -> ProfileCustodyPasswordMaterialPort:
     """Load committed password proof material through the custody boundary."""
     return profile_custody_port().load_password_material(profile_id, root=root)
+
+
+def profile_custody_password_kdf_at_fallback(profile_id: UUID, *, root: Path | None = None) -> bool:
+    """Report whether a profile's committed password envelope holds the fixed fallback KDF point.
+
+    Reads only committed, non-secret envelope metadata; no key material is touched.
+    """
+    return profile_custody_port().password_kdf_at_fallback(profile_id, root=root)
 
 
 def map_profile_authentication_proof_failure(
@@ -1109,6 +1190,7 @@ __all__ = [
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
+    "clear_profile_custody_password_replacement",
     "clear_profile_output_language_hint",
     "create_profile_custody_registration_material",
     "create_profile_recovery_enrollment_material",
@@ -1118,8 +1200,11 @@ __all__ = [
     "ensure_profile_custody_owner_root",
     "install_profile_recovery_envelope",
     "load_profile_custody_recovery_material",
+    "make_profile_custody_record_durable",
     "map_profile_authentication_proof_failure",
     "profile_custody_owner_root",
+    "profile_custody_password_kdf_at_fallback",
+    "profile_custody_password_replacement_pending",
     "profile_custody_port",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
@@ -1131,6 +1216,8 @@ __all__ = [
     "refuse_profile_login_without_password_channel",
     "remove_profile_recovery_envelope",
     "replace_profile_custody_password_envelope",
+    "resolve_profile_custody_password_replacement",
+    "stage_profile_custody_password_replacement",
     "unlock_profile_custody_password",
     "unlock_profile_custody_recovery",
     "verify_profile_custody_dek_against_sentinel",

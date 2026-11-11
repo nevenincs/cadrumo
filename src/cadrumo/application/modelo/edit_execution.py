@@ -98,6 +98,7 @@ from .edit_services import (
     validate_scalar_intent,
 )
 from .edit_value_grammar import ModeloEditValueChannel, ModeloEditValueGrammarV1
+from .work_missing_input import ModeloPriorCarryAbsenceUnstatedError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -479,6 +480,24 @@ def _first_box_fed_by(raw: object, revision: ModeloRevision) -> Mapping[str, obj
     return None
 
 
+def _unresolved_source_context(error: BaseException, revision: ModeloRevision) -> Mapping[str, object] | None:
+    """The box and bindings of a calculation refused for a source it could not resolve, if it was.
+
+    An unstated carry from an earlier ejercicio is addressed to the first box
+    its still open carries feed, as an earlier return that cannot show them is,
+    so the refused Apply names a carry the filer has not answered yet.
+    """
+    if isinstance(error, ModeloPriorCarryAbsenceUnstatedError):
+        return _first_box_fed_by(",".join(error.open_carry_ids), revision)
+    if not isinstance(error, RegistryValidationError) or error.context is None:
+        return None
+    if error.translated_message == "errors.calc.bound_casilla_binding_value_missing":
+        return error.context
+    if error.translated_message == "errors.calc.previous_filing_casillas_unobserved":
+        return _first_box_fed_by(error.context.get("binding_ids"), revision)
+    return None
+
+
 def pre_effect_refusal(
     error: BaseException, *, revision: ModeloRevision | None = None
 ) -> ModeloEditExecutionNoEffectV1:
@@ -487,12 +506,8 @@ def pre_effect_refusal(
     ``revision`` is a :class:`ModeloRevision`.
     """
     code = get_registered_error_code(error).code
-    if isinstance(error, RegistryValidationError) and revision is not None and error.context is not None:
-        context: Mapping[str, object] | None = None
-        if error.translated_message == "errors.calc.bound_casilla_binding_value_missing":
-            context = error.context
-        elif error.translated_message == "errors.calc.previous_filing_casillas_unobserved":
-            context = _first_box_fed_by(error.context.get("binding_ids"), revision)
+    if revision is not None:
+        context = _unresolved_source_context(error, revision)
         refusal = None if context is None else _unresolved_binding_edit_refusal(context, revision, code)
         if refusal is not None:
             return refusal

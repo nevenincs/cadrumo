@@ -6,9 +6,12 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
+
+_YEAR = filing_year_envelope().horizon
 
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
@@ -27,7 +30,7 @@ def issued_services_invoice(invoice_number: str, **overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": invoice_number,
-        "issued_at": date(2026, 4, 15),
+        "issued_at": date(_YEAR, 4, 15),
         "counterparty_name": "Cliente SL",
         "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",

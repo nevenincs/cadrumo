@@ -128,7 +128,7 @@ class TestSaveLoad:
 
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):
-            _make_filing(period="2026Q1")
+            _make_filing(period=f"{filing_year_envelope().horizon}Q1")
 
 
 class TestListAndIter:

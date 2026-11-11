@@ -61,7 +61,7 @@ def _seed_runs() -> None:
                 duration_ms=duration_ms,
                 succeeded=succeeded,
                 error_kind=error_kind,
-                started_at=datetime(2026, 6, index, 9, 0, tzinfo=UTC),
+                started_at=datetime(1980, 6, index, 9, 0, tzinfo=UTC),
             ),
         )
 
@@ -169,9 +169,9 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
             "diagnostics",
             "llm-usage",
             "--since",
-            "2026-06-01",
+            "1980-06-01",
             "--until",
-            "2026-06-01",
+            "1980-06-01",
         ],
         diagnostics_native_profile,
     )
@@ -188,7 +188,7 @@ def test_llm_usage_since_until_scopes_by_date(diagnostics_native_profile: Native
 def test_llm_usage_rejects_malformed_date(diagnostics_native_profile: NativeCliProfileFixture) -> None:
     """A malformed ``--since`` value is refused instructively with a non-zero exit."""
     result = invoke_diagnostics(
-        ["--format", "json", "app", "diagnostics", "llm-usage", "--since", "01/04/2026"],
+        ["--format", "json", "app", "diagnostics", "llm-usage", "--since", "01/04/1980"],
         diagnostics_native_profile,
     )
     assert result.exit_code != 0

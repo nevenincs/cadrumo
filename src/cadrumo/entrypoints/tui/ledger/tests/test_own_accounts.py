@@ -9,6 +9,7 @@ operation publishes. Account numbers are synthetic published examples.
 from __future__ import annotations
 
 import asyncio
+from datetime import date
 from typing import cast, override
 
 import pytest
@@ -24,6 +25,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.operations import OperationEffect
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...account import AccountSessionExpiredError
 from ...operations.outcome import OperationOutcomeUnknownError
 from ...tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
@@ -40,6 +42,8 @@ from .own_account_fixtures import (
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_CLOSED_ON = date(filing_year_envelope().horizon, 6, 30).isoformat()
 
 _SECRETS = (SYNTHETIC_ES_IBAN, SYNTHETIC_ES_IBAN[4:-4], SYNTHETIC_ES_IBAN_2, SYNTHETIC_ES_IBAN_2[4:-4])
 
@@ -153,9 +157,9 @@ async def test_own_account_setup_adds_edits_designates_and_closes_masked() -> No
             await _review_and_confirm(pilot, screen, "own-account-review-undesignate")
             assert [item.own_account_id for item in door.repository.register.designations] == ["acc-01"]
 
-            screen.query_one("#own-account-closed-on", Input).value = "2026-06-30"
+            screen.query_one("#own-account-closed-on", Input).value = _CLOSED_ON
             await _review_and_confirm(pilot, screen, "own-account-review-close")
-            assert str(table.get_row_at(1)[5]) == tr("tui.ledger.own_accounts.state.closed", date="2026-06-30")
+            assert str(table.get_row_at(1)[5]) == tr("tui.ledger.own_accounts.state.closed", date=_CLOSED_ON)
             _assert_masked(screen)
 
 

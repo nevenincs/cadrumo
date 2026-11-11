@@ -19,6 +19,7 @@ executable on a machine with no accelerator.
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 from uuid import UUID
 
@@ -42,6 +43,7 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
@@ -49,6 +51,8 @@ from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_d
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .portable_human_cli_runtime import portable_human_cli_runtime
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -119,7 +123,7 @@ _BAD_CHECKSUM_READ = {
 _COMMON_READ = {
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
-    "invoice_date": "2026-03-10",
+    "invoice_date": date(_YEAR, 3, 10).isoformat(),
     "taxable_base": "100,00",
     "taxable_base_anchor": "100,00",
     "iva_rate": "21",

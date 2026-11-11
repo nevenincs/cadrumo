@@ -29,6 +29,7 @@ from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -43,12 +44,14 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 if TYPE_CHECKING:
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 
 def seed_exportable_modelo_revision(
     *,
     input_values_by_casilla_id: Mapping[CasillaId, str],
     modelo: str = "111",
-    filing_year: int = 2026,
+    filing_year: int = _FILING_YEAR,
     period: str = "1T",
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     operation: PinnedAuthorityOperation,

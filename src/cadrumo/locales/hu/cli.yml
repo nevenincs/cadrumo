@@ -1671,6 +1671,15 @@ cli:
           az év utolsó időszakára (12 vagy 4T időszakkód) szóló 303-as bevallásra,
           és kiírja az azonosítóját és SHA-256 értékét a `work calculate` számára.
           A többi időszak ezt nem kérdezi.
+        attest_prior_carries_confirm: 'Még semmit sem jelentettél ki. Futtasd: `aeat
+          app modelo work attest-prior-carries %{work_unit_id} --yes` a kijelentéshez.'
+        attest_prior_carries_help: Kijelented, hogy egy bevallásban nincs korábbi
+          évekből fennmaradó összeged (a Modelo 100 esetén az előző négy adóév negatív
+          általános adóalapjai), minden olyan összegre, amelyre az űrlap felkínálja
+          a kijelentést. Megmutatja a kijelentést és a változás ellenőrzését; --yes
+          megadásával minden összeget általad kijelentett 0-ként rögzít, a beírt számtól
+          elkülönítve.
+        attest_prior_carries_yes_help: A kijelentés megerősítése és rögzítése a bevallásban
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
@@ -2576,6 +2585,26 @@ cli:
           export_target_exists: A célútvonalon már van fájl, és a biztonsági mentés
             sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
+      ascendiente:
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,NIF=<NIF vagy NIE>][,FALLECIMIENTO=ÉÉÉÉ-HH-NN][,CONVIVIENTES=<azon
+          leszármazottak száma, akikkel a felmenő együtt él>]. Ismételhető; a NACIMIENTO
+          minden sorban kötelező.
+        add_help: Egy vagy több felmenő hozzáadása az aktív profilhoz, vagy a --none
+          megadásával annak rögzítése, hogy nincs egy sem.
+        help: A adózó felmenőinek megadása a 100-as modell családi szakaszához.
+        index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
+          %{total} felmenő van.
+        invalid_flag: Az --ascendiente értéke érvénytelen. Minden sornak tartalmaznia
+          kell a NACIMIENTO=ÉÉÉÉ-HH-NN mezőt; a NIF, a FALLECIMIENTO és a CONVIVIENTES
+          opcionális.
+        invalid_row: Az --ascendiente sor nem olvasható. KULCS=ÉRTÉK párokat használj
+          a NACIMIENTO, NIF, FALLECIMIENTO és CONVIVIENTES kulcsokkal, mindegyiket
+          legfeljebb egyszer és értékkel; a hiba kontextusa megnevezi a kulcsot, ha
+          az azonosítható.
+        list_help: Az aktív profilon megadott felmenők listázása, és annak jelzése,
+          hogy a profil szerint nincs egy sem.
+        remove_help: Egy felmenő eltávolítása 0-alapú index szerint az aktív profilról.
+        remove_index_help: Az eltávolítandó felmenő 0-alapú indexe.
       automation:
         approve:
           digest_help: Az cadrumo-runtime config profile automation inspect által
@@ -2778,6 +2807,15 @@ cli:
         korábbi eseményekre (pl. 2026-04-01T00:00:00+00:00).
       history_until_help: Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem
         újabb eseményekre (pl. 2026-04-30T23:59:59+00:00).
+      household:
+        none_conflicts_with_rows: A(z) %{none} nem kombinálható a(z) %{flag} kapcsolóval.
+        none_flag_help: Rögzíti, hogy az adózónak nincs ilyen, sorok hozzáadása helyett.
+          Ez válasz, nem ismeretlen adat. Sor mellett és tárolt sorok esetén elutasítja.
+        none_with_stored_rows: 'A profil már tartalmazza ezt a háztartási csoportot
+          (%{rows} tárolt sor, megadott darabszám: %{stated_count}). Előbb távolítsd
+          el a sorokat a remove paranccsal.'
+        rows_or_none_required: Adj meg legalább egy %{flag} sort, vagy a(z) %{none}
+          értéket annak rögzítésére, hogy nincs egy sem.
       list:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
           (állapot: {outcome}). Futtasd újra a parancsot; ha továbbra is fennáll,

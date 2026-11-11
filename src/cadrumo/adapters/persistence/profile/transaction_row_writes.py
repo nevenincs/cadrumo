@@ -3,6 +3,8 @@
 A write that stops storing business figures a row's classification refuses
 records each dropped figure in the bucket event history of the same batch;
 the helpers here find such stored rows and compose that trace.
+
+It works with :class:`Envelope`, :class:`SecureObjectRepository`.
 """
 
 from __future__ import annotations
@@ -101,7 +103,10 @@ def stored_rows_holding_figures(
     transaction_ids: Iterable[str],
     refuse_legacy: Callable[[tuple[str, ...]], None],
 ) -> dict[str, Transaction]:
-    """Return the stored rows among ``transaction_ids`` that hold figures their classification refuses."""
+    """Return the stored rows among ``transaction_ids`` that hold figures their classification refuses.
+
+    ``objects`` is the :class:`SecureObjectRepository` it uses.
+    """
     from ..storage.crypto.encrypted_columns import secure_object_key_digest
     from ..storage.envelope.contract import Envelope
 
@@ -146,6 +151,8 @@ def with_withheld_figure_trace(
     silently. The event-history write the caller composed keeps its
     revision guard; a batch without one gets one composed against the
     history as it stands, guarded on that revision.
+
+    ``objects`` is the :class:`SecureObjectRepository` it uses.
     """
     if not drops:
         return extra_writes

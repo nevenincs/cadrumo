@@ -36,6 +36,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -43,6 +44,8 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import renta_income_aggregation_period
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -60,7 +63,7 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
 
 @cache
 def _modelo_303_revision():
-    return published_snapshot("303", filing_year=2025, period="1T").revision
+    return published_snapshot("303", filing_year=_YEAR, period="1T").revision
 
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:
@@ -69,7 +72,7 @@ def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> D
     return resolved.get(_CASILLA_BASE_BINDING[casilla_id], Decimal("0"))
 
 
-_PERIOD = renta_income_aggregation_period(2026, "2T")
+_PERIOD = renta_income_aggregation_period(_YEAR, "2T")
 _DE = EUMemberState.from_registry("de")
 _ES = EUMemberState.from_registry("es")
 _XI = EUMemberState.from_registry("xi")
@@ -78,8 +81,8 @@ _XI = EUMemberState.from_registry("xi")
 def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2026, 4, 15),
-        value_date=date(2026, 4, 15),
+        booked_date=date(_YEAR, 4, 15),
+        value_date=date(_YEAR, 4, 15),
         amount=amount,
         currency="EUR",
         counterparty="GmbH Berlin",
@@ -89,7 +92,7 @@ def _raw(provider_id: str, *, amount: Decimal, direction: TransactionDirection) 
             source_sha256="c" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 16, 9, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 4, 16, 9, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},

@@ -28,9 +28,9 @@ from ..portable_export import CarriedSecureObject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_AWARE = datetime(2026, 4, 1, 10, 30, tzinfo=UTC)
-_NAIVE = datetime(2026, 4, 1, 10, 30)
-_OFFSET = datetime(2026, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
+_AWARE = datetime(1980, 4, 1, 10, 30, tzinfo=UTC)
+_NAIVE = datetime(1980, 4, 1, 10, 30)
+_OFFSET = datetime(1980, 4, 1, 10, 30, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _carried(written_at: datetime) -> CarriedSecureObject:

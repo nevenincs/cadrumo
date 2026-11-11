@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
 import type { AgentEngineHealth } from "../../shell/agentSession";
 import { engineNotRunningWords } from "../../shell/engineHealth";
+import { connectionWords } from "../../shell/providerConnection";
 import { useStrings, type Translate } from "../../shell/strings";
 import { ProviderMark } from "../agent/ProviderMark";
 import { EngineDoor } from "../setup/EngineDoor";
@@ -39,8 +40,8 @@ type ConnectionStatus =
   | "off";
 
 /** Describe what is set, without claiming more than the reading says. A
- * keyless lane whose local engine the service measured as not running says
- * so, once it is otherwise usable. */
+ * keyless lane says what the service measured of its local engine, once it
+ * is otherwise usable. */
 function connectionStatus(
   provider: ProviderStatus,
   engine: AgentEngineHealth | null = null,
@@ -50,9 +51,11 @@ function connectionStatus(
   if (provider.readiness === "unusable") return "setup_needed";
   // An app connection needs its app, whatever it signs in with.
   if (provider.cliState === "not_installed") return "setup_needed";
-  // A connection with no key and no sign-in has nothing to set up.
+  // A connection with no key and no sign-in has nothing to set up. Where the
+  // service measured its engine, that measurement is its status.
   if (provider.authKind === "none") {
     if (engine?.state === "not_running") return "engine_not_running";
+    if (engine?.state === "running") return "ready";
     return provider.readiness === "ready" ? "ready" : "not_checked";
   }
   if (provider.authKind === "provider_sign_in_only") {
@@ -131,19 +134,6 @@ function StatusMark({ status }: { status: ConnectionStatus }) {
       <span className="sr-only">{statusWords(t, status)}</span>
     </span>
   );
-}
-
-/** How a way is reached, in words. A way that takes no key is a server on
- * this computer, whatever its transport, and is not called a key connection. */
-function connectionWords(
-  t: Translate,
-  provider: Pick<ProviderStatus, "transport" | "authKind">,
-): string {
-  if (provider.authKind === "none")
-    return t("desktop.providers.connection_local");
-  return provider.transport === "api"
-    ? t("desktop.providers.connection_api")
-    : t("desktop.providers.connection_app");
 }
 
 /** Why a change was not made, in words where it is a refusal we know. */

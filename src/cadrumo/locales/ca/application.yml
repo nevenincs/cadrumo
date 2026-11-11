@@ -1096,9 +1096,14 @@ application:
           i aquesta confirmació difereix en: %{divergent_fields}. Corregeix o elimina
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
       label_reading:
+        no_model_selected: 'No has triat cap model per llegir, així que els %{count}
+          camps que les etiquetes no cobrien queden buits: %{fields}. Tria un model
+          i torna a llegir el document, o emplena''ls tu.'
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
           %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Emplena''ls
           tu.'
+      next_step:
+        choose_reading_model: Triar un model de lectura
     periods:
       served:
         annual: Any
@@ -1115,6 +1120,9 @@ application:
         november: Novembre
         october: Octubre
         september: Setembre
+    reason:
+      served:
+        command: Registrat per una ordre, sense cap motiu indicat
     staged_check:
       served:
         blocker:
@@ -2495,6 +2503,10 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
+      prior_carries_nothing_open: 'El Modelo %{modelo} de %{filing_year} no té cap
+        import d''exercicis anteriors que puguis declarar com a no pendent: cadascun
+        ja té un valor o la teva declaració, o la declaració no n''arrossega cap.
+        No s''ha canviat res.'
       prior_carries_unstated:
         renta_negative_general_bases_pending: 'No es pot calcular el Modelo %{modelo}
           de %{filing_year}: no consta si queden bases liquidables generals negatives
@@ -3644,6 +3656,10 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
+      kdf_at_fallback: La contrasenya d'aquest perfil té la protecció mínima, perquè
+        aquest ordinador no va poder confirmar a temps una configuració més forta
+        quan es va crear el perfil. Canvia la contrasenya per reforçar-la; pots tornar
+        a introduir la mateixa.
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'

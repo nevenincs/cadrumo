@@ -62,6 +62,7 @@ from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
@@ -86,12 +87,12 @@ _PERIOD = Period.from_year_and_code(
     modelo_operation_test_support.MODELO_FILING_YEAR, modelo_operation_test_support.MODELO_PERIOD
 )
 _CASILLA = validated_casilla_id("19")
-_STORED_AT = datetime(2026, 4, 1, 9, 30, tzinfo=UTC)
 _OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"}
 
 _M145_CREATE = M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID
 _M145_VALIDATE = M145_COMMUNICATION_VALIDATE_OPERATION_DEFINITION_ID
-_M145_YEAR = 2026
+_M145_YEAR = filing_year_envelope().horizon
+_STORED_AT = datetime(_M145_YEAR, 4, 1, 9, 30, tzinfo=UTC)
 _M145_PERIOD = M145CommunicationPeriod.COMMUNICATION
 _WORKER = {
     "perceptor.nif": "12345678Z",

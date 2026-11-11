@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..errors import AggregationValidationError
 from ..source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
 from ..source_precedence import PRECEDENCE_OVERLAY_ORDER
@@ -17,6 +18,8 @@ from ..source_resolution_operations import (
     merge_source_resolutions,
     merge_source_resolutions_by_precedence,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,7 +41,7 @@ def _collection() -> ClosedRecordRowSet:
         bucket_id="fictional-profile",
         work_unit_id="a" * 64,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="369", revision_id="esquema-exterior", modelo_year=2025, period="EXT-1T"
+            modelo="369", revision_id="esquema-exterior", modelo_year=_YEAR, period="EXT-1T"
         ),
         authority_generation="b" * 64,
         source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,

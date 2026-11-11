@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,
@@ -34,6 +35,9 @@ from ..proportionality import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_ENVELOPE = filing_year_envelope()
+_YEAR = _ENVELOPE.horizon
 
 _BOE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 
@@ -50,7 +54,7 @@ def _citation(
     # follows the same partition the model enforces rather than hard-coding one.
     # A verified annual-edition source names the bundled edition it was read from.
     provision = "ley-35-2006:art-30" if source in STATUTORY_CITATION_SOURCES else None
-    edition = "aeat-renta-2025-manual-parte1" if source in ANNUAL_EDITION_CITATION_SOURCES else None
+    edition = f"aeat-renta-{_YEAR}-manual-parte1" if source in ANNUAL_EDITION_CITATION_SOURCES else None
     return CategoryCitation(
         source=source,
         reference=reference,
@@ -67,20 +71,20 @@ def _citation(
 def test_an_edition_dated_citation_windowed_to_its_own_year_is_accepted() -> None:
     citation = _citation(
         source=CategoryCitationSource.MANUAL_RENTA,
-        reference="Manual práctico Renta 2025",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        reference=f"Manual práctico Renta {_YEAR}",
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
-    assert citation.window.years() == (2025,)
+    assert citation.window.years() == (_YEAR,)
 
 
 @pytest.mark.parametrize(
     ("valid_from", "valid_to", "expected_outside"),
     [
-        pytest.param(date(2024, 1, 1), date(2025, 12, 31), "[2024]", id="widened-backwards"),
-        pytest.param(date(2025, 1, 1), date(2026, 12, 31), "[2026]", id="widened-forwards"),
-        pytest.param(date(2022, 1, 1), date(2026, 12, 31), "2022", id="widened-both-ways"),
+        pytest.param(date(_YEAR - 1, 1, 1), date(_YEAR, 12, 31), f"[{_YEAR - 1}]", id="widened-backwards"),
+        pytest.param(date(_YEAR, 1, 1), date(_YEAR + 1, 12, 31), f"[{_YEAR + 1}]", id="widened-forwards"),
+        pytest.param(date(_YEAR - 1, 1, 1), date(_YEAR + 1, 12, 31), str(_YEAR - 1), id="widened-both-ways"),
     ],
 )
 def test_widening_an_edition_dated_citation_past_its_edition_is_refused(
@@ -92,7 +96,7 @@ def test_widening_an_edition_dated_citation_past_its_edition_is_refused(
     with pytest.raises(ValidationError, match="never widen an edition-dated citation") as caught:
         _citation(
             source=CategoryCitationSource.MANUAL_RENTA,
-            reference="Manual práctico Renta 2025",
+            reference=f"Manual práctico Renta {_YEAR}",
             valid_from=valid_from,
             valid_to=valid_to,
         )
@@ -106,8 +110,8 @@ def test_an_annual_source_must_name_the_edition_it_was_read_from() -> None:
         _citation(
             source=CategoryCitationSource.MANUAL_RENTA,
             reference="Manual práctico Renta",
-            valid_from=date(2025, 1, 1),
-            valid_to=date(2025, 12, 31),
+            valid_from=date(_YEAR, 1, 1),
+            valid_to=date(_YEAR, 12, 31),
         )
 
 
@@ -121,11 +125,11 @@ def test_a_statute_reference_year_is_an_enactment_and_does_not_bound_the_window(
     citation = _citation(
         source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
-        valid_from=date(2022, 1, 1),
-        valid_to=date(2026, 12, 31),
+        valid_from=date(_ENVELOPE.floor, 1, 1),
+        valid_to=date(_ENVELOPE.horizon, 12, 31),
     )
 
-    assert citation.window.years() == (2022, 2023, 2024, 2025, 2026)
+    assert citation.window.years() == _ENVELOPE.years
 
 
 def test_every_annual_edition_source_is_held_to_the_invariant() -> None:
@@ -142,9 +146,9 @@ def test_every_annual_edition_source_is_held_to_the_invariant() -> None:
         with pytest.raises(ValidationError):
             _citation(
                 source=source,
-                reference="Publicación anual 2025",
-                valid_from=date(2025, 1, 1),
-                valid_to=date(2026, 12, 31),
+                reference=f"Publicación anual {_YEAR}",
+                valid_from=date(_YEAR, 1, 1),
+                valid_to=date(_YEAR + 1, 12, 31),
             )
 
 

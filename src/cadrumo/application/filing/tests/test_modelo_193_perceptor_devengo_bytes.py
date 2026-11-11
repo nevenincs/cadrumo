@@ -1,4 +1,4 @@
-"""Modelo 193 perceptor PENDIENTE and EJERCICIO DEVENGO reach the fichero as the 2025 design prints them.
+"""Modelo 193 perceptor PENDIENTE and EJERCICIO DEVENGO reach the fichero as the design prints them.
 
 Synthetic rows go through ``build_draft`` and ``export_draft`` and the written
 bytes are read back as records of 500 positions (the design's record length;
@@ -27,6 +27,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.submission.models import ModeloDraftStatus
@@ -37,7 +38,8 @@ from .export_support import m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
+_PRIOR_YEAR = _YEAR - 1
 _RECORD_LENGTH = 500
 _PREFIX = "modelo-193-perceptor-row-"
 _PENDING_NIF = "999999999"
@@ -83,7 +85,7 @@ def _export(operation: PinnedAuthorityOperation, tmp_path: Path, rows: list[dict
         inputs=inputs,
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output_path = tmp_path / "modelo-193-2025.txt"
+    output_path = tmp_path / f"modelo-193-{_YEAR}.txt"
     export_draft(
         draft,
         output_path=output_path,
@@ -106,7 +108,7 @@ def test_pending_ordinary_and_atraso_rows_carry_their_pendiente_and_devengo_byte
         [
             _row(_PENDING_NIF, _PENDING_NAME, pendiente="X"),
             _row("12345678Z", "PERCEPTOR ORDINARIO"),
-            _row("X0001502F", "PERCEPTOR ATRASO", ejercicio_devengo="2024"),
+            _row("X0001502F", "PERCEPTOR ATRASO", ejercicio_devengo=str(_PRIOR_YEAR)),
         ],
     )
     assert pending[116:117] == "X"
@@ -116,10 +118,10 @@ def test_pending_ordinary_and_atraso_rows_carry_their_pendiente_and_devengo_byte
     assert ordinary[116:117] == " "
     assert ordinary[117:121] == "0000"
     assert atraso[116:117] == " "
-    assert atraso[117:121] == "2024"
+    assert atraso[117:121] == str(_PRIOR_YEAR)
     for record in (pending, ordinary, atraso):
         assert record[0:1] == "2"
-        assert record[4:8] == "2025"
+        assert record[4:8] == str(_YEAR)
         assert record[91:92] == "B"
 
 
@@ -128,10 +130,14 @@ def test_pending_ordinary_and_atraso_rows_carry_their_pendiente_and_devengo_byte
     [
         pytest.param({"pendiente": "Y"}, "pending mark must be blank or X", id="pendiente-not-x"),
         pytest.param({"pendiente": "X", "clave": "C"}, "keys A, B and D", id="pendiente-on-other-key"),
-        pytest.param({"ejercicio_devengo": "2024", "clave": "C"}, "keys A, B and D", id="devengo-on-other-key"),
-        pytest.param({"pendiente": "X", "ejercicio_devengo": "2024"}, "pending row has no devengo", id="x-with-year"),
-        pytest.param({"ejercicio_devengo": "2025"}, "earlier than the declaration year", id="same-year"),
-        pytest.param({"ejercicio_devengo": "2026"}, "earlier than the declaration year", id="later-year"),
+        pytest.param(
+            {"ejercicio_devengo": str(_PRIOR_YEAR), "clave": "C"}, "keys A, B and D", id="devengo-on-other-key"
+        ),
+        pytest.param(
+            {"pendiente": "X", "ejercicio_devengo": str(_PRIOR_YEAR)}, "pending row has no devengo", id="x-with-year"
+        ),
+        pytest.param({"ejercicio_devengo": str(_YEAR)}, "earlier than the declaration year", id="same-year"),
+        pytest.param({"ejercicio_devengo": str(_YEAR + 1)}, "earlier than the declaration year", id="later-year"),
     ],
 )
 def test_contradictory_pendiente_or_devengo_refuses_the_fichero(
@@ -139,4 +145,4 @@ def test_contradictory_pendiente_or_devengo_refuses_the_fichero(
 ) -> None:
     with pytest.raises(FilingExportValidationError, match=reason):
         _export(operation, tmp_path, [_row("12345678Z", "PERCEPTOR", **fields)])
-    assert not (tmp_path / "modelo-193-2025.txt").exists()
+    assert not (tmp_path / f"modelo-193-{_YEAR}.txt").exists()

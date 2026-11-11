@@ -7,6 +7,7 @@ Core types:
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Generator, Mapping
 from contextlib import AbstractContextManager, closing, contextmanager
 from datetime import datetime, timedelta
@@ -115,8 +116,21 @@ from .custody.filesystem import (
     write_profile_custody_local_record,
 )
 from .custody.filesystem_primitives import ensure_profile_custody_local_directory
-from .custody.kdf_supervision import ProfileKdfPrewarm, calibrate_profile_kdf, unlock_profile_custody
+from .custody.kdf_supervision import (
+    ProfileKdfPrewarm,
+    calibrate_profile_kdf,
+    profile_kdf_at_fallback,
+    unlock_profile_custody,
+)
 from .custody.label_head_repository import ProfileLabelHeadRepository
+from .custody.password_replacement_intent import (
+    ProfilePasswordReplacementIntent,
+    clear_profile_password_replacement_intent,
+    make_profile_record_durable,
+    profile_password_replacement_intent_path,
+    resolve_profile_password_replacement,
+    stage_profile_password_replacement_intent,
+)
 from .custody.records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyEnvelope, parse_profile_custody_envelope
 from .custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
@@ -800,6 +814,43 @@ class _PersistenceProfileCustody:
         root: Path | None = None,
     ) -> ProfileCustodyPasswordMaterialPort:
         return load_committed_profile_password_material(profile_id, root=root)
+
+    def stage_password_replacement(
+        self,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyEnvelopePort,
+        rotated: ProfileCustodyEnvelopePort,
+        previous_row_provenance: str,
+        rehead_row_provenance: str,
+        root: Path,
+    ) -> None:
+        stage_profile_password_replacement_intent(
+            ProfilePasswordReplacementIntent.create(
+                profile_id=profile_id,
+                expected_envelope=current.canonical_json_bytes(),
+                proposed_envelope=rotated.canonical_json_bytes(),
+                previous_row_provenance=previous_row_provenance,
+                rehead_row_provenance=rehead_row_provenance,
+            ),
+            root=root,
+        )
+
+    def make_record_durable(self, profile_id: UUID, *, root: Path) -> None:
+        make_profile_record_durable(profile_id, root=root)
+
+    def resolve_password_replacement(self, profile_id: UUID, *, root: Path) -> str:
+        return resolve_profile_password_replacement(profile_id, root=root).value
+
+    def clear_password_replacement(self, profile_id: UUID, *, root: Path) -> None:
+        clear_profile_password_replacement_intent(profile_id, root=root)
+
+    def password_replacement_pending(self, profile_id: UUID, *, root: Path) -> bool:
+        return os.path.lexists(profile_password_replacement_intent_path(profile_id, root=root))
+
+    def password_kdf_at_fallback(self, profile_id: UUID, *, root: Path | None = None) -> bool:
+        material = load_committed_profile_password_material(profile_id, root=root)
+        return profile_kdf_at_fallback(material.envelope.kdf)
 
     def is_authentication_proof_failure(
         self,

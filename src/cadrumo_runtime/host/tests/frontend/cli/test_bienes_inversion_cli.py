@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.bienes_inversion_results import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
@@ -30,6 +31,8 @@ pytestmark = [
 
 _ACQUISITION_LEDGER_ID = "ledger-capital-good-1"
 _PRORRATA_SECTOR_ID = "sector-services"
+_ACQUISITION_YEAR = filing_year_envelope().floor
+_DISPOSAL_YEAR = filing_year_envelope().horizon
 
 _PROFILE_FACTS = native_general_iva_facts()
 
@@ -47,7 +50,7 @@ def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields(t
             "--description",
             "Machine used by the services activity",
             "--acquisition-year",
-            "2024",
+            str(_ACQUISITION_YEAR),
             "--acquisition-ledger-id",
             _ACQUISITION_LEDGER_ID,
             "--cuota-soportada",
@@ -60,21 +63,21 @@ def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields(t
             _PRORRATA_SECTOR_ID,
         )
         declared = invoke_native_profile(
-            profile, *command, "--disposal-year", "2026", "--disposal-regime", "sujeta_no_exenta"
+            profile, *command, "--disposal-year", str(_DISPOSAL_YEAR), "--disposal-regime", "sujeta_no_exenta"
         )
         assert declared.exit_code == 0, declared.output
         declared_payload = BienesInversionDeclareResult.model_validate(unwrap_cli_result(declared))
         expected = BienInversionRecordPayload(
             identifier="asset-machine",
             description="Machine used by the services activity",
-            acquisition_year=2024,
+            acquisition_year=_ACQUISITION_YEAR,
             acquisition_ledger_id=_ACQUISITION_LEDGER_ID,
             prorrata_sector_id=_PRORRATA_SECTOR_ID,
             cuota_soportada="4200.00",
             prorrata_inicial_pct="80",
             kind="mueble",
             art108_elegible=True,
-            disposal=BienInversionDisposalPayload(year=2026, regime="sujeta_no_exenta"),
+            disposal=BienInversionDisposalPayload(year=_DISPOSAL_YEAR, regime="sujeta_no_exenta"),
             deduccion_efectuada="3360.00",
             schema_version="2",
         )
@@ -82,7 +85,7 @@ def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields(t
         assert declared_payload.count == 1
 
         duplicate = invoke_native_profile(profile, *command)
-        incomplete = invoke_native_profile(profile, *command, "--disposal-year", "2026")
+        incomplete = invoke_native_profile(profile, *command, "--disposal-year", str(_DISPOSAL_YEAR))
         for refused, reason in ((duplicate, "duplicate_identifier"), (incomplete, "disposal_incomplete")):
             assert refused.exit_code != 0, refused.output
             error = json.loads(refused.output)["error"]

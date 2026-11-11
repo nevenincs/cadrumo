@@ -20,24 +20,43 @@ import pytest
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....application.modelo.carry_attestation_submission import (
+    ModeloPriorCarryNothingOpenError,
+    prior_carry_attestation_submission,
+)
+from ....application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
     ModeloEditBindingAddressV1,
     ModeloEditBindingIntentKind,
+    ModeloEditFindingSeverity,
+    ModeloEditPreflightEvaluatedV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
+from ....application.modelo.edit_operator_input import ModeloEditOperatorInputV2
+from ....application.modelo.edit_preflight import preflight_modelo_edit
+from ....application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from ....application.modelo.work_form_models import ModeloFormField, ModeloWorkForm
 from ....application.modelo.work_form_service import load_modelo_work_form
 from ....application.modelo.work_missing_input import ModeloPriorCarryAbsenceUnstatedError, ModeloWorkMissingInputError
+from ....application.operations.models import OperationRequest
 from ....application.operations.next_step import OperationOpenWorkStepV1, error_next_step
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.aggregation import BindingSourceKind
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
+from ....core.errors.error_codes import (
+    ErrorCategory,
+    get_registered_error_code,
+    public_error_context,
+    resolve_error_message,
+)
+from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.binding_absence_attestation import AbsenceAttestationFamily
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.modelos.calculation_revision_operator_layer import ATTESTED_ZERO
@@ -288,7 +307,11 @@ def test_a_declaration_whose_registry_declares_no_statement_of_absence_offers_no
         seeded_operator_work(tmp_path, modelo=modelo, filing_year=year, period_code=period_code) as work,
     ):
         assert _attestable(work) == frozenset()
-        assert _form(work, OutputLanguage.EN).carry_attestations == ()
+        offered = _form(work, OutputLanguage.EN).carry_attestations
+        assert offered == ()
+        # The command line, staging what the form names, has nothing to state and refuses before any edit.
+        with pytest.raises(ModeloPriorCarryNothingOpenError):
+            prior_carry_attestation_submission(work.baseline(), offered)
 
 
 @pytest.mark.parametrize("year", _renta_years())
@@ -315,14 +338,25 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
             assert str(year) in message
             assert all(box in message for box in _CARRY_BOXES), message
             assert not any(binding_id in message for binding_id in _PENDING_CARRIES), message
+        # The context the refusal is recorded and rendered with names boxes, never a registry binding.
+        context = public_error_context(error)
+        assert context is not None
+        assert context["boxes"] == ", ".join(sorted(_CARRY_BOXES)), context
+        assert "binding_id" not in context, context
+        assert not any(binding_id in value for value in context.values() for binding_id in _PENDING_CARRIES), context
         verdict = error.terminal_precondition_verdict
-        assert verdict is not None
+        assert isinstance(verdict, PreconditionVerdict)
         assert verdict.failed_condition_id == "modelo.work.calculate.prior_carries.stated"
-        assert verdict.action is None
+        # The way on is the statement itself, the command that stages it for this declaration.
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.modelo.work.attest_prior_carries"
+        assert {binding.argument_name: binding.value for binding in verdict.argument_bindings} == {
+            "work_unit_id": renta.work_unit_id
+        }
         (evidence,) = verdict.evidence
         assert evidence.values["open_carries"] == ",".join(sorted(_PENDING_CARRIES))
         assert evidence.values["filing_year"] == year
-        # The way on is the declaration's own form, which serves the statement.
+        # The declaration's own form, which serves the statement, stays the window's way on.
         step = error_next_step(error, OutputLanguage.ES)
         assert isinstance(step, OperationOpenWorkStepV1)
         assert step.work_unit_id == renta.work_unit_id
@@ -335,3 +369,69 @@ def test_an_unstated_carry_with_no_earlier_return_is_refused_naming_every_open_c
     layer = head.operator_layer
     assert layer is not None
     assert layer.attested_binding_ids == _PENDING_CARRIES
+
+
+def _apply_as_submitted(work: SeededOperatorWork, *, offered: ModeloWorkForm) -> CadrumoError | None:
+    """Stage what the form names, check it, then apply it as the command line submits it; the apply's refusal."""
+    submission = prior_carry_attestation_submission(work.baseline(), offered.carry_attestations)
+    review = preflight_modelo_edit(
+        submission,
+        work_catalogue=work.ports.work_unit_repository.load(),
+        calculation_catalogue=work.ports.calculation_repository.load(),
+        tax_id_format=runtime_tax_id_format(authority=work.operation),
+    )
+    assert isinstance(review, ModeloEditPreflightEvaluatedV1), review
+    errors = [finding for finding in review.findings if finding.severity is ModeloEditFindingSeverity.ERROR]
+    assert not errors, errors
+    return work.execute(
+        OperationRequest(
+            definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+            subject_ref=work.work_unit_id,
+            payload=ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
+        )
+    )
+
+
+@pytest.mark.parametrize("year", _renta_years())
+def test_the_command_line_statement_stages_what_the_form_names_and_lets_the_refused_declaration_calculate(
+    tmp_path: Path, year: int
+) -> None:
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(tmp_path, modelo="100", filing_year=year, period_code="0A", extra_facts=_FACTS) as renta,
+    ):
+        with pytest.raises(ModeloPriorCarryAbsenceUnstatedError):
+            renta.recalculate()
+
+        offered = _form(renta, OutputLanguage.EN)
+        staged = prior_carry_attestation_submission(renta.baseline(), offered.carry_attestations).binding_intents
+        # One statement per carry the form names, and nothing else: no value travels with it.
+        assert [intent.address.binding_id for intent in staged] == sorted(_PENDING_CARRIES)
+        assert {intent.kind for intent in staged} == {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT}
+        assert all(intent.value is None for intent in staged)
+        # Checking the staged statement records nothing: the form still offers it.
+        assert renta.head() is None
+        assert _form(renta, OutputLanguage.EN).carry_attestations == offered.carry_attestations
+
+        assert _apply_as_submitted(renta, offered=offered) is None
+        head = renta.recalculate()
+
+        # A second statement has nothing left to answer, and is refused before anything is staged.
+        settled = _form(renta, OutputLanguage.EN)
+        assert settled.carry_attestations == ()
+        with pytest.raises(ModeloPriorCarryNothingOpenError) as again:
+            prior_carry_attestation_submission(renta.baseline(), settled.carry_attestations)
+
+    assert head.casilla_values[validated_casilla_id("1380", surface="test")] == Decimal("0")
+    layer = head.operator_layer
+    assert layer is not None
+    assert layer.attested_binding_ids == _PENDING_CARRIES
+    code = get_registered_error_code(again.value)
+    assert code.category is ErrorCategory.REFUSED
+    assert code.code == "REFUSED_MODELO_PRIOR_CARRY_NOTHING_OPEN"
+    for locale in ("es", "en", "ca", "hu"):
+        message = resolve_error_message(again.value, locale=locale)
+        assert str(year) in message
+        assert "%{" not in message

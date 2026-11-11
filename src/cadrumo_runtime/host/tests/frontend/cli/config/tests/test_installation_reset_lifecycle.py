@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -51,6 +52,7 @@ _OVERRIDE_REASON = "Court order authorises deletion before the retention floor."
 def _persist_retained_filing() -> None:
     work_unit_id = "a" * 64
     revision_id = "b" * 64
+    year = filing_year_envelope().horizon
     record_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
@@ -62,9 +64,9 @@ def _persist_retained_filing() -> None:
         calculation_revision_id=revision_id,
         bucket_id=_PROFILE_ID,
         modelo=ModeloCode("303"),
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "2T"),
-        filed_at=datetime(2025, 7, 1, tzinfo=UTC),
+        filing_year=year,
+        period=Period.from_year_and_code(year, "2T"),
+        filed_at=datetime(year, 7, 1, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
@@ -86,7 +88,7 @@ def _persist_retained_filing() -> None:
         try_record_filing_retention_snapshot(
             bucket_id=_PROFILE_ID,
             records=tuple(saved.records.values()),
-            observed_at=datetime(2025, 7, 1, tzinfo=UTC),
+            observed_at=datetime(year, 7, 1, tzinfo=UTC),
         )
 
 

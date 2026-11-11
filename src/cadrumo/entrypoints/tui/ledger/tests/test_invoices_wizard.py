@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import cast, override
 
 import pytest
@@ -15,6 +16,7 @@ from .....application.ledger.workspace import LedgerWorkspaceArea
 from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.schema import InvoiceKind
 from ...components.host import ScreenHostApp
@@ -28,6 +30,8 @@ from ..workspace_presentation import door_refusal_text
 from .invoices_fixtures import INVOICES_PROFILE_ID, MemoryInvoiceWizardDoor, ReplacingHostApp
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TYPED = {
@@ -35,7 +39,7 @@ _TYPED = {
     "counterparty_nif": "B00010082",
     "country_code": "ES",
     "invoice_number": "W-0001",
-    "invoice_date": "2026-03-15",
+    "invoice_date": date(_YEAR, 3, 15).isoformat(),
     "taxable_base": "100.00",
     "iva_rate": "21",
     "notes": "typed in the wizard",
@@ -105,7 +109,7 @@ async def test_the_wizard_moves_step_by_step_and_records_exactly_the_reviewed_re
             counterparty_nif="B00010082",
             counterparty_name="Synthetic customer",
             invoice_number="W-0001",
-            invoice_date="2026-03-15",
+            invoice_date=date(_YEAR, 3, 15).isoformat(),
             taxable_base="100.00",
             iva_rate="21",
             currency="EUR",

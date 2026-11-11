@@ -53,3 +53,36 @@ test("the model picked in the agent column is the one documents are read with, o
     .poll(() => storedReading(target))
     .toEqual({ lane: "local_api", model: "synthetic-vision:1" });
 });
+
+test("on a fresh profile the picker shows the installed model the service reads documents with, without a pick", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&setup=ready&models=all&reading_default=local_api:synthetic-vision:1",
+  );
+  // Nothing is stored: the service serves its installed default.
+  await expect
+    .poll(() =>
+      target.evaluate(async () => {
+        const list = await window.__fixtureAgentSession?.localModels?.();
+        return list?.state === "readable"
+          ? { reading: list.reading, source: list.reading_source }
+          : undefined;
+      }),
+    )
+    .toEqual({
+      reading: { lane: "local_api", model: "synthetic-vision:1" },
+      source: "default",
+    });
+  const picker = await openModelPicker(target);
+  await expect(picker.getByLabel(label("desktop.agent.model"))).toHaveValue(
+    "synthetic-vision:1",
+  );
+  // Showing it stores nothing: the default stays the service's answer.
+  expect(
+    await target.evaluate(async () => {
+      const list = await window.__fixtureAgentSession?.localModels?.();
+      return list?.state === "readable" ? list.reading_source : undefined;
+    }),
+  ).toBe("default");
+});

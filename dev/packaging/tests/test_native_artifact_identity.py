@@ -50,7 +50,7 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         "build": {
             "version": "1.0",
             "build_number": "42",
-            "build_date": "2026-10-04",
+            "build_date": "1980-10-04",
             "target": "windows-x86-64",
             "python": "3.13.11",
             "channel": "stable",
@@ -72,7 +72,7 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
                 "version": "1.0",
                 "build_id": "2026100401",
                 "build_sequence": 42,
-                "build_date": "2026-10-04",
+                "build_date": "1980-10-04",
                 "display_version": "1.0+2026100401",
             }
         ],

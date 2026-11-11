@@ -30,6 +30,7 @@ from ..contracts import (
     LocalModelListStatus,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
+    ReadingSource,
 )
 from ..local_model_list import LocalModelListService, listed_models, local_lanes
 from ..model_runs import ModelRunService
@@ -55,11 +56,14 @@ _ADDED = "custom-model:test"
 
 
 def _service(
-    store: MemoryLocalModelListStore, default_engine: LocalEngine = LocalEngine.LLAMACPP
+    store: MemoryLocalModelListStore,
+    default_engine: LocalEngine = LocalEngine.LLAMACPP,
+    live: StaticLiveModels | None = None,
 ) -> LocalModelListService:
     return LocalModelListService(
         store=store,
         catalog_source=ProvidedProviderCatalogSource(synthetic_catalog()),
+        live_models=StaticLiveModels() if live is None else live,
         default_engine=default_engine,
     )
 
@@ -117,6 +121,7 @@ def test_a_fresh_profile_lists_no_added_model() -> None:
         unreadable=False,
         models=(),
         reading=None,
+        reading_source=ReadingSource.NONE,
         local_lanes=(KEYLESS_LANE,),
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
@@ -209,7 +214,10 @@ def test_a_write_drops_models_on_lanes_the_catalogue_reports_as_not_local_and_ke
 def test_a_catalogue_the_agent_cannot_report_refuses_changes() -> None:
     store = MemoryLocalModelListStore()
     service = LocalModelListService(
-        store=store, catalog_source=UnavailableCatalogSource(), default_engine=LocalEngine.LLAMACPP
+        store=store,
+        catalog_source=UnavailableCatalogSource(),
+        live_models=StaticLiveModels(),
+        default_engine=LocalEngine.LLAMACPP,
     )
     unavailable = _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
 
@@ -225,7 +233,12 @@ def test_an_unreadable_record_lists_no_model_refuses_changes_and_only_a_guarded_
     service = _service(store)
 
     assert service.status() == LocalModelListStatus(
-        unreadable=True, models=(), reading=None, local_lanes=(KEYLESS_LANE,), revision="d" * 64
+        unreadable=True,
+        models=(),
+        reading=None,
+        reading_source=ReadingSource.NONE,
+        local_lanes=(KEYLESS_LANE,),
+        revision="d" * 64,
     )
     unknown = _refused(ProviderSettingsRefusalCode.UNKNOWN)
     assert service.add(KEYLESS_LANE, model=_ADDED, expected_revision="d" * 64) == unknown
@@ -238,6 +251,7 @@ def test_an_unreadable_record_lists_no_model_refuses_changes_and_only_a_guarded_
         unreadable=False,
         models=(),
         reading=None,
+        reading_source=ReadingSource.NONE,
         local_lanes=(KEYLESS_LANE,),
         revision=ABSENT_SECURE_OBJECT_REVISION_ID,
     )
@@ -328,38 +342,115 @@ def test_adding_and_removing_models_keeps_the_reading_model_and_selecting_it_kee
     assert _reading(more) == _reading(removed) == (KEYLESS_LANE, _ADDED)
 
 
+def _runs(store: MemoryLocalModelListStore, live: StaticLiveModels) -> ModelRunService:
+    source = ProvidedProviderCatalogSource(synthetic_catalog())
+    return ModelRunService(
+        model_list=store,
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=live,
+        selected_engine=lambda: LocalEngine.LLAMACPP,
+        gateway=_NoGateway(),
+    )
+
+
+def _local_lane(model: str) -> ModelRunLane:
+    return ModelRunLane(provider_id="local", transport="api", model=model, reads_off_host=False)
+
+
+def _served(status: LocalModelListStatus) -> tuple[str, str] | None:
+    return None if status.reading is None else (status.reading.lane, status.reading.model)
+
+
+def test_a_fresh_profile_with_the_recommended_model_installed_reads_with_it_without_a_choice() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),)})
+
+    status = _status(_service(store, live=live).status())
+
+    assert (_served(status), status.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+    # The stand-in is an answer, never a write.
+    assert store.stored is None
+
+
+def test_without_an_installed_model_nothing_is_read_and_the_run_refuses_no_selection() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),)})
+
+    status = _status(_service(store, live=live).status())
+
+    assert (status.reading, status.reading_source) == (None, ReadingSource.NONE)
+    assert _runs(store, live).lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+
+
+def test_an_unknown_install_state_never_stands_in() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels({("local", "api"): (live_model(KEYLESS_TEXT_MODEL, vision=False),)})
+
+    assert _status(_service(store, live=live).status()).reading_source is ReadingSource.NONE
+    assert _runs(store, live).lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+
+
 def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_resolves() -> None:
     store = MemoryLocalModelListStore()
-    source = ProvidedProviderCatalogSource(synthetic_catalog())
     live = StaticLiveModels(
         {
             ("local", "api"): (
-                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
                 live_model(KEYLESS_VISION_MODEL, vision=True, installed=False),
                 live_model(_ADDED, vision=False, installed=True),
             )
         }
     )
-    runs = ModelRunService(
-        model_list=store,
-        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
-        catalog_source=source,
-        live_models=live,
-        gateway=_NoGateway(),
-    )
-    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-    service = LocalModelListService(store=store, catalog_source=source, default_engine=LocalEngine.LLAMACPP)
+    runs = _runs(store, live)
+    service = _service(store, live=live)
+    assert runs.lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
 
     added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
-    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
-    _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+    assert runs.lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+    chosen = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
 
-    assert runs.lookup("text_extraction") == ModelRunLane(
-        provider_id="local",
-        transport="api",
-        model=_ADDED,
-        reads_off_host=False,
+    assert (_served(chosen), chosen.reading_source) == ((KEYLESS_LANE, _ADDED), ReadingSource.CHOSEN)
+    assert runs.lookup("text_extraction") == _local_lane(_ADDED)
+
+
+def test_a_chosen_model_taken_off_its_list_gives_way_to_the_installed_default() -> None:
+    store = MemoryLocalModelListStore()
+    live = StaticLiveModels(
+        {
+            ("local", "api"): (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
+                live_model(_ADDED, vision=False, installed=True),
+            )
+        }
     )
+    service = _service(store, live=live)
+    added = _status(service.add(KEYLESS_LANE, model=_ADDED, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID))
+    chosen = _status(service.choose_reading(KEYLESS_LANE, model=_ADDED, expected_revision=added.revision))
+
+    removed = _status(service.remove(KEYLESS_LANE, model=_ADDED, expected_revision=chosen.revision))
+
+    assert (_served(removed), removed.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
+
+
+def test_a_chosen_model_the_server_no_longer_holds_gives_way_to_the_installed_default() -> None:
+    store = MemoryLocalModelListStore()
+    _put(store, (KEYLESS_LANE, _ADDED), reading=ListedModel(lane=KEYLESS_LANE, model=_ADDED))
+    live = StaticLiveModels(
+        {
+            ("local", "api"): (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=True),
+                live_model(_ADDED, vision=False, installed=False),
+            )
+        }
+    )
+
+    status = _status(_service(store, live=live).status())
+
+    assert (_served(status), status.reading_source) == ((KEYLESS_LANE, KEYLESS_TEXT_MODEL), ReadingSource.DEFAULT)
+    assert _runs(store, live).lookup("text_extraction") == _local_lane(KEYLESS_TEXT_MODEL)
 
 
 def _engine(result: LocalEngineStatus | ProviderSettingsRefusal) -> LocalEngineStatus:

@@ -22,6 +22,7 @@ site -- there is no call site.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -29,14 +30,17 @@ from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..counterpart import (
     CounterpartObservation,
     aggregate_counterpart_349,
 )
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PERIOD = Period.from_year_and_code(2026, "2T")
+_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 
 def _observation(**overrides: object) -> CounterpartObservation:
@@ -50,7 +54,7 @@ def _observation(**overrides: object) -> CounterpartObservation:
         "operation_period": "2T",
         "taxable_base": Decimal("5000.00"),
         "invoice_total": Decimal("5000.00"),
-        "accrued_on": "2026-05-11",
+        "accrued_on": date(_YEAR, 5, 11).isoformat(),
     }
     payload.update(overrides)
     return CounterpartObservation.model_validate(payload)
@@ -71,7 +75,7 @@ def test_an_observation_stating_no_country_is_refused() -> None:
         "operation_period": "2T",
         "taxable_base": Decimal("5000.00"),
         "invoice_total": Decimal("5000.00"),
-        "accrued_on": "2026-05-11",
+        "accrued_on": date(_YEAR, 5, 11).isoformat(),
     }
 
     with pytest.raises(ValidationError) as caught:

@@ -72,6 +72,13 @@ export const SETUP_SHAPES = [
    * its setup: nothing the window reads carries the run until
    * `finishPlanning`, which lets the plan reach review and the start return. */
   "start_unreported",
+  /** The browser is ready, and the system refused the local AI's downloaded
+   * program, whose files still match their receipt: it offers the reinstall
+   * of the program. */
+  "engine_unusable",
+  /** The browser is ready, and the system refused the local AI's program
+   * that came with Cadrumo: it offers no action here. */
+  "package_damaged",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -215,7 +222,8 @@ const RECOVERY: Record<SetupFailureCategory, SetupRow["recovery"]> = {
   memory_busy: "try_again",
   program_missing: "try_again",
   program_not_running: "try_again",
-  engine_program_unusable: "try_again",
+  engine_program_unusable: "reinstall_engine_program",
+  engine_package_damaged: null,
   interrupted: "resume",
   needs_sign_in: "try_again",
   not_in_this_build: null,
@@ -269,6 +277,14 @@ function shaped(shape: SetupShape): Seed[] {
     case "offline":
       set("browser", (held) => failed(held, "offline"));
       set("local_ai", (held) => failed(held, "offline"));
+      break;
+    case "engine_unusable":
+      set("browser", readied);
+      set("local_ai", (held) => failed(held, "engine_program_unusable"));
+      break;
+    case "package_damaged":
+      set("browser", readied);
+      set("local_ai", (held) => failed(held, "engine_package_damaged"));
       break;
     case "hardware":
       set("browser", readied);
@@ -1007,7 +1023,9 @@ export function setupFixture({
       });
     },
     start(wanted, options) {
-      say(`setup.start ${wanted}${options?.resume ? " resume" : ""}`);
+      say(
+        `setup.start ${wanted}${options?.resume ? " resume" : ""}${options?.reinstall ? " reinstall" : ""}`,
+      );
       const refused = options?.download ? personal() : ready();
       if (refused) return refused;
       if (shape === "busy") return refuse("busy");

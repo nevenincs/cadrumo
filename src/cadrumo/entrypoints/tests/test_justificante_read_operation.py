@@ -57,6 +57,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .supervised_operation_rig import (
     assert_foreign_profile_refused,
     build_supervised_operation,
@@ -66,7 +67,9 @@ from .supervised_operation_rig import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 _SNAPSHOT_ID = "9" * 64
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
@@ -154,8 +157,8 @@ def _snapshot(*, bucket_id: str, snapshot_id: str = _SNAPSHOT_ID) -> Justificant
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "1T"),
         expediente_id="202613000010001A",
         csv="ABCD1234EFGH5678",
         pdf_sha256=hashlib.sha256(pdf).hexdigest(),

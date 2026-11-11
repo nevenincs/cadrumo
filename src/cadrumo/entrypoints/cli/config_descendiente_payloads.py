@@ -38,6 +38,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, NonNegativeInt, StringConstraints, field_validator, model_validator
 
+from ...application.user_profile.family_rows import ProfileFamilyGroupState
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import is_canonical_month_set
@@ -175,13 +176,22 @@ class ConfigProfileDescendienteAddResult(OutputSchema):
     profile: str
     added: NonNegativeInt
     total: NonNegativeInt
+    none_declared: bool = False
 
 
 class ConfigProfileDescendienteListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente list``."""
+    """JSON envelope for ``aeat config profile descendiente list``.
+
+    ``state`` is the backend's reading of the group: ``rows``, ``incomplete``,
+    ``none_declared`` (the profile states there are none) or ``unknown`` (nothing was
+    stated). An empty ``descendientes`` list says only that no row is stored. The paged
+    door, which reads no group, leaves ``state`` and ``stated_count`` unset.
+    """
 
     profile: str
     total: NonNegativeInt
+    state: ProfileFamilyGroupState | None = None
+    stated_count: str | None = None
     descendientes: list[ProfileDescendientePayload] = []
 
 

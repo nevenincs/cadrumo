@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator, Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -40,8 +41,11 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .ledger_ux_support import invoke, open_ledger_ux_session
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,7 +59,7 @@ def _clean_draft() -> InvoiceDraft:
         supplier_tax_id="ESB00015016",
         supplier_name="Acme Suministros SL",
         invoice_number="2026-0142",
-        invoice_date="2026-03-10",
+        invoice_date=date(_YEAR, 3, 10).isoformat(),
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),

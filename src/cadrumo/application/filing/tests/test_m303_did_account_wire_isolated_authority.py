@@ -1,4 +1,4 @@
-"""Isolated M303 DID account-wire proof against the official 2026 design."""
+"""Isolated M303 DID account-wire proof against the official design of the newest edition."""
 
 from __future__ import annotations
 
@@ -43,6 +43,7 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, open_ended_revision
 from ....domain.deadlines.models import (
     ChargeAccount,
     IVARegime,
@@ -85,7 +86,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 _SOURCE_REF = "aeat-dr-303-2026"
 _SOURCE_SHA256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
-_REVISION_ID = "2026-y-siguientes"
+_REVISION_ID = str(open_ended_revision("303").id)
+_EXERCISE = newest_authored_edition("303")
 _TAXPAYER_TAX_ID = "12345678Z"
 _REFUND_IBAN = "GB82WEST12345698765432"
 _CHARGE_IBAN = "ES9121000418450200051332"
@@ -127,9 +129,9 @@ def _required_iae_epigrafe(value: str | None) -> str:
     return value
 
 
-def _m303_2026_snapshot() -> RegistrySnapshot:
-    """Load the real 2026 revision from the published authority artifact."""
-    return published_snapshot(Modelo("303").value, filing_year=2026, period="2T")
+def _m303_snapshot() -> RegistrySnapshot:
+    """Load the real newest revision from the published authority artifact."""
+    return published_snapshot(Modelo("303").value, filing_year=_EXERCISE, period="2T")
 
 
 #: Modelo 303 prints these thirteen declared rows. Other roles in the shared
@@ -180,7 +182,7 @@ def _projection_rows_envelope_layout(
     *,
     required: bool,
 ) -> tuple[RegistrySnapshot, ExportLayoutDefinition]:
-    """Attach one canonical regimen-simplificado repeated record to a real 2026 snapshot."""
+    """Attach one canonical regimen-simplificado repeated record to a real newest-edition snapshot."""
     projection_ref = M303RegimenSimplificadoActivityProjectionRef(
         projection_kind="m303_regimen_simplificado_activity",
         cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
@@ -254,7 +256,7 @@ def _m303_did_producer_snapshot(
     non_agricultural_activity_count: int = 0,
 ) -> FilingProducerSnapshot:
     """Build real approved-draft producer authority for the isolated DID layout."""
-    period = Period.from_year_and_code(2026, "2T")
+    period = Period.from_year_and_code(_EXERCISE, "2T")
     taxpayer = taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
@@ -421,8 +423,8 @@ def elections(disposition: ResultDisposition) -> FilingElectionFacts:
 
 
 def draft() -> ModeloDraft:
-    period = Period.from_year_and_code(2026, "2T")
-    timestamp = datetime(2026, 8, 11, 12, 0, tzinfo=UTC)
+    period = Period.from_year_and_code(_EXERCISE, "2T")
+    timestamp = datetime(_EXERCISE, 8, 11, 12, 0, tzinfo=UTC)
     return ModeloDraft(
         draft_id="d" + "0" * 63,
         modelo="303",
@@ -462,7 +464,7 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
     expected_occurrences: tuple[tuple[str, int], ...],
 ) -> None:
     registry_snapshot, layout = _projection_rows_envelope_layout(
-        _m303_2026_snapshot(),
+        _m303_snapshot(),
         required=False,
     )
     producer_snapshot = _m303_did_producer_snapshot(
@@ -488,7 +490,7 @@ def test_m303_envelope_preserves_canonical_zero_one_many_projection_row_occurren
 
 def test_m303_envelope_refuses_a_required_projection_record_without_an_applicable_occurrence() -> None:
     registry_snapshot, layout = _projection_rows_envelope_layout(
-        _m303_2026_snapshot(),
+        _m303_snapshot(),
         required=True,
     )
     producer_snapshot = _m303_did_producer_snapshot(
@@ -512,15 +514,15 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
 
 
 def test_production_m303_generated_authority_is_visible_at_the_filing_boundary() -> None:
-    """The filing boundary now receives the generated 2026 layout.
+    """The filing boundary now receives the generated layout of the newest edition.
 
     This replaces the retired absence assertion.  The complete layout remains
     owned by the hash-pinned generated tree; this consumer only proves that the
     selected runtime snapshot exposes it unchanged.
     """
-    registry_snapshot = _m303_2026_snapshot()
+    registry_snapshot = _m303_snapshot()
     (layout,) = registry_snapshot.revision.export_layouts
-    assert layout.id == "generated-modelo-303-2026-y-siguientes-fichero"
+    assert layout.id == f"generated-modelo-303-{_REVISION_ID}-fichero"
     assert layout.filing_envelope is not None
     assert {field.kind for record in layout.records for field in record.fields} == {
         CasillaFieldKind.CASILLA,

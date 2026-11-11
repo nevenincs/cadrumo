@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 from textual.widgets import Button, DataTable, Input
 
 from .....core.config import override_settings
 from .....core.i18n.render import tr
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.settling import settle
 from ..categorisation_counterparties import LedgerCounterpartiesScreen
 from ..categorisation_diagnostics import LedgerDiagnosticsScreen
@@ -22,6 +25,13 @@ from .categorisation_register_fixtures import (
     ratio_notes,
 )
 from .workspace_fixtures import WorkspaceHostApp
+
+_YEAR = filing_year_envelope().horizon
+_SINCE = date(_YEAR, 1, 1).isoformat()
+_UNTIL = date(_YEAR, 3, 31).isoformat()
+_IMPOSSIBLE_DAY = date(_YEAR, 2, 28).isoformat()[:-2] + "30"
+"""A calendar-shaped text for a day February never has."""
+
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -213,12 +223,12 @@ async def test_diagnostics_read_the_report_for_the_typed_range() -> None:
             await settle(pilot)
             assert keys(screen, "#categorisation-diagnostics-usage") == ["lector-local"]
             assert keys(screen, "#categorisation-diagnostics-confidence") == ["lector-local"]
-            type_into(screen, "#categorisation-diagnostics-since", "2026-01-01")
-            type_into(screen, "#categorisation-diagnostics-until", "2026-03-31")
+            type_into(screen, "#categorisation-diagnostics-since", _SINCE)
+            type_into(screen, "#categorisation-diagnostics-until", _UNTIL)
             await press(pilot, screen, "categorisation-diagnostics-read")
             request = door.requests[-1]
-            assert str(request.since) == "2026-01-01"
-            assert str(request.until) == "2026-03-31"
+            assert str(request.since) == _SINCE
+            assert str(request.until) == _UNTIL
             assert text(screen, "#categorisation-diagnostics-totals").startswith(
                 tr(
                     "tui.ledger.categorisation.diagnostics.usage_totals",
@@ -231,7 +241,7 @@ async def test_diagnostics_read_the_report_for_the_typed_range() -> None:
                 )
             )
 
-            type_into(screen, "#categorisation-diagnostics-since", "2026-02-30")
+            type_into(screen, "#categorisation-diagnostics-since", _IMPOSSIBLE_DAY)
             await press(pilot, screen, "categorisation-diagnostics-read")
             assert text(screen, "#ledger-refusal")
             assert len(door.requests) == 2

@@ -31,11 +31,14 @@ from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..modelo_bindings_invoice_iva import invoice_line_iva_observation
 from .invoice_screen_resolution_support import resolved_for
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -48,7 +51,7 @@ def _pinned_operation() -> PinnedAuthorityOperation:
 
 
 _BASE = Decimal("5000.00")
-_DEVENGO = date(2024, 3, 15)
+_DEVENGO = date(_YEAR, 3, 15)
 
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"

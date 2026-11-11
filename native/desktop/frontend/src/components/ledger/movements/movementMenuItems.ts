@@ -6,6 +6,7 @@ import {
 } from "../../../shell/ledgerCommands";
 import type { Translate } from "../../../shell/strings";
 import { REVERT_CELL_CHORD } from "../editing/MovementEditing";
+import { OVERVIEW_CHORD } from "../ledgerChords";
 import { CLASSIFY_CHORDS } from "./useClassifyChords";
 
 /**
@@ -24,6 +25,7 @@ export function movementMenuItems({
   duplicate,
   makeRule,
   classifyEnabled,
+  overview = false,
 }: {
   t: Translate;
   /** The group's movements, where the menu is a group header's. */
@@ -42,6 +44,8 @@ export function movementMenuItems({
   makeRule: boolean;
   /** Whether classifying the menu's target as `kind` can run. */
   classifyEnabled: (kind: ClassifyKind) => boolean;
+  /** The row is a stored movement, which has an overview. */
+  overview?: boolean;
 }): MenuEntry[] {
   const classifyItems = (): MenuEntry[] =>
     CLASSIFY_KINDS.map((kind) => ({
@@ -52,6 +56,18 @@ export function movementMenuItems({
       ...(ids ? {} : { chord: CLASSIFY_CHORDS[kind] }),
     }));
   return [
+    ...(overview && !ids && !draft
+      ? [
+          {
+            id: "overview",
+            label: t("desktop.ledger.overview.show"),
+            icon: "eye" as const,
+            chord: OVERVIEW_CHORD,
+            enabled: true,
+          },
+          { separator: true as const },
+        ]
+      : []),
     ...(draft ? [] : classifyItems()),
     ...(ids
       ? []

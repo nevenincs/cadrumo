@@ -16,6 +16,7 @@ from ....core.aggregation import (
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.models import TransactionCatalogue
 from ..errors import AggregationPeriodError
 from ..grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
@@ -29,6 +30,8 @@ from .renta_income_aggregation_support import (
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -53,7 +56,7 @@ def _observation(
         scheme=scheme,
         taxable_base=Decimal("1.00"),
         retencion_amount=Decimal("0.15"),
-        accrued_on="2026-01-01",
+        accrued_on=date(_YEAR, 1, 1).isoformat(),
     )
 
 
@@ -194,7 +197,7 @@ def test_group_and_collect_names_identity_subset_of_group_key_is_consistent() ->
 # a real ledger observation exactly as the four consumer projections use it.
 # --------------------------------------------------------------------------
 
-_PERIOD = Period.from_year_and_code(2026, "1T")
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _CASILLA_01 = validated_casilla_id("01", surface="test_grouping")
 _CASILLA_02 = validated_casilla_id("02", surface="test_grouping")
 
@@ -216,7 +219,7 @@ def _income(transaction_id: str, casilla: str, gross: str, base: str | None = No
         target_casilla_id=casilla,
         gross_amount=Decimal(gross),
         taxable_base_amount=None if base is None else Decimal(base),
-        filing_date=date(2026, 2, 1),
+        filing_date=date(_YEAR, 2, 1),
         grounding=(LedgerIncomeGrounding.CASH_FALLBACK if base is None else LedgerIncomeGrounding.SUBSTRATE_DECLARED),
         withheld_derivation=(
             LedgerWithholdingDerivation.NO_SUBSTRATE if base is None else LedgerWithholdingDerivation.NONE_WITHHELD
@@ -365,14 +368,14 @@ def test_cumulative_year_to_date_window_spans_january_to_quarter_end() -> None:
     payment cumulative rather than per-quarter.
     """
     expected_ends = {
-        "1T": date(2026, 3, 31),
-        "2T": date(2026, 6, 30),
-        "3T": date(2026, 9, 30),
-        "4T": date(2026, 12, 31),
+        "1T": date(_YEAR, 3, 31),
+        "2T": date(_YEAR, 6, 30),
+        "3T": date(_YEAR, 9, 30),
+        "4T": date(_YEAR, 12, 31),
     }
     for token, expected_end in expected_ends.items():
-        window = cumulative_year_to_date_window(Period.from_year_and_code(2026, token))
-        assert window.start == date(2026, 1, 1), token
+        window = cumulative_year_to_date_window(Period.from_year_and_code(_YEAR, token))
+        assert window.start == date(_YEAR, 1, 1), token
         assert window.end == expected_end, token
         assert window.period.registry_token == token
 
@@ -384,7 +387,7 @@ def test_cumulative_year_to_date_window_refuses_a_non_quarterly_period() -> None
     base both halves of the Modelo 130 calculation accumulate over.
     """
     with pytest.raises(AggregationPeriodError):
-        cumulative_year_to_date_window(Period.from_year_and_code(2026, "0A"))
+        cumulative_year_to_date_window(Period.from_year_and_code(_YEAR, "0A"))
 
 
 def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> None:
@@ -397,7 +400,7 @@ def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> No
     from ..renta_gasto_ledger import aggregate_renta_gasto_ledger
     from ..renta_income_ledger import aggregate_renta_income_ledger
 
-    period = Period.from_year_and_code(2026, "3T")
+    period = Period.from_year_and_code(_YEAR, "3T")
     window = cumulative_year_to_date_window(period)
 
     empty = TransactionCatalogue()

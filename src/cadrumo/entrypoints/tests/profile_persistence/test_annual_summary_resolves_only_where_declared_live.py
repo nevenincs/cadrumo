@@ -29,6 +29,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.casilla_help import legal_ref_id_citation
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
@@ -174,4 +175,5 @@ def test_a_revision_declaring_the_summary_binding_still_refuses_an_iva_filer_wit
 
     context = refusal.value.context
     assert context is not None
-    assert "ley-37-1992:art-122" in str(context["profile_requirements"])
+    # The refusal cites the grounding through the one citation renderer, so the operator reads the article, not the id.
+    assert legal_ref_id_citation("ley-37-1992:art-122") in str(context["profile_requirements"])

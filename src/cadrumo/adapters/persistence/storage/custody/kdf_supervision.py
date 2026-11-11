@@ -309,6 +309,23 @@ def _fallback_profile_kdf_calibration(
     )
 
 
+def profile_kdf_at_fallback(parameters: ProfileCustodyKdfParameters) -> bool:
+    """Return whether stored parameters are exactly the fixed fallback point.
+
+    Calibration adopts that point whenever it cannot confirm a stronger one in
+    time, so a profile holding it may gain strength from a fresh calibration.
+    The salt is the profile's own and plays no part in the comparison.
+    """
+    fallback = fixed_profile_kdf_fallback(salt=bytes(16))
+    return (
+        parameters.algorithm,
+        parameters.version,
+        parameters.memory_mib,
+        parameters.iterations,
+        parameters.parallelism,
+    ) == (fallback.algorithm, fallback.version, fallback.memory_mib, fallback.iterations, fallback.parallelism)
+
+
 def profile_kdf_meets_fallback_floor(parameters: ProfileCustodyKdfParameters) -> bool:
     """Return whether a grid point is at least as strong as the fixed fallback.
 
@@ -974,6 +991,7 @@ __all__ = [
     "ProfileKdfPrewarm",
     "calibrate_profile_kdf",
     "fixed_profile_kdf_fallback",
+    "profile_kdf_at_fallback",
     "profile_kdf_grid",
     "profile_kdf_is_eligible",
     "profile_kdf_lease",

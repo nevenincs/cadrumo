@@ -41,8 +41,10 @@ from .....application.ledger.ratios_contracts import (
 )
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.operations import OperationEffect
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-_ASSERTED_AT = datetime(2026, 3, 1, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_ASSERTED_AT = datetime(_YEAR, 3, 1, tzinfo=UTC)
 SYNTHETIC_TAX_ID = "B00010082"
 SYNTHETIC_RATIO_CATEGORIES = ("suministros_vivienda", "vehiculo")
 

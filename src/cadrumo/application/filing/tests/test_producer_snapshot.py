@@ -16,6 +16,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.deadlines.models import (
     ChargeAccount,
     ModeloIVAProfile,
@@ -72,11 +73,13 @@ def _generation_pinned_authority() -> Iterator[None]:
 
 def _marker_draft() -> ModeloDraft:
     """Provide the typed draft context required by computed marker producers."""
-    period = Period.from_year_and_code(2025, "1T")
+    year = filing_year_envelope().horizon
+    period = Period.from_year_and_code(year, "1T")
+    revision_id = str(revision_serving_period("303", year, "1T").id)
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
+        revision_id=revision_id,
+        modelo_year=year,
         period="1T",
     )
     values = ()
@@ -95,9 +98,9 @@ def _marker_draft() -> ModeloDraft:
         snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=values,
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+        created_at=datetime(1980, 1, 1, tzinfo=UTC),
+        updated_at=datetime(1980, 1, 1, tzinfo=UTC),
+        schema_version=registry_schema_version(modelo="303", revision_id=revision_id),
     )
 
 

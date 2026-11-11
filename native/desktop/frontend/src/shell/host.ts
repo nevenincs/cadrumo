@@ -15,8 +15,8 @@ import type {
   DesktopSetup,
   SetupCheckMode,
   SetupItemId,
-  SetupModelDownload,
   SetupRemoval,
+  SetupStartOptions,
 } from "../ipc/componentSetup";
 import type {
   LogBatch,
@@ -95,11 +95,9 @@ export type Setup = {
   verify(items: SetupItemId[] | null): Promise<DesktopSetup>;
   /** Plans setup of one `item`, beside any other item's setup. Resume after
    * an interruption is a new start with `resume`: the unchanged plan the
-   * person approved before needs no second approval. */
-  start(
-    item: SetupItemId,
-    options?: { resume?: boolean; download?: SetupModelDownload },
-  ): Promise<DesktopSetup>;
+   * person approved before needs no second approval. `reinstall` installs
+   * the local AI's downloaded program afresh. */
+  start(item: SetupItemId, options?: SetupStartOptions): Promise<DesktopSetup>;
   /** Answers the plan whose `plan_digest` the review showed. */
   answer(
     operationId: string,

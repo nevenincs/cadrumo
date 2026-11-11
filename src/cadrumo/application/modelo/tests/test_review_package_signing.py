@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..review_package_signing import (
     ReviewPackageSigningKeypair,
     SignedReviewPackage,
@@ -49,7 +50,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # different identity on purpose: the refusal under test is a bucket
 # mismatch, and a malformed id would refuse for the wrong reason.
 _OWNER_BUCKET_ID = "2e510000-0000-4000-8000-000000000001"
-_NOW = datetime(2026, 7, 3, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 7, 3, 12, 0, tzinfo=UTC)
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-SIGNING-TEST"
 _SIGNING_CAPABILITY = InMemoryReviewPackageSigningKeypairCapability()
 
@@ -87,8 +89,8 @@ def test_sign_then_verify_with_correct_public_key_passes(
 @pytest.mark.parametrize(
     "signed_at",
     (
-        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
-        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+        pytest.param(datetime(_YEAR, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(_YEAR, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
     ),
 )
 def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
@@ -175,8 +177,8 @@ __all__: list[str] = []
 @pytest.mark.parametrize(
     "instant",
     [
-        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
-        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+        datetime(_YEAR, 5, 3, 12, 0),  # naive: the shape under test
+        datetime(_YEAR, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
     ],
 )
 def test_signing_keypair_refuses_a_non_utc_created_at(instant: datetime) -> None:
@@ -197,7 +199,7 @@ def test_signing_keypair_refuses_a_non_utc_created_at(instant: datetime) -> None
 
 def test_signing_keypair_accepts_a_utc_created_at() -> None:
     """Positive control: the UTC shape the mint path produces is still accepted."""
-    minted_at = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+    minted_at = datetime(_YEAR, 5, 3, 12, 0, tzinfo=UTC)
 
     keypair = ReviewPackageSigningKeypair(
         bucket_id="bucket",

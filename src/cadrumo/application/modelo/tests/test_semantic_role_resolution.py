@@ -13,6 +13,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_grade_exercises,
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
@@ -31,6 +37,8 @@ dt12_advisory = import_module("..dt12_advisory", package=__package__)
 taxation_comparison = import_module("..taxation_comparison", package=__package__)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_YEAR = filing_year_envelope().horizon
+_M100_YEAR = newest_authored_edition("100")
 _M100_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_RESULTADO_CASILLA")
 # The Art. 20 mapping fact carries these role tokens.  The advisory module now
 # resolves that mapping rather than exporting a second role vocabulary.
@@ -39,33 +47,33 @@ _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 
 
 @pytest.fixture(scope="module")
-def snapshot_2025() -> RegistrySnapshot:
-    """Real Modelo 100 2025 registry snapshot."""
-    return published_snapshot("100", filing_year=2025, period="0A")
+def snapshot_m100() -> RegistrySnapshot:
+    """Real Modelo 100 registry snapshot of its newest authored edition."""
+    return published_snapshot("100", filing_year=_M100_YEAR, period="0A")
 
 
-def test_unique_semantic_role_resolves_canonical_casilla_id(snapshot_2025: RegistrySnapshot) -> None:
+def test_unique_semantic_role_resolves_canonical_casilla_id(snapshot_m100: RegistrySnapshot) -> None:
     casilla_id = casilla_id_for_unique_semantic_role(
-        snapshot_2025,
+        snapshot_m100,
         taxation_comparison._RESULTADO_ROLE,
     )
 
     assert casilla_id == _M100_RESULTADO_CASILLA
-    assert casilla_id in {casilla.id for casilla in snapshot_2025.revision.casillas}
+    assert casilla_id in {casilla.id for casilla in snapshot_m100.revision.casillas}
 
 
-def test_missing_semantic_role_returns_none(snapshot_2025: RegistrySnapshot) -> None:
-    assert casilla_id_for_unique_semantic_role(snapshot_2025, "not_a_declared_semantic_role") is None
+def test_missing_semantic_role_returns_none(snapshot_m100: RegistrySnapshot) -> None:
+    assert casilla_id_for_unique_semantic_role(snapshot_m100, "not_a_declared_semantic_role") is None
 
 
-def test_ambiguous_semantic_role_refuses_before_choosing_a_casilla(snapshot_2025: RegistrySnapshot) -> None:
-    snapshot, casilla_ids = _snapshot_with_duplicate_role(snapshot_2025, taxation_comparison._RESULTADO_ROLE)
+def test_ambiguous_semantic_role_refuses_before_choosing_a_casilla(snapshot_m100: RegistrySnapshot) -> None:
+    snapshot, casilla_ids = _snapshot_with_duplicate_role(snapshot_m100, taxation_comparison._RESULTADO_ROLE)
 
     with pytest.raises(AmbiguousSemanticRoleCasillaError) as raised:
         casilla_id_for_unique_semantic_role(snapshot, taxation_comparison._RESULTADO_ROLE)
 
     assert raised.value.ambiguity.modelo_id == "100"
-    assert raised.value.ambiguity.revision_id == "2025"
+    assert raised.value.ambiguity.revision_id == str(revision_covering("100", _M100_YEAR).id)
     assert raised.value.ambiguity.casilla_ids == casilla_ids
 
 
@@ -88,7 +96,7 @@ def test_application_single_casilla_resolver_roles_are_unambiguous_in_bundled_re
 
 
 def test_declaration_period_inputs_refuse_ambiguous_semantic_role() -> None:
-    snapshot = published_snapshot("303", filing_year=2025, period="1T")
+    snapshot = published_snapshot("303", filing_year=_YEAR, period="1T")
     original = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
     duplicate = original.model_copy(update={"id": f"ambiguous-{original.id}"})
     revision = snapshot.revision.model_copy(update={"casillas": (*snapshot.revision.casillas, duplicate)})
@@ -96,8 +104,8 @@ def test_declaration_period_inputs_refuse_ambiguous_semantic_role() -> None:
     with pytest.raises(ModeloError, match="multiple casillas"):
         binding_resolution._resolve_declaration_period_inputs(
             revision,
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "1T"),
             declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
 
@@ -116,20 +124,20 @@ def test_declaration_period_inputs_project_real_registry_period_token(
     the typed text-scalar channel; the Decimal channel carries only the
     int-family ``filing_year`` role.
     """
-    snapshot = published_snapshot("303", filing_year=2025, period=period_code)
+    snapshot = published_snapshot("303", filing_year=_YEAR, period=period_code)
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
     filing_year = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
 
     resolved = binding_resolution.resolve_declaration_period_inputs(
         snapshot.revision,
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, period_code),
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, period_code),
         declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
     assert resolved.text_casilla_inputs[filing_period.id] == expected_token
     assert filing_period.id not in resolved.casilla_inputs
-    assert resolved.casilla_inputs[filing_year.id] == Decimal("2025")
+    assert resolved.casilla_inputs[filing_year.id] == Decimal(_YEAR)
 
 
 def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
@@ -140,13 +148,13 @@ def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
     Modelo 369 rather than producing a value. The token is total over every
     declared period form, which is what makes this case expressible at all.
     """
-    snapshot = published_snapshot("369", filing_year=2025, period="EXT-1T")
+    snapshot = published_snapshot("369", filing_year=_YEAR, period="EXT-1T")
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
-    period = Period.from_year_and_code(2025, "EXT-1T")
+    period = Period.from_year_and_code(_YEAR, "EXT-1T")
 
     resolved = binding_resolution.resolve_declaration_period_inputs(
         snapshot.revision,
-        filing_year=2025,
+        filing_year=_YEAR,
         period=period,
         declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
@@ -213,10 +221,14 @@ def test_every_filing_context_role_lands_on_a_casilla_the_declaration_fills() ->
     assert not offences, "filing-context roles on casillas the declaration does not fill:\n  " + "\n  ".join(offences)
 
 
-# 280's 2025 edition reaches applicability grade only; its ejercicio is still the declaration's.
+# 280's newest edition reaches applicability grade only; its ejercicio is still the declaration's.
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "grade"),
-    [("189", 2025, None), ("189", 2026, None), ("280", 2025, RegistryAuthorityGrade.APPLICABILITY)],
+    [
+        ("189", filing_grade_exercises("189")[-1], None),
+        ("189", _YEAR, None),
+        ("280", newest_authored_edition("280"), RegistryAuthorityGrade.APPLICABILITY),
+    ],
 )
 def test_annual_informative_declarations_take_their_ejercicio_from_the_declaration(
     modelo: str, filing_year: int, grade: RegistryAuthorityGrade | None

@@ -35,6 +35,7 @@ from ....tests.aeat_literal_fixtures import (
     CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
 )
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -43,6 +44,8 @@ from ..proportionality import (
 from ..registry import load_category_profiles
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 def _citation(url: str) -> CategoryCitation:
@@ -53,8 +56,8 @@ def _citation(url: str) -> CategoryCitation:
         url=url,
         quote=tr("texto autoritativo"),
         legal_ref="ley-35-2006:art-30",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
     )
 
 

@@ -52,6 +52,7 @@ from .....application.actividad_asset.served_words import worded_limits, worded_
 from .....application.operations.public_scalar import PublicDecimal
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.renta.actividad_asset.claims import ClaimProjection
 from .....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from .....domain.renta.actividad_asset.election import (
@@ -86,6 +87,24 @@ from ..models_actividad_asset import (
     ActivityAssetInspectionV1,
 )
 
+ASSET_IN_SERVICE_YEAR = filing_year_envelope().floor
+"""The year the fixture asset enters service; its first claim year."""
+DISPOSAL_YEAR = filing_year_envelope().horizon
+"""The year the fixture asset is sold, after the year it entered service."""
+REGISTER_YEAR = filing_year_envelope().horizon
+"""The exercise the register offers to claim and the form options are read for."""
+ASSET_IN_SERVICE_ON = date(ASSET_IN_SERVICE_YEAR, 1, 1)
+COVERED_UNTIL = date(ASSET_IN_SERVICE_YEAR + 1, 1, 1)
+"""The claim interval of the first year is one calendar year long."""
+DISPOSAL_ON = date(DISPOSAL_YEAR, 6, 30)
+MAXIMUM_PERIOD_YEARS = 10
+"""How long the fixture's class amortises."""
+MAXIMUM_PERIOD_ENDS_ON = date(ASSET_IN_SERVICE_YEAR + MAXIMUM_PERIOD_YEARS, 1, 1)
+PERIOD_ELAPSED_YEAR = MAXIMUM_PERIOD_ENDS_ON.year + 1
+INCOMPLETE_YEAR = PERIOD_ELAPSED_YEAR + 1
+BASIS_EXHAUSTED_YEAR = INCOMPLETE_YEAR + 1
+"""Three consecutive years after the maximum period, one per way a plan year can read."""
+
 
 def activity_asset_revision(asset_id: str) -> ActivityAssetRevision:
     """A first revision of a new, linearly amortised material asset."""
@@ -105,7 +124,7 @@ def activity_asset_revision(asset_id: str) -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation source",
         ),
-        in_service_date=date(2025, 1, 1),
+        in_service_date=ASSET_IN_SERVICE_ON,
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
         acquired_condition=AcquiredCondition.NEW,
         amortization=ActivityAssetAmortizationElection(
@@ -133,7 +152,7 @@ def activity_asset_forecast(
             method=revision.amortization.method,
             election_fingerprint=revision.amortization.fingerprint,
             annual_rate=Decimal("0.26"),
-            maximum_period_ends_on=date(2035, 1, 1),
+            maximum_period_ends_on=MAXIMUM_PERIOD_ENDS_ON,
             authority_generation="tui-screen-fixture-v1",
             source_reference="TUI screen fixture only",
         ),
@@ -236,7 +255,7 @@ class ActivityAssetActionStub:
             asset_id=asset_id,
             rows=(
                 ActivityAssetPlanRow(
-                    tax_year=2025,
+                    tax_year=ASSET_IN_SERVICE_YEAR,
                     method=AmortizationMethod.LINEAR,
                     planned=PublicDecimal(decimal="520.00"),
                     claimed=PublicDecimal(decimal="0.00"),
@@ -244,14 +263,14 @@ class ActivityAssetActionStub:
                     minimum_through=PublicDecimal(decimal="130.00"),
                     claimable_intervals=(
                         ActivityAssetClaimableInterval(
-                            covered_from=date(2025, 1, 1),
-                            covered_until=date(2026, 1, 1),
-                            covered_through=date(2025, 12, 31),
+                            covered_from=ASSET_IN_SERVICE_ON,
+                            covered_until=COVERED_UNTIL,
+                            covered_through=date(ASSET_IN_SERVICE_YEAR, 12, 31),
                         ),
                     ),
                 ),
                 ActivityAssetPlanRow(
-                    tax_year=2036,
+                    tax_year=PERIOD_ELAPSED_YEAR,
                     method=AmortizationMethod.LINEAR,
                     absence=PlanFigureAbsence.PERIOD_ELAPSED,
                     claimed=PublicDecimal(decimal="0.00"),
@@ -260,7 +279,7 @@ class ActivityAssetActionStub:
                     minimum_complete=False,
                 ),
                 ActivityAssetPlanRow(
-                    tax_year=2037,
+                    tax_year=INCOMPLETE_YEAR,
                     method=AmortizationMethod.LINEAR,
                     absence=PlanFigureAbsence.INCOMPLETE,
                     absence_reason_key=OPENING_HISTORY_MISSING_KEY,
@@ -269,7 +288,7 @@ class ActivityAssetActionStub:
                     claim_state=ActivityAssetClaimState.MISSING,
                 ),
                 ActivityAssetPlanRow(
-                    tax_year=2038,
+                    tax_year=BASIS_EXHAUSTED_YEAR,
                     method=AmortizationMethod.LINEAR,
                     absence=PlanFigureAbsence.BASIS_EXHAUSTED,
                     applies=False,
@@ -280,8 +299,8 @@ class ActivityAssetActionStub:
             limits=ActivityAssetElectionLimits(
                 class_key="equipo-informacion-software",
                 class_label="Information equipment and software",
-                maximum_period_ends_on=date(2035, 1, 1),
-                maximum_period_last_day=date(2034, 12, 31),
+                maximum_period_ends_on=MAXIMUM_PERIOD_ENDS_ON,
+                maximum_period_last_day=date(MAXIMUM_PERIOD_ENDS_ON.year - 1, 12, 31),
             ),
         )
         return plan.model_copy(
@@ -300,7 +319,7 @@ class ActivityAssetActionStub:
     ) -> ActivityAssetDisposalCalculationView:
         self.requests.append(("disposal_calculate", (asset_id, disposal)))
         return ActivityAssetDisposalCalculationView(
-            disposal_date=date(2026, 6, 30),
+            disposal_date=DISPOSAL_ON,
             reason=ActivityAssetDisposalReason.SALE,
             acquisition_value=PublicDecimal(decimal="2000.00"),
             deducted=PublicDecimal(decimal="777.86"),
@@ -379,7 +398,7 @@ def _register_row(
             "name": name,
             "state": state,
             "asset_kind": AssetKind.MATERIAL,
-            "in_service_date": date(2025, 1, 1),
+            "in_service_date": ASSET_IN_SERVICE_ON,
             "method": AmortizationMethod.LINEAR,
             "revision_number": 1,
             "basis": PublicDecimal(decimal="2000.00"),
@@ -398,7 +417,7 @@ def activity_asset_list_rows() -> tuple[ActivityAssetListRow, ...]:
             ActivityAssetRegisterState.IN_SERVICE,
             pending=PublicDecimal(decimal="1480.00"),
             findings=ActivityAssetFindingCounts(missing=2, incomplete=0, conflict=0, stale=0),
-            default_claim_year=2025,
+            default_claim_year=ASSET_IN_SERVICE_YEAR,
         ),
         _register_row(
             "desk",
@@ -413,7 +432,7 @@ def activity_asset_list_rows() -> tuple[ActivityAssetListRow, ...]:
             pending=PublicDecimal(decimal="900.00"),
             pending_applies=False,
             disposal=ActivityAssetListDisposal(
-                disposal_date=date(2026, 6, 30),
+                disposal_date=DISPOSAL_ON,
                 reason=ActivityAssetDisposalReason.SALE,
                 reason_key=activity_asset_label_key("disposal_reason", ActivityAssetDisposalReason.SALE),
             ),
@@ -426,12 +445,12 @@ def activity_asset_timeline_events() -> tuple[ActivityAssetTimelineEvent, ...]:
     return (
         ActivityAssetTimelineEvent(
             sequence=1,
-            recorded_at=datetime(2025, 2, 3, 10, 0, tzinfo=UTC),
+            recorded_at=datetime(ASSET_IN_SERVICE_YEAR, 2, 3, 10, 0, tzinfo=UTC),
             kind=ActivityAssetEventKind.REVISION,
             event_kind=ActivityAssetTimelineEventKind.CREATED,
             asset_id="laptop",
             record_id="record-one",
-            effect_date=date(2025, 1, 1),
+            effect_date=ASSET_IN_SERVICE_ON,
             affects_calculation=True,
         ),
         ActivityAssetTimelineEvent(
@@ -440,13 +459,13 @@ def activity_asset_timeline_events() -> tuple[ActivityAssetTimelineEvent, ...]:
             event_kind=ActivityAssetTimelineEventKind.CORRECTED,
             asset_id="laptop",
             record_id="record-two",
-            effect_date=date(2025, 1, 1),
+            effect_date=ASSET_IN_SERVICE_ON,
             changes=(
                 ActivityAssetTimelineChange(
                     field="in_service_date",
                     field_key=timeline_field_key("in_service_date"),
-                    before="2025-01-01",
-                    after="2025-03-15",
+                    before=ASSET_IN_SERVICE_ON.isoformat(),
+                    after=date(ASSET_IN_SERVICE_YEAR, 3, 15).isoformat(),
                     kind=ActivityAssetTimelineChangeKind.CHANGED,
                 ),
                 ActivityAssetTimelineChange(
@@ -467,10 +486,12 @@ def activity_asset_timeline_events() -> tuple[ActivityAssetTimelineEvent, ...]:
 def activity_asset_form_options(*, m130_periods: tuple[str, ...]) -> ActivityAssetFormOptionsView:
     """Form options whose only served content of interest is the Modelo 130 periods."""
     return ActivityAssetFormOptionsView(
-        tax_year=2031,
+        tax_year=REGISTER_YEAR,
         asset_kind=AssetKind.MATERIAL,
         regime=DirectEstimationRegime.SIMPLIFIED,
-        edition=ActivityAssetEdition(revision_id="fixture-edition", authored_filing_year=2031, projected=False),
+        edition=ActivityAssetEdition(
+            revision_id="fixture-edition", authored_filing_year=REGISTER_YEAR, projected=False
+        ),
         acquisition_shapes=(),
         declared_activities=(),
         methods=(AmortizationMethod.LINEAR,),

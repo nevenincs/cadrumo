@@ -31,7 +31,7 @@ _STATED: dict[str, Any] = {
     "work_unit_id": "c" * 64,
     "registry_snapshot_ref": {"modelo": "130", "period": "1T"},
     "casilla_values": {"01": "100.00"},
-    "created_at": "2000-01-01T09:00:00Z",
+    "created_at": "1980-01-01T09:00:00Z",
 }
 
 

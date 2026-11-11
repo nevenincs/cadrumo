@@ -157,7 +157,7 @@ def test_repair_integrity_objects_result_refuses_blank_namespace() -> None:
 
 def test_workflow_fingerprint_payload_round_trips_valid_row() -> None:
     """A valid fingerprint round-trips with its aware timestamp intact."""
-    written_at = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    written_at = datetime(1980, 6, 1, 12, 0, tzinfo=UTC)
     payload = WorkflowFingerprintPayload(
         schema_version=1,
         written_at=written_at,

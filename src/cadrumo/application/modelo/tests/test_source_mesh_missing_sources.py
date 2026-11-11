@@ -29,6 +29,7 @@ import pytest
 
 from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.schema import BindingDefinition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
@@ -39,6 +40,7 @@ from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from ..calculation_source_guards import assert_no_novel_source_kinds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_YEAR = filing_year_envelope().horizon
 
 
 def _declared_source_kinds() -> frozenset[BindingSourceKind]:
@@ -76,7 +78,7 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     # Resolved from (modelo, filing year, period) rather than indexed by a
     # literal revision id: AEAT re-cuts revision layouts, and this modelo's
     # a broad M303 revision was decomposed into four narrower revisions.
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     # The typed provider union is closed, so an unrouted kind only exists as a
     # stand-in exposing the one attribute the gate reads.
     synthetic = SimpleNamespace(id="synthetic-missing-source-binding", source="synthetic_unrouted_source_qqq")
@@ -100,7 +102,7 @@ def test_row_producing_binding_with_an_unrouted_source_is_refused() -> None:
     gate accepts. ``source`` is projected from the closed provider union, so
     an unrouted kind only exists on a stand-in.
     """
-    revision = published_snapshot("349", filing_year=2025, period="4T").revision
+    revision = published_snapshot("349", filing_year=_YEAR, period="4T").revision
     row_binding = next(
         binding
         for binding in revision.bindings
@@ -139,7 +141,7 @@ def _deferred_binding() -> BindingDefinition:
 
 def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape() -> None:
     """A kind registered ``deferred`` passes the novel gate on its registration, not on a ROWS exemption."""
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     patched = revision.model_copy(update={"bindings": (*revision.bindings, _deferred_binding())})
 
     assert_no_novel_source_kinds(patched)
@@ -150,7 +152,7 @@ def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape()
 
 
 def test_deferred_source_binding_surfaces_as_deferred_diagnostic() -> None:
-    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    revision = published_snapshot("303", filing_year=_YEAR, period="1T").revision
     patched = revision.model_copy(update={"bindings": (_deferred_binding(),)})
 
     diagnostics = collect_unhandled_source_diagnostics(patched, handled_sources=frozenset())

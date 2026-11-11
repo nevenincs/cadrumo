@@ -97,7 +97,11 @@ _REDUCED_LIMIT_AMOUNTS = (
 
 
 def _schedule_by_year(resolved: ResolvedMappingFact) -> tuple[tuple[int, Decimal], ...]:
-    return tuple(sorted((entry.key, entry.value) for entry in resolved.payload.entries))
+    schedule: list[tuple[int, Decimal]] = []
+    for entry in resolved.payload.entries:
+        assert isinstance(entry.key, int) and isinstance(entry.value, Decimal), entry
+        schedule.append((entry.key, entry.value))
+    return tuple(sorted(schedule))
 
 
 def test_authored_statutory_facts_preserve_values_and_provenance() -> None:

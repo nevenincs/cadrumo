@@ -21,7 +21,9 @@ _PROFILE_AND_ENGINE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS
 
 DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | frozenset(
     {
+        "desktop.agent.model_does_not_fit_memory",
         "desktop.agent.model_does_not_fit_refused",
+        "desktop.agent.model_does_not_fit_shortfall",
         "desktop.providers.connection_local",
         "desktop.dock.arrange",
         "desktop.dock.expand",
@@ -1087,6 +1089,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.settings.title",
         "desktop.settings.window",
         "desktop.setup.action.check_again",
+        "desktop.setup.action.reinstall_engine_program",
         "desktop.setup.action.resume",
         "desktop.setup.action.set_up",
         "desktop.setup.action.try_again",
@@ -1099,6 +1102,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = _PROFILE_AND_ENGINE_KEYS | froze
         "desktop.setup.failure.cancelled",
         "desktop.setup.failure.damaged_download",
         "desktop.setup.failure.disk_full",
+        "desktop.setup.failure.engine_package_damaged",
         "desktop.setup.failure.engine_program_unusable",
         "desktop.setup.failure.host_unreachable",
         "desktop.setup.failure.interrupted",

@@ -239,12 +239,27 @@ class LocalModelListEntry(OutputSchema):
     model: ModelId
 
 
+class ReadingSource(StrEnum):
+    """Where the model documents are read with comes from."""
+
+    CHOSEN = "chosen"
+    """The person's stored choice, which is still installed and listed."""
+    DEFAULT = "default"
+    """No usable stored choice: the first installed model the catalogue's order offers. Never stored."""
+    NONE = "none"
+    """No stored choice is usable and no model is installed to stand in: documents are not read."""
+
+
 class LocalModelListStatus(OutputSchema):
     """The models the person added to local lanes' lists, in the order added, with the record's guard.
 
     A lane's recommended models are the catalogue's and are not listed here.
-    ``reading`` is the lane and model the person selected to read documents
-    with, or ``None`` when none is stored. ``local_lanes`` are the catalogue's
+    ``reading`` is the lane and model documents are read with now, and
+    ``reading_source`` says where it comes from: the person's stored choice
+    (``chosen``), the default that stands in when no stored choice is usable
+    (``default``, never written to the record), or ``none``, when ``reading``
+    is ``None``. Every reading of a document uses this same selection.
+    ``local_lanes`` are the catalogue's
     local lane ids, whose models a picker offers from their lists; none when
     the catalogue cannot be read. ``unreadable`` means a stored list
     record cannot be read. Then no model is listed or selected, because
@@ -256,6 +271,7 @@ class LocalModelListStatus(OutputSchema):
     unreadable: bool
     models: tuple[LocalModelListEntry, ...]
     reading: LocalModelListEntry | None
+    reading_source: ReadingSource
     local_lanes: tuple[LaneId, ...]
     revision: ProviderSettingsRevision
 
@@ -264,6 +280,8 @@ class LocalModelListStatus(OutputSchema):
     def _models_follow_readability(self) -> Self:
         if self.unreadable and (self.models or self.reading is not None):
             raise ValueError("an unreadable record lists and selects no model")
+        if (self.reading is None) != (self.reading_source is ReadingSource.NONE):
+            raise ValueError("a reading has a source, and no reading has none")
         return self
 
 
@@ -336,5 +354,6 @@ __all__ = [
     "ProviderSettingsStatus",
     "ProviderStatusEntry",
     "ProviderStatusReason",
+    "ReadingSource",
     "is_provider_settings_revision",
 ]

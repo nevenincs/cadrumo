@@ -237,6 +237,7 @@ def test_a_keyless_lane_reads_nothing_until_the_person_selects_a_model_and_needs
         resolver=ProviderCredentialResolver(store=store, catalog_source=source),
         catalog_source=source,
         live_models=StaticLiveModels(),
+        selected_engine=lambda: LocalEngine.OLLAMA,
         gateway=_UnreachableGateway(),
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
