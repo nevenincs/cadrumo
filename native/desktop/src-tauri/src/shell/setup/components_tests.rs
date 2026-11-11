@@ -2337,3 +2337,45 @@ fn only_a_command_that_names_the_local_ai_or_every_item_reaches_it() {
     assert!(reaches_local_ai(&[ItemId::Browser, ItemId::LocalAi]));
     assert!(!reaches_local_ai(&[ItemId::Browser]));
 }
+
+#[test]
+fn local_ai_facts_name_each_stored_model_by_its_listed_name() {
+    let served = LocalAiServed {
+        engine: LocalEngine::LlamaCpp,
+        server: ServedServer::Dormant,
+        stored: vec![
+            ("listed0".to_owned(), true),
+            ("listed1".to_owned(), false),
+            ("unlisted".to_owned(), true),
+        ],
+    };
+    let named = [
+        ("listed0".to_owned(), "synthetic-held:1".to_owned()),
+        ("listed1".to_owned(), "synthetic-absent:1".to_owned()),
+    ];
+
+    assert_eq!(
+        local_ai_facts(&served, &named),
+        serde_json::json!({
+            "engine": "llamacpp",
+            "server": "dormant",
+            "models": [
+                {"name": "synthetic-held:1", "stored": true},
+                {"name": "synthetic-absent:1", "stored": false},
+            ],
+        })
+    );
+    for (server, word) in [
+        (ServedServer::Running, "running"),
+        (ServedServer::StartFailed, "start_failed"),
+    ] {
+        let facts = local_ai_facts(
+            &LocalAiServed {
+                server,
+                ..served.clone()
+            },
+            &named,
+        );
+        assert_eq!(facts["server"], word);
+    }
+}

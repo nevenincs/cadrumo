@@ -316,6 +316,26 @@ pub struct EngineConfig {
 }
 
 /// The component engine of one installation.
+/// What the selected engine's server does, as a catalogue read is served it.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServedServer {
+    /// No server runs and no demanded start failed: it starts when a document is read.
+    Dormant,
+    /// The server runs.
+    Running,
+    /// A demanded start failed, and no server runs.
+    StartFailed,
+}
+
+/// The selected local engine's served facts: its server, and whether each selected
+/// model, by its role, is stored on this computer.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalAiServed {
+    pub engine: LocalEngine,
+    pub server: ServedServer,
+    pub stored: Vec<(String, bool)>,
+}
+
 pub struct Engine {
     config: EngineConfig,
     activity: ActivityStore,
@@ -951,6 +971,46 @@ impl Engine {
             }
             Err(_) => false,
         }
+    }
+
+    /// What the manager serves of the selected engine's local AI for a catalogue read:
+    /// whether its server sleeps, runs or failed a demanded start, and whether each
+    /// selected model, by its role, is stored on this computer. Files and the recorded
+    /// address only; nothing is started and no hardware is measured. `None` where the
+    /// engine's program cannot be read in this build.
+    pub fn local_ai_served(&self) -> Option<LocalAiServed> {
+        let (program, models) = self.local_ai_parts().ok()?;
+        let (running, failed) = match &program {
+            EngineProgram::Ollama(program) => (
+                program.running_server().is_some(),
+                program.latest_start_failure().is_some(),
+            ),
+            EngineProgram::LlamaCpp(router) => (
+                router.running_server().is_some(),
+                router.latest_start_failure().is_some(),
+            ),
+        };
+        let server = match (running, failed) {
+            (true, _) => ServedServer::Running,
+            (false, true) => ServedServer::StartFailed,
+            (false, false) => ServedServer::Dormant,
+        };
+        // An unmeasured capacity must not invent a hardware shortfall.
+        let hardware = Hardware::default();
+        let stored = models
+            .selection()
+            .as_slice()
+            .iter()
+            .map(|model| {
+                let present = models.observe_quick(model, &hardware) == Observation::Present;
+                (model.role.clone(), present)
+            })
+            .collect();
+        Some(LocalAiServed {
+            engine: self.local_engine,
+            server,
+            stored,
+        })
     }
 
     fn local_ai_parts(&self) -> Result<(EngineProgram, Models), NoProgram> {

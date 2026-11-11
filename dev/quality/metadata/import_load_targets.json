@@ -3659,6 +3659,7 @@
         "cadrumo_agent_service.host.native_refusal",
         "cadrumo_agent_service.host.store_lifecycle",
         "cadrumo_agent_service.installed_client",
+        "cadrumo_agent_service.local_ai_relay",
         "cadrumo_agent_service.main",
         "cadrumo_agent_service.providers",
         "cadrumo_agent_service.providers.application",

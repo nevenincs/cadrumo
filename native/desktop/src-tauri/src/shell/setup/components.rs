@@ -59,7 +59,10 @@ use cadrumo_application::{
     },
     provisioning::{
         browser::failure_category,
-        engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
+        engine::{
+            Answer, Engine, Event, LocalAiServed, Outcome as Ended, Report, ServedServer,
+            SetupRequest,
+        },
         failure::{FailureCategory, TransferFailure},
         installation::installation_config,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
@@ -211,6 +214,25 @@ fn admitted(
     .map_err(Unready::Stopped)?;
     engine.select_local_models(models);
     Ok(engine)
+}
+
+/// The served facts as the agent service's catalogue read takes them, each model by
+/// the name on the person's list its role was selected for.
+fn local_ai_facts(served: &LocalAiServed, named: &[(String, String)]) -> serde_json::Value {
+    let server = match served.server {
+        ServedServer::Dormant => "dormant",
+        ServedServer::Running => "running",
+        ServedServer::StartFailed => "start_failed",
+    };
+    let models: Vec<serde_json::Value> = served
+        .stored
+        .iter()
+        .filter_map(|(role, stored)| {
+            let (_, name) = named.iter().find(|(listed, _)| listed == role)?;
+            Some(serde_json::json!({"name": name, "stored": stored}))
+        })
+        .collect();
+    serde_json::json!({"engine": served.engine, "server": server, "models": models})
 }
 
 fn lock<T>(value: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -485,6 +507,20 @@ impl Components {
                 reports: Reports::new(diagnostics),
             }),
         }
+    }
+
+    /// The selected local engine's facts, as the agent service relays them on its local
+    /// lane in place of its agent's probe of a server that sleeps until a document is
+    /// read: whether the server sleeps, runs or failed a demanded start, and whether each
+    /// model on the person's local lists is stored. Files and records only; nothing is
+    /// started. `None` where the engine selection, the lists or the program cannot be
+    /// read, and the service then holds the lane unknown.
+    pub fn local_ai_facts(&self) -> Option<serde_json::Value> {
+        let selection = self.admission.local_engine().ok()?;
+        let (named, models) = self.admission.listed_named().ok()?;
+        let mut engine = made(&*self.engines, Some(selection)).ok()?;
+        engine.select_local_models(models);
+        Some(local_ai_facts(&engine.local_ai_served()?, &named))
     }
 
     /// Changes whenever a command, report, event or review changes what the

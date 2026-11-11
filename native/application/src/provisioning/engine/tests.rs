@@ -1186,6 +1186,11 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_from_fil
     assert_eq!(row(&verified, ItemId::LocalAi).state, ItemState::Ready);
     assert!(!row(&verified, ItemId::LocalAi).dormant, "its server runs");
     assert_eq!(
+        world.engine().local_ai_served().unwrap().server,
+        ServedServer::Running,
+        "a catalogue read is served the running server"
+    );
+    assert_eq!(
         count(&world.ollama_requests(), "POST /api/generate"),
         4,
         "one token for each role"
@@ -1202,6 +1207,22 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_from_fil
         "dormant",
         "the dormant server is served as a state of its own"
     );
+    // A catalogue read is served the sleeping server, and each selected model as its
+    // files hold it, without a request to any server.
+    let asked = world.ollama_requests().len();
+    let served = world.engine().local_ai_served().unwrap();
+    assert_eq!(served.engine, LocalEngine::Ollama);
+    assert_eq!(served.server, ServedServer::Dormant);
+    assert!(!served.stored.is_empty());
+    assert!(
+        served.stored.iter().all(|(_, stored)| *stored),
+        "{served:?}"
+    );
+    assert_eq!(
+        world.ollama_requests().len(),
+        asked,
+        "nothing is asked of a server"
+    );
     // A demanded start that failed leaves no dormant server: it reads as that failure.
     fs::write(
         world.programs().join(START_FAILURE_RECORD),
@@ -1214,6 +1235,11 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_from_fil
         ItemState::Failed(FailureCategory::ProgramNotRunning)
     );
     assert!(!row(&failed, ItemId::LocalAi).dormant);
+    assert_eq!(
+        world.engine().local_ai_served().unwrap().server,
+        ServedServer::StartFailed,
+        "a catalogue read is served the failed start"
+    );
 
     // A model the person keeps beside the selected ones stays with its layers.
     kept.store(&world.models(), KEPT);
@@ -1236,6 +1262,12 @@ fn the_local_ai_installs_its_program_fetches_each_model_once_and_checks_from_fil
     assert!(phases(&removing, ItemId::LocalAi).contains(&SetupStep::Cleanup));
     assert_eq!(text.stored(&world.models(), TEXT), 0);
     assert_eq!(vision.stored(&world.models(), VISION), 0);
+    if let Some(served) = world.engine().local_ai_served() {
+        assert!(
+            served.stored.iter().all(|(_, stored)| !*stored),
+            "a removed model is served as not stored: {served:?}"
+        );
+    }
     assert_eq!(
         kept.stored(&world.models(), KEPT),
         3,

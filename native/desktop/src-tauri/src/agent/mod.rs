@@ -706,14 +706,21 @@ async fn agent_status_unsubscribe(
     Ok(())
 }
 
-/// cadrumo-agent's provider catalog, relayed unchanged and unfiltered.
+/// cadrumo-agent's provider catalog as the agent service relays it, with the
+/// selected local engine's facts the manager serves in place of the agent's probe
+/// of a server that sleeps until a document is read.
 #[tauri::command]
-async fn agent_provider_catalog(
+async fn agent_provider_catalog<R: Runtime>(
+    app: tauri::AppHandle<R>,
     host: State<'_, Arc<AgentHost>>,
 ) -> std::result::Result<Value, Refused> {
-    blocking(&host, |host| {
+    let setup = app
+        .try_state::<Arc<crate::shell::setup::SetupHost>>()
+        .map(|setup| setup.inner().clone());
+    blocking(&host, move |host| {
+        let facts = setup.and_then(|setup| setup.local_ai_facts());
         let catalog = host
-            .administer(serde_json::json!({"action":"catalog"}), None)
+            .administer(catalog_request(facts), None)
             .map_err(|error| host.refuse(admin_refusal(&error), error))?;
         // The service still working on it answers busy and keeps the answer
         // for the next read, which the column makes.
@@ -723,6 +730,19 @@ async fn agent_provider_catalog(
         Ok(catalog)
     })
     .await
+}
+
+/// The most bytes of local AI facts a catalogue read carries, well inside the service's
+/// administration document with the request's own fields.
+const LOCAL_AI_FACTS_BYTES: usize = 3072;
+
+/// A catalogue read, carrying `facts` where they fit; without them the service holds
+/// a local lane whose server its agent could not read unknown.
+fn catalog_request(facts: Option<Value>) -> Value {
+    match facts.filter(|facts| facts.to_string().len() <= LOCAL_AI_FACTS_BYTES) {
+        Some(facts) => serde_json::json!({"action": "catalog", "local_ai": facts}),
+        None => serde_json::json!({"action": "catalog"}),
+    }
 }
 
 /// The models the person added to the local lanes' lists and the model documents
@@ -1446,6 +1466,24 @@ async fn agent_attachment_policy(
 mod tests {
     use super::*;
     use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+
+    #[test]
+    fn a_catalog_read_carries_the_local_ai_facts_only_where_they_fit() {
+        let facts = serde_json::json!({"engine": "llamacpp", "server": "dormant", "models": []});
+        assert_eq!(
+            catalog_request(Some(facts.clone())),
+            serde_json::json!({"action": "catalog", "local_ai": facts})
+        );
+        assert_eq!(
+            catalog_request(None),
+            serde_json::json!({"action": "catalog"})
+        );
+        let oversized = serde_json::json!({"models": "x".repeat(LOCAL_AI_FACTS_BYTES)});
+        assert_eq!(
+            catalog_request(Some(oversized)),
+            serde_json::json!({"action": "catalog"})
+        );
+    }
 
     #[test]
     fn a_ready_sync_asks_again_only_after_a_transient_miss_and_a_bounded_number_of_times() {

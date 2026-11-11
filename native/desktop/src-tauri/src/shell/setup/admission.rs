@@ -322,6 +322,12 @@ impl Admission {
     /// the models the person manages here and a removal of the local AI takes with it. A
     /// model the person keeps off those lists is not among them.
     pub fn listed(&self) -> Result<LocalModels, Stop> {
+        Ok(self.listed_named()?.1)
+    }
+
+    /// The names on the person's local lists, each with the role its model is selected
+    /// under, and that selection.
+    pub fn listed_named(&self) -> Result<(Vec<(String, String)>, LocalModels), Stop> {
         let lanes = self.lanes(None)?;
         let catalogue = self.catalogue(None)?;
         let added = self.added_models(None)?;
@@ -342,14 +348,20 @@ impl Admission {
                 }
             }
         }
-        // A name the engine cannot pull is on no list the engine could have filled.
-        let selected = names
-            .iter()
+        let named: Vec<(String, String)> = names
+            .into_iter()
             .enumerate()
-            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None, None))
+            .map(|(index, name)| (format!("listed{index}"), name))
+            .collect();
+        // A name the engine cannot pull is on no list the engine could have filled.
+        let selected = named
+            .iter()
+            .map(|(role, name)| SelectedModel::new(role, name, None, None))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))?;
-        LocalModels::new(selected).map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))
+        let models = LocalModels::new(selected)
+            .map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))?;
+        Ok((named, models))
     }
 
     /// Whether the person added `model` to `lane`'s list.
