@@ -23,9 +23,13 @@ import os
 import sys
 import tomllib
 from collections.abc import Sequence
+from functools import cache
 from pathlib import Path
 
 import pytest
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
 
 from .diff import diff_tables, render_diff, row_id
 from .render import render_table, summary_line
@@ -35,11 +39,19 @@ BASELINE = Path(__file__).with_name("baseline")
 _SWEEP = Path(__file__).with_name("sweep.py")
 
 
+@cache
+def _horizon() -> int:
+    """The registry's horizon, on which the baseline's year tokens resolve."""
+    with bundled_indexed_authority().operation() as operation:
+        return year_envelope(operation).horizon
+
+
 def _rows_from(paths: Sequence[Path]) -> dict[tuple[str, str, int, str], TableRow]:
+    """The latest row per key in the run files, or the baseline directories, at ``paths``."""
     files: list[Path] = []
     for path in paths:
         files += sorted(path.glob("*.jsonl")) if path.is_dir() else [path]
-    return latest_rows(read_rows(files))
+    return latest_rows(read_rows(files, horizon=_horizon()))
 
 
 def _run(args: argparse.Namespace) -> int:
@@ -87,7 +99,7 @@ def _baseline(args: argparse.Namespace) -> int:
     for key in sorted(rows):
         by_persona.setdefault(key[0], []).append(rows[key])
     for persona, persona_rows in by_persona.items():
-        text = "".join(row.to_json() + "\n" for row in persona_rows)
+        text = "".join(row.to_baseline_json(_horizon()) + "\n" for row in persona_rows)
         (args.dir / f"{persona}.jsonl").write_text(text, encoding="utf-8")
     return 0
 

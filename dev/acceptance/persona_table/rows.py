@@ -155,15 +155,49 @@ class TableRow:
         data["sources"] = list(self.sources)
         return json.dumps(data, ensure_ascii=False, sort_keys=True)
 
+    def to_baseline_json(self, horizon: int) -> str:
+        """One baseline line: years as tokens on ``horizon`` and no free text, so the ratchet holds no year."""
+        data = {
+            "persona": self.persona,
+            "modelo": self.modelo,
+            "year": _token(self.year, horizon),
+            "period": self.period,
+            "horizon": _token(self.horizon, horizon),
+            "grounding": self.grounding,
+            "sources": list(self.sources),
+            "has_values": self.has_values,
+            "calculate": self.calculate.value,
+            "verify": self.verify.value,
+            "export": self.export.value,
+            "verdict": self.verdict.value,
+        }
+        return json.dumps(data, ensure_ascii=False, sort_keys=True)
+
     @classmethod
-    def from_json(cls, line: str) -> TableRow:
-        """Read one JSON line written by :meth:`to_json`."""
+    def from_json(cls, line: str, *, horizon: int | None = None) -> TableRow:
+        """Read one line written by :meth:`to_json`, or by :meth:`to_baseline_json` given the ``horizon``."""
         data = json.loads(line)
         data.pop("verdict", None)
+        for name in ("year", "horizon"):
+            if isinstance(data[name], str):
+                if horizon is None:
+                    raise ValueError(f"a baseline row's {name} token needs the registry horizon")
+                data[name] = _resolved(data[name], horizon)
         data["sources"] = tuple(data["sources"])
         for name in ("calculate", "verify", "export"):
             data[name] = Stage(data[name])
         return cls(**data)
+
+
+def _token(year: int, horizon: int) -> str:
+    return str(YearToken(anchor="horizon", offset=year - horizon))
+
+
+def _resolved(text: str, horizon: int) -> int:
+    token = YearToken.parse(text, where="persona table baseline")
+    if token.anchor != "horizon":
+        raise ValueError(f"a baseline year token is anchored on the horizon, not {token}")
+    return horizon + token.offset
 
 
 def classify(row: TableRow) -> Verdict:
@@ -262,12 +296,12 @@ def write_rows(path: Path, rows: Iterable[TableRow]) -> None:
             handle.write(row.to_json() + "\n")
 
 
-def read_rows(paths: Iterable[Path]) -> Iterator[TableRow]:
-    """Every row in the JSON-lines files at ``paths``, in file order."""
+def read_rows(paths: Iterable[Path], *, horizon: int | None = None) -> Iterator[TableRow]:
+    """Every row in the JSON-lines files at ``paths``, in file order; baseline tokens resolve on ``horizon``."""
     for path in paths:
         for line in path.read_text(encoding="utf-8").splitlines():
             if line.strip():
-                yield TableRow.from_json(line)
+                yield TableRow.from_json(line, horizon=horizon)
 
 
 def latest_rows(rows: Iterable[TableRow]) -> dict[tuple[str, str, int, str], TableRow]:

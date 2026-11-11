@@ -151,3 +151,15 @@ def test_a_filter_keeps_only_the_named_modelos_and_years() -> None:
     assert kept
     assert {(row.modelo, row.year) for row in kept} == {("130", envelope.horizon - 1)}
     assert select(rows) == rows
+
+
+def test_a_baseline_line_holds_year_tokens_and_reads_back_on_the_horizon() -> None:
+    plan = _plan()
+    row = TableRow.from_plan(plan, Stage.PASSED, verify=Stage.PASSED, export=Stage.PASSED, reason="free text")
+    line = row.to_baseline_json(plan.horizon)
+    assert str(plan.year) not in line
+    assert '"year": "horizon-1"' in line
+    restored = TableRow.from_json(line, horizon=plan.horizon)
+    assert (restored.key, restored.verdict, restored.horizon) == (row.key, row.verdict, row.horizon)
+    with pytest.raises(ValueError, match="needs the registry horizon"):
+        TableRow.from_json(line)
