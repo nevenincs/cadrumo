@@ -67,6 +67,19 @@ as_of = { year = "horizon", month = 2, day = 16 }
 description = "Traducción e interpretación"
 iae_epigraph = "774"
 
+# She sells her own translation work and holds no mercaderías or materias
+# primas, so her activity holds no existencias: the book opens at zero, records
+# no movement and closes on its movements at zero. The Modelo 100 rows of the
+# stock variation and the purchases of existencias (casillas 0177, 0181 and
+# 0182) read it as zero on her statement, never by default.
+[[inventory]]
+activity = "traduccion-interpretacion"
+year = "horizon-1"
+valuation_method = "fifo"
+opening_stock = "0.00"
+closing_stock = "0.00"
+statement = "La actividad de traducción e interpretación no mantuvo existencias en ningún momento del ejercicio ni al cierre del anterior."
+
 [[elections]]
 question = "irpf-activity-income-imputation-criterion"
 value = "devengo"
