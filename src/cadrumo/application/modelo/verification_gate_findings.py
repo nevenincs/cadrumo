@@ -84,6 +84,7 @@ from .verification_cross_period import (
     CrossPeriodDoor,
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
+    cross_period_door_operator_arguments,
     cross_period_door_reader,
     cross_period_expected_member_sets_from_profile,
     operator_value_attestations,
@@ -322,6 +323,7 @@ def _append_cross_period_findings(
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
             action_argument_values=action_argument_values,
+            missing_action_arguments=cross_period_door_operator_arguments(scenario),
         )
 
     findings.extend(

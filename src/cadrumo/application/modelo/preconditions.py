@@ -183,19 +183,32 @@ _SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
 )
 
 
+def _attest_prior_value_profile(subject_leaf_key: str) -> ManifestActionProfile:
+    """A source no return can ever prove here: the filer states the figure the declaration reads from it."""
+    return _profile(
+        subject_leaf_key,
+        f"{subject_leaf_key}.cross_period_dependency.clean",
+        f"{subject_leaf_key}.cross_period_dependency.attest_prior_value",
+        action_id="operator.modelo.work.attest_prior_value",
+    )
+
+
 def _cross_period_door_profiles(subject_leaf_key: str) -> tuple[ManifestActionProfile, ...]:
-    """An unclean source routed by its first blocker: its own work, or its capture once filed."""
-    return tuple(
-        _profile(
-            subject_leaf_key,
-            f"{subject_leaf_key}.cross_period_dependency.clean",
-            f"{subject_leaf_key}.cross_period_dependency.{scenario}",
-            action_id=action_id,
-        )
-        for scenario, action_id in (
-            *_SOURCE_STANDING_DOORS,
-            ("filed_evidence_missing", "operator.live.filed.pull"),
-        )
+    """An unclean source routed by its first blocker: its own work, its capture once filed, or the filer's statement."""
+    return (
+        *(
+            _profile(
+                subject_leaf_key,
+                f"{subject_leaf_key}.cross_period_dependency.clean",
+                f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+                action_id=action_id,
+            )
+            for scenario, action_id in (
+                *_SOURCE_STANDING_DOORS,
+                ("filed_evidence_missing", "operator.live.filed.pull"),
+            )
+        ),
+        _attest_prior_value_profile(subject_leaf_key),
     )
 
 
@@ -865,6 +878,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.cross_period_dependency.unclean",
     ),
     *_cross_period_door_profiles("modelo.work.verify"),
+    # An export refused on a source no return can prove names the same statement.
+    _attest_prior_value_profile("modelo.export"),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",

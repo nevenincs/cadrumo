@@ -4,7 +4,9 @@
 value of an input over what its source supplies (or in place of a source that
 supplied nothing, such as an earlier return that is not stored), and
 ``attest-no-amount`` states that a carry from an earlier filing holds no
-amount. Each reads the declaration's form, which admits the edit baseline,
+amount, and ``attest-prior-value`` states the figure of a carry whose earlier
+return the profile holds nowhere, so the statement stands in for that return.
+Each reads the declaration's form, which admits the edit baseline,
 reads the typed value through the address's own grammar, checks the staged
 change, and applies it through the guarded edit only when the filer confirms
 with ``--yes``. Applying one entry keeps every other value the filer entered.
@@ -59,11 +61,12 @@ from .operation_modelo_carry_attestation import (
     read_modelo_work_form_for_cli,
 )
 
-type ManualEntryIntent = Literal["set_typed_value", "set_override_value", "attest_no_amount"]
+type ManualEntryIntent = Literal["set_typed_value", "set_override_value", "attest_no_amount", "attest_prior_value"]
 
 _SET_VALUE_COMMAND = "modelo.work.set_value"
 _OVERRIDE_COMMAND = "modelo.work.override"
 _ATTEST_NO_AMOUNT_COMMAND = "modelo.work.attest_no_amount"
+_ATTEST_PRIOR_VALUE_COMMAND = "modelo.work.attest_prior_value"
 
 
 def _not_writable(address: ModeloEditValueAddressV1, language: OutputLanguage) -> typer.BadParameter:
@@ -314,4 +317,46 @@ def work_attest_no_amount(
     )
 
 
-__all__ = ["work_attest_no_amount", "work_override", "work_set_value"]
+def work_attest_prior_value(
+    ctx: typer.Context,
+    work_unit_id: str,
+    binding_id: str,
+    value: str,
+    confirmed: bool = False,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """State the figure of a carry whose earlier return the profile does not hold.
+
+    The check refuses the statement where that return is held, because the
+    declaration then follows the return rather than the statement.
+    """
+    client, language = _session(ctx, output_language)
+    baseline, tax_id_format = _admitted_baseline(client, work_unit_id, language)
+    address = _binding_address(binding_id)
+    parsed, value_text = _typed_value(baseline, address, value, tax_id_format=tax_id_format, language=language)
+    submission = ModeloEditSubmissionV1(
+        baseline=baseline,
+        mutation_family=ModeloEditMutationFamily.CALCULATE,
+        binding_intents=(
+            ModeloBindingEditIntentV1(
+                address=address, kind=ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE, value=parsed.value
+            ),
+        ),
+    )
+    _settle(
+        ctx,
+        client,
+        submission,
+        command=_ATTEST_PRIOR_VALUE_COMMAND,
+        intent="attest_prior_value",
+        address=address,
+        command_words=(
+            f"aeat app modelo work attest-prior-value {baseline.work_unit_id} {address.binding_id} <value> --yes"
+        ),
+        value_text=value_text,
+        confirmed=confirmed,
+        language=language,
+    )
+
+
+__all__ = ["work_attest_no_amount", "work_attest_prior_value", "work_override", "work_set_value"]

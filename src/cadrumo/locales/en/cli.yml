@@ -1592,6 +1592,12 @@ cli:
           each carry as a 0 you stated, apart from a figure you typed.
         attest_prior_carries_yes_help: Confirm the statement and record it on the
           declaration
+        attest_prior_value_help: State the figure a declaration takes from an earlier
+          return that Cadrumo does not hold, such as last year's Modelo 100 filed
+          elsewhere. Shows the value and the check of the change; with --yes it records
+          the figure as one you stated for that return, apart from a figure you typed.
+          Refused when the earlier return is held, because the declaration then follows
+          it.
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%

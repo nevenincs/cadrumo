@@ -728,6 +728,11 @@ type CrossPeriodDoor = tuple[str, dict[str, str | int] | None]
 """The ``cross_period_dependency`` scenario suffix and the facts its action binds, ``None`` when door-less."""
 
 
+def cross_period_door_operator_arguments(scenario: str) -> tuple[str, ...]:
+    """The arguments of a door's action only the operator supplies: the figure a statement states."""
+    return ("value",) if scenario == _ATTEST_PRIOR_VALUE_SCENARIO else ()
+
+
 def cross_period_door(
     evidence: CrossPeriodDependencyEvidence,
     *,
@@ -981,6 +986,7 @@ def require_cross_period_clean_state(
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
             action_argument_values=action_argument_values,
+            missing_action_arguments=cross_period_door_operator_arguments(scenario),
         )
 
     findings = cross_period_clean_state_findings(
@@ -1010,6 +1016,7 @@ __all__ = [
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
     "cross_period_door",
+    "cross_period_door_operator_arguments",
     "cross_period_door_reader",
     "cross_period_expected_member_sets_from_profile",
     "operator_value_attestations",

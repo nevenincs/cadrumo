@@ -312,6 +312,7 @@ PROFILE_CONNECTION_KEYS = frozenset(
         "app_modelo_work_set_value",
         "app_modelo_work_override",
         "app_modelo_work_attest_no_amount",
+        "app_modelo_work_attest_prior_value",
         "app_modelo_export",
         "app_modelo_review_package_build",
         "app_modelo_work_verify",
