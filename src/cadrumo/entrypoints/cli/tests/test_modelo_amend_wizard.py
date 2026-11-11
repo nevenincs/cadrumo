@@ -30,7 +30,7 @@ from __future__ import annotations
 import hashlib
 import json
 from contextlib import ExitStack
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import NamedTuple
 from uuid import UUID
@@ -65,12 +65,12 @@ from cadrumo.application.modelo.work_unit_repository import work_unit_catalogue_
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.flows import FlowMode
-from cadrumo.core.period import Period
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.query_reports import ModeloCasillaRow
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -118,6 +118,7 @@ def test_amend_wizard_missing_evidence_offers_the_justificante_import() -> None:
 
 
 _TAX_ID = "12345678Z"
+_YEAR = filing_year_envelope().horizon
 
 # M130 1T has no required-manual casillas (casilla 02 is `required = true` but
 # `input_kind = "bound"`); a baseline carrying only casillas 01 (ingresos) and
@@ -284,36 +285,41 @@ def _profile_amend_catalogue_state(
         )
 
 
-def _seed_justificante(
-    *, bucket_id: str, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025
-) -> None:
-    """Persist the stored receipt metadata a justificante-bound evidence import requires."""
+def _seed_justificante(*, bucket_id: str, csv: str, work_unit_id: str, modelo: str = "130") -> None:
+    """Persist the stored receipt metadata a justificante-bound evidence import requires.
+
+    The receipt names the work unit's own filing year and period and is presented
+    after that period closes, so it attests exactly the import target.
+    """
+    unit = load_work_unit_by_id(work_unit_id=work_unit_id)
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
+    presented_on = unit.period.end_date + timedelta(days=15)
+    presented_at = datetime(presented_on.year, presented_on.month, presented_on.day, 9, 30, tzinfo=UTC)
     receipt = Justificante(
         csv=csv,
         modelo=modelo,
-        period=Period.from_year_and_code(filing_year, period),
-        ejercicio=str(filing_year),
+        period=unit.period,
+        ejercicio=str(unit.filing_year),
         presentation_id="1234567890123",
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+        presented_at=presented_at,
         tax_id=_TAX_ID,
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
         source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
         source_pdf_sha256=source_pdf_sha256,
-        parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        parsed_at=presented_at + timedelta(days=1),
     )
     JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
 
-def _import_external_baseline(work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T") -> str:
+def _import_external_baseline(work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD") -> str:
     """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     with open_test_profile_session(bucket_id):
-        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period)
+        _seed_justificante(bucket_id=bucket_id, csv=csv, work_unit_id=work_unit_id)
     result = _invoke(
         [
             "--format", "json",
@@ -332,7 +338,6 @@ def _import_external_m303_baseline(
     work_unit_id: str,
     *,
     csv: str = "JUST20253031TAMENDWIZARD",
-    period: str = "1T",
     runtime_profile: HumanProbeSession | None = None,
 ) -> str:
     """Import an AEAT-attested M303 baseline filing and return its filing_record_id.
@@ -354,7 +359,7 @@ def _import_external_m303_baseline(
         if runtime_profile is not None:
             assert str(runtime_profile.profile_id) == bucket_id
         sessions.enter_context(open_test_profile_session(bucket_id))
-        _seed_justificante(bucket_id=bucket_id, csv=csv, period=period, modelo="303")
+        _seed_justificante(bucket_id=bucket_id, csv=csv, work_unit_id=work_unit_id, modelo="303")
         ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
         work_unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
         record = import_external_filing_evidence(
@@ -669,7 +674,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
     """An Autoliquidación Rectificativa on M303 files through the wizard's scripted drive.
 
     Modelo 303 adopts the unified ``autoliquidación rectificativa`` (LGT art.
-    120.4, Orden HAC/819/2024) from 2024 periods 09/3T onward, so 2025 1T is
+    120.4, Orden HAC/819/2024) from 2024 periods 09/3T onward, so the horizon year's 1T is
     rectificativa-effective. The correction LOWERS the declared base imponible
     -- a direction a self-filed complementaria could not lawfully carry -- so a
     rectificativa is the only mechanism that can file it. The wizard's scripted
@@ -723,9 +728,9 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="1T",
-        revision=_m303_revision_id(filing_year=2025, period="1T"),
+        revision=_m303_revision_id(filing_year=_YEAR, period="1T"),
     )
     baseline_filing_id = _import_external_m303_baseline(work_unit_id, runtime_profile=_operator_profile)
     bucket_id = resolve_active_bucket_id()
@@ -796,7 +801,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
 ) -> None:
     """Wizard-derived amend inputs and a hand-built ``work amend`` agree exactly.
 
-    Two independently-seeded M303 2025 baselines (different quarters, both
+    Two independently-seeded M303 horizon-year baselines (different quarters, both
     rectificativa-effective) are amended identically: one through the wizard's
     scripted-derived inputs, one through the raw ``work amend`` flag grammar.
     Both must resolve to the same persisted outcome -- proof the wizard is a
@@ -808,7 +813,6 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     wizard_baseline_filing_id = _import_external_m303_baseline(
         wizard_unit_id,
         csv="JUST20253031TRECTWIZARD",
-        period="1T",
     )
     overrides, kind, motive, reason = _scripted_amend(
         wizard_unit_id,
@@ -820,14 +824,13 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
     )
     hand_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
-        filing_year=2025,
+        filing_year=_YEAR,
         period="2T",
-        revision=_m303_revision_id(filing_year=2025, period="2T"),
+        revision=_m303_revision_id(filing_year=_YEAR, period="2T"),
     )
     hand_baseline_filing_id = _import_external_m303_baseline(
         hand_unit_id,
         csv="JUST20253032TRECTHANDBUILT",
-        period="2T",
     )
     wizard_result = _amend_via_shared_path(
         from_filing_record_id=wizard_baseline_filing_id,
@@ -898,7 +901,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
 def test_amend_wizard_kind_select_offers_only_period_permitted_kinds(seed_profile: ProfileSeeder) -> None:
     """The amendment-kind SELECT is period-aware: it offers only the legally-available kinds.
 
-    M303 2025 1T is post-unification, so the kind SELECT offers ``rectificativa``
+    M303 horizon-year 1T is post-unification, so the kind SELECT offers ``rectificativa``
     and NOT ``complementaria`` (the rectificativa has replaced it for ordinary
     corrections); M130 has no rectificativa regime, so its SELECT offers
     ``complementaria`` and NOT ``rectificativa``. Asserted on the projected
@@ -913,7 +916,7 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds(seed_profil
     assert "complementaria" not in m303_kinds
 
     m130_unit_id = create_m130_work_unit(period="2T")
-    _import_external_baseline(m130_unit_id, csv="JUST20251302TKINDS", period="2T")
+    _import_external_baseline(m130_unit_id, csv="JUST20251302TKINDS")
     m130_kinds = _permitted_kind_choice_values(m130_unit_id, change_numbers=["01"])
     assert "complementaria" in m130_kinds
     assert "rectificativa" not in m130_kinds
@@ -922,7 +925,7 @@ def test_amend_wizard_kind_select_offers_only_period_permitted_kinds(seed_profil
 def test_amend_wizard_scripting_a_non_permitted_kind_is_refused(seed_profile: ProfileSeeder) -> None:
     """Scripting a kind the SELECT does not offer is refused by the substrate, nothing filed.
 
-    ``complementaria`` is not a permitted M303 2025 kind, so it is not a choice
+    ``complementaria`` is not a permitted M303 horizon-year kind, so it is not a choice
     on the amendment-kind SELECT; the scripted driver rejects the unknown token
     with the substrate's typed answer-rejected error rather than filing it.
     """

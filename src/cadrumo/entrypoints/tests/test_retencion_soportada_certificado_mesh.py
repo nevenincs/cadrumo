@@ -318,6 +318,11 @@ def test_a_payer_id_failing_its_checksum_is_refused_and_nothing_is_stored(
     assert [record.evidence_fingerprint for record, _revision in stored_after_success] == [_sha256(accepted_bytes)]
 
 
+def _printed_cif(cif: str) -> str:
+    """Return a bare CIF in the hyphenated form a certificate prints: letter, seven digits, control."""
+    return f"{cif[0]}-{cif[1:8]}-{cif[8]}"
+
+
 def test_the_printed_and_bare_forms_of_one_payer_id_name_one_row(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
@@ -329,7 +334,7 @@ def test_the_printed_and_bare_forms_of_one_payer_id_name_one_row(
         first = _run(operation, _request(_PAYER_A, retencion="100.00", directory=files, file="first.pdf"))
         # The printed form of the same identifier meets the stored row, not an empty slot.
         printed, context = _run_in(
-            operation, _request("B-0000001-8", retencion="250.00", directory=files, file="second.pdf")
+            operation, _request(_printed_cif(_PAYER_A), retencion="250.00", directory=files, file="second.pdf")
         )
         stored = _repository().list_revisioned(_EJERCICIO)
 
