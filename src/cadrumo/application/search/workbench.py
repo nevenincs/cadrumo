@@ -403,7 +403,7 @@ class WorkbenchSearchDocument(BaseModel):
     identity_basis: SecretStr | None = Field(default=None, exclude=True, repr=False, min_length=1, max_length=512)
     content_terms: tuple[str, ...] = ()
     """The operator's own words for this record, matched alongside the enums."""
-    precedence: Annotated[int, Field(ge=0, le=9)] = 9
+    precedence: Annotated[int, Field(ge=0)] = 9
     """Among results of equal score, the lower value is listed first."""
 
     @field_validator("identity_basis")
