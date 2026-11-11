@@ -9,6 +9,7 @@ import type {
   LedgerRow,
   LedgerTransaction,
 } from "../../src/shell/ledger";
+import { fixtureDay, fixtureInstant } from "../../src/dev/fixtureDates";
 
 /** A synthetic movement: an active, unclassified outgoing payment unless
  * `facts` says otherwise. Every value is invented. */
@@ -20,8 +21,8 @@ export function movement(
 ): LedgerRow {
   const transaction: LedgerTransaction = {
     transaction_id: id,
-    date: "2026-10-05",
-    booked_date: "2026-10-05",
+    date: fixtureDay(10, 5),
+    booked_date: fixtureDay(10, 5),
     value_date: null,
     operation_date: null,
     accrual_date: null,
@@ -57,8 +58,8 @@ export function movement(
     source_jurisdiction: null,
     value_in_eur: null,
     fx_rate: null,
-    created_at: "2026-10-05T08:00:00Z",
-    modified_at: "2026-10-05T08:00:00Z",
+    created_at: fixtureInstant(10, 5, "08:00:00Z"),
+    modified_at: fixtureInstant(10, 5, "08:00:00Z"),
     ...facts,
   };
   const status =
@@ -90,7 +91,7 @@ export function catalogueInvoice(
     bucket_id: null,
     kind: "received",
     invoice_number: number,
-    issued_at: "2026-10-01",
+    issued_at: fixtureDay(10, 1),
     counterparty_name: "Papelería Trazo SL",
     counterparty_tax_id: "B12000045",
     counterparty_country: "ES",

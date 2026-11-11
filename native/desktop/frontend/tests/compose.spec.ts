@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { fixtureYear } from "../src/dev/fixtureDates";
 import {
   described,
   describedGap,
@@ -44,9 +45,10 @@ function words(locale: string): Translate {
 }
 
 test("a label and its value follow the locale's template", () => {
-  expect(labelled(words("en"), "Period", "2026-3T")).toBe("Period: 2026-3T");
-  expect(labelled(words("turned"), "Period", "2026-3T")).toBe(
-    "2026-3T @ Period",
+  const period = `${fixtureYear}-3T`;
+  expect(labelled(words("en"), "Period", period)).toBe(`Period: ${period}`);
+  expect(labelled(words("turned"), "Period", period)).toBe(
+    `${period} @ Period`,
   );
   expect(labelGap(words("en"))).toBe(": ");
   expect(labelGap(words("turned"))).toBe(" @ ");

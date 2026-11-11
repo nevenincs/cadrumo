@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { fixtureInstant, fixtureYear } from "../src/dev/fixtureDates";
 import {
   FIXTURE_RUNS,
   SEED_DEPTH,
@@ -38,7 +39,7 @@ const t: Translate = Object.assign(
   (key: string, values?: Record<string, string | number>) => label(key, values),
   { locale: "en" },
 );
-const NOW = new Date("2026-10-13T12:00:00Z");
+const NOW = new Date(fixtureInstant(10, 13, "12:00:00Z"));
 
 const text = (
   reply_id: string,
@@ -661,7 +662,7 @@ test.describe("the conversations the history lists", () => {
   ): AgentConversationRecord => ({
     id,
     title,
-    last_active_at: "2026-10-13T09:00:00Z",
+    last_active_at: fixtureInstant(10, 13, "09:00:00Z"),
     archived,
   });
 
@@ -806,7 +807,7 @@ test.describe("what a tool call took and gave", () => {
       title: "ledger_list",
       tool_kind: "read",
       status: "in_progress",
-      details: ['{"year":2026}', "libro.csv:3"],
+      details: [`{"year":${fixtureYear}}`, "libro.csv:3"],
     },
     reply("r1", "running"),
   ];
@@ -822,7 +823,7 @@ test.describe("what a tool call took and gave", () => {
       label: "ledger_list",
       state: "in_progress",
       detail: "Reads",
-      internals: ['{"year":2026}', "libro.csv:3"],
+      internals: [`{"year":${fixtureYear}}`, "libro.csv:3"],
     });
   });
 
@@ -845,7 +846,7 @@ test.describe("what a tool call took and gave", () => {
     );
     expect(live.turns.find((record) => record.kind === "tool")).toMatchObject({
       status: "completed",
-      details: ['{"year":2026}', "libro.csv:3"],
+      details: [`{"year":${fixtureYear}}`, "libro.csv:3"],
     });
   });
 

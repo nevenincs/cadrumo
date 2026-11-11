@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { fixtureInstant } from "../../src/dev/fixtureDates";
 import { label } from "../support/strings";
 
 const calls = (page: Page, name: string) =>
@@ -239,7 +240,7 @@ const password = (page: Page) =>
   page.getByLabel(label("desktop.signin.password"), { exact: true });
 
 async function observedClock(page: Page) {
-  const time = new Date("2026-10-11T00:00:00Z");
+  const time = new Date(fixtureInstant(10, 11, "00:00:00Z"));
   // Installed before the time it pauses at: the installed clock runs until
   // it is paused, and pausing at a time it has already passed is refused.
   await page.clock.install({ time: new Date(time.getTime() - 60_000) });
