@@ -31,6 +31,7 @@ from cadrumo_agent_service.providers.application.tests.synthetic_catalog import 
     StaticLiveModels,
     synthetic_catalog,
 )
+from cadrumo_agent_service.providers.domain.record import LocalEngine
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import open_ledger_ux_session
@@ -56,6 +57,7 @@ class _UnservedAgent(RecordingModelRuns):
             resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=catalog),
             catalog_source=catalog,
             live_models=StaticLiveModels(),
+            selected_engine=lambda: LocalEngine.LLAMACPP,
             gateway=HostedBackgroundRuns(
                 endpoint=lambda: None,
                 bearer=bytearray(b"g" * 64),
@@ -72,10 +74,10 @@ class _UnservedAgent(RecordingModelRuns):
 @pytest.mark.parametrize(
     ("language", "message"),
     [
-        ("en", "The automatic reader could not run, so nothing was read."),
-        ("es", "El lector automático no ha podido funcionar, así que no se ha leído nada."),
-        ("ca", "El lector automàtic no ha pogut funcionar, així que no s'ha llegit res."),
-        ("hu", "Az automatikus olvasó nem tudott elindulni, ezért semmi sem lett beolvasva."),
+        ("en", "No model is picked to read with. Pick one, then try again."),
+        ("es", "No has elegido ningún modelo para leer. Elige uno y vuelve a intentarlo."),
+        ("ca", "No has triat cap model per llegir. Tria'n un i torna-ho a provar."),
+        ("hu", "Nincs kiválasztott modell az olvasáshoz. Válassz egyet, majd próbáld újra."),
     ],
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:
