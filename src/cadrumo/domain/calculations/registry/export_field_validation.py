@@ -69,9 +69,6 @@ _SIGNED_MONEY_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
 )
 
 
-_MONEY_IMPLIED_DECIMALS: Final[int] = 2
-
-
 def validate_export_field_kind(field: ExportFieldDefinition) -> None:
     """Validate semantic payload, render shape and taxpayer-specific requirements."""
     _validate_field_semantic_payload(field)
@@ -279,9 +276,8 @@ def _allowed_values_member_failure(
     length = field.length
     if length is None:
         return f"export field {field.id!r} allowed_values requires a declared length"
-    scale = _MONEY_IMPLIED_DECIMALS if field.data_type == "money" else (field.decimals or 0)
-    unit_digit_budget = length - scale
-    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, unit_digit_budget))
+    # Members are the digit runs the slot prints, implied decimals included.
+    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, length))
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
     return None

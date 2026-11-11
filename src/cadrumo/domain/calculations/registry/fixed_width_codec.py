@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol
+from typing import Annotated, Final, Literal, Protocol
 
 from pydantic import BeforeValidator
 
@@ -22,6 +22,9 @@ from .export_value_policy import (
     validate_export_wire_value,
 )
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, CasillaDataType
+
+#: The implied decimals the ``money`` wire type prints its amounts at.
+_MONEY_SCALE: Final = 2
 
 
 class ExportPadding(StrEnum):
@@ -544,16 +547,33 @@ def require_minimum_year(field: ExportField, value: object) -> None:
 
 
 def require_allowed_value(field: ExportField, value: object) -> None:
+    """Refuse a value whose wire digits are not one of the field's closed domain.
+
+    A closed domain is spelled as the canonical digit run the slot prints, so a
+    scaled field compares the value at its implied decimals: on a five-digit
+    Tipo % slot at two decimals ``0.50`` is ``50``, the run ``00050`` prints.
+    A value carrying more precision than the slot prints is refused rather than
+    rounded into a member.
+    """
     if field.allowed_values is None:
         return
-    number = _coerce_numeric(field, value)
+    number = _coerce_numeric(field, value) * Decimal(10 ** allowed_value_scale(field))
     if number != number.to_integral_value():
-        raise RegistryValidationError(f"export field {field.id!r} value is not an allowed integer")
+        raise RegistryValidationError(f"export field {field.id!r} value is not one of its allowed wire values")
     canonical = str(int(number))
     if canonical not in field.allowed_values:
         raise RegistryValidationError(
             f"export field {field.id!r} value {canonical!r} is outside allowed_values",
         )
+
+
+def allowed_value_scale(field: ExportField) -> int:
+    """Return the implied decimals a closed domain's digit runs are spelled at."""
+    if field.data_type == "money":
+        return _MONEY_SCALE
+    if field.data_type == "decimal":
+        return field.decimals or 0
+    return 0
 
 
 def _is_absent_slot(field: ExportField, value: object) -> bool:
@@ -675,7 +695,7 @@ def _render_scaled_numeric(field: ExportField, value: object, *, scale: int) -> 
 
 def _render_money(field: ExportField, value: object) -> str:
     number = _coerce_numeric(field, value)
-    scaled = round_to_cents(abs(number)) * 100
+    scaled = round_to_cents(abs(number)) * 10**_MONEY_SCALE
     return _render_numeric_digits(field, str(int(scaled)), negative=number < 0)
 
 

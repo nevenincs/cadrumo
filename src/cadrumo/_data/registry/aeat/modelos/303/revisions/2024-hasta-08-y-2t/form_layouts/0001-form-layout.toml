@@ -7,7 +7,7 @@ revision_id = "2024-hasta-08-y-2t"
 seed_source = "authored"
 review = { state = "generated", notes = "Partial authored layout after visual inspection of BOE-A-2022-19290 AnnexII, printed158996-159001. First applicable periods begin January2023. The historical complementaria procedure is retained, without later rectificativa motives or boxes108/111. Rate cells retain this edition's own record-design literals and scale. Outstanding: complementaria marker and explicit no-activity declaration; annual activity descriptions; payment/refund72/73 and non-IBAN details; extra electronic activity worksheets. No operator or native visual review claimed." }
 generator_version = 1
-source_state_digest = "4007067943c39e15be9b49fe1668740af066331b0c1192c78b271f2d44433aed"
+source_state_digest = "b651dc3afee1a65148db14415c8cda8db7ec913c37a8aa559762b12c125b8c10"
 design_sources = [
     { source_ref = "aeat-dr-303-2024-early", sha256 = "28dcb7194c148b02b5687c08d4fecb76f6af6fcdf0d3f7dfbac6043a1f838be9" },
     { source_ref = "boe-modelo-303-2023-form-pdf", sha256 = "71caf415a830b8f8bd08edb6d239bc3e85a1c6ca0e276512f9717a5d2c19c590" },
