@@ -1600,6 +1600,7 @@
         "cadrumo.application.operations.fenced_result",
         "cadrumo.application.operations.financial_operand_contract",
         "cadrumo.application.operations.financial_operand_custody",
+        "cadrumo.application.operations.first_write_effect",
         "cadrumo.application.operations.frontend_contracts",
         "cadrumo.application.operations.frontend_projection",
         "cadrumo.application.operations.frontend_requests",

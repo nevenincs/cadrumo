@@ -19,10 +19,10 @@ from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ..ledger.read_access import resolve_ledger_request_commit_access
-from ..modelo.operation_shared import FirstWriteEffectAnnouncement
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
+from ..operations.first_write_effect import FirstWriteEffectAnnouncement
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
