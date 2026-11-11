@@ -64,14 +64,6 @@ class M303FilingLexicals:
     """Whether the period asks the prorrata election questions; ``None`` while the register is not read."""
 
 
-@dataclass(frozen=True)
-class M303ForalLexicals:
-    """Rendered lexical values for a Modelo 303 foral prorrata election."""
-
-    prorrata_special_option: str | None
-    prorrata_special_revocation: str | None
-
-
 def _m303_lexical_producer_values(
     m303_profile: M303ProfileLexicals,
     m303_filing: M303FilingLexicals,
@@ -116,20 +108,21 @@ def m303_context_producer_values(
     A lexical they do not hold stays ``None``, never a default answer.
     """
     values = _m303_lexical_producer_values(m303_profile, m303_filing)
-    _apply_foral_m303_overrides(values, m303_profile, m303_filing)
+    _apply_foral_m303_overrides(values, m303_profile)
     return values
 
 
 def _apply_foral_m303_overrides(
     values: dict[FilingProducerKey, object],
     m303_profile: M303ProfileLexicals,
-    m303_filing: M303FilingLexicals,
 ) -> None:
     if not m303_profile.is_foral:
         return
-    foral = m303_foral_lexicals(m303_filing)
     codes = _m303_form_codes()
     not_answered = codes.code("answer.no")
+    # DP30301 Nota 5: a filer taxed exclusively by a foral administration prints the election fields' "2" in
+    # every period, whatever the register says.
+    election_blank = _m303_blank_outside_final_period()
     values.update(
         {
             FilingProducerKey.M303_REDEME_ENROLLED: not_answered,
@@ -138,8 +131,8 @@ def _apply_foral_m303_overrides(
             FilingProducerKey.M303_JOINT_RETURN_ELECTED: not_answered,
             FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: not_answered,
             FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: not_answered,
-            FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
-            FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
+            FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: election_blank,
+            FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: election_blank,
             FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
             FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
             FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
@@ -263,8 +256,9 @@ def _m303_prorrata_election_lexicals(
     applicable: bool,
 ) -> tuple[str | None, str | None]:
     if not applicable:
-        outside = _m303_outside_period()
-        return outside, outside
+        # DP30301 Nota 6: outside the last period both election fields print "2" (blank), never Nota 3's "0".
+        blank = _m303_blank_outside_final_period()
+        return blank, blank
     return (
         yes_no(transition.transition == opcion_prorrata_transition()),
         yes_no(transition.transition == revocacion_prorrata_transition()),
@@ -278,13 +272,6 @@ def _m303_insolvency_lexicals(
         return yes_no(False), None, None
     subtype = _m303_form_codes().code(f"insolvency_subtype.{_M303_INSOLVENCY_SUBTYPE_KEYS[insolvency.subtype]}")
     return yes_no(True), insolvency.judicial_order_date.strftime("%d%m%Y"), subtype
-
-
-def m303_foral_lexicals(m303_filing: M303FilingLexicals) -> M303ForalLexicals:
-    """Project the Modelo 303 filing lexicals into the foral prorrata election lexicals."""
-    applicable = m303_filing.prorrata_transition_applicable
-    value = None if applicable is None else yes_no(False) if applicable else _m303_outside_period()
-    return M303ForalLexicals(prorrata_special_option=value, prorrata_special_revocation=value)
 
 
 _M303_FORM_CODES_FACT = "modelo-303-identification-form-codes"
@@ -303,6 +290,11 @@ def _m303_outside_period() -> str:
     return _m303_form_codes().code("answer.outside_period")
 
 
+def _m303_blank_outside_final_period() -> str:
+    """Return the Nota 6 code an election field prints outside the last period, and a foral filer always prints."""
+    return _m303_form_codes().code("answer.blank_outside_final_period")
+
+
 def yes_no(value: bool) -> str:
     return _m303_form_codes().code("answer.yes" if value else "answer.no")
 
@@ -315,12 +307,10 @@ def m303_a30_entitlement_applicable(period: Period) -> bool:
 __all__ = [
     "M303_LEXICAL_PRODUCER_KEYS",
     "M303FilingLexicals",
-    "M303ForalLexicals",
     "M303ProfileLexicals",
     "m303_a30_entitlement_applicable",
     "m303_context_producer_values",
     "m303_evidence_lexicals",
     "m303_filing_lexicals",
-    "m303_foral_lexicals",
     "m303_profile_lexicals",
 ]

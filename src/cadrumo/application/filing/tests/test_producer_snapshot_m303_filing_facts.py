@@ -400,7 +400,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     }
 
 
-def test_modelo_303_foral_note_5_prints_the_outside_period_code_in_prorrata_slots_before_final_period() -> None:
+def test_modelo_303_foral_note_5_prints_two_in_prorrata_slots_before_final_period() -> None:
     period = Period.from_year_and_code(_YEAR, "1T")
     snapshot = _m303_foral_snapshot(
         prorrata_transition=M303ProrrataTransitionArrival(
@@ -410,9 +410,10 @@ def test_modelo_303_foral_note_5_prints_the_outside_period_code_in_prorrata_slot
 
     values = filing_producer_values(snapshot)
 
-    # DP30301 prints 0 for a question the period does not ask, the same bytes a blank slot zero-fills to.
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] == "0"
-    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] == "0"
+    # DP30301 Nota 5 gives a foral filer "2" in both election slots, and Nota 6 gives every filer "2" outside
+    # the last period. "0" is Nota 3's code for other fields, a value these slots do not admit.
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION] == "2"
+    assert values[FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION] == "2"
 
 
 @pytest.mark.parametrize(
