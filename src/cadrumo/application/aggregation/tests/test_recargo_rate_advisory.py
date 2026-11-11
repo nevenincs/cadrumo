@@ -26,7 +26,7 @@ carries its own test rather than being covered incidentally.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -34,9 +34,10 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
-from ....domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
+from ....domain.iva.recargo_equivalencia import IVA_RECARGO_FACT_ID, recargo_rate_record_for_applied_rate
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..modelo_bindings_invoice_iva import (
     modelo_bindings_invoice_iva_recargo_rate_divergence,
@@ -48,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BASE = Decimal("1000.00")
 
 #: Inside the ordinary art. 161 pairing: 21 % general carries 5,2 % recargo.
-_ORDINARY_DAY = date(2025, 6, 15)
+_ORDINARY_DAY = date(filing_year_envelope().horizon, 6, 15)
 
 #: An exempt slot names no percentage at all, so there is no pairing to look up.
 #: This is the reachable silence; the test below records why the table's OWN
@@ -170,17 +171,23 @@ def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> No
     December 2024 window, and the table declines outside it.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        (window,) = (
+            variant
+            for variant in _authority_operation_for_test.governed_fact(IVA_RECARGO_FACT_ID).variants
+            if {selector.name: selector.value for selector in variant.selectors}.get("applied_rate") == Decimal("0.02")
+        )
+        assert window.valid_from is not None
+        assert window.valid_to is not None
         pairing = recargo_rate_record_for_applied_rate(
-            Decimal("0.02"), date(2024, 11, 15), operation=_authority_operation_for_test
+            Decimal("0.02"), window.valid_from, operation=_authority_operation_for_test
         )
         assert pairing is not None
         assert pairing.recargo_rate == Decimal("0.0026")
-        assert (
-            recargo_rate_record_for_applied_rate(
-                Decimal("0.02"), date(2025, 6, 15), operation=_authority_operation_for_test
+        for outside in (window.valid_from - timedelta(days=1), window.valid_to + timedelta(days=1)):
+            assert (
+                recargo_rate_record_for_applied_rate(Decimal("0.02"), outside, operation=_authority_operation_for_test)
+                is None
             )
-            is None
-        )
 
 
 def test_an_invoice_bearing_no_recargo_is_not_this_screens_business(operation: PinnedAuthorityOperation) -> None:
