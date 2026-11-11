@@ -13,10 +13,12 @@ from dev.acceptance.income_tax.installed_tui_child import (
 )
 
 from .m303_evidence_contracts import (
-    ATTESTATION_REFUSAL_KEY,
+    COORDINATE_MISMATCH_REFUSAL_KEY,
     EVIDENCE_SUBMIT_ID,
+    MALFORMED_IDENTITY_REFUSAL_KEY,
     MISMATCHED_ATTACHMENT_ID,
     MISMATCHED_SHA256,
+    PERIOD,
     SCHEMA_VERSION,
     ChildMode,
     ChildReceipt,
@@ -56,9 +58,22 @@ def run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
         try:
             if mode == "tui-led-calculate":
                 outcomes.extend(await form_refusals(pilot, work_unit_id=work_unit_id, observed_at=observed_at))
-                for step, attachment_id, sha256 in (
-                    ("mismatched_pair", MISMATCHED_ATTACHMENT_ID, MISMATCHED_SHA256),
-                    ("wrong_filing_context", args.wrong_attachment_id, args.wrong_sha256),
+                coordinate = {"period": PERIOD, "filing_year": cast(int, args.year)}
+                for step, attachment_id, sha256, refusal_key, refusal_context in (
+                    (
+                        "mismatched_pair",
+                        MISMATCHED_ATTACHMENT_ID,
+                        MISMATCHED_SHA256,
+                        MALFORMED_IDENTITY_REFUSAL_KEY,
+                        {},
+                    ),
+                    (
+                        "wrong_filing_context",
+                        args.wrong_attachment_id,
+                        args.wrong_sha256,
+                        COORDINATE_MISMATCH_REFUSAL_KEY,
+                        coordinate,
+                    ),
                 ):
                     await open_evidence_form(pilot, work_unit_id=work_unit_id)
                     fill_evidence_form(pilot, attachment_id=attachment_id, sha256=sha256)
@@ -67,7 +82,8 @@ def run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
                             pilot,
                             activation_id=EVIDENCE_SUBMIT_ID,
                             step=step,
-                            refusal_key=ATTESTATION_REFUSAL_KEY,
+                            refusal_key=refusal_key,
+                            refusal_context=refusal_context,
                         )
                     )
                 outcomes.extend(

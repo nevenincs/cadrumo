@@ -10,7 +10,7 @@ related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
 modified: '2026-11-11'
 body_schema: body-v2
-body_hash: 'sha256:a7b0fec86619d7cef9b87bb6d65b4903c445b1a3be2207d5f56cd30d76414b65'
+body_hash: 'sha256:4aea9f4992977af56a67af56cf20fd0b9a8bdf77302fe1f8ff1affcc61d03309'
 ---
 
 # `persona-table` plan
@@ -56,6 +56,7 @@ Every persona row passes calculate, verify and export, proven in Python with no 
 - [ ] `P01.S17` - Run the full Python gate set green on a head where the persona table is green (lane INTEGRATOR); `justfile`.
 - [ ] `P01.S30` - Write fixed-width export text as each official design requires (upper case, no accents, ISO-8859-1 where the design says so) from one shared rule, and make the persona table's export stage assert it (lanes LIFECYCLE and ACCEPTANCE); `src/cadrumo/application/filing, dev/acceptance/persona_table`.
 - [ ] `P01.S31` - Satisfy a cross-period dependency whose source year lies below the support envelope by an explicit operator attestation shown on the verification report (lanes CALC-PAGOS and LIFECYCLE); `src/cadrumo/application/modelo/verification_cross_period.py, dev/fixtures/personas`.
+- [ ] `P01.S33` - Remove every dependence of a result on a particular year in registry authoring, production code and persona data, and add a gate for declarations that exist in one edition or one year only (all lanes; gate by ACCEPTANCE); `src/cadrumo/_data/registry, src/cadrumo/application, dev/registry, dev/fixtures/personas`.
 
 ### Phase `P02` - Deferred backend scope
 
