@@ -3204,6 +3204,7 @@ cli:
     missing_option: Hiányzó kapcsoló
     missing_parameter: Hiányzó paraméter
     not_valid_integer: nem érvényes egész szám.
+    not_valid_number: nem érvényes szám.
     panel:
       arguments: Argumentumok
       commands: Parancsok
@@ -3212,6 +3213,7 @@ cli:
     path_not_found: a(z) '{path}' elérési út nem létezik, vagy nem olvasható fájl.
     try_for_help: 'Súgóért futtasd: [blue]''{command_path} {help_option}''[/].'
     usage_prefix: 'Használat: '
+    value_not_accepted: nem elfogadott érték.
   ledger:
     account:
       errors:

@@ -3233,6 +3233,7 @@ cli:
     missing_option: Falta l'opció
     missing_parameter: Falta el paràmetre
     not_valid_integer: no és un enter vàlid.
+    not_valid_number: no és un nombre vàlid.
     panel:
       arguments: Arguments
       commands: Ordres
@@ -3241,6 +3242,7 @@ cli:
     path_not_found: la ruta '{path}' no existeix o no és un fitxer llegible.
     try_for_help: Prova [blue]'{command_path} {help_option}'[/] per obtenir ajuda.
     usage_prefix: 'Ús: '
+    value_not_accepted: no és un valor acceptat.
   ledger:
     account:
       errors:
