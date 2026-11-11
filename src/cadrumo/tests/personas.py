@@ -366,6 +366,37 @@ class AeatFiling:
 
 
 @dataclass(frozen=True, slots=True)
+class PriorValueSource:
+    """The earlier return an attested prior value stands in for."""
+
+    modelo: str
+    year: YearToken
+    period: str
+
+
+@dataclass(frozen=True, slots=True)
+class AttestedPriorValue:
+    """A figure the taxpayer states for a calculation's dependency on an earlier return the application does not hold.
+
+    The replay submits it through the registered edit operation as an operator
+    attestation, and only where the application holds nothing of ``source``:
+    where it holds a work unit, a filing record or an observation of it, that
+    source governs and the entry is not submitted. ``derivation`` and
+    ``legal_ref`` record where the figure comes from; the operation does not
+    receive them.
+    """
+
+    modelo: str
+    period: str
+    year: YearToken
+    binding: str
+    value: Decimal
+    source: PriorValueSource
+    derivation: str
+    legal_ref: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class LeasedPremises:
     """Premises the taxpayer rents for the activity from a landlord on whose rent he withholds.
 
@@ -540,6 +571,7 @@ type BelowFloorBlock = Literal[
     "calculated_returns",
     "local_observations",
     "aeat_filings",
+    "attested_prior_values",
     "expectations.obligations",
     "expectations.deadlines",
     "expectations.values",
@@ -621,6 +653,8 @@ class Persona:
     identities: IdentityCatalogue
     below_floor: tuple[BelowFloorRecord, ...] = ()
     """The dated records a read under a lowered horizon left out, their year lying below the envelope floor."""
+    attested_prior_values: tuple[AttestedPriorValue, ...] = ()
+    """The figures the taxpayer states for earlier returns the application does not hold."""
 
     def identity(self, reference: str | IdentityRef) -> str:
         """Return the value an identity role or a role field reference names."""
@@ -828,6 +862,7 @@ _PERSONA_TABLES = frozenset(
         "calculated_returns",
         "local_observations",
         "aeat_filings",
+        "attested_prior_values",
         "leased_premises",
         "inventory",
     }
@@ -1089,6 +1124,33 @@ def _aeat_filing(table: _Table, where: str) -> AeatFiling:
         justificante=number,
         casillas=tuple(values),
         reason=_string(table, "reason", where),
+    )
+
+
+def _attested_prior_value(table: _Table, where: str) -> AttestedPriorValue:
+    _keys(
+        table,
+        where,
+        required=frozenset({"modelo", "period", "year", "binding", "value", "source", "derivation", "legal_ref"}),
+    )
+    source = _table(table["source"], f"{where}.source")
+    _keys(source, f"{where}.source", required=frozenset({"modelo", "year", "period"}))
+    legal_ref = _strings(table, "legal_ref", where)
+    if not legal_ref:
+        raise _fail(where, "legal_ref must name at least one provision")
+    return AttestedPriorValue(
+        modelo=_string(table, "modelo", where),
+        period=_choice(_string(table, "period", where), _FILED_PERIODS, where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        binding=_string(table, "binding", where),
+        value=_amount(table["value"], f"{where}.value"),
+        source=PriorValueSource(
+            modelo=_string(source, "modelo", f"{where}.source"),
+            year=YearToken.parse(source["year"], where=f"{where}.source.year"),
+            period=_choice(_string(source, "period", f"{where}.source"), _FILED_PERIODS, f"{where}.source"),
+        ),
+        derivation=_string(table, "derivation", where),
+        legal_ref=legal_ref,
     )
 
 
@@ -1641,6 +1703,10 @@ def parse_persona(
             _aeat_filing(table, f"{where} aeat_filings[{index}]")
             for index, table in enumerate(_tables(persona_document.get("aeat_filings"), where))
         ),
+        attested_prior_values=tuple(
+            _attested_prior_value(table, f"{where} attested_prior_values[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("attested_prior_values"), where))
+        ),
         leased_premises=tuple(
             _leased_premises(table, f"{where} leased_premises[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("leased_premises"), where))
@@ -1669,6 +1735,7 @@ def parse_persona(
         persona = _without_records_below_floor(persona, envelope)
     _check_years(persona, envelope)
     _check_aeat_filings(persona, envelope)
+    _check_attested_prior_values(persona, envelope)
     return persona
 
 
@@ -1677,6 +1744,7 @@ type _DatedRecord = (
     | CalculatedReturns
     | LocalObservation
     | AeatFiling
+    | AttestedPriorValue
     | ExpectedObligation
     | ExpectedDeadline
     | ExpectedValue
@@ -1730,6 +1798,7 @@ def _without_records_below_floor(persona: Persona, envelope: YearEnvelope) -> Pe
         calculated_returns=kept("calculated_returns", persona.calculated_returns),
         local_observations=kept("local_observations", persona.local_observations),
         aeat_filings=kept("aeat_filings", persona.aeat_filings),
+        attested_prior_values=kept("attested_prior_values", persona.attested_prior_values),
         expectations=Expectations(
             obligations=kept("expectations.obligations", expectations.obligations),
             deadlines=kept("expectations.deadlines", expectations.deadlines),
@@ -1774,6 +1843,26 @@ def _check_aeat_filings(persona: Persona, envelope: YearEnvelope) -> None:
             )
 
 
+def _check_attested_prior_values(persona: Persona, envelope: YearEnvelope) -> None:
+    """Refuse an attested figure listed twice, or whose source does not precede the return it feeds."""
+    seen: set[tuple[str, str, str, str]] = set()
+    for item in persona.attested_prior_values:
+        key = (item.modelo, str(item.year), item.period, item.binding)
+        if key in seen:
+            raise _fail(persona.id, f"Modelo {item.modelo} {item.year} {item.period} attests {item.binding} twice")
+        seen.add(key)
+        try:
+            source_year = item.source.year.resolve(envelope, biographical=True)
+            year = item.year.resolve(envelope)
+        except ValueError as error:
+            raise _fail(persona.id, str(error)) from None
+        if source_year >= year:
+            raise _fail(
+                persona.id,
+                f"Modelo {item.modelo} {item.year} {item.period} attests a source that does not precede it",
+            )
+
+
 def _check_inventory(persona: Persona) -> None:
     """Refuse two books for one activity and year."""
     books = [(book.activity, str(book.year)) for book in persona.inventory]
@@ -1802,6 +1891,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
         *(filing.year for filing in persona.aeat_filings),
+        *(item.year for item in persona.attested_prior_values),
         *(book.year for book in persona.inventory),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
@@ -1856,6 +1946,7 @@ __all__ = [
     "PERSONAS_ROOT",
     "ActivityRow",
     "AeatFiling",
+    "AttestedPriorValue",
     "BelowFloorBlock",
     "BelowFloorRecord",
     "CalculatedReturns",
@@ -1880,6 +1971,7 @@ __all__ = [
     "PersonaCatalogueError",
     "PersonaDate",
     "PersonaDocument",
+    "PriorValueSource",
     "ProfileAnswer",
     "ProfileValue",
     "ProvisionPeriods",

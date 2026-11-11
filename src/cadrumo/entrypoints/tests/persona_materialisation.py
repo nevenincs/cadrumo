@@ -118,6 +118,7 @@ from ...application.live.filed_single_capture_operation import (
     FiledSingleCapturePublicResultV1,
     FiledSingleCaptureRequest,
 )
+from ...application.modelo.edit_operator_input import PreparedModeloEditOperand
 from ...application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
     ModeloInvoiceWithholdingCaptureProjection,
@@ -223,6 +224,7 @@ from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, compose_legal_full_name
 from ...tests.persona_invoices import render_facturae
 from ...tests.personas import (
+    AttestedPriorValue,
     CalculatedReturns,
     FiledReturns,
     HouseholdMember,
@@ -246,6 +248,7 @@ from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 from .persona_aeat_filings import PERSONA_AEAT_REGISTER, PERSONA_FILED_REGISTER, recorded_filing
+from .persona_prior_values import PriorValueAttestationError, attest_prior_values
 
 PERSONA_ACTOR = "operator:persona"
 """The actor every replayed operation is submitted under."""
@@ -314,6 +317,8 @@ class PersonaWorld:
     services: OperationComposedServices
     registry: OperationRegistry
     operation: PinnedAuthorityOperation
+    attested_prior_values: tuple[AttestedPriorValue, ...] = ()
+    """The persona's stated figures for earlier returns; :func:`run_operation` submits them after a calculation."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,11 +408,18 @@ def _scenario(as_of: datetime) -> Generator[None]:
 
 @contextmanager
 def _operations_over(
-    root: Path, profile_id: UUID, *, workdir: Path, as_of: datetime, envelope: YearEnvelope | None = None
+    root: Path,
+    profile_id: UUID,
+    *,
+    workdir: Path,
+    as_of: datetime,
+    envelope: YearEnvelope | None = None,
+    attested_prior_values: tuple[AttestedPriorValue, ...] = (),
 ) -> Generator[PersonaWorld]:
     """Compose a production supervisor over the profile already resumed in the isolated ``root``.
 
     ``envelope`` is the year envelope the persona was read under; the registry's own when omitted.
+    ``attested_prior_values`` are the persona's stated figures for earlier returns.
     """
     with (
         profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects,
@@ -445,6 +457,7 @@ def _operations_over(
                 services=services,
                 registry=registry,
                 operation=operation,
+                attested_prior_values=attested_prior_values,
             )
         finally:
             asyncio.run(services.shutdown())
@@ -464,7 +477,12 @@ def persona_world(
         ):
             try:
                 with _operations_over(
-                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                    root,
+                    profile_id,
+                    workdir=tmp_path / "inputs",
+                    as_of=as_of,
+                    envelope=envelope,
+                    attested_prior_values=persona.attested_prior_values,
                 ) as opened:
                     yield opened
             finally:
@@ -475,11 +493,18 @@ def persona_world(
 
 
 def settle_operation(
-    world: PersonaWorld, definition_id: str, payload: BaseModel, *, subject: str | None = None
+    world: PersonaWorld,
+    definition_id: str,
+    payload: BaseModel,
+    *,
+    subject: str | None = None,
+    operand: PreparedModeloEditOperand | None = None,
 ) -> BaseModel | None:
     """Submit one registered operation, settle it, refuse anything but success, and return its public result.
 
     The operation addresses the profile unless ``subject`` names another subject, such as a work unit.
+    An edit's ``operand`` is the prepared batch its request refers to: it is bound to the operation once
+    submitted, and the prepared holder releases it.
     """
 
     async def settle() -> OperationPublicProjectionV1:
@@ -493,6 +518,12 @@ def settle_operation(
             actor_ref=PERSONA_ACTOR,
         )
         operation_id = submitted.receipt.operation_id
+        if operand is not None:
+            batch = operand.operand
+            operand.release()
+            if batch is None:
+                raise PersonaMaterialisationError(f"{definition_id} was given an empty edit operand")
+            await services.submission.supervisor.bind_typed_financial_operand(operation_id, batch)
         await services.submission.start(operation_id)
         await services.submission.settled(operation_id)
         observed = await services.observation.observe(
@@ -524,11 +555,57 @@ def run_operation[Projection: BaseModel](
     *,
     subject: str | None = None,
 ) -> Projection:
-    """Settle one registered operation and return its public result as ``projection``."""
+    """Settle one registered operation and return its public result as ``projection``.
+
+    A calculation of a return the persona states a prior value for is followed by the
+    attestation of that value, where the application offers it, and calculated again so
+    the result reads the stated figure.
+    """
     result = settle_operation(world, definition_id, payload, subject=subject)
     if not isinstance(result, projection):
         raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
+    if isinstance(payload, ModeloWorkCalculateRequest) and isinstance(result, ModeloWorkCalculatePublicResultV3):
+        result = _with_attested_prior_values(world, definition_id, payload, result, subject=subject)
+        if not isinstance(result, projection):
+            raise PersonaMaterialisationError(f"{definition_id} published no {projection.__name__}")
     return result
+
+
+def _with_attested_prior_values(
+    world: PersonaWorld,
+    definition_id: str,
+    payload: ModeloWorkCalculateRequest,
+    calculated: ModeloWorkCalculatePublicResultV3,
+    *,
+    subject: str | None,
+) -> BaseModel:
+    """``calculated``, or its calculation again once the persona's stated prior values are attested."""
+
+    def settle(
+        definition_id: str,
+        payload: BaseModel,
+        *,
+        subject: str | None = None,
+        operand: PreparedModeloEditOperand | None = None,
+    ) -> BaseModel | None:
+        return settle_operation(world, definition_id, payload, subject=subject, operand=operand)
+
+    try:
+        attested = attest_prior_values(
+            world.attested_prior_values,
+            envelope=world.envelope,
+            profile_id=world.profile_id,
+            calculated=calculated,
+            settle=settle,
+        )
+    except PriorValueAttestationError as error:
+        raise PersonaMaterialisationError(str(error)) from error
+    if not attested:
+        return calculated
+    recalculated = settle_operation(world, definition_id, payload, subject=subject)
+    if not isinstance(recalculated, ModeloWorkCalculatePublicResultV3):
+        raise PersonaMaterialisationError(f"{definition_id} published no calculation after the attestation")
+    return recalculated
 
 
 def _public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -> BaseModel | None:
@@ -1625,7 +1702,14 @@ def _sealed_replay(
             raise PersonaMaterialisationError("a sealed replay runs inside an isolated storage root")
         with (
             TemporaryDirectory(prefix="persona-inputs-") as inputs,
-            _operations_over(root, profile_id, workdir=Path(inputs), as_of=as_of, envelope=envelope) as world,
+            _operations_over(
+                root,
+                profile_id,
+                workdir=Path(inputs),
+                as_of=as_of,
+                envelope=envelope,
+                attested_prior_values=persona.attested_prior_values,
+            ) as world,
         ):
             replayed = materialise_persona(persona, world, scope, complete_setup=complete_setup)
         ids = {
@@ -1679,7 +1763,12 @@ def _reused_persona_world(
             ids = json.loads((root.parent / _REPLAYED_IDS).read_text(encoding="utf-8"))
             try:
                 with _operations_over(
-                    root, profile_id, workdir=tmp_path / "inputs", as_of=as_of, envelope=envelope
+                    root,
+                    profile_id,
+                    workdir=tmp_path / "inputs",
+                    as_of=as_of,
+                    envelope=envelope,
+                    attested_prior_values=persona.attested_prior_values,
                 ) as world:
                     yield MaterialisedPersona(
                         persona=persona,
